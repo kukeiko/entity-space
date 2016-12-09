@@ -4,3 +4,6 @@
  - checking query type by "instanceof" kinda sucks. consider using discriminated union approach.
  - create a query cache that handles checking if a query can be loaded from workspace or not
  - make use of lazy reference (@ util)
+ - service-cluster:
+    - aggregates data loading/caching logic of multiple/all entity types
+    - queries can be executed against it

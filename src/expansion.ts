@@ -38,6 +38,10 @@ export class Expansion {
          * can still be lazily evaluated.
          */
         Object.freeze(this._expansions);
+
+        if (this instanceof Expansion) {
+
+        }
     }
 
     /**
@@ -105,20 +109,6 @@ export class Expansion {
         } else {
             throw new Error("Expansion.isSuperSetOf(): invalid arguments");
         }
-    }
-
-    static toString(exp: Expansion): string {
-        let str = exp.property.name;
-
-        if (exp.expansions.length > 0) {
-            str += "/";
-
-            if (exp.expansions.length > 1) str += "{";
-            str += exp.expansions.map(exp => exp.toString()).join(",");
-            if (exp.expansions.length > 1) str += "}";
-        }
-
-        return str;
     }
 
     /**
@@ -266,7 +256,17 @@ export class Expansion {
 
     toString(): string {
         if (this._toStringValue == null) {
-            this._toStringValue = Expansion.toString(this);
+            let str = this.property.name;
+
+            if (this.expansions.length > 0) {
+                str += "/";
+
+                if (this.expansions.length > 1) str += "{";
+                str += this.expansions.map(exp => exp.toString()).join(",");
+                if (this.expansions.length > 1) str += "}";
+            }
+
+            this._toStringValue = str;
         }
 
         return this._toStringValue;
