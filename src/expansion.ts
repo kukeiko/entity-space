@@ -38,10 +38,6 @@ export class Expansion {
          * can still be lazily evaluated.
          */
         Object.freeze(this._expansions);
-
-        if (this instanceof Expansion) {
-
-        }
     }
 
     /**
