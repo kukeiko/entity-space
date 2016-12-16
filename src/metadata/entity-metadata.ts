@@ -5,77 +5,83 @@ import { NavigationProperty } from "./navigation-property";
 import { Reference } from "./reference";
 
 export class EntityMetadata {
-    get name(): string { return this._name; };
-    private _name: string;
+    readonly name: string;
+    readonly primaryKey: Primitive;
+    readonly properties: ReadonlyArray<Property>;
+    readonly primitives: ReadonlyArray<Primitive>;
+    readonly navigationProperties: ReadonlyArray<NavigationProperty>;
+    readonly references: ReadonlyArray<Reference>;
+    readonly collections: ReadonlyArray<Collection>;
 
-    get primaryKey(): Primitive { return this._primaryKey; }
-    private _primaryKey: Primitive;
-
-    get properties(): Property[] { return this._properties._toArray(); }
-    private _properties: Map<string, Property>;
-
-    get primitives(): Primitive[] { return this._primitives._toArray(); };
-    private _primitives: Map<string, Primitive>;
-
-    get navigationProperties(): NavigationProperty[] { return this._navigationProperties._toArray(); }
-    private _navigationProperties: Map<string, NavigationProperty>;
-
-    get references(): Reference[] { return this._references._toArray(); };
-    private _references: Map<string, Reference>;
-
-    get collections(): Collection[] { return this._collections._toArray(); };
-    private _collections: Map<string, Collection>;
+    private _propertiesMap: Map<string, Property>;
+    private _primitivesMap: Map<string, Primitive>;
+    private _navigationsMap: Map<string, NavigationProperty>;
+    private _referencesMap: Map<string, Reference>;
+    private _collectionsMap: Map<string, Collection>;
 
     constructor(args: EntityMetadata.ICtorArgs) {
-        this._name = args.name;
-        this._primaryKey = new Primitive(args.primaryKey);
-        this._properties = new Map<string, Property>();
-        this._primitives = new Map<string, Primitive>();
-        this._references = new Map<string, Reference>();
-        this._collections = new Map<string, Collection>();
-        this._navigationProperties = new Map<string, NavigationProperty>();
+        this.name = args.name;
+        this.primaryKey = new Primitive(args.primaryKey);
 
-        (args.primitives || []).forEach(a => this.addPrimitive(a));
-        (args.references || []).forEach(a => this.addReference(a));
-        (args.collections || []).forEach(a => this.addCollection(a));
-    }
+        this._propertiesMap = new Map<string, Property>();
+        this._primitivesMap = new Map<string, Primitive>();
+        this._referencesMap = new Map<string, Reference>();
+        this._collectionsMap = new Map<string, Collection>();
+        this._navigationsMap = new Map<string, NavigationProperty>();
 
-    addPrimitive(args: Primitive.ICtorArgs): void {
-        let p = new Primitive(args);
-        this._primitives.set(p.name.toLocaleLowerCase(), p);
-        this._addProperty(p);
-    }
+        let addProperty = (p: Property) => {
+            this._propertiesMap.set(p.name.toLocaleLowerCase(), p);
+        }
 
-    addReference(args: Reference.ICtorArgs): void {
-        let ref = new Reference(args);
-        this._references.set(ref.name.toLocaleLowerCase(), ref);
-        this._addNavigationProperty(ref);
-    }
+        let addPrimitive = (p: Primitive) => {
+            this._primitivesMap.set(p.name.toLocaleLowerCase(), p);
+            addProperty(p);
+        };
 
-    addCollection(args: Collection.ICtorArgs): void {
-        let col = new Collection(args);
-        this._collections.set(col.name.toLocaleLowerCase(), col);
-        this._addNavigationProperty(col);
+        let addNavigation = (p: NavigationProperty) => {
+            this._navigationsMap.set(p.name.toLocaleLowerCase(), p);
+            addProperty(p);
+        };
+
+        let addReference = (p: Reference) => {
+            this._referencesMap.set(p.name.toLocaleLowerCase(), p);
+            addNavigation(p);
+        };
+
+        let addCollection = (p: Collection) => {
+            this._collectionsMap.set(p.name.toLocaleLowerCase(), p);
+            addNavigation(p);
+        };
+
+        (args.primitives || []).forEach(x => addPrimitive(new Primitive(x)));
+        (args.references || []).forEach(x => addReference(new Reference(x)));
+        (args.collections || []).forEach(x => addCollection(new Collection(x)));
+
+        this.properties = this._propertiesMap._toArray().sort((a, b) => a.name < b.name ? -1 : 1);
+        this.primitives = this._primitivesMap._toArray().sort((a, b) => a.name < b.name ? -1 : 1);
+        this.navigationProperties = this._navigationsMap._toArray().sort((a, b) => a.name < b.name ? -1 : 1);
+        this.references = this._referencesMap._toArray().sort((a, b) => a.name < b.name ? -1 : 1);
+        this.collections = this._collectionsMap._toArray().sort((a, b) => a.name < b.name ? -1 : 1);
     }
 
     getProperty(name: string): Property {
-        return this._properties.get(name.toLocaleLowerCase()) || null;
+        return this._propertiesMap.get(name.toLocaleLowerCase()) || null;
     }
 
     getPrimitive(name: string): Primitive {
-        return this._primitives.get(name.toLocaleLowerCase()) || null;
+        return this._primitivesMap.get(name.toLocaleLowerCase()) || null;
     }
 
     getNavigationProperty(name: string): NavigationProperty {
-        return this._navigationProperties.get(name.toLocaleLowerCase()) || null;
+        return this._navigationsMap.get(name.toLocaleLowerCase()) || null;
     }
 
     getReference(name: string): Reference {
-        return this._references.get(name.toLocaleLowerCase()) || null;
+        return this._referencesMap.get(name.toLocaleLowerCase()) || null;
     }
 
     getCollection(name: string): Collection {
-        return this._collections.get(name.toLocaleLowerCase()) || null;
+        return this._collectionsMap.get(name.toLocaleLowerCase()) || null;
     }
 
     /**
@@ -85,19 +91,10 @@ export class EntityMetadata {
         let stripped = {} as any;
 
         stripped[this.primaryKey.name] = entity[this.primaryKey.name];
-        this._primitives.forEach(p => stripped[p.name] = entity[p.name]);
-        this._references.forEach(r => stripped[r.keyName] = entity[r.keyName]);
+        this._primitivesMap.forEach(p => stripped[p.name] = entity[p.name]);
+        this._referencesMap.forEach(r => stripped[r.keyName] = entity[r.keyName]);
 
         return stripped;
-    }
-
-    private _addProperty(p: Property): void {
-        this._properties.set(p.name.toLocaleLowerCase(), p);
-    }
-
-    private _addNavigationProperty(nav: NavigationProperty): void {
-        this._navigationProperties.set(nav.name.toLocaleLowerCase(), nav);
-        this._addProperty(nav);
     }
 }
 
