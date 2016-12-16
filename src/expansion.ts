@@ -70,8 +70,10 @@ export class Expansion {
             x.sort((a, b) => a.property.name < b.property.name ? -1 : 1);
             y.sort((a, b) => a.property.name < b.property.name ? -1 : 1);
 
+            let e = 0;
+
             for (let i = 0; i < x.length; ++i) {
-                let [xExp, yExp] = [x[i], y[i]];
+                let [xExp, yExp] = [x[i], y[e]];
 
                 // if we reached the end of y, x must be a superset
                 if (yExp == null) break;
@@ -87,12 +89,12 @@ export class Expansion {
                 }
                 // properties of x and y match - deepen recursion
                 if (!Expansion.isSuperset(xExp, yExp)) return false;
+
+                e++;
             }
 
             return true;
-        }
-
-        if (x instanceof Expansion && y instanceof Expansion) {
+        } else if (x instanceof Expansion && y instanceof Expansion) {
             // x can't be a superset if y points to a different property
             if (x.property != y.property) return false;
             // x can't be a superset if y has more expansions
@@ -100,10 +102,11 @@ export class Expansion {
 
             // x and y match in property and expansion length - deepen recursion
             return Expansion.isSuperset(x.expansions, y.expansions);
+        } else {
+            throw new Error("Expansion.isSuperSetOf(): invalid arguments");
         }
-
-        throw new Error("Expansion.isSuperSetOf(): invalid arguments");
     }
+
 
     static toString(exp: Expansion): string {
         let str = exp.property.name;
