@@ -12,5 +12,5 @@ export function Entity(metadata: EntityMetadata.ICtorArgs) {
 }
 
 export function getEntityMetadata(type: IEntityType): EntityMetadata {
-    return Reflect.getMetadata(METADATA_KEY, type);
+    return Reflect.getMetadata(METADATA_KEY, type) || null;
 }
