@@ -48,7 +48,7 @@ export class Workspace {
     }
 
     add(args: {
-        entity: Object;
+        entity: { [key: string]: any };
         type: IEntityType;
         expansion?: string | Expansion[];
     }): void {

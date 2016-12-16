@@ -6,6 +6,8 @@
     "module": "commonjs",
     "sourceMap": true,
     "declaration": true,
-    "outDir": "dist"
+    "outDir": "dist",
+    "noImplicitAny": true,
+    "noImplicitThis": true
   }
 }

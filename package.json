@@ -18,7 +18,7 @@
     "test": "karma start"
   },
   "devDependencies": {
-    "awesome-typescript-loader": "2.2.4",
+    "awesome-typescript-loader": "3.0.0-beta.10",
     "circular-dependency-plugin": "2.0.0",
     "copy-webpack-plugin": "3.0.1",
     "jasmine-core": "2.5.1",
@@ -30,7 +30,7 @@
     "karma-sourcemap-loader": "0.3.7",
     "karma-webpack": "1.7.0",
     "rimraf": "2.5.2",
-    "typescript": "2.0.3",
+    "typescript": "2.1.4",
     "webpack": "1.13.2",
     "webpack-dev-server": "1.16.1"
   },

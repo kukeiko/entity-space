@@ -9,7 +9,7 @@ import { Query } from "./query";
  * V = actual type stored
  * M = type exposed to consumer
  */
-export class Repository<K, V, M> {
+export class Repository<K, V extends { [key: string]: any }, M> {
     get workspace(): Workspace { return this._workspace; }
     private _workspace: Workspace;
 

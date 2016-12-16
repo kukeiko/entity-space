@@ -107,24 +107,6 @@ export class Expansion {
         }
     }
 
-
-    static toString(exp: Expansion): string {
-        let str = exp.property.name;
-
-        if (exp.expansions.length > 0) {
-
-            let expansions = exp.expansions.map(exp => exp.toString()).join(",");
-
-            if (exp.expansions.length > 1) {
-                expansions = `{${expansions}}`;
-            }
-
-            str += `/${expansions}`;
-        }
-
-        return str;
-    }
-
     /**
      * Create expansions starting at the given entity type, crawling down
      * navigation properties as defined in the given expansion string.
@@ -270,7 +252,20 @@ export class Expansion {
 
     toString(): string {
         if (this._toStringValue == null) {
-            this._toStringValue = Expansion.toString(this);
+            let str = this.property.name;
+
+            if (this.expansions.length > 0) {
+
+                let expansions = this.expansions.map(exp => exp.toString()).join(",");
+
+                if (this.expansions.length > 1) {
+                    expansions = `{${expansions}}`;
+                }
+
+                str += `/${expansions}`;
+            }
+
+            this._toStringValue = str;
         }
 
         return this._toStringValue;
