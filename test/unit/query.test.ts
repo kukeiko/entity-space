@@ -190,7 +190,7 @@ describe("query", () => {
                 expansions: Expansion.parse(Artist, "albums/{songs/album,tags}")
             });
 
-            let albumsProp = getEntityMetadata(Artist).getNavigationProperty("albums");
+            let albumsProp = getEntityMetadata(Artist).getNavigation("albums");
 
             // act
             let [withoutAlbumsQuery, extracted] = q.extract([albumsProp]);
@@ -211,8 +211,8 @@ describe("query", () => {
                 expansions: Expansion.parse(Artist, "albums/{songs/album,tags}")
             });
 
-            let songsProp = getEntityMetadata(Album).getNavigationProperty("songs");
-            let tagsProp = getEntityMetadata(Album).getNavigationProperty("tags");
+            let songsProp = getEntityMetadata(Album).getNavigation("songs");
+            let tagsProp = getEntityMetadata(Album).getNavigation("tags");
 
             // act
             let [withoutSongsQuery, songExtracted] = q.extract([

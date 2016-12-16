@@ -35,7 +35,7 @@ describe("expansion", () => {
         it("should extract 1st level expansion", () => {
             // arrange
             let exp = Expansion.parse(Artist, "albums/{songs/album/artist,tags}");
-            let songsProp = getEntityMetadata(Album).getNavigationProperty("songs");
+            let songsProp = getEntityMetadata(Album).getNavigation("songs");
 
             // act
             let [reducedExp, extracted] = exp[0].extract([songsProp]);
@@ -51,7 +51,7 @@ describe("expansion", () => {
         it("should extract 2nd level expansion", () => {
             // arrange
             let exp = Expansion.parse(Artist, "albums/{songs/album/artist,tags}");
-            let albumProp = getEntityMetadata(Song).getNavigationProperty("album");
+            let albumProp = getEntityMetadata(Song).getNavigation("album");
 
             // act
             let [reducedExp, extracted] = exp[0].extract([albumProp]);
@@ -67,7 +67,7 @@ describe("expansion", () => {
         it("should extract nothing", () => {
             // arrange
             let exp = Expansion.parse(Artist, "albums/{songs/album,tags}");
-            let artistProp = getEntityMetadata(Album).getNavigationProperty("artist");
+            let artistProp = getEntityMetadata(Album).getNavigation("artist");
 
             // act
             let [reducedExp, extracted] = exp[0].extract([artistProp]);

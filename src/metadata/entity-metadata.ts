@@ -72,7 +72,7 @@ export class EntityMetadata {
         return this._primitivesMap.get(name.toLocaleLowerCase()) || null;
     }
 
-    getNavigationProperty(name: string): Navigation {
+    getNavigation(name: string): Navigation {
         return this._navigationsMap.get(name.toLocaleLowerCase()) || null;
     }
 

@@ -113,7 +113,7 @@ export class Expansion {
     private static _parse(ownerType: IEntityType, expansion: string): Expansion {
         let slashIndex = expansion.indexOf("/");
         let name = slashIndex == -1 ? expansion : expansion.substring(0, slashIndex);
-        let property = getEntityMetadata(ownerType).getNavigationProperty(name);
+        let property = getEntityMetadata(ownerType).getNavigation(name);
 
         if (property == null) throw `unknown navigation property: ${name}`;
 
