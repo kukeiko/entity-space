@@ -2,7 +2,7 @@
 in addition to the tslint rules, the following should apply:
 * private class members are prefixed with _
 * every getter/function must specify a return type
-* use typed arg objects as arguments whenever appropiate
+* use typed arg objects as arguments whenever appropriate
     * increases readability/usability if there are multiple arguments
     * increases backwards compatibility when you add optional arguments
 

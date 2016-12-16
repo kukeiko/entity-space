@@ -70,12 +70,10 @@ export class Expansion {
             x.sort((a, b) => a.property.name < b.property.name ? -1 : 1);
             y.sort((a, b) => a.property.name < b.property.name ? -1 : 1);
 
-            let e = 0;
-
             for (let i = 0; i < x.length; ++i) {
-                let [xExp, yExp] = [x[i], y[e]];
+                let [xExp, yExp] = [x[i], y[i]];
 
-                // if we reached end the end of y, x must be a superset
+                // if we reached the end of y, x must be a superset
                 if (yExp == null) break;
 
                 if (xExp.property != yExp.property) {
@@ -89,12 +87,12 @@ export class Expansion {
                 }
                 // properties of x and y match - deepen recursion
                 if (!Expansion.isSuperset(xExp, yExp)) return false;
-
-                e++;
             }
 
             return true;
-        } else if (x instanceof Expansion && y instanceof Expansion) {
+        }
+
+        if (x instanceof Expansion && y instanceof Expansion) {
             // x can't be a superset if y points to a different property
             if (x.property != y.property) return false;
             // x can't be a superset if y has more expansions
@@ -102,20 +100,23 @@ export class Expansion {
 
             // x and y match in property and expansion length - deepen recursion
             return Expansion.isSuperset(x.expansions, y.expansions);
-        } else {
-            throw new Error("Expansion.isSuperSetOf(): invalid arguments");
         }
+
+        throw new Error("Expansion.isSuperSetOf(): invalid arguments");
     }
 
     static toString(exp: Expansion): string {
         let str = exp.property.name;
 
         if (exp.expansions.length > 0) {
-            str += "/";
 
-            if (exp.expansions.length > 1) str += "{";
-            str += exp.expansions.map(exp => exp.toString()).join(",");
-            if (exp.expansions.length > 1) str += "}";
+            let expansions = exp.expansions.map(exp => exp.toString()).join(",");
+
+            if (exp.expansions.length > 1) {
+                expansions = `{${expansions}}`;
+            }
+
+            str += `/${expansions}`;
         }
 
         return str;

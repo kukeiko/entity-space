@@ -25,7 +25,7 @@ export function convert<T>(value: any, t: ITypeOf<T>): T {
         if (typeof (value) == "string") {
             value = (value as string).toLowerCase() == "true" ? true : false;
         }
-
+        //TODO: why converting into a Boolean object?
         return new Boolean(value) as any;
     }
 
