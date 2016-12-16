@@ -5,6 +5,7 @@ webpackConfig.entry = {};
 
 module.exports = function (config) {
     config.set({
+        port: 6400,
         webpack: webpackConfig,
         browsers: ["PhantomJS"],
         // browsers: ["Chrome"],
@@ -13,9 +14,9 @@ module.exports = function (config) {
             "test/main.ts"
         ],
         preprocessors: {
-            "**/*.ts": ["webpack"]
+            "test/main.ts": ["webpack"]
         },
-        reporters: ["progress", "html"],
+        reporters: ["mocha", "html"],
         htmlReporter: {
             outputFile: "reports/report.html",
             pageTitle: "Entity-Space Tests",

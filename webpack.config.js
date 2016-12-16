@@ -2,6 +2,7 @@ var path = require("path");
 var webpack = require("webpack");
 var CopyWebpackPlugin = require("copy-webpack-plugin");
 var CircularDependencyPlugin = require("circular-dependency-plugin");
+
 module.exports = {
     devtool: "inline-source-map",
     devServer: {
