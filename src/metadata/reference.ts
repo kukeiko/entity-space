@@ -1,7 +1,7 @@
 import { IEntityType } from "./entity-decorator";
-import { NavigationProperty } from "./navigation-property";
+import { Navigation } from "./navigation";
 
-export class Reference extends NavigationProperty {
+export class Reference extends Navigation {
     private _keyName: string;
     get keyName(): string { return this._keyName };
 

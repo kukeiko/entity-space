@@ -1,7 +1,7 @@
 import { Collection } from "./collection";
 import { Primitive } from "./primitive";
 import { Property } from "./property";
-import { NavigationProperty } from "./navigation-property";
+import { Navigation } from "./navigation";
 import { Reference } from "./reference";
 
 export class EntityMetadata {
@@ -9,13 +9,13 @@ export class EntityMetadata {
     readonly primaryKey: Primitive;
     readonly properties: ReadonlyArray<Property>;
     readonly primitives: ReadonlyArray<Primitive>;
-    readonly navigationProperties: ReadonlyArray<NavigationProperty>;
+    readonly navigations: ReadonlyArray<Navigation>;
     readonly references: ReadonlyArray<Reference>;
     readonly collections: ReadonlyArray<Collection>;
 
     private _propertiesMap: Map<string, Property>;
     private _primitivesMap: Map<string, Primitive>;
-    private _navigationsMap: Map<string, NavigationProperty>;
+    private _navigationsMap: Map<string, Navigation>;
     private _referencesMap: Map<string, Reference>;
     private _collectionsMap: Map<string, Collection>;
 
@@ -27,7 +27,7 @@ export class EntityMetadata {
         this._primitivesMap = new Map<string, Primitive>();
         this._referencesMap = new Map<string, Reference>();
         this._collectionsMap = new Map<string, Collection>();
-        this._navigationsMap = new Map<string, NavigationProperty>();
+        this._navigationsMap = new Map<string, Navigation>();
 
         let addProperty = (p: Property) => {
             this._propertiesMap.set(p.name.toLocaleLowerCase(), p);
@@ -38,7 +38,7 @@ export class EntityMetadata {
             addProperty(p);
         };
 
-        let addNavigation = (p: NavigationProperty) => {
+        let addNavigation = (p: Navigation) => {
             this._navigationsMap.set(p.name.toLocaleLowerCase(), p);
             addProperty(p);
         };
@@ -59,7 +59,7 @@ export class EntityMetadata {
 
         this.properties = this._propertiesMap._toArray().sort((a, b) => a.name < b.name ? -1 : 1);
         this.primitives = this._primitivesMap._toArray().sort((a, b) => a.name < b.name ? -1 : 1);
-        this.navigationProperties = this._navigationsMap._toArray().sort((a, b) => a.name < b.name ? -1 : 1);
+        this.navigations = this._navigationsMap._toArray().sort((a, b) => a.name < b.name ? -1 : 1);
         this.references = this._referencesMap._toArray().sort((a, b) => a.name < b.name ? -1 : 1);
         this.collections = this._collectionsMap._toArray().sort((a, b) => a.name < b.name ? -1 : 1);
     }
@@ -72,7 +72,7 @@ export class EntityMetadata {
         return this._primitivesMap.get(name.toLocaleLowerCase()) || null;
     }
 
-    getNavigationProperty(name: string): NavigationProperty {
+    getNavigationProperty(name: string): Navigation {
         return this._navigationsMap.get(name.toLocaleLowerCase()) || null;
     }
 

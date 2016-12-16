@@ -1,5 +1,5 @@
 import * as _ from "lodash";
-import { getEntityMetadata, IEntityType, NavigationProperty } from "./metadata";
+import { getEntityMetadata, IEntityType, Navigation } from "./metadata";
 import { Expansion } from "./expansion";
 import { Extraction } from "./extraction";
 
@@ -34,7 +34,7 @@ export abstract class Query {
         return Query.equals(this, other);
     }
 
-    extract(props: NavigationProperty[]): [Query, Extraction[]] {
+    extract(props: Navigation[]): [Query, Extraction[]] {
         let extractions = new Array<Extraction>();
         let expansions = new Array<Expansion>();
 

@@ -1,17 +1,17 @@
-import { NavigationProperty } from "./metadata";
+import { Navigation } from "./metadata";
 
 /**
  * A path is a chain of navigation properties.
  */
 export class Path {
-    private _property: NavigationProperty;
-    get property(): NavigationProperty { return this._property };
+    private _property: Navigation;
+    get property(): Navigation { return this._property };
 
     private _next: Path;
     get next(): Path { return this._next };
 
     constructor(args: {
-        property: NavigationProperty;
+        property: Navigation;
         next?: Path;
     }) {
         this._property = args.property;

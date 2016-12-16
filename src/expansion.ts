@@ -1,4 +1,4 @@
-import { getEntityMetadata, IEntityType, NavigationProperty } from "./metadata";
+import { getEntityMetadata, IEntityType, Navigation } from "./metadata";
 import { Path } from "./path";
 import { Extraction } from "./extraction";
 
@@ -17,7 +17,7 @@ export class Expansion {
     /**
      * The navigation property that is being expanded.
      */
-    readonly property: NavigationProperty;
+    readonly property: Navigation;
 
     /**
      * Further expansions on the navigation property.
@@ -30,7 +30,7 @@ export class Expansion {
     private _toStringValue: string;
 
     private constructor(args: {
-        property: NavigationProperty;
+        property: Navigation;
         expansions?: Expansion[];
     }) {
         this.property = args.property;
@@ -194,7 +194,7 @@ export class Expansion {
      * 
      * Returns the reduced expansion and the extractions.
      */
-    extract(props: NavigationProperty[]): [Expansion, Extraction[]] {
+    extract(props: Navigation[]): [Expansion, Extraction[]] {
         let extractions = new Array<Extraction>();
         let expansions = new Array<Expansion>();
 

@@ -1,7 +1,7 @@
 import { IEntityType } from "./entity-decorator";
 import { Property } from "./property";
 
-export class NavigationProperty extends Property {
+export class Navigation extends Property {
     private _otherType: () => IEntityType;
     get otherType(): IEntityType { return this._otherType(); };
 
