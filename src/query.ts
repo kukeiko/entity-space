@@ -1,23 +1,23 @@
 import * as _ from "lodash";
-import { getEntityMetadata, EntityMetadata, IEntityType, NavigationProperty } from "./metadata";
+import { getEntityMetadata, IEntityType, NavigationProperty } from "./metadata";
 import { Expansion } from "./expansion";
 import { Extraction } from "./extraction";
 
+/**
+ * Describes which entities and expansions should be loaded. 
+ * 
+ * Is immutable.
+ */
 export abstract class Query {
-    private _entityType: IEntityType;
-    get entityType(): IEntityType { return this._entityType; }
-
-    private _expansions: Expansion[];
-    get expansions(): Expansion[] { return this._expansions; }
+    readonly entityType: IEntityType;
+    readonly expansions: ReadonlyArray<Expansion>;
 
     constructor(args: {
         entityType: IEntityType;
         expansions?: Expansion[];
     }) {
-        this._entityType = args.entityType;
-        this._expansions = (args.expansions || []).slice().sort((a, b) => a.property.name < b.property.name ? -1 : 1);
-
-        Object.freeze(this._expansions);
+        this.entityType = args.entityType;
+        this.expansions = Object.freeze((args.expansions || []).slice().sort((a, b) => a.property.name < b.property.name ? -1 : 1));
     }
 
     static equals(a: Query, b: Query): boolean {
@@ -38,7 +38,7 @@ export abstract class Query {
         let extractions = new Array<Extraction>();
         let expansions = new Array<Expansion>();
 
-        this._expansions.forEach(exp => {
+        this.expansions.forEach(exp => {
             if (props.includes(exp.property)) {
                 extractions.push(new Extraction({
                     extracted: exp
@@ -101,7 +101,7 @@ export module Query {
         isSuperSetOf(other: Query): boolean {
             if (other.entityType != this.entityType) return false;
 
-            return Expansion.isSuperset(this.expansions, other.expansions);
+            return Expansion.isSuperset(this.expansions.slice(), other.expansions.slice());
         }
     }
 
@@ -122,7 +122,7 @@ export module Query {
         isSuperSetOf(other: Query): boolean {
             if (other.entityType != this.entityType) return false;
             if (other instanceof ByKey && other.key == this.key) {
-                return Expansion.isSuperset(this.expansions, other.expansions)
+                return Expansion.isSuperset(this.expansions.slice(), other.expansions.slice())
             }
 
             return false;
@@ -152,9 +152,9 @@ export module Query {
         isSuperSetOf(other: Query): boolean {
             if (other.entityType != this.entityType) return false;
             if (other instanceof ByKey && this._keys.includes(other.key)) {
-                return Expansion.isSuperset(this.expansions, other.expansions);
+                return Expansion.isSuperset(this.expansions.slice(), other.expansions.slice());
             } else if (other instanceof ByKeys && _.isEqual(this._keys.sort(), other._keys.sort())) {
-                return Expansion.isSuperset(this.expansions, other.expansions);
+                return Expansion.isSuperset(this.expansions.slice(), other.expansions.slice());
             }
 
             return false;
@@ -189,7 +189,7 @@ export module Query {
         isSuperSetOf(other: Query): boolean {
             if (other.entityType != this.entityType) return false;
             if (other instanceof ByIndex && other.index == this.index && other.value == this.value) {
-                return Expansion.isSuperset(this.expansions, other.expansions)
+                return Expansion.isSuperset(this.expansions.slice(), other.expansions.slice())
             }
 
             return false;
@@ -239,7 +239,7 @@ export module Query {
         isSuperSetOf(other: Query): boolean {
             if (other.entityType != this.entityType) return false;
             if (other instanceof ByIndex && this.indexes.has(other.index) && this.indexes.get(other.index) == other.value) {
-                return Expansion.isSuperset(this.expansions, other.expansions)
+                return Expansion.isSuperset(this.expansions.slice(), other.expansions.slice())
             }
             if (other instanceof ByIndexes) {
                 let otherDiffers = false;

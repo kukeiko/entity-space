@@ -13,13 +13,13 @@ export class Workspace {
         if (q instanceof Query.All) {
             result = this.all({
                 type: q.entityType,
-                expansion: q.expansions
+                expansion: q.expansions.slice()
             });
         } else if (q instanceof Query.ByKey) {
             let item = this.get({
                 key: q.key,
                 type: q.entityType,
-                expansion: q.expansions
+                expansion: q.expansions.slice()
             });
 
             result.set(q.key, item);
@@ -27,20 +27,20 @@ export class Workspace {
             result = this.getMany({
                 keys: q.keys,
                 type: q.entityType,
-                expansion: q.expansions
+                expansion: q.expansions.slice()
             });
         } else if (q instanceof Query.ByIndex) {
             result = this.byIndex({
                 index: q.index,
                 value: q.value,
                 type: q.entityType,
-                expansion: q.expansions
+                expansion: q.expansions.slice()
             });
         } else if (q instanceof Query.ByIndexes) {
             result = this.byIndexes({
                 indexes: q.indexes,
                 type: q.entityType,
-                expansion: q.expansions
+                expansion: q.expansions.slice()
             });
         }
 
@@ -77,11 +77,11 @@ export class Workspace {
                     otherCache.removeByIndex(keyName, value[0][keyName]);
 
                     (value as any[]).forEach(v => {
-                        this.add({ entity: v, type: otherType, expansion: ex.expansions });
+                        this.add({ entity: v, type: otherType, expansion: ex.expansions.slice() });
                     });
                 }
             } else {
-                this.add({ entity: value, type: otherType, expansion: ex.expansions });
+                this.add({ entity: value, type: otherType, expansion: ex.expansions.slice() });
             }
         });
     }
@@ -259,7 +259,7 @@ export class Workspace {
                 args.items.forEach(item => item[name] = this.get({
                     key: item[keyName],
                     type: otherType,
-                    expansion: expansion.expansions
+                    expansion: expansion.expansions.slice()
                 }));
             } else {
                 let collection = expansion.property as Collection;
@@ -270,7 +270,7 @@ export class Workspace {
                     index: keyName,
                     value: item[pkName],
                     type: otherType,
-                    expansion: expansion.expansions
+                    expansion: expansion.expansions.slice()
                 })._toArray());
             }
         });

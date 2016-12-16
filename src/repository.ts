@@ -159,7 +159,7 @@ export class Repository<K, V extends { [key: string]: any }, M> {
                             this.workspace.add({
                                 entity: entity,
                                 type: query.entityType,
-                                expansion: query.expansions
+                                expansion: query.expansions.slice()
                             });
 
                             map.set(key, entity);

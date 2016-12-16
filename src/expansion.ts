@@ -10,34 +10,31 @@ import { Extraction } from "./extraction";
  * 
  * An expansion is created solely by using Expansion.parse(), that way it is secured that the resulting
  * navigation tree is valid (as according to the given entity metadata).
+ * 
+ * Is immutable.
  */
 export class Expansion {
-    private _toStringValue: string;
-
     /**
      * The navigation property that is being expanded.
      */
-    get property(): NavigationProperty { return this._property; }
-    private _property: NavigationProperty;
+    readonly property: NavigationProperty;
 
     /**
      * Further expansions on the navigation property.
      */
-    get expansions(): Expansion[] { return this._expansions; }
-    private _expansions: Expansion[];
+    readonly expansions: ReadonlyArray<Expansion>;
+
+    /**
+     * Is lazily evaluated @ toString()
+     */
+    private _toStringValue: string;
 
     private constructor(args: {
         property: NavigationProperty;
         expansions?: Expansion[];
     }) {
-        this._property = args.property;
-        this._expansions = (args.expansions || []).slice().sort((a, b) => a.property.name < b.property.name ? -1 : 1);
-
-        /**
-         * we're only going to freeze the expansions, so that string representations
-         * can still be lazily evaluated.
-         */
-        Object.freeze(this._expansions);
+        this.property = args.property;
+        this.expansions = Object.freeze((args.expansions || []).slice().sort((a, b) => a.property.name < b.property.name ? -1 : 1));
     }
 
     /**
@@ -61,14 +58,8 @@ export class Expansion {
             // x can not be a superset if y contains more expansions
             if (x.length < y.length) return false;
 
-            /**
-             * algorithm requires expansions to be sorted. we make copies since expansion arrays of
-             * queries & expansions are frozen.
-             */
-            x = x.slice();
-            y = y.slice();
-            x.sort((a, b) => a.property.name < b.property.name ? -1 : 1);
-            y.sort((a, b) => a.property.name < b.property.name ? -1 : 1);
+            x = x.slice().sort((a, b) => a.property.name < b.property.name ? -1 : 1);
+            y = y.slice().sort((a, b) => a.property.name < b.property.name ? -1 : 1);
 
             let e = 0;
 
@@ -101,15 +92,15 @@ export class Expansion {
             if (x.expansions.length < y.expansions.length) return false;
 
             // x and y match in property and expansion length - deepen recursion
-            return Expansion.isSuperset(x.expansions, y.expansions);
+            return Expansion.isSuperset(x.expansions.slice(), y.expansions.slice());
         } else {
             throw new Error("Expansion.isSuperSetOf(): invalid arguments");
         }
     }
 
     /**
-     * Create expansions starting at the given entity type, crawling down
-     * navigation properties as defined in the given expansion string.
+     * Create expansions starting at ownerType, crawling down
+     * navigation properties as defined in the expansion string.
      * 
      * Example: Expansion.parse(artistMetadata, "albums/{songs, tags}")
      */
@@ -207,7 +198,7 @@ export class Expansion {
         let extractions = new Array<Extraction>();
         let expansions = new Array<Expansion>();
 
-        this._expansions.forEach(exp => {
+        this.expansions.forEach(exp => {
             if (props.includes(exp.property)) {
                 extractions.push(new Extraction({
                     path: new Path({ property: this.property }),
