@@ -11,8 +11,7 @@ export class Primitive extends Property {
 }
 
 export module Primitive {
-    export interface ICtorArgs {
-        name: string;
+    export interface ICtorArgs extends Property.ICtorArgs {
         index?: boolean;
     }
 }

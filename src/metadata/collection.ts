@@ -1,4 +1,3 @@
-import { IEntityType } from "./entity-decorator";
 import { Navigation } from "./navigation";
 
 export class Collection extends Navigation {
@@ -17,10 +16,8 @@ export class Collection extends Navigation {
 }
 
 export module Collection {
-    export interface ICtorArgs {
+    export interface ICtorArgs extends Navigation.ICtorArgs {
         backReferenceKeyName: string;
         backReferenceName: string;
-        name: string;
-        otherType: () => IEntityType;
     }
 }

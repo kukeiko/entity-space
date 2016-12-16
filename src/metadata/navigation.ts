@@ -5,12 +5,15 @@ export class Navigation extends Property {
     private _otherType: () => IEntityType;
     get otherType(): IEntityType { return this._otherType(); };
 
-    constructor(args: {
-        name: string;
-        otherType: () => IEntityType;
-    }) {
+    constructor(args: Navigation.ICtorArgs) {
         super({ name: args.name });
 
         this._otherType = args.otherType;
+    }
+}
+
+export module Navigation {
+    export interface ICtorArgs extends Property.ICtorArgs {
+        otherType: () => IEntityType;
     }
 }

@@ -253,17 +253,15 @@ export class Workspace {
             let otherType = expansion.property.otherType;
 
             if (expansion.property instanceof Reference) {
-                let reference = expansion.property as Reference;
-                let keyName = reference.keyName;
+                let keyName = expansion.property.keyName;
 
                 args.items.forEach(item => item[name] = this.get({
                     key: item[keyName],
                     type: otherType,
                     expansion: expansion.expansions.slice()
                 }));
-            } else {
-                let collection = expansion.property as Collection;
-                let keyName = this._getMetadata(collection.otherType).getReference(collection.backReferenceName).keyName;
+            } else if (expansion.property instanceof Collection) {
+                let keyName = this._getMetadata(expansion.property.otherType).getReference(expansion.property.backReferenceName).keyName;
                 let pkName = this._getMetadata(args.ownerType).primaryKey.name;
 
                 args.items.forEach(item => item[name] = this.byIndex({
