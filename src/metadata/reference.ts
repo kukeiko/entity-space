@@ -2,8 +2,7 @@ import { IEntityType } from "./entity-decorator";
 import { Navigation } from "./navigation";
 
 export class Reference extends Navigation {
-    private _keyName: string;
-    get keyName(): string { return this._keyName };
+    readonly keyName: string;
 
     constructor(args: Reference.ICtorArgs) {
         super({
@@ -11,7 +10,7 @@ export class Reference extends Navigation {
             otherType: args.otherType
         });
 
-        this._keyName = args.keyName;
+        this.keyName = args.keyName;
     }
 }
 

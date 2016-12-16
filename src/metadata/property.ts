@@ -1,10 +1,9 @@
 export class Property {
-    private _name: string;
-    get name(): string { return this._name; }
+    readonly name: string;
 
     constructor(args: {
         name: string;
     }) {
-        this._name = args.name;
+        this.name = args.name;
     }
 }

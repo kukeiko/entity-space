@@ -1,13 +1,12 @@
 import { Property } from "./property";
 
 export class Primitive extends Property {
-    private _index: boolean;
-    get index(): boolean { return this._index; }
+    readonly index: boolean;
 
     constructor(args: Primitive.ICtorArgs) {
         super({ name: args.name });
 
-        this._index = !!args.index;
+        this.index = !!args.index;
     }
 }
 
