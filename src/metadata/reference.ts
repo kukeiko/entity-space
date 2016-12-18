@@ -1,4 +1,4 @@
-import { IEntityType } from "./entity-decorator";
+import { IEntityType } from "./entity-type";
 import { Navigation } from "./navigation";
 import { ObjectMetadata } from "./value-metadata";
 import { ValueType } from "./value-type";

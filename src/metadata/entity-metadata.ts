@@ -1,3 +1,5 @@
+import * as _ from "lodash";
+import { IEntityType } from "./entity-type";
 import { Collection } from "./collection";
 import { Primitive } from "./primitive";
 import { Property } from "./property";
@@ -6,6 +8,7 @@ import { Reference } from "./reference";
 import { ValueType } from "./value-type";
 
 export class EntityMetadata {
+    readonly entityType: IEntityType;
     readonly name: string;
     readonly primaryKey: Primitive;
     readonly properties: ReadonlyArray<Property>;
@@ -20,9 +23,9 @@ export class EntityMetadata {
     private _referencesMap: Map<string, Reference>;
     private _collectionsMap: Map<string, Collection>;
 
-    constructor(args: EntityMetadata.ICtorArgs) {
+    constructor(entityType: IEntityType, args: EntityMetadata.ICtorArgs) {
+        this.entityType = entityType;
         this.name = args.name;
-        this.primaryKey = new Primitive(args.primaryKey);
 
         this._propertiesMap = new Map<string, Property>();
         this._primitivesMap = new Map<string, Primitive>();
@@ -53,6 +56,9 @@ export class EntityMetadata {
             this._collectionsMap.set(p.name.toLocaleLowerCase(), p);
             addNavigation(p);
         };
+
+        this.primaryKey = new Primitive(args.primaryKey);
+        addPrimitive(this.primaryKey);
 
         (args.primitives || []).forEach(x => addPrimitive(new Primitive(x)));
         (args.references || []).forEach(x => addReference(new Reference(x)));
@@ -92,15 +98,30 @@ export class EntityMetadata {
         let copy: { [key: string]: any } = {};
         let item = args.item;
 
-        copy[this.primaryKey.name] = item[args.isDtoFormat ? this.primaryKey.dtoName : this.primaryKey.name];
         this._primitivesMap.forEach(p => copy[p.name] = item[args.isDtoFormat ? p.dtoName : p.name]);
 
         return copy;
+    }
+
+    fromCached(args: {
+        cached: { [key: string]: any };
+    }): { [key: string]: any } {
+        let entity = new this.entityType();
+        this.primitives.forEach(p => {
+            if ([ValueType.Array, ValueType.Object].includes(p.valueMetadata.type)) {
+                entity[p.name] = _.cloneDeep(args.cached[p.name]);
+            } else {
+                entity[p.name] = args.cached[p.name];
+            }
+        });
+
+        return entity;
     }
 }
 
 export module EntityMetadata {
     export interface ICtorArgs {
+        createEntity?: (item: { [key: string]: any }) => { [key: string]: any };
         name: string;
         primaryKey: Primitive.ICtorArgs;
         primitives?: Primitive.ICtorArgs[];

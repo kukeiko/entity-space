@@ -1,4 +1,3 @@
-import * as _ from "lodash";
 import { Cache } from "./cache";
 import { Collection, getEntityMetadata, EntityMetadata, IEntityType, Reference } from "./metadata";
 import { Expansion } from "./expansion";
@@ -110,9 +109,9 @@ export class Workspace {
     }): T {
         let item = this._getCache(args.type).get(args.key);
         if (item == null) return null;
-        item = _.cloneDeep(item);
 
         let metadata = this._getMetadata(args.type);
+        item = metadata.fromCached({ cached: item });
         let expansions = new Array<Expansion>();
 
         if (args.expansion != null) {
@@ -140,7 +139,8 @@ export class Workspace {
         type: IEntityType;
         expansion?: string | Expansion[];
     }): Map<any, T> {
-        let items = this._getCache(args.type).getMany(args.keys)._map(i => _.cloneDeep(i));
+        let metadata = this._getMetadata(args.type);
+        let items = this._getCache(args.type).getMany(args.keys)._map(i => metadata.fromCached({ cached: i }) as T);
         if (items.size == 0) return items;
 
         let expansions = new Array<Expansion>();
@@ -166,7 +166,8 @@ export class Workspace {
         type: IEntityType;
         expansion?: string | Expansion[];
     }): Map<any, T> {
-        let items = this._getCache(args.type).all()._map(i => _.cloneDeep(i));
+        let metadata = this._getMetadata(args.type);
+        let items = this._getCache(args.type).all()._map(i => metadata.fromCached({ cached: i }) as T);
         if (items.size == 0) return items;
 
         let expansions = new Array<Expansion>();
@@ -194,7 +195,9 @@ export class Workspace {
         type: IEntityType;
         expansion?: string | Expansion[];
     }): Map<any, T> {
-        let items = this._getCache(args.type).byIndex(args.index, args.value)._map(i => _.cloneDeep(i));
+        let metadata = this._getMetadata(args.type);
+        let items = this._getCache(args.type).byIndex(args.index, args.value)._map(i => metadata.fromCached({ cached: i }) as T);
+
         if (items.size == 0) return items;
 
         let expansions = new Array<Expansion>();
@@ -221,7 +224,9 @@ export class Workspace {
         type: IEntityType;
         expansion?: string | Expansion[];
     }): Map<any, T> {
-        let items = this._getCache(args.type).byIndexes(args.indexes)._map(i => _.cloneDeep(i));
+        let metadata = this._getMetadata(args.type);
+        let items = this._getCache(args.type).byIndexes(args.indexes)._map(i => metadata.fromCached({ cached: i }) as T);
+
         if (items.size == 0) return items;
 
         let expansions = new Array<Expansion>();

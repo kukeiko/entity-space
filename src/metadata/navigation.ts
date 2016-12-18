@@ -1,4 +1,4 @@
-import { IEntityType } from "./entity-decorator";
+import { IEntityType } from "./entity-type";
 import { Property } from "./property";
 
 export class Navigation extends Property {
