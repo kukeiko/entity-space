@@ -1,33 +1,50 @@
-import { Expansion, IEntityType, getEntityMetadata } from "../../src";
+import { Expansion, getEntityMetadata } from "../../src";
 import { Artist, Album, Song } from "../common";
 
 describe("expansion", () => {
+    describe("toString()", () => {
+        it("should return albums", () => {
+            let str = "albums";
+            let exp = Expansion.parse(Artist, str);
+
+            expect(exp.toString()).toEqual(str);
+        });
+
+        it("should return albums/songs", () => {
+            let str = "albums/songs";
+            let exp = Expansion.parse(Artist, str);
+
+            expect(exp.toString()).toEqual(str);
+        });
+
+        it("should return albums/{songs,tags}", () => {
+            let str = "albums/{songs,tags}";
+            let exp = Expansion.parse(Artist, str);
+
+            expect(exp.toString()).toEqual(str);
+        });
+
+        it("should return albums/{songs/album/{artist,songs},tags}", () => {
+            let str = "albums/{songs/album/{artist,songs},tags}";
+            let exp = Expansion.parse(Artist, str);
+
+            expect(exp.toString()).toEqual(str);
+        });
+
+        it("should return songs/{album/{artist,songs},tags},artist", () => {
+            let str = "songs/{album/{artist,songs},tags},artist";
+            let exp = Expansion.parse(Album, str);
+
+            expect(exp.toString()).toEqual(str);
+        });
+    });
+
     describe("toPaths()", () => {
-        it("albums/{songs/album/{artist,songs},tags} should equal albums/songs/album/artist,albums/songs/album/songs,albums/tags", () => {
+        it("should flatten a 4 level deep expansion", () => {
             let exp = Expansion.parse(Artist, "albums/{songs/album/{artist,songs},tags}");
             let paths = exp[0].toPaths();
 
             expect(paths.map(p => p.toString()).join(",")).toEqual("albums/songs/album/artist,albums/songs/album/songs,albums/tags");
-        });
-    });
-
-    describe("toString()", () => {
-        it("albums should equal albums", () => {
-            let exp = Expansion.parse(Artist, "albums");
-
-            expect(exp.toString()).toEqual("albums");
-        });
-
-        it("albums/songs should equal albums/songs", () => {
-            let exp = Expansion.parse(Artist, "albums/songs");
-
-            expect(exp.toString()).toEqual("albums/songs");
-        });
-
-        it("albums/{songs,tags} should equal albums/{songs,tags}", () => {
-            let exp = Expansion.parse(Artist, "albums/{songs,tags}");
-
-            expect(exp.toString()).toEqual("albums/{songs,tags}");
         });
     });
 
@@ -78,8 +95,17 @@ describe("expansion", () => {
         });
     });
 
-    describe("isSuperset()/isSubsetOf()", () => {
-        it("albums/{songs,tags} should be a superset of albums/{tags,songs} (manual array disorder)", () => {
+    describe("isSuperset()", () => {
+        it("should return true for equal expansions", () => {
+            let expA = Expansion.parse(Song, "album/{artist,tags/tag/type},tags/tag/type")
+            let expB = Expansion.parse(Song, "album/{artist,tags/tag/type},tags/tag/type")
+
+            let result = Expansion.isSuperset(expA, expB);
+
+            expect(result).toEqual(true);
+        });
+
+        it("should ignore order of expansions", () => {
             let tags = Expansion.parse(Album, "tags")[0];
             let songs = Expansion.parse(Album, "songs")[0];
 
