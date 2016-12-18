@@ -5,3 +5,5 @@ export * from "./navigation";
 export * from "./primitive";
 export * from "./property";
 export * from "./reference";
+export * from "./value-metadata";
+export * from "./value-type";

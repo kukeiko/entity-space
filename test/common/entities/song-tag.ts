@@ -5,12 +5,18 @@ import { Tag } from "./tag";
 @Entity({
     name: "SongTag",
     primaryKey: { name: "id" },
+    primitives: [{
+        name: "tagId",
+        index: true
+    }, {
+        name: "songId",
+        index: true
+    }],
     references: [{
         keyName: "tagId",
         name: "tag",
         otherType: () => Tag
-    },
-    {
+    }, {
         keyName: "songId",
         name: "song",
         otherType: () => Song

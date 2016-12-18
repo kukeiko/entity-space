@@ -49,6 +49,7 @@ export class Workspace {
 
     add(args: {
         entity: { [key: string]: any };
+        isDtoFormat?: boolean;
         type: IEntityType;
         expansion?: string | Expansion[];
     }): void {
@@ -64,24 +65,40 @@ export class Workspace {
             }
         }
 
-        cache.add(metadata.withoutNavigationProperties(args.entity));
+        cache.add(metadata.createCacheable({
+            item: args.entity,
+            isDtoFormat: args.isDtoFormat
+        }));
 
         expansions.forEach(ex => {
-            let value = args.entity[ex.property.name];
+            let value = args.entity[args.isDtoFormat ? ex.property.dtoName : ex.property.name];
             let otherType = ex.property.otherType;
+            let otherTypeMetadata = this._getMetadata(otherType);
 
-            if (value instanceof Array) {
-                if (value.length > 0) {
-                    let keyName = (ex.property as Collection).backReferenceKeyName;
-                    let otherCache = this._getCache(otherType);
-                    otherCache.removeByIndex(keyName, value[0][keyName]);
+            if (ex.property instanceof Reference) {
+                this.add({
+                    entity: value,
+                    isDtoFormat: args.isDtoFormat,
+                    type: otherType,
+                    expansion: ex.expansions.slice()
+                });
+            } else if (ex.property instanceof Collection) {
+                let items = value as any[];
+                if (items.length == 0) return;
 
-                    (value as any[]).forEach(v => {
-                        this.add({ entity: v, type: otherType, expansion: ex.expansions.slice() });
-                    });
-                }
-            } else {
-                this.add({ entity: value, type: otherType, expansion: ex.expansions.slice() });
+                let reference = otherTypeMetadata.getReference(ex.property.backReferenceName);
+                let key = otherTypeMetadata.getPrimitive(reference.keyName);
+                let keyName = args.isDtoFormat ? key.dtoName : key.name;
+
+                let otherCache = this._getCache(otherType);
+                otherCache.removeByIndex(keyName, value[0][keyName]);
+
+                items.forEach(v => this.add({
+                    entity: v,
+                    isDtoFormat: args.isDtoFormat,
+                    type: otherType,
+                    expansion: ex.expansions.slice()
+                }));
             }
         });
     }
@@ -288,8 +305,8 @@ export class Workspace {
         if (!this._caches.has(type)) {
             let indexes: { [key: string]: (item: any) => any } = {};
             let metadata = this._getMetadata(type);
+
             metadata.primitives.filter(p => p.index).forEach(p => indexes[p.name] = item => item[p.name]);
-            metadata.references.forEach(r => indexes[r.keyName] = (item: any) => item[r.keyName]);
 
             let cache = new Cache<any, any>({
                 getter: item => item[metadata.primaryKey.name],

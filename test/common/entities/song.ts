@@ -5,14 +5,18 @@ import { SongTag } from "./song-tag";
 @Entity({
     name: "Song",
     primaryKey: { name: "id" },
-    primitives: [{ name: "name" }],
+    primitives: [{
+        name: "name"
+    }, {
+        name: "albumId",
+        index: true
+    }],
     references: [{
         keyName: "albumId",
         name: "album",
         otherType: () => Album
     }],
     collections: [{
-        backReferenceKeyName: "songId",
         backReferenceName: "song",
         name: "tags",
         otherType: () => SongTag

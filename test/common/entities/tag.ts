@@ -5,9 +5,13 @@ import { TagType } from "./tag-type";
 @Entity({
     name: "Tag",
     primaryKey: { name: "id" },
+    primitives: [{
+        name: "typeId",
+        index: true
+    }],
     references: [{
-        keyName: "tagTypeId",
-        name: "tagType",
+        keyName: "typeId",
+        name: "type",
         otherType: () => TagType
     }]
 })
@@ -15,6 +19,6 @@ export class Tag {
     id: number;
     albumId: number;
     album: Album;
-    tagTypeId: number;
-    tagType: TagType;
+    typeId: number;
+    type: TagType;
 }

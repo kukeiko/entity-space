@@ -3,6 +3,7 @@ import { Primitive } from "./primitive";
 import { Property } from "./property";
 import { Navigation } from "./navigation";
 import { Reference } from "./reference";
+import { ValueType } from "./value-type";
 
 export class EntityMetadata {
     readonly name: string;
@@ -84,17 +85,17 @@ export class EntityMetadata {
         return this._collectionsMap.get(name.toLocaleLowerCase()) || null;
     }
 
-    /**
-     * Returns a new object with only the primary key, primitive properties and ids to references.
-     */
-    withoutNavigationProperties(entity: any): any {
-        let stripped = {} as any;
+    createCacheable(args: {
+        item: { [key: string]: any };
+        isDtoFormat?: boolean;
+    }): { [key: string]: any } {
+        let copy: { [key: string]: any } = {};
+        let item = args.item;
 
-        stripped[this.primaryKey.name] = entity[this.primaryKey.name];
-        this._primitivesMap.forEach(p => stripped[p.name] = entity[p.name]);
-        this._referencesMap.forEach(r => stripped[r.keyName] = entity[r.keyName]);
+        copy[this.primaryKey.name] = item[args.isDtoFormat ? this.primaryKey.dtoName : this.primaryKey.name];
+        this._primitivesMap.forEach(p => copy[p.name] = item[args.isDtoFormat ? p.dtoName : p.name]);
 
-        return stripped;
+        return copy;
     }
 }
 

@@ -6,7 +6,7 @@ export class Navigation extends Property {
     get otherType(): IEntityType { return this._otherType(); };
 
     constructor(args: Navigation.ICtorArgs) {
-        super({ name: args.name });
+        super(args);
 
         this._otherType = args.otherType;
     }

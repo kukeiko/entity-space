@@ -6,25 +6,26 @@ import { AlbumTag } from "./album-tag";
 @Entity({
     name: "Album",
     primaryKey: { name: "id" },
-    primitives: [{ name: "name", index: true }],
+    primitives: [{
+        name: "name",
+        index: true
+    }, {
+        name: "artistId",
+        index: true
+    }],
     references: [{
         keyName: "artistId",
         name: "artist",
         otherType: () => Artist
     }],
-    collections: [
-        {
-            backReferenceKeyName: "albumId",
-            backReferenceName: "album",
-            name: "songs", otherType: () => Song
-        },
-        {
-            backReferenceKeyName: "albumId",
-            backReferenceName: "album",
-            name: "tags",
-            otherType: () => AlbumTag
-        }
-    ]
+    collections: [{
+        backReferenceName: "album",
+        name: "songs", otherType: () => Song
+    }, {
+        backReferenceName: "album",
+        name: "tags",
+        otherType: () => AlbumTag
+    }]
 })
 export class Album {
     id: number;
