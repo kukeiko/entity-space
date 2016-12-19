@@ -10,15 +10,15 @@ import {
 describe("data-workspace", () => {
     it("byIndex()", () => {
         let ws = new Workspace();
-        let numArtists = 200;
+        let numArtists = 2;
         let numAlbums = 3;
         let numSongs = 10;
         let albumId = 1;
         let songId = 1;
 
         for (let i = 0; i < numArtists; ++i) {
-            let artist = <Artist>{
-                id: i,
+            let artist = <any>{
+                ArtistId: i,
                 name: i.toString()
             };
 
@@ -28,7 +28,7 @@ describe("data-workspace", () => {
                 let album = <Album>{
                     id: albumId++,
                     artist: artist,
-                    artistId: artist.id
+                    artistId: artist.ArtistId
                 };
 
                 album.name = album.id.toString()
@@ -54,6 +54,7 @@ describe("data-workspace", () => {
 
             ws.add({
                 entity: artist,
+                isDtoFormat: true,
                 type: Artist,
                 expansion: `albums/songs`
             });
@@ -62,10 +63,11 @@ describe("data-workspace", () => {
         let albums = ws.byIndex<Album>({
             type: Album,
             index: "artistId",
-            value: 64,
+            value: 1,
             expansion: `songs,artist`
         })._toArray();
 
+        expect(albums[0] instanceof Album).toBe(true);
         expect(albums.length).toBe(numAlbums);
         expect(albums.map(a => a.songs.length).reduce((a, b) => a + b)).toBe(numAlbums * numSongs);
     });
