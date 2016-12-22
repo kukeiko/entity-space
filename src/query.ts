@@ -220,7 +220,7 @@ export module Query {
             let indexes: Map<string, IStringable>;
 
             if (args.indexes instanceof Map) {
-                indexes = args.indexes._copy();
+                indexes = new Map<string, IStringable>(args.indexes);
             } else {
                 indexes = new Map<string, IStringable>();
 
@@ -233,7 +233,7 @@ export module Query {
                 throw `a ByIndexes query can't have zero index/values pairs`;
             }
 
-            this._indexes = indexes._copy();
+            this._indexes = new Map<string, IStringable>(indexes);
         }
 
         isSuperSetOf(other: Query): boolean {

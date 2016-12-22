@@ -173,7 +173,12 @@ export class Repository<K, V extends { [key: string]: any }, M> {
                     resolve(map);
                 }, reject);
             }
-        }).then(result => result._map(x => this.toExposed(x)));
+        }).then(result => {
+            let mapped = new Map<K, M>();
+            result.forEach((v, k) => mapped.set(k, this.toExposed(v)));
+
+            return mapped;
+        });
     }
 
     private _executeToService(q: Query): Promise<V[]> {
@@ -193,6 +198,6 @@ export class Repository<K, V extends { [key: string]: any }, M> {
     }
 
     private _hasSupersetQueryOf(query: Query): boolean {
-        return this._executedQueries._toArray().some(v => v.isSuperSetOf(query));
+        return Array.from(this._executedQueries, v => v[1]).some(v => v.isSuperSetOf(query));
     }
 }

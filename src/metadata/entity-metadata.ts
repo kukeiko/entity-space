@@ -8,6 +8,7 @@ import { Reference } from "./reference";
 import { ValueType } from "./value-type";
 
 export class EntityMetadata {
+    readonly createEntity: (item: { [key: string]: any }) => any;
     readonly entityType: IEntityType;
     readonly name: string;
     readonly primaryKey: Primitive;
@@ -24,6 +25,7 @@ export class EntityMetadata {
     private _collectionsMap: Map<string, Collection>;
 
     constructor(entityType: IEntityType, args: EntityMetadata.ICtorArgs) {
+        this.createEntity = args.createEntity || null;
         this.entityType = entityType;
         this.name = args.name;
 
@@ -64,11 +66,12 @@ export class EntityMetadata {
         (args.references || []).forEach(x => addReference(new Reference(x)));
         (args.collections || []).forEach(x => addCollection(new Collection(x)));
 
-        this.properties = this._propertiesMap._toArray().sort((a, b) => a.name < b.name ? -1 : 1);
-        this.primitives = this._primitivesMap._toArray().sort((a, b) => a.name < b.name ? -1 : 1);
-        this.navigations = this._navigationsMap._toArray().sort((a, b) => a.name < b.name ? -1 : 1);
-        this.references = this._referencesMap._toArray().sort((a, b) => a.name < b.name ? -1 : 1);
-        this.collections = this._collectionsMap._toArray().sort((a, b) => a.name < b.name ? -1 : 1);
+        // Array.from(this._propertiesMap,).sort()
+        this.properties = Array.from(this._propertiesMap, v => v[1]).sort((a, b) => a.name < b.name ? -1 : 1);
+        this.primitives = Array.from(this._primitivesMap, v => v[1]).sort((a, b) => a.name < b.name ? -1 : 1);
+        this.navigations = Array.from(this._navigationsMap, v => v[1]).sort((a, b) => a.name < b.name ? -1 : 1);
+        this.references = Array.from(this._referencesMap, v => v[1]).sort((a, b) => a.name < b.name ? -1 : 1);
+        this.collections = Array.from(this._collectionsMap, v => v[1]).sort((a, b) => a.name < b.name ? -1 : 1);
     }
 
     getProperty(name: string): Property {
@@ -106,14 +109,21 @@ export class EntityMetadata {
     fromCached(args: {
         cached: { [key: string]: any };
     }): { [key: string]: any } {
-        let entity = new this.entityType();
-        this.primitives.forEach(p => {
-            if ([ValueType.Array, ValueType.Object].includes(p.valueMetadata.type)) {
-                entity[p.name] = _.cloneDeep(args.cached[p.name]);
-            } else {
-                entity[p.name] = args.cached[p.name];
-            }
-        });
+        let entity: any;
+
+        if (this.createEntity) {
+            entity = this.createEntity(args.cached);
+        } else {
+            entity = new this.entityType();
+
+            this.primitives.forEach(p => {
+                if ([ValueType.Array, ValueType.Object].includes(p.valueMetadata.type)) {
+                    entity[p.name] = _.cloneDeep(args.cached[p.name]);
+                } else {
+                    entity[p.name] = args.cached[p.name];
+                }
+            });
+        }
 
         return entity;
     }

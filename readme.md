@@ -1,5 +1,3 @@
-**this package uses natex, which pollutes the prototypes of Array/Map.**
-
 # purpose
 you need a client-side data storage that helps you with caching relational entities to minimize calls to remote APIs
 

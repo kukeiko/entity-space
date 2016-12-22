@@ -60,12 +60,12 @@ describe("data-workspace", () => {
             });
         }
 
-        let albums = ws.byIndex<Album>({
+        let albums = Array.from(ws.byIndex<Album>({
             type: Album,
             index: "artistId",
             value: 1,
             expansion: `songs,artist`
-        })._toArray();
+        }), v => v[1]);
 
         expect(albums[0] instanceof Album).toBe(true);
         expect(albums.length).toBe(numAlbums);
@@ -124,10 +124,10 @@ describe("data-workspace", () => {
             });
         }
 
-        let artists = ws.all<Artist>({
+        let artists = Array.from(ws.all<Artist>({
             type: Artist,
             expansion: `albums/{songs/album, artist}`
-        })._toArray();
+        }), v => v[1]);
 
         let numLoadedAlbums = artists.map(a => a.albums.length).reduce((p, c) => p + c);
         let numLoadedSongs = artists.map(a => a.albums.map(a => a.songs.length).reduce((a, c) => a + c)).reduce((p, c) => p + c);

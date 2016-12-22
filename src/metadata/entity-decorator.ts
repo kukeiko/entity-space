@@ -16,8 +16,7 @@ function getOrCreateMetadataArgs(type: any): Partial<EntityMetadata.ICtorArgs> {
         let args: Partial<EntityMetadata.ICtorArgs> = {
             collections: [],
             primitives: [],
-            references: [],
-            createEntity: () => new type()
+            references: []
         };
 
         Reflect.defineMetadata(METADATA_ARGS_KEY, args, type);

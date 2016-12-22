@@ -131,7 +131,7 @@ export module Cache {
          */
         get(value: any): Map<K, V> {
             let map = this._maps.get(value);
-            return map ? map._copy() : new Map<K, V>();
+            return map ? new Map<K, V>(map) : new Map<K, V>();
         }
 
         clear(): void;

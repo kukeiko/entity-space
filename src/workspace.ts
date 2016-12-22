@@ -140,7 +140,10 @@ export class Workspace {
         expansion?: string | Expansion[];
     }): Map<any, T> {
         let metadata = this._getMetadata(args.type);
-        let items = this._getCache(args.type).getMany(args.keys)._map(i => metadata.fromCached({ cached: i }) as T);
+        let items = new Map<any, T>();
+        this._getCache(args.type).getMany(args.keys)
+            .forEach((v, k) => items.set(k, metadata.fromCached({ cached: v }) as T));
+
         if (items.size == 0) return items;
 
         let expansions = new Array<Expansion>();
@@ -167,7 +170,10 @@ export class Workspace {
         expansion?: string | Expansion[];
     }): Map<any, T> {
         let metadata = this._getMetadata(args.type);
-        let items = this._getCache(args.type).all()._map(i => metadata.fromCached({ cached: i }) as T);
+        let items = new Map<any, any>();
+        this._getCache(args.type).all()
+            .forEach((v, k) => items.set(k, metadata.fromCached({ cached: v }) as T));
+
         if (items.size == 0) return items;
 
         let expansions = new Array<Expansion>();
@@ -196,7 +202,9 @@ export class Workspace {
         expansion?: string | Expansion[];
     }): Map<any, T> {
         let metadata = this._getMetadata(args.type);
-        let items = this._getCache(args.type).byIndex(args.index, args.value)._map(i => metadata.fromCached({ cached: i }) as T);
+        let items = new Map<any, any>();
+        this._getCache(args.type).byIndex(args.index, args.value)
+            .forEach((v, k) => items.set(k, metadata.fromCached({ cached: v }) as T));
 
         if (items.size == 0) return items;
 
@@ -225,7 +233,9 @@ export class Workspace {
         expansion?: string | Expansion[];
     }): Map<any, T> {
         let metadata = this._getMetadata(args.type);
-        let items = this._getCache(args.type).byIndexes(args.indexes)._map(i => metadata.fromCached({ cached: i }) as T);
+        let items = new Map<any, any>();
+        this._getCache(args.type).byIndexes(args.indexes)
+            .forEach((v, k) => items.set(k, metadata.fromCached({ cached: v }) as T));
 
         if (items.size == 0) return items;
 
@@ -286,12 +296,16 @@ export class Workspace {
                 let keyName = this._getMetadata(expansion.property.otherType).getReference(expansion.property.backReferenceName).keyName;
                 let pkName = this._getMetadata(args.ownerType).primaryKey.name;
 
-                args.items.forEach(item => item[name] = this.byIndex({
-                    index: keyName,
-                    value: item[pkName],
-                    type: otherType,
-                    expansion: expansion.expansions.slice()
-                })._toArray());
+                args.items.forEach(item => {
+                    let items = Array.from(this.byIndex<any>({
+                        index: keyName,
+                        value: item[pkName],
+                        type: otherType,
+                        expansion: expansion.expansions.slice()
+                    }), v => v[1]);
+
+                    item[name] = items;
+                });
             }
         });
     }
