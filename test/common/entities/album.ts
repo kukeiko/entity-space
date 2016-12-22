@@ -14,12 +14,12 @@ export class Album {
     @Entity.ReferenceKey()
     artistId: number;
 
-    @Entity.Reference({ keyName: "artistId", otherType: () => Artist })
+    @Entity.Reference({ key: "artistId", other: () => Artist })
     artist: Artist;
 
-    @Entity.Collection({ backReferenceName: "album", otherType: () => Song })
+    @Entity.Collection({ back: "album", other: () => Song })
     songs: Song[];
 
-    @Entity.Collection({ backReferenceName: "album", otherType: () => AlbumTag })
+    @Entity.Collection({ back: "album", other: () => AlbumTag })
     tags: AlbumTag[];
 }

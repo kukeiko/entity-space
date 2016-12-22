@@ -10,9 +10,9 @@ import { TagType } from "./tag-type";
         index: true
     }],
     references: [{
-        keyName: "typeId",
+        key: "typeId",
         name: "type",
-        otherType: () => TagType
+        other: () => TagType
     }]
 })
 export class Tag {

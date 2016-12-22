@@ -13,13 +13,13 @@ import { Tag } from "./tag";
         index: true
     }],
     references: [{
-        keyName: "tagId",
+        key: "tagId",
         name: "tag",
-        otherType: () => Tag
+        other: () => Tag
     }, {
-        keyName: "songId",
+        key: "songId",
         name: "song",
-        otherType: () => Song
+        other: () => Song
     }]
 })
 export class SongTag {

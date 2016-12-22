@@ -10,21 +10,21 @@ export class Collection extends Navigation {
         super({
             dtoName: args.dtoName,
             name: args.name,
-            otherType: args.otherType,
+            other: args.other,
             valueMetadata: <ArrayMetadata>{
                 type: ValueType.Array
             }
         });
 
-        this.backReferenceName = args.backReferenceName;
+        this.backReferenceName = args.back;
     }
 }
 
 export module Collection {
     export interface ICtorArgs {
-        backReferenceName: string;
+        back: string;
         dtoName?: string;
         name: string;
-        otherType: () => IEntityType;
+        other: () => IEntityType;
     }
 }

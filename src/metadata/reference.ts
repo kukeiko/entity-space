@@ -10,21 +10,21 @@ export class Reference extends Navigation {
         super({
             dtoName: args.dtoName,
             name: args.name,
-            otherType: args.otherType,
+            other: args.other,
             valueMetadata: <ObjectMetadata>{
                 type: ValueType.Object
             }
         });
 
-        this.keyName = args.keyName;
+        this.keyName = args.key;
     }
 }
 
 export module Reference {
     export interface ICtorArgs {
-        keyName: string;
+        key: string;
         dtoName?: string;
         name: string;
-        otherType: () => IEntityType;
+        other: () => IEntityType;
     }
 }

@@ -12,14 +12,14 @@ import { SongTag } from "./song-tag";
         index: true
     }],
     references: [{
-        keyName: "albumId",
+        key: "albumId",
         name: "album",
-        otherType: () => Album
+        other: () => Album
     }],
     collections: [{
-        backReferenceName: "song",
+        back: "song",
         name: "tags",
-        otherType: () => SongTag
+        other: () => SongTag
     }]
 })
 export class Song {

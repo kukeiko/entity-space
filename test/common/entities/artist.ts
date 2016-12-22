@@ -6,9 +6,9 @@ import { Album } from "./album";
     primaryKey: { name: "id", dtoName: "ArtistId" },
     primitives: [{ name: "name" }],
     collections: [{
-        backReferenceName: "artist",
+        back: "artist",
         name: "albums",
-        otherType: () => Album
+        other: () => Album
     }]
 })
 export class Artist {

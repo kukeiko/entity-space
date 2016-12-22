@@ -8,12 +8,12 @@ export class Navigation extends Property {
     constructor(args: Navigation.ICtorArgs) {
         super(args);
 
-        this._otherType = args.otherType;
+        this._otherType = args.other;
     }
 }
 
 export module Navigation {
     export interface ICtorArgs extends Property.ICtorArgs {
-        otherType: () => IEntityType;
+        other: () => IEntityType;
     }
 }
