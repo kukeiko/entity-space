@@ -1,5 +1,5 @@
 export interface INoArgsCtor extends Function {
-    new (): any;
+    new (...args: any[]): any;
 }
 
 export interface ITypeOf<T> extends Function {
@@ -31,3 +31,5 @@ export function convert<T>(value: any, t: ITypeOf<T>): T {
 
     return new t(value);
 }
+
+export type Partial<T> = {[P in keyof T]?: T[P]; };

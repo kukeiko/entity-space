@@ -2,6 +2,14 @@ import { Expansion, getEntityMetadata } from "../../src";
 import { Artist, Album, Song } from "../common";
 
 describe("expansion", () => {
+    describe("parse()", () => {
+        it("should return expected amount of expansions", () => {
+            let expansions = Expansion.parse(Album, "songs/{album,tags},tags");
+
+            expect(expansions.length).toBe(2);
+        });
+    });
+
     describe("toString()", () => {
         it("should return albums", () => {
             let str = "albums";
@@ -40,7 +48,7 @@ describe("expansion", () => {
     });
 
     describe("toPaths()", () => {
-        it("should flatten a 4 level deep expansion", () => {
+        it("should flatten a multi-level expansion", () => {
             let exp = Expansion.parse(Artist, "albums/{songs/album/{artist,songs},tags}");
             let paths = exp[0].toPaths();
 

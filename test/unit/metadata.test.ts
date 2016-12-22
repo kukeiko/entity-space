@@ -2,6 +2,27 @@ import { getEntityMetadata, EntityMetadata, Primitive, Navigation, Reference, Co
 import { Album, Artist, Song, TagType } from "../common/entities";
 
 describe("entity-metadata", () => {
+    describe("getEntityMetadata()", () => {
+        it("should return null if not found", () => {
+            let arrayMetadata = getEntityMetadata(Array);
+
+            expect(arrayMetadata).toBe(null);
+        });
+
+        it("should return an EntityMetadata instance for a class", () => {
+            let albumMetadata = getEntityMetadata(Album);
+
+            expect(albumMetadata instanceof EntityMetadata).toBe(true);
+        });
+
+        it("should return different instances for different classes", () => {
+            let artistMetadata = getEntityMetadata(Artist);
+            let songMetadata = getEntityMetadata(Song);
+
+            expect(artistMetadata).not.toBe(songMetadata);
+        });
+    });
+
     it("should have the correct entity class name", () => {
         let albumMetadata = getEntityMetadata(Album);
         let tagTypeMetadata = getEntityMetadata(TagType);
@@ -110,27 +131,6 @@ describe("entity-metadata", () => {
         it("should not return a primitive or reference", () => {
             expect(songMetadata.getCollection("name")).toBe(null, "primitive");
             expect(songMetadata.getCollection("album")).toBe(null, "reference");
-        });
-    });
-
-    describe("getEntityMetadata()", () => {
-        it("should return null if not found", () => {
-            let arrayMetadata = getEntityMetadata(Array);
-
-            expect(arrayMetadata).toBe(null);
-        });
-
-        it("should return an EntityMetadata instance for a class", () => {
-            let albumMetadata = getEntityMetadata(Album);
-
-            expect(albumMetadata instanceof EntityMetadata).toBe(true);
-        });
-
-        it("should return different instances for different classes", () => {
-            let artistMetadata = getEntityMetadata(Artist);
-            let songMetadata = getEntityMetadata(Song);
-
-            expect(artistMetadata).not.toBe(songMetadata);
         });
     });
 });
