@@ -12,13 +12,13 @@ export class Workspace {
         if (q instanceof Query.All) {
             result = this.all({
                 type: q.entityType,
-                expansion: q.expansions.slice()
+                expansion: q.expansions
             });
         } else if (q instanceof Query.ByKey) {
             let item = this.get({
                 key: q.key,
                 type: q.entityType,
-                expansion: q.expansions.slice()
+                expansion: q.expansions
             });
 
             result.set(q.key, item);
@@ -26,20 +26,20 @@ export class Workspace {
             result = this.getMany({
                 keys: q.keys,
                 type: q.entityType,
-                expansion: q.expansions.slice()
+                expansion: q.expansions
             });
         } else if (q instanceof Query.ByIndex) {
             result = this.byIndex({
                 index: q.index,
                 value: q.value,
                 type: q.entityType,
-                expansion: q.expansions.slice()
+                expansion: q.expansions
             });
         } else if (q instanceof Query.ByIndexes) {
             result = this.byIndexes({
                 indexes: q.indexes,
                 type: q.entityType,
-                expansion: q.expansions.slice()
+                expansion: q.expansions
             });
         }
 
@@ -50,7 +50,7 @@ export class Workspace {
         entity: { [key: string]: any };
         isDtoFormat?: boolean;
         type: IEntityType;
-        expansion?: string | Expansion[];
+        expansion?: string | Expansion[] | ReadonlyArray<Expansion>;
     }): void {
         let metadata = this._getMetadata(args.type);
         let cache = this._getCache(args.type);
@@ -79,7 +79,7 @@ export class Workspace {
                     entity: value,
                     isDtoFormat: args.isDtoFormat,
                     type: otherType,
-                    expansion: ex.expansions.slice()
+                    expansion: ex.expansions
                 });
             } else if (ex.property instanceof Collection) {
                 let items = value as any[];
@@ -96,7 +96,7 @@ export class Workspace {
                     entity: v,
                     isDtoFormat: args.isDtoFormat,
                     type: otherType,
-                    expansion: ex.expansions.slice()
+                    expansion: ex.expansions
                 }));
             }
         });
@@ -105,7 +105,7 @@ export class Workspace {
     get<T>(args: {
         key: any;
         type: IEntityType;
-        expansion?: string | Expansion[];
+        expansion?: string | Expansion[] | ReadonlyArray<Expansion>;
     }): T {
         let item = this._getCache(args.type).get(args.key);
         if (item == null) return null;
@@ -137,7 +137,7 @@ export class Workspace {
     getMany<T>(args: {
         keys: any[];
         type: IEntityType;
-        expansion?: string | Expansion[];
+        expansion?: string | Expansion[] | ReadonlyArray<Expansion>;
     }): Map<any, T> {
         let metadata = this._getMetadata(args.type);
         let items = new Map<any, T>();
@@ -167,7 +167,7 @@ export class Workspace {
 
     all<T>(args: {
         type: IEntityType;
-        expansion?: string | Expansion[];
+        expansion?: string | Expansion[] | ReadonlyArray<Expansion>;
     }): Map<any, T> {
         let metadata = this._getMetadata(args.type);
         let items = new Map<any, any>();
@@ -199,7 +199,7 @@ export class Workspace {
         index: string;
         value: any;
         type: IEntityType;
-        expansion?: string | Expansion[];
+        expansion?: string | Expansion[] | ReadonlyArray<Expansion>;
     }): Map<any, T> {
         let metadata = this._getMetadata(args.type);
         let items = new Map<any, any>();
@@ -230,7 +230,7 @@ export class Workspace {
     byIndexes<T>(args: {
         indexes: Map<string, any>;
         type: IEntityType;
-        expansion?: string | Expansion[];
+        expansion?: string | Expansion[] | ReadonlyArray<Expansion>;
     }): Map<any, T> {
         let metadata = this._getMetadata(args.type);
         let items = new Map<any, any>();
@@ -277,10 +277,10 @@ export class Workspace {
      */
     private _expand(args: {
         items: Map<any, any>;
-        expansions: Expansion[];
+        expansions: Expansion[] | ReadonlyArray<Expansion>;
         ownerType: IEntityType;
     }): void {
-        args.expansions.forEach(expansion => {
+        args.expansions.slice().forEach(expansion => {
             let name = expansion.property.name;
             let otherType = expansion.property.otherType;
 
@@ -290,7 +290,7 @@ export class Workspace {
                 args.items.forEach(item => item[name] = this.get({
                     key: item[keyName],
                     type: otherType,
-                    expansion: expansion.expansions.slice()
+                    expansion: expansion.expansions
                 }));
             } else if (expansion.property instanceof Collection) {
                 let keyName = this._getMetadata(expansion.property.otherType).getReference(expansion.property.backReferenceName).keyName;
@@ -301,7 +301,7 @@ export class Workspace {
                         index: keyName,
                         value: item[pkName],
                         type: otherType,
-                        expansion: expansion.expansions.slice()
+                        expansion: expansion.expansions
                     }), v => v[1]);
 
                     item[name] = items;
