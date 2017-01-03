@@ -4,6 +4,7 @@ import { ValueType } from "./value-type";
 
 export class Primitive extends Property {
     readonly index: boolean;
+    readonly computed: boolean;
 
     constructor(args: Primitive.ICtorArgs) {
         super({
@@ -13,12 +14,14 @@ export class Primitive extends Property {
         });
 
         this.index = !!args.index;
+        this.computed = !!args.computed;
     }
 }
 
 export module Primitive {
     export interface ICtorArgs {
         index?: boolean;
+        computed?: boolean;
         dtoName?: string;
         name: string;
         valueMetadata?: ValueMetadata;

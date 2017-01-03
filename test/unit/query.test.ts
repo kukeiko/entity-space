@@ -193,7 +193,7 @@ describe("query", () => {
             let albumsProp = getEntityMetadata(Artist).getNavigation("albums");
 
             // act
-            let [withoutAlbumsQuery, extracted] = q.extract([albumsProp]);
+            let [withoutAlbumsQuery, extracted] = q.extract(x => x.property == albumsProp);
 
             // assert
             expect(q.toString()).toEqual("Artist/albums/{songs/album,tags}");
@@ -215,9 +215,7 @@ describe("query", () => {
             let tagsProp = getEntityMetadata(Album).getNavigation("tags");
 
             // act
-            let [withoutSongsQuery, songExtracted] = q.extract([
-                songsProp
-            ]);
+            let [withoutSongsQuery, songExtracted] = q.extract(x => x.property == songsProp);
 
             // assert
             expect(q.toString()).toEqual("Artist/albums/{songs/album,tags}");
@@ -230,9 +228,7 @@ describe("query", () => {
             expect(songExtracted[0].path.toString()).toEqual("albums");
 
             // act
-            let [withoutTagsQuery, tagsExtracted] = q.extract([
-                tagsProp
-            ]);
+            let [withoutTagsQuery, tagsExtracted] = q.extract(x => x.property == tagsProp);
 
             // assert
             expect(q.toString()).toEqual("Artist/albums/{songs/album,tags}");
@@ -244,9 +240,7 @@ describe("query", () => {
             expect(tagsExtracted[0].path.toString()).toEqual("albums");
 
             // act
-            let [withoutSongsAndTagsQuery, songsAndTagsExtracted] = q.extract([
-                songsProp, tagsProp
-            ]);
+            let [withoutSongsAndTagsQuery, songsAndTagsExtracted] = q.extract(x => [songsProp, tagsProp].includes(x.property));
 
             // assert
             expect(q.toString()).toEqual("Artist/albums/{songs/album,tags}");

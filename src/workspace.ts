@@ -111,7 +111,7 @@ export class Workspace {
         if (item == null) return null;
 
         let metadata = this._getMetadata(args.type);
-        item = metadata.fromCached({ cached: item });
+        item = metadata.fromCached(item);
         let expansions = new Array<Expansion>();
 
         if (args.expansion != null) {
@@ -142,7 +142,7 @@ export class Workspace {
         let metadata = this._getMetadata(args.type);
         let items = new Map<any, T>();
         this._getCache(args.type).getMany(args.keys)
-            .forEach((v, k) => items.set(k, metadata.fromCached({ cached: v }) as T));
+            .forEach((v, k) => items.set(k, metadata.fromCached(v) as T));
 
         if (items.size == 0) return items;
 
@@ -172,7 +172,7 @@ export class Workspace {
         let metadata = this._getMetadata(args.type);
         let items = new Map<any, any>();
         this._getCache(args.type).all()
-            .forEach((v, k) => items.set(k, metadata.fromCached({ cached: v }) as T));
+            .forEach((v, k) => items.set(k, metadata.fromCached(v) as T));
 
         if (items.size == 0) return items;
 
@@ -204,7 +204,7 @@ export class Workspace {
         let metadata = this._getMetadata(args.type);
         let items = new Map<any, any>();
         this._getCache(args.type).byIndex(args.index, args.value)
-            .forEach((v, k) => items.set(k, metadata.fromCached({ cached: v }) as T));
+            .forEach((v, k) => items.set(k, metadata.fromCached(v) as T));
 
         if (items.size == 0) return items;
 
@@ -235,7 +235,7 @@ export class Workspace {
         let metadata = this._getMetadata(args.type);
         let items = new Map<any, any>();
         this._getCache(args.type).byIndexes(args.indexes)
-            .forEach((v, k) => items.set(k, metadata.fromCached({ cached: v }) as T));
+            .forEach((v, k) => items.set(k, metadata.fromCached(v) as T));
 
         if (items.size == 0) return items;
 

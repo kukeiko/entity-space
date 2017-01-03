@@ -25,6 +25,8 @@ export class EntityMetadata {
     private _collectionsMap: Map<string, Collection>;
 
     constructor(entityType: IEntityType, args: EntityMetadata.ICtorArgs) {
+        if (!args.primaryKey) throw `${entityType.name} has no primary key`;
+
         this.createEntity = args.createEntity || null;
         this.entityType = entityType;
         this.name = args.name;
@@ -94,6 +96,10 @@ export class EntityMetadata {
         return this._collectionsMap.get(name.toLocaleLowerCase()) || null;
     }
 
+    getVirtuals(): Navigation[] {
+        return this.navigations.filter(nav => nav.virtual);
+    }
+
     createCacheable(args: {
         item: { [key: string]: any };
         isDtoFormat?: boolean;
@@ -106,21 +112,21 @@ export class EntityMetadata {
         return copy;
     }
 
-    fromCached(args: {
-        cached: { [key: string]: any };
-    }): { [key: string]: any } {
+    fromCached(cached: { [key: string]: any }): { [key: string]: any } {
         let entity: any;
 
         if (this.createEntity) {
-            entity = this.createEntity(args.cached);
+            entity = this.createEntity(cached);
         } else {
             entity = new this.entityType();
 
             this.primitives.forEach(p => {
+                if (p.computed) return;
+
                 if ([ValueType.Array, ValueType.Object].includes(p.valueMetadata.type)) {
-                    entity[p.name] = _.cloneDeep(args.cached[p.name]);
+                    entity[p.name] = _.cloneDeep(cached[p.name]);
                 } else {
-                    entity[p.name] = args.cached[p.name];
+                    entity[p.name] = cached[p.name];
                 }
             });
         }

@@ -9,6 +9,7 @@ export class Reference extends Navigation {
     constructor(args: Reference.ICtorArgs) {
         super({
             dtoName: args.dtoName,
+            virtual: args.virtual,
             name: args.name,
             other: args.other,
             valueMetadata: <ObjectMetadata>{
@@ -26,5 +27,6 @@ export module Reference {
         dtoName?: string;
         name: string;
         other: () => IEntityType;
+        virtual?: boolean;
     }
 }

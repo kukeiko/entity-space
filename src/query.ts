@@ -34,17 +34,17 @@ export abstract class Query {
         return Query.equals(this, other);
     }
 
-    extract(props: Navigation[]): [Query, Extraction[]] {
+    extract(predicate: (p: Expansion) => boolean): [Query, Extraction[]] {
         let extractions = new Array<Extraction>();
         let expansions = new Array<Expansion>();
 
         this.expansions.forEach(exp => {
-            if (props.includes(exp.property)) {
+            if (predicate(exp)) {
                 extractions.push(new Extraction({
                     extracted: exp
                 }));
             } else {
-                let [subExp, subExtractions] = exp.extract(props);
+                let [subExp, subExtractions] = exp.extract(predicate);
 
                 expansions.push(subExp);
                 extractions = extractions.concat(subExtractions);

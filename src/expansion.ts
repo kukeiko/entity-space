@@ -189,23 +189,22 @@ export class Expansion {
     }
 
     /**
-     * Extract all expansions (and any sub-expansions) that use any of the given
-     * navigation properties.
+     * Extract all expansions that match against the predicate.
      * 
      * Returns the reduced expansion and the extractions.
      */
-    extract(props: Navigation[]): [Expansion, Extraction[]] {
+    extract(predicate: (p: Expansion) => boolean): [Expansion, Extraction[]] {
         let extractions = new Array<Extraction>();
         let expansions = new Array<Expansion>();
 
         this.expansions.forEach(exp => {
-            if (props.includes(exp.property)) {
+            if (predicate(exp)) {
                 extractions.push(new Extraction({
                     path: new Path({ property: this.property }),
                     extracted: exp
                 }));
             } else {
-                let [subExpansion, subExtracted] = exp.extract(props);
+                let [subExpansion, subExtracted] = exp.extract(predicate);
 
                 expansions.push(subExpansion);
 

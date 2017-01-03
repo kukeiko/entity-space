@@ -8,7 +8,6 @@ module.exports = function (config) {
         port: 6400,
         webpack: webpackConfig,
         browsers: ["PhantomJS"],
-        // browsers: ["Chrome"],
         frameworks: ["jasmine"],
         files: [
             "test/main.ts"

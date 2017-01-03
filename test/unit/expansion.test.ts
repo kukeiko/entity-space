@@ -2,6 +2,13 @@ import { Expansion, getEntityMetadata } from "../../src";
 import { Artist, Album, Song } from "../common";
 
 describe("expansion", () => {
+    it("return value of toString() should be parsable by parse()", () => {
+        let original = Expansion.parse(Album, "songs/{album,tags},tags");
+        let parsed = Expansion.parse(Album, original.map(o => o.toString()).join(","));
+
+        expect(original.toString()).toEqual(parsed.toString());
+    });
+
     describe("parse()", () => {
         it("should return expected amount of expansions", () => {
             let expansions = Expansion.parse(Album, "songs/{album,tags},tags");
@@ -63,7 +70,7 @@ describe("expansion", () => {
             let songsProp = getEntityMetadata(Album).getNavigation("songs");
 
             // act
-            let [reducedExp, extracted] = exp[0].extract([songsProp]);
+            let [reducedExp, extracted] = exp[0].extract(x => x.property == songsProp);
 
             // assert
             expect(reducedExp.toString()).toEqual("albums/tags");
@@ -79,7 +86,7 @@ describe("expansion", () => {
             let albumProp = getEntityMetadata(Song).getNavigation("album");
 
             // act
-            let [reducedExp, extracted] = exp[0].extract([albumProp]);
+            let [reducedExp, extracted] = exp[0].extract(x => x.property == albumProp);
 
             // assert
             expect(reducedExp.toString()).toEqual("albums/{songs,tags}");
@@ -95,7 +102,7 @@ describe("expansion", () => {
             let artistProp = getEntityMetadata(Album).getNavigation("artist");
 
             // act
-            let [reducedExp, extracted] = exp[0].extract([artistProp]);
+            let [reducedExp, extracted] = exp[0].extract(x => x.property == artistProp);
 
             // assert
             expect(reducedExp.toString()).toEqual(exp.toString());

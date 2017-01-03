@@ -1,9 +1,16 @@
  - Query.ByKeys: repository should remove keys from query that are already loaded
  - artist{albums,albums} should fail
- - workspace.remove() with expansion? or what about 1-n relations?
+ - workspace.remove()
+    - with expansion?
+    - should children of a 1-n relation be removed if the parent is removed?
  - checking query type by "instanceof" kinda sucks. consider using discriminated union approach.
  - create a query cache that handles checking if a query can be loaded from workspace or not
  - make use of lazy reference (@ util)
  - service-cluster:
     - aggregates data loading/caching logic of multiple/all entity types
     - queries can be executed against it
+
+- roadmap / milestones:
+    - 0.5.0 service-cluster, virtuals, Query.parse()
+    - 0.6.0 abstract entities, cache invalidation
+    - 0.7.0 validation

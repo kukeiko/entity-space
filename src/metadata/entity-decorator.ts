@@ -32,7 +32,7 @@ export function Entity(args?: Partial<EntityMetadata.ICtorArgs>) {
 
         if (!args) return;
 
-        args = args || {} as Partial<EntityMetadata.ICtorArgs>;
+        existing.createEntity = args.createEntity || existing.createEntity;
         existing.primaryKey = args.primaryKey || existing.primaryKey;
         existing.primitives = [...existing.primitives, ...(args.primitives || [])];
         existing.references = [...existing.references, ...(args.references || [])];
@@ -73,9 +73,13 @@ export module Entity {
     }
 
     export function ReferenceKey(args?: Partial<Primitive.ICtorArgs>) {
-        return <T>(type: Object, key: string) => {
+        return <T>(type: Object, key: string, descriptor?: TypedPropertyDescriptor<T>) => {
             args = args || {};
             args.index = true;
+
+            if (descriptor && !descriptor.set) {
+                args.computed = true;
+            }
 
             Primitive(args)(type, key);
         };

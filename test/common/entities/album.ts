@@ -2,6 +2,7 @@ import { Entity } from "../../../src";
 import { Artist } from "./artist";
 import { Song } from "./song";
 import { AlbumTag } from "./album-tag";
+import { AlbumReview } from "./album-review";
 
 @Entity()
 export class Album {
@@ -22,4 +23,7 @@ export class Album {
 
     @Entity.Collection({ back: "album", other: () => AlbumTag })
     tags: AlbumTag[];
+
+    @Entity.Collection({ back: "album", other: () => AlbumReview, virtual: true })
+    reviews: AlbumReview[];
 }

@@ -1,5 +1,5 @@
-import { getEntityMetadata, EntityMetadata, Primitive, Navigation, Reference, Collection } from "../../src";
-import { Album, Artist, Song, TagType } from "../common/entities";
+import { getEntityMetadata, Entity, EntityMetadata, Primitive, Navigation, Reference, Collection } from "../../src";
+import { Album, AlbumReview, Artist, Song, TagType } from "../common/entities";
 
 describe("entity-metadata", () => {
     describe("getEntityMetadata()", () => {
@@ -9,17 +9,27 @@ describe("entity-metadata", () => {
             expect(arrayMetadata).toBe(null);
         });
 
-        it("should return an EntityMetadata instance for a class", () => {
+        it("should return an EntityMetadata instance for a known type", () => {
             let albumMetadata = getEntityMetadata(Album);
 
             expect(albumMetadata instanceof EntityMetadata).toBe(true);
         });
 
-        it("should return different instances for different classes", () => {
+        it("should return different instances for different types", () => {
             let artistMetadata = getEntityMetadata(Artist);
             let songMetadata = getEntityMetadata(Song);
 
             expect(artistMetadata).not.toBe(songMetadata);
+        });
+
+        it("should throw if no primary key is defined", () => {
+            try {
+                @Entity()
+                class Foo { }
+
+                getEntityMetadata(Foo);
+                fail("expected to throw");
+            } catch (error) { }
         });
     });
 
@@ -29,6 +39,40 @@ describe("entity-metadata", () => {
 
         expect(albumMetadata.name).toEqual("Album");
         expect(tagTypeMetadata.name).toEqual("TagType");
+    });
+
+    describe("fromCached()", () => {
+        it("should not try to set a computed property", () => {
+            let metadata = getEntityMetadata(AlbumReview);
+
+            try {
+                metadata.fromCached(<AlbumReview>{
+                    reviewExternalId: "abc@foo"
+                });
+            } catch (error) {
+                fail("expected not to throw");
+            }
+        });
+
+        it("should use custom creator function", () => {
+            let didUse = false;
+
+            @Entity({
+                createEntity: (data: any) => {
+                    didUse = true;
+                    return new Foo();
+                }
+            })
+            class Foo {
+                @Entity.PrimaryKey()
+                id: number;
+            }
+
+            let metadata = getEntityMetadata(Foo);
+
+            metadata.fromCached({});
+            expect(didUse).toBe(true);
+        });
     });
 
     describe("getProperty()", () => {
@@ -131,6 +175,16 @@ describe("entity-metadata", () => {
         it("should not return a primitive or reference", () => {
             expect(songMetadata.getCollection("name")).toBe(null, "primitive");
             expect(songMetadata.getCollection("album")).toBe(null, "reference");
+        });
+    });
+
+    describe("getVirtuals()", () => {
+        it("should return a collection marked as virtual", () => {
+            let metadata = getEntityMetadata(Album);
+
+            let virtuals = metadata.getVirtuals();
+
+            expect(virtuals.find(v => v.name == "reviews")).toBeDefined();
         });
     });
 });

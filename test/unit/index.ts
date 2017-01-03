@@ -1,4 +1,4 @@
 import "./expansion.test";
-import "./metadata.test";
+import "./entity-metadata.test";
 import "./query.test";
 import "./workspace.test";
