@@ -26,7 +26,7 @@ function getOrCreateMetadataArgs(type: any): Partial<EntityMetadata.ICtorArgs> {
 }
 
 export function Entity(args?: Partial<EntityMetadata.ICtorArgs>) {
-    return (type: IEntityType) => {
+    return (type: IEntityType<any>) => {
         let existing = getOrCreateMetadataArgs(type);
         existing.name = type.name;
 
@@ -40,7 +40,7 @@ export function Entity(args?: Partial<EntityMetadata.ICtorArgs>) {
     };
 }
 
-export function getEntityMetadata(type: IEntityType): EntityMetadata {
+export function getEntityMetadata(type: IEntityType<any>): EntityMetadata {
     if (!Reflect.hasMetadata(METADATA_KEY, type)) {
         if (!Reflect.hasMetadata(METADATA_ARGS_KEY, type)) {
             return null;

@@ -104,13 +104,13 @@ export class Expansion {
      * 
      * Example: Expansion.parse(artistMetadata, "albums/{songs, tags}")
      */
-    static parse(ownerType: IEntityType, expansion: string): Expansion[] {
+    static parse(ownerType: IEntityType<any>, expansion: string): Expansion[] {
         expansion = expansion.replace(/(\r?\n|\r)| /g, "");
 
         return Expansion._splitExpansions(expansion).map(e => Expansion._parse(ownerType, e));
     }
 
-    private static _parse(ownerType: IEntityType, expansion: string): Expansion {
+    private static _parse(ownerType: IEntityType<any>, expansion: string): Expansion {
         let slashIndex = expansion.indexOf("/");
         let name = slashIndex == -1 ? expansion : expansion.substring(0, slashIndex);
         let property = getEntityMetadata(ownerType).getNavigation(name);

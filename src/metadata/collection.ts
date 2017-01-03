@@ -8,7 +8,6 @@ export class Collection extends Navigation {
 
     constructor(args: Collection.ICtorArgs) {
         super({
-            dtoName: args.dtoName,
             virtual: args.virtual,
             name: args.name,
             other: args.other,
@@ -24,9 +23,8 @@ export class Collection extends Navigation {
 export module Collection {
     export interface ICtorArgs {
         back: string;
-        dtoName?: string;
         name: string;
-        other: () => IEntityType;
+        other: () => IEntityType<any>;
         virtual?: boolean;
     }
 }

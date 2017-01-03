@@ -9,7 +9,7 @@ import { ValueType } from "./value-type";
 
 export class EntityMetadata {
     readonly createEntity: (item: { [key: string]: any }) => any;
-    readonly entityType: IEntityType;
+    readonly entityType: IEntityType<any>;
     readonly name: string;
     readonly primaryKey: Primitive;
     readonly properties: ReadonlyArray<Property>;
@@ -24,7 +24,7 @@ export class EntityMetadata {
     private _referencesMap: Map<string, Reference>;
     private _collectionsMap: Map<string, Collection>;
 
-    constructor(entityType: IEntityType, args: EntityMetadata.ICtorArgs) {
+    constructor(entityType: IEntityType<any>, args: EntityMetadata.ICtorArgs) {
         if (!args.primaryKey) throw `${entityType.name} has no primary key`;
 
         this.createEntity = args.createEntity || null;
@@ -100,14 +100,9 @@ export class EntityMetadata {
         return this.navigations.filter(nav => nav.virtual);
     }
 
-    createCacheable(args: {
-        item: { [key: string]: any };
-        isDtoFormat?: boolean;
-    }): { [key: string]: any } {
+    createCacheable(item: { [key: string]: any }): { [key: string]: any } {
         let copy: { [key: string]: any } = {};
-        let item = args.item;
-
-        this._primitivesMap.forEach(p => copy[p.name] = item[args.isDtoFormat ? p.dtoName : p.name]);
+        this._primitivesMap.forEach(p => copy[p.name] = item[p.name]);
 
         return copy;
     }

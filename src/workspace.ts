@@ -1,10 +1,11 @@
+import { Partial } from "./util";
 import { Cache } from "./cache";
 import { Collection, getEntityMetadata, EntityMetadata, IEntityType, Reference } from "./metadata";
 import { Expansion } from "./expansion";
 import { Query } from "./query";
 
 export class Workspace {
-    private _caches = new Map<IEntityType, Cache<any, any>>();
+    private _caches = new Map<IEntityType<any>, Cache<any, any>>();
 
     execute(q: Query): Promise<Map<any, any>> {
         let result: Map<any, any> = new Map();
@@ -46,10 +47,9 @@ export class Workspace {
         return Promise.resolve(result)
     }
 
-    add(args: {
-        entity: { [key: string]: any };
-        isDtoFormat?: boolean;
-        type: IEntityType;
+    add<T>(args: {
+        entity: Partial<T>;
+        type: IEntityType<T>;
         expansion?: string | Expansion[] | ReadonlyArray<Expansion>;
     }): void {
         let metadata = this._getMetadata(args.type);
@@ -65,19 +65,17 @@ export class Workspace {
         }
 
         cache.add(metadata.createCacheable({
-            item: args.entity,
-            isDtoFormat: args.isDtoFormat
+            item: args.entity as any
         }));
 
         expansions.forEach(ex => {
-            let value = args.entity[args.isDtoFormat ? ex.property.dtoName : ex.property.name];
+            let value = (args.entity as any)[ex.property.name];
             let otherType = ex.property.otherType;
             let otherTypeMetadata = this._getMetadata(otherType);
 
             if (ex.property instanceof Reference) {
                 this.add({
                     entity: value,
-                    isDtoFormat: args.isDtoFormat,
                     type: otherType,
                     expansion: ex.expansions
                 });
@@ -87,14 +85,12 @@ export class Workspace {
 
                 let reference = otherTypeMetadata.getReference(ex.property.backReferenceName);
                 let key = otherTypeMetadata.getPrimitive(reference.keyName);
-                let keyName = args.isDtoFormat ? key.dtoName : key.name;
 
                 let otherCache = this._getCache(otherType);
-                otherCache.removeByIndex(keyName, value[0][keyName]);
+                otherCache.removeByIndex(key.name, value[0][key.name]);
 
                 items.forEach(v => this.add({
                     entity: v,
-                    isDtoFormat: args.isDtoFormat,
                     type: otherType,
                     expansion: ex.expansions
                 }));
@@ -104,7 +100,7 @@ export class Workspace {
 
     get<T>(args: {
         key: any;
-        type: IEntityType;
+        type: IEntityType<T>;
         expansion?: string | Expansion[] | ReadonlyArray<Expansion>;
     }): T {
         let item = this._getCache(args.type).get(args.key);
@@ -136,7 +132,7 @@ export class Workspace {
 
     getMany<T>(args: {
         keys: any[];
-        type: IEntityType;
+        type: IEntityType<T>;
         expansion?: string | Expansion[] | ReadonlyArray<Expansion>;
     }): Map<any, T> {
         let metadata = this._getMetadata(args.type);
@@ -166,7 +162,7 @@ export class Workspace {
     }
 
     all<T>(args: {
-        type: IEntityType;
+        type: IEntityType<T>;
         expansion?: string | Expansion[] | ReadonlyArray<Expansion>;
     }): Map<any, T> {
         let metadata = this._getMetadata(args.type);
@@ -198,7 +194,7 @@ export class Workspace {
     byIndex<T>(args: {
         index: string;
         value: any;
-        type: IEntityType;
+        type: IEntityType<T>;
         expansion?: string | Expansion[] | ReadonlyArray<Expansion>;
     }): Map<any, T> {
         let metadata = this._getMetadata(args.type);
@@ -229,7 +225,7 @@ export class Workspace {
 
     byIndexes<T>(args: {
         indexes: Map<string, any>;
-        type: IEntityType;
+        type: IEntityType<T>;
         expansion?: string | Expansion[] | ReadonlyArray<Expansion>;
     }): Map<any, T> {
         let metadata = this._getMetadata(args.type);
@@ -260,7 +256,7 @@ export class Workspace {
 
     remove(args: {
         item: any;
-        type: IEntityType;
+        type: IEntityType<any>;
     }): void {
         let cache = this._getCache(args.type);
 
@@ -278,7 +274,7 @@ export class Workspace {
     private _expand(args: {
         items: Map<any, any>;
         expansions: Expansion[] | ReadonlyArray<Expansion>;
-        ownerType: IEntityType;
+        ownerType: IEntityType<any>;
     }): void {
         args.expansions.slice().forEach(expansion => {
             let name = expansion.property.name;
@@ -310,7 +306,7 @@ export class Workspace {
         });
     }
 
-    private _getMetadata(type: IEntityType): EntityMetadata {
+    private _getMetadata(type: IEntityType<any>): EntityMetadata {
         let metadata = getEntityMetadata(type);
 
         if (metadata == null) {
@@ -320,7 +316,7 @@ export class Workspace {
         return metadata;
     }
 
-    private _getCache(type: IEntityType): Cache<any, any> {
+    private _getCache(type: IEntityType<any>): Cache<any, any> {
         if (!this._caches.has(type)) {
             let indexes: { [key: string]: (item: any) => any } = {};
             let metadata = this._getMetadata(type);

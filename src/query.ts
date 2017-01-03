@@ -9,11 +9,11 @@ import { Extraction } from "./extraction";
  * Is immutable.
  */
 export abstract class Query {
-    readonly entityType: IEntityType;
+    readonly entityType: IEntityType<any>;
     readonly expansions: ReadonlyArray<Expansion>;
 
     constructor(args: {
-        entityType: IEntityType;
+        entityType: IEntityType<any>;
         expansions?: Expansion[];
     }) {
         this.entityType = args.entityType;
@@ -111,7 +111,7 @@ export module Query {
 
         constructor(args: {
             key: any;
-            entityType: IEntityType;
+            entityType: IEntityType<any>;
             expansions?: Expansion[];
         }) {
             super(args);
@@ -141,7 +141,7 @@ export module Query {
 
         constructor(args: {
             keys: any[];
-            entityType: IEntityType;
+            entityType: IEntityType<any>;
             expansions?: Expansion[];
         }) {
             super(args);
@@ -177,7 +177,7 @@ export module Query {
         constructor(args: {
             index: string;
             value: any;
-            entityType: IEntityType;
+            entityType: IEntityType<any>;
             expansions?: Expansion[];
         }) {
             super(args);
@@ -212,7 +212,7 @@ export module Query {
 
         constructor(args: {
             indexes: Map<string, IStringable> | { [key: string]: IStringable };
-            entityType: IEntityType;
+            entityType: IEntityType<any>;
             expansions?: Expansion[];
         }) {
             super(args);

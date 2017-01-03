@@ -8,7 +8,6 @@ export class Reference extends Navigation {
 
     constructor(args: Reference.ICtorArgs) {
         super({
-            dtoName: args.dtoName,
             virtual: args.virtual,
             name: args.name,
             other: args.other,
@@ -24,9 +23,8 @@ export class Reference extends Navigation {
 export module Reference {
     export interface ICtorArgs {
         key: string;
-        dtoName?: string;
         name: string;
-        other: () => IEntityType;
+        other: () => IEntityType<any>;
         virtual?: boolean;
     }
 }

@@ -2,8 +2,8 @@ import { IEntityType } from "./entity-type";
 import { Property } from "./property";
 
 export class Navigation extends Property {
-    get otherType(): IEntityType { return this._otherType(); };
-    private _otherType: () => IEntityType;
+    get otherType(): IEntityType<any> { return this._otherType(); };
+    private _otherType: () => IEntityType<any>;
 
     get virtual(): boolean { return this._virtual; }
     private _virtual: boolean;
@@ -18,7 +18,7 @@ export class Navigation extends Property {
 
 export module Navigation {
     export interface ICtorArgs extends Property.ICtorArgs {
-        other: () => IEntityType;
+        other: () => IEntityType<any>;
         virtual?: boolean;
     }
 }

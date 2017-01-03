@@ -64,6 +64,18 @@ describe("expansion", () => {
     });
 
     describe("extract()", () => {
+        it("should extract a virtual expansion", () => {
+            // arrange
+            let exp = Expansion.parse(Song, "album/reviews/review");
+
+            // act
+            let [reducedExp, extracted] = exp[0].extract(x => x.property.virtual);
+
+            // assert
+            expect(reducedExp.toString()).toEqual("album");
+            expect(extracted[0].extracted.toString()).toEqual("reviews/review");
+        });
+
         it("should extract 1st level expansion", () => {
             // arrange
             let exp = Expansion.parse(Artist, "albums/{songs/album/artist,tags}");

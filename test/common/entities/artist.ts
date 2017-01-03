@@ -3,7 +3,7 @@ import { Album } from "./album";
 
 @Entity({
     name: "Artist",
-    primaryKey: { name: "id", dtoName: "ArtistId" },
+    primaryKey: { name: "id" },
     primitives: [{ name: "name" }],
     collections: [{
         back: "artist",

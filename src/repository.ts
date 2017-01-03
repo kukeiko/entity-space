@@ -13,13 +13,13 @@ export class Repository<K, V extends { [key: string]: any }, M> {
     get workspace(): Workspace { return this._workspace; }
     private _workspace: Workspace;
 
-    get entityType(): IEntityType { return this._entityType; }
-    private _entityType: IEntityType;
+    get entityType(): IEntityType<any> { return this._entityType; }
+    private _entityType: IEntityType<any>;
 
     private _executedQueries = new Map<string, Query>();
 
     constructor(args: {
-        entityType: IEntityType;
+        entityType: IEntityType<any>;
         workspace: Workspace;
     }) {
         this._entityType = args.entityType;

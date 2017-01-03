@@ -8,7 +8,6 @@ export class Primitive extends Property {
 
     constructor(args: Primitive.ICtorArgs) {
         super({
-            dtoName: args.dtoName,
             name: args.name,
             valueMetadata: args.valueMetadata || { type: ValueType.Any }
         });
@@ -22,7 +21,6 @@ export module Primitive {
     export interface ICtorArgs {
         index?: boolean;
         computed?: boolean;
-        dtoName?: string;
         name: string;
         valueMetadata?: ValueMetadata;
     }
