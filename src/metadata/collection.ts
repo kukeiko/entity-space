@@ -1,6 +1,5 @@
 import { IEntityType } from "./entity-type";
 import { Navigation } from "./navigation";
-import { ArrayMetadata } from "./value-metadata";
 import { ValueType } from "./value-type";
 
 export class Collection extends Navigation {
@@ -8,12 +7,11 @@ export class Collection extends Navigation {
 
     constructor(args: Collection.ICtorArgs) {
         super({
+            alias: args.alias,
             virtual: args.virtual,
             name: args.name,
             other: args.other,
-            valueMetadata: <ArrayMetadata>{
-                type: ValueType.Array
-            }
+            valueType: ValueType.Array
         });
 
         this.backReferenceName = args.back;
@@ -22,6 +20,7 @@ export class Collection extends Navigation {
 
 export module Collection {
     export interface ICtorArgs {
+        alias?: string;
         back: string;
         name: string;
         other: () => IEntityType<any>;

@@ -31,6 +31,54 @@ describe("entity-metadata", () => {
                 fail("expected to throw");
             } catch (error) { }
         });
+
+        it("should throw if two properties share a name", () => {
+            try {
+                @Entity()
+                class Foo {
+                    @Entity.PrimaryKey({ name: "dan" })
+                    khaz: string;
+
+                    @Entity.Primitive({ name: "dan" })
+                    mo: string;
+                }
+
+                getEntityMetadata(Foo);
+                fail("expected to throw");
+            } catch (error) { }
+        });
+
+        it("should throw if two properties share an alias", () => {
+            try {
+                @Entity()
+                class Foo {
+                    @Entity.PrimaryKey({ alias: "dan" })
+                    khaz: string;
+
+                    @Entity.Primitive({ alias: "dan" })
+                    mo: string;
+                }
+
+                getEntityMetadata(Foo);
+                fail("expected to throw");
+            } catch (error) { }
+        });
+
+        it("should throw if an alias of a property equals the name of another", () => {
+            try {
+                @Entity()
+                class Foo {
+                    @Entity.PrimaryKey()
+                    khaz: string;
+
+                    @Entity.Primitive({ alias: "khaz" })
+                    mo: string;
+                }
+
+                getEntityMetadata(Foo);
+                fail("expected to throw");
+            } catch (error) { }
+        });
     });
 
     it("should have the correct entity class name", () => {

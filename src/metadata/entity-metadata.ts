@@ -37,9 +37,18 @@ export class EntityMetadata {
         this._collectionsMap = new Map<string, Collection>();
         this._navigationsMap = new Map<string, Navigation>();
 
+        let aliases = new Set<string>();
+
         let addProperty = (p: Property) => {
-            this._propertiesMap.set(p.name.toLocaleLowerCase(), p);
-        }
+            let [name, alias] = [p.name.toLowerCase(), p.alias.toLowerCase()];
+
+            if (this._propertiesMap.has(name) || aliases.has(alias)) {
+                throw `names and aliases across all properties must be unique`;
+            }
+
+            aliases.add(alias);
+            this._propertiesMap.set(name, p);
+        };
 
         let addPrimitive = (p: Primitive) => {
             this._primitivesMap.set(p.name.toLocaleLowerCase(), p);
@@ -68,7 +77,6 @@ export class EntityMetadata {
         (args.references || []).forEach(x => addReference(new Reference(x)));
         (args.collections || []).forEach(x => addCollection(new Collection(x)));
 
-        // Array.from(this._propertiesMap,).sort()
         this.properties = Array.from(this._propertiesMap, v => v[1]).sort((a, b) => a.name < b.name ? -1 : 1);
         this.primitives = Array.from(this._primitivesMap, v => v[1]).sort((a, b) => a.name < b.name ? -1 : 1);
         this.navigations = Array.from(this._navigationsMap, v => v[1]).sort((a, b) => a.name < b.name ? -1 : 1);
@@ -119,7 +127,7 @@ export class EntityMetadata {
             this.primitives.forEach(p => {
                 if (p.computed) return;
 
-                if ([ValueType.Array, ValueType.Object].includes(p.valueMetadata.type)) {
+                if ([ValueType.Array, ValueType.Object].includes(p.valueType)) {
                     entity[p.name] = _.cloneDeep(cached[p.name]);
                 } else {
                     entity[p.name] = cached[p.name];

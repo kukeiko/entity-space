@@ -1,5 +1,4 @@
 import { Property } from "./property";
-import { ValueMetadata } from "./value-metadata";
 import { ValueType } from "./value-type";
 
 export class Primitive extends Property {
@@ -8,8 +7,9 @@ export class Primitive extends Property {
 
     constructor(args: Primitive.ICtorArgs) {
         super({
+            alias: args.alias,
             name: args.name,
-            valueMetadata: args.valueMetadata || { type: ValueType.Any }
+            valueType: args.valueType
         });
 
         this.index = !!args.index;
@@ -19,9 +19,10 @@ export class Primitive extends Property {
 
 export module Primitive {
     export interface ICtorArgs {
+        alias?: string;
         index?: boolean;
         computed?: boolean;
         name: string;
-        valueMetadata?: ValueMetadata;
+        valueType?: ValueType;
     }
 }
