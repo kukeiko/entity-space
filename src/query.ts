@@ -8,33 +8,33 @@ import { Extraction } from "./extraction";
  * 
  * Is immutable.
  */
-export abstract class Query {
-    readonly entityType: IEntityType<any>;
+export abstract class Query<T> {
+    readonly entityType: IEntityType<T>;
     readonly expansions: ReadonlyArray<Expansion>;
 
     constructor(args: {
-        entityType: IEntityType<any>;
+        entityType: IEntityType<T>;
         expansions?: Expansion[];
     }) {
         this.entityType = args.entityType;
         this.expansions = Object.freeze((args.expansions || []).slice().sort((a, b) => a.property.name < b.property.name ? -1 : 1));
     }
 
-    static equals(a: Query, b: Query): boolean {
+    static equals<T>(a: Query<T>, b: Query<T>): boolean {
         return a.toString() == b.toString();
     }
 
-    abstract isSuperSetOf(other: Query): boolean;
+    abstract isSuperSetOf(other: Query<T>): boolean;
 
-    isSubsetOf(other: Query): boolean {
+    isSubsetOf(other: Query<T>): boolean {
         return other.isSuperSetOf(this);
     }
 
-    equals(other: Query): boolean {
+    equals(other: Query<T>): boolean {
         return Query.equals(this, other);
     }
 
-    extract(predicate: (p: Expansion) => boolean): [Query, Extraction[]] {
+    extract(predicate: (p: Expansion) => boolean): [Query<T>, Extraction[]] {
         let extractions = new Array<Extraction>();
         let expansions = new Array<Expansion>();
 
@@ -52,18 +52,18 @@ export abstract class Query {
         });
 
 
-        let q: Query;
+        let q: Query<T>;
 
         if (this instanceof Query.ByKey) {
-            q = new Query.ByKey({ key: this.key, entityType: this.entityType, expansions: expansions });
+            q = new Query.ByKey<T>({ key: this.key, entityType: this.entityType, expansions: expansions });
         } else if (this instanceof Query.ByKeys) {
-            q = new Query.ByKeys({ keys: this.keys, entityType: this.entityType, expansions: expansions });
+            q = new Query.ByKeys<T>({ keys: this.keys, entityType: this.entityType, expansions: expansions });
         } else if (this instanceof Query.ByIndex) {
-            q = new Query.ByIndex({ index: this.index, value: this.value, entityType: this.entityType, expansions: expansions });
+            q = new Query.ByIndex<T>({ index: this.index, value: this.value, entityType: this.entityType, expansions: expansions });
         } else if (this instanceof Query.ByIndexes) {
-            q = new Query.ByIndexes({ indexes: this.indexes, entityType: this.entityType, expansions: expansions });
+            q = new Query.ByIndexes<T>({ indexes: this.indexes, entityType: this.entityType, expansions: expansions });
         } else if (this instanceof Query.All) {
-            q = new Query.All({ entityType: this.entityType, expansions: expansions });
+            q = new Query.All<T>({ entityType: this.entityType, expansions: expansions });
         }
 
         return [q, extractions];
@@ -97,21 +97,21 @@ export abstract class Query {
 }
 
 export module Query {
-    export class All extends Query {
-        isSuperSetOf(other: Query): boolean {
+    export class All<T> extends Query<T> {
+        isSuperSetOf(other: Query<T>): boolean {
             if (other.entityType != this.entityType) return false;
 
             return Expansion.isSuperset(this.expansions.slice(), other.expansions.slice());
         }
     }
 
-    export class ByKey extends Query {
+    export class ByKey<T> extends Query<T> {
         private _key: any;
         get key(): any { return this._key; }
 
         constructor(args: {
             key: any;
-            entityType: IEntityType<any>;
+            entityType: IEntityType<T>;
             expansions?: Expansion[];
         }) {
             super(args);
@@ -119,7 +119,7 @@ export module Query {
             this._key = args.key;
         }
 
-        isSuperSetOf(other: Query): boolean {
+        isSuperSetOf(other: Query<T>): boolean {
             if (other.entityType != this.entityType) return false;
             if (other instanceof ByKey && other.key == this.key) {
                 return Expansion.isSuperset(this.expansions.slice(), other.expansions.slice())
@@ -135,13 +135,13 @@ export module Query {
         }
     }
 
-    export class ByKeys extends Query {
+    export class ByKeys<T> extends Query<T> {
         private _keys: any[];
         get keys(): any[] { return this._keys; }
 
         constructor(args: {
             keys: any[];
-            entityType: IEntityType<any>;
+            entityType: IEntityType<T>;
             expansions?: Expansion[];
         }) {
             super(args);
@@ -149,7 +149,7 @@ export module Query {
             this._keys = args.keys.slice();
         }
 
-        isSuperSetOf(other: Query): boolean {
+        isSuperSetOf(other: Query<T>): boolean {
             if (other.entityType != this.entityType) return false;
             if (other instanceof ByKey && this._keys.includes(other.key)) {
                 return Expansion.isSuperset(this.expansions.slice(), other.expansions.slice());
@@ -167,7 +167,7 @@ export module Query {
         }
     }
 
-    export class ByIndex extends Query {
+    export class ByIndex<T> extends Query<T> {
         private _index: string;
         get index(): string { return this._index; }
 
@@ -177,7 +177,7 @@ export module Query {
         constructor(args: {
             index: string;
             value: any;
-            entityType: IEntityType<any>;
+            entityType: IEntityType<T>;
             expansions?: Expansion[];
         }) {
             super(args);
@@ -186,7 +186,7 @@ export module Query {
             this._value = args.value;
         }
 
-        isSuperSetOf(other: Query): boolean {
+        isSuperSetOf(other: Query<T>): boolean {
             if (other.entityType != this.entityType) return false;
             if (other instanceof ByIndex && other.index == this.index && other.value == this.value) {
                 return Expansion.isSuperset(this.expansions.slice(), other.expansions.slice())
@@ -206,13 +206,13 @@ export module Query {
         toString(): string;
     }
 
-    export class ByIndexes extends Query {
+    export class ByIndexes<T> extends Query<T> {
         private _indexes = new Map<string, IStringable>();
         get indexes(): Map<string, IStringable> { return this._indexes; }
 
         constructor(args: {
             indexes: Map<string, IStringable> | { [key: string]: IStringable };
-            entityType: IEntityType<any>;
+            entityType: IEntityType<T>;
             expansions?: Expansion[];
         }) {
             super(args);
@@ -236,7 +236,7 @@ export module Query {
             this._indexes = new Map<string, IStringable>(indexes);
         }
 
-        isSuperSetOf(other: Query): boolean {
+        isSuperSetOf(other: Query<T>): boolean {
             if (other.entityType != this.entityType) return false;
             if (other instanceof ByIndex && this.indexes.has(other.index) && this.indexes.get(other.index) == other.value) {
                 return Expansion.isSuperset(this.expansions.slice(), other.expansions.slice())

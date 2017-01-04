@@ -7,15 +7,10 @@ import { Query } from "./query";
 export class Workspace {
     private _caches = new Map<IEntityType<any>, Cache<any, any>>();
 
-    execute(q: Query): Promise<Map<any, any>> {
+    execute<T>(q: Query<T>): Promise<Map<any, any>> {
         let result: Map<any, any> = new Map();
 
-        if (q instanceof Query.All) {
-            result = this.all({
-                type: q.entityType,
-                expansion: q.expansions
-            });
-        } else if (q instanceof Query.ByKey) {
+        if (q instanceof Query.ByKey) {
             let item = this.get({
                 key: q.key,
                 type: q.entityType,
@@ -39,6 +34,11 @@ export class Workspace {
         } else if (q instanceof Query.ByIndexes) {
             result = this.byIndexes({
                 indexes: q.indexes,
+                type: q.entityType,
+                expansion: q.expansions
+            });
+        } else if (q instanceof Query.All) {
+            result = this.all({
                 type: q.entityType,
                 expansion: q.expansions
             });

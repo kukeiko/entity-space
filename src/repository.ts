@@ -16,7 +16,7 @@ export class Repository<K, V extends { [key: string]: any }, M> {
     get entityType(): IEntityType<any> { return this._entityType; }
     private _entityType: IEntityType<any>;
 
-    private _executedQueries = new Map<string, Query>();
+    private _executedQueries = new Map<string, Query<V>>();
 
     constructor(args: {
         entityType: IEntityType<any>;
@@ -41,7 +41,7 @@ export class Repository<K, V extends { [key: string]: any }, M> {
         key: K;
         expansion?: string;
     }): Promise<M> {
-        return this.execute(new Query.ByKey({
+        return this.execute(new Query.ByKey<V>({
             entityType: this.entityType,
             expansions: args.expansion != null ? Expansion.parse(this.entityType, args.expansion) : [],
             key: args.key
@@ -52,7 +52,7 @@ export class Repository<K, V extends { [key: string]: any }, M> {
         keys: K[];
         expansion?: string;
     }): Promise<Map<K, M>> {
-        return this.execute(new Query.ByKeys({
+        return this.execute(new Query.ByKeys<V>({
             entityType: this.entityType,
             expansions: args.expansion != null ? Expansion.parse(this.entityType, args.expansion) : [],
             keys: args.keys
@@ -73,14 +73,14 @@ export class Repository<K, V extends { [key: string]: any }, M> {
         if (indexes.size == 0) {
             return this.all({ expansion: args.expansion });
         } else if (indexes.size == 1) {
-            return this.execute(new Query.ByIndex({
+            return this.execute(new Query.ByIndex<V>({
                 entityType: this.entityType,
                 expansions: args.expansion != null ? Expansion.parse(this.entityType, args.expansion) : [],
                 index: indexes.keys().next().value,
                 value: indexes.values().next().value
             }));
         } else {
-            return this.execute(new Query.ByIndexes({
+            return this.execute(new Query.ByIndexes<V>({
                 entityType: this.entityType,
                 expansions: args.expansion != null ? Expansion.parse(this.entityType, args.expansion) : [],
                 indexes: indexes
@@ -91,35 +91,35 @@ export class Repository<K, V extends { [key: string]: any }, M> {
     /**
      * To be implemented by child class.
      */
-    protected loadAll(q: Query.All): Promise<V[]> {
+    protected loadAll(q: Query.All<V>): Promise<V[]> {
         throw `loading all entities of ${this.entityType.name} is not supported`;
     }
 
     /**
      * To be implemented by child class.
      */
-    protected loadOne(q: Query.ByKey): Promise<V> {
+    protected loadOne(q: Query.ByKey<V>): Promise<V> {
         throw `loading one entity of ${this.entityType.name} by its primary key is not supported`;
     }
 
     /**
      * To be implemented by child class.
      */
-    protected loadMany(q: Query.ByKeys): Promise<V[]> {
+    protected loadMany(q: Query.ByKeys<V>): Promise<V[]> {
         throw `loading multiple entities of ${this.entityType.name} by their primary keys is not supported`;
     }
 
     /**
      * To be implemented by child class.
      */
-    protected loadByIndex(q: Query.ByIndex): Promise<V[]> {
+    protected loadByIndex(q: Query.ByIndex<V>): Promise<V[]> {
         throw `loading multiple entities of ${this.entityType.name} by their index '${q.index}' is not supported`;
     }
 
     /**
      * To be implemented by child class.
      */
-    protected loadByIndexes(q: Query.ByIndexes): Promise<V[]> {
+    protected loadByIndexes(q: Query.ByIndexes<V>): Promise<V[]> {
         throw `loading multiple entities of ${this.entityType.name} by multiple indexes is not supported`;
     }
 
@@ -143,7 +143,7 @@ export class Repository<K, V extends { [key: string]: any }, M> {
      * Otherwise, data is loaded from the service (or whatever the inheritor implemented),
      * which is then added and returned. 
      */
-    protected execute(query: Query): Promise<Map<K, M>> {
+    protected execute(query: Query<V>): Promise<Map<K, M>> {
         return new Promise<Map<K, V>>((resolve, reject) => {
             if (this._executedQueries.has(query.toString()) || this._hasSupersetQueryOf(query)) {
                 this.workspace.execute(query).then(resolve, reject);
@@ -181,7 +181,7 @@ export class Repository<K, V extends { [key: string]: any }, M> {
         });
     }
 
-    private _executeToService(q: Query): Promise<V[]> {
+    private _executeToService(q: Query<V>): Promise<V[]> {
         if (q instanceof Query.All) {
             return this.loadAll(q);
         } else if (q instanceof Query.ByKey) {
@@ -192,12 +192,13 @@ export class Repository<K, V extends { [key: string]: any }, M> {
             return this.loadByIndex(q);
         } else if (q instanceof Query.ByIndexes) {
             return this.loadByIndexes(q);
-        } else {
-            return Promise.reject<any>(`unknown query type for query ${q.toString()}`);
         }
+        // else {
+        //     return Promise.reject<any>(`unknown query type for query ${q.toString()}`);
+        // }
     }
 
-    private _hasSupersetQueryOf(query: Query): boolean {
+    private _hasSupersetQueryOf(query: Query<V>): boolean {
         return Array.from(this._executedQueries, v => v[1]).some(v => v.isSuperSetOf(query));
     }
 }
