@@ -1,4 +1,3 @@
-import { Partial } from "./util";
 import { Cache } from "./cache";
 import { Collection, getEntityMetadata, EntityMetadata, IEntityType, Reference } from "./metadata";
 import { Expansion } from "./expansion";
@@ -7,7 +6,7 @@ import { Query } from "./query";
 export class Workspace {
     private _caches = new Map<IEntityType<any>, Cache<any, any>>();
 
-    execute<T>(q: Query<T>): Promise<Map<any, any>> {
+    execute<T>(q: Query<T>): Promise<Map<any, T>> {
         let result: Map<any, any> = new Map();
 
         if (q instanceof Query.ByKey) {
@@ -20,7 +19,7 @@ export class Workspace {
             result.set(q.key, item);
         } else if (q instanceof Query.ByKeys) {
             result = this.getMany({
-                keys: q.keys,
+                keys: q.keys.slice(),
                 type: q.entityType,
                 expansion: q.expansions
             });
@@ -48,7 +47,7 @@ export class Workspace {
     }
 
     add<T>(args: {
-        entity: Partial<T>;
+        entity: T;
         type: IEntityType<T>;
         expansion?: string | Expansion[] | ReadonlyArray<Expansion>;
     }): void {
@@ -64,9 +63,7 @@ export class Workspace {
             }
         }
 
-        cache.add(metadata.createCacheable({
-            item: args.entity as any
-        }));
+        cache.add(metadata.createCacheable(args.entity));
 
         expansions.forEach(ex => {
             let value = (args.entity as any)[ex.property.name];
@@ -96,6 +93,28 @@ export class Workspace {
                 }));
             }
         });
+    }
+
+    addMany<T>(args: {
+        entities: T[];
+        type: IEntityType<T>;
+        expansion?: string | Expansion[] | ReadonlyArray<Expansion>;
+    }): void {
+        let expansions = new Array<Expansion>();
+
+        if (args.expansion != null) {
+            if (args.expansion instanceof Array) {
+                expansions = args.expansion as Expansion[];
+            } else {
+                expansions = Expansion.parse(args.type, args.expansion as string);
+            }
+        }
+
+        args.entities.forEach(e => this.add({
+            entity: e,
+            expansion: expansions,
+            type: args.type
+        }));
     }
 
     get<T>(args: {
@@ -224,7 +243,7 @@ export class Workspace {
     }
 
     byIndexes<T>(args: {
-        indexes: Map<string, any>;
+        indexes: { [key: string]: Object };
         type: IEntityType<T>;
         expansion?: string | Expansion[] | ReadonlyArray<Expansion>;
     }): Map<any, T> {

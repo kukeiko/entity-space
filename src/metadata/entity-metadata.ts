@@ -102,6 +102,7 @@ export class EntityMetadata {
 
     createCacheable(item: { [key: string]: any }): { [key: string]: any } {
         let copy: { [key: string]: any } = {};
+
         this._primitivesMap.forEach(p => copy[p.name] = item[p.name]);
 
         return copy;

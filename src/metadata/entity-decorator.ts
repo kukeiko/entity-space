@@ -1,4 +1,3 @@
-import { Partial } from "../util";
 import { IEntityType } from "./entity-type";
 import { EntityMetadata } from "./entity-metadata";
 import { Collection } from "./collection";

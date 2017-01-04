@@ -60,15 +60,10 @@ export class Repository<K, V extends { [key: string]: any }, M> {
     }
 
     where(args: {
-        filters: { [property: string]: { toString(): string } };
+        filters: { [key: string]: Object };
         expansion?: string;
     }): Promise<Map<K, M>> {
         let indexes = new Map<string, any>();
-
-        for (let property in args.filters) {
-            // todo: check if those indexes actually exist
-            indexes.set(property, args.filters[property]);
-        }
 
         if (indexes.size == 0) {
             return this.all({ expansion: args.expansion });
@@ -83,7 +78,7 @@ export class Repository<K, V extends { [key: string]: any }, M> {
             return this.execute(new Query.ByIndexes<V>({
                 entityType: this.entityType,
                 expansions: args.expansion != null ? Expansion.parse(this.entityType, args.expansion) : [],
-                indexes: indexes
+                indexes: args.filters
             }));
         }
     }

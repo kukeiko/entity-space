@@ -5,5 +5,3 @@ export interface INoArgsCtor extends Function {
 export interface ITypeOf<T> extends Function {
     new (...args: any[]): T;
 }
-
-export type Partial<T> = {[P in keyof T]?: T[P]; };

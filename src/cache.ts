@@ -47,15 +47,15 @@ export class Cache<K, V> {
         return ix.get(value);
     }
 
-    byIndexes(indexes: Map<string, any>): Map<K, V> {
+    byIndexes(indexes: { [key: string]: Object }): Map<K, V> {
         let indexArray = new Array<string>();
         let items = new Map<K, V>();
         let itemsPerIndex = new Map<string, Map<K, V>>();
 
-        indexes.forEach((v, i) => {
-            itemsPerIndex.set(i, this.byIndex(i, v));
-            indexArray.push(i);
-        });
+        for (let key in indexes) {
+            itemsPerIndex.set(key, this.byIndex(key, indexes[key]));
+            indexArray.push(key);
+        }
 
         itemsPerIndex.forEach((map, index) => {
             let otherIndexes = indexArray.filter(i => i != index);
