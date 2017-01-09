@@ -6,7 +6,7 @@ import { Query } from "./query";
 export class Workspace {
     private _caches = new Map<IEntityType<any>, Cache<any, any>>();
 
-    execute<T>(q: Query<T>): Promise<Map<any, T>> {
+    execute<T>(q: Query<T>): Map<any, T> {
         let result: Map<any, any> = new Map();
 
         if (q instanceof Query.ByKey) {
@@ -43,7 +43,7 @@ export class Workspace {
             });
         }
 
-        return Promise.resolve(result)
+        return result;
     }
 
     add<T>(args: {
@@ -67,6 +67,12 @@ export class Workspace {
 
         expansions.forEach(ex => {
             let value = (args.entity as any)[ex.property.name];
+
+            /**
+             * just because it is in the expansion doesn't mean it has been loaded for this particular entity
+             */
+            if (!value) return;
+
             let otherType = ex.property.otherType;
             let otherTypeMetadata = this._getMetadata(otherType);
 

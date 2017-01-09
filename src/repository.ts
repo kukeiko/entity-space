@@ -141,7 +141,8 @@ export class Repository<K, V extends { [key: string]: any }, M> {
     protected execute(query: Query<V>): Promise<Map<K, M>> {
         return new Promise<Map<K, V>>((resolve, reject) => {
             if (this._executedQueries.has(query.toString()) || this._hasSupersetQueryOf(query)) {
-                this.workspace.execute(query).then(resolve, reject);
+                let items = this.workspace.execute(query)
+                resolve(items);
             } else {
                 this._executeToService(query).then(result => {
                     let map = new Map<any, any>();

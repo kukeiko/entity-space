@@ -12,7 +12,11 @@ import { Album } from "./album";
     }]
 })
 export class Artist {
-    id: number;
-    name: string;
-    albums: Album[];
+    id: number = null;
+    name: string = null;
+    albums: Album[] = [];
+
+    constructor(args?: Partial<Artist>) {
+        Object.assign(this, args || {});
+    }
 }

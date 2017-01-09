@@ -54,19 +54,27 @@ export function getEntityMetadata(type: IEntityType<any>): EntityMetadata {
 
 export module Entity {
     export function PrimaryKey(args?: Partial<Primitive.ICtorArgs>) {
-        return <T>(type: Object, key: string) => {
+        return <T>(type: Object, key: string, descriptor?: TypedPropertyDescriptor<T>) => {
             args = args || {};
             let defaults = <Primitive.ICtorArgs>{ name: key };
+
+            if (descriptor && !descriptor.set) {
+                args.computed = true;
+            }
 
             getOrCreateMetadataArgs(type.constructor).primaryKey = { ...defaults, ...args };
         };
     }
 
     export function Primitive(args?: Partial<Primitive.ICtorArgs>) {
-        return <T>(type: Object, key: string) => {
+        return <T>(type: Object, key: string, descriptor?: TypedPropertyDescriptor<T>) => {
             args = args || {};
             let defaults = <Primitive.ICtorArgs>{ name: key };
 
+            if (descriptor && !descriptor.set) {
+                args.computed = true;
+            }
+            
             getOrCreateMetadataArgs(type.constructor).primitives.push({ ...defaults, ...args });
         };
     }

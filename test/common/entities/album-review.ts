@@ -5,25 +5,29 @@ import { Review } from "./review";
 @Entity()
 export class AlbumReview {
     @Entity.PrimaryKey()
-    id: number;
+    id: number = null;
 
     @Entity.ReferenceKey()
-    albumId: number;
+    albumId: number = null;
 
     @Entity.Reference({ key: "albumId", other: () => Album })
-    album: Album;
+    album: Album = null;
 
     @Entity.ReferenceKey()
     get reviewId(): string {
         return `${this.reviewExternalId}@${this.systemId}`;
     }
 
-    @Entity.Reference({ key: "reviewId", other: () => Review })
-    review: Review;
+    @Entity.Reference({ key: "reviewId", other: () => Review, virtual: true })
+    review: Review = null;
 
     @Entity.Primitive()
-    reviewExternalId: string;
+    reviewExternalId: string = null;
 
     @Entity.Primitive()
-    systemId: number;
+    systemId: number = null;
+
+    constructor(args?: Partial<AlbumReview>) {
+        Object.assign(this, args || {});
+    }
 }

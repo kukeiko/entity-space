@@ -7,23 +7,27 @@ import { AlbumReview } from "./album-review";
 @Entity()
 export class Album {
     @Entity.PrimaryKey()
-    id: number;
+    id: number = null;
 
-    @Entity.Primitive()
-    name: string;
+    @Entity.Primitive({ index: true })
+    name: string = null;
 
     @Entity.ReferenceKey()
-    artistId: number;
+    artistId: number = null;
 
     @Entity.Reference({ key: "artistId", other: () => Artist })
-    artist: Artist;
+    artist: Artist = null;
 
     @Entity.Collection({ back: "album", other: () => Song })
-    songs: Song[];
+    songs: Song[] = [];
 
     @Entity.Collection({ back: "album", other: () => AlbumTag })
-    tags: AlbumTag[];
+    tags: AlbumTag[] = [];
 
     @Entity.Collection({ back: "album", other: () => AlbumReview, virtual: true })
-    reviews: AlbumReview[];
+    reviews: AlbumReview[] = [];
+
+    constructor(args?: Partial<Album>) {
+        Object.assign(this, args || {});
+    }
 }

@@ -3,8 +3,17 @@ import { Entity } from "../../../src";
 @Entity()
 export class Review {
     @Entity.PrimaryKey()
-    id: string;
+    get globalId(): string {
+        return `${this.id}@${this.systemId}`;
+    }
 
     @Entity.Primitive()
-    text: string;
+    id: string = null;
+
+    @Entity.Primitive()
+    systemId: number = null;
+
+    constructor(args?: Partial<Review>) {
+        Object.assign(this, args || {});
+    }
 }
