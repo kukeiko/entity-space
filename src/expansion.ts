@@ -107,6 +107,8 @@ export class Expansion {
     static parse(ownerType: IEntityType<any>, expansion: string): Expansion[] {
         expansion = expansion.replace(/(\r?\n|\r)| /g, "");
 
+        if (expansion.length == 0) return [];
+
         return Expansion._splitExpansions(expansion).map(e => Expansion._parse(ownerType, e));
     }
 

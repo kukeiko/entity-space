@@ -4,7 +4,9 @@ import { Song } from "./song";
 import { AlbumTag } from "./album-tag";
 import { AlbumReview } from "./album-review";
 
-@Entity()
+@Entity({
+    alias: "TheAlbum"
+})
 export class Album {
     @Entity.PrimaryKey()
     id: number = null;

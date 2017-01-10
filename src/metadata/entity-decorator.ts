@@ -7,8 +7,7 @@ import { Reference } from "./reference";
 const METADATA_KEY = "entity-space:entity-metadata";
 const METADATA_ARGS_KEY = "entity-space:entity-metadata:ctor-args";
 
-
-type A = Partial<EntityMetadata.ICtorArgs>;
+let nameToTypeMap = new Map<string, IEntityType<any>>();
 
 function getOrCreateMetadataArgs(type: any): Partial<EntityMetadata.ICtorArgs> {
     if (!Reflect.hasMetadata(METADATA_ARGS_KEY, type)) {
@@ -27,9 +26,14 @@ function getOrCreateMetadataArgs(type: any): Partial<EntityMetadata.ICtorArgs> {
 export function Entity(args?: Partial<EntityMetadata.ICtorArgs>) {
     return (type: IEntityType<any>) => {
         let existing = getOrCreateMetadataArgs(type);
-        existing.name = type.name;
+        existing.name = (args || {}).name || type.name;
+        nameToTypeMap.set(existing.name, type);
 
         if (!args) return;
+
+        if (args.alias) {
+            nameToTypeMap.set(args.alias, type);
+        }
 
         existing.createEntity = args.createEntity || existing.createEntity;
         existing.primaryKey = args.primaryKey || existing.primaryKey;
@@ -39,7 +43,15 @@ export function Entity(args?: Partial<EntityMetadata.ICtorArgs>) {
     };
 }
 
-export function getEntityMetadata(type: IEntityType<any>): EntityMetadata {
+export function getEntityMetadata(type: string | IEntityType<any>): EntityMetadata {
+    if (typeof (type) == "string") {
+        if (!nameToTypeMap.has(type)) {
+            throw `no entity metadata found with name/alias '${type}'`;
+        }
+
+        type = nameToTypeMap.get(type);
+    }
+
     if (!Reflect.hasMetadata(METADATA_KEY, type)) {
         if (!Reflect.hasMetadata(METADATA_ARGS_KEY, type)) {
             return null;
@@ -74,7 +86,7 @@ export module Entity {
             if (descriptor && !descriptor.set) {
                 args.computed = true;
             }
-            
+
             getOrCreateMetadataArgs(type.constructor).primitives.push({ ...defaults, ...args });
         };
     }
@@ -92,7 +104,13 @@ export module Entity {
         };
     }
 
-    export function Reference(args: Partial<Reference.ICtorArgs>) {
+    export function Reference(args: {
+        alias?: string;
+        key: string;
+        name?: string;
+        other: () => IEntityType<any>;
+        virtual?: boolean;
+    }) {
         return <T>(type: Object, key: string) => {
             let defaults = <Reference.ICtorArgs>{ name: key };
 
@@ -100,7 +118,13 @@ export module Entity {
         };
     }
 
-    export function Collection(args: Partial<Collection.ICtorArgs>) {
+    export function Collection(args: {
+        alias?: string;
+        back: string;
+        name?: string;
+        other: () => IEntityType<any>;
+        virtual?: boolean;
+    }) {
         return <T>(type: Object, key: string) => {
             let defaults = <Collection.ICtorArgs>{ name: key };
 

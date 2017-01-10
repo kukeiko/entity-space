@@ -17,7 +17,7 @@ describe("service-cluster", () => {
             try {
                 await sc.execute(new Query.All({ entityType: Album }));
                 fail("expected to throw");
-                done()
+                done();
             } catch (error) {
                 done();
             }
@@ -26,14 +26,20 @@ describe("service-cluster", () => {
         it("should return copies of the entities loaded by the query executer", async (done) => {
             let sc = new ServiceCluster(new Workspace());
             let albums = [new Album({ id: 1, name: "khaz" }), new Album({ id: 2, name: "mo" })];
+            let loaded: any[] = [];
 
             sc.register({
                 entityType: Album,
                 loadAll: () => Promise.resolve(albums)
             });
 
-            let map = await sc.execute(new Query.All({ entityType: Album }));
-            let loaded = Array.from(map.values()).sort((a, b) => a.id - b.id);
+            try {
+                let map = await sc.execute(new Query.All({ entityType: Album }));
+                loaded = Array.from(map.values()).sort((a, b) => a.id - b.id);
+            } catch (error) {
+                fail(error);
+                done();
+            }
 
             // they should be equal in terms of data,
             expect(loaded).toEqual(albums);
@@ -57,10 +63,158 @@ describe("service-cluster", () => {
                 }
             });
 
-            await sc.execute(new Query.All({ entityType: Album }));
-            await sc.execute(new Query.All({ entityType: Album }));
+            try {
+                await sc.execute(new Query.All({ entityType: Album }));
+                await sc.execute(new Query.All({ entityType: Album }));
+            } catch (error) {
+                fail(error);
+                done();
+            }
 
             expect(numLoadCalled).toEqual(1);
+            done();
+        });
+
+        it("should execute Query.All and return expected payload", async (done) => {
+            let sc = new ServiceCluster(new Workspace());
+            let albums = [new Album({ id: 1 }), new Album({ id: 2 })];
+            let loaded: any[] = [];
+
+            sc.register({
+                entityType: Album,
+                loadAll: () => Promise.resolve(albums)
+            });
+
+            try {
+                let map = await sc.execute(new Query.All({
+                    entityType: Album
+                }));
+
+                loaded = Array.from(map.values());
+            } catch (error) {
+                fail(error);
+                done();
+            }
+
+            expect(loaded).toEqual(albums);
+            done();
+        });
+
+        it("should execute Query.ByKey and return expected payload", async (done) => {
+            let sc = new ServiceCluster(new Workspace());
+            let id = 64;
+            let loaded: any[] = [];
+
+            sc.register({
+                entityType: Album,
+                loadOne: (q: Query.ByKey<Album>) => Promise.resolve(new Album({ id: q.key }))
+            });
+
+            try {
+                let map = await sc.execute(new Query.ByKey({
+                    entityType: Album,
+                    key: id
+                }));
+
+                loaded = Array.from(map.values());
+            } catch (error) {
+                fail(error);
+                done();
+            }
+
+            expect(loaded[0]).toBeDefined();
+            expect(loaded[0].id).toBe(id);
+            done();
+        });
+
+        it("should execute Query.ByKeys and return expected payload", async (done) => {
+            let sc = new ServiceCluster(new Workspace());
+            let ids = [64, 32];
+            let loaded: any[] = [];
+
+            sc.register({
+                entityType: Album,
+                loadMany: (q: Query.ByKeys<Album>) => Promise.resolve(q.keys.map(k => new Album({ id: k })))
+            });
+
+            try {
+                let map = await sc.execute(new Query.ByKeys({
+                    entityType: Album,
+                    keys: ids
+                }));
+
+                loaded = Array.from(map.values());
+            } catch (error) {
+                fail(error);
+                done();
+            }
+
+            expect(loaded.map(e => e.id)).toEqual(ids);
+            done();
+        });
+
+        it("should execute Query.ByIndex and return expected payload", async (done) => {
+            let sc = new ServiceCluster(new Workspace());
+            let loaded: any[] = [];
+            let albums = [
+                new Album({ id: 1, artistId: 77 }),
+                new Album({ id: 2, artistId: 77 }),
+                new Album({ id: 3, artistId: 77 })
+            ];
+
+            sc.register({
+                entityType: Album,
+                loadByIndex: (q: Query.ByIndex<Album>) => Promise.resolve(albums)
+            });
+
+            try {
+                let map = await sc.execute(new Query.ByIndex({
+                    entityType: Album,
+                    index: "artistId",
+                    value: 77
+                }));
+
+                loaded = Array.from(map.values());
+            } catch (error) {
+                fail(error);
+                done();
+            }
+
+            expect(loaded).toEqual(albums);
+            done();
+        });
+
+        it("should execute Query.ByIndexes and return expected payload", async (done) => {
+            let sc = new ServiceCluster(new Workspace());
+            let expected = new Album({ id: 1, artistId: 77, name: "khaz" });
+            let loaded: any[] = [];
+            let albums = [
+                expected,
+                new Album({ id: 2, artistId: 77, name: "mo" }),
+                new Album({ id: 3, artistId: 77, name: "dan" })
+            ];
+
+            sc.register({
+                entityType: Album,
+                loadByIndexes: (q: Query.ByIndexes<Album>) => Promise.resolve(albums)
+            });
+
+            try {
+                let map = await sc.execute(new Query.ByIndexes({
+                    entityType: Album,
+                    indexes: {
+                        artistId: 77,
+                        name: "khaz"
+                    }
+                }));
+
+                loaded = Array.from(map.values());
+            } catch (error) {
+                fail(error);
+                done();
+            }
+
+            expect(loaded).toEqual([expected]);
             done();
         });
 
@@ -88,6 +242,7 @@ describe("service-cluster", () => {
         it("should hydrate a virtual collection", async (done) => {
             let sc = new ServiceCluster(new Workspace());
             let review = new AlbumReview({ id: 64, albumId: 1 });
+            let album: Map<any, Album>;
 
             sc.register({
                 entityType: Album,
@@ -99,10 +254,15 @@ describe("service-cluster", () => {
                 loadByIndex: q => Promise.resolve([review])
             });
 
-            let album = await sc.execute(new Query.All({
-                entityType: Album,
-                expansions: Expansion.parse(Album, `reviews`)
-            }));
+            try {
+                album = await sc.execute(new Query.All({
+                    entityType: Album,
+                    expansions: Expansion.parse(Album, `reviews`)
+                }));
+            } catch (error) {
+                fail(error);
+                done();
+            }
 
             expect(album.get(1).reviews[0]).toEqual(review);
             done();
@@ -113,6 +273,7 @@ describe("service-cluster", () => {
             let artist = new Artist({ id: 7 });
             let album = new Album({ id: 1, artistId: artist.id });
             let albumReview = new AlbumReview({ id: 64, albumId: album.id });
+            let loaded: Map<any, any>;
 
             artist.albums = [album];
 
@@ -131,10 +292,15 @@ describe("service-cluster", () => {
                 loadByIndex: q => Promise.resolve([albumReview])
             });
 
-            let loaded = await sc.execute(new Query.All({
-                entityType: Artist,
-                expansions: Expansion.parse(Artist, `albums/reviews`)
-            }));
+            try {
+                loaded = await sc.execute(new Query.All({
+                    entityType: Artist,
+                    expansions: Expansion.parse(Artist, `albums/reviews`)
+                }));
+            } catch (error) {
+                fail(error);
+                done();
+            }
 
             expect(loaded.get(artist.id).albums[0].reviews[0]).toEqual(albumReview);
             done();
@@ -146,6 +312,7 @@ describe("service-cluster", () => {
             let album = new Album({ id: 1, artistId: artist.id });
             let review = new Review({ id: "#moo", systemId: 8 });
             let albumReview = new AlbumReview({ id: 64, albumId: album.id, reviewExternalId: review.id, systemId: review.systemId });
+            let loaded: Map<any, any>;
 
             artist.albums = [album];
 
@@ -169,125 +336,17 @@ describe("service-cluster", () => {
                 loadByIndex: q => Promise.resolve([albumReview])
             });
 
-            let loaded = await sc.execute(new Query.All({
-                entityType: Artist,
-                expansions: Expansion.parse(Artist, `albums/reviews/review`)
-            }));
+            try {
+                loaded = await sc.execute(new Query.All({
+                    entityType: Artist,
+                    expansions: Expansion.parse(Artist, `albums/reviews/review`)
+                }));
+            } catch (error) {
+                fail(error);
+                done();
+            }
 
             expect(loaded.get(artist.id).albums[0].reviews[0].review).toEqual(review);
-            done();
-        });
-
-        it("should execute Query.All and return expected payload", async (done) => {
-            let sc = new ServiceCluster(new Workspace());
-            let albums = [new Album({ id: 1 }), new Album({ id: 2 })];
-
-            sc.register({
-                entityType: Album,
-                loadAll: () => Promise.resolve(albums)
-            });
-
-            let map = await sc.execute(new Query.All({
-                entityType: Album
-            }));
-
-            let loaded = Array.from(map.values());
-
-            expect(loaded).toEqual(albums);
-            done();
-        });
-
-        it("should execute Query.ByKey and return expected payload", async (done) => {
-            let sc = new ServiceCluster(new Workspace());
-            let id = 64;
-
-            sc.register({
-                entityType: Album,
-                loadOne: (q: Query.ByKey<Album>) => Promise.resolve(new Album({ id: q.key }))
-            });
-
-            let map = await sc.execute(new Query.ByKey({
-                entityType: Album,
-                key: id
-            }));
-
-            let loaded = Array.from(map.values());
-
-            expect(loaded[0]).toBeDefined();
-            expect(loaded[0].id).toBe(id);
-            done();
-        });
-
-        it("should execute Query.ByKeys and return expected payload", async (done) => {
-            let sc = new ServiceCluster(new Workspace());
-            let ids = [64, 32];
-
-            sc.register({
-                entityType: Album,
-                loadMany: (q: Query.ByKeys<Album>) => Promise.resolve(q.keys.map(k => new Album({ id: k })))
-            });
-
-            let map = await sc.execute(new Query.ByKeys({
-                entityType: Album,
-                keys: ids
-            }));
-
-            let loaded = Array.from(map.values());
-
-            expect(loaded.map(e => e.id)).toEqual(ids);
-            done();
-        });
-
-        it("should execute Query.ByIndex and return expected payload", async (done) => {
-            let sc = new ServiceCluster(new Workspace());
-            let albums = [
-                new Album({ id: 1, artistId: 77 }),
-                new Album({ id: 2, artistId: 77 }),
-                new Album({ id: 3, artistId: 77 })
-            ];
-
-            sc.register({
-                entityType: Album,
-                loadByIndex: (q: Query.ByIndex<Album>) => Promise.resolve(albums)
-            });
-
-            let map = await sc.execute(new Query.ByIndex({
-                entityType: Album,
-                index: "artistId",
-                value: 77
-            }));
-
-            let loaded = Array.from(map.values());
-
-            expect(loaded).toEqual(albums);
-            done();
-        });
-
-        it("should execute Query.ByIndexes and return expected payload", async (done) => {
-            let sc = new ServiceCluster(new Workspace());
-            let expected = new Album({ id: 1, artistId: 77, name: "khaz" });
-            let albums = [
-                expected,
-                new Album({ id: 2, artistId: 77, name: "mo" }),
-                new Album({ id: 3, artistId: 77, name: "dan" })
-            ];
-
-            sc.register({
-                entityType: Album,
-                loadByIndexes: (q: Query.ByIndexes<Album>) => Promise.resolve(albums)
-            });
-
-            let map = await sc.execute(new Query.ByIndexes({
-                entityType: Album,
-                indexes: {
-                    artistId: 77,
-                    name: "khaz"
-                }
-            }));
-
-            let loaded = Array.from(map.values());
-
-            expect(loaded).toEqual([expected]);
             done();
         });
     });

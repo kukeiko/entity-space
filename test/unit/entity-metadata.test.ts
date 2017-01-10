@@ -4,22 +4,23 @@ import { Album, AlbumReview, Artist, Song, TagType } from "../common/entities";
 describe("entity-metadata", () => {
     describe("getEntityMetadata()", () => {
         it("should return null if not found", () => {
-            let arrayMetadata = getEntityMetadata(Array);
-
-            expect(arrayMetadata).toBe(null);
+            expect(getEntityMetadata(Array)).toBe(null);
         });
 
-        it("should return an EntityMetadata instance for a known type", () => {
-            let albumMetadata = getEntityMetadata(Album);
+        it("should return metadata using the type", () => {
+            expect(getEntityMetadata(Album) instanceof EntityMetadata).toBe(true);
+        });
 
-            expect(albumMetadata instanceof EntityMetadata).toBe(true);
+        it("should return metadata using an entity type name", () => {
+            expect(getEntityMetadata("Album") instanceof EntityMetadata).toBe(true);
+        });
+
+        it("should return metadata using an entity type alias", () => {
+            expect(getEntityMetadata("TheAlbum") instanceof EntityMetadata).toBe(true);
         });
 
         it("should return different instances for different types", () => {
-            let artistMetadata = getEntityMetadata(Artist);
-            let songMetadata = getEntityMetadata(Song);
-
-            expect(artistMetadata).not.toBe(songMetadata);
+            expect(getEntityMetadata(Artist)).not.toBe(getEntityMetadata(Song));
         });
 
         it("should throw if no primary key is defined", () => {

@@ -15,6 +15,12 @@ describe("expansion", () => {
 
             expect(expansions.length).toBe(2);
         });
+
+        it("should return empty array for empty string", () => {
+            let expansions = Expansion.parse(Album, "");
+
+            expect(expansions.length).toBe(0);
+        });
     });
 
     describe("toString()", () => {

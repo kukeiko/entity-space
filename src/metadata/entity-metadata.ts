@@ -11,6 +11,7 @@ export class EntityMetadata {
     readonly createEntity: (item: { [key: string]: any }) => any;
     readonly entityType: IEntityType<any>;
     readonly name: string;
+    readonly alias: string;
     readonly primaryKey: Primitive;
     readonly properties: ReadonlyArray<Property>;
     readonly primitives: ReadonlyArray<Primitive>;
@@ -30,6 +31,7 @@ export class EntityMetadata {
         this.createEntity = args.createEntity || null;
         this.entityType = entityType;
         this.name = args.name;
+        this.alias = args.alias || this.name;
 
         this._propertiesMap = new Map<string, Property>();
         this._primitivesMap = new Map<string, Primitive>();
@@ -146,6 +148,7 @@ export class EntityMetadata {
 
 export module EntityMetadata {
     export interface ICtorArgs {
+        alias?: string;
         createEntity?: (item: { [key: string]: any }) => { [key: string]: any };
         name: string;
         primaryKey: Primitive.ICtorArgs;
