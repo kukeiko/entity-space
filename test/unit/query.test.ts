@@ -2,9 +2,86 @@ import { getEntityMetadata, Query, Expansion } from "../../src/";
 import { Artist, Album } from "../common";
 
 describe("query", () => {
+    describe("parse()", () => {
+        it("should parse Artist into Query.All", () => {
+            let expected = new Query.All({
+                entityType: Artist
+            });
+
+            let q = Query.parse("Artist");
+
+            expect(q).toEqual(expected);
+        });
+
+        it("should parse Artist(64) into Query.ByKey", () => {
+            let expected = new Query.ByKey({
+                entityType: Artist,
+                key: 64
+            });
+
+            let q = Query.parse("Artist(64)");
+
+            expect(q).toEqual(expected);
+        });
+
+        it("should parse Artist([64, 7, 1337]) into Query.ByKeys", () => {
+            let expected = new Query.ByKeys({
+                entityType: Artist,
+                keys: [64, 7, 1337]
+            });
+
+            let q = Query.parse("Artist([64, 7, 1337])");
+
+            expect(q).toEqual(expected);
+        });
+
+        it("should parse Artist({\"name\": \"fo\\\"o\"}) into Query.ByIndex", () => {
+            let expected = new Query.ByIndex({
+                entityType: Artist,
+                index: "name",
+                value: "fo\"o"
+            });
+
+            let q = Query.parse("Artist({\"name\": \"fo\\\"o\"})");
+
+            expect(q).toEqual(expected);
+        });
+
+        it("should parse Artist({\"name\": \"fo\\\"o\", \"age\": 27}) into Query.ByIndexes", () => {
+            let expected = new Query.ByIndexes({
+                entityType: Artist,
+                indexes: {
+                    name: "fo\"o",
+                    age: 27
+                }
+            });
+
+            let q = Query.parse("Artist({\"name\": \"fo\\\"o\", \"age\": 27})");
+
+            expect(q).toEqual(expected);
+        });
+    });
+
     // todo: more combinations are possiberu
     // todo: byKey & byIndex combinations are missing
     describe("isSuperset()/isSubsetOf()", () => {
+        it("Artist(64,3,128) should be superset of Artist(3)", () => {
+            let a = new Query.ByKeys({
+                entityType: Artist,
+                keys: [64, 3, 128]
+            });
+
+            let b = new Query.ByKey({
+                entityType: Artist,
+                key: 3
+            });
+
+            expect(a.isSuperSetOf(b)).toEqual(true);
+            expect(b.isSuperSetOf(a)).toEqual(false);
+            expect(a.isSubsetOf(b)).toEqual(false);
+            expect(b.isSubsetOf(a)).toEqual(true);
+        });
+
         it("all:artist/albums/{songs,tags} should be superset of all:artist", () => {
             let a = new Query.All({
                 entityType: Artist,

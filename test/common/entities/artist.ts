@@ -13,6 +13,9 @@ import { Album } from "./album";
 })
 export class Artist {
     id: number = null;
+
+    @Entity.Primitive()
+    age: number = null;
     name: string = null;
     albums: Album[] = [];
 

@@ -24,6 +24,111 @@ export abstract class Query<T> {
         return a.toString() == b.toString();
     }
 
+    static parse<T>(query: string): Query<T> {
+        let typeIdentifier: string;
+        let rest = "";
+        let hasIdentity = false;
+
+        for (let i = 0; i < query.length; ++i) {
+            switch (query[i]) {
+                case "(":
+                    hasIdentity = true;
+
+                case "/":
+                    typeIdentifier = query.substring(0, i);
+                    rest = query.substring(i + 1);
+                    break;
+            }
+
+            if (rest) break;
+        }
+
+        if (!typeIdentifier) {
+            typeIdentifier = query;
+        }
+
+        let metadata = getEntityMetadata(typeIdentifier);
+
+        if (!metadata) {
+            throw `no metadata for '${typeIdentifier}' found`;
+        }
+
+        if (!hasIdentity) {
+            return new Query.All({
+                entityType: metadata.entityType,
+                expansions: Expansion.parse(metadata.entityType, rest)
+            });
+        }
+
+        let isInQuotes = false;
+        let identity = "";
+
+        for (let i = 0; i < rest.length; ++i) {
+            let c = rest[i];
+
+            if (!isInQuotes) {
+                if (c == ")") {
+                    identity = rest.substring(0, i);
+                    rest = rest.substring(i + 2);
+                    break;
+                } else if (c == "/") {
+                    identity = rest.substring(0, i);
+                    rest = rest.substring(i + 1);
+                    break;
+                }
+            }
+
+            if (c == "\"") {
+                isInQuotes = !isInQuotes;
+            } else if (c == "\\" && rest[i + 1] == "\"") {
+                i++;
+            }
+        }
+
+        let value: Object;
+
+        try {
+            value = JSON.parse(identity);
+        } catch (error) {
+            throw `invalid identity format: ${error}`;
+        }
+
+        if (typeof (value) == "number" || typeof (value) == "string") {
+            return new Query.ByKey({
+                entityType: metadata.entityType,
+                expansions: Expansion.parse(metadata.entityType, rest),
+                key: value
+            });
+        } else if (value instanceof Array) {
+            return new Query.ByKeys({
+                entityType: metadata.entityType,
+                expansions: Expansion.parse(metadata.entityType, rest),
+                keys: value
+            });
+        } else {
+            let keys = Object.keys(value);
+
+            if (keys.length == 0) {
+                throw `empty index`;
+            }
+
+            if (keys.length == 1) {
+                return new Query.ByIndex({
+                    entityType: metadata.entityType,
+                    expansions: Expansion.parse(metadata.entityType, rest),
+                    index: keys[0],
+                    value: (value as any)[keys[0]] // todo: dirty
+                });
+            } else {
+                return new Query.ByIndexes({
+                    entityType: metadata.entityType,
+                    expansions: Expansion.parse(metadata.entityType, rest),
+                    indexes: value as any // todo: dirty
+                });
+            }
+        }
+    }
+
     abstract isSuperSetOf(other: Query<T>): boolean;
 
     isSubsetOf(other: Query<T>): boolean {
