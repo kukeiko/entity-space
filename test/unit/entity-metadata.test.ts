@@ -134,6 +134,10 @@ describe("entity-metadata", () => {
             expect(songMetadata.getProperty("NAME") instanceof Primitive).toBe(true);
         });
 
+        it("should allow usage of alias (ignore case)", () => {
+            expect(songMetadata.getProperty("SongId").name).toEqual("id");
+        });
+
         it("should return a primitive, navigation, reference and collection", () => {
             expect(songMetadata.getProperty("name") instanceof Primitive).toBe(true, "primitive");
             expect(songMetadata.getProperty("album") instanceof Navigation).toBe(true, "navigation");
@@ -151,6 +155,10 @@ describe("entity-metadata", () => {
 
         it("should ignore case", () => {
             expect(songMetadata.getPrimitive("NAME") instanceof Primitive).toBe(true);
+        });
+
+        it("should allow usage of alias (ignore case)", () => {
+            expect(songMetadata.getProperty("SongName").name).toEqual("name");
         });
 
         it("should return a primitive", () => {
@@ -174,6 +182,10 @@ describe("entity-metadata", () => {
             expect(songMetadata.getNavigation("ALBUM") instanceof Navigation).toBe(true);
         });
 
+        it("should allow usage of alias (ignore case)", () => {
+            expect(songMetadata.getProperty("DerAlbumSpieltSchweissfrei").name).toEqual("album");
+        });
+
         it("should not return a primitive", () => {
             expect(songMetadata.getNavigation("name")).toBe(null);
         });
@@ -193,6 +205,10 @@ describe("entity-metadata", () => {
 
         it("should ignore case", () => {
             expect(songMetadata.getReference("ALBUM") instanceof Reference).toBe(true);
+        });
+
+        it("should allow usage of alias (ignore case)", () => {
+            expect(songMetadata.getProperty("DerAlbumSpieltSchweissfrei").name).toEqual("album");
         });
 
         it("should return a reference", () => {
@@ -216,6 +232,10 @@ describe("entity-metadata", () => {
             expect(songMetadata.getCollection("TAGS") instanceof Collection).toBe(true);
         });
 
+        it("should allow usage of alias (ignore case)", () => {
+            expect(songMetadata.getProperty("SongTags").name).toEqual("tags");
+        });
+
         it("should return a collection", () => {
             expect(songMetadata.getCollection("tags") instanceof Collection).toBe(true);
         });
@@ -229,7 +249,6 @@ describe("entity-metadata", () => {
     describe("getVirtuals()", () => {
         it("should return a collection marked as virtual", () => {
             let metadata = getEntityMetadata(Album);
-
             let virtuals = metadata.getVirtuals();
 
             expect(virtuals.find(v => v.name == "reviews")).toBeDefined();

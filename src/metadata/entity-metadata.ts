@@ -48,25 +48,30 @@ export class EntityMetadata {
 
             aliases.add(alias);
             this._propertiesMap.set(name, p);
+            this._propertiesMap.set(alias, p);
         };
 
         let addPrimitive = (p: Primitive) => {
             this._primitivesMap.set(p.name.toLocaleLowerCase(), p);
+            this._primitivesMap.set(p.alias.toLocaleLowerCase(), p);
             addProperty(p);
         };
 
         let addNavigation = (p: Navigation) => {
             this._navigationsMap.set(p.name.toLocaleLowerCase(), p);
+            this._navigationsMap.set(p.alias.toLocaleLowerCase(), p);
             addProperty(p);
         };
 
         let addReference = (p: Reference) => {
             this._referencesMap.set(p.name.toLocaleLowerCase(), p);
+            this._referencesMap.set(p.alias.toLocaleLowerCase(), p);
             addNavigation(p);
         };
 
         let addCollection = (p: Collection) => {
             this._collectionsMap.set(p.name.toLocaleLowerCase(), p);
+            this._collectionsMap.set(p.alias.toLocaleLowerCase(), p);
             addNavigation(p);
         };
 
@@ -77,11 +82,11 @@ export class EntityMetadata {
         (args.references || []).forEach(x => addReference(new Reference(x)));
         (args.collections || []).forEach(x => addCollection(new Collection(x)));
 
-        this.properties = Array.from(this._propertiesMap, v => v[1]).sort((a, b) => a.name < b.name ? -1 : 1);
-        this.primitives = Array.from(this._primitivesMap, v => v[1]).sort((a, b) => a.name < b.name ? -1 : 1);
-        this.navigations = Array.from(this._navigationsMap, v => v[1]).sort((a, b) => a.name < b.name ? -1 : 1);
-        this.references = Array.from(this._referencesMap, v => v[1]).sort((a, b) => a.name < b.name ? -1 : 1);
-        this.collections = Array.from(this._collectionsMap, v => v[1]).sort((a, b) => a.name < b.name ? -1 : 1);
+        this.properties = _.uniq(Array.from(this._propertiesMap.values())).sort((a, b) => a.name < b.name ? -1 : 1);
+        this.primitives = _.uniq(Array.from(this._primitivesMap.values())).sort((a, b) => a.name < b.name ? -1 : 1);
+        this.navigations = _.uniq(Array.from(this._navigationsMap.values())).sort((a, b) => a.name < b.name ? -1 : 1);
+        this.references = _.uniq(Array.from(this._referencesMap.values())).sort((a, b) => a.name < b.name ? -1 : 1);
+        this.collections = _.uniq(Array.from(this._collectionsMap.values())).sort((a, b) => a.name < b.name ? -1 : 1);
     }
 
     getProperty(name: string): Property {
