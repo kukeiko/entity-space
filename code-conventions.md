@@ -21,3 +21,4 @@ changes/additions to improve clarity / follow conventions / cleanup the codebase
 * code guidelines are applied (e.g. tslint rules, file naming conventions, etc.)
 * comments to illustrate functionality
 * unused files/functions are removed
+* code usability is increased via small means

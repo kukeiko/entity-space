@@ -14,10 +14,15 @@ export abstract class Query<T> {
 
     constructor(args: {
         entityType: IEntityType<T>;
-        expansions?: Expansion[];
+        expansions?: string | Expansion[];
     }) {
         this.entityType = args.entityType;
-        this.expansions = Object.freeze((args.expansions || []).slice().sort((a, b) => a.property.name < b.property.name ? -1 : 1));
+
+        let expansions = typeof (args.expansions) == "string"
+            ? Expansion.parse(args.entityType, args.expansions)
+            : (args.expansions || []);
+
+        this.expansions = Object.freeze(expansions.slice().sort((a, b) => a.property.name < b.property.name ? -1 : 1));
     }
 
     static equals<T>(a: Query<T>, b: Query<T>): boolean {
@@ -216,7 +221,7 @@ export module Query {
         constructor(args: {
             key: any;
             entityType: IEntityType<T>;
-            expansions?: Expansion[];
+            expansions?: string | Expansion[];
         }) {
             super(args);
 
@@ -246,7 +251,7 @@ export module Query {
         constructor(args: {
             keys: any[];
             entityType: IEntityType<T>;
-            expansions?: Expansion[];
+            expansions?: string | Expansion[];
         }) {
             super(args);
 
@@ -280,7 +285,7 @@ export module Query {
             index: string;
             value: any;
             entityType: IEntityType<T>;
-            expansions?: Expansion[];
+            expansions?: string | Expansion[];
         }) {
             super(args);
 
@@ -310,7 +315,7 @@ export module Query {
         constructor(args: {
             indexes: { [key: string]: Object };
             entityType: IEntityType<T>;
-            expansions?: Expansion[];
+            expansions?: string | Expansion[];
         }) {
             super(args);
 
