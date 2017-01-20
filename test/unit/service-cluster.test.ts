@@ -28,10 +28,11 @@ describe("service-cluster", () => {
             let albums = [new Album({ id: 1, name: "khaz" }), new Album({ id: 2, name: "mo" })];
             let loaded: any[] = [];
 
-            sc.register({
-                entityType: Album,
-                loadAll: () => Promise.resolve(albums)
-            });
+            sc.register(
+                Album,
+                {
+                    loadAll: () => Promise.resolve(albums)
+                });
 
             try {
                 let map = await sc.execute(new Query.All({ entityType: Album }));
@@ -55,13 +56,14 @@ describe("service-cluster", () => {
             let albums = [new Album({ id: 1 }), new Album({ id: 2 })];
             let numLoadCalled = 0;
 
-            sc.register({
-                entityType: Album,
-                loadAll: () => {
-                    numLoadCalled++;
-                    return Promise.resolve(albums);
-                }
-            });
+            sc.register(
+                Album,
+                {
+                    loadAll: () => {
+                        numLoadCalled++;
+                        return Promise.resolve(albums);
+                    }
+                });
 
             try {
                 await sc.execute(new Query.All({ entityType: Album }));
@@ -80,10 +82,11 @@ describe("service-cluster", () => {
             let albums = [new Album({ id: 1 }), new Album({ id: 2 })];
             let loaded: any[] = [];
 
-            sc.register({
-                entityType: Album,
-                loadAll: () => Promise.resolve(albums)
-            });
+            sc.register(
+                Album,
+                {
+                    loadAll: () => Promise.resolve(albums)
+                });
 
             try {
                 let map = await sc.execute(new Query.All({
@@ -105,10 +108,11 @@ describe("service-cluster", () => {
             let id = 64;
             let loaded: any[] = [];
 
-            sc.register({
-                entityType: Album,
-                loadOne: (q: Query.ByKey<Album>) => Promise.resolve(new Album({ id: q.key }))
-            });
+            sc.register(
+                Album,
+                {
+                    loadOne: (q: Query.ByKey<Album>) => Promise.resolve(new Album({ id: q.key }))
+                });
 
             try {
                 let map = await sc.execute(new Query.ByKey({
@@ -132,10 +136,11 @@ describe("service-cluster", () => {
             let ids = [64, 32];
             let loaded: any[] = [];
 
-            sc.register({
-                entityType: Album,
-                loadMany: (q: Query.ByKeys<Album>) => Promise.resolve(q.keys.map(k => new Album({ id: k })))
-            });
+            sc.register(
+                Album,
+                {
+                    loadMany: (q: Query.ByKeys<Album>) => Promise.resolve(q.keys.map(k => new Album({ id: k })))
+                });
 
             try {
                 let map = await sc.execute(new Query.ByKeys({
@@ -162,10 +167,11 @@ describe("service-cluster", () => {
                 new Album({ id: 3, artistId: 77 })
             ];
 
-            sc.register({
-                entityType: Album,
-                loadByIndex: (q: Query.ByIndex<Album>) => Promise.resolve(albums)
-            });
+            sc.register(
+                Album,
+                {
+                    loadByIndex: (q: Query.ByIndex<Album>) => Promise.resolve(albums)
+                });
 
             try {
                 let map = await sc.execute(new Query.ByIndex({
@@ -194,10 +200,11 @@ describe("service-cluster", () => {
                 new Album({ id: 3, artistId: 77, name: "dan" })
             ];
 
-            sc.register({
-                entityType: Album,
-                loadByIndexes: (q: Query.ByIndexes<Album>) => Promise.resolve(albums)
-            });
+            sc.register(
+                Album,
+                {
+                    loadByIndexes: (q: Query.ByIndexes<Album>) => Promise.resolve(albums)
+                });
 
             try {
                 let map = await sc.execute(new Query.ByIndexes({
@@ -221,10 +228,11 @@ describe("service-cluster", () => {
         it("should throw if a query executer for hydration is missing", async (done) => {
             let sc = new ServiceCluster(new Workspace());
 
-            sc.register({
-                entityType: Album,
-                loadAll: () => Promise.resolve([new Album({ id: 1 })])
-            });
+            sc.register(
+                Album,
+                {
+                    loadAll: () => Promise.resolve([new Album({ id: 1 })])
+                });
 
             try {
                 await sc.execute(new Query.All({
@@ -244,15 +252,17 @@ describe("service-cluster", () => {
             let review = new AlbumReview({ id: 64, albumId: 1 });
             let album: Map<any, Album>;
 
-            sc.register({
-                entityType: Album,
-                loadAll: () => Promise.resolve([new Album({ id: 1 })])
-            });
+            sc.register(
+                Album,
+                {
+                    loadAll: () => Promise.resolve([new Album({ id: 1 })])
+                });
 
-            sc.register({
-                entityType: AlbumReview,
-                loadByIndex: q => Promise.resolve([review])
-            });
+            sc.register(
+                AlbumReview,
+                {
+                    loadByIndex: q => Promise.resolve([review])
+                });
 
             try {
                 album = await sc.execute(new Query.All({
@@ -277,20 +287,23 @@ describe("service-cluster", () => {
 
             artist.albums = [album];
 
-            sc.register({
-                entityType: Artist,
-                loadAll: () => Promise.resolve([artist])
-            });
+            sc.register(
+                Artist,
+                {
+                    loadAll: () => Promise.resolve([artist])
+                });
 
-            sc.register({
-                entityType: Album,
-                loadByIndex: q => Promise.resolve([album])
-            });
+            sc.register(
+                Album,
+                {
+                    loadByIndex: q => Promise.resolve([album])
+                });
 
-            sc.register({
-                entityType: AlbumReview,
-                loadByIndex: q => Promise.resolve([albumReview])
-            });
+            sc.register(
+                AlbumReview,
+                {
+                    loadByIndex: q => Promise.resolve([albumReview])
+                });
 
             try {
                 loaded = await sc.execute(new Query.All({
@@ -316,25 +329,29 @@ describe("service-cluster", () => {
 
             artist.albums = [album];
 
-            sc.register({
-                entityType: Artist,
-                loadAll: () => Promise.resolve([artist])
-            });
+            sc.register(
+                Artist,
+                {
+                    loadAll: () => Promise.resolve([artist])
+                });
 
-            sc.register({
-                entityType: Album,
-                loadByIndex: q => Promise.resolve([album])
-            });
+            sc.register(
+                Album,
+                {
+                    loadByIndex: q => Promise.resolve([album])
+                });
 
-            sc.register({
-                entityType: Review,
-                loadMany: q => Promise.resolve([review])
-            });
+            sc.register(
+                Review,
+                {
+                    loadMany: q => Promise.resolve([review])
+                });
 
-            sc.register({
-                entityType: AlbumReview,
-                loadByIndex: q => Promise.resolve([albumReview])
-            });
+            sc.register(
+                AlbumReview,
+                {
+                    loadByIndex: q => Promise.resolve([albumReview])
+                });
 
             try {
                 loaded = await sc.execute(new Query.All({

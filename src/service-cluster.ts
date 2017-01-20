@@ -15,21 +15,13 @@ export class ServiceCluster {
         this._workspace = workspace;
     }
 
-    register<T>(executer: IQueryExecuter<T>): void {
-        this._executers.set(executer.entityType, executer);
+    register<T>(entityType: IEntityType<T>, executer: IQueryExecuter<T>): void {
+        this._executers.set(entityType, executer);
     }
 
     async execute<T>(query: Query<T>): Promise<Map<any, T>> {
-        let executer = this._executers.get(query.entityType) as IQueryExecuter<T>;
-
-        if (!executer) {
-            throw `no query executer for entity type ${query.entityType.name} registered`;
-        }
-
         let [noVirtuals, virtuals] = query.extract(exp => exp.property.virtual);
-
         let entities = await this._execute(noVirtuals);
-
         await Promise.all<any>(virtuals.map(v => this._hydrateEntities(entities, v)));
 
         return await this._execute(query);
@@ -89,6 +81,10 @@ export class ServiceCluster {
 
     private async _executeAgainstService<T>(query: Query<T>): Promise<T[]> {
         let executer = this._executers.get(query.entityType) as IQueryExecuter<T>;
+
+        if (!executer) {
+            throw `no query executer for entity type ${query.entityType.name} registered`;
+        }
 
         let throwNotSupported = (type: string) => {
             throw `query of type ${type} for entity ${query.entityType.name} not supported`;
