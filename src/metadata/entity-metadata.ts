@@ -45,7 +45,7 @@ export class EntityMetadata {
             let [name, alias] = [p.name.toLowerCase(), p.alias.toLowerCase()];
 
             if (this._propertiesMap.has(name) || aliases.has(alias)) {
-                throw `names and aliases across all properties must be unique`;
+                throw `names and aliases across all properties must be unique (type: ${entityType.name}, property: ${name}, alias: ${alias})`;
             }
 
             aliases.add(alias);
@@ -121,6 +121,58 @@ export class EntityMetadata {
         this._primitivesMap.forEach(p => copy[p.name] = item[p.name]);
 
         return copy;
+    }
+
+    createSaveable(entity: { [key: string]: any }, useAlias?: boolean): { [key: string]: any } {
+        let saveable: { [key: string]: any } = {};
+
+        this.properties.filter(p => p.saveable).forEach(p => {
+            let name = useAlias ? p.alias : p.name;
+
+            if (entity[p.name] == undefined) return;
+
+            if (p instanceof Collection) {
+                if (entity[p.name] instanceof Array) {
+                    saveable[name] = (entity[p.name] as Object[]).map(x => this.createSaveable(x, useAlias));
+                }
+            } else if (p instanceof Reference) {
+                if (entity[p.name] instanceof Object) {
+                    saveable[name] = this.createSaveable(entity[p.name], useAlias);
+                }
+            } else {
+                if (p.valueType == ValueType.Date) {
+                    saveable[name] = (entity[p.name] as Date).toJSON();
+                } else {
+                    saveable[name] = entity[p.name];
+                }
+            }
+        });
+
+        return saveable;
+    }
+
+    fromAliased(entityType: IEntityType<any>, aliased: { [key: string]: any }): { [key: string]: any } {
+        let entity = new this.entityType();
+
+        this.properties.forEach(p => {
+            if (p instanceof Collection) {
+                if (aliased[p.alias] instanceof Array) {
+                    entity[p.name] = (aliased[p.alias] as Object[]).map(x => this.fromAliased(p.otherType, x));
+                }
+            } else if (p instanceof Reference) {
+                if (aliased[p.alias] instanceof Object) {
+                    entity[p.name] = this.fromAliased(p.otherType, aliased[p.alias]);
+                }
+            } else {
+                if (p.valueType == ValueType.Date) {
+                    entity[p.name] = new Date(aliased[p.alias]);
+                } else {
+                    entity[p.name] = aliased[p.alias];
+                }
+            }
+        });
+
+        return entity;
     }
 
     fromCached(cached: { [key: string]: any }): { [key: string]: any } {

@@ -11,6 +11,7 @@ export class Collection extends Navigation {
             virtual: args.virtual,
             name: args.name,
             other: args.other,
+            saveable: args.saveable,
             valueType: ValueType.Array
         });
 
@@ -24,6 +25,7 @@ export module Collection {
         back: string;
         name: string;
         other: () => IEntityType<any>;
+        saveable?: boolean;
         virtual?: boolean;
     }
 }

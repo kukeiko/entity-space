@@ -109,6 +109,7 @@ export module Entity {
         key: string;
         name?: string;
         other: () => IEntityType<any>;
+        saveable?: boolean;
         virtual?: boolean;
     }) {
         return <T>(type: Object, key: string) => {
@@ -123,6 +124,7 @@ export module Entity {
         back: string;
         name?: string;
         other: () => IEntityType<any>;
+        saveable?: boolean;
         virtual?: boolean;
     }) {
         return <T>(type: Object, key: string) => {

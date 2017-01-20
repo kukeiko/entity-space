@@ -11,6 +11,7 @@ export class Reference extends Navigation {
             virtual: args.virtual,
             name: args.name,
             other: args.other,
+            saveable: args.saveable,
             valueType: ValueType.Object
         });
 
@@ -24,6 +25,7 @@ export module Reference {
         key: string;
         name: string;
         other: () => IEntityType<any>;
+        saveable?: boolean;
         virtual?: boolean;
     }
 }

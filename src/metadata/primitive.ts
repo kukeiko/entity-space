@@ -9,6 +9,7 @@ export class Primitive extends Property {
         super({
             alias: args.alias,
             name: args.name,
+            saveable: args.saveable,
             valueType: args.valueType
         });
 
@@ -23,6 +24,7 @@ export module Primitive {
         index?: boolean;
         computed?: boolean;
         name: string;
+        saveable?: boolean;
         valueType?: ValueType;
     }
 }
