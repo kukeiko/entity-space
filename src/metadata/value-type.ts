@@ -7,5 +7,6 @@ export enum ValueType {
     Float,
     Integer,
     Object,
-    String
+    String,
+    Guid
 }
