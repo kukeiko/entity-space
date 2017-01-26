@@ -249,8 +249,10 @@ describe("service-cluster", () => {
 
         it("should hydrate a virtual collection", async (done) => {
             let sc = new ServiceCluster(new Workspace());
-            let review = new AlbumReview({ id: 64, albumId: 1 });
-            let album: Map<any, Album>;
+            let album = new Album({ id: 1 });
+            let review = new AlbumReview({ id: 64, albumId: 1, album: album });
+            album.reviews = [review];
+            let albumMap: Map<any, Album>;
 
             sc.register(
                 Album,
@@ -261,11 +263,14 @@ describe("service-cluster", () => {
             sc.register(
                 AlbumReview,
                 {
-                    loadByIndex: q => Promise.resolve([review])
+                    loadByIndex: q => Promise.resolve([new AlbumReview({
+                        id: 64,
+                        albumId: 1
+                    })])
                 });
 
             try {
-                album = await sc.execute(new Query.All({
+                albumMap = await sc.execute(new Query.All({
                     entityType: Album,
                     expansions: Expansion.parse(Album, `reviews`)
                 }));
@@ -274,11 +279,11 @@ describe("service-cluster", () => {
                 done();
             }
 
-            expect(album.get(1).reviews[0]).toEqual(review);
+            expect(albumMap.get(1).reviews[0]).toEqual(review);
             done();
         });
 
-        it("should hydrate a virtual reference of a collection navigation", async (done) => {
+        xit("should hydrate a virtual reference of a collection navigation", async (done) => {
             let sc = new ServiceCluster(new Workspace());
             let artist = new Artist({ id: 7 });
             let album = new Album({ id: 1, artistId: artist.id });
