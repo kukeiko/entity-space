@@ -4,6 +4,7 @@ import { ValueType } from "./value-type";
 export class Primitive extends Property {
     readonly index: boolean;
     readonly computed: boolean;
+    readonly map?: (cached: any) => any;
 
     constructor(args: Primitive.ICtorArgs) {
         super({
@@ -15,6 +16,7 @@ export class Primitive extends Property {
 
         this.index = !!args.index;
         this.computed = !!args.computed;
+        this.map = args.map || null;
     }
 }
 
@@ -23,6 +25,7 @@ export module Primitive {
         alias?: string;
         index?: boolean;
         computed?: boolean;
+        map?: (cached: any) => any;
         name: string;
         saveable?: boolean;
         valueType?: ValueType;

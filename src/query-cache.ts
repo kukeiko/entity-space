@@ -18,6 +18,19 @@ export class QueryCache {
             || Array.from(cached, x => x[1]).some(q => q.isSuperSetOf(query));
     }
 
+    clear(args?: {
+        entityType?: IEntityType<any>;
+    }): void {
+        args = args || {};
+
+        if (args.entityType) {
+            let cache = this._getQueriesOfEntityType(args.entityType);
+            cache.clear();
+        } else {
+            this._byType = new Map<IEntityType<any>, Map<string, Query<any>>>()
+        }
+    }
+
     private _getQueriesOfEntityType(entityType: IEntityType<any>): Map<string, Query<any>> {
         let queries = this._byType.get(entityType);
 

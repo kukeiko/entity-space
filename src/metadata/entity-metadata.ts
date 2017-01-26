@@ -1,4 +1,5 @@
 import * as _ from "lodash";
+import { getEntityMetadata } from "./entity-decorator";
 import { IEntityType } from "./entity-type";
 import { Collection } from "./collection";
 import { Primitive } from "./primitive";
@@ -19,11 +20,12 @@ export class EntityMetadata {
     readonly references: ReadonlyArray<Reference>;
     readonly collections: ReadonlyArray<Collection>;
 
-    private _propertiesMap: Map<string, Property>;
-    private _primitivesMap: Map<string, Primitive>;
-    private _navigationsMap: Map<string, Navigation>;
-    private _referencesMap: Map<string, Reference>;
-    private _collectionsMap: Map<string, Collection>;
+    private _propertiesMap = new Map<string, Property>();
+    private _primitivesMap = new Map<string, Primitive>();
+    private _navigationsMap = new Map<string, Navigation>();
+    private _referencesMap = new Map<string, Reference>();
+    private _collectionsMap = new Map<string, Collection>();
+    private _refKeysMap = new Map<string, Primitive>();
 
     constructor(entityType: IEntityType<any>, args: EntityMetadata.ICtorArgs) {
         if (!args.primaryKey) throw `${entityType.name} has no primary key`;
@@ -32,12 +34,6 @@ export class EntityMetadata {
         this.entityType = entityType;
         this.name = args.name;
         this.alias = args.alias || this.name;
-
-        this._propertiesMap = new Map<string, Property>();
-        this._primitivesMap = new Map<string, Primitive>();
-        this._referencesMap = new Map<string, Reference>();
-        this._collectionsMap = new Map<string, Collection>();
-        this._navigationsMap = new Map<string, Navigation>();
 
         let aliases = new Set<string>();
 
@@ -84,6 +80,13 @@ export class EntityMetadata {
         (args.references || []).forEach(x => addReference(new Reference(x)));
         (args.collections || []).forEach(x => addCollection(new Collection(x)));
 
+        this._referencesMap.forEach(ref => {
+            let refKeyProperty = this._primitivesMap.get(ref.keyName.toLocaleLowerCase());
+            if (refKeyProperty) {
+                this._refKeysMap.set(refKeyProperty.name.toLocaleLowerCase(), refKeyProperty);
+            }
+        })
+
         this.properties = _.uniq(Array.from(this._propertiesMap.values())).sort((a, b) => a.name < b.name ? -1 : 1);
         this.primitives = _.uniq(Array.from(this._primitivesMap.values())).sort((a, b) => a.name < b.name ? -1 : 1);
         this.navigations = _.uniq(Array.from(this._navigationsMap.values())).sort((a, b) => a.name < b.name ? -1 : 1);
@@ -118,6 +121,7 @@ export class EntityMetadata {
     createCacheable(item: { [key: string]: any }): { [key: string]: any } {
         let copy: { [key: string]: any } = {};
 
+        // todo: this doesn't seem like it is enough
         this._primitivesMap.forEach(p => copy[p.name] = item[p.name]);
 
         return copy;
@@ -148,24 +152,37 @@ export class EntityMetadata {
             }
         });
 
+        this.references.forEach(ref => {
+            if (!(entity[ref.name] instanceof Object)) return;
+            let refKey = this._refKeysMap.get(ref.keyName.toLocaleLowerCase());
+            if (!refKey || !refKey.saveable) return;
+            let refKeyName = useAlias ? refKey.alias : refKey.name;
+            let refKeyValue = entity[ref.name][getEntityMetadata(ref.otherType).primaryKey.name];
+            saveable[refKeyName] = refKeyValue;
+        });
+
         return saveable;
     }
 
-    fromAliased(entityType: IEntityType<any>, aliased: { [key: string]: any }): { [key: string]: any } {
+    fromAliased<T>(aliased: { [key: string]: any }): T {
         let entity = new this.entityType();
 
         this.properties.forEach(p => {
             if (p instanceof Collection) {
                 if (aliased[p.alias] instanceof Array) {
-                    entity[p.name] = (aliased[p.alias] as Object[]).map(x => this.fromAliased(p.otherType, x));
+                    let otherMetadata = getEntityMetadata(p.otherType);
+                    entity[p.name] = (aliased[p.alias] as Object[]).map(x => otherMetadata.fromAliased(x));
                 }
             } else if (p instanceof Reference) {
                 if (aliased[p.alias] instanceof Object) {
-                    entity[p.name] = this.fromAliased(p.otherType, aliased[p.alias]);
+                    let otherMetadata = getEntityMetadata(p.otherType);
+                    entity[p.name] = otherMetadata.fromAliased(aliased[p.alias]);
                 }
-            } else {
+            } else if (p instanceof Primitive && !p.computed) {
                 if (p.valueType == ValueType.Date) {
-                    entity[p.name] = new Date(aliased[p.alias]);
+                    entity[p.name] = aliased[p.alias] ? new Date(aliased[p.alias]) : null;
+                } else if ([ValueType.Array, ValueType.Object].includes(p.valueType)) {
+                    entity[p.name] = _.cloneDeep(aliased[p.alias]);
                 } else {
                     entity[p.name] = aliased[p.alias];
                 }
@@ -186,7 +203,9 @@ export class EntityMetadata {
             this.primitives.forEach(p => {
                 if (p.computed) return;
 
-                if ([ValueType.Array, ValueType.Object].includes(p.valueType)) {
+                if (p.map) {
+                    entity[p.name] = p.map(cached[p.name]);
+                } else if ([ValueType.Array, ValueType.Object].includes(p.valueType)) {
                     entity[p.name] = _.cloneDeep(cached[p.name]);
                 } else {
                     entity[p.name] = cached[p.name];

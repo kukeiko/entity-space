@@ -6,4 +6,6 @@ export interface IQueryExecuter<T> {
     loadMany?: (q: Query.ByKeys<T>) => Promise<T[]>;
     loadByIndex?: (q: Query.ByIndex<T>) => Promise<T[]>;
     loadByIndexes?: (q: Query.ByIndexes<T>) => Promise<T[]>;
+    save?: (entity: T, diff?: Partial<T>) => Promise<T>;
+    delete?: (entity: T) => Promise<void>;
 }

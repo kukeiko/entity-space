@@ -19,12 +19,97 @@ export class ServiceCluster {
         this._executers.set(entityType, executer);
     }
 
+    async save<T>(args: {
+        entity: T;
+    }): Promise<T> {
+        let entityType = args.entity.constructor as IEntityType<any>;
+        let metadata = getEntityMetadata(entityType);
+        let executer = this._executers.get(entityType) as IQueryExecuter<any>;
+
+        if (!executer) {
+            throw `no query executer for entity type ${entityType.name} registered`;
+        }
+
+        let key = (args.entity as any)[metadata.primaryKey.name];
+        let diff: { [key: string]: any } = null;
+
+        if (key != null) {
+            diff = {};
+
+            let cached = (await this.execute(new Query.ByKey({
+                entityType: entityType,
+                key: key
+            }))).get(key);
+
+            metadata.primitives.forEach(p => {
+                if (!_.isEqual((args.entity as any)[p.name], cached[p.name])) {
+                    diff[p.name] = (args.entity as any)[p.name];
+                }
+            });
+
+            if (Object.keys(diff).length == 0) {
+                return args.entity;
+            }
+        }
+
+        let saved = await executer.save(args.entity, diff || null);
+
+        this._workspace.add({
+            entity: saved,
+            type: entityType
+        });
+
+        key = saved[getEntityMetadata(entityType).primaryKey.name];
+
+        return (await this.execute(new Query.ByKey({
+            entityType: entityType,
+            key: key
+        }))).get(key) || null;
+    }
+
+    async delete(args: {
+        entity: Object;
+    }): Promise<void> {
+        let entityType = args.entity.constructor as IEntityType<any>;
+        let executer = this._executers.get(entityType) as IQueryExecuter<any>;
+
+        if (!executer) {
+            throw `no query executer for entity type ${entityType.name} registered`;
+        }
+
+        await executer.delete(args.entity);
+
+        this._workspace.remove({
+            item: args.entity,
+            type: entityType
+        });
+    }
+
     async execute<T>(query: Query<T>): Promise<Map<any, T>> {
         let [noVirtuals, virtuals] = query.extract(exp => exp.property.virtual);
         let entities = await this._execute(noVirtuals);
         await Promise.all<any>(virtuals.map(v => this._hydrateEntities(entities, v)));
 
         return await this._execute(query);
+    }
+
+    flush(args?: {
+        entityType?: IEntityType<any>;
+    }): void {
+        args = args || {};
+
+        if (args.entityType) {
+            this._workspace.clear({
+                entityType: args.entityType
+            });
+
+            this._queryCache.clear({
+                entityType: args.entityType
+            });
+        } else {
+            this._workspace.clear();
+            this._queryCache.clear();
+        }
     }
 
     private _hydrateEntities<T>(entities: Map<any, T>, ex: Extraction): Promise<void> {
@@ -35,15 +120,16 @@ export class ServiceCluster {
             let keyName = ex.extracted.property.keyName;
             let keys = new Set<any>();
 
-            dryEntities.forEach(t => keys.add(t[keyName]));
+            dryEntities.forEach(t => t[keyName] != null && keys.add(t[keyName]));
 
             return this.execute(new Query.ByKeys({
                 entityType: ex.extracted.property.otherType,
                 expansions: ex.extracted.expansions.slice(),
                 keys: Array.from(keys)
-            })).then(items => {
-                dryEntities.forEach(t => t[refName] = items.get(t[keyName]) || null);
-            });
+            })).then(() => void 0);
+            // .then(items => {
+            //     dryEntities.forEach(t => t[refName] = items.get(t[keyName]) || null);
+            // });
         } else if (ex.extracted.property instanceof Collection) {
             let otherMetadata = getEntityMetadata(ex.extracted.property.otherType);
             let backRef = otherMetadata.getReference(ex.extracted.property.backReferenceName);
@@ -56,9 +142,10 @@ export class ServiceCluster {
                     expansions: ex.extracted.expansions.slice(),
                     index: backRef.keyName,
                     value: t[pkName]
-                })).then(items => {
-                    t[ex.extracted.property.name] = Array.from(items, x => x[1]);
-                });
+                }));
+                // .then(items => {
+                //     t[ex.extracted.property.name] = Array.from(items, x => x[1]);
+                // });
             })).then(() => void 0);
         }
     }

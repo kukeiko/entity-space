@@ -3,8 +3,12 @@ import { Collection, getEntityMetadata, EntityMetadata, IEntityType, Reference }
 import { Expansion } from "./expansion";
 import { Query } from "./query";
 
+type EntityCache = Cache<any, any>;
+type ByEntityType<T> = Map<IEntityType<any>, T>;
+
 export class Workspace {
-    private _caches = new Map<IEntityType<any>, Cache<any, any>>();
+    private _caches = new Map<IEntityType<any>, EntityCache>();
+    private _contextedCaches = new Map<IEntityType<any>, Map<string, EntityCache>>();
 
     execute<T>(q: Query<T>): Map<any, T> {
         let result: Map<any, any> = new Map();
@@ -52,7 +56,7 @@ export class Workspace {
         expansion?: string | Expansion[] | ReadonlyArray<Expansion>;
     }): void {
         let metadata = this._getMetadata(args.type);
-        let cache = this._getCache(args.type);
+        let cache = this._getEntityCache(args.type);
         let expansions = new Array<Expansion>();
 
         if (args.expansion != null) {
@@ -89,7 +93,7 @@ export class Workspace {
                 let reference = otherTypeMetadata.getReference(ex.property.backReferenceName);
                 let key = otherTypeMetadata.getPrimitive(reference.keyName);
 
-                let otherCache = this._getCache(otherType);
+                let otherCache = this._getEntityCache(otherType);
                 otherCache.removeByIndex(key.name, value[0][key.name]);
 
                 items.forEach(v => this.add({
@@ -128,7 +132,7 @@ export class Workspace {
         type: IEntityType<T>;
         expansion?: string | Expansion[] | ReadonlyArray<Expansion>;
     }): T {
-        let item = this._getCache(args.type).get(args.key);
+        let item = this._getEntityCache(args.type).get(args.key);
         if (item == null) return null;
 
         let metadata = this._getMetadata(args.type);
@@ -162,7 +166,7 @@ export class Workspace {
     }): Map<any, T> {
         let metadata = this._getMetadata(args.type);
         let items = new Map<any, T>();
-        this._getCache(args.type).getMany(args.keys)
+        this._getEntityCache(args.type).getMany(args.keys)
             .forEach((v, k) => items.set(k, metadata.fromCached(v) as T));
 
         if (items.size == 0) return items;
@@ -192,7 +196,7 @@ export class Workspace {
     }): Map<any, T> {
         let metadata = this._getMetadata(args.type);
         let items = new Map<any, any>();
-        this._getCache(args.type).all()
+        this._getEntityCache(args.type).all()
             .forEach((v, k) => items.set(k, metadata.fromCached(v) as T));
 
         if (items.size == 0) return items;
@@ -224,7 +228,7 @@ export class Workspace {
     }): Map<any, T> {
         let metadata = this._getMetadata(args.type);
         let items = new Map<any, any>();
-        this._getCache(args.type).byIndex(args.index, args.value)
+        this._getEntityCache(args.type).byIndex(args.index, args.value)
             .forEach((v, k) => items.set(k, metadata.fromCached(v) as T));
 
         if (items.size == 0) return items;
@@ -255,7 +259,7 @@ export class Workspace {
     }): Map<any, T> {
         let metadata = this._getMetadata(args.type);
         let items = new Map<any, any>();
-        this._getCache(args.type).byIndexes(args.indexes)
+        this._getEntityCache(args.type).byIndexes(args.indexes)
             .forEach((v, k) => items.set(k, metadata.fromCached(v) as T));
 
         if (items.size == 0) return items;
@@ -283,13 +287,27 @@ export class Workspace {
         item: any;
         type: IEntityType<any>;
     }): void {
-        let cache = this._getCache(args.type);
+        let cache = this._getEntityCache(args.type);
 
         if (cache == null) {
             throw `can't remove item: type ${args.type} is not a known type`;
         }
 
         cache.remove(args.item);
+    }
+
+    clear(args?: {
+        entityType?: IEntityType<any>;
+    }): void {
+        args = args || {};
+
+        if (args.entityType) {
+            let cache = this._getEntityCache(args.entityType);
+            cache.clear();
+        } else {
+            this._caches = new Map<IEntityType<any>, EntityCache>();
+            this._contextedCaches = new Map<IEntityType<any>, Map<string, EntityCache>>();
+        }
     }
 
     /**
@@ -314,7 +332,8 @@ export class Workspace {
                     expansion: expansion.expansions
                 }));
             } else if (expansion.property instanceof Collection) {
-                let keyName = this._getMetadata(expansion.property.otherType).getReference(expansion.property.backReferenceName).keyName;
+                let backRef = this._getMetadata(expansion.property.otherType).getReference(expansion.property.backReferenceName);
+                let keyName = backRef.keyName;
                 let pkName = this._getMetadata(args.ownerType).primaryKey.name;
 
                 args.items.forEach(item => {
@@ -326,6 +345,7 @@ export class Workspace {
                     }), v => v[1]);
 
                     item[name] = items;
+                    items.forEach(i => i[backRef.name] = item);
                 });
             }
         });
@@ -341,21 +361,58 @@ export class Workspace {
         return metadata;
     }
 
-    private _getCache(type: IEntityType<any>): Cache<any, any> {
+    private _getEntityCache(type: IEntityType<any>): Cache<any, any> {
         if (!this._caches.has(type)) {
-            let indexes: { [key: string]: (item: any) => any } = {};
-            let metadata = this._getMetadata(type);
-
-            metadata.primitives.filter(p => p.index).forEach(p => indexes[p.name] = item => item[p.name]);
-
-            let cache = new Cache<any, any>({
-                getter: item => item[metadata.primaryKey.name],
-                indexes
-            });
-
-            this._caches.set(type, cache);
+            this._caches.set(type, this._createEntityCache(type));
         }
 
         return this._caches.get(type);
+    }
+
+    private _buildContextKey(contexts: { [key: number]: any }): string {
+        let a: any[] = [];
+
+        for (let k in contexts) {
+            a[k] = contexts[k];
+        }
+
+        let map = new Map<number, any>();
+        a.forEach((v, i) => map.set(i, v));
+
+        // todo: stopped here
+        throw "NotImplemented";
+    }
+
+    private _getContextedEntityCache(args: {
+        type: IEntityType<any>;
+        contextKey: string;
+    }): EntityCache {
+        let perContext = this._contextedCaches.get(args.type);
+
+        if (!perContext) {
+            perContext = new Map<string, EntityCache>();
+            this._contextedCaches.set(args.type, perContext);
+        }
+
+        let entities = perContext.get(args.contextKey);
+
+        if (!entities) {
+            entities = this._createEntityCache(args.type);
+            perContext.set(args.contextKey, );
+        }
+
+        return entities;
+    }
+
+    private _createEntityCache(type: IEntityType<any>): EntityCache {
+        let indexes: { [key: string]: (item: any) => any } = {};
+        let metadata = this._getMetadata(type);
+
+        metadata.primitives.filter(p => p.index).forEach(p => indexes[p.name] = item => item[p.name]);
+
+        return new Cache<any, any>({
+            getter: item => item[metadata.primaryKey.name],
+            indexes
+        });
     }
 }

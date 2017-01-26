@@ -84,7 +84,7 @@ export class Cache<K, V> {
 
     add(item: V): V {
         let key = this._getKey(item);
-        if (key == null) throw "can't add item to cache with undefined/null key";
+        if (key == null) throw `can't add item to cache with undefined/null key: ${JSON.stringify(item)}`;
 
         let existing = this._pkMap.get(key);
 
@@ -103,6 +103,11 @@ export class Cache<K, V> {
         });
 
         return map;
+    }
+
+    clear(): void {
+        this._pkMap = new Map<K, V>();
+        this._indexes.forEach(index => index.clear());
     }
 }
 
