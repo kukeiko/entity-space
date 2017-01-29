@@ -4,11 +4,9 @@ import { Expansion } from "./expansion";
 import { Query, QueryType } from "./query";
 
 type EntityCache = Cache<any, any>;
-type ByEntityType<T> = Map<IEntityType<any>, T>;
 
 export class Workspace {
     private _caches = new Map<IEntityType<any>, EntityCache>();
-    private _contextedCaches = new Map<IEntityType<any>, Map<string, EntityCache>>();
 
     execute<T>(q: QueryType<T>): Map<any, T> {
         let metadata = this._getMetadata(q.entityType);
@@ -149,7 +147,6 @@ export class Workspace {
             cache.clear();
         } else {
             this._caches = new Map<IEntityType<any>, EntityCache>();
-            this._contextedCaches = new Map<IEntityType<any>, Map<string, EntityCache>>();
         }
     }
 
@@ -228,41 +225,6 @@ export class Workspace {
         }
 
         return this._caches.get(type);
-    }
-
-    private _buildContextKey(contexts: { [key: number]: any }): string {
-        let a: any[] = [];
-
-        for (let k in contexts) {
-            a[k] = contexts[k];
-        }
-
-        let map = new Map<number, any>();
-        a.forEach((v, i) => map.set(i, v));
-
-        // todo: stopped here
-        throw "NotImplemented";
-    }
-
-    private _getContextedEntityCache(args: {
-        type: IEntityType<any>;
-        contextKey: string;
-    }): EntityCache {
-        let perContext = this._contextedCaches.get(args.type);
-
-        if (!perContext) {
-            perContext = new Map<string, EntityCache>();
-            this._contextedCaches.set(args.type, perContext);
-        }
-
-        let entities = perContext.get(args.contextKey);
-
-        if (!entities) {
-            entities = this._createEntityCache(args.type);
-            perContext.set(args.contextKey, );
-        }
-
-        return entities;
     }
 
     private _createEntityCache(type: IEntityType<any>): EntityCache {
