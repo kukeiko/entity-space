@@ -3,7 +3,6 @@ export * from "./expansion";
 export * from "./extraction";
 export * from "./metadata";
 export * from "./path";
-export * from "./repository";
 export * from "./service-cluster";
 export * from "./util";
 export * from "./query";

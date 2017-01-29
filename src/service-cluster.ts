@@ -1,4 +1,4 @@
-import { getEntityMetadata, IEntityType, Collection, Reference } from "./metadata";
+import { getEntityMetadata, IEntityType, Children, Reference } from "./metadata";
 import { Extraction } from "./extraction";
 import { Path } from "./path";
 import { Query } from "./query";
@@ -130,7 +130,7 @@ export class ServiceCluster {
             // .then(items => {
             //     dryEntities.forEach(t => t[refName] = items.get(t[keyName]) || null);
             // });
-        } else if (ex.extracted.property instanceof Collection) {
+        } else if (ex.extracted.property instanceof Children) {
             let otherMetadata = getEntityMetadata(ex.extracted.property.otherType);
             let backRef = otherMetadata.getReference(ex.extracted.property.backReferenceName);
             let metadata = getEntityMetadata(backRef.otherType);
@@ -206,7 +206,7 @@ export class ServiceCluster {
         let next = path;
 
         while (next) {
-            let isArray = next.property instanceof Collection;
+            let isArray = next.property instanceof Children;
 
             if (isArray) {
                 items = _.flatten(items.map(item => item[next.property.name]));

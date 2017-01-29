@@ -5,7 +5,7 @@ import { Album } from "./album";
     name: "Artist",
     primaryKey: { name: "id" },
     primitives: [{ name: "name" }],
-    collections: [{
+    children: [{
         back: "artist",
         name: "albums",
         other: () => Album

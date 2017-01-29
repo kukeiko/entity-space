@@ -1,9 +1,13 @@
-import { IEntityType } from "./entity-type";
+import { IEntityType } from "../entity-type";
+import { ValueType } from "../value-type";
 import { Navigation } from "./navigation";
-import { ValueType } from "./value-type";
 
+/**
+ * Array of entities of which this entity has the keys to, in an array.
+ */
 export class Collection extends Navigation {
-    readonly backReferenceName: string;
+    readonly type = "array:ref";
+    readonly keysName: string;
 
     constructor(args: Collection.ICtorArgs) {
         super({
@@ -15,14 +19,14 @@ export class Collection extends Navigation {
             valueType: ValueType.Array
         });
 
-        this.backReferenceName = args.back;
+        this.keysName = args.keys;
     }
 }
 
 export module Collection {
     export interface ICtorArgs {
         alias?: string;
-        back: string;
+        keys: string;
         name: string;
         other: () => IEntityType<any>;
         saveable?: boolean;

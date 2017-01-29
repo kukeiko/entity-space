@@ -1,11 +1,9 @@
 import * as _ from "lodash";
 import { getEntityMetadata } from "./entity-decorator";
 import { IEntityType } from "./entity-type";
-import { Collection } from "./collection";
 import { Primitive } from "./primitive";
 import { Property } from "./property";
-import { Navigation } from "./navigation";
-import { Reference } from "./reference";
+import { Navigation, Children, Collection, Reference } from "./navigation";
 import { ValueType } from "./value-type";
 
 export class EntityMetadata {
@@ -18,12 +16,14 @@ export class EntityMetadata {
     readonly primitives: ReadonlyArray<Primitive>;
     readonly navigations: ReadonlyArray<Navigation>;
     readonly references: ReadonlyArray<Reference>;
+    readonly children: ReadonlyArray<Children>;
     readonly collections: ReadonlyArray<Collection>;
 
     private _propertiesMap = new Map<string, Property>();
     private _primitivesMap = new Map<string, Primitive>();
     private _navigationsMap = new Map<string, Navigation>();
     private _referencesMap = new Map<string, Reference>();
+    private _childrenMap = new Map<string, Children>();
     private _collectionsMap = new Map<string, Collection>();
     private _refKeysMap = new Map<string, Primitive>();
 
@@ -67,6 +67,12 @@ export class EntityMetadata {
             addNavigation(p);
         };
 
+        let addChildren = (p: Children) => {
+            this._childrenMap.set(p.name.toLocaleLowerCase(), p);
+            this._childrenMap.set(p.alias.toLocaleLowerCase(), p);
+            addNavigation(p);
+        };
+
         let addCollection = (p: Collection) => {
             this._collectionsMap.set(p.name.toLocaleLowerCase(), p);
             this._collectionsMap.set(p.alias.toLocaleLowerCase(), p);
@@ -78,6 +84,7 @@ export class EntityMetadata {
 
         (args.primitives || []).forEach(x => addPrimitive(new Primitive(x)));
         (args.references || []).forEach(x => addReference(new Reference(x)));
+        (args.children || []).forEach(x => addChildren(new Children(x)));
         (args.collections || []).forEach(x => addCollection(new Collection(x)));
 
         this._referencesMap.forEach(ref => {
@@ -85,12 +92,13 @@ export class EntityMetadata {
             if (refKeyProperty) {
                 this._refKeysMap.set(refKeyProperty.name.toLocaleLowerCase(), refKeyProperty);
             }
-        })
+        });
 
         this.properties = _.uniq(Array.from(this._propertiesMap.values())).sort((a, b) => a.name < b.name ? -1 : 1);
         this.primitives = _.uniq(Array.from(this._primitivesMap.values())).sort((a, b) => a.name < b.name ? -1 : 1);
         this.navigations = _.uniq(Array.from(this._navigationsMap.values())).sort((a, b) => a.name < b.name ? -1 : 1);
         this.references = _.uniq(Array.from(this._referencesMap.values())).sort((a, b) => a.name < b.name ? -1 : 1);
+        this.children = _.uniq(Array.from(this._childrenMap.values())).sort((a, b) => a.name < b.name ? -1 : 1);
         this.collections = _.uniq(Array.from(this._collectionsMap.values())).sort((a, b) => a.name < b.name ? -1 : 1);
     }
 
@@ -108,6 +116,10 @@ export class EntityMetadata {
 
     getReference(name: string): Reference {
         return this._referencesMap.get(name.toLocaleLowerCase()) || null;
+    }
+
+    getChildren(name: string): Children {
+        return this._childrenMap.get(name.toLocaleLowerCase()) || null;
     }
 
     getCollection(name: string): Collection {
@@ -135,7 +147,7 @@ export class EntityMetadata {
 
             if (entity[p.name] == undefined) return;
 
-            if (p instanceof Collection) {
+            if (p instanceof Children) {
                 if (entity[p.name] instanceof Array) {
                     saveable[name] = (entity[p.name] as Object[]).map(x => this.createSaveable(x, useAlias));
                 }
@@ -168,7 +180,7 @@ export class EntityMetadata {
         let entity = new this.entityType();
 
         this.properties.forEach(p => {
-            if (p instanceof Collection) {
+            if (p instanceof Children) {
                 if (aliased[p.alias] instanceof Array) {
                     let otherMetadata = getEntityMetadata(p.otherType);
                     entity[p.name] = (aliased[p.alias] as Object[]).map(x => otherMetadata.fromAliased(x));
@@ -225,6 +237,7 @@ export module EntityMetadata {
         primaryKey: Primitive.ICtorArgs;
         primitives?: Primitive.ICtorArgs[];
         references?: Reference.ICtorArgs[];
+        children?: Children.ICtorArgs[];
         collections?: Collection.ICtorArgs[];
     }
 }

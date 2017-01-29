@@ -1,8 +1,9 @@
-import { IEntityType } from "./entity-type";
+import { IEntityType } from "../entity-type";
 import { Navigation } from "./navigation";
-import { ValueType } from "./value-type";
+import { ValueType } from "../value-type";
 
 export class Reference extends Navigation {
+    readonly type = "ref";
     readonly keyName: string;
 
     constructor(args: Reference.ICtorArgs) {

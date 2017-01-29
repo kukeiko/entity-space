@@ -20,13 +20,13 @@ export class Album {
     @Entity.Reference({ key: "artistId", other: () => Artist })
     artist: Artist = null;
 
-    @Entity.Collection({ back: "album", other: () => Song })
+    @Entity.Children({ back: "album", other: () => Song })
     songs: Song[] = [];
 
-    @Entity.Collection({ back: "album", other: () => AlbumTag })
+    @Entity.Children({ back: "album", other: () => AlbumTag })
     tags: AlbumTag[] = [];
 
-    @Entity.Collection({ back: "album", other: () => AlbumReview, virtual: true })
+    @Entity.Children({ back: "album", other: () => AlbumReview, virtual: true })
     reviews: AlbumReview[] = [];
 
     constructor(args?: Partial<Album>) {

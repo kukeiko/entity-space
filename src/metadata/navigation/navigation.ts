@@ -1,7 +1,13 @@
-import { IEntityType } from "./entity-type";
-import { Property } from "./property";
+import { IEntityType } from "../entity-type";
+import { Property } from "../property";
 
-export class Navigation extends Property {
+export type NavigationIdentity =
+    "ref"
+    | "array:ref"
+    | "array:child";
+
+export abstract class Navigation extends Property {
+    readonly type: NavigationIdentity;
     readonly virtual: boolean;
 
     get otherType(): IEntityType<any> { return this._otherType(); };

@@ -1,4 +1,4 @@
-import { getEntityMetadata, Entity, EntityMetadata, Primitive, Navigation, Reference, Collection } from "../../src";
+import { getEntityMetadata, Entity, EntityMetadata, Primitive, Navigation, Reference, Children } from "../../src";
 import { Album, AlbumReview, Artist, Song, TagType } from "../common/entities";
 
 describe("entity-metadata", () => {
@@ -143,7 +143,7 @@ describe("entity-metadata", () => {
             expect(songMetadata.getProperty("name") instanceof Primitive).toBe(true, "primitive");
             expect(songMetadata.getProperty("album") instanceof Navigation).toBe(true, "navigation");
             expect(songMetadata.getProperty("album") instanceof Reference).toBe(true, "reference");
-            expect(songMetadata.getProperty("tags") instanceof Collection).toBe(true, "collection");
+            expect(songMetadata.getProperty("tags") instanceof Children).toBe(true, "collection");
         });
     });
 
@@ -193,7 +193,7 @@ describe("entity-metadata", () => {
 
         it("should return a reference and collection", () => {
             expect(songMetadata.getNavigation("album") instanceof Reference).toBe(true, "reference");
-            expect(songMetadata.getNavigation("tags") instanceof Collection).toBe(true, "collection");
+            expect(songMetadata.getNavigation("tags") instanceof Children).toBe(true, "collection");
         });
     });
 
@@ -222,15 +222,15 @@ describe("entity-metadata", () => {
         });
     });
 
-    describe("getCollection()", () => {
+    describe("getChildren()", () => {
         let songMetadata = getEntityMetadata(Song);
 
         it("should return null if not found", () => {
-            expect(songMetadata.getCollection("iDontExist")).toBe(null);
+            expect(songMetadata.getChildren("iDontExist")).toBe(null);
         });
 
         it("should ignore case", () => {
-            expect(songMetadata.getCollection("TAGS") instanceof Collection).toBe(true);
+            expect(songMetadata.getChildren("TAGS") instanceof Children).toBe(true);
         });
 
         it("should allow usage of alias (ignore case)", () => {
@@ -238,12 +238,12 @@ describe("entity-metadata", () => {
         });
 
         it("should return a collection", () => {
-            expect(songMetadata.getCollection("tags") instanceof Collection).toBe(true);
+            expect(songMetadata.getChildren("tags") instanceof Children).toBe(true);
         });
 
         it("should not return a primitive or reference", () => {
-            expect(songMetadata.getCollection("name")).toBe(null, "primitive");
-            expect(songMetadata.getCollection("album")).toBe(null, "reference");
+            expect(songMetadata.getChildren("name")).toBe(null, "primitive");
+            expect(songMetadata.getChildren("album")).toBe(null, "reference");
         });
     });
 

@@ -1,7 +1,7 @@
 import { Cache } from "./cache";
-import { Collection, getEntityMetadata, EntityMetadata, IEntityType, Reference } from "./metadata";
+import { Children, getEntityMetadata, EntityMetadata, IEntityType, Reference, NavigationType } from "./metadata";
 import { Expansion } from "./expansion";
-import { Query } from "./query";
+import { Query, QueryType } from "./query";
 
 type EntityCache = Cache<any, any>;
 type ByEntityType<T> = Map<IEntityType<any>, T>;
@@ -10,44 +10,43 @@ export class Workspace {
     private _caches = new Map<IEntityType<any>, EntityCache>();
     private _contextedCaches = new Map<IEntityType<any>, Map<string, EntityCache>>();
 
-    execute<T>(q: Query<T>): Map<any, T> {
-        let result: Map<any, any> = new Map();
+    execute<T>(q: QueryType<T>): Map<any, T> {
+        let metadata = this._getMetadata(q.entityType);
+        let items = new Map<any, T>();
+        let cache = this._getEntityCache(q.entityType);
 
-        if (q instanceof Query.ByKey) {
-            let item = this.get({
-                key: q.key,
-                type: q.entityType,
-                expansion: q.expansions
-            });
+        switch (q.type) {
+            case "all":
+                cache.all().forEach((v, k) => items.set(k, metadata.fromCached(v) as T));
+                break;
 
-            result.set(q.key, item);
-        } else if (q instanceof Query.ByKeys) {
-            result = this.getMany({
-                keys: q.keys.slice(),
-                type: q.entityType,
-                expansion: q.expansions
-            });
-        } else if (q instanceof Query.ByIndex) {
-            result = this.byIndex({
-                index: q.index,
-                value: q.value,
-                type: q.entityType,
-                expansion: q.expansions
-            });
-        } else if (q instanceof Query.ByIndexes) {
-            result = this.byIndexes({
-                indexes: q.indexes,
-                type: q.entityType,
-                expansion: q.expansions
-            });
-        } else if (q instanceof Query.All) {
-            result = this.all({
-                type: q.entityType,
-                expansion: q.expansions
-            });
+            case "key":
+                let item = cache.get(q.key);
+
+                if (item) {
+                    items.set(q.key, metadata.fromCached(item) as T);
+                }
+                break;
+
+            case "keys":
+                cache.getMany(q.keys.slice()).forEach((v, k) => items.set(k, metadata.fromCached(v) as T));
+                break;
+
+            case "index":
+                cache.byIndex(q.index, q.value).forEach((v, k) => items.set(k, metadata.fromCached(v) as T));
+                break;
+
+            case "indexes":
+                cache.byIndexes(q.indexes).forEach((v, k) => items.set(k, metadata.fromCached(v) as T));
+                break;
         }
 
-        return result;
+        this._hydrate({
+            items: items,
+            query: q
+        });
+
+        return items;
     }
 
     add<T>(args: {
@@ -86,7 +85,7 @@ export class Workspace {
                     type: otherType,
                     expansion: ex.expansions
                 });
-            } else if (ex.property instanceof Collection) {
+            } else if (ex.property instanceof Children) {
                 let items = value as any[];
                 if (items.length == 0) return;
 
@@ -127,162 +126,6 @@ export class Workspace {
         }));
     }
 
-    get<T>(args: {
-        key: any;
-        type: IEntityType<T>;
-        expansion?: string | Expansion[] | ReadonlyArray<Expansion>;
-    }): T {
-        let item = this._getEntityCache(args.type).get(args.key);
-        if (item == null) return null;
-
-        let metadata = this._getMetadata(args.type);
-        item = metadata.fromCached(item);
-        let expansions = new Array<Expansion>();
-
-        if (args.expansion != null) {
-            if (args.expansion instanceof Array) {
-                expansions = args.expansion as Expansion[];
-            } else {
-                expansions = Expansion.parse(args.type, args.expansion as string);
-            }
-        }
-
-        let map = new Map();
-        map.set(item[metadata.primaryKey.name], item);
-
-        this._expand({
-            items: map,
-            ownerType: args.type,
-            expansions: expansions
-        });
-
-        return item;
-    }
-
-    getMany<T>(args: {
-        keys: any[];
-        type: IEntityType<T>;
-        expansion?: string | Expansion[] | ReadonlyArray<Expansion>;
-    }): Map<any, T> {
-        let metadata = this._getMetadata(args.type);
-        let items = new Map<any, T>();
-        this._getEntityCache(args.type).getMany(args.keys)
-            .forEach((v, k) => items.set(k, metadata.fromCached(v) as T));
-
-        if (items.size == 0) return items;
-
-        let expansions = new Array<Expansion>();
-
-        if (args.expansion != null) {
-            if (args.expansion instanceof Array) {
-                expansions = args.expansion as Expansion[];
-            } else {
-                expansions = Expansion.parse(args.type, args.expansion as string);
-            }
-        }
-
-        this._expand({
-            items: items,
-            ownerType: args.type,
-            expansions: expansions
-        });
-
-        return items;
-    }
-
-    all<T>(args: {
-        type: IEntityType<T>;
-        expansion?: string | Expansion[] | ReadonlyArray<Expansion>;
-    }): Map<any, T> {
-        let metadata = this._getMetadata(args.type);
-        let items = new Map<any, any>();
-        this._getEntityCache(args.type).all()
-            .forEach((v, k) => items.set(k, metadata.fromCached(v) as T));
-
-        if (items.size == 0) return items;
-
-        let expansions = new Array<Expansion>();
-
-        if (args.expansion != null) {
-            if (args.expansion instanceof Array) {
-                expansions = args.expansion as Expansion[];
-            } else {
-                expansions = Expansion.parse(args.type, args.expansion as string);
-            }
-        }
-
-        this._expand({
-            items: items,
-            ownerType: args.type,
-            expansions: expansions
-        });
-
-        return items;
-    }
-
-    byIndex<T>(args: {
-        index: string;
-        value: any;
-        type: IEntityType<T>;
-        expansion?: string | Expansion[] | ReadonlyArray<Expansion>;
-    }): Map<any, T> {
-        let metadata = this._getMetadata(args.type);
-        let items = new Map<any, any>();
-        this._getEntityCache(args.type).byIndex(args.index, args.value)
-            .forEach((v, k) => items.set(k, metadata.fromCached(v) as T));
-
-        if (items.size == 0) return items;
-
-        let expansions = new Array<Expansion>();
-
-        if (args.expansion != null) {
-            if (args.expansion instanceof Array) {
-                expansions = args.expansion as Expansion[];
-            } else {
-                expansions = Expansion.parse(args.type, args.expansion as string);
-            }
-        }
-
-        this._expand({
-            items: items,
-            ownerType: args.type,
-            expansions: expansions
-        });
-
-        return items;
-    }
-
-    byIndexes<T>(args: {
-        indexes: { [key: string]: Object };
-        type: IEntityType<T>;
-        expansion?: string | Expansion[] | ReadonlyArray<Expansion>;
-    }): Map<any, T> {
-        let metadata = this._getMetadata(args.type);
-        let items = new Map<any, any>();
-        this._getEntityCache(args.type).byIndexes(args.indexes)
-            .forEach((v, k) => items.set(k, metadata.fromCached(v) as T));
-
-        if (items.size == 0) return items;
-
-        let expansions = new Array<Expansion>();
-
-        if (args.expansion != null) {
-            if (args.expansion instanceof Array) {
-                expansions = args.expansion as Expansion[];
-            } else {
-                expansions = Expansion.parse(args.type, args.expansion as string);
-            }
-        }
-
-        this._expand({
-            items: items,
-            ownerType: args.type,
-            expansions: expansions
-        });
-
-        return items;
-    }
-
     remove(args: {
         item: any;
         type: IEntityType<any>;
@@ -310,43 +153,61 @@ export class Workspace {
         }
     }
 
-    /**
-     * The code of this function was once duplicated @ get(), all() and ofIndex() functions.
-     * Interestingly enough it was faster that way by about 15% (@ Chrome).
-     */
-    private _expand(args: {
+    private _hydrate(args: {
+        query: QueryType<any>;
         items: Map<any, any>;
-        expansions: Expansion[] | ReadonlyArray<Expansion>;
-        ownerType: IEntityType<any>;
     }): void {
-        args.expansions.slice().forEach(expansion => {
-            let name = expansion.property.name;
-            let otherType = expansion.property.otherType;
+        args.query.expansions.forEach(exp => {
+            let nav = exp.property as NavigationType;
 
-            if (expansion.property instanceof Reference) {
-                let keyName = expansion.property.keyName;
+            switch (nav.type) {
+                case "ref":
+                    let keyName = nav.keyName;
 
-                args.items.forEach(item => item[name] = this.get({
-                    key: item[keyName],
-                    type: otherType,
-                    expansion: expansion.expansions
-                }));
-            } else if (expansion.property instanceof Collection) {
-                let backRef = this._getMetadata(expansion.property.otherType).getReference(expansion.property.backReferenceName);
-                let keyName = backRef.keyName;
-                let pkName = this._getMetadata(args.ownerType).primaryKey.name;
+                    args.items.forEach(item =>
+                        item[nav.name] = this.execute(new Query.ByKey({
+                            entityType: nav.otherType,
+                            expansions: exp.expansions.slice(),
+                            key: item[keyName]
+                        })).get(item[keyName]) || null);
+                    break;
 
-                args.items.forEach(item => {
-                    let items = Array.from(this.byIndex<any>({
-                        index: keyName,
-                        value: item[pkName],
-                        type: otherType,
-                        expansion: expansion.expansions
-                    }), v => v[1]);
+                case "array:child":
+                    let backRef = this._getMetadata(nav.otherType).getReference(nav.backReferenceName);
+                    let parentKeyName = backRef.keyName;
+                    let pkName = this._getMetadata(args.query.entityType).primaryKey.name;
 
-                    item[name] = items;
-                    items.forEach(i => i[backRef.name] = item);
-                });
+                    args.items.forEach(item => {
+                        let parentKey = item[pkName];
+
+                        let items = this.execute(new Query.ByIndex({
+                            entityType: nav.otherType,
+                            expansions: exp.expansions.slice(),
+                            index: parentKeyName,
+                            value: parentKey
+                        }));
+
+                        item[nav.name] = Array.from(items.values());
+                        items.forEach(i => i[backRef.name] = item);
+                    });
+                    break;
+
+                case "array:ref":
+                    let keysName = nav.keysName;
+
+                    args.items.forEach(item => {
+                        let items = this.execute(new Query.ByKeys({
+                            entityType: nav.otherType,
+                            expansions: exp.expansions.slice(),
+                            keys: item[keysName]
+                        }));
+
+                        item[nav.name] = Array.from(items.values());
+                    });
+                    break;
+
+                default:
+                    throw `unknown navigation type: ${(nav as any).type}`;
             }
         });
     }

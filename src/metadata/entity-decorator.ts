@@ -1,8 +1,7 @@
 import { IEntityType } from "./entity-type";
 import { EntityMetadata } from "./entity-metadata";
-import { Collection } from "./collection";
+import { Children, Collection, Reference } from "./navigation";
 import { Primitive } from "./primitive";
-import { Reference } from "./reference";
 
 const METADATA_KEY = "entity-space:entity-metadata";
 const METADATA_ARGS_KEY = "entity-space:entity-metadata:ctor-args";
@@ -12,6 +11,7 @@ let nameToTypeMap = new Map<string, IEntityType<any>>();
 function getOrCreateMetadataArgs(type: any): Partial<EntityMetadata.ICtorArgs> {
     if (!Reflect.hasMetadata(METADATA_ARGS_KEY, type)) {
         let args: Partial<EntityMetadata.ICtorArgs> = {
+            children: [],
             collections: [],
             primitives: [],
             references: []
@@ -39,6 +39,7 @@ export function Entity(args?: Partial<EntityMetadata.ICtorArgs>) {
         existing.primaryKey = args.primaryKey || existing.primaryKey;
         existing.primitives = [...existing.primitives, ...(args.primitives || [])];
         existing.references = [...existing.references, ...(args.references || [])];
+        existing.children = [...existing.children, ...(args.children || [])];
         existing.collections = [...existing.collections, ...(args.collections || [])];
     };
 }
@@ -119,13 +120,23 @@ export module Entity {
         };
     }
 
-    export function Collection(args: {
+    export function Children(args: {
         alias?: string;
         back: string;
         name?: string;
         other: () => IEntityType<any>;
         saveable?: boolean;
         virtual?: boolean;
+    }) {
+        return <T>(type: Object, key: string) => {
+            let defaults = <Children.ICtorArgs>{ name: key };
+
+            getOrCreateMetadataArgs(type.constructor).children.push({ ...defaults, ...args });
+        };
+    }
+
+    export function Collection(args: {
+
     }) {
         return <T>(type: Object, key: string) => {
             let defaults = <Collection.ICtorArgs>{ name: key };

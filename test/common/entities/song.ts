@@ -16,6 +16,6 @@ export class Song {
     @Entity.Reference({ key: "albumId", other: () => Album, alias: "DerAlbumSpieltSchweissfrei" })
     album: Album;
 
-    @Entity.Collection({ back: "song", other: () => SongTag, alias: "SongTags" })
+    @Entity.Children({ back: "song", other: () => SongTag, alias: "SongTags" })
     tags: SongTag[];
 }

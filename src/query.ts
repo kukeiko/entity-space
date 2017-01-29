@@ -1,7 +1,9 @@
 import * as _ from "lodash";
-import { getEntityMetadata, IEntityType, Navigation } from "./metadata";
+import { getEntityMetadata, IEntityType } from "./metadata";
 import { Expansion } from "./expansion";
 import { Extraction } from "./extraction";
+
+export type QueryIdentity = "all" | "key" | "keys" | "index" | "indexes";
 
 /**
  * Describes which entities and expansions should be loaded. 
@@ -9,6 +11,7 @@ import { Extraction } from "./extraction";
  * Is immutable.
  */
 export abstract class Query<T> {
+    readonly type: QueryIdentity;
     readonly entityType: IEntityType<T>;
     readonly expansions: ReadonlyArray<Expansion>;
 
@@ -144,7 +147,7 @@ export abstract class Query<T> {
         return Query.equals(this, other);
     }
 
-    extract(predicate: (p: Expansion) => boolean): [Query<T>, Extraction[]] {
+    extract(predicate: (p: Expansion) => boolean): [QueryType<T>, Extraction[]] {
         let extractions = new Array<Extraction>();
         let expansions = new Array<Expansion>();
 
@@ -161,19 +164,30 @@ export abstract class Query<T> {
             }
         });
 
+        // todo: this screams for a Query.copy(newProps) method
+        let q: QueryType<T>;
+        let self = this as QueryType<T>;
 
-        let q: Query<T>;
+        switch (self.type) {
+            case "all":
+                q = new Query.All<T>({ entityType: self.entityType, expansions: expansions });
+                break;
 
-        if (this instanceof Query.ByKey) {
-            q = new Query.ByKey<T>({ key: this.key, entityType: this.entityType, expansions: expansions });
-        } else if (this instanceof Query.ByKeys) {
-            q = new Query.ByKeys<T>({ keys: this.keys.slice(), entityType: this.entityType, expansions: expansions });
-        } else if (this instanceof Query.ByIndex) {
-            q = new Query.ByIndex<T>({ index: this.index, value: this.value, entityType: this.entityType, expansions: expansions });
-        } else if (this instanceof Query.ByIndexes) {
-            q = new Query.ByIndexes<T>({ indexes: this.indexes, entityType: this.entityType, expansions: expansions });
-        } else if (this instanceof Query.All) {
-            q = new Query.All<T>({ entityType: this.entityType, expansions: expansions });
+            case "key":
+                q = new Query.ByKey<T>({ key: self.key, entityType: self.entityType, expansions: expansions });
+                break;
+
+            case "keys":
+                q = new Query.ByKeys<T>({ keys: self.keys.slice(), entityType: self.entityType, expansions: expansions });
+                break;
+
+            case "index":
+                q = new Query.ByIndex<T>({ index: self.index, value: self.value, entityType: self.entityType, expansions: expansions });
+                break;
+
+            case "indexes":
+                q = new Query.ByIndexes<T>({ indexes: self.indexes, entityType: self.entityType, expansions: expansions });
+                break;
         }
 
         return [q, extractions];
@@ -208,6 +222,8 @@ export abstract class Query<T> {
 
 export module Query {
     export class All<T> extends Query<T> {
+        readonly type = "all";
+
         isSuperSetOf(other: Query<T>): boolean {
             if (other.entityType != this.entityType) return false;
 
@@ -216,6 +232,7 @@ export module Query {
     }
 
     export class ByKey<T> extends Query<T> {
+        readonly type = "key";
         readonly key: any;
 
         constructor(args: {
@@ -245,6 +262,7 @@ export module Query {
     }
 
     export class ByKeys<T> extends Query<T> {
+        readonly type = "keys";
         readonly keys: ReadonlyArray<any>;
         private readonly _sortedKeys: Array<any>;
 
@@ -278,6 +296,7 @@ export module Query {
     }
 
     export class ByIndex<T> extends Query<T> {
+        readonly type = "index";
         readonly index: string;
         readonly value: any;
 
@@ -310,6 +329,7 @@ export module Query {
     }
 
     export class ByIndexes<T> extends Query<T> {
+        readonly type = "indexes";
         readonly indexes: Readonly<{ [key: string]: Object }>;
 
         constructor(args: {
@@ -352,3 +372,10 @@ export module Query {
         }
     }
 }
+
+export type QueryType<T> =
+    Query.All<T>
+    | Query.ByIndex<T>
+    | Query.ByIndexes<T>
+    | Query.ByKey<T>
+    | Query.ByKeys<T>;

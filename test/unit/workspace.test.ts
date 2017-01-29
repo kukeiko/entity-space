@@ -1,4 +1,4 @@
-import { getEntityMetadata, EntityMetadata, Primitive, Navigation, Reference, Collection, Workspace } from "../../src";
+import { getEntityMetadata, EntityMetadata, Primitive, Navigation, Reference, Children, Workspace } from "../../src";
 import { Album, Artist, Song, TagType } from "../common/entities";
 
 describe("workspace", () => {
