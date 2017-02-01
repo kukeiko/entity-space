@@ -8,45 +8,6 @@ type EntityCache = Cache<any, any>;
 export class Workspace {
     private _caches = new Map<IEntityType<any>, EntityCache>();
 
-    execute<T>(q: QueryType<T>): Map<any, T> {
-        let metadata = this._getMetadata(q.entityType);
-        let items = new Map<any, T>();
-        let cache = this._getEntityCache(q.entityType);
-
-        switch (q.type) {
-            case "all":
-                cache.all().forEach((v, k) => items.set(k, metadata.fromCached(v) as T));
-                break;
-
-            case "key":
-                let item = cache.get(q.key);
-
-                if (item) {
-                    items.set(q.key, metadata.fromCached(item) as T);
-                }
-                break;
-
-            case "keys":
-                cache.getMany(q.keys.slice()).forEach((v, k) => items.set(k, metadata.fromCached(v) as T));
-                break;
-
-            case "index":
-                cache.byIndex(q.index, q.value).forEach((v, k) => items.set(k, metadata.fromCached(v) as T));
-                break;
-
-            case "indexes":
-                cache.byIndexes(q.indexes).forEach((v, k) => items.set(k, metadata.fromCached(v) as T));
-                break;
-        }
-
-        this._hydrate({
-            items: items,
-            query: q
-        });
-
-        return items;
-    }
-
     add<T>(args: {
         entity: T;
         type: IEntityType<T>;
@@ -148,6 +109,45 @@ export class Workspace {
         } else {
             this._caches = new Map<IEntityType<any>, EntityCache>();
         }
+    }
+
+    execute<T>(q: QueryType<T>): Map<any, T> {
+        let metadata = this._getMetadata(q.entityType);
+        let items = new Map<any, T>();
+        let cache = this._getEntityCache(q.entityType);
+
+        switch (q.type) {
+            case "all":
+                cache.all().forEach((v, k) => items.set(k, metadata.fromCached(v) as T));
+                break;
+
+            case "key":
+                let item = cache.get(q.key);
+
+                if (item) {
+                    items.set(q.key, metadata.fromCached(item) as T);
+                }
+                break;
+
+            case "keys":
+                cache.getMany(q.keys.slice()).forEach((v, k) => items.set(k, metadata.fromCached(v) as T));
+                break;
+
+            case "index":
+                cache.byIndex(q.index, q.value).forEach((v, k) => items.set(k, metadata.fromCached(v) as T));
+                break;
+
+            case "indexes":
+                cache.byIndexes(q.indexes).forEach((v, k) => items.set(k, metadata.fromCached(v) as T));
+                break;
+        }
+
+        this._hydrate({
+            items: items,
+            query: q
+        });
+
+        return items;
     }
 
     private _hydrate(args: {

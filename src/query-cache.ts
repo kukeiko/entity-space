@@ -27,7 +27,7 @@ export class QueryCache {
             let cache = this._getQueriesOfEntityType(args.entityType);
             cache.clear();
         } else {
-            this._byType = new Map<IEntityType<any>, Map<string, Query<any>>>()
+            this._byType = new Map<IEntityType<any>, Map<string, Query<any>>>();
         }
     }
 

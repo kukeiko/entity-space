@@ -5,10 +5,10 @@ import { Navigation } from "./metadata";
  */
 export class Path {
     private _property: Navigation;
-    get property(): Navigation { return this._property };
+    get property(): Navigation { return this._property; };
 
     private _next: Path;
-    get next(): Path { return this._next };
+    get next(): Path { return this._next; };
 
     constructor(args: {
         property: Navigation;
