@@ -4,7 +4,8 @@ import {
 import {
     Album, AlbumReview,
     Artist,
-    Review
+    Review,
+    Song, SongTag
 } from "../common/entities";
 
 describe("service-cluster", () => {
@@ -73,6 +74,46 @@ describe("service-cluster", () => {
 
             expect(numLoadCalled).toEqual(1);
             done();
+        });
+
+        it("should not load from service due being loaded as an expansion", async (done) => {
+            let sc = new ServiceCluster(new Workspace());
+            let album = new Album({
+                id: 1,
+                artistId: 7,
+                songs: [
+                    new Song({ id: 1337, albumId: 1 }),
+                    new Song({ id: 64, albumId: 1 }),
+                    new Song({
+                        id: 32, albumId: 1, tags: [
+                            new SongTag({
+                                id: 777,
+                                songId: 32
+                            })
+                        ]
+                    })
+                ],
+                artist: new Artist({
+                    id: 7
+                })
+            });
+            sc.register(Album, { loadOne: () => Promise.resolve(album) });
+            sc.register(Artist, { loadOne: () => { throw ("expected to not call Artist query executer"); } });
+            sc.register(Song, { loadOne: () => { throw ("expected to not call Song query executer"); } });
+            sc.register(SongTag, { loadOne: () => { throw ("expected to not call SongTag query executer"); } });
+
+            try {
+                await sc.execute(new Query.ByKey({ entityType: Album, key: 1, expansions: `artist,songs/tags` }));
+                await sc.execute(new Query.ByKey({ entityType: Song, key: 1337 }));
+                await sc.execute(new Query.ByKey({ entityType: Song, key: 64 }));
+                await sc.execute(new Query.ByKey({ entityType: Song, key: 32 }));
+                await sc.execute(new Query.ByKey({ entityType: Artist, key: 7 }));
+                await sc.execute(new Query.ByKey({ entityType: SongTag, key: 777 }));
+                done();
+            } catch (error) {
+                fail(error);
+                done();
+            }
         });
 
         it("should execute Query.All and return expected payload", async (done) => {

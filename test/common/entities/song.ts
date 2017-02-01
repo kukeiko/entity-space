@@ -18,4 +18,8 @@ export class Song {
 
     @Entity.Children({ back: "song", other: () => SongTag, alias: "SongTags" })
     tags: SongTag[];
+
+    constructor(args?: Partial<Song>) {
+        Object.assign(this, args || {});
+    }
 }

@@ -1,4 +1,5 @@
 import { getEntityMetadata, IEntityType, Children, NavigationType } from "./metadata";
+import { Expansion } from "./expansion";
 import { Path } from "./path";
 import { Query, QueryType } from "./query";
 import { QueryCache } from "./query-cache";
@@ -111,6 +112,8 @@ export class ServiceCluster {
 
     /**
      * Make sure that the payload of the provided query exists in the workspace.
+     * 
+     * todo: create and add queries of loaded navigations into the query cache
      */
     private async _loadIntoWorkspace(query: QueryType<any>): Promise<void> {
         let [noVirtuals, virtuals] = query.extract(exp => exp.property.virtual);
@@ -125,6 +128,9 @@ export class ServiceCluster {
             });
 
             this._queryCache.add(noVirtuals);
+
+            let fromCache = this._workspace.execute(noVirtuals);
+            this._buildQueriesFromPayload(Array.from(fromCache.values()), noVirtuals.expansions.slice());
         }
 
         if (virtuals.length > 0) {
@@ -233,6 +239,72 @@ export class ServiceCluster {
             default:
                 throw `unknown query type ${(query as any).type}`;
         }
+    }
+
+    private _buildQueriesFromPayload(entities: any[], expansions: Expansion[]): void {
+        expansions.forEach(exp => {
+            let nav = exp.property as NavigationType;
+
+            switch (nav.type) {
+                case "ref":
+                    {
+                        let ref = nav;
+                        let references: any[] = [];
+                        let keys = new Set<any>();
+
+                        entities.forEach(e => {
+                            if (e[nav.name] == null) return;
+
+                            let key = e[ref.keyName];
+                            if (keys.has(key)) return;
+
+                            keys.add(key);
+                            references.push(e)
+                        });
+
+                        let q = new Query.ByKeys({
+                            entityType: nav.otherType,
+                            expansions: exp.expansions.slice(),
+                            keys: Array.from(keys)
+                        });
+
+                        this._queryCache.add(q);
+                        this._buildQueriesFromPayload(references, exp.expansions.slice());
+                    }
+                    break;
+
+                case "array:child":
+                case "array:ref":
+                    {
+                        let metadata = getEntityMetadata(nav.otherType);
+                        let keyName = metadata.primaryKey.name;
+                        let items: any[] = [];
+                        let keys = new Set<any>();
+
+                        entities.forEach(e => {
+                            if (!(e[nav.name] instanceof Array)) return;
+
+                            (e[nav.name] as any[]).forEach(c => {
+                                let key = c[keyName];
+                                if (keys.has(key)) return;
+
+                                keys.add(key);
+                                items.push(c);
+                            });
+                        });
+
+                        let q = new Query.ByKeys({
+                            entityType: nav.otherType,
+                            expansions: exp.expansions.slice(),
+                            keys: Array.from(keys)
+                        });
+
+                        this._queryCache.add(q);
+                        this._buildQueriesFromPayload(items, exp.expansions.slice());
+                    }
+                    break;
+            }
+        });
     }
 
     private _crawl(entities: Map<any, any>, path: Path): any[] {

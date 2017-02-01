@@ -28,4 +28,8 @@ export class SongTag {
     song: Song;
     tagId: number;
     tag: Tag;
+
+    constructor(args?: Partial<SongTag>) {
+        Object.assign(this, args || {});
+    }
 }
