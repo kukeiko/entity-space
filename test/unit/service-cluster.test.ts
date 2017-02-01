@@ -283,7 +283,7 @@ describe("service-cluster", () => {
             done();
         });
 
-        fit("should hydrate a virtual reference of a collection navigation", async (done) => {
+        it("should hydrate a virtual reference of a collection navigation", async (done) => {
             let sc = new ServiceCluster(new Workspace());
             let artist = new Artist({ id: 7 });
             let album = new Album({ id: 1, artistId: artist.id });
