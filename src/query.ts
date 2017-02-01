@@ -3,15 +3,12 @@ import { getEntityMetadata, IEntityType } from "./metadata";
 import { Expansion } from "./expansion";
 import { Extraction } from "./extraction";
 
-export type QueryIdentity = "all" | "key" | "keys" | "index" | "indexes";
-
 /**
  * Describes which entities and expansions should be loaded. 
  * 
  * Is immutable.
  */
 export abstract class Query<T> {
-    readonly type: QueryIdentity;
     readonly entityType: IEntityType<T>;
     readonly expansions: ReadonlyArray<Expansion>;
 
@@ -166,7 +163,7 @@ export abstract class Query<T> {
 
         // todo: this screams for a Query.copy(newProps) method
         let q: QueryType<T>;
-        let self = this as QueryType<T>;
+        let self = this as any as QueryType<T>;
 
         switch (self.type) {
             case "all":
@@ -188,6 +185,9 @@ export abstract class Query<T> {
             case "indexes":
                 q = new Query.ByIndexes<T>({ indexes: self.indexes, entityType: self.entityType, expansions: expansions });
                 break;
+
+            default:
+                throw `unknown query type '${(self as any).type}'`;
         }
 
         return [q, extractions];
@@ -339,6 +339,7 @@ export module Query {
         }) {
             super(args);
 
+            // tslint:disable-next-line:semicolon
             this.indexes = Object.freeze({ ...args.indexes });
         }
 
@@ -369,6 +370,7 @@ export module Query {
             return this._toString({
                 suffix: indexValues.join(",")
             });
+            // tslint:disable-next-line:semicolon
         }
     }
 }

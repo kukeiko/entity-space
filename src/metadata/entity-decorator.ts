@@ -136,7 +136,12 @@ export module Entity {
     }
 
     export function Collection(args: {
-
+        alias?: string;
+        keys: string;
+        name?: string;
+        other: () => IEntityType<any>;
+        saveable?: boolean;
+        virtual?: boolean;
     }) {
         return <T>(type: Object, key: string) => {
             let defaults = <Collection.ICtorArgs>{ name: key };
