@@ -3,6 +3,8 @@ import { getEntityMetadata, IEntityType } from "./metadata";
 import { Expansion } from "./expansion";
 import { Extraction } from "./extraction";
 
+export type QueryIdentity = "all" | "key" | "keys" | "index" | "indexes";
+
 /**
  * Describes which entities and expansions should be loaded. 
  * 
@@ -11,6 +13,7 @@ import { Extraction } from "./extraction";
 export abstract class Query<T> {
     readonly entityType: IEntityType<T>;
     readonly expansions: ReadonlyArray<Expansion>;
+    readonly expansion: string;
 
     constructor(args: {
         entityType: IEntityType<T>;
@@ -18,10 +21,12 @@ export abstract class Query<T> {
     }) {
         this.entityType = args.entityType;
 
-        let expansions = typeof (args.expansions) == "string"
+        let expansions = (typeof (args.expansions) == "string"
             ? Expansion.parse(args.entityType, args.expansions)
-            : (args.expansions || []);
+            : (args.expansions || []))
+            .sort((a, b) => a.property.name.toLocaleLowerCase() < b.property.name.toLocaleLowerCase() ? -1 : 1);
 
+        this.expansion = expansions.map(exp => exp.toString()).join(",");
         this.expansions = Object.freeze(expansions.slice().sort((a, b) => a.property.name < b.property.name ? -1 : 1));
     }
 
@@ -281,7 +286,7 @@ export module Query {
             if (other.entityType != this.entityType) return false;
             if (other instanceof ByKey && this._sortedKeys.includes(other.key)) {
                 return Expansion.isSuperset(this.expansions.slice(), other.expansions.slice());
-            } else if (other instanceof ByKeys && _.isEqual(this._sortedKeys, other._sortedKeys)) {
+            } else if (other instanceof ByKeys && _.difference(other._sortedKeys, this._sortedKeys).length == 0) {
                 return Expansion.isSuperset(this.expansions.slice(), other.expansions.slice());
             }
 
@@ -377,7 +382,7 @@ export module Query {
 
 export type QueryType<T> =
     Query.All<T>
-    | Query.ByIndex<T>
-    | Query.ByIndexes<T>
     | Query.ByKey<T>
-    | Query.ByKeys<T>;
+    | Query.ByKeys<T>
+    | Query.ByIndex<T>
+    | Query.ByIndexes<T>;

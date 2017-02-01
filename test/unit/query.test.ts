@@ -2,6 +2,24 @@ import { getEntityMetadata, Query, Expansion } from "../../src/";
 import { Artist, Album } from "../common";
 
 describe("query", () => {
+    it("expansion string should be sorted by name", () => {
+        let q = new Query.All({
+            entityType: Album,
+            expansions: `songs,artist,tags,reviews`
+        });
+
+        expect(q.expansion).toEqual("artist,reviews,songs,tags");
+    });
+
+    it("expansions should be sorted by name", () => {
+        let q = new Query.All({
+            entityType: Album,
+            expansions: `songs,artist,tags,reviews`
+        });
+
+        expect(q.expansions.map(exp => exp.toString()).join(",")).toEqual("artist,reviews,songs,tags");
+    });
+
     describe("parse()", () => {
         it("should parse Artist into Query.All", () => {
             let expected = new Query.All({
@@ -74,6 +92,23 @@ describe("query", () => {
             let b = new Query.ByKey({
                 entityType: Artist,
                 key: 3
+            });
+
+            expect(a.isSuperSetOf(b)).toEqual(true);
+            expect(b.isSuperSetOf(a)).toEqual(false);
+            expect(a.isSubsetOf(b)).toEqual(false);
+            expect(b.isSubsetOf(a)).toEqual(true);
+        });
+
+        it("Artist(64,3,128) should be superset of Artist(3,64)", () => {
+            let a = new Query.ByKeys({
+                entityType: Artist,
+                keys: [64, 3, 128]
+            });
+
+            let b = new Query.ByKeys({
+                entityType: Artist,
+                keys: [3, 64]
             });
 
             expect(a.isSuperSetOf(b)).toEqual(true);
