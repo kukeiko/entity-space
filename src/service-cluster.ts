@@ -1,7 +1,6 @@
-import { getEntityMetadata, IEntityType, Children, Reference } from "./metadata";
-import { Extraction } from "./extraction";
+import { getEntityMetadata, IEntityType, Children, NavigationType } from "./metadata";
 import { Path } from "./path";
-import { Query } from "./query";
+import { Query, QueryType } from "./query";
 import { QueryCache } from "./query-cache";
 import { IQueryExecuter } from "./query-executer";
 import { Workspace } from "./workspace";
@@ -13,6 +12,25 @@ export class ServiceCluster {
 
     constructor(workspace: Workspace) {
         this._workspace = workspace;
+    }
+
+    flush(args?: {
+        entityType?: IEntityType<any>;
+    }): void {
+        args = args || {};
+
+        if (args.entityType) {
+            this._workspace.clear({
+                entityType: args.entityType
+            });
+
+            this._queryCache.clear({
+                entityType: args.entityType
+            });
+        } else {
+            this._workspace.clear();
+            this._queryCache.clear();
+        }
     }
 
     register<T>(entityType: IEntityType<T>, executer: IQueryExecuter<T>): void {
@@ -85,88 +103,102 @@ export class ServiceCluster {
         });
     }
 
-    async execute<T>(query: Query<T>): Promise<Map<any, T>> {
+    async execute<T>(query: QueryType<T>): Promise<Map<any, T>> {
+        await this._loadIntoWorkspace(query);
+
+        return await this._workspace.execute(query);
+    }
+
+    /**
+     * Make sure that the payload of the provided query exists in the workspace.
+     */
+    private async _loadIntoWorkspace(query: QueryType<any>): Promise<void> {
         let [noVirtuals, virtuals] = query.extract(exp => exp.property.virtual);
-        let entities = await this._execute(noVirtuals);
-        await Promise.all<any>(virtuals.map(v => this._hydrateEntities(entities, v)));
 
-        return await this._execute(query);
-    }
-
-    flush(args?: {
-        entityType?: IEntityType<any>;
-    }): void {
-        args = args || {};
-
-        if (args.entityType) {
-            this._workspace.clear({
-                entityType: args.entityType
-            });
-
-            this._queryCache.clear({
-                entityType: args.entityType
-            });
-        } else {
-            this._workspace.clear();
-            this._queryCache.clear();
-        }
-    }
-
-    private _hydrateEntities<T>(entities: Map<any, T>, ex: Extraction): Promise<void> {
-        let dryEntities = this._crawl(entities, ex.path);
-
-        if (ex.extracted.property instanceof Reference) {
-            let refName = ex.extracted.property.name;
-            let keyName = ex.extracted.property.keyName;
-            let keys = new Set<any>();
-
-            dryEntities.forEach(t => t[keyName] != null && keys.add(t[keyName]));
-
-            return this.execute(new Query.ByKeys({
-                entityType: ex.extracted.property.otherType,
-                expansions: ex.extracted.expansions.slice(),
-                keys: Array.from(keys)
-            })).then(() => void 0);
-            // .then(items => {
-            //     dryEntities.forEach(t => t[refName] = items.get(t[keyName]) || null);
-            // });
-        } else if (ex.extracted.property instanceof Children) {
-            let otherMetadata = getEntityMetadata(ex.extracted.property.otherType);
-            let backRef = otherMetadata.getReference(ex.extracted.property.backReferenceName);
-            let metadata = getEntityMetadata(backRef.otherType);
-            let pkName = metadata.primaryKey.name;
-
-            return Promise.all(dryEntities.map(t => {
-                return this.execute(new Query.ByIndex({
-                    entityType: ex.extracted.property.otherType,
-                    expansions: ex.extracted.expansions.slice(),
-                    index: backRef.keyName,
-                    value: t[pkName]
-                }));
-                // .then(items => {
-                //     t[ex.extracted.property.name] = Array.from(items, x => x[1]);
-                // });
-            })).then(() => void 0);
-        }
-    }
-
-    private async _execute<T>(query: Query<T>): Promise<Map<any, T>> {
-        if (!this._queryCache.isCached(query)) {
-            let entities: T[] = await this._executeAgainstService(query);
+        if (!this._queryCache.isCached(noVirtuals)) {
+            let fromService: any[] = await this._loadFromService(noVirtuals);
 
             this._workspace.addMany({
-                entities: entities,
-                type: query.entityType,
-                expansion: query.expansions
+                entities: fromService,
+                type: noVirtuals.entityType,
+                expansion: noVirtuals.expansions
             });
 
-            this._queryCache.add(query);
+            this._queryCache.add(noVirtuals);
         }
 
-        return this._workspace.execute(query);
+        if (virtuals.length > 0) {
+            let entities = this._workspace.execute(noVirtuals);
+            let promises: Promise<void>[] = [];
+
+            virtuals.forEach(v => {
+                let crawled = this._crawl(entities, v.path);
+                let nav = v.extracted.property as NavigationType;
+
+                switch (nav.type) {
+                    case "ref":
+                        let keys = new Set<any>();
+                        let keyName = nav.keyName;
+
+                        crawled.forEach(e => {
+                            if (e[keyName] == null) return;
+                            keys.add(e[keyName]);
+                        });
+
+                        promises.push(this._loadIntoWorkspace(new Query.ByKeys({
+                            entityType: nav.otherType,
+                            expansions: v.extracted.expansions.slice(),
+                            keys: Array.from(keys)
+                        })));
+                        break;
+
+                    case "array:child":
+                        let backRef = getEntityMetadata(nav.otherType).getReference(nav.backReferenceName);
+                        let parentKeyName = backRef.keyName;
+                        let pkName = getEntityMetadata(backRef.otherType).primaryKey.name;
+
+                        crawled.forEach(item => {
+                            let parentKey = item[pkName];
+
+                            promises.push(this._loadIntoWorkspace(new Query.ByIndex({
+                                entityType: nav.otherType,
+                                expansions: v.extracted.expansions.slice(),
+                                index: parentKeyName,
+                                value: parentKey
+                            })));
+                        });
+                        break;
+
+                    case "array:ref":
+                        let refKeys = new Set<any>();
+                        let keysName = nav.keysName;
+
+                        crawled.forEach(e => {
+                            let keys = e[keysName];
+                            if (!(keys instanceof Array)) return;
+                            keys.forEach(k => refKeys.add(k));
+                        });
+
+                        promises.push(this._loadIntoWorkspace(new Query.ByKeys({
+                            entityType: nav.otherType,
+                            expansions: v.extracted.expansions.slice(),
+                            keys: Array.from(keys)
+                        })));
+                        break;
+                }
+            });
+
+            await Promise.all(promises);
+        }
     }
 
-    private async _executeAgainstService<T>(query: Query<T>): Promise<T[]> {
+    /**
+     * Load entities from a service by looking up the query executer associated with 
+     * the entity type of the query.
+     * 
+     * The query must not contain any virtuals.
+     */
+    private async _loadFromService<T>(query: QueryType<T>): Promise<T[]> {
         let executer = this._executers.get(query.entityType) as IQueryExecuter<T>;
 
         if (!executer) {
@@ -177,26 +209,29 @@ export class ServiceCluster {
             throw `query of type ${type} for entity ${query.entityType.name} not supported`;
         };
 
-        if (query instanceof Query.ByIndex) {
-            if (!executer.loadByIndex) throwNotSupported("ByIndex");
+        switch (query.type) {
+            case "all":
+                if (!executer.loadAll) throwNotSupported("All");
+                return await executer.loadAll(query);
 
-            return await executer.loadByIndex(query);
-        } else if (query instanceof Query.ByIndexes) {
-            if (!executer.loadByIndexes) throwNotSupported("ByIndexes");
+            case "key":
+                if (!executer.loadOne) throwNotSupported("ByKey");
+                return [await executer.loadOne(query)];
 
-            return await executer.loadByIndexes(query);
-        } else if (query instanceof Query.ByKey) {
-            if (!executer.loadOne) throwNotSupported("ByKey");
+            case "keys":
+                if (!executer.loadMany) throwNotSupported("ByKeys");
+                return await executer.loadMany(query);
 
-            return [await executer.loadOne(query)];
-        } else if (query instanceof Query.ByKeys) {
-            if (!executer.loadMany) throwNotSupported("ByKeys");
+            case "index":
+                if (!executer.loadByIndex) throwNotSupported("ByIndex");
+                return await executer.loadByIndex(query);
 
-            return await executer.loadMany(query);
-        } else if (query instanceof Query.All) {
-            if (!executer.loadAll) throwNotSupported("All");
+            case "indexes":
+                if (!executer.loadByIndexes) throwNotSupported("ByIndexes");
+                return await executer.loadByIndexes(query);
 
-            return await executer.loadAll(query);
+            default:
+                throw `unknown query type ${(query as any).type}`;
         }
     }
 
