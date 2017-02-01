@@ -1,4 +1,4 @@
-import { getEntityMetadata, Query, QueryType, Expansion } from "../../src/";
+import { getEntityMetadata, Query, Expansion } from "../../src/";
 import { Artist, Album } from "../common";
 
 describe("query", () => {

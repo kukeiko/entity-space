@@ -130,8 +130,8 @@ describe("expansion", () => {
 
     describe("isSuperset()", () => {
         it("should return true for equal expansions", () => {
-            let expA = Expansion.parse(Song, "album/{artist,tags/tag/type},tags/tag/type")
-            let expB = Expansion.parse(Song, "album/{artist,tags/tag/type},tags/tag/type")
+            let expA = Expansion.parse(Song, "album/{artist,tags/tag/type},tags/tag/type");
+            let expB = Expansion.parse(Song, "album/{artist,tags/tag/type},tags/tag/type");
 
             let result = Expansion.isSuperset(expA, expB);
 

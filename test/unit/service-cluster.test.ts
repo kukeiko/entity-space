@@ -1,12 +1,10 @@
 import {
-    getEntityMetadata, Entity, EntityMetadata,
     Expansion, ServiceCluster, Query, Workspace
 } from "../../src";
 import {
     Album, AlbumReview,
     Artist,
-    Review,
-    Song, TagType
+    Review
 } from "../common/entities";
 
 describe("service-cluster", () => {
