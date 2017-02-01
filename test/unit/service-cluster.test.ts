@@ -283,7 +283,7 @@ describe("service-cluster", () => {
             done();
         });
 
-        xit("should hydrate a virtual reference of a collection navigation", async (done) => {
+        fit("should hydrate a virtual reference of a collection navigation", async (done) => {
             let sc = new ServiceCluster(new Workspace());
             let artist = new Artist({ id: 7 });
             let album = new Album({ id: 1, artistId: artist.id });
@@ -291,6 +291,9 @@ describe("service-cluster", () => {
             let loaded: Map<any, any>;
 
             artist.albums = [album];
+            album.artist = artist;
+            album.reviews = [albumReview];
+            albumReview.album = album;
 
             sc.register(
                 Artist,

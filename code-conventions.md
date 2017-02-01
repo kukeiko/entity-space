@@ -14,6 +14,8 @@ functionality is added
 functionality changes
 ## **del**:
 functionality is removed
+## **test**
+tests were added, removed, changed, activated/deactivated
 ## **polish**:
 changes/additions to improve clarity / follow conventions / cleanup the codebase:
 * files/folders are moved/renamed
