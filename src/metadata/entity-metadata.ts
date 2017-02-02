@@ -4,7 +4,7 @@ import { IEntityType, IEntity } from "../entity-type";
 import { getEntityMetadata } from "./entity-decorator";
 import { Primitive } from "./primitive";
 import { Property } from "./property";
-import { Navigation, Children, Collection, Reference } from "./navigation";
+import { NavigationType, Navigation, Children, Collection, Reference } from "./navigation";
 import { ValueType } from "./value-type";
 
 /**
@@ -18,14 +18,14 @@ export class EntityMetadata<T extends IEntity> {
     readonly primaryKey: Primitive;
     readonly properties: ReadonlyArray<Property>;
     readonly primitives: ReadonlyArray<Primitive>;
-    readonly navigations: ReadonlyArray<Navigation>;
+    readonly navigations: ReadonlyArray<NavigationType>;
     readonly references: ReadonlyArray<Reference>;
     readonly children: ReadonlyArray<Children>;
     readonly collections: ReadonlyArray<Collection>;
 
     private _propertiesMap = new Map<string, Property>();
     private _primitivesMap = new Map<string, Primitive>();
-    private _navigationsMap = new Map<string, Navigation>();
+    private _navigationsMap = new Map<string, NavigationType>();
     private _referencesMap = new Map<string, Reference>();
     private _childrenMap = new Map<string, Children>();
     private _collectionsMap = new Map<string, Collection>();
@@ -59,7 +59,7 @@ export class EntityMetadata<T extends IEntity> {
             addProperty(p);
         };
 
-        let addNavigation = (p: Navigation) => {
+        let addNavigation = (p: NavigationType) => {
             this._navigationsMap.set(p.name.toLocaleLowerCase(), p);
             this._navigationsMap.set(p.alias.toLocaleLowerCase(), p);
             addProperty(p);
@@ -167,25 +167,34 @@ export class EntityMetadata<T extends IEntity> {
     createSaveable(entity: IEntity, useAlias?: boolean): IStringIndexable {
         let saveable: IStringIndexable = {};
 
-        this.properties.filter(p => p.saveable).forEach(p => {
+        this.navigations.forEach(nav => {
+            if (entity[nav.name] == undefined) return;
+
+            let name = useAlias ? nav.alias : nav.name;
+
+            switch (nav.type) {
+                case "ref":
+                    if (entity[nav.name] instanceof Object) {
+                        saveable[name] = this.createSaveable(entity[nav.name], useAlias);
+                    }
+                    break;
+
+                case "array:child":
+                case "array:ref":
+                    if (entity[nav.name] instanceof Array) {
+                        saveable[name] = (entity[nav.name] as IEntity[]).map(x => this.createSaveable(x, useAlias));
+                    }
+                    break;
+            }
+        });
+
+        this.primitives.forEach(p => {
             let name = useAlias ? p.alias : p.name;
 
-            if (entity[p.name] == undefined) return;
-
-            if (p instanceof Children) {
-                if (entity[p.name] instanceof Array) {
-                    saveable[name] = (entity[p.name] as Object[]).map(x => this.createSaveable(x, useAlias));
-                }
-            } else if (p instanceof Reference) {
-                if (entity[p.name] instanceof Object) {
-                    saveable[name] = this.createSaveable(entity[p.name], useAlias);
-                }
+            if (p.valueType == ValueType.Date) {
+                saveable[name] = (entity[p.name] as Date).toJSON();
             } else {
-                if (p.valueType == ValueType.Date) {
-                    saveable[name] = (entity[p.name] as Date).toJSON();
-                } else {
-                    saveable[name] = entity[p.name];
-                }
+                saveable[name] = entity[p.name];
             }
         });
 
@@ -204,25 +213,34 @@ export class EntityMetadata<T extends IEntity> {
     fromAliased(aliased: IStringIndexable): T {
         let entity = new this.entityType();
 
-        this.properties.forEach(p => {
-            if (p instanceof Children) {
-                if (aliased[p.alias] instanceof Array) {
-                    let otherMetadata = getEntityMetadata(p.otherType);
-                    entity[p.name] = (aliased[p.alias] as Object[]).map(x => otherMetadata.fromAliased(x));
-                }
-            } else if (p instanceof Reference) {
-                if (aliased[p.alias] instanceof Object) {
-                    let otherMetadata = getEntityMetadata(p.otherType);
-                    entity[p.name] = otherMetadata.fromAliased(aliased[p.alias]);
-                }
-            } else if (p instanceof Primitive && !p.computed) {
-                if (p.valueType == ValueType.Date) {
-                    entity[p.name] = aliased[p.alias] ? new Date(aliased[p.alias]) : null;
-                } else if ([ValueType.Array, ValueType.Object].includes(p.valueType)) {
-                    entity[p.name] = _.cloneDeep(aliased[p.alias]);
-                } else {
-                    entity[p.name] = aliased[p.alias];
-                }
+        this.navigations.forEach(nav => {
+            let otherMetadata = getEntityMetadata(nav.otherType);
+
+            switch (nav.type) {
+                case "ref":
+                    if (aliased[nav.alias] instanceof Object) {
+                        entity[nav.name] = otherMetadata.fromAliased(aliased[nav.alias]);
+                    }
+                    break;
+
+                case "array:child":
+                case "array:ref":
+                    if (aliased[nav.alias] instanceof Array) {
+                        entity[nav.name] = (aliased[nav.alias] as IStringIndexable[]).map(x => otherMetadata.fromAliased(x));
+                    }
+                    break;
+            }
+        });
+
+        this.primitives.forEach(p => {
+            if (p.computed) return;
+
+            if (p.clone) {
+                entity[p.name] = _.cloneDeep(aliased[p.alias]);
+            } else if (p.valueType == ValueType.Date) {
+                entity[p.name] = aliased[p.alias] ? new Date(aliased[p.alias]) : null;
+            } else {
+                entity[p.name] = aliased[p.alias];
             }
         });
 
@@ -240,10 +258,10 @@ export class EntityMetadata<T extends IEntity> {
             this.primitives.forEach(p => {
                 if (p.computed) return;
 
-                if (p.map) {
-                    entity[p.name] = p.map(cached[p.name]);
-                } else if ([ValueType.Array, ValueType.Object].includes(p.valueType)) {
+                if (p.clone) {
                     entity[p.name] = _.cloneDeep(cached[p.name]);
+                } else if (p.map) {
+                    entity[p.name] = p.map(cached[p.name]);
                 } else {
                     entity[p.name] = cached[p.name];
                 }

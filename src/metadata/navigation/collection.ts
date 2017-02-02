@@ -1,5 +1,4 @@
 import { IEntityType } from "../../entity-type";
-import { ValueType } from "../value-type";
 import { Navigation } from "./navigation";
 
 /**
@@ -15,8 +14,7 @@ export class Collection extends Navigation {
             virtual: args.virtual,
             name: args.name,
             other: args.other,
-            saveable: args.saveable,
-            valueType: ValueType.Array
+            saveable: args.saveable
         });
 
         this.keysName = args.keys;

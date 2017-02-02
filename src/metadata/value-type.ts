@@ -1,5 +1,5 @@
 export enum ValueType {
-    Any,
+    Unknown,
     Array,
     Boolean,
     Date,

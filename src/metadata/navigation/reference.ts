@@ -1,6 +1,5 @@
 import { IEntityType } from "../../entity-type";
 import { Navigation } from "./navigation";
-import { ValueType } from "../value-type";
 
 export class Reference extends Navigation {
     readonly type = "ref";
@@ -12,8 +11,7 @@ export class Reference extends Navigation {
             virtual: args.virtual,
             name: args.name,
             other: args.other,
-            saveable: args.saveable,
-            valueType: ValueType.Object
+            saveable: args.saveable
         });
 
         this.keyName = args.key;
