@@ -1,12 +1,13 @@
 import { Cache } from "./cache";
-import { Children, getEntityMetadata, IEntityType, Reference, NavigationType } from "./metadata";
+import { Children, getEntityMetadata, Reference, NavigationType } from "./metadata";
+import { IEntityType, IEntity } from "./entity-type";
 import { Expansion } from "./expansion";
 import { Query, QueryType } from "./query";
 
-type EntityCache = Cache<any, any>;
+type EntityCache = Cache<any, IEntity>;
 
 export class Workspace {
-    private _caches = new Map<IEntityType<any>, EntityCache>();
+    private _caches = new Map<IEntityType<IEntity>, EntityCache>();
 
     add<T>(args: {
         entity: T;

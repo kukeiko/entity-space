@@ -1,5 +1,5 @@
 import * as _ from "lodash";
-import { IEntityType } from "./metadata";
+import { IEntityType } from "./entity-type";
 import { Query, QueryType, QueryIdentity } from "./query";
 
 type PerExpansions = Map<string, QueryType<any>>;

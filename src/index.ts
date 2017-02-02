@@ -4,6 +4,7 @@ export * from "./extraction";
 export * from "./metadata";
 export * from "./path";
 export * from "./service-cluster";
+export * from "./entity-type";
 export * from "./util";
 export * from "./query";
 export * from "./query-cache";

@@ -1,4 +1,5 @@
-import { getEntityMetadata, IEntityType, Navigation } from "./metadata";
+import { getEntityMetadata, Navigation } from "./metadata";
+import { IEntityType } from "./entity-type";
 import { Path } from "./path";
 import { Extraction } from "./extraction";
 

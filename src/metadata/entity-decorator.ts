@@ -1,4 +1,4 @@
-import { IEntityType } from "./entity-type";
+import { IEntityType, IEntity } from "../entity-type";
 import { EntityMetadata } from "./entity-metadata";
 import { Children, Collection, Reference } from "./navigation";
 import { Primitive } from "./primitive";
@@ -8,9 +8,9 @@ const METADATA_ARGS_KEY = "entity-space:entity-metadata:ctor-args";
 
 let nameToTypeMap = new Map<string, IEntityType<any>>();
 
-function getOrCreateMetadataArgs(type: any): Partial<EntityMetadata.ICtorArgs> {
+function getOrCreateMetadataArgs(type: any): Partial<EntityMetadata.ICtorArgs<IEntity>> {
     if (!Reflect.hasMetadata(METADATA_ARGS_KEY, type)) {
-        let args: Partial<EntityMetadata.ICtorArgs> = {
+        let args: Partial<EntityMetadata.ICtorArgs<IEntity>> = {
             children: [],
             collections: [],
             primitives: [],
@@ -32,7 +32,7 @@ function getOrCreateMetadataArgs(type: any): Partial<EntityMetadata.ICtorArgs> {
  *
  * Each entity type must have a primary key defined, and names/aliases must be unique across all properties.
  */
-export function Entity(args?: Partial<EntityMetadata.ICtorArgs>) {
+export function Entity(args?: Partial<EntityMetadata.ICtorArgs<IEntity>>) {
     return (type: IEntityType<any>) => {
         let existing = getOrCreateMetadataArgs(type);
         existing.name = (args || {}).name || type.name;
@@ -53,7 +53,7 @@ export function Entity(args?: Partial<EntityMetadata.ICtorArgs>) {
     };
 }
 
-export function getEntityMetadata(type: string | IEntityType<any>): EntityMetadata {
+export function getEntityMetadata<T extends IEntity>(type: string | IEntityType<T>): EntityMetadata<T> {
     if (typeof (type) == "string") {
         type = type.toLocaleLowerCase();
 

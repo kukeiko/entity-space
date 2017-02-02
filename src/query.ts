@@ -1,5 +1,6 @@
 import * as _ from "lodash";
-import { getEntityMetadata, IEntityType } from "./metadata";
+import { getEntityMetadata } from "./metadata";
+import { IEntityType, IEntity } from "./entity-type";
 import { Expansion } from "./expansion";
 import { Extraction } from "./extraction";
 
@@ -10,7 +11,7 @@ export type QueryIdentity = "all" | "key" | "keys" | "index" | "indexes";
  * 
  * Is immutable.
  */
-export abstract class Query<T> {
+export abstract class Query<T extends IEntity> {
     readonly entityType: IEntityType<T>;
     readonly expansions: ReadonlyArray<Expansion>;
     readonly expansion: string;
@@ -57,7 +58,7 @@ export abstract class Query<T> {
             typeIdentifier = query;
         }
 
-        let metadata = getEntityMetadata(typeIdentifier);
+        let metadata = getEntityMetadata<T>(typeIdentifier);
 
         if (!metadata) {
             throw `no metadata for '${typeIdentifier}' found`;
@@ -226,7 +227,7 @@ export abstract class Query<T> {
 }
 
 export module Query {
-    export class All<T> extends Query<T> {
+    export class All<T extends IEntity> extends Query<T> {
         readonly type = "all";
 
         isSuperSetOf(other: Query<T>): boolean {
@@ -236,7 +237,7 @@ export module Query {
         }
     }
 
-    export class ByKey<T> extends Query<T> {
+    export class ByKey<T extends IEntity> extends Query<T> {
         readonly type = "key";
         readonly key: any;
 
@@ -266,7 +267,7 @@ export module Query {
         }
     }
 
-    export class ByKeys<T> extends Query<T> {
+    export class ByKeys<T extends IEntity> extends Query<T> {
         readonly type = "keys";
         readonly keys: ReadonlyArray<any>;
         private readonly _sortedKeys: Array<any>;
@@ -300,7 +301,7 @@ export module Query {
         }
     }
 
-    export class ByIndex<T> extends Query<T> {
+    export class ByIndex<T extends IEntity> extends Query<T> {
         readonly type = "index";
         readonly index: string;
         readonly value: any;
@@ -333,7 +334,7 @@ export module Query {
         }
     }
 
-    export class ByIndexes<T> extends Query<T> {
+    export class ByIndexes<T extends IEntity> extends Query<T> {
         readonly type = "indexes";
         readonly indexes: Readonly<{ [key: string]: Object }>;
 

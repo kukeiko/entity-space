@@ -1,4 +1,5 @@
-import { getEntityMetadata, IEntityType, Children, NavigationType } from "./metadata";
+import { getEntityMetadata, Children, NavigationType } from "./metadata";
+import { IEntityType } from "./entity-type";
 import { Expansion } from "./expansion";
 import { Path } from "./path";
 import { Query, QueryType } from "./query";

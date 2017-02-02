@@ -1,6 +1,7 @@
 import * as _ from "lodash";
+import { IStringIndexable } from "../util";
+import { IEntityType, IEntity } from "../entity-type";
 import { getEntityMetadata } from "./entity-decorator";
-import { IEntityType } from "./entity-type";
 import { Primitive } from "./primitive";
 import { Property } from "./property";
 import { Navigation, Children, Collection, Reference } from "./navigation";
@@ -9,9 +10,9 @@ import { ValueType } from "./value-type";
 /**
  * Contains information about properties of an entity.
  */
-export class EntityMetadata {
-    readonly createEntity: (item: { [key: string]: any }) => any;
-    readonly entityType: IEntityType<any>;
+export class EntityMetadata<T extends IEntity> {
+    readonly createEntity: (item: IStringIndexable) => T;
+    readonly entityType: IEntityType<T>;
     readonly name: string;
     readonly alias: string;
     readonly primaryKey: Primitive;
@@ -30,7 +31,7 @@ export class EntityMetadata {
     private _collectionsMap = new Map<string, Collection>();
     private _refKeysMap = new Map<string, Primitive>();
 
-    constructor(entityType: IEntityType<any>, args: EntityMetadata.ICtorArgs) {
+    constructor(entityType: IEntityType<T>, args: EntityMetadata.ICtorArgs<T>) {
         if (!args.primaryKey) throw `${entityType.name} has no primary key`;
 
         this.createEntity = args.createEntity || null;
@@ -154,8 +155,8 @@ export class EntityMetadata {
         return this.navigations.filter(nav => nav.virtual);
     }
 
-    createCacheable(item: { [key: string]: any }): { [key: string]: any } {
-        let copy: { [key: string]: any } = {};
+    createCacheable(item: T): IStringIndexable {
+        let copy: IStringIndexable = {};
 
         // todo: this doesn't seem like it is enough
         this._primitivesMap.forEach(p => copy[p.name] = item[p.name]);
@@ -163,8 +164,8 @@ export class EntityMetadata {
         return copy;
     }
 
-    createSaveable(entity: { [key: string]: any }, useAlias?: boolean): { [key: string]: any } {
-        let saveable: { [key: string]: any } = {};
+    createSaveable(entity: IEntity, useAlias?: boolean): IStringIndexable {
+        let saveable: IStringIndexable = {};
 
         this.properties.filter(p => p.saveable).forEach(p => {
             let name = useAlias ? p.alias : p.name;
@@ -200,7 +201,7 @@ export class EntityMetadata {
         return saveable;
     }
 
-    fromAliased<T>(aliased: { [key: string]: any }): T {
+    fromAliased(aliased: IStringIndexable): T {
         let entity = new this.entityType();
 
         this.properties.forEach(p => {
@@ -228,8 +229,8 @@ export class EntityMetadata {
         return entity;
     }
 
-    fromCached(cached: { [key: string]: any }): { [key: string]: any } {
-        let entity: any;
+    fromCached(cached: IStringIndexable): T {
+        let entity: T;
 
         if (this.createEntity) {
             entity = this.createEntity(cached);
@@ -254,9 +255,9 @@ export class EntityMetadata {
 }
 
 export module EntityMetadata {
-    export interface ICtorArgs {
+    export interface ICtorArgs<T extends IEntity> {
         alias?: string;
-        createEntity?: (item: { [key: string]: any }) => { [key: string]: any };
+        createEntity?: (item: { [key: string]: any }) => T;
         name: string;
         primaryKey: Primitive.ICtorArgs;
         primitives?: Primitive.ICtorArgs[];

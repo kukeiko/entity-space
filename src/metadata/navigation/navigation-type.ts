@@ -3,7 +3,7 @@ import { Children } from "./children";
 import { Collection } from "./collection";
 
 /**
- * Union of all navigation types
+ * Union of all navigation entity-type
  */
 export type NavigationType =
     Reference

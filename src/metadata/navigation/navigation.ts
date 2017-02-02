@@ -1,4 +1,4 @@
-import { IEntityType } from "../entity-type";
+import { IEntityType } from "../../entity-type";
 import { Property } from "../property";
 
 export abstract class Navigation extends Property {

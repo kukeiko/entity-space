@@ -1,4 +1,4 @@
-import { IEntityType } from "../entity-type";
+import { IEntityType } from "../../entity-type";
 import { ValueType } from "../value-type";
 import { Navigation } from "./navigation";
 
