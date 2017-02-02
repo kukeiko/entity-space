@@ -41,7 +41,8 @@
     "karma-sourcemap-loader": "0.3.7",
     "karma-webpack": "1.7.0",
     "rimraf": "2.5.2",
-    "typescript": "2.1.4",
+    "tslint": "4.4.2",
+    "typescript": "2.1.5",
     "webpack": "1.13.2",
     "webpack-dev-server": "1.16.1"
   }
