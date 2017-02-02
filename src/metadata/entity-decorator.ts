@@ -46,7 +46,9 @@ export function Entity(args?: Partial<EntityMetadata.ICtorArgs>) {
 
 export function getEntityMetadata(type: string | IEntityType<any>): EntityMetadata {
     if (typeof (type) == "string") {
-        if (!nameToTypeMap.has(type.toLocaleLowerCase())) {
+        type = type.toLocaleLowerCase();
+
+        if (!nameToTypeMap.has(type)) {
             throw `no entity metadata found with name/alias '${type}'`;
         }
 
