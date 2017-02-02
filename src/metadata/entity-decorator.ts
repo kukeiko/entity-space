@@ -27,12 +27,12 @@ export function Entity(args?: Partial<EntityMetadata.ICtorArgs>) {
     return (type: IEntityType<any>) => {
         let existing = getOrCreateMetadataArgs(type);
         existing.name = (args || {}).name || type.name;
-        nameToTypeMap.set(existing.name, type);
+        nameToTypeMap.set(existing.name.toLocaleLowerCase(), type);
 
         if (!args) return;
 
         if (args.alias) {
-            nameToTypeMap.set(args.alias, type);
+            nameToTypeMap.set(args.alias.toLocaleLowerCase(), type);
         }
 
         existing.createEntity = args.createEntity || existing.createEntity;
@@ -46,7 +46,7 @@ export function Entity(args?: Partial<EntityMetadata.ICtorArgs>) {
 
 export function getEntityMetadata(type: string | IEntityType<any>): EntityMetadata {
     if (typeof (type) == "string") {
-        if (!nameToTypeMap.has(type)) {
+        if (!nameToTypeMap.has(type.toLocaleLowerCase())) {
             throw `no entity metadata found with name/alias '${type}'`;
         }
 

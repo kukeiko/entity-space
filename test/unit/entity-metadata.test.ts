@@ -3,24 +3,62 @@ import { Album, AlbumReview, Artist, Song, TagType } from "../common/entities";
 
 describe("entity-metadata", () => {
     describe("getEntityMetadata()", () => {
+        @Entity()
+        class Foo {
+            @Entity.PrimaryKey()
+            id: number = null;
+        }
+
+        @Entity({
+            name: "Barbar",
+            alias: "Barbarian"
+        })
+        class Bar {
+            @Entity.PrimaryKey()
+            id: number = null;
+        }
+
         it("should return null if not found", () => {
             expect(getEntityMetadata(Array)).toBe(null);
         });
 
         it("should return metadata using the type", () => {
-            expect(getEntityMetadata(Album) instanceof EntityMetadata).toBe(true);
+            let metadata = getEntityMetadata(Foo);
+
+            expect(metadata instanceof EntityMetadata).toBe(true);
+            expect(metadata.entityType).toBe(Foo);
         });
 
-        it("should return metadata using an entity type name", () => {
-            expect(getEntityMetadata("Album") instanceof EntityMetadata).toBe(true);
+        it("should return metadata using the entity type name", () => {
+            let metadata = getEntityMetadata("Barbar");
+
+            expect(metadata instanceof EntityMetadata).toBe(true);
+            expect(metadata.entityType).toBe(Bar);
         });
 
-        it("should return metadata using an entity type alias", () => {
-            expect(getEntityMetadata("TheAlbum") instanceof EntityMetadata).toBe(true);
+        it("should return metadata using the entity type name (case insensitive check)", () => {
+            let metadata = getEntityMetadata("bARbAR");
+
+            expect(metadata instanceof EntityMetadata).toBe(true);
+            expect(metadata.entityType).toBe(Bar);
+        });
+
+        it("should return metadata using the entity type alias", () => {
+            let metadata = getEntityMetadata("Barbarian");
+
+            expect(metadata instanceof EntityMetadata).toBe(true);
+            expect(metadata.entityType).toBe(Bar);
+        });
+
+        it("should return metadata using the entity type alias (case insensitive check)", () => {
+            let metadata = getEntityMetadata("bARbArIAn");
+
+            expect(metadata instanceof EntityMetadata).toBe(true);
+            expect(metadata.entityType).toBe(Bar);
         });
 
         it("should return different instances for different types", () => {
-            expect(getEntityMetadata(Artist)).not.toBe(getEntityMetadata(Song));
+            expect(getEntityMetadata(Foo)).not.toBe(getEntityMetadata(Bar));
         });
 
         it("should throw if no primary key is defined", () => {
