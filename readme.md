@@ -1,12 +1,10 @@
-# purpose
-you need a client-side data storage that helps you with caching relational entities to minimize calls to remote APIs
+# entity-space
+entity-space is a data layer utility for TypeScript web applications.
 
-# functionality
-* usage of entity queries to describe which entities including which relations should be loaded
-* load data from cache by executing a query against it
-* easily determine if a query is a superset/subset of an already executed query and thus load from cache instead
+it helps you with:
+* caching data fetched from APIs
+* unifying data loading logic
+* abstracting multiple APIs into one interface
 
-# what you need to do
-* create metadata for your entities
-* transform entity queries into API calls
-    * very easy if you're consuming an OData service
+# documentation
+documentation will follow as soon as version reaches stable v1.0.0

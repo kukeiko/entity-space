@@ -16,6 +16,5 @@
     - queries can be executed against it
 
 - roadmap / milestones:
-    - 0.5.0 service-cluster, virtuals, Query.parse(), contexts
-    - 0.6.0 abstract entities, cache invalidation
-    - 0.7.0 validation
+    - 0.5.0 service-cluster, virtuals
+    - 0.?.0 abstract entities, cache invalidation, contexts, validation

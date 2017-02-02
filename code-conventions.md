@@ -24,3 +24,5 @@ changes/additions to improve clarity / follow conventions / cleanup the codebase
 * comments to illustrate functionality
 * unused files/functions are removed
 * code usability is increased via small means
+## **meta**
+anything about the project itself - readme, setup, build pipeline, etc.
