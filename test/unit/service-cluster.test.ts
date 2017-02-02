@@ -106,7 +106,7 @@ describe("service-cluster", () => {
                 await sc.execute(new Query.ByKey({ entityType: Album, key: 1, expansions: `artist,songs/tags` }));
                 await sc.execute(new Query.ByKey({ entityType: Song, key: 1337 }));
                 await sc.execute(new Query.ByKey({ entityType: Song, key: 64 }));
-                await sc.execute(new Query.ByKey({ entityType: Song, key: 32 }));
+                await sc.execute(new Query.ByKey({ entityType: Song, key: 32, expansions: `tags` }));
                 await sc.execute(new Query.ByKey({ entityType: Artist, key: 7 }));
                 await sc.execute(new Query.ByKey({ entityType: SongTag, key: 777 }));
                 done();

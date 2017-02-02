@@ -1,5 +1,5 @@
 import { getEntityMetadata, Entity, EntityMetadata, Primitive, Navigation, Reference, Children } from "../../src";
-import { Album, AlbumReview, Artist, Song, TagType } from "../common/entities";
+import { Album, AlbumReview, Song, TagType } from "../common/entities";
 
 describe("entity-metadata", () => {
     describe("getEntityMetadata()", () => {
@@ -18,8 +18,11 @@ describe("entity-metadata", () => {
             id: number = null;
         }
 
-        it("should return null if not found", () => {
-            expect(getEntityMetadata(Array)).toBe(null);
+        it("should throw if not found", () => {
+            try {
+                getEntityMetadata(Array);;
+                fail("expected to throw");
+            } catch (error) { }
         });
 
         it("should return metadata using the type", () => {

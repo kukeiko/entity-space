@@ -1,5 +1,5 @@
 import { Cache } from "./cache";
-import { Children, getEntityMetadata, EntityMetadata, IEntityType, Reference, NavigationType } from "./metadata";
+import { Children, getEntityMetadata, IEntityType, Reference, NavigationType } from "./metadata";
 import { Expansion } from "./expansion";
 import { Query, QueryType } from "./query";
 
@@ -13,7 +13,7 @@ export class Workspace {
         type: IEntityType<T>;
         expansion?: string | Expansion[] | ReadonlyArray<Expansion>;
     }): void {
-        let metadata = this._getMetadata(args.type);
+        let metadata = getEntityMetadata(args.type);
         let cache = this._getEntityCache(args.type);
         let expansions = new Array<Expansion>();
 
@@ -36,7 +36,7 @@ export class Workspace {
             if (!value) return;
 
             let otherType = ex.property.otherType;
-            let otherTypeMetadata = this._getMetadata(otherType);
+            let otherTypeMetadata = getEntityMetadata(otherType);
 
             if (ex.property instanceof Reference) {
                 this.add({
@@ -112,7 +112,7 @@ export class Workspace {
     }
 
     execute<T>(q: QueryType<T>): Map<any, T> {
-        let metadata = this._getMetadata(q.entityType);
+        let metadata = getEntityMetadata(q.entityType);
         let items = new Map<any, T>();
         let cache = this._getEntityCache(q.entityType);
 
@@ -170,9 +170,9 @@ export class Workspace {
                     break;
 
                 case "array:child":
-                    let backRef = this._getMetadata(nav.otherType).getReference(nav.backReferenceName);
+                    let backRef = getEntityMetadata(nav.otherType).getReference(nav.backReferenceName);
                     let parentKeyName = backRef.keyName;
-                    let pkName = this._getMetadata(args.query.entityType).primaryKey.name;
+                    let pkName = getEntityMetadata(args.query.entityType).primaryKey.name;
 
                     args.items.forEach(item => {
                         let parentKey = item[pkName];
@@ -209,16 +209,6 @@ export class Workspace {
         });
     }
 
-    private _getMetadata(type: IEntityType<any>): EntityMetadata {
-        let metadata = getEntityMetadata(type);
-
-        if (metadata == null) {
-            throw `no metadata for ${type.name} found`;
-        }
-
-        return metadata;
-    }
-
     private _getEntityCache(type: IEntityType<any>): Cache<any, any> {
         if (!this._caches.has(type)) {
             this._caches.set(type, this._createEntityCache(type));
@@ -229,7 +219,7 @@ export class Workspace {
 
     private _createEntityCache(type: IEntityType<any>): EntityCache {
         let indexes: { [key: string]: (item: any) => any } = {};
-        let metadata = this._getMetadata(type);
+        let metadata = getEntityMetadata(type);
 
         metadata.primitives.filter(p => p.index).forEach(p => indexes[p.name] = item => item[p.name]);
 

@@ -6,6 +6,9 @@ import { Property } from "./property";
 import { Navigation, Children, Collection, Reference } from "./navigation";
 import { ValueType } from "./value-type";
 
+/**
+ * Contains information about properties of an entity.
+ */
 export class EntityMetadata {
     readonly createEntity: (item: { [key: string]: any }) => any;
     readonly entityType: IEntityType<any>;
@@ -102,30 +105,51 @@ export class EntityMetadata {
         this.collections = _.uniq(Array.from(this._collectionsMap.values())).sort((a, b) => a.name < b.name ? -1 : 1);
     }
 
-    getProperty(name: string): Property {
-        return this._propertiesMap.get(name.toLocaleLowerCase()) || null;
+    /**
+     * Returns a property identified by its name or alias (case insensitive) or null if not found.
+     */
+    getProperty(nameOrAlias: string): Property {
+        return this._propertiesMap.get(nameOrAlias.toLocaleLowerCase()) || null;
     }
 
-    getPrimitive(name: string): Primitive {
-        return this._primitivesMap.get(name.toLocaleLowerCase()) || null;
+    /**
+     * Returns a primitive identified by its name or alias (case insensitive) or null if not found.
+     */
+    getPrimitive(nameOrAlias: string): Primitive {
+        return this._primitivesMap.get(nameOrAlias.toLocaleLowerCase()) || null;
     }
 
-    getNavigation(name: string): Navigation {
-        return this._navigationsMap.get(name.toLocaleLowerCase()) || null;
+    /**
+     * Returns a navigation identified by its name or alias (case insensitive) or null if not found.
+     */
+    getNavigation(nameOrAlias: string): Navigation {
+        return this._navigationsMap.get(nameOrAlias.toLocaleLowerCase()) || null;
     }
 
-    getReference(name: string): Reference {
-        return this._referencesMap.get(name.toLocaleLowerCase()) || null;
+    /**
+     * Returns a reference identified by its name or alias (case insensitive) or null if not found.
+     */
+    getReference(nameOrAlias: string): Reference {
+        return this._referencesMap.get(nameOrAlias.toLocaleLowerCase()) || null;
     }
 
-    getChildren(name: string): Children {
-        return this._childrenMap.get(name.toLocaleLowerCase()) || null;
+    /**
+     * Returns a child collection identified by its name or alias (case insensitive) or null if not found.
+     */
+    getChildren(nameOrAlias: string): Children {
+        return this._childrenMap.get(nameOrAlias.toLocaleLowerCase()) || null;
     }
 
-    getCollection(name: string): Collection {
-        return this._collectionsMap.get(name.toLocaleLowerCase()) || null;
+    /**
+     * Returns a reference collection identified by its name or alias (case insensitive) or null if not found.
+     */
+    getCollection(nameOrAlias: string): Collection {
+        return this._collectionsMap.get(nameOrAlias.toLocaleLowerCase()) || null;
     }
 
+    /**
+     * Returns all navigations marked as being virtual.
+     */
     getVirtuals(): Navigation[] {
         return this.navigations.filter(nav => nav.virtual);
     }

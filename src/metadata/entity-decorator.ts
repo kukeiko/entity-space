@@ -23,6 +23,15 @@ function getOrCreateMetadataArgs(type: any): Partial<EntityMetadata.ICtorArgs> {
     return Reflect.getMetadata(METADATA_ARGS_KEY, type);
 }
 
+/**
+ * Define a class as a type of entity, describing all its cacheable, loadable and saveable properties.
+ * 
+ * Property metadata can be defined by:
+ * * using property decorators (e.g. @Entity.PrimaryKey(), @Entity.Reference())
+ * * passing constructor arguments via this decorator
+ * 
+ * Each entity type must have a primary key defined, and names/aliases must be unique across all properties.
+ */
 export function Entity(args?: Partial<EntityMetadata.ICtorArgs>) {
     return (type: IEntityType<any>) => {
         let existing = getOrCreateMetadataArgs(type);
@@ -57,14 +66,15 @@ export function getEntityMetadata(type: string | IEntityType<any>): EntityMetada
 
     if (!Reflect.hasMetadata(METADATA_KEY, type)) {
         if (!Reflect.hasMetadata(METADATA_ARGS_KEY, type)) {
-            return null;
+            throw `no entity metadata found for type ${type.name}`;
         }
 
         let args = Reflect.getMetadata(METADATA_ARGS_KEY, type);
-        Reflect.defineMetadata(METADATA_KEY, new EntityMetadata(type, args), type);
+        let metadata = new EntityMetadata(type, args);
+        Reflect.defineMetadata(METADATA_KEY, metadata, type);
     }
 
-    return Reflect.getMetadata(METADATA_KEY, type) || null;
+    return Reflect.getMetadata(METADATA_KEY, type);
 }
 
 export module Entity {
