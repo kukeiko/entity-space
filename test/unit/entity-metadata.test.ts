@@ -148,7 +148,7 @@ describe("entity-metadata", () => {
             let didUse = false;
 
             @Entity({
-                createEntity: (data: any) => {
+                createEntity: () => {
                     didUse = true;
                     return new Foo();
                 }

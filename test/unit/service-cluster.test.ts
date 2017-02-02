@@ -209,7 +209,7 @@ describe("service-cluster", () => {
             sc.register(
                 Album,
                 {
-                    loadByIndex: (q: Query.ByIndex<Album>) => Promise.resolve(albums)
+                    loadByIndex: () => Promise.resolve(albums)
                 });
 
             try {
@@ -242,7 +242,7 @@ describe("service-cluster", () => {
             sc.register(
                 Album,
                 {
-                    loadByIndexes: (q: Query.ByIndexes<Album>) => Promise.resolve(albums)
+                    loadByIndexes: () => Promise.resolve(albums)
                 });
 
             try {
@@ -302,7 +302,7 @@ describe("service-cluster", () => {
             sc.register(
                 AlbumReview,
                 {
-                    loadByIndex: q => Promise.resolve([new AlbumReview({
+                    loadByIndex: () => Promise.resolve([new AlbumReview({
                         id: 64,
                         albumId: 1
                     })])
@@ -343,13 +343,13 @@ describe("service-cluster", () => {
             sc.register(
                 Album,
                 {
-                    loadByIndex: q => Promise.resolve([album])
+                    loadByIndex: () => Promise.resolve([album])
                 });
 
             sc.register(
                 AlbumReview,
                 {
-                    loadByIndex: q => Promise.resolve([albumReview])
+                    loadByIndex: () => Promise.resolve([albumReview])
                 });
 
             try {
@@ -385,19 +385,19 @@ describe("service-cluster", () => {
             sc.register(
                 Album,
                 {
-                    loadByIndex: q => Promise.resolve([album])
+                    loadByIndex: () => Promise.resolve([album])
                 });
 
             sc.register(
                 Review,
                 {
-                    loadMany: q => Promise.resolve([review])
+                    loadMany: () => Promise.resolve([review])
                 });
 
             sc.register(
                 AlbumReview,
                 {
-                    loadByIndex: q => Promise.resolve([albumReview])
+                    loadByIndex: () => Promise.resolve([albumReview])
                 });
 
             try {

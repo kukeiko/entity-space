@@ -25,11 +25,11 @@ function getOrCreateMetadataArgs(type: any): Partial<EntityMetadata.ICtorArgs> {
 
 /**
  * Define a class as a type of entity, describing all its cacheable, loadable and saveable properties.
- * 
+ *
  * Property metadata can be defined by:
  * * using property decorators (e.g. @Entity.PrimaryKey(), @Entity.Reference())
  * * passing constructor arguments via this decorator
- * 
+ *
  * Each entity type must have a primary key defined, and names/aliases must be unique across all properties.
  */
 export function Entity(args?: Partial<EntityMetadata.ICtorArgs>) {
@@ -125,7 +125,7 @@ export module Entity {
         saveable?: boolean;
         virtual?: boolean;
     }) {
-        return <T>(type: Object, key: string) => {
+        return (type: Object, key: string) => {
             let defaults = <Reference.ICtorArgs>{ name: key };
 
             getOrCreateMetadataArgs(type.constructor).references.push({ ...defaults, ...args });
@@ -140,7 +140,7 @@ export module Entity {
         saveable?: boolean;
         virtual?: boolean;
     }) {
-        return <T>(type: Object, key: string) => {
+        return (type: Object, key: string) => {
             let defaults = <Children.ICtorArgs>{ name: key };
 
             getOrCreateMetadataArgs(type.constructor).children.push({ ...defaults, ...args });
@@ -155,7 +155,7 @@ export module Entity {
         saveable?: boolean;
         virtual?: boolean;
     }) {
-        return <T>(type: Object, key: string) => {
+        return (type: Object, key: string) => {
             let defaults = <Collection.ICtorArgs>{ name: key };
 
             getOrCreateMetadataArgs(type.constructor).collections.push({ ...defaults, ...args });
