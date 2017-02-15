@@ -1,22 +1,38 @@
 import * as _ from "lodash";
-import { getEntityMetadata } from "./metadata";
-import { IEntityType, IEntity } from "./entity-type";
+import { getEntityMetadata, IEntityType, IEntity } from "../metadata";
 import { Expansion } from "./expansion";
 import { Extraction } from "./extraction";
 
+/**
+ * All the supported query identities by which the initial set of an operation is narrowed down.
+ */
 export type QueryIdentity = "all" | "key" | "keys" | "index" | "indexes";
 
 /**
- * Describes which entities and expansions should be loaded. 
- * 
- * Is immutable.
+ * Describes which entities and expansions should be considered for an operation.
+ *
+ * Immutable.
  */
 export abstract class Query<T extends IEntity> {
+    /**
+     * The entity type designated by this query.
+     */
     readonly entityType: IEntityType<T>;
+
+    /**
+     * All expansions of this query.
+     */
     readonly expansions: ReadonlyArray<Expansion>;
+
+    /**
+     * The full expansion string of this query.
+     */
     readonly expansion: string;
 
-    constructor(args: {
+    /**
+     * Extending this class and trying to use it will lead to random exceptions.
+     */
+    protected constructor(args: {
         entityType: IEntityType<T>;
         expansions?: string | Expansion[];
     }) {
@@ -35,6 +51,7 @@ export abstract class Query<T extends IEntity> {
         return a.toString() == b.toString();
     }
 
+    // todo: remove since there might be queries which can't be parsed
     static parse<T>(query: string): Query<T> {
         let typeIdentifier: string;
         let rest = "";
@@ -229,6 +246,13 @@ export abstract class Query<T extends IEntity> {
 export module Query {
     export class All<T extends IEntity> extends Query<T> {
         readonly type = "all";
+
+        constructor(args: {
+            entityType: IEntityType<T>;
+            expansions?: string | Expansion[];
+        }) {
+            super(args);
+        }
 
         isSuperSetOf(other: Query<T>): boolean {
             if (other.entityType != this.entityType) return false;

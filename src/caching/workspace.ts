@@ -1,8 +1,6 @@
 import { Cache } from "./cache";
-import { Children, getEntityMetadata, Reference, NavigationType } from "./metadata";
-import { IEntityType, IEntity } from "./entity-type";
-import { Expansion } from "./expansion";
-import { Query, QueryType } from "./query";
+import { getEntityMetadata, IEntityType, IEntity, Children, Reference, NavigationType } from "../metadata";
+import { Expansion, Query, QueryType } from "../elements";
 
 type EntityCache = Cache<any, IEntity>;
 
@@ -141,6 +139,9 @@ export class Workspace {
             case "indexes":
                 cache.byIndexes(q.indexes).forEach((v, k) => items.set(k, metadata.fromCached(v) as T));
                 break;
+
+            default:
+                throw `incompatible query: ${q}`;
         }
 
         this._hydrate({

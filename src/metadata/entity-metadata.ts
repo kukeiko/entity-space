@@ -1,6 +1,6 @@
 import * as _ from "lodash";
 import { IStringIndexable } from "../util";
-import { IEntityType, IEntity } from "../entity-type";
+import { IEntityType, IEntity } from "./entity-type";
 import { getEntityMetadata } from "./entity-decorator";
 import { Primitive } from "./primitive";
 import { Property } from "./property";
@@ -11,10 +11,11 @@ import { ValueType } from "./value-type";
  * Contains information about properties of an entity.
  */
 export class EntityMetadata<T extends IEntity> {
-    readonly createEntity: (item: IStringIndexable) => T;
+    readonly factory: (item: IStringIndexable) => T;
     readonly entityType: IEntityType<T>;
     readonly name: string;
     readonly alias: string;
+    readonly abstract: boolean;
     readonly primaryKey: Primitive;
     readonly properties: ReadonlyArray<Property>;
     readonly primitives: ReadonlyArray<Primitive>;
@@ -34,10 +35,11 @@ export class EntityMetadata<T extends IEntity> {
     constructor(entityType: IEntityType<T>, args: EntityMetadata.ICtorArgs<T>) {
         if (!args.primaryKey) throw `${entityType.name} has no primary key`;
 
-        this.createEntity = args.createEntity || null;
+        this.factory = args.factory || null;
         this.entityType = entityType;
         this.name = args.name;
         this.alias = args.alias || this.name;
+        this.abstract = !!args.abstract;
 
         let aliases = new Set<string>();
 
@@ -247,11 +249,16 @@ export class EntityMetadata<T extends IEntity> {
         return entity;
     }
 
+    /**
+     * Creates an instance of T and assigns all primitive properties in an undefined order.
+     *
+     * Delegates to factory function if defined.
+     */
     fromCached(cached: IStringIndexable): T {
         let entity: T;
 
-        if (this.createEntity) {
-            entity = this.createEntity(cached);
+        if (this.factory) {
+            entity = this.factory(cached);
         } else {
             entity = new this.entityType();
 
@@ -275,12 +282,13 @@ export class EntityMetadata<T extends IEntity> {
 export module EntityMetadata {
     export interface ICtorArgs<T extends IEntity> {
         alias?: string;
-        createEntity?: (item: { [key: string]: any }) => T;
+        factory?: (item: { [key: string]: any }) => T;
         name: string;
         primaryKey: Primitive.ICtorArgs;
         primitives?: Primitive.ICtorArgs[];
         references?: Reference.ICtorArgs[];
         children?: Children.ICtorArgs[];
         collections?: Collection.ICtorArgs[];
+        abstract?: boolean;
     }
 }

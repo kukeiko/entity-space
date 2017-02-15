@@ -16,5 +16,5 @@
     - queries can be executed against it
 
 - roadmap / milestones:
-    - 0.5.0 service-cluster, virtuals
-    - 0.?.0 abstract entities, cache invalidation, contexts, validation
+    - 0.5.0 service-cluster, abstract entities
+    - 0.?.0 helpful debug output, cache invalidation, contexts, validation

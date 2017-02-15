@@ -1,8 +1,8 @@
-import { IEntityType } from "../../entity-type";
+import { IEntityType } from "../entity-type";
 import { Navigation } from "./navigation";
 
 /**
- * Array of entities of which this entity has the keys to, in an array.
+ * Array of entities of which this entity has the keys stored in an array.
  */
 export class Collection extends Navigation {
     readonly type = "array:ref";

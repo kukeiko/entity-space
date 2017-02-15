@@ -142,7 +142,6 @@ describe("expansion", () => {
             let tags = Expansion.parse(Album, "tags")[0];
             let songs = Expansion.parse(Album, "songs")[0];
 
-            // testing that the function sorts the expansions
             let result = Expansion.isSuperset([tags, songs], [songs, tags]);
 
             expect(result).toEqual(true);

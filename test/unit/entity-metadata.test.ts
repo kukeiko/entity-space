@@ -144,11 +144,11 @@ describe("entity-metadata", () => {
             }
         });
 
-        it("should use custom creator function", () => {
+        it("should use custom factory function", () => {
             let didUse = false;
 
             @Entity({
-                createEntity: () => {
+                factory: () => {
                     didUse = true;
                     return new Foo();
                 }

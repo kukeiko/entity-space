@@ -1,4 +1,4 @@
-import { IEntityType, IEntity } from "../entity-type";
+import { IEntityType, IEntity } from "./entity-type";
 import { EntityMetadata } from "./entity-metadata";
 import { Children, Collection, Reference } from "./navigation";
 import { Primitive } from "./primitive";
@@ -44,7 +44,7 @@ export function Entity(args?: Partial<EntityMetadata.ICtorArgs<IEntity>>) {
             nameToTypeMap.set(args.alias.toLocaleLowerCase(), type);
         }
 
-        existing.createEntity = args.createEntity || existing.createEntity;
+        existing.factory = args.factory || existing.factory;
         existing.primaryKey = args.primaryKey || existing.primaryKey;
         existing.primitives = [...existing.primitives, ...(args.primitives || [])];
         existing.references = [...existing.references, ...(args.references || [])];
@@ -75,6 +75,23 @@ export function getEntityMetadata<T extends IEntity>(type: string | IEntityType<
     }
 
     return Reflect.getMetadata(METADATA_KEY, type);
+}
+
+export function isEntity(type: string | IEntityType<any>): boolean {
+    if (typeof (type) == "string") {
+        type = type.toLocaleLowerCase();
+
+        if (!nameToTypeMap.has(type)) {
+            return false;
+        }
+
+        type = nameToTypeMap.get(type);
+    }
+
+    if (Reflect.hasMetadata(METADATA_KEY, type)) return true;
+    if (Reflect.hasMetadata(METADATA_ARGS_KEY, type)) return true;
+
+    return false;
 }
 
 export module Entity {

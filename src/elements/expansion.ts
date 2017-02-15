@@ -1,18 +1,16 @@
-import { getEntityMetadata, Navigation } from "./metadata";
-import { IEntityType } from "./entity-type";
+import { getEntityMetadata, IEntityType, Navigation } from "../metadata";
 import { Path } from "./path";
 import { Extraction } from "./extraction";
 
 /**
- * An expansion defines which navigation properties should be considered for an operation.
- * 
- * It contains the navigation property that is being expanded
- * and an array of further expansions on that navigation property.
- * 
- * An expansion is created solely by using Expansion.parse(), that way it is secured that the resulting
- * navigation tree is valid (as according to the given entity metadata).
- * 
- * Is immutable.
+ * An expansion defines which navigations should be considered for execution
+ * by representing them in a tree-like structure.
+ *
+ * * Create one by using Expansion.parse()
+ * * Compare expansions via equals(), isSupersetOf(), isSubsetOf()
+ * * Create a modified version by removing navigations via extract()
+ *
+ * Immutable
  */
 export class Expansion {
     /**
@@ -102,7 +100,7 @@ export class Expansion {
     /**
      * Create expansions starting at ownerType, crawling down
      * navigation properties as defined in the expansion string.
-     * 
+     *
      * Example: Expansion.parse(artistMetadata, "albums/{songs, tags}")
      */
     static parse(ownerType: IEntityType<any>, expansion: string): Expansion[] {
@@ -193,7 +191,7 @@ export class Expansion {
 
     /**
      * Extract all expansions that match against the predicate.
-     * 
+     *
      * Returns the reduced expansion and the extractions.
      */
     extract(predicate: (p: Expansion) => boolean): [Expansion, Extraction[]] {

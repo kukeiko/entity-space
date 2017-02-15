@@ -1,4 +1,4 @@
-import { Navigation } from "./metadata";
+import { Navigation } from "../metadata";
 
 /**
  * A path is a chain of navigation properties.

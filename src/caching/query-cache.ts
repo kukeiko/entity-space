@@ -1,15 +1,21 @@
 import * as _ from "lodash";
-import { IEntityType } from "./entity-type";
-import { Query, QueryType, QueryIdentity } from "./query";
+import { IEntityType } from "../metadata";
+import { Query, QueryType, QueryIdentity } from "../elements";
 
 type PerExpansions = Map<string, QueryType<any>>;
 type PerIdentity = Map<QueryIdentity, PerExpansions>;
 
 export class QueryCache {
+    get cachedQueries(): QueryType<any>[] {
+        return Array.from(this._all.values());
+    }
+
+    private _all = new Set<QueryType<any>>();
     private _byType = new Map<IEntityType<any>, PerIdentity>();
 
     /**
      * todo: this should be optimized by deleting queries that are subsets of the given query
+     * todo: implement index + indexes
      */
     add(query: QueryType<any>): void {
         if (this.isCached(query)) return;
@@ -23,15 +29,19 @@ export class QueryCache {
 
                     if (sameExpansion) {
                         newKeys = [...sameExpansion.keys, query.key];
+                        this._all.delete(sameExpansion);
                     } else {
                         newKeys = [query.key];
                     }
 
-                    byKeys.set(query.expansion, new Query.ByKeys({
+                    let q = new Query.ByKeys({
                         entityType: query.entityType,
                         keys: newKeys,
                         expansions: query.expansions.slice()
-                    }));
+                    });
+
+                    byKeys.set(query.expansion, q);
+                    this._all.add(q);
                 }
                 break;
 
@@ -43,15 +53,19 @@ export class QueryCache {
 
                     if (sameExpansion) {
                         newKeys = _.flatten([...sameExpansion.keys, ...query.keys]);
+                        this._all.delete(sameExpansion);
                     } else {
                         newKeys = query.keys.slice();
                     }
 
-                    byKeys.set(query.expansion, new Query.ByKeys({
+                    let q = new Query.ByKeys({
                         entityType: query.entityType,
                         keys: newKeys,
                         expansions: query.expansions.slice()
-                    }));
+                    });
+
+                    byKeys.set(query.expansion, q);
+                    this._all.add(q);
                 }
                 break;
 
@@ -62,14 +76,17 @@ export class QueryCache {
 
                     if (sameExpansion) {
                         byKeys.delete(query.expansion);
+                        this._all.delete(sameExpansion);
                     }
 
                     let cached = this._perExpansion(query.entityType, query.type);
                     cached.set(query.expansion, query);
+                    this._all.add(query);
                 }
                 break;
 
             default:
+                // todo: this seems to overwrite queries even though it shouldn't
                 let cached = this._perExpansion(query.entityType, query.type);
                 cached.set(query.expansion, query);
         }
@@ -78,7 +95,7 @@ export class QueryCache {
     /**
      * todo: this should be optimized by checking against type of incoming query,
      * effectively re-implementing logic already existing @ query.ts
-     * 
+     *
      * right now it checks in order or highest (guessed) probability
      */
     isCached(query: QueryType<any>): boolean {
@@ -97,6 +114,9 @@ export class QueryCache {
         return false;
     }
 
+    /**
+     * Clear parts or all of the cache.
+     */
     clear(args?: {
         entityType?: IEntityType<any>;
         queryIdentity?: QueryIdentity;
@@ -109,6 +129,10 @@ export class QueryCache {
         } else if (args.entityType) {
             let cache = this._perIdentity(args.entityType);
             cache.clear();
+        } else if (args.queryIdentity) {
+            this._byType.forEach(perIdentity => {
+                perIdentity.set(args.queryIdentity, new Map<string, QueryType<any>>());
+            });
         } else {
             this._byType = new Map<IEntityType<any>, PerIdentity>();
         }

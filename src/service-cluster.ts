@@ -1,11 +1,7 @@
-import { getEntityMetadata, Children, NavigationType } from "./metadata";
-import { IEntityType } from "./entity-type";
-import { Expansion } from "./expansion";
-import { Path } from "./path";
-import { Query, QueryType } from "./query";
-import { QueryCache } from "./query-cache";
+import { getEntityMetadata, IEntityType, Children, NavigationType } from "./metadata";
+import { Expansion, Path, Query, QueryType } from "./elements";
+import { QueryCache, Workspace } from "./caching";
 import { IQueryExecuter } from "./query-executer";
-import { Workspace } from "./workspace";
 
 export class ServiceCluster {
     private _executers = new Map<IEntityType<any>, IQueryExecuter<any>>();
@@ -113,10 +109,11 @@ export class ServiceCluster {
 
     /**
      * Make sure that the payload of the provided query exists in the workspace.
-     * 
-     * todo: create and add queries of loaded navigations into the query cache
      */
     private async _loadIntoWorkspace(query: QueryType<any>): Promise<void> {
+        // let metadata = getEntityMetadata(query.entityType);
+
+
         let [noVirtuals, virtuals] = query.extract(exp => exp.property.virtual);
 
         if (!this._queryCache.isCached(noVirtuals)) {
