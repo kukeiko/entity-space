@@ -97,6 +97,49 @@ export class Expansion {
         }
     }
 
+    // todo: throw if expansions are not of same entity type
+    // i think for this it'll be nice for properties to have an ownerType
+    static merge(x: Expansion[], y: Expansion[]): Expansion[] {
+        x = x.slice().sort((a, b) => a.property.name < b.property.name ? -1 : 1);
+        y = y.slice().sort((a, b) => a.property.name < b.property.name ? -1 : 1);
+
+        let merged: Expansion[] = [];
+        let xi = 0;
+        let yi = 0;
+
+        while (true) {
+            // handle reaching end of either both, just x or just y
+            if (x[xi] == null && y[yi] == null) {
+                break;
+            } else if (x[xi] == null) {
+                merged = [...merged, ...y.slice(yi)];
+                break;
+            } else if (y[yi] == null) {
+                merged = [...merged, ...x.slice(xi)];
+                break;
+            }
+
+            // handle merging based on property arrangement
+            if (x[xi].property == y[yi].property) {
+                merged = [...merged, new Expansion({
+                    property: x[xi].property,
+                    expansions: Expansion.merge(x[xi].expansions.slice(), y[yi].expansions.slice())
+                })];
+
+                xi++;
+                yi++;
+            } else if (x[xi].property.name < y[yi].property.name) {
+                merged = [...merged, x[xi]];
+                xi++;
+            } else {
+                merged = [...merged, y[yi]];
+                yi++;
+            }
+        }
+
+        return merged;
+    }
+
     /**
      * Create expansions starting at ownerType, crawling down
      * navigation properties as defined in the expansion string.

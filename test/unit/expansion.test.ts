@@ -1,4 +1,4 @@
-import { Expansion, getEntityMetadata } from "../../src";
+import { Expansion, getEntityMetadata, Entity } from "../../src";
 import { Artist, Album, Song } from "../common";
 
 describe("expansion", () => {
@@ -66,6 +66,80 @@ describe("expansion", () => {
             let paths = exp[0].toPaths();
 
             expect(paths.map(p => p.toString()).join(",")).toEqual("albums/songs/album/artist,albums/songs/album/songs,albums/tags");
+        });
+    });
+
+    describe("merge()", () => {
+        @Entity()
+        class Khaz {
+            @Entity.PrimaryKey()
+            id: number = null;
+
+            @Entity.Primitive()
+            moId: number = null;
+
+            @Entity.Reference({ key: "moId", other: () => Mo })
+            mo: Mo = null;
+
+            @Entity.Primitive()
+            danId: number = null;
+
+            @Entity.Reference({ key: "danId", other: () => Dan })
+            dan: Dan = null;
+        }
+
+        class Mo {
+            @Entity.PrimaryKey()
+            id: number = null;
+
+            @Entity.Primitive()
+            danId: number = null;
+
+            @Entity.Reference({ key: "danId", other: () => Dan })
+            dan: Dan = null;
+
+            @Entity.Primitive()
+            fooId: number = null;
+
+            @Entity.Reference({ key: "fooId", other: () => Foo })
+            foo: Foo = null;
+        }
+
+        class Dan {
+            @Entity.PrimaryKey()
+            id: number = null;
+        }
+
+        class Foo {
+            @Entity.PrimaryKey()
+            id: number = null;
+        }
+
+        it("should merge completely different expansions", () => {
+            let moExpansion = Expansion.parse(Khaz, `mo`);
+            let danExpansion = Expansion.parse(Khaz, `dan`);
+
+            let merged = Expansion.merge(moExpansion, danExpansion);
+
+            expect(merged.toString()).toEqual("dan,mo");
+        });
+
+        it("should not remove nested expansions", () => {
+            let moDanExpansion = Expansion.parse(Khaz, `mo/dan`);
+            let danExpansion = Expansion.parse(Khaz, `dan`);
+
+            let merged = Expansion.merge(moDanExpansion, danExpansion);
+
+            expect(merged.toString()).toEqual("dan,mo/dan");
+        });
+
+        it("should merge nested expansions", () => {
+            let moDanExpansion = Expansion.parse(Khaz, `mo/dan`);
+            let moFooExpansion = Expansion.parse(Khaz, `mo/foo`);
+
+            let merged = Expansion.merge(moDanExpansion, moFooExpansion);
+
+            expect(merged.toString()).toEqual("mo/{dan,foo}");
         });
     });
 
