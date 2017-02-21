@@ -2,7 +2,7 @@ import { IEntityType } from "../entity-type";
 import { Navigation } from "./navigation";
 
 /**
- * Array of entities which have a back reference to this entity.
+ * Array of entities which have a back reference to this entity (parent/child relationship).
  */
 export class Children extends Navigation {
     readonly type = "array:child";

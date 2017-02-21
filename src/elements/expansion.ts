@@ -8,18 +8,18 @@ import { Extraction } from "./extraction";
  *
  * * Create one by using Expansion.parse()
  * * Compare expansions via equals(), isSupersetOf(), isSubsetOf()
- * * Create a modified version by removing navigations via extract()
+ * * Create a modified version by merging navigations via merge() or removing them via extract()
  *
  * Immutable
  */
 export class Expansion {
     /**
-     * The navigation property that is being expanded.
+     * The navigation that is being expanded.
      */
     readonly property: Navigation;
 
     /**
-     * Further expansions on the navigation property.
+     * Further expansions on the navigation.
      */
     readonly expansions: ReadonlyArray<Expansion>;
 
@@ -44,8 +44,8 @@ export class Expansion {
     }
 
     /**
-     * Determines if x is a superset of y, securing that an operation on x
-     * leads to a superset of y when using the same operation on y.
+     * Determines if x is a superset of y, securing that an operation using expansion(s) x
+     * leads to a superset of y if the same operation were to be used with expansion(s) y.
      */
     static isSuperset(x: Expansion, y: Expansion): boolean;
     static isSuperset(x: Expansion[], y: Expansion[]): boolean;
@@ -77,7 +77,8 @@ export class Expansion {
                         return false;
                     }
                 }
-                // properties of x and y match - deepen recursion
+
+                // properties of x and y match - recurse onto nested expansion
                 if (!Expansion.isSuperset(xExp, yExp)) return false;
 
                 e++;
@@ -93,10 +94,13 @@ export class Expansion {
             // x and y match in property and expansion length - deepen recursion
             return Expansion.isSuperset(x.expansions.slice(), y.expansions.slice());
         } else {
-            throw new Error("Expansion.isSuperSetOf(): invalid arguments");
+            throw new Error("invalid arguments");
         }
     }
 
+    /**
+     * Merges two expansions together.
+     */
     // todo: throw if expansions are not of same entity type
     // i think for this it'll be nice for properties to have an ownerType
     static merge(x: Expansion[], y: Expansion[]): Expansion[] {
@@ -121,6 +125,7 @@ export class Expansion {
 
             // handle merging based on property arrangement
             if (x[xi].property == y[yi].property) {
+                // properties of x and y match - recurse onto nested expansion
                 merged = [...merged, new Expansion({
                     property: x[xi].property,
                     expansions: Expansion.merge(x[xi].expansions.slice(), y[yi].expansions.slice())
@@ -129,9 +134,11 @@ export class Expansion {
                 xi++;
                 yi++;
             } else if (x[xi].property.name < y[yi].property.name) {
+                // property of x is not in y, simply add
                 merged = [...merged, x[xi]];
                 xi++;
             } else {
+                // property of y is not in x, simply add
                 merged = [...merged, y[yi]];
                 yi++;
             }
@@ -142,9 +149,11 @@ export class Expansion {
 
     /**
      * Create expansions starting at ownerType, crawling down
-     * navigation properties as defined in the expansion string.
+     * navigations as defined in the expansion string.
      *
-     * Example: Expansion.parse(artistMetadata, "albums/{songs, tags}")
+     * Expansion string may contain spaces and newlines.
+     *
+     * Example: Expansion.parse(artistMetadata, "albums/{songs,tags}")
      */
     static parse(ownerType: IEntityType<any>, expansion: string): Expansion[] {
         expansion = expansion.replace(/(\r?\n|\r)| /g, "");
@@ -154,9 +163,13 @@ export class Expansion {
         return Expansion._splitExpansions(expansion).map(e => Expansion._parse(ownerType, e));
     }
 
+    /**
+     * Parses a single expansion string that may contain nested expansions.
+     */
     private static _parse(ownerType: IEntityType<any>, expansion: string): Expansion {
-        let slashIndex = expansion.indexOf("/");
-        let name = slashIndex == -1 ? expansion : expansion.substring(0, slashIndex);
+        // index for if there are nested expansions
+        let nestedStart = expansion.indexOf("/");
+        let name = nestedStart == -1 ? expansion : expansion.substring(0, nestedStart);
         let property = getEntityMetadata(ownerType).getNavigation(name);
 
         if (property == null) throw `unknown navigation property: ${name}`;
@@ -165,12 +178,12 @@ export class Expansion {
             return new Expansion({ property: property });
         }
 
-        let hasGroupedExpansions = expansion[slashIndex + 1] == "{";
+        let hasGroupedExpansions = expansion[nestedStart + 1] == "{";
 
         if (!hasGroupedExpansions) {
             return new Expansion({
                 property: property,
-                expansions: [Expansion._parse(property.otherType, expansion.substr(slashIndex + 1))]
+                expansions: [Expansion._parse(property.otherType, expansion.substr(nestedStart + 1))]
             });
         } else {
             let endsProperly = expansion[expansion.length - 1] == "}";
@@ -178,11 +191,14 @@ export class Expansion {
 
             return new Expansion({
                 property: property,
-                expansions: Expansion._splitExpansions(expansion.substring(slashIndex + 2, expansion.length - 1)).map(e => Expansion._parse(property.otherType, e))
+                expansions: Expansion._splitExpansions(expansion.substring(nestedStart + 2, expansion.length - 1)).map(e => Expansion._parse(property.otherType, e))
             });
         }
     }
 
+    /**
+     * Split a string that may contain multiple expansions into single expansion strings.
+     */
     private static _splitExpansions(str: string): string[] {
         let cutpoints = new Array<number>();
         let i = 0;

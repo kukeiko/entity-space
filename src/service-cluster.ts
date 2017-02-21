@@ -1,4 +1,4 @@
-import { getEntityMetadata, IEntityType, Children, NavigationType } from "./metadata";
+import { getEntityMetadata, IEntityType, IEntity, Children, NavigationType } from "./metadata";
 import { Expansion, Path, Query, QueryType } from "./elements";
 import { QueryCache, Workspace } from "./caching";
 import { IQueryExecuter } from "./query-executer";
@@ -35,7 +35,7 @@ export class ServiceCluster {
         this._executers.set(entityType, executer);
     }
 
-    async save<T>(args: {
+    async save<T extends IEntity>(args: {
         entity: T;
     }): Promise<T> {
         let entityType = args.entity.constructor as IEntityType<any>;
@@ -46,7 +46,7 @@ export class ServiceCluster {
             throw `no query executer for entity type ${entityType.name} registered`;
         }
 
-        let key = (args.entity as any)[metadata.primaryKey.name];
+        let key = args.entity[metadata.primaryKey.name];
         let diff: { [key: string]: any } = null;
 
         if (key != null) {
@@ -58,8 +58,8 @@ export class ServiceCluster {
             }))).get(key);
 
             metadata.primitives.forEach(p => {
-                if (!_.isEqual((args.entity as any)[p.name], cached[p.name])) {
-                    diff[p.name] = (args.entity as any)[p.name];
+                if (!_.isEqual(args.entity[p.name], cached[p.name])) {
+                    diff[p.name] = args.entity[p.name];
                 }
             });
 
@@ -84,7 +84,7 @@ export class ServiceCluster {
     }
 
     async delete(args: {
-        entity: Object;
+        entity: IEntity;
     }): Promise<void> {
         let entityType = args.entity.constructor as IEntityType<any>;
         let executer = this._executers.get(entityType) as IQueryExecuter<any>;
@@ -101,7 +101,7 @@ export class ServiceCluster {
         });
     }
 
-    async execute<T>(query: QueryType<T>): Promise<Map<any, T>> {
+    async execute<T extends IEntity>(query: QueryType<T>): Promise<Map<any, T>> {
         await this._loadIntoWorkspace(query);
 
         return await this._workspace.execute(query);

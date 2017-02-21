@@ -1,4 +1,4 @@
-// todo: unit test this sucker
+// todo: needs testing
 export class Cache<K, V> {
     private _pkMap = new Map<K, V>();
     private _getKey: (item: V) => K;

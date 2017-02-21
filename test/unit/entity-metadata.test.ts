@@ -25,35 +25,35 @@ describe("entity-metadata", () => {
             } catch (error) { }
         });
 
-        it("should return metadata using the type", () => {
+        it("should accept type", () => {
             let metadata = getEntityMetadata(Foo);
 
             expect(metadata instanceof EntityMetadata).toBe(true);
             expect(metadata.entityType).toBe(Foo);
         });
 
-        it("should return metadata using the entity type name", () => {
+        it("should accept entity type name", () => {
             let metadata = getEntityMetadata("Barbar");
 
             expect(metadata instanceof EntityMetadata).toBe(true);
             expect(metadata.entityType).toBe(Bar);
         });
 
-        it("should return metadata using the entity type name (case insensitive check)", () => {
+        it("should accept entity type name (case insensitive check)", () => {
             let metadata = getEntityMetadata("bARbAR");
 
             expect(metadata instanceof EntityMetadata).toBe(true);
             expect(metadata.entityType).toBe(Bar);
         });
 
-        it("should return metadata using the entity type alias", () => {
+        it("should accept entity type alias", () => {
             let metadata = getEntityMetadata("Barbarian");
 
             expect(metadata instanceof EntityMetadata).toBe(true);
             expect(metadata.entityType).toBe(Bar);
         });
 
-        it("should return metadata using the entity type alias (case insensitive check)", () => {
+        it("should accept entity type alias (case insensitive check)", () => {
             let metadata = getEntityMetadata("bARbArIAn");
 
             expect(metadata instanceof EntityMetadata).toBe(true);

@@ -1,6 +1,9 @@
 import { IEntityType } from "../entity-type";
 import { Property } from "../property";
 
+/**
+ * A property that points to one (Reference) or many (Children, Collection) related entities.
+ */
 export abstract class Navigation extends Property {
     readonly virtual: boolean;
 

@@ -1,6 +1,9 @@
 import { IEntityType } from "../entity-type";
 import { Navigation } from "./navigation";
 
+/**
+ * A property that points to one related entity.
+ */
 export class Reference extends Navigation {
     readonly type = "ref";
     readonly keyName: string;

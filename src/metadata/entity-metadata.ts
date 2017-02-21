@@ -8,7 +8,7 @@ import { NavigationType, Navigation, Children, Collection, Reference } from "./n
 import { ValueType } from "./value-type";
 
 /**
- * Contains information about properties of an entity.
+ * Contains information about properties and other metadata of an entity.
  */
 export class EntityMetadata<T extends IEntity> {
     readonly factory: (item: IStringIndexable) => T;

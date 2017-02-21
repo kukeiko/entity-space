@@ -7,6 +7,11 @@ type EntityCache = Cache<any, IEntity>;
 export class Workspace {
     private _caches = new Map<IEntityType<IEntity>, EntityCache>();
 
+    /**
+     * Add one entity into the cache.
+     *
+     * Use expansions to describe which navigations should be put into the cache as well.
+     */
     add<T>(args: {
         entity: T;
         type: IEntityType<T>;
@@ -62,6 +67,11 @@ export class Workspace {
         });
     }
 
+    /**
+     * Add multiple entities into the cache.
+     *
+     * Use expansions to describe which navigations should be put into the cache as well.
+     */
     addMany<T>(args: {
         entities: T[];
         type: IEntityType<T>;
@@ -84,6 +94,11 @@ export class Workspace {
         }));
     }
 
+    /**
+     * Remove an entity from the cache.
+     *
+     * todo: support expansions
+     */
     remove(args: {
         item: any;
         type: IEntityType<any>;
@@ -97,6 +112,9 @@ export class Workspace {
         cache.remove(args.item);
     }
 
+    /**
+     * Clear all or parts of the cache.
+     */
     clear(args?: {
         entityType?: IEntityType<any>;
     }): void {
@@ -110,6 +128,9 @@ export class Workspace {
         }
     }
 
+    /**
+     * Load entities from the cache.
+     */
     execute<T>(q: QueryType<T>): Map<any, T> {
         let metadata = getEntityMetadata(q.entityType);
         let items = new Map<any, T>();
@@ -152,6 +173,9 @@ export class Workspace {
         return items;
     }
 
+    /**
+     * Expands upon the entities as described in the query.
+     */
     private _hydrate(args: {
         query: QueryType<any>;
         items: Map<any, any>;
