@@ -116,7 +116,14 @@ describe("expansion", () => {
         }
 
         describe("add()", () => {
-            it("should add completely different expansions", () => {
+            it("[mo] + [mo] should be [mo]", () => {
+                let x = Expansion.parse(Khaz, `mo`);
+                let y = Expansion.parse(Khaz, `mo`);
+
+                expect(Expansion.add(x, y).toString()).toEqual(`mo`);
+            });
+
+            it("[mo] + [dan] should be [dan,mo]", () => {
                 let moExpansion = Expansion.parse(Khaz, `mo`);
                 let danExpansion = Expansion.parse(Khaz, `dan`);
 
@@ -125,7 +132,7 @@ describe("expansion", () => {
                 expect(merged.toString()).toEqual("dan,mo");
             });
 
-            it("should not remove nested expansions", () => {
+            it("[mo/dan] + [dan] should be [dan,mo/dan]", () => {
                 let moDanExpansion = Expansion.parse(Khaz, `mo/dan`);
                 let danExpansion = Expansion.parse(Khaz, `dan`);
 
@@ -134,13 +141,29 @@ describe("expansion", () => {
                 expect(merged.toString()).toEqual("dan,mo/dan");
             });
 
-            it("should add nested expansions", () => {
+            it("[mo/dan] + [mo/foo] should be [mo/{dan,foo}]", () => {
                 let moDanExpansion = Expansion.parse(Khaz, `mo/dan`);
                 let moFooExpansion = Expansion.parse(Khaz, `mo/foo`);
 
                 let merged = Expansion.add(moDanExpansion, moFooExpansion);
 
                 expect(merged.toString()).toEqual("mo/{dan,foo}");
+            });
+
+            it("[] + [] should be []", () => {
+                expect(Expansion.add([], [])).toEqual([]);
+            });
+
+            it("[mo] + [] should be [mo]", () => {
+                let mo = Expansion.parse(Khaz, `mo`);
+
+                expect(Expansion.add(mo, []).toString()).toEqual(`mo`);
+            });
+
+            it("[] + [mo] should be [mo]", () => {
+                let mo = Expansion.parse(Khaz, `mo`);
+
+                expect(Expansion.add([], mo).toString()).toEqual(`mo`);
             });
         });
 
