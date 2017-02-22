@@ -1,27 +1,6 @@
 import { Entity, Query, QueryCache } from "../../src";
 
 describe("query-cache", () => {
-    describe("add()", () => {
-        @Entity() class Foo { @Entity.PrimaryKey() id: string; }
-
-        it("should add Query.ByKey as Query.ByKeys if empty", () => {
-            let cache = new QueryCache();
-            let q = new Query.ByKey({
-                entityType: Foo,
-                key: 64
-            });
-
-            cache.add(q);
-
-            expect(cache.cachedQueries[0] instanceof Query.ByKeys).toBe(true);
-            expect((cache.cachedQueries[0] as Query.ByKeys<any>).keys).toContain(q.key);
-        });
-
-        xit("should merge Query.ByKey with existing Query.ByKeys", () => {
-            // todo
-        });
-    });
-
     describe("isCached()", () => {
         describe("identity only", () => {
             @Entity() class Foo { @Entity.PrimaryKey() id: string; }
