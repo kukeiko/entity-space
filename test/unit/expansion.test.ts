@@ -69,7 +69,7 @@ describe("expansion", () => {
         });
     });
 
-    describe("add()", () => {
+    {
         @Entity()
         class Khaz {
             @Entity.PrimaryKey()
@@ -115,33 +115,96 @@ describe("expansion", () => {
             id: number = null;
         }
 
-        it("should add completely different expansions", () => {
-            let moExpansion = Expansion.parse(Khaz, `mo`);
-            let danExpansion = Expansion.parse(Khaz, `dan`);
+        describe("add()", () => {
+            it("should add completely different expansions", () => {
+                let moExpansion = Expansion.parse(Khaz, `mo`);
+                let danExpansion = Expansion.parse(Khaz, `dan`);
 
-            let merged = Expansion.add(moExpansion, danExpansion);
+                let merged = Expansion.add(moExpansion, danExpansion);
 
-            expect(merged.toString()).toEqual("dan,mo");
+                expect(merged.toString()).toEqual("dan,mo");
+            });
+
+            it("should not remove nested expansions", () => {
+                let moDanExpansion = Expansion.parse(Khaz, `mo/dan`);
+                let danExpansion = Expansion.parse(Khaz, `dan`);
+
+                let merged = Expansion.add(moDanExpansion, danExpansion);
+
+                expect(merged.toString()).toEqual("dan,mo/dan");
+            });
+
+            it("should add nested expansions", () => {
+                let moDanExpansion = Expansion.parse(Khaz, `mo/dan`);
+                let moFooExpansion = Expansion.parse(Khaz, `mo/foo`);
+
+                let merged = Expansion.add(moDanExpansion, moFooExpansion);
+
+                expect(merged.toString()).toEqual("mo/{dan,foo}");
+            });
         });
 
-        it("should not remove nested expansions", () => {
-            let moDanExpansion = Expansion.parse(Khaz, `mo/dan`);
-            let danExpansion = Expansion.parse(Khaz, `dan`);
+        describe("minus()", () => {
+            it("[mo] - [mo] should be []", () => {
+                let x = Expansion.parse(Khaz, `mo`);
+                let y = Expansion.parse(Khaz, `mo`);
 
-            let merged = Expansion.add(moDanExpansion, danExpansion);
+                expect(Expansion.minus(x, y)).toEqual([]);
+            });
 
-            expect(merged.toString()).toEqual("dan,mo/dan");
+            it("[mo] - [dan] should be [mo]", () => {
+                let x = Expansion.parse(Khaz, `mo`);
+                let y = Expansion.parse(Khaz, `dan`);
+
+                expect(Expansion.minus(x, y).toString()).toEqual(`mo`);
+            });
+
+            it("[mo/dan] - [mo] should be [mo/dan]", () => {
+                let x = Expansion.parse(Khaz, `mo/dan`);
+                let y = Expansion.parse(Khaz, `mo`);
+
+                expect(Expansion.minus(x, y).toString()).toEqual(`mo/dan`);
+            });
+
+            it("[mo/{dan,foo}] - [mo/dan] should be [mo/foo]", () => {
+                let x = Expansion.parse(Khaz, `mo/{dan,foo}`);
+                let y = Expansion.parse(Khaz, `mo/dan`);
+
+                expect(Expansion.minus(x, y).toString()).toEqual(`mo/foo`);
+            });
+
+            it("[mo,dan] - [mo] should be [dan]", () => {
+                let x = Expansion.parse(Khaz, `mo,dan`);
+                let y = Expansion.parse(Khaz, `mo`);
+
+                expect(Expansion.minus(x, y).toString()).toEqual(`dan`);
+            });
+
+            it("[mo] - [mo,dan] should be []", () => {
+                let x = Expansion.parse(Khaz, `mo`);
+                let y = Expansion.parse(Khaz, `mo,dan`);
+
+                expect(Expansion.minus(x, y)).toEqual([]);
+            });
+
+            it("[mo] - [mo/dan] should be []", () => {
+                let x = Expansion.parse(Khaz, `mo`);
+                let y = Expansion.parse(Khaz, `mo/dan`);
+
+                expect(Expansion.minus(x, y)).toEqual([]);
+            });
+
+            it("[] - [] should be []", () => {
+                expect(Expansion.minus([], [])).toEqual([]);
+            });
+
+            it("[] - [dan] should be []", () => {
+                let dan = Expansion.parse(Khaz, `dan`);
+
+                expect(Expansion.minus([], dan)).toEqual([]);
+            });
         });
-
-        it("should add nested expansions", () => {
-            let moDanExpansion = Expansion.parse(Khaz, `mo/dan`);
-            let moFooExpansion = Expansion.parse(Khaz, `mo/foo`);
-
-            let merged = Expansion.add(moDanExpansion, moFooExpansion);
-
-            expect(merged.toString()).toEqual("mo/{dan,foo}");
-        });
-    });
+    }
 
     describe("extract()", () => {
         it("should extract a virtual expansion", () => {

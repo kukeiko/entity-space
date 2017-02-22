@@ -102,7 +102,6 @@ export class Expansion {
      * Merges two expansions together.
      */
     // todo: throw if expansions are not of same entity type
-    // i think for this it'll be nice for properties to have an ownerType
     static add(x: Expansion[], y: Expansion[]): Expansion[] {
         x = x.slice().sort((a, b) => a.property.name < b.property.name ? -1 : 1);
         y = y.slice().sort((a, b) => a.property.name < b.property.name ? -1 : 1);
@@ -145,6 +144,47 @@ export class Expansion {
         }
 
         return merged;
+    }
+
+    /**
+     * Subtracts y from x.
+     */
+    // todo: throw if expansions are not of same entity type
+    static minus(x: Expansion[], y: Expansion[]): Expansion[] {
+        if (x.length == 0 || y.length == 0) return x;
+
+        let result: Expansion[] = [];
+        let xi = 0;
+        let yi = 0;
+
+        x = x.slice().sort((a, b) => a.property.name < b.property.name ? -1 : 1);
+        y = y.slice().sort((a, b) => a.property.name < b.property.name ? -1 : 1);
+
+        while (true) {
+            if (y[yi] == null) {
+                result = [...result, ...x.slice(xi)];
+                break;
+            } else if (x[xi].property == y[yi].property) {
+                let remaining = Expansion.minus(x[xi].expansions.slice(), y[yi].expansions.slice());
+
+                if (remaining.length > 0) {
+                    result = [...result, new Expansion({
+                        property: x[xi].property,
+                        expansions: remaining
+                    })];
+                }
+
+                xi++;
+                yi++;
+            } else if (x[xi].property.name < y[yi].property.name) {
+                result.push(x[xi]);
+                xi++;
+            } else {
+                yi++;
+            }
+        }
+
+        return result;
     }
 
     /**
