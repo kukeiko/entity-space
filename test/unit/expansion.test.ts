@@ -69,7 +69,7 @@ describe("expansion", () => {
         });
     });
 
-    describe("merge()", () => {
+    describe("add()", () => {
         @Entity()
         class Khaz {
             @Entity.PrimaryKey()
@@ -115,11 +115,11 @@ describe("expansion", () => {
             id: number = null;
         }
 
-        it("should merge completely different expansions", () => {
+        it("should add completely different expansions", () => {
             let moExpansion = Expansion.parse(Khaz, `mo`);
             let danExpansion = Expansion.parse(Khaz, `dan`);
 
-            let merged = Expansion.merge(moExpansion, danExpansion);
+            let merged = Expansion.add(moExpansion, danExpansion);
 
             expect(merged.toString()).toEqual("dan,mo");
         });
@@ -128,16 +128,16 @@ describe("expansion", () => {
             let moDanExpansion = Expansion.parse(Khaz, `mo/dan`);
             let danExpansion = Expansion.parse(Khaz, `dan`);
 
-            let merged = Expansion.merge(moDanExpansion, danExpansion);
+            let merged = Expansion.add(moDanExpansion, danExpansion);
 
             expect(merged.toString()).toEqual("dan,mo/dan");
         });
 
-        it("should merge nested expansions", () => {
+        it("should add nested expansions", () => {
             let moDanExpansion = Expansion.parse(Khaz, `mo/dan`);
             let moFooExpansion = Expansion.parse(Khaz, `mo/foo`);
 
-            let merged = Expansion.merge(moDanExpansion, moFooExpansion);
+            let merged = Expansion.add(moDanExpansion, moFooExpansion);
 
             expect(merged.toString()).toEqual("mo/{dan,foo}");
         });

@@ -103,7 +103,7 @@ export class Expansion {
      */
     // todo: throw if expansions are not of same entity type
     // i think for this it'll be nice for properties to have an ownerType
-    static merge(x: Expansion[], y: Expansion[]): Expansion[] {
+    static add(x: Expansion[], y: Expansion[]): Expansion[] {
         x = x.slice().sort((a, b) => a.property.name < b.property.name ? -1 : 1);
         y = y.slice().sort((a, b) => a.property.name < b.property.name ? -1 : 1);
 
@@ -128,7 +128,7 @@ export class Expansion {
                 // properties of x and y match - recurse onto nested expansion
                 merged = [...merged, new Expansion({
                     property: x[xi].property,
-                    expansions: Expansion.merge(x[xi].expansions.slice(), y[yi].expansions.slice())
+                    expansions: Expansion.add(x[xi].expansions.slice(), y[yi].expansions.slice())
                 })];
 
                 xi++;
