@@ -150,6 +150,15 @@ describe("expansion", () => {
                 expect(merged.toString()).toEqual("mo/{dan,foo}");
             });
 
+            it("[mo/dan] + [mo/foo,dan] should be [dan,mo/{dan,foo}]", () => {
+                let moDanExpansion = Expansion.parse(Khaz, `mo/dan`);
+                let moFooExpansion = Expansion.parse(Khaz, `mo/foo,dan`);
+
+                let merged = Expansion.add(moDanExpansion, moFooExpansion);
+
+                expect(merged.toString()).toEqual("dan,mo/{dan,foo}");
+            });
+
             it("[] + [] should be []", () => {
                 expect(Expansion.add([], [])).toEqual([]);
             });

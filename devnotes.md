@@ -1,20 +1,13 @@
- - merge pending queries if possible
- - remove "name" from property decorator arguments
- - allow reference key convention => "template" => "templateId"
- - super class decorators should be available on inheriting classes
- - implement something that does what @Reuse() does, but with query analysis stuff
- - Query.ByKeys: repository should remove keys from query that are already loaded
- - artist{albums,albums} should fail
- - workspace.remove()
-    - with expansion
-    - should children of a 1-n relation be removed if the parent is removed?
- - checking query type by "instanceof" kinda sucks. consider using discriminated union approach.
- - create a query cache that handles checking if a query can be loaded from workspace or not
- - make use of lazy reference (@ util)
- - service-cluster:
-    - aggregates data loading/caching logic of multiple/all entity types
-    - queries can be executed against it
+# feature roadmap / milestones:
+- 0.5.0 service-cluster, abstract entities
+- 0.?.0 debug output interface, cache invalidation, contexts, validation, query statistics
 
-- roadmap / milestones:
-    - 0.5.0 service-cluster, abstract entities
-    - 0.?.0 helpful debug output, cache invalidation, contexts, validation
+# todos
+- reduce queries by expansions that are already cached
+- merge equal pending queries
+- remove "name" from property decorator arguments
+- use custom decorator arguments instead of Partial<ICtorArgs>
+- allow reference key convention => "template" => "templateId"
+- decorators should bleed through from super classes, allowing inheritance
+- support expansions @ workspace.remove()
+- possibly introduce expansion pool to reduce memory footprint
