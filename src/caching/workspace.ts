@@ -153,10 +153,6 @@ export class Workspace {
                 cache.getMany(q.keys.slice()).forEach((v, k) => items.set(k, metadata.fromCached(v) as T));
                 break;
 
-            case "index":
-                cache.byIndex(q.index, q.value).forEach((v, k) => items.set(k, metadata.fromCached(v) as T));
-                break;
-
             case "indexes":
                 cache.byIndexes(q.indexes).forEach((v, k) => items.set(k, metadata.fromCached(v) as T));
                 break;
@@ -203,11 +199,12 @@ export class Workspace {
                     args.items.forEach(item => {
                         let parentKey = item[pkName];
 
-                        let items = this.execute(new Query.ByIndex({
+                        let items = this.execute(new Query.ByIndexes({
                             entityType: nav.otherType,
                             expansions: exp.expansions.slice(),
-                            index: parentKeyName,
-                            value: parentKey
+                            indexes: {
+                                [parentKeyName]: parentKey
+                            }
                         }));
 
                         item[nav.name] = Array.from(items.values());

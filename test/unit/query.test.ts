@@ -20,66 +20,6 @@ describe("query", () => {
         expect(q.expansions.map(exp => exp.toString()).join(",")).toEqual("artist,reviews,songs,tags");
     });
 
-    describe("parse()", () => {
-        it("should parse Artist into Query.All", () => {
-            let expected = new Query.All({
-                entityType: Artist
-            });
-
-            let q = Query.parse("Artist");
-
-            expect(q).toEqual(expected);
-        });
-
-        it("should parse Artist(64) into Query.ByKey", () => {
-            let expected = new Query.ByKey({
-                entityType: Artist,
-                key: 64
-            });
-
-            let q = Query.parse("Artist(64)");
-
-            expect(q).toEqual(expected);
-        });
-
-        it("should parse Artist([64, 7, 1337]) into Query.ByKeys", () => {
-            let expected = new Query.ByKeys({
-                entityType: Artist,
-                keys: [64, 7, 1337]
-            });
-
-            let q = Query.parse("Artist([64, 7, 1337])");
-
-            expect(q).toEqual(expected);
-        });
-
-        it("should parse Artist({\"name\": \"fo\\\"o\"}) into Query.ByIndex", () => {
-            let expected = new Query.ByIndex({
-                entityType: Artist,
-                index: "name",
-                value: "fo\"o"
-            });
-
-            let q = Query.parse("Artist({\"name\": \"fo\\\"o\"})");
-
-            expect(q).toEqual(expected);
-        });
-
-        it("should parse Artist({\"name\": \"fo\\\"o\", \"age\": 27}) into Query.ByIndexes", () => {
-            let expected = new Query.ByIndexes({
-                entityType: Artist,
-                indexes: {
-                    name: "fo\"o",
-                    age: 27
-                }
-            });
-
-            let q = Query.parse("Artist({\"name\": \"fo\\\"o\", \"age\": 27})");
-
-            expect(q).toEqual(expected);
-        });
-    });
-
     // todo: more combinations are possiberu
     // todo: byKey & byIndex combinations are missing
     describe("isSuperset()/isSubsetOf()", () => {
@@ -218,25 +158,6 @@ describe("query", () => {
             expect(a.isSubsetOf(b)).toEqual(false);
             expect(b.isSubsetOf(a)).toEqual(true);
         });
-
-        it("all:albums/{songs,tags} should be superset of byIndex:albums/{songs,tags}", () => {
-            let a = new Query.All({
-                entityType: Artist,
-                expansions: Expansion.parse(Album, "songs,tags")
-            });
-
-            let b = new Query.ByIndex({
-                index: "artistId",
-                value: 1,
-                entityType: Artist,
-                expansions: Expansion.parse(Album, "songs,tags")
-            });
-
-            expect(a.isSuperSetOf(b)).toEqual(true);
-            expect(b.isSuperSetOf(a)).toEqual(false);
-            expect(a.isSubsetOf(b)).toEqual(false);
-            expect(b.isSubsetOf(a)).toEqual(true);
-        });
     });
 
     describe("toString()", () => {
@@ -267,17 +188,6 @@ describe("query", () => {
             });
 
             expect(q.toString()).toEqual("Artist(64,1337,42,23)/albums/{songs,tags}");
-        });
-
-        it("byIndex: Artist(theIndex:theValue)/albums/{songs,tags}", () => {
-            let q = new Query.ByIndex({
-                index: "theIndex",
-                value: "theValue",
-                entityType: Artist,
-                expansions: Expansion.parse(Artist, "albums/{songs,tags}")
-            });
-
-            expect(q.toString()).toEqual("Artist(theIndex:theValue)/albums/{songs,tags}");
         });
 
         it("byIndexes: Artist(khaz:64,mo:dan)/albums/{songs,tags}", () => {

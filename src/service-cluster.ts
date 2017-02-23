@@ -164,11 +164,12 @@ export class ServiceCluster {
                         crawled.forEach(item => {
                             let parentKey = item[pkName];
 
-                            promises.push(this._loadIntoWorkspace(new Query.ByIndex({
+                            promises.push(this._loadIntoWorkspace(new Query.ByIndexes({
                                 entityType: nav.otherType,
                                 expansions: v.extracted.expansions.slice(),
-                                index: parentKeyName,
-                                value: parentKey
+                                indexes: {
+                                    [parentKeyName]: parentKey
+                                }
                             })));
                         });
                         break;
@@ -225,10 +226,6 @@ export class ServiceCluster {
             case "keys":
                 if (!executer.loadMany) throwNotSupported("ByKeys");
                 return await executer.loadMany(query);
-
-            case "index":
-                if (!executer.loadByIndex) throwNotSupported("ByIndex");
-                return await executer.loadByIndex(query);
 
             case "indexes":
                 if (!executer.loadByIndexes) throwNotSupported("ByIndexes");
