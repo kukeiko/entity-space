@@ -1,63 +1,53 @@
-import * as _ from "lodash";
 import { IEntityType, IEntity } from "../metadata";
-import { Query, QueryType, QueryIdentity } from "../elements";
+import { QueryType } from "../elements";
 import { AllQueryCache } from "./all-query-cache";
 import { ByIndexesQueryCache } from "./by-indexes-query-cache";
 import { ByKeyQueryCache } from "./by-key-query-cache";
 
-type PerExpansions = Map<string, QueryType<any>>;
-type PerIdentity = Map<QueryIdentity, PerExpansions>;
-
 export class QueryCache {
-    get cachedQueries(): QueryType<any>[] {
-        return Array.from(this._all.values());
-    }
-
-    private _all = new Set<QueryType<any>>();
-    private _byType = new Map<IEntityType<any>, PerIdentity>();
-
     private _allQueryCaches = new Map<IEntityType<any>, AllQueryCache<any>>();
     private _byIndexesCaches = new Map<IEntityType<any>, ByIndexesQueryCache<any>>();
     private _byKeyCaches = new Map<IEntityType<any>, ByKeyQueryCache<any>>();
 
     reduce<T extends IEntity>(query: QueryType<T>): QueryType<T>[] {
+        /**
+         * todo: also consider QueryAllCache where applicable, will require comparing
+         * expansion weights which should be offloaded into a separate class (since query caches
+         * will also make use of it)
+         */
+
         switch (query.type) {
             case "key":
                 {
-                    // todo: also consider QueryAllCache
-                    let byKeyCache = this._getByKeyQueryCache<T>(query.entityType);
-                    let reduced = byKeyCache.reduce(query);
+                    let reduced = this._getByKeyQueryCache(query.entityType).reduce(query);
+                    return reduced ? [reduced] : [];
+                }
 
-                    return reduced ? [reduced] : null;
+            case "keys":
+                return this._getByKeyQueryCache(query.entityType).reduce(query);
+
+            case "indexes":
+                {
+                    let reduced = this._getByIndexesQueryCache(query.entityType).reduce(query);
+                    return reduced ? [reduced] : [];
+                }
+
+            case "all":
+                {
+                    let reduced = this._getAllQueryCache(query.entityType).reduce(query);
+                    return reduced ? [reduced] : [];
                 }
 
             default:
-                throw `reduce() for query type ${query.type} not implemented`;
+                throw `incompatible query: ${query}`;
         }
     }
 
-    // todo: implementation incomplete
     add(query: QueryType<any>): void {
-        if (this.isCached(query)) return;
-
         switch (query.type) {
             case "key":
-                this._getByKeyQueryCache(query.entityType).add(query);
-                break;
-
             case "keys":
-                {
-                    // todo: possibly instead overload add() @ cache to support ByKeys query
-                    let cache = this._getByKeyQueryCache(query.entityType);
-
-                    query.keys.forEach(k => {
-                        cache.add(new Query.ByKey({
-                            entityType: query.entityType,
-                            expansions: query.expansions.slice(),
-                            key: k
-                        }));
-                    });
-                }
+                this._getByKeyQueryCache(query.entityType).add(query);
                 break;
 
             case "indexes":
@@ -69,79 +59,36 @@ export class QueryCache {
                 break;
 
             default:
-                throw `incompatible/unknown query: ${query}`;
+                throw `incompatible query: ${query}`;
         }
     }
 
-    // todo: implementation incomplete
     isCached(query: QueryType<any>): boolean {
         let allCache = this._getAllQueryCache(query.entityType);
-
         if (allCache.isCached(query)) return true;
 
         switch (query.type) {
             case "key": return this._getByKeyQueryCache(query.entityType).isCached(query);
-
-            case "keys":
-                {
-                    // todo: possibly instead overload add() @ cache to support ByKeys query
-                    let cache = this._getByKeyQueryCache(query.entityType);
-
-                    return query.keys.every(k => cache.isCached(new Query.ByKey({
-                        entityType: query.entityType,
-                        expansions: query.expansions.slice(),
-                        key: k
-                    })));
-                }
-
+            case "keys": return this._getByKeyQueryCache(query.entityType).isCached(query);
             case "indexes": return this._getByIndexesQueryCache(query.entityType).isCached(query);
 
             default: return false;
         }
     }
 
-    /**
-     * Clear parts or all of the cache.
-     */
     clear(args?: {
         entityType?: IEntityType<any>;
-        queryIdentity?: QueryIdentity;
     }): void {
         args = args || {};
 
-        if (args.entityType && args.queryIdentity) {
-            let cache = this._perExpansion(args.entityType, args.queryIdentity);
-            cache.clear();
-        } else if (args.entityType) {
-            let cache = this._perIdentity(args.entityType);
-            cache.clear();
-        } else if (args.queryIdentity) {
-            this._byType.forEach(perIdentity => {
-                perIdentity.set(args.queryIdentity, new Map<string, QueryType<any>>());
-            });
+        if (args.entityType) {
+            this._allQueryCaches.delete(args.entityType);
+            this._byIndexesCaches.delete(args.entityType);
+            this._byKeyCaches.delete(args.entityType);
         } else {
-            this._byType = new Map<IEntityType<any>, PerIdentity>();
-        }
-    }
-
-    numCached(args?: {
-        entityType?: IEntityType<any>;
-        queryIdentity?: QueryIdentity;
-    }): number {
-        if (!args) {
-            let all = _.flatten(Array.from(this._byType.values()).map(x => Array.from(x.values())));
-            return _.flatten(all.map(x => Array.from(x.values()))).length;
-        } else if (args.entityType && args.queryIdentity) {
-            return this._perExpansion(args.entityType, args.queryIdentity).size;
-        } else if (args.entityType) {
-            let allIdentities = Array.from(this._perIdentity(args.entityType).values());
-            return _.flatten(allIdentities.map(x => Array.from(x.values()))).length;
-        } else if (args.queryIdentity) {
-            let ofSameIdentity = Array.from(this._byType.values())
-                .map(x => x.get(args.queryIdentity))
-                .filter(x => x);
-
-            return _.flatten(ofSameIdentity.map(x => Array.from(x.values()))).length;
+            this._allQueryCaches = new Map<IEntityType<any>, AllQueryCache<any>>();
+            this._byIndexesCaches = new Map<IEntityType<any>, ByIndexesQueryCache<any>>();
+            this._byKeyCaches = new Map<IEntityType<any>, ByKeyQueryCache<any>>();
         }
     }
 
@@ -176,28 +123,5 @@ export class QueryCache {
         }
 
         return cache;
-    }
-
-    private _perExpansion(entityType: IEntityType<any>, queryIdentity: QueryIdentity): PerExpansions {
-        let perIdentity = this._perIdentity(entityType);
-        let perExpansions = perIdentity.get(queryIdentity);
-
-        if (!perExpansions) {
-            perExpansions = new Map<string, QueryType<any>>();
-            perIdentity.set(queryIdentity, perExpansions);
-        }
-
-        return perExpansions;
-    }
-
-    private _perIdentity(entityType: IEntityType<any>): PerIdentity {
-        let queries = this._byType.get(entityType);
-
-        if (!queries) {
-            queries = new Map<QueryIdentity, PerExpansions>();
-            this._byType.set(entityType, queries);
-        }
-
-        return queries;
     }
 }
