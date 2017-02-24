@@ -257,20 +257,8 @@ describe("service-cluster", () => {
             album.reviews = [review];
             let albumMap: Map<any, Album>;
 
-            sc.register(
-                Album,
-                {
-                    loadAll: () => Promise.resolve([new Album({ id: 1 })])
-                });
-
-            sc.register(
-                AlbumReview,
-                {
-                    loadByIndexes: () => Promise.resolve([new AlbumReview({
-                        id: 64,
-                        albumId: 1
-                    })])
-                });
+            sc.register(Album, { loadAll: () => Promise.resolve([new Album({ id: 1 })]) });
+            sc.register(AlbumReview, { loadByIndexes: () => Promise.resolve([new AlbumReview({ id: 64, albumId: 1 })]) });
 
             try {
                 albumMap = await sc.execute(new Query.All({
@@ -298,23 +286,9 @@ describe("service-cluster", () => {
             album.reviews = [albumReview];
             albumReview.album = album;
 
-            sc.register(
-                Artist,
-                {
-                    loadAll: () => Promise.resolve([artist])
-                });
-
-            sc.register(
-                Album,
-                {
-                    loadByIndexes: () => Promise.resolve([album])
-                });
-
-            sc.register(
-                AlbumReview,
-                {
-                    loadByIndexes: () => Promise.resolve([albumReview])
-                });
+            sc.register(Artist, { loadAll: () => Promise.resolve([artist]) });
+            sc.register(Album, { loadByIndexes: () => Promise.resolve([album]) });
+            sc.register(AlbumReview, { loadByIndexes: () => Promise.resolve([albumReview]) });
 
             try {
                 loaded = await sc.execute(new Query.All({
@@ -338,31 +312,13 @@ describe("service-cluster", () => {
             let albumReview = new AlbumReview({ id: 64, albumId: album.id, reviewExternalId: review.id, systemId: review.systemId });
             let loaded: Map<any, any>;
 
+            // we only have to connect these two together since review & albumReview are virtual
             artist.albums = [album];
 
-            sc.register(
-                Artist,
-                {
-                    loadAll: () => Promise.resolve([artist])
-                });
-
-            sc.register(
-                Album,
-                {
-                    loadByIndexes: () => Promise.resolve([album])
-                });
-
-            sc.register(
-                Review,
-                {
-                    loadMany: () => Promise.resolve([review])
-                });
-
-            sc.register(
-                AlbumReview,
-                {
-                    loadByIndexes: () => Promise.resolve([albumReview])
-                });
+            sc.register(Artist, { loadAll: () => Promise.resolve([artist]) });
+            sc.register(Album, { loadByIndexes: () => Promise.resolve([album]) });
+            sc.register(AlbumReview, { loadByIndexes: () => Promise.resolve([albumReview]) });
+            sc.register(Review, { loadMany: () => Promise.resolve([review]) });
 
             try {
                 loaded = await sc.execute(new Query.All({

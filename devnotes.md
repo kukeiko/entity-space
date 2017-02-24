@@ -12,3 +12,7 @@
 - support expansions @ workspace.remove()
 - possibly introduce expansion pool to reduce memory footprint
 - improve performance in various cache-checking places by using utlizing Expansin.equals()
+
+# test-todos
+- write query-cache tests which state: "if isCached(q) returns true, reduce(q) must return null"
+- write expansion test thats states that if A and B are equal, A must be a superset/subset of B and vice verse

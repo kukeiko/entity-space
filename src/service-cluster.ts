@@ -111,9 +111,6 @@ export class ServiceCluster {
      * Make sure that the payload of the provided query exists in the workspace.
      */
     private async _loadIntoWorkspace(query: QueryType<any>): Promise<void> {
-        // let metadata = getEntityMetadata(query.entityType);
-
-
         let [noVirtuals, virtuals] = query.extract(exp => exp.property.virtual);
 
         if (!this._queryCache.isCached(noVirtuals)) {
@@ -198,9 +195,8 @@ export class ServiceCluster {
     }
 
     /**
-     * Load entities from a service by looking up the query executer associated with 
-     * the entity type of the query.
-     * 
+     * Load entities from a service by looking up the query executer associated with the entity type of the query.
+     *
      * The query must not contain any virtuals.
      */
     private async _loadFromService<T>(query: QueryType<T>): Promise<T[]> {
@@ -254,7 +250,7 @@ export class ServiceCluster {
                             if (keys.has(key)) return;
 
                             keys.add(key);
-                            references.push(e)
+                            references.push(e);
                         });
 
                         let q = new Query.ByKeys({
