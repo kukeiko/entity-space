@@ -1,6 +1,9 @@
 import * as _ from "lodash";
-import { IEntityType } from "../metadata";
+import { IEntityType, IEntity } from "../metadata";
 import { Query, QueryType, QueryIdentity } from "../elements";
+import { AllQueryCache } from "./all-query-cache";
+import { ByIndexesQueryCache } from "./by-indexes-query-cache";
+import { ByKeyQueryCache } from "./by-key-query-cache";
 
 type PerExpansions = Map<string, QueryType<any>>;
 type PerIdentity = Map<QueryIdentity, PerExpansions>;
@@ -13,105 +16,88 @@ export class QueryCache {
     private _all = new Set<QueryType<any>>();
     private _byType = new Map<IEntityType<any>, PerIdentity>();
 
-    /**
-     * todo: this should be optimized by deleting queries that are subsets of the given query
-     * todo: implement index + indexes
-     */
+    private _allQueryCaches = new Map<IEntityType<any>, AllQueryCache<any>>();
+    private _byIndexesCaches = new Map<IEntityType<any>, ByIndexesQueryCache<any>>();
+    private _byKeyCaches = new Map<IEntityType<any>, ByKeyQueryCache<any>>();
+
+    reduce<T extends IEntity>(query: QueryType<T>): QueryType<T>[] {
+        switch (query.type) {
+            case "key":
+                {
+                    // todo: also consider QueryAllCache
+                    let byKeyCache = this._getByKeyQueryCache<T>(query.entityType);
+                    let reduced = byKeyCache.reduce(query);
+
+                    return reduced ? [reduced] : null;
+                }
+
+            default:
+                throw `reduce() for query type ${query.type} not implemented`;
+        }
+    }
+
+    // todo: implementation incomplete
     add(query: QueryType<any>): void {
         if (this.isCached(query)) return;
 
         switch (query.type) {
             case "key":
-                {
-                    let byKeys = this._perExpansion(query.entityType, "keys");
-                    let sameExpansion = byKeys.get(query.expansion) as Query.ByKeys<any>;
-                    let newKeys: any[] = [];
-
-                    if (sameExpansion) {
-                        newKeys = [...sameExpansion.keys, query.key];
-                        this._all.delete(sameExpansion);
-                    } else {
-                        newKeys = [query.key];
-                    }
-
-                    let q = new Query.ByKeys({
-                        entityType: query.entityType,
-                        keys: newKeys,
-                        expansions: query.expansions.slice()
-                    });
-
-                    byKeys.set(query.expansion, q);
-                    this._all.add(q);
-                }
+                this._getByKeyQueryCache(query.entityType).add(query);
                 break;
 
             case "keys":
                 {
-                    let byKeys = this._perExpansion(query.entityType, "keys");
-                    let sameExpansion = byKeys.get(query.expansion) as Query.ByKeys<any>;
-                    let newKeys: any[] = [];
+                    // todo: possibly instead overload add() @ cache to support ByKeys query
+                    let cache = this._getByKeyQueryCache(query.entityType);
 
-                    if (sameExpansion) {
-                        newKeys = _.flatten([...sameExpansion.keys, ...query.keys]);
-                        this._all.delete(sameExpansion);
-                    } else {
-                        newKeys = query.keys.slice();
-                    }
-
-                    let q = new Query.ByKeys({
-                        entityType: query.entityType,
-                        keys: newKeys,
-                        expansions: query.expansions.slice()
+                    query.keys.forEach(k => {
+                        cache.add(new Query.ByKey({
+                            entityType: query.entityType,
+                            expansions: query.expansions.slice(),
+                            key: k
+                        }));
                     });
-
-                    byKeys.set(query.expansion, q);
-                    this._all.add(q);
                 }
+                break;
+
+            case "indexes":
+                this._getByIndexesQueryCache(query.entityType).add(query);
                 break;
 
             case "all":
-                {
-                    let byKeys = this._perExpansion(query.entityType, "keys");
-                    let sameExpansion = byKeys.get(query.expansion) as Query.ByKeys<any>;
-
-                    if (sameExpansion) {
-                        byKeys.delete(query.expansion);
-                        this._all.delete(sameExpansion);
-                    }
-
-                    let cached = this._perExpansion(query.entityType, query.type);
-                    cached.set(query.expansion, query);
-                    this._all.add(query);
-                }
+                this._getAllQueryCache(query.entityType).add(query);
                 break;
 
             default:
-                // todo: this seems to overwrite queries even though it shouldn't
-                let cached = this._perExpansion(query.entityType, query.type);
-                cached.set(query.expansion, query);
+                throw `incompatible/unknown query: ${query}`;
         }
     }
 
-    /**
-     * todo: this should be optimized by checking against type of incoming query,
-     * effectively re-implementing logic already existing @ query.ts
-     *
-     * right now it checks in order or highest (guessed) probability
-     */
+    // todo: implementation incomplete
     isCached(query: QueryType<any>): boolean {
-        let byKeys = this._perExpansion(query.entityType, "keys");
-        if (Array.from(byKeys.values()).some(q => q.isSuperSetOf(query))) return true;
+        let allCache = this._getAllQueryCache(query.entityType);
 
-        let byIndex = this._perExpansion(query.entityType, "index");
-        if (Array.from(byIndex.values()).some(q => q.isSuperSetOf(query))) return true;
+        if (allCache.isCached(query)) return true;
 
-        let byIndexes = this._perExpansion(query.entityType, "indexes");
-        if (Array.from(byIndexes.values()).some(q => q.isSuperSetOf(query))) return true;
+        switch (query.type) {
+            case "key": return this._getByKeyQueryCache(query.entityType).isCached(query);
 
-        let all = this._perExpansion(query.entityType, "all");
-        if (Array.from(all.values()).some(q => q.isSuperSetOf(query))) return true;
+            case "keys":
+                {
+                    // todo: possibly instead overload add() @ cache to support ByKeys query
+                    let cache = this._getByKeyQueryCache(query.entityType);
 
-        return false;
+                    return query.keys.every(k => cache.isCached(new Query.ByKey({
+                        entityType: query.entityType,
+                        expansions: query.expansions.slice(),
+                        key: k
+                    })));
+                }
+
+            case "indexes": return this._getByIndexesQueryCache(query.entityType).isCached(query);
+
+            default: return false;
+        }
     }
 
     /**
@@ -157,6 +143,39 @@ export class QueryCache {
 
             return _.flatten(ofSameIdentity.map(x => Array.from(x.values()))).length;
         }
+    }
+
+    private _getAllQueryCache<T>(entityType: IEntityType<T>): AllQueryCache<T> {
+        let cache = this._allQueryCaches.get(entityType) as AllQueryCache<T>;
+
+        if (!cache) {
+            cache = new AllQueryCache<T>();
+            this._allQueryCaches.set(entityType, cache);
+        }
+
+        return cache;
+    }
+
+    private _getByIndexesQueryCache<T>(entityType: IEntityType<T>): ByIndexesQueryCache<T> {
+        let cache = this._byIndexesCaches.get(entityType) as ByIndexesQueryCache<T>;
+
+        if (!cache) {
+            cache = new ByIndexesQueryCache<T>();
+            this._byIndexesCaches.set(entityType, cache);
+        }
+
+        return cache;
+    }
+
+    private _getByKeyQueryCache<T>(entityType: IEntityType<T>): ByKeyQueryCache<T> {
+        let cache = this._byKeyCaches.get(entityType) as ByKeyQueryCache<T>;
+
+        if (!cache) {
+            cache = new ByKeyQueryCache<T>();
+            this._byKeyCaches.set(entityType, cache);
+        }
+
+        return cache;
     }
 
     private _perExpansion(entityType: IEntityType<any>, queryIdentity: QueryIdentity): PerExpansions {

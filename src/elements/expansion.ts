@@ -24,6 +24,11 @@ export class Expansion {
     readonly expansions: ReadonlyArray<Expansion>;
 
     /**
+     * Number of all expansions (including nested).
+     */
+    readonly numExpansions: number;
+
+    /**
      * Is lazily evaluated @ toString()
      */
     private _toStringValue: string;
@@ -34,6 +39,7 @@ export class Expansion {
     }) {
         this.property = args.property;
         this.expansions = Object.freeze((args.expansions || []).slice().sort((a, b) => a.property.name < b.property.name ? -1 : 1));
+        this.numExpansions = this.expansions.length + this.expansions.map(exp => exp.numExpansions).reduce((p, c) => p + c, 0);
     }
 
     /**

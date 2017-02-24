@@ -11,3 +11,4 @@
 - decorators should bleed through from super classes, allowing inheritance
 - support expansions @ workspace.remove()
 - possibly introduce expansion pool to reduce memory footprint
+- improve performance in various cache-checking places by using utlizing Expansin.equals()

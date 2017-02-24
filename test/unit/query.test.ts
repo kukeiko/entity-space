@@ -278,4 +278,8 @@ describe("query", () => {
             expect(songsAndTagsExtracted[1].path.toString()).toEqual("albums");
         });
     });
+
+    it("Query.ByIndexes.indexesToString() should sort by key", () => {
+        expect(Query.ByIndexes.indexesToArray({ d: 7, a: 1, c: 3, b: 3 }).join()).toEqual(`a:1,b:3,c:3,d:7`);
+    });
 });

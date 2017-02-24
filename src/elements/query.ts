@@ -1,4 +1,5 @@
 import * as _ from "lodash";
+import { IStringable } from "../util";
 import { getEntityMetadata, IEntityType, IEntity } from "../metadata";
 import { Expansion } from "./expansion";
 import { Extraction } from "./extraction";
@@ -30,6 +31,11 @@ export abstract class Query<T extends IEntity> {
     readonly expansion: string;
 
     /**
+     * Number of all expansions (including nested).
+     */
+    readonly numExpansions: number;
+
+    /**
      * Extending this class and trying to use it will lead to random exceptions.
      */
     protected constructor(args: {
@@ -45,116 +51,11 @@ export abstract class Query<T extends IEntity> {
 
         this.expansion = expansions.map(exp => exp.toString()).join(",");
         this.expansions = Object.freeze(expansions.slice().sort((a, b) => a.property.name < b.property.name ? -1 : 1));
+        this.numExpansions = this.expansions.map(exp => exp.numExpansions).reduce((p, c) => p + c, 0);
     }
 
     static equals<T>(a: Query<T>, b: Query<T>): boolean {
         return a.toString() == b.toString();
-    }
-
-    // todo: remove since there might be queries which can't be parsed
-    static parse<T>(query: string): Query<T> {
-        let typeIdentifier: string;
-        let rest = "";
-        let hasIdentity = false;
-
-        for (let i = 0; i < query.length; ++i) {
-            switch (query[i]) {
-                case "(":
-                    hasIdentity = true;
-
-                case "/":
-                    typeIdentifier = query.substring(0, i);
-                    rest = query.substring(i + 1);
-                    break;
-            }
-
-            if (rest) break;
-        }
-
-        if (!typeIdentifier) {
-            typeIdentifier = query;
-        }
-
-        let metadata = getEntityMetadata<T>(typeIdentifier);
-
-        if (!metadata) {
-            throw `no metadata for '${typeIdentifier}' found`;
-        }
-
-        if (!hasIdentity) {
-            return new Query.All({
-                entityType: metadata.entityType,
-                expansions: Expansion.parse(metadata.entityType, rest)
-            });
-        }
-
-        let isInQuotes = false;
-        let identity = "";
-
-        for (let i = 0; i < rest.length; ++i) {
-            let c = rest[i];
-
-            if (!isInQuotes) {
-                if (c == ")") {
-                    identity = rest.substring(0, i);
-                    rest = rest.substring(i + 2);
-                    break;
-                } else if (c == "/") {
-                    identity = rest.substring(0, i);
-                    rest = rest.substring(i + 1);
-                    break;
-                }
-            }
-
-            if (c == "\"") {
-                isInQuotes = !isInQuotes;
-            } else if (c == "\\" && rest[i + 1] == "\"") {
-                i++;
-            }
-        }
-
-        let value: Object;
-
-        try {
-            value = JSON.parse(identity);
-        } catch (error) {
-            throw `invalid identity format: ${error}`;
-        }
-
-        if (typeof (value) == "number" || typeof (value) == "string") {
-            return new Query.ByKey({
-                entityType: metadata.entityType,
-                expansions: Expansion.parse(metadata.entityType, rest),
-                key: value
-            });
-        } else if (value instanceof Array) {
-            return new Query.ByKeys({
-                entityType: metadata.entityType,
-                expansions: Expansion.parse(metadata.entityType, rest),
-                keys: value
-            });
-        } else {
-            let keys = Object.keys(value);
-
-            if (keys.length == 0) {
-                throw `empty index`;
-            }
-
-            if (keys.length == 1) {
-                return new Query.ByIndex({
-                    entityType: metadata.entityType,
-                    expansions: Expansion.parse(metadata.entityType, rest),
-                    index: keys[0],
-                    value: (value as any)[keys[0]] // todo: dirty
-                });
-            } else {
-                return new Query.ByIndexes({
-                    entityType: metadata.entityType,
-                    expansions: Expansion.parse(metadata.entityType, rest),
-                    indexes: value as any // todo: dirty
-                });
-            }
-        }
     }
 
     abstract isSuperSetOf(other: Query<T>): boolean;
@@ -199,10 +100,6 @@ export abstract class Query<T extends IEntity> {
 
             case "keys":
                 q = new Query.ByKeys<T>({ keys: self.keys.slice(), entityType: self.entityType, expansions: expansions });
-                break;
-
-            case "index":
-                q = new Query.ByIndex<T>({ index: self.index, value: self.value, entityType: self.entityType, expansions: expansions });
                 break;
 
             case "indexes":
@@ -259,14 +156,31 @@ export module Query {
 
             return Expansion.isSuperset(this.expansions.slice(), other.expansions.slice());
         }
+
+        reduce(other: Query.All<T>): Query.All<T> {
+            let remainingExpansions = Expansion.minus(this.expansions.slice(), other.expansions.slice());
+            if (remainingExpansions.length == 0) return null;
+
+            return new Query.All({
+                entityType: this.entityType,
+                expansions: remainingExpansions
+            });
+        }
+
+        merge(other: Query.All<T>): Query.All<T> {
+            return new Query.All({
+                entityType: this.entityType,
+                expansions: Expansion.add(this.expansions.slice(), other.expansions.slice())
+            });
+        }
     }
 
     export class ByKey<T extends IEntity> extends Query<T> {
         readonly type = "key";
-        readonly key: any;
+        readonly key: IStringable;
 
         constructor(args: {
-            key: any;
+            key: IStringable;
             entityType: IEntityType<T>;
             expansions?: string | Expansion[];
         }) {
@@ -289,15 +203,38 @@ export module Query {
                 suffix: this.key
             });
         }
+
+        reduce(other: Query.ByKey<T>): Query.ByKey<T> {
+            if (other.key != this.key) throw `can't reduce using two by-key queries with different keys`;
+
+            let remainingExpansions = Expansion.minus(this.expansions.slice(), other.expansions.slice());
+            if (remainingExpansions.length == 0) return null;
+
+            return new Query.ByKey({
+                entityType: this.entityType,
+                expansions: remainingExpansions,
+                key: this.key
+            });
+        }
+
+        merge(other: Query.ByKey<T>): Query.ByKey<T> {
+            if (other.key != this.key) throw `can't merge two by-key queries with different keys`;
+
+            return new Query.ByKey({
+                entityType: this.entityType,
+                expansions: Expansion.add(this.expansions.slice(), other.expansions.slice()),
+                key: this.key
+            });
+        }
     }
 
     export class ByKeys<T extends IEntity> extends Query<T> {
         readonly type = "keys";
-        readonly keys: ReadonlyArray<any>;
-        private readonly _sortedKeys: Array<any>;
+        readonly keys: ReadonlyArray<IStringable>;
+        private readonly _sortedKeys: Array<IStringable>;
 
         constructor(args: {
-            keys: any[];
+            keys: IStringable[];
             entityType: IEntityType<T>;
             expansions?: string | Expansion[];
         }) {
@@ -325,60 +262,30 @@ export module Query {
         }
     }
 
-    export class ByIndex<T extends IEntity> extends Query<T> {
-        readonly type = "index";
-        readonly index: string;
-        readonly value: any;
-
-        constructor(args: {
-            index: string;
-            value: any;
-            entityType: IEntityType<T>;
-            expansions?: string | Expansion[];
-        }) {
-            super(args);
-
-            this.index = args.index;
-            this.value = args.value;
-        }
-
-        isSuperSetOf(other: Query<T>): boolean {
-            if (other.entityType != this.entityType) return false;
-            if (other instanceof ByIndex && other.index == this.index && other.value == this.value) {
-                return Expansion.isSuperset(this.expansions.slice(), other.expansions.slice());
-            }
-
-            return false;
-        }
-
-        toString(): string {
-            return this._toString({
-                suffix: `${this.index}:${this.value}`
-            });
-        }
-    }
-
     export class ByIndexes<T extends IEntity> extends Query<T> {
         readonly type = "indexes";
-        readonly indexes: Readonly<{ [key: string]: Object }>;
+        readonly indexes: Readonly<{ [key: string]: IStringable }>;
 
         constructor(args: {
-            indexes: { [key: string]: Object };
+            indexes: { [key: string]: IStringable };
             entityType: IEntityType<T>;
             expansions?: string | Expansion[];
         }) {
             super(args);
 
-            // tslint:disable-next-line:semicolon
             this.indexes = Object.freeze({ ...args.indexes });
         }
 
+        static indexesToArray(indexes: { [key: string]: IStringable }): string[] {
+            return Object.keys(indexes).sort().map(k => `${k}:${indexes[k].toString()}`);
+        }
+
+        indexesToArray(): string[] {
+            return ByIndexes.indexesToArray(this.indexes);
+        }
+
         isSuperSetOf(other: Query<T>): boolean {
             if (other.entityType != this.entityType) return false;
-            if (other instanceof ByIndex && other.index in this.indexes && this.indexes[other.index] == other.value) {
-                return Expansion.isSuperset(this.expansions.slice(), other.expansions.slice());
-            }
-
             if (other instanceof ByIndexes) {
                 let otherDiffers = false;
 
@@ -394,13 +301,35 @@ export module Query {
 
         toString(): string {
             let indexValues = new Array<string>();
-            for (let k in this.indexes) indexValues.push(`${k}:${this.indexes[k]}`)
+            for (let k in this.indexes) indexValues.push(`${k}:${this.indexes[k]}`);
+
             indexValues.sort();
 
             return this._toString({
                 suffix: indexValues.join(",")
             });
-            // tslint:disable-next-line:semicolon
+        }
+
+        // todo: throw if indexes are incompatible
+        reduce(other: Query.ByIndexes<T>): Query.ByIndexes<T> {
+
+            let remainingExpansions = Expansion.minus(this.expansions.slice(), other.expansions.slice());
+            if (remainingExpansions.length == 0) return null;
+
+            return new Query.ByIndexes({
+                entityType: this.entityType,
+                expansions: remainingExpansions,
+                indexes: this.indexes
+            });
+        }
+
+        // todo: throw if indexes are incompatible
+        merge(other: Query.ByIndexes<T>): Query.ByIndexes<T> {
+            return new Query.ByIndexes({
+                entityType: this.entityType,
+                expansions: Expansion.add(this.expansions.slice(), other.expansions.slice()),
+                indexes: this.indexes
+            });
         }
     }
 }
@@ -409,5 +338,4 @@ export type QueryType<T> =
     Query.All<T>
     | Query.ByKey<T>
     | Query.ByKeys<T>
-    | Query.ByIndex<T>
     | Query.ByIndexes<T>;
