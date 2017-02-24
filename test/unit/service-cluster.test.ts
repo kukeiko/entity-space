@@ -318,7 +318,7 @@ describe("service-cluster", () => {
             sc.register(Artist, { loadAll: () => Promise.resolve([artist]) });
             sc.register(Album, { loadByIndexes: () => Promise.resolve([album]) });
             sc.register(AlbumReview, { loadByIndexes: () => Promise.resolve([albumReview]) });
-            sc.register(Review, { loadMany: () => Promise.resolve([review]) });
+            sc.register(Review, { loadOne: () => Promise.resolve(review) });
 
             try {
                 loaded = await sc.execute(new Query.All({

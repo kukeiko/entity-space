@@ -17,7 +17,7 @@ export class ByIndexesQueryCache<T extends IEntity> {
     reduce(query: Query.ByIndexes<T>): Query.ByIndexes<T> {
         let candidates = this._getIdentitySupersets(query).map(x => x.reduce(query));
         let numMinExpansions = null;
-        let best: Query.ByIndexes<T> = null;
+        let best: Query.ByIndexes<T> = query;
 
         for (let i = 0; i < candidates.length; ++i) {
             let candidate = candidates[i];

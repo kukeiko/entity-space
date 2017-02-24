@@ -112,18 +112,31 @@ export class ServiceCluster {
      */
     private async _loadIntoWorkspace(query: QueryType<any>): Promise<void> {
         let [noVirtuals, virtuals] = query.extract(exp => exp.property.virtual);
+        let reduced = this._queryCache.reduce(noVirtuals);
+        let loadReducedPromises: Promise<any>[] = [];
 
-        if (!this._queryCache.isCached(noVirtuals)) {
-            let fromService: any[] = await this._loadFromService(noVirtuals);
+        reduced.forEach(rq => {
+            let promise = this._loadFromService(rq)
+                .then(entities => {
+                    this._workspace.addMany({
+                        entities: entities,
+                        type: rq.entityType,
+                        expansion: rq.expansions
+                    });
 
-            this._workspace.addMany({
-                entities: fromService,
-                type: noVirtuals.entityType,
-                expansion: noVirtuals.expansions
-            });
+                    this._queryCache.add(rq);
+                });
 
-            this._queryCache.add(noVirtuals);
+            loadReducedPromises.push(promise);
+        });
 
+        await Promise.all(loadReducedPromises);
+
+        /**
+         * todo: move this to after each reduced query is executed,
+         * and let query-cache handle building queries from payload
+         */
+        if (reduced.length > 0) {
             let fromCache = this._workspace.execute(noVirtuals);
             this._buildQueriesFromPayload(Array.from(fromCache.values()), noVirtuals.expansions.slice());
         }
