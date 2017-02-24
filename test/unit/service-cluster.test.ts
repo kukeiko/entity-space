@@ -194,7 +194,6 @@ describe("service-cluster", () => {
             }
         });
 
-        // todo: re-enable
         it("should execute Query.ByIndexes and return expected payload", async (done) => {
             let sc = new ServiceCluster(new Workspace());
             let expected = new Album({ id: 1, artistId: 77, name: "khaz" });
@@ -251,7 +250,6 @@ describe("service-cluster", () => {
             }
         });
 
-        // todo: re-enable
         it("should hydrate a virtual collection", async (done) => {
             let sc = new ServiceCluster(new Workspace());
             let album = new Album({ id: 1 });
@@ -288,7 +286,6 @@ describe("service-cluster", () => {
             }
         });
 
-        // todo: re-enable
         it("should hydrate a virtual reference of a collection navigation", async (done) => {
             let sc = new ServiceCluster(new Workspace());
             let artist = new Artist({ id: 7 });
@@ -333,7 +330,6 @@ describe("service-cluster", () => {
             }
         });
 
-        // todo: re-enable
         it("should hydrate a virtual reference of a virtual collection", async (done) => {
             let sc = new ServiceCluster(new Workspace());
             let artist = new Artist({ id: 7 });
