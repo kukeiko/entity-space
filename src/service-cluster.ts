@@ -1,5 +1,6 @@
+import * as _ from "lodash";
 import { getEntityMetadata, IEntityType, IEntity, Children, NavigationType } from "./metadata";
-import { Expansion, Path, Query, QueryType } from "./elements";
+import { Path, Query, QueryType } from "./elements";
 import { QueryCache, Workspace } from "./caching";
 import { IQueryExecuter } from "./query-executer";
 
@@ -111,7 +112,10 @@ export class ServiceCluster {
      * Make sure that the payload of the provided query exists in the workspace.
      */
     private async _loadIntoWorkspace(query: QueryType<any>): Promise<void> {
+        // remove all navigations that should be loaded separately
         let [noVirtuals, virtuals] = query.extract(exp => exp.property.virtual);
+
+        // reduce the query by removing navigations that are already loaded
         let reduced = this._queryCache.reduce(noVirtuals);
         let loadReducedPromises: Promise<any>[] = [];
 
@@ -124,22 +128,13 @@ export class ServiceCluster {
                         expansion: rq.expansions
                     });
 
-                    this._queryCache.add(rq);
+                    this._queryCache.add(rq, entities);
                 });
 
             loadReducedPromises.push(promise);
         });
 
         await Promise.all(loadReducedPromises);
-
-        /**
-         * todo: move this to after each reduced query is executed,
-         * and let query-cache handle building queries from payload
-         */
-        if (reduced.length > 0) {
-            let fromCache = this._workspace.execute(noVirtuals);
-            this._buildQueriesFromPayload(Array.from(fromCache.values()), noVirtuals.expansions.slice());
-        }
 
         if (virtuals.length > 0) {
             let entities = this._workspace.execute(noVirtuals);
@@ -243,72 +238,6 @@ export class ServiceCluster {
             default:
                 throw `unknown query type ${(query as any).type}`;
         }
-    }
-
-    private _buildQueriesFromPayload(entities: any[], expansions: Expansion[]): void {
-        expansions.forEach(exp => {
-            let nav = exp.property as NavigationType;
-
-            switch (nav.type) {
-                case "ref":
-                    {
-                        let ref = nav;
-                        let references: any[] = [];
-                        let keys = new Set<any>();
-
-                        entities.forEach(e => {
-                            if (e[nav.name] == null) return;
-
-                            let key = e[ref.keyName];
-                            if (keys.has(key)) return;
-
-                            keys.add(key);
-                            references.push(e);
-                        });
-
-                        let q = new Query.ByKeys({
-                            entityType: nav.otherType,
-                            expansions: exp.expansions.slice(),
-                            keys: Array.from(keys)
-                        });
-
-                        this._queryCache.add(q);
-                        this._buildQueriesFromPayload(references, exp.expansions.slice());
-                    }
-                    break;
-
-                case "array:child":
-                case "array:ref":
-                    {
-                        let metadata = getEntityMetadata(nav.otherType);
-                        let keyName = metadata.primaryKey.name;
-                        let items: any[] = [];
-                        let keys = new Set<any>();
-
-                        entities.forEach(e => {
-                            if (!(e[nav.name] instanceof Array)) return;
-
-                            (e[nav.name] as any[]).forEach(c => {
-                                let key = c[keyName];
-                                if (keys.has(key)) return;
-
-                                keys.add(key);
-                                items.push(c);
-                            });
-                        });
-
-                        let q = new Query.ByKeys({
-                            entityType: nav.otherType,
-                            expansions: exp.expansions.slice(),
-                            keys: Array.from(keys)
-                        });
-
-                        this._queryCache.add(q);
-                        this._buildQueriesFromPayload(items, exp.expansions.slice());
-                    }
-                    break;
-            }
-        });
     }
 
     private _crawl(entities: Map<any, any>, path: Path): any[] {

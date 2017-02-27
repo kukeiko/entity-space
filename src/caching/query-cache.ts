@@ -1,5 +1,5 @@
-import { IEntityType, IEntity } from "../metadata";
-import { QueryType } from "../elements";
+import { getEntityMetadata, IEntityType, IEntity, NavigationType } from "../metadata";
+import { Expansion, Query, QueryType } from "../elements";
 import { AllQueryCache } from "./all-query-cache";
 import { ByIndexesQueryCache } from "./by-indexes-query-cache";
 import { ByKeyQueryCache } from "./by-key-query-cache";
@@ -43,19 +43,41 @@ export class QueryCache {
         }
     }
 
-    add(query: QueryType<any>): void {
+    // todo: possibly add payload option here (to construct queries from payload)
+    add(query: QueryType<any>, payload?: any[]): void {
         switch (query.type) {
             case "key":
             case "keys":
                 this._getByKeyQueryCache(query.entityType).add(query);
+
+                if (payload) {
+                    this._buildQueriesFromPayloadExpansions(payload, query.expansions.slice());
+                }
                 break;
 
             case "indexes":
                 this._getByIndexesQueryCache(query.entityType).add(query);
+
+                if (payload) {
+                    let metadata = getEntityMetadata(query.entityType);
+                    let keys = new Set<any>();
+
+                    payload.forEach(entity => keys.add(entity[metadata.primaryKey.name]));
+
+                    this.add(new Query.ByKeys({
+                        entityType: query.entityType,
+                        expansions: query.expansions.slice(),
+                        keys: Array.from(keys.values())
+                    }), payload);
+                }
                 break;
 
             case "all":
                 this._getAllQueryCache(query.entityType).add(query);
+
+                if (payload) {
+                    this._buildQueriesFromPayloadExpansions(payload, query.expansions.slice());
+                }
                 break;
 
             default:
@@ -123,5 +145,110 @@ export class QueryCache {
         }
 
         return cache;
+    }
+
+    private _buildQueriesFromPayloadExpansions(entities: any[], expansions: Expansion[]): void {
+        expansions.forEach(exp => {
+            let nav = exp.property as NavigationType;
+
+            switch (nav.type) {
+                case "ref":
+                    {
+                        let ref = nav;
+                        let references: any[] = [];
+                        let keys = new Set<any>();
+
+                        entities.forEach(e => {
+                            if (e[nav.name] == null) return;
+
+                            let key = e[ref.keyName];
+                            if (keys.has(key)) return;
+
+                            keys.add(key);
+                            references.push(e);
+                        });
+
+                        let q = new Query.ByKeys({
+                            entityType: nav.otherType,
+                            expansions: exp.expansions.slice(),
+                            keys: Array.from(keys)
+                        });
+
+                        this.add(q, references);
+                    }
+                    break;
+
+                // todo: array:child payload can create into byindexes query (i think)
+                case "array:child":
+                    {
+                        let metadata = getEntityMetadata(nav.otherType);
+                        let keyName = metadata.primaryKey.name;
+                        let items: any[] = [];
+                        let keys = new Set<any>();
+                        let backRef = metadata.getReference(nav.backReferenceName);
+
+                        entities.forEach(e => {
+                            let children = e[nav.name] as any[];
+                            if (!(children instanceof Array) || children.length == 0) return;
+
+                            children.forEach(child => {
+                                let key = child[keyName];
+                                if (keys.has(key)) return;
+
+                                keys.add(key);
+                                items.push(child);
+                            });
+
+                            let byParentIdQuery = new Query.ByIndexes({
+                                entityType: nav.otherType,
+                                expansions: exp.expansions.slice(),
+                                indexes: {
+                                    [backRef.keyName]: children[0][backRef.keyName]
+                                }
+                            });
+
+                            this.add(byParentIdQuery, children);
+                        });
+
+                        let q = new Query.ByKeys({
+                            entityType: nav.otherType,
+                            expansions: exp.expansions.slice(),
+                            keys: Array.from(keys)
+                        });
+
+                        this.add(q, items);
+                    }
+                    break;
+
+                case "array:ref":
+                    {
+                        let metadata = getEntityMetadata(nav.otherType);
+                        let keyName = metadata.primaryKey.name;
+                        let items: any[] = [];
+                        let keys = new Set<any>();
+
+                        entities.forEach(e => {
+                            if (!(e[nav.name] instanceof Array)) return;
+
+                            (e[nav.name] as any[]).forEach(c => {
+                                let key = c[keyName];
+                                if (keys.has(key)) return;
+
+                                keys.add(key);
+                                items.push(c);
+                            });
+                        });
+
+                        let q = new Query.ByKeys({
+                            entityType: nav.otherType,
+                            expansions: exp.expansions.slice(),
+                            keys: Array.from(keys)
+                        });
+
+                        this.add(q, items);
+                    }
+                    break;
+            }
+        });
     }
 }
