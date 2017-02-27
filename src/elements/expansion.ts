@@ -167,7 +167,9 @@ export class Expansion {
         y = y.slice().sort((a, b) => a.property.name < b.property.name ? -1 : 1);
 
         while (true) {
-            if (y[yi] == null) {
+            if (x[xi] == null) {
+                break;
+            } else if (y[yi] == null) {
                 result = [...result, ...x.slice(xi)];
                 break;
             } else if (x[xi].property == y[yi].property) {

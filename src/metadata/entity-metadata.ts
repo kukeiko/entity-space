@@ -170,7 +170,8 @@ export class EntityMetadata<T extends IEntity> {
         let saveable: IStringIndexable = {};
 
         this.navigations.forEach(nav => {
-            if (entity[nav.name] == undefined) return;
+            if(!nav.saveable) return;
+            if (entity[nav.name] == null) return;
 
             let name = useAlias ? nav.alias : nav.name;
 
@@ -191,10 +192,13 @@ export class EntityMetadata<T extends IEntity> {
         });
 
         this.primitives.forEach(p => {
+            if(!p.saveable) return;
+            if (entity[p.name] === undefined) return;
             let name = useAlias ? p.alias : p.name;
 
             if (p.valueType == ValueType.Date) {
-                saveable[name] = (entity[p.name] as Date).toJSON();
+                let date = entity[p.name] as Date;
+                saveable[name] = date instanceof Date ? date.toJSON() : null;
             } else {
                 saveable[name] = entity[p.name];
             }
