@@ -6,7 +6,7 @@ export interface ITypeOf<T> extends Function {
     new (...args: any[]): T;
 }
 
-export interface IStringIndexable {
+export interface IStringIndexable extends Object {
     [key: string]: any;
 }
 

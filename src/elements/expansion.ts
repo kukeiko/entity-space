@@ -8,7 +8,7 @@ import { Extraction } from "./extraction";
  *
  * * Create one by using Expansion.parse()
  * * Compare expansions via equals(), isSupersetOf(), isSubsetOf()
- * * Create a modified version by merging navigations via merge() or removing them via extract()
+ * * Create modified versions via add(), minus(), extract()
  *
  * Immutable
  */
@@ -298,6 +298,7 @@ export class Expansion {
 
     /**
      * Extract all expansions that match against the predicate.
+     * Only first occurences are extracted.
      *
      * Returns the reduced expansion and the extractions.
      */
