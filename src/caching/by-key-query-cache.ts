@@ -39,7 +39,7 @@ export class ByKeyQueryCache<T extends IEntity> {
             let existing = this._queriesPerKey.get(query.key);
             if (!existing) return query;
 
-            return query.reduce(existing);
+            return existing.reduce(query);
         } else {
             let reduced = query.keys.map(k => new Query.ByKey({
                 entityType: query.entityType,

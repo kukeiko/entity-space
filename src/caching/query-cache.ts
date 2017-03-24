@@ -16,31 +16,29 @@ export class QueryCache {
          * will also make use of it)
          */
 
+        let reducedViaAll = this._getAllQueryCache(query.entityType).reduce(query);
+        if (reducedViaAll == null) return [];
+
         switch (query.type) {
             case "key":
                 {
-                    let reduced = this._getByKeyQueryCache(query.entityType).reduce(query);
+                    let reduced = this._getByKeyQueryCache(query.entityType).reduce(reducedViaAll as Query.ByKey<T>);
                     return reduced ? [reduced] : [];
                 }
 
             case "keys":
-                return this._getByKeyQueryCache(query.entityType).reduce(query);
+                {
+                    return this._getByKeyQueryCache(query.entityType).reduce(reducedViaAll as Query.ByKeys<T>);
+                }
 
             case "indexes":
                 {
-                    let reduced = this._getByIndexesQueryCache(query.entityType).reduce(query);
+                    let reduced = this._getByIndexesQueryCache(query.entityType).reduce(reducedViaAll as Query.ByIndexes<T>);
                     return reduced ? [reduced] : [];
                 }
-
-            case "all":
-                {
-                    let reduced = this._getAllQueryCache(query.entityType).reduce(query);
-                    return reduced ? [reduced] : [];
-                }
-
-            default:
-                throw `incompatible query: ${query}`;
         }
+
+        return [query];
     }
 
     // todo: possibly add payload option here (to construct queries from payload)

@@ -14,7 +14,7 @@ export class AllQueryCache<T extends IEntity> {
     /**
      * Returns a query with already cached expansions removed or null if it is completely cached.
      */
-    reduce(query: Query.All<T>): Query.All<T> {
+    reduce(query: QueryType<T>): QueryType<T> {
         if (!this._cached) return query;
 
         return this._cached.reduce(query);

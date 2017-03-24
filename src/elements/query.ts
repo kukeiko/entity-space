@@ -157,14 +157,20 @@ export module Query {
             return Expansion.isSuperset(this.expansions.slice(), other.expansions.slice());
         }
 
-        reduce(other: Query.All<T>): Query.All<T> {
-            let remainingExpansions = Expansion.minus(this.expansions.slice(), other.expansions.slice());
+        /**
+         * Reduce another query by this query.
+         */
+        reduce(other: QueryType<T>): QueryType<T> {
+            let remainingExpansions = Expansion.minus(other.expansions.slice(), this.expansions.slice());
             if (remainingExpansions.length == 0) return null;
 
-            return new Query.All({
-                entityType: this.entityType,
-                expansions: remainingExpansions
-            });
+            switch (other.type) {
+                case "all": return new Query.All<T>({ entityType: other.entityType, expansions: remainingExpansions });
+                case "key": return new Query.ByKey<T>({ key: other.key, entityType: other.entityType, expansions: remainingExpansions });
+                case "keys": return new Query.ByKeys<T>({ keys: other.keys.slice(), entityType: other.entityType, expansions: remainingExpansions });
+                case "indexes": return new Query.ByIndexes<T>({ indexes: other.indexes, entityType: other.entityType, expansions: remainingExpansions });
+                default: throw `unsupported query ${other}`;
+            }
         }
 
         merge(other: Query.All<T>): Query.All<T> {
@@ -207,7 +213,7 @@ export module Query {
         reduce(other: Query.ByKey<T>): Query.ByKey<T> {
             if (other.key != this.key) throw `can't reduce using two by-key queries with different keys`;
 
-            let remainingExpansions = Expansion.minus(this.expansions.slice(), other.expansions.slice());
+            let remainingExpansions = Expansion.minus(other.expansions.slice(), this.expansions.slice());
             if (remainingExpansions.length == 0) return null;
 
             return new Query.ByKey({
@@ -312,8 +318,7 @@ export module Query {
 
         // todo: throw if indexes are incompatible
         reduce(other: Query.ByIndexes<T>): Query.ByIndexes<T> {
-
-            let remainingExpansions = Expansion.minus(this.expansions.slice(), other.expansions.slice());
+            let remainingExpansions = Expansion.minus(other.expansions.slice(), this.expansions.slice());
             if (remainingExpansions.length == 0) return null;
 
             return new Query.ByIndexes({
