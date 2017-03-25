@@ -54,7 +54,7 @@ export abstract class Query<T extends IEntity> {
         this.numExpansions = this.expansions.map(exp => exp.numExpansions).reduce((p, c) => p + c, 0);
     }
 
-    static equals<T>(a: Query<T>, b: Query<T>): boolean {
+    static equals<T extends IEntity>(a: Query<T>, b: Query<T>): boolean {
         return a.toString() == b.toString();
     }
 
@@ -337,7 +337,7 @@ export module Query {
     }
 }
 
-export type QueryType<T> =
+export type QueryType<T extends IEntity> =
     Query.All<T>
     | Query.ByKey<T>
     | Query.ByKeys<T>

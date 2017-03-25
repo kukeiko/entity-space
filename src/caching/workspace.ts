@@ -12,7 +12,7 @@ export class Workspace {
      *
      * Use expansions to describe which navigations should be put into the cache as well.
      */
-    add<T>(args: {
+    add<T extends IEntity>(args: {
         entity: T;
         type: IEntityType<T>;
         expansion?: string | Expansion[] | ReadonlyArray<Expansion>;
@@ -72,7 +72,7 @@ export class Workspace {
      *
      * Use expansions to describe which navigations should be put into the cache as well.
      */
-    addMany<T>(args: {
+    addMany<T extends IEntity>(args: {
         entities: T[];
         type: IEntityType<T>;
         expansion?: string | Expansion[] | ReadonlyArray<Expansion>;
@@ -131,7 +131,7 @@ export class Workspace {
     /**
      * Load entities from the cache.
      */
-    execute<T>(q: QueryType<T>): Map<any, T> {
+    execute<T extends IEntity>(q: QueryType<T>): Map<any, T> {
         let metadata = getEntityMetadata(q.entityType);
         let items = new Map<any, T>();
         let cache = this._getEntityCache(q.entityType);
@@ -170,7 +170,7 @@ export class Workspace {
     }
 
     /**
-     * Expands upon the entities as described in the query.
+     * Hydrates navigations of the query into the entities.
      */
     private _hydrate(args: {
         query: QueryType<any>;
