@@ -8,6 +8,7 @@ export class ServiceCluster {
     private _executers = new Map<IEntityType<any>, IQueryExecuter<any>>();
     private _queryCache = new QueryCache();
     private _workspace: Workspace;
+    private _pendingQueries = new Map<IEntityType<any>, { query: QueryType<any>, promise: Promise<any> }[]>();
 
     constructor(workspace: Workspace) {
         this._workspace = workspace;
@@ -208,6 +209,19 @@ export class ServiceCluster {
      * The query must not contain any virtuals.
      */
     private async _loadFromService<T>(query: QueryType<T>): Promise<T[]> {
+        let pending = this._pendingQueries.get(query.entityType);
+
+        if (!pending) {
+            pending = [];
+            this._pendingQueries.set(query.entityType, pending);
+        }
+
+        let superset = pending.find(x => x.query.isSuperSetOf(query));
+
+        if (superset) {
+            return superset.promise;
+        }
+
         let executer = this._executers.get(query.entityType) as IQueryExecuter<T>;
 
         if (!executer) {
@@ -218,26 +232,41 @@ export class ServiceCluster {
             throw `query of type ${type} for entity ${query.entityType.name} not supported`;
         };
 
+        let promise: Promise<T[]> = null;
+
         switch (query.type) {
             case "all":
                 if (!executer.loadAll) throwNotSupported("All");
-                return await executer.loadAll(query);
+                promise = executer.loadAll(query);
+                break;
 
             case "key":
                 if (!executer.loadOne) throwNotSupported("ByKey");
-                return [await executer.loadOne(query)];
+                promise = Promise.all([executer.loadOne(query)]);
+                break;
 
             case "keys":
                 if (!executer.loadMany) throwNotSupported("ByKeys");
-                return await executer.loadMany(query);
+                promise = executer.loadMany(query);
+                break;
 
             case "indexes":
                 if (!executer.loadByIndexes) throwNotSupported("ByIndexes");
-                return await executer.loadByIndexes(query);
+                promise = executer.loadByIndexes(query);
+                break;
 
             default:
                 throw `unknown query type ${(query as any).type}`;
         }
+
+        pending.push({
+            query: query,
+            promise: promise
+        });
+
+        promise.then(() => pending.splice(pending.findIndex(x => x.query == query), 1));
+
+        return promise;
     }
 
     private _crawl(entities: Map<any, any>, path: Path): any[] {
