@@ -1,29 +1,29 @@
 var path = require("path");
 var webpackConfig = require("./webpack.config");
 
-webpackConfig.entry = {};
+webpackConfig.entry = {
+    "unit-tests": "./test/main.ts"
+};
 
 module.exports = function (config) {
     config.set({
         port: 6400,
         webpack: webpackConfig,
-        browsers: ["PhantomJS"],
+        browsers: ["Chrome"],
         frameworks: ["jasmine"],
         files: [
-            "test/main.ts"
+            "./test/main.ts"
         ],
         preprocessors: {
-            "test/main.ts": ["webpack"]
+            "./test/main.ts": ["webpack"]
         },
-        reporters: ["mocha", "html"],
-        htmlReporter: {
-            outputFile: "reports/report.html",
-            pageTitle: "Entity-Space Tests",
-            groupSuites: true,
-            useCompactStyle: true
-        },
+        reporters: ["mocha"],
         webpackMiddleware: {
             noInfo: true
+        },
+        // so chrome doesn't refuse execution
+        mime: {
+            'text/x-typescript': ['ts', 'tsx']
         }
     });
 }

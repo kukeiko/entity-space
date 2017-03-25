@@ -10,6 +10,12 @@
     "noImplicitAny": true,
     "noImplicitThis": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true
+    "noUnusedParameters": true,
+    "lib": [
+      "dom",
+      "scripthost",
+      "es2015",
+      "es2016.array.include"
+    ]
   }
 }

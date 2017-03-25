@@ -1,2 +1,2 @@
-import "../src/vendor";
+import "./vendor";
 import "./unit";

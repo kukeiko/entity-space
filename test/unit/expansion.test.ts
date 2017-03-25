@@ -71,23 +71,18 @@ describe("expansion", () => {
 
     {
         @Entity()
-        class Khaz {
+        class Dan {
             @Entity.PrimaryKey()
             id: number = null;
-
-            @Entity.Primitive()
-            moId: number = null;
-
-            @Entity.Reference({ key: "moId", other: () => Mo })
-            mo: Mo = null;
-
-            @Entity.Primitive()
-            danId: number = null;
-
-            @Entity.Reference({ key: "danId", other: () => Dan })
-            dan: Dan = null;
         }
 
+        @Entity()
+        class Foo {
+            @Entity.PrimaryKey()
+            id: number = null;
+        }
+
+        @Entity()
         class Mo {
             @Entity.PrimaryKey()
             id: number = null;
@@ -105,14 +100,22 @@ describe("expansion", () => {
             foo: Foo = null;
         }
 
-        class Dan {
+        @Entity()
+        class Khaz {
             @Entity.PrimaryKey()
             id: number = null;
-        }
 
-        class Foo {
-            @Entity.PrimaryKey()
-            id: number = null;
+            @Entity.Primitive()
+            moId: number = null;
+
+            @Entity.Reference({ key: "moId", other: () => Mo })
+            mo: Mo = null;
+
+            @Entity.Primitive()
+            danId: number = null;
+
+            @Entity.Reference({ key: "danId", other: () => Dan })
+            dan: Dan = null;
         }
 
         describe("add()", () => {
