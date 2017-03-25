@@ -51,7 +51,7 @@ export abstract class Query<T extends IEntity> {
 
         this.expansion = expansions.map(exp => exp.toString()).join(",");
         this.expansions = Object.freeze(expansions.slice().sort((a, b) => a.property.name < b.property.name ? -1 : 1));
-        this.numExpansions = this.expansions.map(exp => exp.numExpansions).reduce((p, c) => p + c, 0);
+        this.numExpansions = this.expansions.map(exp => exp.numExpansions).reduce((p, c) => p + c, 0) + this.expansions.length;
     }
 
     static equals<T extends IEntity>(a: Query<T>, b: Query<T>): boolean {
