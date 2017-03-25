@@ -293,16 +293,14 @@ export module Query {
         isSuperSetOf(other: Query<T>): boolean {
             if (other.entityType != this.entityType) return false;
             if (other instanceof ByIndexes) {
-                let otherDiffers = false;
-
                 for (let key in other.indexes) {
                     if (!(key in this.indexes) || this.indexes[key] != other.indexes[key]) {
-                        otherDiffers = true;
+                        return false;
                     }
                 }
             }
 
-            return false;
+            return Expansion.isSuperset(this.expansions.slice(), other.expansions.slice());
         }
 
         toString(): string {
