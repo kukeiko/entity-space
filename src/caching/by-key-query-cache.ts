@@ -15,7 +15,7 @@ export class ByKeyQueryCache<T extends IEntity> {
             let cached = this._queriesPerKey.get(query.key);
             if (cached == null) return false;
 
-            return cached.isSuperSetOf(query);
+            return cached.isSupersetOf(query);
         } else if (query.type == "keys") {
             return query.keys.every(k => this.isCached(new Query.ByKey({
                 entityType: query.entityType,

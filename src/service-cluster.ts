@@ -216,7 +216,7 @@ export class ServiceCluster {
             this._pendingQueries.set(query.entityType, pending);
         }
 
-        let superset = pending.find(x => x.query.isSuperSetOf(query));
+        let superset = pending.find(x => x.query.isSupersetOf(query));
 
         if (superset) {
             return superset.promise;

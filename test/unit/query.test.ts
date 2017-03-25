@@ -34,8 +34,8 @@ describe("query", () => {
                 key: 3
             });
 
-            expect(a.isSuperSetOf(b)).toEqual(true);
-            expect(b.isSuperSetOf(a)).toEqual(false);
+            expect(a.isSupersetOf(b)).toEqual(true);
+            expect(b.isSupersetOf(a)).toEqual(false);
             expect(a.isSubsetOf(b)).toEqual(false);
             expect(b.isSubsetOf(a)).toEqual(true);
         });
@@ -51,8 +51,8 @@ describe("query", () => {
                 keys: [3, 64]
             });
 
-            expect(a.isSuperSetOf(b)).toEqual(true);
-            expect(b.isSuperSetOf(a)).toEqual(false);
+            expect(a.isSupersetOf(b)).toEqual(true);
+            expect(b.isSupersetOf(a)).toEqual(false);
             expect(a.isSubsetOf(b)).toEqual(false);
             expect(b.isSubsetOf(a)).toEqual(true);
         });
@@ -67,8 +67,8 @@ describe("query", () => {
                 entityType: Artist
             });
 
-            expect(a.isSuperSetOf(b)).toEqual(true);
-            expect(b.isSuperSetOf(a)).toEqual(false);
+            expect(a.isSupersetOf(b)).toEqual(true);
+            expect(b.isSupersetOf(a)).toEqual(false);
             expect(a.isSubsetOf(b)).toEqual(false);
             expect(b.isSubsetOf(a)).toEqual(true);
         });
@@ -84,8 +84,8 @@ describe("query", () => {
                 expansions: Expansion.parse(Artist, "albums")
             });
 
-            expect(a.isSuperSetOf(b)).toEqual(true);
-            expect(b.isSuperSetOf(a)).toEqual(false);
+            expect(a.isSupersetOf(b)).toEqual(true);
+            expect(b.isSupersetOf(a)).toEqual(false);
             expect(a.isSubsetOf(b)).toEqual(false);
             expect(b.isSubsetOf(a)).toEqual(true);
         });
@@ -101,8 +101,8 @@ describe("query", () => {
                 expansions: Expansion.parse(Artist, "albums/songs")
             });
 
-            expect(a.isSuperSetOf(b)).toEqual(true);
-            expect(b.isSuperSetOf(a)).toEqual(false);
+            expect(a.isSupersetOf(b)).toEqual(true);
+            expect(b.isSupersetOf(a)).toEqual(false);
             expect(a.isSubsetOf(b)).toEqual(false);
             expect(b.isSubsetOf(a)).toEqual(true);
         });
@@ -118,8 +118,8 @@ describe("query", () => {
                 expansions: Expansion.parse(Artist, "albums/{songs,tags}")
             });
 
-            expect(a.isSuperSetOf(b)).toEqual(true);
-            expect(b.isSuperSetOf(a)).toEqual(true);
+            expect(a.isSupersetOf(b)).toEqual(true);
+            expect(b.isSupersetOf(a)).toEqual(true);
             expect(a.isSubsetOf(b)).toEqual(true);
             expect(b.isSubsetOf(a)).toEqual(true);
         });
@@ -135,8 +135,8 @@ describe("query", () => {
                 expansions: Expansion.parse(Artist, "albums/{songs,tags}")
             });
 
-            expect(a.isSuperSetOf(b)).toEqual(true);
-            expect(b.isSuperSetOf(a)).toEqual(true);
+            expect(a.isSupersetOf(b)).toEqual(true);
+            expect(b.isSupersetOf(a)).toEqual(true);
             expect(a.isSubsetOf(b)).toEqual(true);
             expect(b.isSubsetOf(a)).toEqual(true);
         });
@@ -153,8 +153,8 @@ describe("query", () => {
                 expansions: Expansion.parse(Artist, "albums/{songs,tags}")
             });
 
-            expect(a.isSuperSetOf(b)).toEqual(true);
-            expect(b.isSuperSetOf(a)).toEqual(false);
+            expect(a.isSupersetOf(b)).toEqual(true);
+            expect(b.isSupersetOf(a)).toEqual(false);
             expect(a.isSubsetOf(b)).toEqual(false);
             expect(b.isSubsetOf(a)).toEqual(true);
         });

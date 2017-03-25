@@ -7,7 +7,7 @@ export class AllQueryCache<T extends IEntity> {
 
     isCached(query: QueryType<T>): boolean {
         return this._cached
-            ? this._cached.isSuperSetOf(query)
+            ? this._cached.isSupersetOf(query)
             : false;
     }
 

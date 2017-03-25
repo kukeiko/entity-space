@@ -7,7 +7,7 @@ export class ByIndexesQueryCache<T extends IEntity> {
     private _queryPerIndexesString = new Map<string, Query.ByIndexes<T>>();
 
     isCached(query: Query.ByIndexes<T>): boolean {
-        return this._getIdentitySupersets(query).some(q => q.isSuperSetOf(query));
+        return this._getIdentitySupersets(query).some(q => q.isSupersetOf(query));
     }
 
     /**

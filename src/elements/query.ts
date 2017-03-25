@@ -58,10 +58,10 @@ export abstract class Query<T extends IEntity> {
         return a.toString() == b.toString();
     }
 
-    abstract isSuperSetOf(other: Query<T>): boolean;
+    abstract isSupersetOf(other: Query<T>): boolean;
 
     isSubsetOf(other: Query<T>): boolean {
-        return other.isSuperSetOf(this);
+        return other.isSupersetOf(this);
     }
 
     equals(other: Query<T>): boolean {
@@ -151,7 +151,7 @@ export module Query {
             super(args);
         }
 
-        isSuperSetOf(other: Query<T>): boolean {
+        isSupersetOf(other: Query<T>): boolean {
             if (other.entityType != this.entityType) return false;
 
             return Expansion.isSuperset(this.expansions.slice(), other.expansions.slice());
@@ -195,7 +195,7 @@ export module Query {
             this.key = args.key;
         }
 
-        isSuperSetOf(other: Query<T>): boolean {
+        isSupersetOf(other: Query<T>): boolean {
             if (other.entityType != this.entityType) return false;
             if (other instanceof ByKey && other.key == this.key) {
                 return Expansion.isSuperset(this.expansions.slice(), other.expansions.slice());
@@ -250,7 +250,7 @@ export module Query {
             this._sortedKeys = args.keys.slice().sort();
         }
 
-        isSuperSetOf(other: Query<T>): boolean {
+        isSupersetOf(other: Query<T>): boolean {
             if (other.entityType != this.entityType) return false;
             if (other instanceof ByKey && this._sortedKeys.includes(other.key)) {
                 return Expansion.isSuperset(this.expansions.slice(), other.expansions.slice());
@@ -290,7 +290,7 @@ export module Query {
             return ByIndexes.indexesToArray(this.indexes);
         }
 
-        isSuperSetOf(other: Query<T>): boolean {
+        isSupersetOf(other: Query<T>): boolean {
             if (other.entityType != this.entityType) return false;
             if (other instanceof ByIndexes) {
                 for (let key in other.indexes) {
