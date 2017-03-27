@@ -33,7 +33,7 @@ module.exports = function (config) {
             ]
         },
         reporters: ["mocha", "coverage-istanbul"],
-        coverageIstanbulReporter: { reports: ["text-summary", "html"] },
+        coverageIstanbulReporter: { reports: ["html"] },
         webpackMiddleware: { noInfo: true },
         mime: { "text/x-typescript": ["ts", "tsx"] } // so chrome doesn"t refuse execution
     });
