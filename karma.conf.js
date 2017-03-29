@@ -23,7 +23,8 @@ module.exports = function (config) {
                         enforce: "post",
                         test: /\.ts$/,
                         loader: "istanbul-instrumenter-loader",
-                        include: /src/
+                        include: /src/,
+                        exclude: /\.spec\.ts$/
                     }
                 ]
             },
@@ -33,7 +34,7 @@ module.exports = function (config) {
             ]
         },
         reporters: ["mocha", "coverage-istanbul"],
-        coverageIstanbulReporter: { reports: ["html"] },
+        coverageIstanbulReporter: { reports: ["text-summary", "html"] },
         webpackMiddleware: { noInfo: true },
         mime: { "text/x-typescript": ["ts", "tsx"] } // so chrome doesn"t refuse execution
     });
