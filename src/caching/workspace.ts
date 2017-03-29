@@ -1,8 +1,8 @@
-import { Cache } from "./cache";
+import { ObjectCache } from "./object-cache";
 import { getEntityMetadata, IEntityType, IEntity, Children, Reference, NavigationType } from "../metadata";
 import { Expansion, Query, QueryType } from "../elements";
 
-type EntityCache = Cache<any, IEntity>;
+type EntityCache = ObjectCache<any, IEntity>;
 
 export class Workspace {
     private _caches = new Map<IEntityType<IEntity>, EntityCache>();
@@ -232,7 +232,7 @@ export class Workspace {
         });
     }
 
-    private _getEntityCache(type: IEntityType<any>): Cache<any, any> {
+    private _getEntityCache(type: IEntityType<any>): ObjectCache<any, any> {
         if (!this._caches.has(type)) {
             this._caches.set(type, this._createEntityCache(type));
         }
@@ -246,8 +246,8 @@ export class Workspace {
 
         metadata.primitives.filter(p => p.index).forEach(p => indexes[p.name] = item => item[p.name]);
 
-        return new Cache<any, any>({
-            getter: item => item[metadata.primaryKey.name],
+        return new ObjectCache<any, any>({
+            getKey: item => item[metadata.primaryKey.name],
             indexes
         });
     }

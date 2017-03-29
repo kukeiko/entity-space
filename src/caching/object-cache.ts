@@ -1,19 +1,18 @@
-// todo: needs testing
-export class Cache<K, V> {
+export class ObjectCache<K, V> {
+    readonly getKey: (item: V) => K;
     private _pkMap = new Map<K, V>();
-    private _getKey: (item: V) => K;
-    private _indexes = new Map<string, Cache.Index<K, V>>();
+    private _indexes = new Map<string, ObjectCache.Index<K, V>>();
 
     constructor(args: {
-        getter: (item: V) => K;
+        getKey: (item: V) => K;
         indexes?: { [index: string]: (item: V) => any };
     }) {
-        this._getKey = args.getter;
+        this.getKey = args.getKey;
 
         for (let index in args.indexes) {
-            this._indexes.set(index, new Cache.Index<K, V>({
-                getter: args.indexes[index],
-                keyGetter: args.getter,
+            this._indexes.set(index, new ObjectCache.Index<K, V>({
+                getIndexValue: args.indexes[index],
+                getKey: args.getKey,
                 name: index
             }));
         }
@@ -78,12 +77,12 @@ export class Cache<K, V> {
     }
 
     remove(item: V): void {
-        this._pkMap.delete(this._getKey(item));
+        this._pkMap.delete(this.getKey(item));
         this._indexes.forEach(i => i.remove(item));
     }
 
     add(item: V): V {
-        let key = this._getKey(item);
+        let key = this.getKey(item);
         if (key == null) throw `can't add item to cache with undefined/null key: ${JSON.stringify(item)}`;
 
         let existing = this._pkMap.get(key);
@@ -99,7 +98,7 @@ export class Cache<K, V> {
 
         items.forEach(i => {
             this.add(i);
-            map.set(this._getKey(i), i);
+            map.set(this.getKey(i), i);
         });
 
         return map;
@@ -111,23 +110,22 @@ export class Cache<K, V> {
     }
 }
 
-export module Cache {
+export module ObjectCache {
     export class Index<K, V> {
-        private _name: string;
-        get name(): string { return this._name; }
+        readonly name: string = null;
+        readonly getIndexValue: (item: V) => any;
+        readonly getKey: (item: V) => K;
 
-        private _getter: (item: V) => any;
-        private _keyGetter: (item: V) => K;
         private _maps = new Map<any, Map<K, V>>();
 
         constructor(args: {
-            getter: (item: V) => any;
-            keyGetter: (item: V) => K;
+            getIndexValue: (item: V) => any;
+            getKey: (item: V) => K;
             name: string;
         }) {
-            this._getter = args.getter;
-            this._keyGetter = args.keyGetter;
-            this._name = args.name;
+            this.getIndexValue = args.getIndexValue;
+            this.getKey = args.getKey;
+            this.name = args.name;
         }
 
         /**
@@ -157,7 +155,7 @@ export module Cache {
         update(...args: any[]): void {
             if (args[1] == null) {
                 let item = args[0] as V;
-                let value = this._getter(item);
+                let value = this.getIndexValue(item);
                 if (value == null) return;
 
                 let map = this._maps.get(value);
@@ -167,16 +165,16 @@ export module Cache {
                     this._maps.set(value, map);
                 }
 
-                map.set(this._keyGetter(item), item);
+                map.set(this.getKey(item), item);
             } else {
                 let [newItem, oldItem] = <V[]>[args[0], args[1]];
 
-                let key = this._keyGetter(newItem);
-                if (key != this._keyGetter(oldItem)) {
+                let key = this.getKey(newItem);
+                if (key != this.getKey(oldItem)) {
                     throw "can't update indexes for 2 items that have different primary keys";
                 }
 
-                let [newValue, oldValue] = [this._getter(newItem), this._getter(oldItem)];
+                let [newValue, oldValue] = [this.getIndexValue(newItem), this.getIndexValue(oldItem)];
                 let [newMap, oldMap] = [this._maps.get(newValue), this._maps.get(oldValue)];
 
                 if (oldMap != null) oldMap.delete(key);
@@ -193,10 +191,10 @@ export module Cache {
         }
 
         remove(item: V): void {
-            let key = this._keyGetter(item);
+            let key = this.getKey(item);
             if (key == null) return;
 
-            let map = this._maps.get(this._getter(item));
+            let map = this._maps.get(this.getIndexValue(item));
             if (map == null) return;
 
             map.delete(key);
