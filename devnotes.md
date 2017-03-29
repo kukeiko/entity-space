@@ -1,5 +1,5 @@
 # feature roadmap / milestones:
-- 0.5.0 service-cluster, abstract entities
+- 0.6.0 abstract entities, entity-mapper
 - 0.?.0 debug output interface, cache invalidation, contexts, validation, query statistics
 
 # todos
