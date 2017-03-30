@@ -12,6 +12,7 @@
   "main": "./dist/src/index",
   "scripts": {
     "build": "rimraf dist && tsc",
+    "build:watch": "tsc -w",
     "run": "server",
     "server": "webpack-dev-server --inline --progress --port 6464",
     "start": "npm run server",
