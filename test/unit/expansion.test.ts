@@ -11,15 +11,8 @@ describe("expansion", () => {
 
     describe("parse()", () => {
         it("should return expected amount of expansions", () => {
-            let expansions = Expansion.parse(Album, "songs/{album,tags},tags");
-
-            expect(expansions.length).toBe(2);
-        });
-
-        it("should return empty array for empty string", () => {
-            let expansions = Expansion.parse(Album, "");
-
-            expect(expansions.length).toBe(0);
+            expect(Expansion.parse(Album, "songs/{album,tags},tags").length).toBe(2);
+            expect(Expansion.parse(Album, "").length).toBe(0);
         });
     });
 

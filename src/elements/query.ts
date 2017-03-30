@@ -12,7 +12,7 @@ export type QueryIdentity = "all" | "key" | "keys" | "index" | "indexes";
 /**
  * Describes which entities and expansions should be considered for an operation.
  *
- * Immutable.
+ * Immutable
  */
 export abstract class Query<T extends IEntity> {
     /**
@@ -141,6 +141,11 @@ export abstract class Query<T extends IEntity> {
 }
 
 export module Query {
+    /**
+     * A query that targets all entities of one entity type.
+     *
+     * Immutable
+     */
     export class All<T extends IEntity> extends Query<T> {
         readonly type = "all";
 
@@ -181,6 +186,11 @@ export module Query {
         }
     }
 
+    /**
+     * A query that targets a single entity of an entity type by its key.
+     *
+     * Immutable
+     */
     export class ByKey<T extends IEntity> extends Query<T> {
         readonly type = "key";
         readonly key: IStringable;
@@ -234,6 +244,11 @@ export module Query {
         }
     }
 
+    /**
+     * A query that targets multiple entities of one entity type by their keys.
+     *
+     * Immutable
+     */
     export class ByKeys<T extends IEntity> extends Query<T> {
         readonly type = "keys";
         readonly keys: ReadonlyArray<IStringable>;
@@ -268,6 +283,11 @@ export module Query {
         }
     }
 
+    /**
+     * A query that targets multiple entities of one entity type by one or many indexes.
+     *
+     * Immutable
+     */
     export class ByIndexes<T extends IEntity> extends Query<T> {
         readonly type = "indexes";
         readonly indexes: Readonly<{ [key: string]: IStringable }>;
@@ -282,10 +302,16 @@ export module Query {
             this.indexes = Object.freeze({ ...args.indexes });
         }
 
+        /**
+         * Returns the indexes sorted by their name.
+         */
         static indexesToArray(indexes: { [key: string]: IStringable }): string[] {
             return Object.keys(indexes).sort().map(k => `${k}:${indexes[k].toString()}`);
         }
 
+        /**
+         * Returns the indexes sorted by their name.
+         */
         indexesToArray(): string[] {
             return ByIndexes.indexesToArray(this.indexes);
         }
