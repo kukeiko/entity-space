@@ -1,6 +1,7 @@
 import { ObjectCache } from "./object-cache";
 import { getEntityMetadata, IEntityType, IEntity, Children, Reference, NavigationType } from "../metadata";
 import { Expansion, Query, QueryType } from "../elements";
+import { EntityMapper } from "../entity-mapper";
 
 type EntityCache = ObjectCache<any, IEntity>;
 
@@ -29,7 +30,13 @@ export class Workspace {
             }
         }
 
-        cache.add(metadata.createCacheable(args.entity));
+        let mapper = new EntityMapper();
+
+        cache.add(mapper.createObject({
+            from: args.entity,
+            metadata: metadata,
+            expansions: expansions
+        }));
 
         expansions.forEach(ex => {
             let value = (args.entity as any)[ex.property.name];
@@ -132,29 +139,45 @@ export class Workspace {
      * Load entities from the cache.
      */
     execute<T extends IEntity>(q: QueryType<T>): Map<any, T> {
-        let metadata = getEntityMetadata(q.entityType);
         let items = new Map<any, T>();
         let cache = this._getEntityCache(q.entityType);
+        let mapper = new EntityMapper();
 
         switch (q.type) {
             case "all":
-                cache.all().forEach((v, k) => items.set(k, metadata.fromCached(v) as T));
+                cache.all().forEach((v, k) => items.set(k, mapper.createEntity<T>({
+                    entityType: q.entityType,
+                    expansions: q.expansions.slice(),
+                    from: v
+                })));
                 break;
 
             case "key":
                 let item = cache.get(q.key);
 
                 if (item) {
-                    items.set(q.key, metadata.fromCached(item) as T);
+                    items.set(q.key, mapper.createEntity<T>({
+                        entityType: q.entityType,
+                        expansions: q.expansions.slice(),
+                        from: item
+                    }));
                 }
                 break;
 
             case "keys":
-                cache.getMany(q.keys.slice()).forEach((v, k) => items.set(k, metadata.fromCached(v) as T));
+                cache.getMany(q.keys.slice()).forEach((v, k) => items.set(k, mapper.createEntity<T>({
+                    entityType: q.entityType,
+                    expansions: q.expansions.slice(),
+                    from: v
+                })));
                 break;
 
             case "indexes":
-                cache.byIndexes(q.indexes).forEach((v, k) => items.set(k, metadata.fromCached(v) as T));
+                cache.byIndexes(q.indexes).forEach((v, k) => items.set(k, mapper.createEntity<T>({
+                    entityType: q.entityType,
+                    expansions: q.expansions.slice(),
+                    from: v
+                })));
                 break;
 
             default:

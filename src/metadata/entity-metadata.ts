@@ -1,11 +1,9 @@
 import * as _ from "lodash";
 import { IStringIndexable } from "../util";
 import { IEntityType, IEntity } from "./entity-type";
-import { getEntityMetadata } from "./entity-decorator";
 import { Primitive } from "./primitive";
 import { Property } from "./property";
 import { NavigationType, Navigation, Children, Collection, Reference } from "./navigation";
-import { ValueType } from "./value-type";
 
 /**
  * Contains information about properties and other metadata of an entity.
@@ -155,131 +153,6 @@ export class EntityMetadata<T extends IEntity> {
      */
     getVirtuals(): Navigation[] {
         return this.navigations.filter(nav => nav.virtual);
-    }
-
-    createCacheable(item: T): IStringIndexable {
-        let copy: IStringIndexable = {};
-
-        // todo: this doesn't seem like it is enough
-        this._primitivesMap.forEach(p => copy[p.name] = item[p.name]);
-
-        return copy;
-    }
-
-    createSaveable(entity: IEntity, useAlias?: boolean): IStringIndexable {
-        let saveable: IStringIndexable = {};
-
-        this.navigations.forEach(nav => {
-            if(!nav.saveable) return;
-            if (entity[nav.name] == null) return;
-
-            let name = useAlias ? nav.alias : nav.name;
-
-            switch (nav.type) {
-                case "ref":
-                    if (entity[nav.name] instanceof Object) {
-                        saveable[name] = this.createSaveable(entity[nav.name], useAlias);
-                    }
-                    break;
-
-                case "array:child":
-                case "array:ref":
-                    if (entity[nav.name] instanceof Array) {
-                        saveable[name] = (entity[nav.name] as IEntity[]).map(x => this.createSaveable(x, useAlias));
-                    }
-                    break;
-            }
-        });
-
-        this.primitives.forEach(p => {
-            if(!p.saveable) return;
-            if (entity[p.name] === undefined) return;
-            let name = useAlias ? p.alias : p.name;
-
-            if (p.valueType == ValueType.Date) {
-                let date = entity[p.name] as Date;
-                saveable[name] = date instanceof Date ? date.toJSON() : null;
-            } else {
-                saveable[name] = entity[p.name];
-            }
-        });
-
-        this.references.forEach(ref => {
-            if (!(entity[ref.name] instanceof Object)) return;
-            let refKey = this._refKeysMap.get(ref.keyName.toLocaleLowerCase());
-            if (!refKey || !refKey.saveable) return;
-            let refKeyName = useAlias ? refKey.alias : refKey.name;
-            let refKeyValue = entity[ref.name][getEntityMetadata(ref.otherType).primaryKey.name];
-            saveable[refKeyName] = refKeyValue;
-        });
-
-        return saveable;
-    }
-
-    fromAliased(aliased: IStringIndexable): T {
-        let entity = new this.entityType();
-
-        this.navigations.forEach(nav => {
-            let otherMetadata = getEntityMetadata(nav.otherType);
-
-            switch (nav.type) {
-                case "ref":
-                    if (aliased[nav.alias] instanceof Object) {
-                        entity[nav.name] = otherMetadata.fromAliased(aliased[nav.alias]);
-                    }
-                    break;
-
-                case "array:child":
-                case "array:ref":
-                    if (aliased[nav.alias] instanceof Array) {
-                        entity[nav.name] = (aliased[nav.alias] as IStringIndexable[]).map(x => otherMetadata.fromAliased(x));
-                    }
-                    break;
-            }
-        });
-
-        this.primitives.forEach(p => {
-            if (p.computed) return;
-
-            if (p.clone) {
-                entity[p.name] = _.cloneDeep(aliased[p.alias]);
-            } else if (p.valueType == ValueType.Date) {
-                entity[p.name] = aliased[p.alias] ? new Date(aliased[p.alias]) : null;
-            } else {
-                entity[p.name] = aliased[p.alias];
-            }
-        });
-
-        return entity;
-    }
-
-    /**
-     * Creates an instance of T and assigns all primitive properties in an undefined order.
-     *
-     * Delegates to factory function if defined.
-     */
-    fromCached(cached: IStringIndexable): T {
-        let entity: T;
-
-        if (this.factory) {
-            entity = this.factory(cached);
-        } else {
-            entity = new this.entityType();
-
-            this.primitives.forEach(p => {
-                if (p.computed) return;
-
-                if (p.clone) {
-                    entity[p.name] = _.cloneDeep(cached[p.name]);
-                } else if (p.map) {
-                    entity[p.name] = p.map(cached[p.name]);
-                } else {
-                    entity[p.name] = cached[p.name];
-                }
-            });
-        }
-
-        return entity;
     }
 }
 

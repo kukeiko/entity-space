@@ -3,6 +3,7 @@ import { getEntityMetadata, IEntityType, IEntity, Children, NavigationType } fro
 import { Path, Query, QueryType } from "./elements";
 import { QueryCache, Workspace } from "./caching";
 import { IQueryExecuter } from "./query-executer";
+import { EntityMapper } from "./entity-mapper";
 
 export class ServiceCluster {
     private _executers = new Map<IEntityType<any>, IQueryExecuter<any>>();
@@ -40,15 +41,30 @@ export class ServiceCluster {
     async save<T extends IEntity>(args: {
         entity: T;
     }): Promise<T> {
+        let mapper = new EntityMapper();
         let entityType = args.entity.constructor as IEntityType<any>;
         let metadata = getEntityMetadata(entityType);
         let executer = this._executers.get(entityType) as IQueryExecuter<any>;
+        let toDto = true; // todo: make configurable
 
         if (!executer) {
             throw `no query executer for entity type ${entityType.name} registered`;
         }
 
         let key = args.entity[metadata.primaryKey.name];
+
+        // todo: make configurable
+        mapper.updateReferenceKeys({
+            item: args.entity,
+            metadata: metadata
+        });
+
+        let saveable = mapper.createSaveable({
+            from: args.entity,
+            metadata: metadata,
+            toDto: toDto
+        });
+
         let diff: { [key: string]: any } = null;
 
         if (key != null) {
@@ -59,9 +75,18 @@ export class ServiceCluster {
                 key: key
             }))).get(key);
 
+            let cachedSaveable = mapper.createSaveable({
+                from: cached,
+                metadata: metadata,
+                toDto: toDto
+            });
+
             metadata.primitives.forEach(p => {
-                if (!_.isEqual(args.entity[p.name], cached[p.name])) {
-                    diff[p.name] = args.entity[p.name];
+                if (!p.saveable) return;
+                let propName = p.getName(toDto);
+
+                if (!_.isEqual(saveable[propName], cachedSaveable[propName])) {
+                    diff[propName] = saveable[propName];
                 }
             });
 
@@ -70,14 +95,14 @@ export class ServiceCluster {
             }
         }
 
-        let saved = await executer.save(args.entity, diff || null);
+        let saved = await executer.save(args.entity, saveable, diff || null);
 
         this._workspace.add({
             entity: saved,
             type: entityType
         });
 
-        key = saved[getEntityMetadata(entityType).primaryKey.name];
+        key = saved[metadata.primaryKey.name];
 
         return (await this.execute(new Query.ByKey({
             entityType: entityType,

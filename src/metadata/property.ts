@@ -8,6 +8,10 @@ export abstract class Property {
         this.name = args.name;
         this.saveable = args.saveable || false;
     }
+
+    getName(dto?: boolean): string {
+        return dto ? this.alias : this.name;
+    }
 }
 
 export module Property {

@@ -1,5 +1,5 @@
 import { getEntityMetadata, Entity, EntityMetadata, Primitive, Navigation, Reference, Children } from "../../src";
-import { Album, AlbumReview, Song, TagType } from "../common/entities";
+import { Album, Song, TagType } from "../common/entities";
 
 describe("entity-metadata", () => {
     describe("getEntityMetadata()", () => {
@@ -129,40 +129,6 @@ describe("entity-metadata", () => {
 
         expect(albumMetadata.name).toEqual("Album");
         expect(tagTypeMetadata.name).toEqual("TagType");
-    });
-
-    describe("fromCached()", () => {
-        it("should not try to set a computed property", () => {
-            let metadata = getEntityMetadata(AlbumReview);
-
-            try {
-                metadata.fromCached(<AlbumReview>{
-                    reviewExternalId: "abc@foo"
-                });
-            } catch (error) {
-                fail("expected not to throw");
-            }
-        });
-
-        it("should use custom factory function", () => {
-            let didUse = false;
-
-            @Entity({
-                factory: () => {
-                    didUse = true;
-                    return new Foo();
-                }
-            })
-            class Foo {
-                @Entity.PrimaryKey()
-                id: number;
-            }
-
-            let metadata = getEntityMetadata(Foo);
-
-            metadata.fromCached({});
-            expect(didUse).toBe(true);
-        });
     });
 
     describe("getProperty()", () => {
