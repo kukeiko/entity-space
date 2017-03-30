@@ -1,10 +1,8 @@
 # feature roadmap / milestones:
 - 0.6.0 abstract entities, entity-mapper
-- 0.?.0 debug output interface, cache invalidation, contexts, validation, query statistics
+- 0.?.0 debug output interface, cache invalidation, contexts, validation, query statistics, indexedb support
 
 # todos
-- reduce queries by expansions that are already cached
-- merge equal pending queries
 - remove "name" from property decorator arguments
 - use custom decorator arguments instead of Partial<ICtorArgs>
 - allow reference key convention => "template" => "templateId"
