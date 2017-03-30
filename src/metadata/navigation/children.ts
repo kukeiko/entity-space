@@ -13,8 +13,7 @@ export class Children extends Navigation {
             alias: args.alias,
             virtual: args.virtual,
             name: args.name,
-            other: args.other,
-            saveable: args.saveable
+            other: args.other
         });
 
         this.backReferenceName = args.back;
@@ -27,7 +26,6 @@ export module Children {
         back: string;
         name: string;
         other: () => IEntityType<any>;
-        saveable?: boolean;
         virtual?: boolean;
     }
 }
