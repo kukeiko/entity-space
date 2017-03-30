@@ -1,7 +1,16 @@
+/**
+ * Store and access objects via primary key & indexes. The ObjectCache is basically a Map on steroids
+ * that is used to cache entities of a single type and retrieve them by their primary key or
+ * a combination of indexes.
+ */
 export class ObjectCache<K, V> {
     readonly getKey: (item: V) => K;
     private _pkMap = new Map<K, V>();
     private _indexes = new Map<string, ObjectCache.Index<K, V>>();
+
+    get size(): number {
+        return this._pkMap.size;
+    }
 
     constructor(args: {
         getKey: (item: V) => K;

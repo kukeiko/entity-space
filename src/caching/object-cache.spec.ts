@@ -81,7 +81,7 @@ describe("object-cache", () => {
         expect(() => cache.removeByIndex("i-dont-exist", "me-too")).toThrow();
     });
 
-    it("should not return objects after clearing", () => {
+    it("should be empty after clearing", () => {
         let foo = { id: 7, name: "foo", tag: "baz" };
 
         let cache = new ObjectCache<number, any>({
@@ -95,6 +95,7 @@ describe("object-cache", () => {
         expect(cache.get(foo.id)).not.toBe(foo);
         expect(cache.byIndex("tag", foo.tag).size).toBe(0);
         expect(cache.byIndex("tag", foo.tag).values().next().value).not.toBe(foo);
+        expect(cache.size).toBe(0);
     });
 
     it("should throw if trying to add item with null/undefined primary key", () => {
@@ -103,5 +104,15 @@ describe("object-cache", () => {
         expect(() => cache.add({})).toThrow();
         expect(() => cache.add({ id: null })).toThrow();
         expect(() => cache.add({ id: undefined })).toThrow();
-    })
+    });
+
+    it("should have the expected size", () => {
+        let cache = new ObjectCache<number, any>({ getKey: v => v.id });
+
+        expect(cache.size).toBe(0);
+        cache.add({ id: 1 });
+        expect(cache.size).toBe(1);
+        cache.add({ id: 2 });
+        expect(cache.size).toBe(2);
+    });
 });
