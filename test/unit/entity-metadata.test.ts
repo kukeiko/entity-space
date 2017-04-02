@@ -10,8 +10,7 @@ describe("entity-metadata", () => {
         }
 
         @Entity({
-            name: "Barbar",
-            alias: "Barbarian"
+            name: "Barbar"
         })
         class Bar {
             @Entity.PrimaryKey()
@@ -41,20 +40,6 @@ describe("entity-metadata", () => {
 
         it("should accept entity type name (case insensitive check)", () => {
             let metadata = getEntityMetadata("bARbAR");
-
-            expect(metadata instanceof EntityMetadata).toBe(true);
-            expect(metadata.entityType).toBe(Bar);
-        });
-
-        it("should accept entity type alias", () => {
-            let metadata = getEntityMetadata("Barbarian");
-
-            expect(metadata instanceof EntityMetadata).toBe(true);
-            expect(metadata.entityType).toBe(Bar);
-        });
-
-        it("should accept entity type alias (case insensitive check)", () => {
-            let metadata = getEntityMetadata("bARbArIAn");
 
             expect(metadata instanceof EntityMetadata).toBe(true);
             expect(metadata.entityType).toBe(Bar);
@@ -251,15 +236,6 @@ describe("entity-metadata", () => {
         it("should not return a primitive or reference", () => {
             expect(songMetadata.getChildren("name")).toBe(null, "primitive");
             expect(songMetadata.getChildren("album")).toBe(null, "reference");
-        });
-    });
-
-    describe("getVirtuals()", () => {
-        it("should return a collection marked as virtual", () => {
-            let metadata = getEntityMetadata(Album);
-            let virtuals = metadata.getVirtuals();
-
-            expect(virtuals.find(v => v.name == "reviews")).toBeDefined();
         });
     });
 });

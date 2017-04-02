@@ -1,5 +1,4 @@
 import * as _ from "lodash";
-import { IStringIndexable } from "../util";
 import { IEntityType, IEntity } from "./entity-type";
 import { Primitive } from "./primitive";
 import { Property } from "./property";
@@ -9,11 +8,8 @@ import { NavigationType, Navigation, Children, Collection, Reference } from "./n
  * Contains information about properties and other metadata of an entity.
  */
 export class EntityMetadata<T extends IEntity> {
-    readonly factory: (item: IStringIndexable) => T;
     readonly entityType: IEntityType<T>;
     readonly name: string;
-    readonly alias: string;
-    readonly abstract: boolean;
     readonly primaryKey: Primitive;
     readonly properties: ReadonlyArray<Property>;
     readonly primitives: ReadonlyArray<Primitive>;
@@ -28,16 +24,12 @@ export class EntityMetadata<T extends IEntity> {
     private _referencesMap = new Map<string, Reference>();
     private _childrenMap = new Map<string, Children>();
     private _collectionsMap = new Map<string, Collection>();
-    private _refKeysMap = new Map<string, Primitive>();
 
-    constructor(entityType: IEntityType<T>, args: EntityMetadata.ICtorArgs<T>) {
+    constructor(entityType: IEntityType<T>, args: EntityMetadata.ICtorArgs) {
         if (!args.primaryKey) throw `${entityType.name} has no primary key`;
 
-        this.factory = args.factory || null;
         this.entityType = entityType;
         this.name = args.name;
-        this.alias = args.alias || this.name;
-        this.abstract = !!args.abstract;
 
         let aliases = new Set<string>();
 
@@ -91,13 +83,6 @@ export class EntityMetadata<T extends IEntity> {
         (args.children || []).forEach(x => addChildren(new Children(x)));
         (args.collections || []).forEach(x => addCollection(new Collection(x)));
 
-        this._referencesMap.forEach(ref => {
-            let refKeyProperty = this._primitivesMap.get(ref.keyName.toLocaleLowerCase());
-            if (refKeyProperty) {
-                this._refKeysMap.set(refKeyProperty.name.toLocaleLowerCase(), refKeyProperty);
-            }
-        });
-
         this.properties = _.uniq(Array.from(this._propertiesMap.values())).sort((a, b) => a.name < b.name ? -1 : 1);
         this.primitives = _.uniq(Array.from(this._primitivesMap.values())).sort((a, b) => a.name < b.name ? -1 : 1);
         this.navigations = _.uniq(Array.from(this._navigationsMap.values())).sort((a, b) => a.name < b.name ? -1 : 1);
@@ -147,25 +132,15 @@ export class EntityMetadata<T extends IEntity> {
     getCollection(nameOrAlias: string): Collection {
         return this._collectionsMap.get(nameOrAlias.toLocaleLowerCase()) || null;
     }
-
-    /**
-     * Returns all navigations marked as being virtual.
-     */
-    getVirtuals(): Navigation[] {
-        return this.navigations.filter(nav => nav.virtual);
-    }
 }
 
 export module EntityMetadata {
-    export interface ICtorArgs<T extends IEntity> {
-        alias?: string;
-        factory?: (item: { [key: string]: any }) => T;
+    export interface ICtorArgs {
         name: string;
         primaryKey: Primitive.ICtorArgs;
         primitives?: Primitive.ICtorArgs[];
         references?: Reference.ICtorArgs[];
         children?: Children.ICtorArgs[];
         collections?: Collection.ICtorArgs[];
-        abstract?: boolean;
     }
 }
