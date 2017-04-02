@@ -1,4 +1,4 @@
-import { IEntityType, IEntity } from "./entity-type";
+import { IEntityClass, IEntity } from "./entity-class";
 import { EntityMetadata } from "./entity-metadata";
 import { Children, Collection, Reference } from "./navigation";
 import { Primitive } from "./primitive";
@@ -6,7 +6,7 @@ import { Primitive } from "./primitive";
 const METADATA_KEY = "entity-space:entity-metadata";
 const METADATA_ARGS_KEY = "entity-space:entity-metadata:ctor-args";
 
-let nameToTypeMap = new Map<string, IEntityType<any>>();
+let nameToTypeMap = new Map<string, IEntityClass<any>>();
 
 function getOrCreateMetadataArgs(type: any): Partial<EntityMetadata.ICtorArgs> {
     if (!Reflect.hasMetadata(METADATA_ARGS_KEY, type)) {
@@ -33,7 +33,7 @@ function getOrCreateMetadataArgs(type: any): Partial<EntityMetadata.ICtorArgs> {
  * Each entity type must have a primary key defined, and names/aliases must be unique across all properties.
  */
 export function Entity(args?: Partial<EntityMetadata.ICtorArgs>) {
-    return (type: IEntityType<any>) => {
+    return (type: IEntityClass<any>) => {
         let existing = getOrCreateMetadataArgs(type);
         existing.name = (args || {}).name || type.name;
         nameToTypeMap.set(existing.name.toLocaleLowerCase(), type);
@@ -48,7 +48,7 @@ export function Entity(args?: Partial<EntityMetadata.ICtorArgs>) {
     };
 }
 
-export function getEntityMetadata<T extends IEntity>(type: string | IEntityType<T>): EntityMetadata<T> {
+export function getEntityMetadata<T extends IEntity>(type: string | IEntityClass<T>): EntityMetadata<T> {
     if (typeof (type) == "string") {
         type = type.toLocaleLowerCase();
 
@@ -72,7 +72,7 @@ export function getEntityMetadata<T extends IEntity>(type: string | IEntityType<
     return Reflect.getMetadata(METADATA_KEY, type);
 }
 
-export function isEntity(type: string | IEntityType<any>): boolean {
+export function isEntity(type: string | IEntityClass<any>): boolean {
     if (typeof (type) == "string") {
         type = type.toLocaleLowerCase();
 
@@ -133,7 +133,7 @@ export module Entity {
         alias?: string;
         key: string;
         name?: string;
-        other: () => IEntityType<any>;
+        other: () => IEntityClass<any>;
         saveable?: boolean;
         virtual?: boolean;
     }) {
@@ -148,7 +148,7 @@ export module Entity {
         alias?: string;
         back: string;
         name?: string;
-        other: () => IEntityType<any>;
+        other: () => IEntityClass<any>;
         saveable?: boolean;
         virtual?: boolean;
     }) {
@@ -163,7 +163,7 @@ export module Entity {
         alias?: string;
         keys: string;
         name?: string;
-        other: () => IEntityType<any>;
+        other: () => IEntityClass<any>;
         saveable?: boolean;
         virtual?: boolean;
     }) {

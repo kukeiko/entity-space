@@ -80,7 +80,7 @@ export class ByKeyQueryCache<T extends IEntity> {
         }
     }
 
-    add(query: Query.ByKey<T> | Query.ByKeys<T>): void {
+    merge(query: Query.ByKey<T> | Query.ByKeys<T>): void {
         if (query.type == "key") {
             let existing = this._queriesPerKey.get(query.key);
 
@@ -91,7 +91,7 @@ export class ByKeyQueryCache<T extends IEntity> {
             }
         } else if (query.type == "keys") {
             query.keys.forEach(k => {
-                this.add(new Query.ByKey({
+                this.merge(new Query.ByKey({
                     entityType: query.entityType,
                     expansions: query.expansions.slice(),
                     key: k

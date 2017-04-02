@@ -18,7 +18,7 @@ describe("query-cache", () => {
                     key: "mo"
                 });
 
-                cache.add(byKeys);
+                cache.merge(byKeys);
 
                 expect(cache.isCached(byMo)).toBe(true);
             });
@@ -46,9 +46,9 @@ describe("query-cache", () => {
                     keys: ["khaz", "mo", "dan"]
                 });
 
-                cache.add(byMo);
-                cache.add(byDan);
-                cache.add(byKhaz);
+                cache.merge(byMo);
+                cache.merge(byDan);
+                cache.merge(byKhaz);
 
                 expect(cache.isCached(byKeys)).toBe(true);
             });
@@ -71,8 +71,8 @@ describe("query-cache", () => {
                     keys: ["mo", "zul"]
                 });
 
-                cache.add(byKhazMo);
-                cache.add(byZulJin);
+                cache.merge(byKhazMo);
+                cache.merge(byZulJin);
 
                 expect(cache.isCached(byMoZul)).toBe(true);
             });
@@ -104,7 +104,7 @@ describe("query-cache", () => {
                     expansions: `children`
                 });
 
-                cache.add(byKeys);
+                cache.merge(byKeys);
 
                 expect(cache.isCached(byMo)).toBe(true);
             });

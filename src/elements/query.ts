@@ -1,6 +1,6 @@
 import * as _ from "lodash";
 import { IStringable } from "../util";
-import { getEntityMetadata, IEntityType, IEntity } from "../metadata";
+import { getEntityMetadata, IEntityClass, IEntity } from "../metadata";
 import { Expansion } from "./expansion";
 import { Extraction } from "./extraction";
 
@@ -18,7 +18,7 @@ export abstract class Query<T extends IEntity> {
     /**
      * The entity type designated by this query.
      */
-    readonly entityType: IEntityType<T>;
+    readonly entityType: IEntityClass<T>;
 
     /**
      * All expansions of this query.
@@ -39,7 +39,7 @@ export abstract class Query<T extends IEntity> {
      * Extending this class and trying to use it will lead to random exceptions.
      */
     protected constructor(args: {
-        entityType: IEntityType<T>;
+        entityType: IEntityClass<T>;
         expansions?: string | Expansion[];
     }) {
         this.entityType = args.entityType;
@@ -150,7 +150,7 @@ export module Query {
         readonly type = "all";
 
         constructor(args: {
-            entityType: IEntityType<T>;
+            entityType: IEntityClass<T>;
             expansions?: string | Expansion[];
         }) {
             super(args);
@@ -197,7 +197,7 @@ export module Query {
 
         constructor(args: {
             key: IStringable;
-            entityType: IEntityType<T>;
+            entityType: IEntityClass<T>;
             expansions?: string | Expansion[];
         }) {
             super(args);
@@ -256,7 +256,7 @@ export module Query {
 
         constructor(args: {
             keys: IStringable[];
-            entityType: IEntityType<T>;
+            entityType: IEntityClass<T>;
             expansions?: string | Expansion[];
         }) {
             super(args);
@@ -294,7 +294,7 @@ export module Query {
 
         constructor(args: {
             indexes: { [key: string]: IStringable };
-            entityType: IEntityType<T>;
+            entityType: IEntityClass<T>;
             expansions?: string | Expansion[];
         }) {
             super(args);

@@ -1,4 +1,4 @@
-import { IEntityType } from "../entity-type";
+import { IEntityClass } from "../entity-class";
 import { Property } from "../property";
 
 /**
@@ -7,8 +7,8 @@ import { Property } from "../property";
 export abstract class Navigation extends Property {
     readonly virtual: boolean;
 
-    get otherType(): IEntityType<any> { return this._otherType(); };
-    private _otherType: () => IEntityType<any>;
+    get otherType(): IEntityClass<any> { return this._otherType(); };
+    private _otherType: () => IEntityClass<any>;
 
     constructor(args: Navigation.ICtorArgs) {
         super(args);
@@ -20,7 +20,7 @@ export abstract class Navigation extends Property {
 
 export module Navigation {
     export interface ICtorArgs extends Property.ICtorArgs {
-        other: () => IEntityType<any>;
+        other: () => IEntityClass<any>;
         virtual?: boolean;
     }
 }

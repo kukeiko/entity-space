@@ -1,7 +1,7 @@
 /**
  * ordered by dependcy
  */
-export * from "./entity-type";
+export * from "./entity-class";
 export * from "./property";
 export * from "./value-type";
 export * from "./primitive";

@@ -34,7 +34,7 @@ export class ByIndexesQueryCache<T extends IEntity> {
         return best;
     }
 
-    add(query: Query.ByIndexes<T>): void {
+    merge(query: Query.ByIndexes<T>): void {
         let indexesKey = query.indexesToArray().toString();
         let existing = this._queryPerIndexesString.get(indexesKey);
 

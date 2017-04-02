@@ -1,5 +1,5 @@
 import * as _ from "lodash";
-import { IEntityType, IEntity } from "./entity-type";
+import { IEntityClass, IEntity } from "./entity-class";
 import { Primitive } from "./primitive";
 import { Property } from "./property";
 import { NavigationType, Navigation, Children, Collection, Reference } from "./navigation";
@@ -8,7 +8,7 @@ import { NavigationType, Navigation, Children, Collection, Reference } from "./n
  * Contains information about properties and other metadata of an entity.
  */
 export class EntityMetadata<T extends IEntity> {
-    readonly entityType: IEntityType<T>;
+    readonly entityType: IEntityClass<T>;
     readonly name: string;
     readonly primaryKey: Primitive;
     readonly properties: ReadonlyArray<Property>;
@@ -25,7 +25,7 @@ export class EntityMetadata<T extends IEntity> {
     private _childrenMap = new Map<string, Children>();
     private _collectionsMap = new Map<string, Collection>();
 
-    constructor(entityType: IEntityType<T>, args: EntityMetadata.ICtorArgs) {
+    constructor(entityType: IEntityClass<T>, args: EntityMetadata.ICtorArgs) {
         if (!args.primaryKey) throw `${entityType.name} has no primary key`;
 
         this.entityType = entityType;
@@ -124,6 +124,10 @@ export class EntityMetadata<T extends IEntity> {
      */
     getChildren(nameOrAlias: string): Children {
         return this._childrenMap.get(nameOrAlias.toLocaleLowerCase()) || null;
+    }
+
+    getBackReference(children: Children) : Reference {
+        return this.getReference(children.backReferenceName);
     }
 
     /**

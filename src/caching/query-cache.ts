@@ -1,39 +1,33 @@
-import { getEntityMetadata, IEntityType, IEntity, NavigationType } from "../metadata";
+import { getEntityMetadata, IEntityClass, IEntity, NavigationType } from "../metadata";
 import { Expansion, Query, QueryType } from "../elements";
 import { AllQueryCache } from "./all-query-cache";
 import { ByIndexesQueryCache } from "./by-indexes-query-cache";
 import { ByKeyQueryCache } from "./by-key-query-cache";
 
 export class QueryCache {
-    private _allQueryCaches = new Map<IEntityType<any>, AllQueryCache<any>>();
-    private _byIndexesCaches = new Map<IEntityType<any>, ByIndexesQueryCache<any>>();
-    private _byKeyCaches = new Map<IEntityType<any>, ByKeyQueryCache<any>>();
+    private _allQueryCaches = new Map<IEntityClass<any>, AllQueryCache<any>>();
+    private _byIndexesCaches = new Map<IEntityClass<any>, ByIndexesQueryCache<any>>();
+    private _byKeyCaches = new Map<IEntityClass<any>, ByKeyQueryCache<any>>();
 
     reduce<T extends IEntity>(query: QueryType<T>): QueryType<T>[] {
-        /**
-         * todo: also consider QueryAllCache where applicable, will require comparing
-         * expansion weights which should be offloaded into a separate class (since query caches
-         * will also make use of it)
-         */
-
         let reducedViaAll = this._getAllQueryCache(query.entityType).reduce(query);
         if (reducedViaAll == null) return [];
 
-        switch (query.type) {
+        switch (reducedViaAll.type) {
             case "key":
                 {
-                    let reduced = this._getByKeyQueryCache(query.entityType).reduce(reducedViaAll as Query.ByKey<T>);
+                    let reduced = this._getByKeyQueryCache(reducedViaAll.entityType).reduce(reducedViaAll);
                     return reduced ? [reduced] : [];
                 }
 
             case "keys":
                 {
-                    return this._getByKeyQueryCache(query.entityType).reduce(reducedViaAll as Query.ByKeys<T>);
+                    return this._getByKeyQueryCache(reducedViaAll.entityType).reduce(reducedViaAll);
                 }
 
             case "indexes":
                 {
-                    let reduced = this._getByIndexesQueryCache(query.entityType).reduce(reducedViaAll as Query.ByIndexes<T>);
+                    let reduced = this._getByIndexesQueryCache(reducedViaAll.entityType).reduce(reducedViaAll);
                     return reduced ? [reduced] : [];
                 }
         }
@@ -41,20 +35,19 @@ export class QueryCache {
         return [query];
     }
 
-    // todo: possibly add payload option here (to construct queries from payload)
-    add(query: QueryType<any>, payload?: any[]): void {
+    merge(query: QueryType<any>, payload?: any[]): void {
         switch (query.type) {
             case "key":
             case "keys":
-                this._getByKeyQueryCache(query.entityType).add(query);
+                this._getByKeyQueryCache(query.entityType).merge(query);
 
                 if (payload) {
-                    this._buildQueriesFromPayloadExpansions(payload, query.expansions.slice());
+                    this._buildQueriesFromPayload(payload, query.expansions.slice());
                 }
                 break;
 
             case "indexes":
-                this._getByIndexesQueryCache(query.entityType).add(query);
+                this._getByIndexesQueryCache(query.entityType).merge(query);
 
                 if (payload) {
                     let metadata = getEntityMetadata(query.entityType);
@@ -62,7 +55,7 @@ export class QueryCache {
 
                     payload.forEach(entity => keys.add(entity[metadata.primaryKey.name]));
 
-                    this.add(new Query.ByKeys({
+                    this.merge(new Query.ByKeys({
                         entityType: query.entityType,
                         expansions: query.expansions.slice(),
                         keys: Array.from(keys.values())
@@ -71,10 +64,10 @@ export class QueryCache {
                 break;
 
             case "all":
-                this._getAllQueryCache(query.entityType).add(query);
+                this._getAllQueryCache(query.entityType).merge(query);
 
                 if (payload) {
-                    this._buildQueriesFromPayloadExpansions(payload, query.expansions.slice());
+                    this._buildQueriesFromPayload(payload, query.expansions.slice());
                 }
                 break;
 
@@ -97,7 +90,7 @@ export class QueryCache {
     }
 
     clear(args?: {
-        entityType?: IEntityType<any>;
+        entityType?: IEntityClass<any>;
     }): void {
         args = args || {};
 
@@ -106,13 +99,13 @@ export class QueryCache {
             this._byIndexesCaches.delete(args.entityType);
             this._byKeyCaches.delete(args.entityType);
         } else {
-            this._allQueryCaches = new Map<IEntityType<any>, AllQueryCache<any>>();
-            this._byIndexesCaches = new Map<IEntityType<any>, ByIndexesQueryCache<any>>();
-            this._byKeyCaches = new Map<IEntityType<any>, ByKeyQueryCache<any>>();
+            this._allQueryCaches = new Map<IEntityClass<any>, AllQueryCache<any>>();
+            this._byIndexesCaches = new Map<IEntityClass<any>, ByIndexesQueryCache<any>>();
+            this._byKeyCaches = new Map<IEntityClass<any>, ByKeyQueryCache<any>>();
         }
     }
 
-    private _getAllQueryCache<T>(entityType: IEntityType<T>): AllQueryCache<T> {
+    private _getAllQueryCache<T>(entityType: IEntityClass<T>): AllQueryCache<T> {
         let cache = this._allQueryCaches.get(entityType) as AllQueryCache<T>;
 
         if (!cache) {
@@ -123,7 +116,7 @@ export class QueryCache {
         return cache;
     }
 
-    private _getByIndexesQueryCache<T>(entityType: IEntityType<T>): ByIndexesQueryCache<T> {
+    private _getByIndexesQueryCache<T>(entityType: IEntityClass<T>): ByIndexesQueryCache<T> {
         let cache = this._byIndexesCaches.get(entityType) as ByIndexesQueryCache<T>;
 
         if (!cache) {
@@ -134,7 +127,7 @@ export class QueryCache {
         return cache;
     }
 
-    private _getByKeyQueryCache<T>(entityType: IEntityType<T>): ByKeyQueryCache<T> {
+    private _getByKeyQueryCache<T>(entityType: IEntityClass<T>): ByKeyQueryCache<T> {
         let cache = this._byKeyCaches.get(entityType) as ByKeyQueryCache<T>;
 
         if (!cache) {
@@ -145,7 +138,7 @@ export class QueryCache {
         return cache;
     }
 
-    private _buildQueriesFromPayloadExpansions(entities: any[], expansions: Expansion[]): void {
+    private _buildQueriesFromPayload(entities: IEntity[], expansions: Expansion[]): void {
         expansions.forEach(exp => {
             let nav = exp.property as NavigationType;
 
@@ -172,18 +165,18 @@ export class QueryCache {
                             keys: Array.from(keys)
                         });
 
-                        this.add(q, references);
+                        this.merge(q, references);
                     }
                     break;
 
-                // todo: array:child payload can create into byindexes query (i think)
+                // todo: array:child payload can be built into byindexes query (i think)
                 case "array:child":
                     {
                         let metadata = getEntityMetadata(nav.otherType);
                         let keyName = metadata.primaryKey.name;
                         let items: any[] = [];
                         let keys = new Set<any>();
-                        let backRef = metadata.getReference(nav.backReferenceName);
+                        let backRef = metadata.getBackReference(nav);
 
                         entities.forEach(e => {
                             let children = e[nav.name] as any[];
@@ -205,7 +198,7 @@ export class QueryCache {
                                 }
                             });
 
-                            this.add(byParentIdQuery, children);
+                            this.merge(byParentIdQuery, children);
                         });
 
                         let q = new Query.ByKeys({
@@ -214,7 +207,7 @@ export class QueryCache {
                             keys: Array.from(keys)
                         });
 
-                        this.add(q, items);
+                        this.merge(q, items);
                     }
                     break;
 
@@ -243,7 +236,7 @@ export class QueryCache {
                             keys: Array.from(keys)
                         });
 
-                        this.add(q, items);
+                        this.merge(q, items);
                     }
                     break;
             }

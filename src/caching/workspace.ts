@@ -1,12 +1,12 @@
 import { ObjectCache } from "./object-cache";
-import { getEntityMetadata, IEntityType, IEntity, Children, Reference, NavigationType } from "../metadata";
+import { getEntityMetadata, IEntityClass, IEntity, NavigationType } from "../metadata";
 import { Expansion, Query, QueryType } from "../elements";
 import { EntityMapper } from "../entity-mapper";
 
 type EntityCache = ObjectCache<any, IEntity>;
 
 export class Workspace {
-    private _caches = new Map<IEntityType<IEntity>, EntityCache>();
+    private _caches = new Map<IEntityClass<IEntity>, EntityCache>();
 
     /**
      * Add one entity into the cache.
@@ -15,7 +15,7 @@ export class Workspace {
      */
     add<T extends IEntity>(args: {
         entity: T;
-        type: IEntityType<T>;
+        type: IEntityClass<T>;
         expansion?: string | Expansion[] | ReadonlyArray<Expansion>;
     }): void {
         let metadata = getEntityMetadata(args.type);
@@ -39,37 +39,54 @@ export class Workspace {
         }));
 
         expansions.forEach(ex => {
-            let value = (args.entity as any)[ex.property.name];
-
-            /**
-             * just because it is in the expansion doesn't mean it has been loaded for this particular entity
-             */
+            let value = args.entity[ex.property.name];
             if (!value) return;
 
             let otherType = ex.property.otherType;
             let otherTypeMetadata = getEntityMetadata(otherType);
 
-            if (ex.property instanceof Reference) {
-                this.add({
-                    entity: value,
-                    type: otherType,
-                    expansion: ex.expansions
-                });
-            } else if (ex.property instanceof Children) {
-                let items = value as any[];
-                if (items.length == 0) return;
+            let nav = ex.property as NavigationType;
 
-                let reference = otherTypeMetadata.getReference(ex.property.backReferenceName);
-                let key = otherTypeMetadata.getPrimitive(reference.keyName);
+            switch (nav.type) {
+                case "ref":
+                    this.add({
+                        entity: value,
+                        type: otherType,
+                        expansion: ex.expansions
+                    });
+                    break;
 
-                let otherCache = this._getEntityCache(otherType);
-                otherCache.removeByIndex(key.name, value[0][key.name]);
+                case "array:ref":
+                    {
+                        let items = value as IEntity[];
+                        if (items.length == 0) return;
 
-                items.forEach(v => this.add({
-                    entity: v,
-                    type: otherType,
-                    expansion: ex.expansions
-                }));
+                        items.forEach(v => this.add({
+                            entity: v,
+                            type: otherType,
+                            expansion: ex.expansions
+                        }));
+                    }
+                    break;
+
+                case "array:child":
+                    {
+                        let items = value as IEntity[];
+                        if (items.length == 0) return;
+
+                        let backRef = otherTypeMetadata.getBackReference(nav);
+                        let otherCache = this._getEntityCache(otherType);
+
+                        // remove old children
+                        otherCache.removeByIndex(backRef.keyName, value[0][backRef.keyName]);
+
+                        items.forEach(v => this.add({
+                            entity: v,
+                            type: otherType,
+                            expansion: ex.expansions
+                        }));
+                    }
+                    break;
             }
         });
     }
@@ -81,7 +98,7 @@ export class Workspace {
      */
     addMany<T extends IEntity>(args: {
         entities: T[];
-        type: IEntityType<T>;
+        type: IEntityClass<T>;
         expansion?: string | Expansion[] | ReadonlyArray<Expansion>;
     }): void {
         let expansions = new Array<Expansion>();
@@ -108,7 +125,7 @@ export class Workspace {
      */
     remove(args: {
         item: any;
-        type: IEntityType<any>;
+        type: IEntityClass<any>;
     }): void {
         let cache = this._getEntityCache(args.type);
 
@@ -123,7 +140,7 @@ export class Workspace {
      * Clear all or parts of the cache.
      */
     clear(args?: {
-        entityType?: IEntityType<any>;
+        entityType?: IEntityClass<any>;
     }): void {
         args = args || {};
 
@@ -131,7 +148,7 @@ export class Workspace {
             let cache = this._getEntityCache(args.entityType);
             cache.clear();
         } else {
-            this._caches = new Map<IEntityType<any>, EntityCache>();
+            this._caches = new Map<IEntityClass<any>, EntityCache>();
         }
     }
 
@@ -255,7 +272,7 @@ export class Workspace {
         });
     }
 
-    private _getEntityCache(type: IEntityType<any>): ObjectCache<any, any> {
+    private _getEntityCache(type: IEntityClass<any>): ObjectCache<any, any> {
         if (!this._caches.has(type)) {
             this._caches.set(type, this._createEntityCache(type));
         }
@@ -263,7 +280,7 @@ export class Workspace {
         return this._caches.get(type);
     }
 
-    private _createEntityCache(type: IEntityType<any>): EntityCache {
+    private _createEntityCache(type: IEntityClass<any>): EntityCache {
         let indexes: { [key: string]: (item: any) => any } = {};
         let metadata = getEntityMetadata(type);
 

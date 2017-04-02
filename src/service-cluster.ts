@@ -1,22 +1,22 @@
 import * as _ from "lodash";
-import { getEntityMetadata, IEntityType, IEntity, Children, NavigationType } from "./metadata";
+import { getEntityMetadata, IEntityClass, IEntity, Children, NavigationType } from "./metadata";
 import { Path, Query, QueryType } from "./elements";
 import { QueryCache, Workspace } from "./caching";
 import { IQueryExecuter } from "./query-executer";
 import { EntityMapper } from "./entity-mapper";
 
 export class ServiceCluster {
-    private _executers = new Map<IEntityType<any>, IQueryExecuter<any>>();
+    private _executers = new Map<IEntityClass<any>, IQueryExecuter<any>>();
     private _queryCache = new QueryCache();
     private _workspace: Workspace;
-    private _pendingQueries = new Map<IEntityType<any>, { query: QueryType<any>, promise: Promise<any> }[]>();
+    private _pendingQueries = new Map<IEntityClass<any>, { query: QueryType<any>, promise: Promise<any> }[]>();
 
     constructor(workspace: Workspace) {
         this._workspace = workspace;
     }
 
     flush(args?: {
-        entityType?: IEntityType<any>;
+        entityType?: IEntityClass<any>;
     }): void {
         args = args || {};
 
@@ -34,7 +34,7 @@ export class ServiceCluster {
         }
     }
 
-    register<T>(entityType: IEntityType<T>, executer: IQueryExecuter<T>): void {
+    register<T>(entityType: IEntityClass<T>, executer: IQueryExecuter<T>): void {
         this._executers.set(entityType, executer);
     }
 
@@ -42,7 +42,7 @@ export class ServiceCluster {
         entity: T;
     }): Promise<T> {
         let mapper = new EntityMapper();
-        let entityType = args.entity.constructor as IEntityType<any>;
+        let entityType = args.entity.constructor as IEntityClass<any>;
         let metadata = getEntityMetadata(entityType);
         let executer = this._executers.get(entityType) as IQueryExecuter<any>;
         let toDto = true; // todo: make configurable
@@ -113,7 +113,7 @@ export class ServiceCluster {
     async delete(args: {
         entity: IEntity;
     }): Promise<void> {
-        let entityType = args.entity.constructor as IEntityType<any>;
+        let entityType = args.entity.constructor as IEntityClass<any>;
         let executer = this._executers.get(entityType) as IQueryExecuter<any>;
 
         if (!executer) {
@@ -154,7 +154,7 @@ export class ServiceCluster {
                         expansion: rq.expansions
                     });
 
-                    this._queryCache.add(rq, entities);
+                    this._queryCache.merge(rq, entities);
                 });
 
             loadReducedPromises.push(promise);

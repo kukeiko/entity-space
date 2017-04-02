@@ -1,4 +1,4 @@
-import { IEntityType } from "../entity-type";
+import { IEntityClass } from "../entity-class";
 import { Navigation } from "./navigation";
 
 /**
@@ -25,7 +25,7 @@ export module Reference {
         alias?: string;
         key: string;
         name: string;
-        other: () => IEntityType<any>;
+        other: () => IEntityClass<any>;
         virtual?: boolean;
     }
 }

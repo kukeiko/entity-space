@@ -20,7 +20,7 @@ export class AllQueryCache<T extends IEntity> {
         return this._cached.reduce(query);
     }
 
-    add(query: Query.All<T>): void {
+    merge(query: Query.All<T>): void {
         if (!this._cached) {
             this._cached = query;
         } else {

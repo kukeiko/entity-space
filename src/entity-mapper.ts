@@ -2,13 +2,13 @@ import * as _ from "lodash";
 import { IStringIndexable } from "./util";
 import { Expansion } from "./elements";
 import {
-    getEntityMetadata, EntityMetadata, IEntity, IEntityType,
+    getEntityMetadata, EntityMetadata, IEntity, IEntityClass,
     Primitive, Children, NavigationType, ValueType
 } from "./metadata";
 
 export class EntityMapper {
     createEntity<T extends IEntity>(args: {
-        entityType: IEntityType<T>;
+        entityType: IEntityClass<T>;
         expansions?: Expansion[];
         from?: IStringIndexable;
         fromDto?: boolean;
@@ -277,29 +277,6 @@ export class EntityMapper {
             let refSelfKeyName = refMetadata.primaryKey.getName(args.isDto);
 
             args.item[refKeysProp.getName(args.isDto)] = _.uniq(refs.map(ref => ref[refSelfKeyName]).filter(id => id != null));
-        });
-    }
-
-    _updateReferenceKeys(entity: IEntity): void {
-        // todo: casting to any is meh
-        let metadata = getEntityMetadata(entity.constructor as any);
-
-        metadata.references.forEach(refProp => {
-            let ref = entity[refProp.name];
-            if (ref == null) return;
-
-            let refMetadata = getEntityMetadata(refProp.otherType);
-            let refKeyProp = metadata.getPrimitive(refProp.keyName);
-            entity[refKeyProp.name] = ref[refMetadata.primaryKey.name];
-        });
-
-        metadata.collections.forEach(colProp => {
-            let refs = entity[colProp.name] as any[];
-            if (refs == null || refs.length == 0) return;
-
-            let refKeysProp = metadata.getPrimitive(colProp.keysName);
-            let refMetadata = getEntityMetadata(colProp.otherType);
-            entity[refKeysProp.name] = _.uniq(refs.map(ref => ref[refMetadata.primaryKey.name]).filter(id => id != null));
         });
     }
 }
