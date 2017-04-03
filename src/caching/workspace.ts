@@ -232,7 +232,7 @@ export class Workspace {
                     break;
 
                 case "array:child":
-                    let backRef = getEntityMetadata(nav.otherType).getReference(nav.backReferenceName);
+                    let backRef = getEntityMetadata(nav.otherType).getBackReference(nav);
                     let parentKeyName = backRef.keyName;
                     let pkName = getEntityMetadata(args.query.entityType).primaryKey.name;
 

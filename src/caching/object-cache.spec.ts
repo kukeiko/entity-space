@@ -1,7 +1,7 @@
 import { ObjectCache } from "./object-cache";
 
 describe("object-cache", () => {
-    it("should return an object by primary key", () => {
+    it("should return an object for its primary key", () => {
         let foo = { id: 7, name: "bar" };
         let cache = new ObjectCache<number, any>({ getKey: v => v.id });
 
@@ -10,7 +10,7 @@ describe("object-cache", () => {
         expect(cache.get(7)).toBe(foo);
     });
 
-    it("should return a map of objects by their primary keys", () => {
+    it("should return a map of objects for their primary keys", () => {
         let khaz = { id: 64, name: "khaz" };
         let mo = { id: 128, name: "mo" };
         let dan = { id: 256, name: "dan" };
@@ -24,14 +24,14 @@ describe("object-cache", () => {
         expect(actual.get(dan.id)).toBe(dan);
     });
 
-    it("should not throw if it didn't find by primary key", () => {
+    it("should not throw if it didn't find via primay key(s)", () => {
         let cache = new ObjectCache<number, any>({ getKey: v => v.id });
 
         expect(() => cache.get(1)).not.toThrow();
         expect(() => cache.getMany([1, 64, 1337])).not.toThrow();
     });
 
-    it("should return a map of objects by 1 index", () => {
+    it("should return a map of objects for 1 index", () => {
         let foo = { id: 7, name: "foo", tag: "baz" };
         let bar = { id: 13, name: "bar", tag: "baz" };
         let notBaz = { id: 64, name: "notBaz", tag: "not-baz" };
@@ -48,7 +48,7 @@ describe("object-cache", () => {
         expect(Array.from(result.values())).toEqual([foo, bar]);
     });
 
-    it("should return a map of objects by n indexes", () => {
+    it("should return a map of objects for n indexes", () => {
         let foo = { id: 7, name: "foo", tag: "baz", scope: "global" };
         let bar = { id: 13, name: "bar", tag: "baz", scope: "global" };
         let notBaz = { id: 64, name: "notBaz", tag: "not-baz", scope: "global" };
@@ -98,7 +98,7 @@ describe("object-cache", () => {
         expect(cache.size).toBe(0);
     });
 
-    it("should throw if trying to add item with null/undefined primary key", () => {
+    it("should throw if trying to add item with a null/undefined primary key", () => {
         let cache = new ObjectCache<number, any>({ getKey: v => v.id });
 
         expect(() => cache.add({})).toThrow();
