@@ -138,7 +138,7 @@ export class EntityMapper {
                         to[toName] = null;
                     }
                 } else if (!args.fromDto && args.toDto) {
-                    to[toName] = JSON.stringify(value);
+                    to[toName] = (value as Date).toISOString();
                 } else {
                     to[toName] = new Date(value);
                 }
