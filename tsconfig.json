@@ -11,11 +11,18 @@
     "noImplicitThis": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+    "typeRoots": [
+      "node_modules/@types"
+    ],
     "lib": [
       "dom",
       "scripthost",
       "es2015",
       "es2016.array.include"
     ]
-  }
+  },
+  "include": [
+    "./src/**/*.ts",
+    "./test/**/*.ts"
+  ]
 }

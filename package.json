@@ -21,15 +21,19 @@
     "prepublish": "npm run build && npm run test"
   },
   "dependencies": {
-    "@types/core-js": "0.9.39",
+    "@types/core-js": "0.9.41",
     "@types/jasmine": "2.5.46",
     "@types/lodash": "4.14.58",
-    "core-js": "2.4.1",
-    "lodash": "4.17.4",
-    "reflect-metadata": "0.1.10"
+    "@types/reflect-metadata": "0.0.5"
+  },
+  "peerDependencies": {
+    "core-js": "^2.4.1",
+    "lodash": "^4.17.4",
+    "reflect-metadata": "^0.1.10"
   },
   "devDependencies": {
     "awesome-typescript-loader": "3.1.2",
+    "core-js": "2.4.1",
     "istanbul-instrumenter-loader": "2.0.0",
     "jasmine-core": "2.5.2",
     "karma": "1.5.0",
@@ -40,6 +44,8 @@
     "karma-phantomjs-launcher": "1.0.4",
     "karma-sourcemap-loader": "0.3.7",
     "karma-webpack": "2.0.3",
+    "lodash": "4.17.4",
+    "reflect-metadata": "0.1.10",
     "rimraf": "2.6.1",
     "tslint": "4.5.1",
     "typescript": "2.2.1",
