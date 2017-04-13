@@ -6,6 +6,7 @@ import { IQueryExecuter } from "./query-executer";
 import { EntityMapper } from "./entity-mapper";
 
 export class ServiceCluster {
+    getQueryExecuter: <T>(entityType: IEntityClass<T>) => Promise<IQueryExecuter<T>> = null;
     private _executers = new Map<IEntityClass<any>, IQueryExecuter<any>>();
     private _queryCache = new QueryCache();
     private _workspace: Workspace;
@@ -44,7 +45,7 @@ export class ServiceCluster {
         let mapper = new EntityMapper();
         let entityType = args.entity.constructor as IEntityClass<any>;
         let metadata = getEntityMetadata(entityType);
-        let executer = this._executers.get(entityType) as IQueryExecuter<any>;
+        let executer = await this._getQueryExecuter(entityType);
         let toDto = true; // todo: make configurable
 
         if (!executer) {
@@ -114,7 +115,7 @@ export class ServiceCluster {
         entity: IEntity;
     }): Promise<void> {
         let entityType = args.entity.constructor as IEntityClass<any>;
-        let executer = this._executers.get(entityType) as IQueryExecuter<any>;
+        let executer = await this._getQueryExecuter(entityType);
 
         if (!executer) {
             throw `no query executer for entity type ${entityType.name} registered`;
@@ -247,7 +248,7 @@ export class ServiceCluster {
             return superset.promise;
         }
 
-        let executer = this._executers.get(query.entityType) as IQueryExecuter<T>;
+        let executer = await this._getQueryExecuter(query.entityType);
 
         if (!executer) {
             throw `no query executer for entity type ${query.entityType.name} registered`;
@@ -292,6 +293,21 @@ export class ServiceCluster {
         promise.then(() => pending.splice(pending.findIndex(x => x.query == query), 1));
 
         return promise;
+    }
+
+    private async _getQueryExecuter<T extends IEntity>(entityType: IEntityClass<T>): Promise<IQueryExecuter<T>> {
+        let executer = this._executers.get(entityType);
+
+        if (!executer) {
+            if (this.getQueryExecuter instanceof Function) {
+                executer = await this.getQueryExecuter(entityType);
+                this.register(entityType, executer);
+            } else {
+                throw `no query executer for entity type ${entityType.name} registered`;
+            }
+        }
+
+        return executer;
     }
 
     private _crawl(entities: Map<any, any>, path: Path): any[] {
