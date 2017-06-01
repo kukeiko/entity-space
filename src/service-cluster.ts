@@ -103,6 +103,11 @@ export class ServiceCluster {
             type: entityType
         });
 
+        this._queryCache.merge(new Query.ByKey({
+            entityType: entityType,
+            key: key
+        }));
+
         key = saved[metadata.primaryKey.name];
 
         return (await this.execute(new Query.ByKey({
@@ -290,9 +295,10 @@ export class ServiceCluster {
             promise: promise
         });
 
-        promise.then(() => pending.splice(pending.findIndex(x => x.query == query), 1));
+        let cleanup = () => pending.splice(pending.findIndex(x => x.query == query), 1);
+        promise.then(cleanup, cleanup);
 
-        return promise;
+        return promise.then(x => x.filter(y => y));
     }
 
     private async _getQueryExecuter<T extends IEntity>(entityType: IEntityClass<T>): Promise<IQueryExecuter<T>> {
@@ -319,9 +325,9 @@ export class ServiceCluster {
             let isArray = next.property instanceof Children;
 
             if (isArray) {
-                items = _.flatten(items.map(item => item[next.property.name]));
+                items = _.flatten(items.map(item => item[next.property.name])).filter(x => x);
             } else {
-                items = items.map(item => item[next.property.name]);
+                items = items.map(item => item[next.property.name]).filter(x => x);
             }
 
             next = next.next;
