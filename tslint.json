@@ -6,12 +6,6 @@
         "no-var-keyword": true,
         "eofline": true,
         "no-use-before-declare": true,
-        "member-ordering": [
-            true,
-            {
-                "order": "fields-first"
-            }
-        ],
         "semicolon": [
             "always"
         ]
