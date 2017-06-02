@@ -90,6 +90,60 @@ export class EntityMapper {
         });
     }
 
+    compileCopyPrimitives(args: {
+        fromDto?: boolean;
+        includeComputed?: boolean;
+        metadata: EntityMetadata<any>;
+        predicate?: (p: Primitive) => boolean;
+        toDto?: boolean;
+    }): string {
+        let predicate = args.predicate
+            ? args.includeComputed
+                ? args.predicate
+                : ((p: Primitive) => !p.computed && args.predicate(p))
+            : args.includeComputed
+                ? (() => true)
+                : ((p: Primitive) => !p.computed);
+
+        let buffer: string[] = [];
+        let line = (str: string) => buffer.push(str);
+
+        line("function compile_test(args) {");
+
+        args.metadata.primitives.forEach(p => {
+            if (!predicate(p)) return;
+
+            let fromName = p.getName(args.fromDto);
+            let toName = p.getName(args.toDto);
+            let valueName = toName;
+
+            line(`\tvar ${valueName} = args.from.${fromName};`);
+            line(`\tif(${valueName} === undefined) { return; }`);
+            line(`\tif(${valueName} == null) { args.to.${toName} = null; return; }`);
+
+            if ([ValueType.Array, ValueType.Object].includes(p.valueType)) {
+                line(`\targs.to.${toName} = JSON.parse(JSON.stringify(${valueName}));`);
+            } else if (p.valueType == ValueType.Date) {
+                if (args.fromDto && args.toDto) {
+                    line(`\targs.to.${toName} = ${valueName};`);
+                } else if (args.fromDto && !args.toDto) {
+                    line(`\targs.to.${toName} = ${valueName} ? new Date(${valueName}) : null;`);
+                } else if (!args.fromDto && args.toDto) {
+                    line(`\targs.to.${toName} = ${valueName}.toISOString();`);
+                } else {
+                    line(`\targs.to.${toName} = new Date(${valueName});`);
+                }
+            } else {
+                line(`\targs.to.${toName} = ${valueName};`);
+                line(``);
+            }
+        });
+
+        buffer.push("}");
+
+        return buffer.join("\n");
+    }
+
     /**
      * Copies all primitive properties of an entity type from one object to another.
      * An optional predicate can be supplied to filter copied primitives. Use fromDto & toDto to use aliases instead.
@@ -108,44 +162,47 @@ export class EntityMapper {
         toDto?: boolean;
     }): IStringIndexable {
         let to = args.to || {};
-        let predicate = args.predicate
-            ? args.includeComputed
-                ? args.predicate
-                : ((p: Primitive) => !p.computed && args.predicate(p))
-            : args.includeComputed
-                ? (() => true)
-                : ((p: Primitive) => !p.computed);
+        (window as any)["compile_test"](args);
+        // let predicate = args.predicate
+        //     ? args.includeComputed
+        //         ? args.predicate
+        //         : ((p: Primitive) => !p.computed && args.predicate(p))
+        //     : args.includeComputed
+        //         ? (() => true)
+        //         : ((p: Primitive) => !p.computed);
 
-        args.metadata.primitives.forEach(p => {
-            if (!predicate(p)) return;
-            let fromName = p.getName(args.fromDto);
-            let toName = p.getName(args.toDto);
+        // let fn = (p: Primitive) => {
+        //     if (!predicate(p)) return;
+        //     let fromName = p.getName(args.fromDto);
+        //     let toName = p.getName(args.toDto);
 
-            let value = args.from[fromName];
-            if (value === undefined) return;
+        //     let value = args.from[fromName];
+        //     if (value === undefined) return;
 
-            if (value == null) {
-                to[toName] = value;
-            } else if ([ValueType.Array, ValueType.Object].includes(p.valueType)) {
-                to[toName] = _.cloneDeep(value);
-            } else if (p.valueType == ValueType.Date) {
-                if (args.fromDto && args.toDto) {
-                    to[toName] = value;
-                } else if (args.fromDto && !args.toDto) {
-                    if (value) {
-                        to[toName] = new Date(value);
-                    } else {
-                        to[toName] = null;
-                    }
-                } else if (!args.fromDto && args.toDto) {
-                    to[toName] = (value as Date).toISOString();
-                } else {
-                    to[toName] = new Date(value);
-                }
-            } else {
-                to[toName] = value;
-            }
-        });
+        //     if (value == null) {
+        //         to[toName] = value;
+        //     } else if ([ValueType.Array, ValueType.Object].includes(p.valueType)) {
+        //         to[toName] = _.cloneDeep(value);
+        //     } else if (p.valueType == ValueType.Date) {
+        //         if (args.fromDto && args.toDto) {
+        //             to[toName] = value;
+        //         } else if (args.fromDto && !args.toDto) {
+        //             if (value) {
+        //                 to[toName] = new Date(value);
+        //             } else {
+        //                 to[toName] = null;
+        //             }
+        //         } else if (!args.fromDto && args.toDto) {
+        //             to[toName] = (value as Date).toISOString();
+        //         } else {
+        //             to[toName] = new Date(value);
+        //         }
+        //     } else {
+        //         to[toName] = value;
+        //     }
+        // };
+
+        // args.metadata.primitives.forEach(fn);
 
         return to;
     }
