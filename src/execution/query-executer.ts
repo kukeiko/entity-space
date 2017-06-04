@@ -1,5 +1,5 @@
-import { IStringIndexable } from "./util";
-import { Query } from "./elements";
+import { IStringIndexable } from "../util";
+import { Query } from "../elements";
 
 export interface IQueryExecuter<T> {
     loadAll?: (q: Query.All<T>) => Promise<T[]>;
