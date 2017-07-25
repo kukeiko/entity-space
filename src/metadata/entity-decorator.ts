@@ -32,6 +32,7 @@ function getOrCreateMetadataArgs(type: any): Partial<EntityMetadata.ICtorArgs> {
  *
  * Each entity type must have a primary key defined, and names/aliases must be unique across all properties.
  */
+
 export function Entity(args?: Partial<EntityMetadata.ICtorArgs>) {
     return (type: IEntityClass<any>) => {
         let existing = getOrCreateMetadataArgs(type);
@@ -48,7 +49,7 @@ export function Entity(args?: Partial<EntityMetadata.ICtorArgs>) {
     };
 }
 
-export function getEntityMetadata<T extends IEntity>(type: string | IEntityClass<T>): EntityMetadata<T> {
+export function getEntityMetadata<T extends IEntity>(type: string | IEntityClass<T> | Function): EntityMetadata<T> {
     if (typeof (type) == "string") {
         type = type.toLocaleLowerCase();
 
@@ -65,7 +66,7 @@ export function getEntityMetadata<T extends IEntity>(type: string | IEntityClass
         }
 
         let args = Reflect.getMetadata(METADATA_ARGS_KEY, type);
-        let metadata = new EntityMetadata(type, args);
+        let metadata = new EntityMetadata(type as IEntityClass<T>, args);
         Reflect.defineMetadata(METADATA_KEY, metadata, type);
     }
 

@@ -1,8 +1,11 @@
+import { ArrayLike } from "../util";
+
 /**
  * Store and access objects via primary key & indexes. The ObjectCache is basically a Map on steroids
  * that is used to cache entities of a single type and retrieve them by their primary key or
  * a combination of indexes.
  */
+// todo: optimize via kill forEach where possible + getKey() => keyName
 export class ObjectCache<K, V> {
     readonly getKey: (item: V) => K;
     private _pkMap = new Map<K, V>();
@@ -31,28 +34,69 @@ export class ObjectCache<K, V> {
         return this._pkMap.get(key) || null;
     }
 
-    getMany(keys: K[]): Map<K, V> {
-        let map = new Map<K, V>();
-        keys.forEach(k => {
+    getMany(keys: ArrayLike<K>, into?: Map<K, V>): Map<K, V> {
+        let map = into || new Map<K, V>();
+        let k: K;
+
+        for (let i = 0; i < keys.length; ++i) {
+            k = keys[i];
             let v = this.get(k);
             if (v != null) map.set(k, v);
-        });
+        }
 
         return map;
     }
 
-    all(): Map<K, V> {
-        let map = new Map<K, V>();
-        this._pkMap.forEach((v, k) => map.set(k, v));
+    getManyAsArray(keys: ArrayLike<K>): V[] {
+        let k: K;
+        let items: V[] = [];
 
-        return map;
+        for (let i = 0; i < keys.length; ++i) {
+            k = keys[i];
+            let v = this.get(k);
+            if (v != null) items.push(v);
+        }
+
+        return items;
+    }
+
+    // todo: kill or keep? not used yet
+    getManyIntoArray(keys: ArrayLike<K>, into: V[]): void {
+        let k: any;
+
+        for (let i = 0; i < keys.length; ++i) {
+            k = keys[i];
+            let v = this.get(k);
+            if (v != null) into.push(v);
+        }
+    }
+
+    all(into?: Map<K, V>): Map<K, V> {
+        into = into || new Map<K, V>();
+        this._pkMap.forEach((v, k) => into.set(k, v));
+
+        return into;
+    }
+
+    allAsArray(into?: V[]): V[] {
+        into = into || [];
+        this._pkMap.forEach(v => into.push(v));
+
+        return into;
     }
 
     byIndex(index: string, value: any): Map<K, V> {
+        let idx = this._indexes.get(index);
+        if (idx == null) throw `index ${index} doesn't exist`;
+
+        return idx.get(value);
+    }
+
+    byIndexAsArray(index: string, value: any): V[] {
         let ix = this._indexes.get(index);
         if (ix == null) throw `index ${index} doesn't exist`;
 
-        return ix.get(value);
+        return ix.getAsArray(value);
     }
 
     byIndexes(indexes: { [key: string]: Object }): Map<K, V> {
@@ -65,6 +109,7 @@ export class ObjectCache<K, V> {
             indexArray.push(key);
         }
 
+        // todo: i think amount of loops can be drastically reduced by deleting non-matches during iteration
         itemsPerIndex.forEach((map, index) => {
             let otherIndexes = indexArray.filter(i => i != index);
 
@@ -78,10 +123,15 @@ export class ObjectCache<K, V> {
         return items;
     }
 
+    byIndexesAsArray(indexes: { [key: string]: Object }): V[] {
+        return Array.from(this.byIndexes(indexes).values());
+    }
+
     removeByIndex(index: string, value: any): void {
         let ix = this._indexes.get(index);
         if (ix == null) throw `index ${index} doesn't exist`;
 
+        ix.get(value).forEach(x => this._pkMap.delete(this.getKey(x)));
         ix.clear(value);
     }
 
@@ -90,7 +140,7 @@ export class ObjectCache<K, V> {
         this._indexes.forEach(i => i.remove(item));
     }
 
-    add(item: V): V {
+    add(item: V): void {
         let key = this.getKey(item);
         if (key == null) throw `can't add item to cache with undefined/null key: ${JSON.stringify(item)}`;
 
@@ -98,19 +148,10 @@ export class ObjectCache<K, V> {
 
         this._pkMap.set(key, item);
         this._indexes.forEach(i => i.update(item, existing));
-
-        return item;
     }
 
-    addMany(items: V[]): Map<K, V> {
-        let map = new Map<K, V>();
-
-        items.forEach(i => {
-            this.add(i);
-            map.set(this.getKey(i), i);
-        });
-
-        return map;
+    addMany(items: V[]): void {
+        items.forEach(i => this.add(i));
     }
 
     clear(): void {
@@ -144,6 +185,13 @@ export module ObjectCache {
         get(value: any): Map<K, V> {
             let map = this._maps.get(value);
             return map ? new Map<K, V>(map) : new Map<K, V>();
+        }
+
+        getAsArray(value: any): V[] {
+            let map = this._maps.get(value);
+            if (!map) return [];
+
+            return Array.from(map.values());
         }
 
         clear(): void;

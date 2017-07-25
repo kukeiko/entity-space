@@ -19,7 +19,7 @@ describe("entity-metadata", () => {
 
         it("should throw if not found", () => {
             try {
-                getEntityMetadata(Array);;
+                getEntityMetadata(Array);
                 fail("expected to throw");
             } catch (error) { }
         });

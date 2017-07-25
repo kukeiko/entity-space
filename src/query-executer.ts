@@ -1,4 +1,4 @@
-import { IStringIndexable } from "./util";
+import { Indexable } from "./util";
 import { Query } from "./elements";
 
 export interface IQueryExecuter<T> {
@@ -6,6 +6,6 @@ export interface IQueryExecuter<T> {
     loadOne?: (q: Query.ByKey<T>) => Promise<T>;
     loadMany?: (q: Query.ByKeys<T>) => Promise<T[]>;
     loadByIndexes?: (q: Query.ByIndexes<T>) => Promise<T[]>;
-    save?: (entity: T, saveable: IStringIndexable, diff?: IStringIndexable) => Promise<T>;
+    save?: (entity: T, saveable: Indexable, diff?: Indexable) => Promise<T>;
     delete?: (entity: T) => Promise<void>;
 }

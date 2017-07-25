@@ -1,7 +1,7 @@
 import { ObjectCache } from "./object-cache";
 import { getEntityMetadata, IEntityClass, IEntity, NavigationType } from "../metadata";
 import { Expansion, Query, QueryType } from "../elements";
-import { EntityMapper } from "../entity-mapper";
+import { EntityMapper } from "../mapping";
 
 type EntityCache = ObjectCache<any, IEntity>;
 

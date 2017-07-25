@@ -6,7 +6,7 @@ export interface ITypeOf<T> extends Function {
     new (...args: any[]): T;
 }
 
-export interface IStringIndexable extends Object {
+export interface Indexable extends Object {
     [key: string]: any;
 }
 
@@ -27,3 +27,18 @@ export function combinations<T>(items: T[]): T[][] {
 
     return result;
 }
+
+/**
+ * https://stackoverflow.com/a/2117523
+ */
+export function guid(): string {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        let r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+
+        return v.toString(16);
+    });
+}
+
+export type ArrayLike<T>
+    = Array<T>
+    | ReadonlyArray<T>;

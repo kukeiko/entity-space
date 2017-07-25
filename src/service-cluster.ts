@@ -3,7 +3,7 @@ import { getEntityMetadata, IEntityClass, IEntity, Children, NavigationType } fr
 import { Path, Query, QueryType } from "./elements";
 import { QueryCache, Workspace } from "./caching";
 import { IQueryExecuter } from "./query-executer";
-import { EntityMapper } from "./entity-mapper";
+import { EntityMapper } from "./mapping";
 
 export class ServiceCluster {
     getQueryExecuter: <T>(entityType: IEntityClass<T>) => Promise<IQueryExecuter<T>> = null;

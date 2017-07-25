@@ -306,7 +306,7 @@ export module Query {
          * Returns the indexes sorted by their name.
          */
         static indexesToArray(indexes: { [key: string]: IStringable }): string[] {
-            return Object.keys(indexes).sort().map(k => `${k}:${indexes[k].toString()}`);
+            return Object.keys(indexes).sort().map(k => `${k} == ${indexes[k].toString()}`);
         }
 
         /**
@@ -314,6 +314,10 @@ export module Query {
          */
         indexesToArray(): string[] {
             return ByIndexes.indexesToArray(this.indexes);
+        }
+
+        indexesToString(): string {
+            return this.indexesToArray().join(" && ");
         }
 
         isSupersetOf(other: Query<T>): boolean {
