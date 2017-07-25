@@ -32,11 +32,11 @@ export class Workspace {
 
         let mapper = new EntityMapper();
 
-        cache.add(mapper.createObject({
+        cache.add([mapper.createObject({
             from: args.entity,
             metadata: metadata,
             expansions: expansions
-        }));
+        })]);
 
         expansions.forEach(ex => {
             let value = args.entity[ex.property.name];
@@ -133,7 +133,7 @@ export class Workspace {
             throw `can't remove item: type ${args.type} is not a known type`;
         }
 
-        cache.remove(args.item);
+        cache.remove([args.item]);
     }
 
     /**
@@ -170,7 +170,7 @@ export class Workspace {
                 break;
 
             case "key":
-                let item = cache.get(q.key);
+                let item = cache.byKey(q.key);
 
                 if (item) {
                     items.set(q.key, mapper.createEntity<T>({
@@ -182,7 +182,7 @@ export class Workspace {
                 break;
 
             case "keys":
-                cache.getMany(q.keys.slice()).forEach((v, k) => items.set(k, mapper.createEntity<T>({
+                cache.byKeys(q.keys.slice()).forEach((v, k) => items.set(k, mapper.createEntity<T>({
                     entityType: q.entityType,
                     expansions: q.expansions.slice(),
                     from: v

@@ -5,6 +5,7 @@ import { IEntity, IEntityClass, EntityMetadata, NavigationType, getEntityMetadat
 import { ObjectCache } from "./object-cache";
 
 type EntityCache = ObjectCache<any, IEntity>;
+export type EntityLike = IEntity | Indexable;
 
 // todo: refactor common body of addEntities() & addDtos()
 export class WorkspaceV2 {
@@ -22,29 +23,88 @@ export class WorkspaceV2 {
         switch (query.type) {
             case "key":
                 {
-                    let item = cache.get(query.key);
+                    let item = cache.byKey(query.key);
 
                     if (item) {
                         item = EntityMapper.entitiesToEntities([item], metadata)[0];
-                        this._hydrate([item], metadata, query.expansions);
+                        this._hydrateNavigations([item], metadata, query.expansions);
                     }
 
                     return item;
                 }
 
-            case "keys": return this._hydrate(EntityMapper.entitiesToEntities(cache.getManyAsArray(query.keys), metadata), metadata, query.expansions);
-            case "indexes": return this._hydrate(EntityMapper.entitiesToEntities(cache.byIndexesAsArray(query.indexes), metadata), metadata, query.expansions);
-            case "all": return this._hydrate(EntityMapper.entitiesToEntities(cache.allAsArray(), metadata), metadata, query.expansions);
+            case "keys": return this._hydrateNavigations(EntityMapper.entitiesToEntities(cache.byKeysAsArray(query.keys), metadata), metadata, query.expansions);
+            case "indexes": return this._hydrateNavigations(EntityMapper.entitiesToEntities(cache.byIndexesAsArray(query.indexes), metadata), metadata, query.expansions);
+            case "all": return this._hydrateNavigations(EntityMapper.entitiesToEntities(cache.allAsArray(), metadata), metadata, query.expansions);
         }
     }
 
     hydrate(entities: ArrayLike<IEntity>, expand: ArrayLike<Expansion>): ArrayLike<IEntity> {
         if (entities.length == 0) return [];
 
-        return this._hydrate(entities, getEntityMetadata(entities[0].constructor), expand);
+        return this._hydrateNavigations(entities, getEntityMetadata(entities[0].constructor), expand);
     }
 
-    private _hydrate(entities: ArrayLike<IEntity>, metadata: EntityMetadata<any>, expand: ArrayLike<Expansion>): ArrayLike<IEntity> {
+    add(items: IEntity[] | Indexable[], metadata: EntityMetadata<any>, expand?: ArrayLike<Expansion>, isDto?: boolean): void {
+        let copied = isDto
+            ? EntityMapper.dtosToEntities(items, metadata)
+            : EntityMapper.entitiesToEntities(items, metadata);
+
+        let cache = this._getEntityCache(metadata);
+        cache.add(copied);
+
+        if (!expand) return;
+
+        let length = expand.length;
+        let expansion: Expansion = null;
+        let pkName = isDto
+            ? metadata.primaryKey.alias
+            : metadata.primaryKey.name;
+
+        for (let i = 0; i < length; ++i) {
+            expansion = expand[i];
+
+            let related = this._collect(items, expansion.property as NavigationType, isDto);
+            if (related.length == 0) continue;
+
+            let nav = expansion.property as NavigationType;
+
+            if (nav.type == "array:child") {
+                let childCache = this._getEntityCache(nav.otherTypeMetadata);
+                let backRef = nav.otherTypeMetadata.getBackReference(nav);
+
+                for (let e = 0; e < items.length; ++e) {
+                    childCache.removeByIndex(backRef.keyName, items[e][pkName]);
+                }
+            }
+
+            this.add(related, expansion.property.otherTypeMetadata, expansion.expansions, isDto);
+        }
+    }
+
+    remove(items: EntityLike[], metadata: EntityMetadata<any>, expand?: ArrayLike<Expansion>, isDto?: boolean): void {
+        this._getEntityCache(metadata).remove(items);
+
+        if (!expand) return;
+
+        this._hydrateNavigations(items, metadata, expand);
+
+        let length = expand.length;
+        let expansion: Expansion = null;
+
+        for (let i = 0; i < length; ++i) {
+            expansion = expand[i];
+
+            let related = this._collect(items, expansion.property as NavigationType, isDto);
+            this.remove(related, expansion.property.otherTypeMetadata, expansion.expansions, isDto);
+        }
+    }
+
+    clear(): void {
+        this._caches.clear();
+    }
+
+    private _hydrateNavigations(entities: ArrayLike<IEntity>, metadata: EntityMetadata<any>, expand: ArrayLike<Expansion>): ArrayLike<IEntity> {
         let expansion: Expansion;
 
         for (let i = 0; i < expand.length; ++i) {
@@ -89,7 +149,7 @@ export class WorkspaceV2 {
 
         {
             let cache = this._getEntityCache(ref.otherTypeMetadata);
-            let copies = EntityMapper.entitiesToEntities(cache.getManyAsArray(Array.from(ids.values())), ref.otherTypeMetadata);
+            let copies = EntityMapper.entitiesToEntities(cache.byKeysAsArray(Array.from(ids.values())), ref.otherTypeMetadata);
             let length = copies.length;
 
             for (let i = 0; i < length; ++i) {
@@ -105,7 +165,7 @@ export class WorkspaceV2 {
             entity[prop] = related.get(entity[keyName]) || null;
         }
 
-        this._hydrate(Array.from(related.values()), getEntityMetadata(ref.otherType), expansion.expansions);
+        this._hydrateNavigations(Array.from(related.values()), getEntityMetadata(ref.otherType), expansion.expansions);
     }
 
     private _hydrateChildren(parents: ArrayLike<IEntity>, metadata: EntityMetadata<any>, expansion: Expansion): void {
@@ -135,7 +195,7 @@ export class WorkspaceV2 {
             }
         }
 
-        this._hydrate(all, otherMetadata, expansion.expansions);
+        this._hydrateNavigations(all, otherMetadata, expansion.expansions);
     }
 
     private _hydrateCollection(collectors: ArrayLike<IEntity>, metadata: EntityMetadata<any>, expansion: Expansion): void {
@@ -153,74 +213,12 @@ export class WorkspaceV2 {
 
         for (let i = 0; i < length_i; ++i) {
             collector = collectors[i];
-            let collected = EntityMapper.entitiesToEntities(cache.getManyAsArray(collector[keysName]), otherMetadata);
+            let collected = EntityMapper.entitiesToEntities(cache.byKeysAsArray(collector[keysName]), otherMetadata);
             allPerEntity.push(collected);
             collector[prop] = collected;
         }
 
-        this._hydrate([].concat(...allPerEntity), otherMetadata, expansion.expansions);
-    }
-
-    addEntities(entities: IEntity[], metadata: EntityMetadata<any>, expand?: ArrayLike<Expansion>): void {
-        let cache = this._getEntityCache(metadata);
-        let copied = EntityMapper.entitiesToEntities(entities, metadata);
-
-        cache.addMany(copied);
-        if (!expand) return;
-
-        let length = expand.length;
-        let expansion: Expansion = null;
-
-        for (let i = 0; i < length; ++i) {
-            expansion = expand[i];
-
-            let related = this._collect(entities, expansion.property as NavigationType);
-            if (related.length == 0) continue;
-
-            let nav = expansion.property as NavigationType;
-
-            if (nav.type == "array:child") {
-                let childCache = this._getEntityCache(nav.otherTypeMetadata);
-                let backRef = nav.otherTypeMetadata.getBackReference(nav);
-
-                for (let e = 0; e < entities.length; ++e) {
-                    childCache.removeByIndex(backRef.keyName, entities[e][metadata.primaryKey.name]);
-                }
-            }
-
-            this.addEntities(related, expansion.property.otherTypeMetadata, expansion.expansions);
-        }
-    }
-
-    addDtos(dtos: Indexable[], metadata: EntityMetadata<any>, expand?: ArrayLike<Expansion>): void {
-        let cache = this._getEntityCache(metadata);
-        let entities = EntityMapper.dtosToEntities(dtos, metadata);
-
-        cache.addMany(entities);
-        if (!expand) return;
-
-        let length = expand.length;
-        let expansion: Expansion = null;
-
-        for (let i = 0; i < length; ++i) {
-            expansion = expand[i];
-
-            let related = this._collect(dtos, expansion.property as NavigationType, true);
-            if (related.length == 0) continue;
-
-            let nav = expansion.property as NavigationType;
-
-            if (nav.type == "array:child") {
-                let childCache = this._getEntityCache(nav.otherTypeMetadata);
-                let backRef = nav.otherTypeMetadata.getBackReference(nav);
-
-                for (let parent of entities) {
-                    childCache.removeByIndex(backRef.keyName, parent[metadata.primaryKey.alias]);
-                }
-            }
-
-            this.addDtos(related, expansion.property.otherTypeMetadata, expansion.expansions);
-        }
+        this._hydrateNavigations([].concat(...allPerEntity), otherMetadata, expansion.expansions);
     }
 
     private _getEntityCache(metadata: EntityMetadata<any>): ObjectCache<any, any> {

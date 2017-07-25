@@ -5,9 +5,9 @@ describe("object-cache", () => {
         let foo = { id: 7, name: "bar" };
         let cache = new ObjectCache<number, any>({ getKey: v => v.id });
 
-        cache.add(foo);
+        cache.add([foo]);
 
-        expect(cache.get(7)).toBe(foo);
+        expect(cache.byKey(7)).toBe(foo);
     });
 
     it("should return a map of objects for their primary keys", () => {
@@ -16,8 +16,8 @@ describe("object-cache", () => {
         let dan = { id: 256, name: "dan" };
         let cache = new ObjectCache<number, any>({ getKey: v => v.id });
 
-        cache.addMany([khaz, mo, dan]);
-        let actual = cache.getMany([khaz.id, mo.id, dan.id]);
+        cache.add([khaz, mo, dan]);
+        let actual = cache.byKeys([khaz.id, mo.id, dan.id]);
 
         expect(actual.get(khaz.id)).toBe(khaz);
         expect(actual.get(mo.id)).toBe(mo);
@@ -27,8 +27,8 @@ describe("object-cache", () => {
     it("should not throw if it didn't find via primay key(s)", () => {
         let cache = new ObjectCache<number, any>({ getKey: v => v.id });
 
-        expect(() => cache.get(1)).not.toThrow();
-        expect(() => cache.getMany([1, 64, 1337])).not.toThrow();
+        expect(() => cache.byKey(1)).not.toThrow();
+        expect(() => cache.byKeys([1, 64, 1337])).not.toThrow();
     });
 
     it("should return a map of objects for 1 index", () => {
@@ -41,7 +41,7 @@ describe("object-cache", () => {
             indexes: { tag: v => v.tag }
         });
 
-        cache.addMany([foo, bar, notBaz]);
+        cache.add([foo, bar, notBaz]);
         let result = cache.byIndex("tag", "baz");
 
         expect(result.size).toBe(2);
@@ -59,7 +59,7 @@ describe("object-cache", () => {
             indexes: { tag: v => v.tag, scope: v => v.scope }
         });
 
-        cache.addMany([foo, bar, notBaz, bazButNotGlobal]);
+        cache.add([foo, bar, notBaz, bazButNotGlobal]);
 
         let result = cache.byIndexes({
             tag: "baz",
@@ -89,10 +89,10 @@ describe("object-cache", () => {
             indexes: { tag: v => v.tag }
         });
 
-        cache.add(foo);
+        cache.add([foo]);
         cache.clear();
 
-        expect(cache.get(foo.id)).not.toBe(foo);
+        expect(cache.byKey(foo.id)).not.toBe(foo);
         expect(cache.byIndex("tag", foo.tag).size).toBe(0);
         expect(cache.byIndex("tag", foo.tag).values().next().value).not.toBe(foo);
         expect(cache.size).toBe(0);
@@ -101,18 +101,18 @@ describe("object-cache", () => {
     it("should throw if trying to add item with a null/undefined primary key", () => {
         let cache = new ObjectCache<number, any>({ getKey: v => v.id });
 
-        expect(() => cache.add({})).toThrow();
-        expect(() => cache.add({ id: null })).toThrow();
-        expect(() => cache.add({ id: undefined })).toThrow();
+        expect(() => cache.add([{}])).toThrow();
+        expect(() => cache.add([{ id: null }])).toThrow();
+        expect(() => cache.add([{ id: undefined }])).toThrow();
     });
 
     it("should have the expected size", () => {
         let cache = new ObjectCache<number, any>({ getKey: v => v.id });
 
         expect(cache.size).toBe(0);
-        cache.add({ id: 1 });
+        cache.add([{ id: 1 }]);
         expect(cache.size).toBe(1);
-        cache.add({ id: 2 });
+        cache.add([{ id: 2 }]);
         expect(cache.size).toBe(2);
     });
 });

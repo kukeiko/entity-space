@@ -1,5 +1,5 @@
 import { Expansion, Query } from "../elements";
-import { IEntity, IEntityClass, EntityMetadata, NavigationType, Entity, ValueType, getEntityMetadata } from "../metadata";
+import { Entity, ValueType, getEntityMetadata } from "../metadata";
 
 import { Workspace } from "./workspace";
 import { WorkspaceV2 } from "./workspace-v2";
@@ -14,7 +14,7 @@ fdescribe("workspace-v2", () => {
 
         @Entity.Children({ back: "foo", other: () => Bar }) bars: Bar[] = [];
 
-        @Entity.Primitive() bazIds: number[] = [];
+        @Entity.Primitive({ valueType: ValueType.Array }) bazIds: number[] = [];
         @Entity.Collection({ keys: "bazIds", other: () => Baz }) bazs: Baz[] = [];
     }
 
@@ -47,7 +47,7 @@ fdescribe("workspace-v2", () => {
         let barMetadata = getEntityMetadata(Bar);
         let bazMetadata = getEntityMetadata(Baz);
         let foos: Foo[] = [];
-        let numRootEntities = 100;
+        let numRootEntities = 1000;
 
         for (let i = 0; i < numRootEntities; ++i) {
             let foo = new Foo({
@@ -80,66 +80,56 @@ fdescribe("workspace-v2", () => {
 
         let exp = Expansion.parse(fooMetadata.entityType, `bars/baz`);
         ws.addMany({ entities: foos, type: Foo, expansion: exp })
-        ws2.addEntities(foos, fooMetadata, exp);
+        ws2.add(foos, fooMetadata, exp);
 
-        let allImproved: number[] = [];
+        let performanceTest = () => {
+            let allImproved: number[] = [];
 
-        for (let i = 0; i < 10; ++i) {
-            let wsv_start = new Date();
-            ws.execute(new Query.All({
-                entityType: Foo,
-                expansions: `bazs,bars/baz`
-            }));
-            let wsv_end = new Date();
+            foos[0].bars = [new Bar({ id: 39812374, fooId: 0 })];
+            ws2.add([foos[0]], fooMetadata, Expansion.parse(fooMetadata.entityType, `bars/baz`));
 
-            let wsv2_start = new Date();
-            ws2.execute(new Query.All({
-                entityType: Foo,
-                expansions: `bazs,bars/baz`
-            }));
-            let wsv2_end = new Date();
+            for (let i = 0; i < 10; ++i) {
+                let wsv_start = new Date();
+                ws.execute(new Query.All({
+                    entityType: Foo,
+                    expansions: `bazs,bars/baz`
+                }));
+                let wsv_end = new Date();
+
+                let wsv2_start = new Date();
+                ws2.execute(new Query.All({
+                    entityType: Foo,
+                    expansions: `bazs,bars/baz`
+                }));
+                let wsv2_end = new Date();
 
 
-            let wsv_time = (wsv_end.getTime() - wsv_start.getTime());
-            let wsv2_time = (wsv2_end.getTime() - wsv2_start.getTime());
+                let wsv_time = (wsv_end.getTime() - wsv_start.getTime());
+                let wsv2_time = (wsv2_end.getTime() - wsv2_start.getTime());
 
-            let improved = (wsv2_time / wsv_time) * 100;
-            allImproved.push(improved);
-            console.log(`${improved.toFixed(2)}% (${wsv2_time}ms / ${wsv_time}ms)`);
+                let improved = (wsv2_time / wsv_time) * 100;
+                allImproved.push(improved);
+                console.log(`${improved.toFixed(2)}% (${wsv2_time}ms / ${wsv_time}ms)`);
+            }
+
+            let improvedAvg = allImproved.reduce((p, c) => p + c, 0) / allImproved.length;
+            console.log(`--------------------------`);
+            console.log(`${improvedAvg.toFixed(2)}%`);
+
+            console.log(ws2);
+        };
+
+        let toBeRemoved: Foo[] = [];
+
+        for (let i = 0; i < 200; i += 2) {
+            toBeRemoved.push(new Foo({ id: i }));
         }
 
-        let improvedAvg = allImproved.reduce((p, c) => p + c, 0) / allImproved.length;
-        console.log(`--------------------------`);
-        console.log(`${improvedAvg.toFixed(2)}%`);
+        let start = new Date();
+        ws2.remove(toBeRemoved, fooMetadata, exp);
+        let time = new Date().getTime() - start.getTime();
 
-
-        // let fooSample = foos[0];
-        // fooSample.bars = [];
-
-
-
-        // debugger;
-        // ws.hydrate([fooSample], Expansion.parse(Foo/*  */, `bazs,bars/baz`));
-
-        // console.log(ws["_getEntityCache"](barMetadata).get(fooSample.bars[0].id) == fooSample.bars[0]);
-
-
-        // console.log();
-
-
-        // foos[0].bars = [new Bar({ id: 39812374, fooId: 0 })];
-
-        // debugger;
-        // ws.addEntities([foos[0]], fooMetadata, Expansion.parse(fooMetadata.entityType, `bars/baz`));
-
-
-        // let barMetadata = getEntityMetadata(Bar);
-        // let dryBar = new Bar({
-        //     bazId: 0
-        // });
-
-        // debugger;
-        // ws.hydrate([dryBar], barMetadata, Expansion.parse(barMetadata.entityType, `baz`));
-        // debugger;
+        console.log(`${time}ms`);
+        console.log(ws2);
     });
 });
