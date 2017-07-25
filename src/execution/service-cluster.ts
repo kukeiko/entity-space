@@ -1,19 +1,21 @@
 import * as _ from "lodash";
-import { getEntityMetadata, IEntityClass, IEntity, Children, NavigationType } from "./metadata";
-import { Path, Query, QueryType } from "./elements";
-import { QueryCache, Workspace } from "./caching";
+import { getEntityMetadata, IEntityClass, IEntity, Children, NavigationType } from "../metadata";
+import { Path, Query, QueryType } from "../elements";
+import { QueryCache, Workspace } from "../caching";
 import { IQueryExecuter } from "./query-executer";
-import { EntityMapper } from "./mapping";
+import { EntityMapper } from "../mapping";
+import { QueryExecuterProvider } from "./query-executer.provider";
 
 export class ServiceCluster {
-    getQueryExecuter: <T>(entityType: IEntityClass<T>) => Promise<IQueryExecuter<T>> = null;
+    private _executerProvider: QueryExecuterProvider = null;
     private _executers = new Map<IEntityClass<any>, IQueryExecuter<any>>();
     private _queryCache = new QueryCache();
     private _workspace: Workspace;
     private _pendingQueries = new Map<IEntityClass<any>, { query: QueryType<any>, promise: Promise<any> }[]>();
 
-    constructor(workspace: Workspace) {
+    constructor(workspace: Workspace, executerProvider?: QueryExecuterProvider) {
         this._workspace = workspace;
+        this._executerProvider = executerProvider || null;
     }
 
     flush(args?: {
@@ -305,8 +307,8 @@ export class ServiceCluster {
         let executer = this._executers.get(entityType);
 
         if (!executer) {
-            if (this.getQueryExecuter instanceof Function) {
-                executer = await this.getQueryExecuter(entityType);
+            if (this._executerProvider) {
+                executer = await this._executerProvider.get(entityType);
                 this.register(entityType, executer);
             } else {
                 throw `no query executer for entity type ${entityType.name} registered`;
