@@ -242,6 +242,12 @@ export class ServiceCluster {
      * The query must not contain any virtuals.
      */
     private async _loadFromService<T>(query: QueryType<T>): Promise<T[]> {
+        let executer = await this._getQueryExecuter(query.entityType);
+
+        if (!executer) {
+            throw `no query executer for entity type ${query.entityType.name} registered`;
+        }
+
         let pending = this._pendingQueries.get(query.entityType);
 
         if (!pending) {
@@ -253,12 +259,6 @@ export class ServiceCluster {
 
         if (superset) {
             return superset.promise;
-        }
-
-        let executer = await this._getQueryExecuter(query.entityType);
-
-        if (!executer) {
-            throw `no query executer for entity type ${query.entityType.name} registered`;
         }
 
         let throwNotSupported = (type: string) => {
