@@ -145,11 +145,15 @@ export class ObjectCache<K, V> {
     remove(items: V[]): void {
         let length = items.length;
         let item: V = null;
+        let cached: V = null;
 
         for (let i = 0; i < length; ++i) {
             item = items[i];
+            cached = this._pkMap.get(this.getKey(item));
+            if (!cached) continue;
+
             this._pkMap.delete(this.getKey(item));
-            this._indexes.forEach(i => i.remove(item));
+            this._indexes.forEach(i => i.remove(cached));
         }
     }
 
