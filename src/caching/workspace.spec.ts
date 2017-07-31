@@ -47,7 +47,7 @@ fdescribe("workspace-v2", () => {
         let barMetadata = getEntityMetadata(Bar);
         let bazMetadata = getEntityMetadata(Baz);
         let foos: Foo[] = [];
-        let numRootEntities = 1000;
+        let numRootEntities = 50;
 
         for (let i = 0; i < numRootEntities; ++i) {
             let foo = new Foo({
@@ -85,8 +85,8 @@ fdescribe("workspace-v2", () => {
         let performanceTest = () => {
             let allImproved: number[] = [];
 
-            foos[0].bars = [new Bar({ id: 39812374, fooId: 0 })];
-            ws2.add([foos[0]], fooMetadata, Expansion.parse(fooMetadata.entityType, `bars/baz`));
+            // foos[0].bars = [new Bar({ id: 39812374, fooId: 0 })];
+            // ws2.add([foos[0]], fooMetadata, Expansion.parse(fooMetadata.entityType, `bars/baz`));
 
             for (let i = 0; i < 10; ++i) {
                 let wsv_start = new Date();
@@ -103,13 +103,19 @@ fdescribe("workspace-v2", () => {
                 }));
                 let wsv2_end = new Date();
 
-
                 let wsv_time = (wsv_end.getTime() - wsv_start.getTime());
                 let wsv2_time = (wsv2_end.getTime() - wsv2_start.getTime());
 
                 let improved = (wsv2_time / wsv_time) * 100;
                 allImproved.push(improved);
                 console.log(`${improved.toFixed(2)}% (${wsv2_time}ms / ${wsv_time}ms)`);
+
+                if (i == 9) {
+                    setTimeout(() => console.log(ws2.execute(new Query.All({
+                        entityType: Foo,
+                        expansions: `bazs,bars/baz`
+                    }))));
+                }
             }
 
             let improvedAvg = allImproved.reduce((p, c) => p + c, 0) / allImproved.length;
@@ -119,17 +125,19 @@ fdescribe("workspace-v2", () => {
             console.log(ws2);
         };
 
-        let toBeRemoved: Foo[] = [];
+        performanceTest();
 
-        for (let i = 0; i < 200; i += 2) {
-            toBeRemoved.push(new Foo({ id: i }));
-        }
+        // let toBeRemoved: Foo[] = [];
 
-        let start = new Date();
-        ws2.remove(toBeRemoved, fooMetadata, exp);
-        let time = new Date().getTime() - start.getTime();
+        // for (let i = 0; i < 200; i += 2) {
+        //     toBeRemoved.push(new Foo({ id: i }));
+        // }
 
-        console.log(`${time}ms`);
-        console.log(ws2);
+        // let start = new Date();
+        // ws2.remove(toBeRemoved, fooMetadata, exp);
+        // let time = new Date().getTime() - start.getTime();
+
+        // console.log(`${time}ms`);
+        // console.log(ws2);
     });
 });

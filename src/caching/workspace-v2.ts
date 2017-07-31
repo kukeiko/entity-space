@@ -20,23 +20,21 @@ export class WorkspaceV2 {
         let metadata = getEntityMetadata(query.entityType);
         let cache = this._getEntityCache(metadata);
 
+        let cached: Partial<T>[] = [];
+
         switch (query.type) {
-            case "key":
-                {
-                    let item = cache.byKey(query.key);
-
-                    if (item) {
-                        item = EntityMapper.entitiesToEntities([item], metadata)[0];
-                        this._hydrateNavigations([item], metadata, query.expansions);
-                    }
-
-                    return item;
-                }
-
-            case "keys": return this._hydrateNavigations(EntityMapper.entitiesToEntities(cache.byKeysAsArray(query.keys), metadata), metadata, query.expansions);
-            case "indexes": return this._hydrateNavigations(EntityMapper.entitiesToEntities(cache.byIndexesAsArray(query.indexes), metadata), metadata, query.expansions);
-            case "all": return this._hydrateNavigations(EntityMapper.entitiesToEntities(cache.allAsArray(), metadata), metadata, query.expansions);
+            case "key": cached = [cache.byKey(query.key)].filter(x => x); break;
+            case "keys": cached = cache.byKeysAsArray(query.keys); break;
+            case "indexes": cached = cache.byIndexesAsArray(query.indexes); break;
+            case "all": cached = cache.allAsArray(); break;
         }
+
+        let entities = EntityMapper.copyPrimitives({
+            from: cached,
+            metadata: metadata
+        });
+
+        return this._hydrateNavigations(entities, metadata, query.expansions);
     }
 
     hydrate(entities: ArrayLike<IEntity>, expand: ArrayLike<Expansion>): ArrayLike<IEntity> {
@@ -47,8 +45,8 @@ export class WorkspaceV2 {
 
     add(items: IEntity[] | Indexable[], metadata: EntityMetadata<any>, expand?: ArrayLike<Expansion>, isDto?: boolean): void {
         let copied = isDto
-            ? EntityMapper.dtosToEntities(items, metadata)
-            : EntityMapper.entitiesToEntities(items, metadata);
+            ? EntityMapper.copyPrimitives({ from: items, metadata: metadata, fromDto: true })
+            : EntityMapper.copyPrimitives({ from: items, metadata: metadata });
 
         let cache = this._getEntityCache(metadata);
         cache.add(copied);
@@ -149,7 +147,7 @@ export class WorkspaceV2 {
 
         {
             let cache = this._getEntityCache(ref.otherTypeMetadata);
-            let copies = EntityMapper.entitiesToEntities(cache.byKeysAsArray(Array.from(ids.values())), ref.otherTypeMetadata);
+            let copies = EntityMapper.copyPrimitives({ from: cache.byKeysAsArray(Array.from(ids.values())), metadata: ref.otherTypeMetadata });
             let length = copies.length;
 
             for (let i = 0; i < length; ++i) {
@@ -185,7 +183,7 @@ export class WorkspaceV2 {
         for (let i = 0; i < length_i; ++i) {
             parent = parents[i];
 
-            let children = EntityMapper.entitiesToEntities(cache.byIndexAsArray(backRefKeyName, parent[pkName]), otherMetadata);
+            let children = EntityMapper.copyPrimitives({ from: cache.byIndexAsArray(backRefKeyName, parent[pkName]), metadata: otherMetadata });
             parent[childrenPropName] = children;
             let length_e = children.length;
 
@@ -213,7 +211,7 @@ export class WorkspaceV2 {
 
         for (let i = 0; i < length_i; ++i) {
             collector = collectors[i];
-            let collected = EntityMapper.entitiesToEntities(cache.byKeysAsArray(collector[keysName]), otherMetadata);
+            let collected = EntityMapper.copyPrimitives({ from: cache.byKeysAsArray(collector[keysName]), metadata: otherMetadata });
             allPerEntity.push(collected);
             collector[prop] = collected;
         }

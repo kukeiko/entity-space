@@ -1,53 +1,61 @@
 import * as _ from "lodash";
-import { Indexable } from "../util";
+import { Indexable, ITypeOf } from "../util";
 import { Expansion } from "../elements";
 import {
     getEntityMetadata, EntityMetadata, IEntity, IEntityClass,
-    Primitive, Children, Collection, NavigationType, ValueType, Reference
+    Primitive, Children, NavigationType, ValueType, Reference
 } from "../metadata";
 import { MappingCompiler, CopyPrimitivesFunction } from "./mapping-compiler";
 
 export class EntityMapper {
     private static _compiler = new MappingCompiler();
     private static _dtoToEntity = new Map<IEntityClass<any>, CopyPrimitivesFunction>();
+    private static _dtoToDto = new Map<IEntityClass<any>, CopyPrimitivesFunction>();
     private static _entityToEntity = new Map<IEntityClass<any>, CopyPrimitivesFunction>();
+    private static _entityToDto = new Map<IEntityClass<any>, CopyPrimitivesFunction>();
 
-    static dtosToEntities<T extends IEntity>(dtos: Indexable[], metadata: EntityMetadata<T>): T[] {
-        let type = metadata.entityType;
-        let fn = this._dtoToEntity.get(type);
+    static copyPrimitives<T>(args: {
+        from: Indexable[];
+        fromDto?: boolean;
+        to?: Partial<T>[];
+        toDto?: boolean;
+        metadata: EntityMetadata<T>;
+        type?: ITypeOf<any>;
+    }): Partial<T>[] {
+        let to = args.to;
+        let type = args.metadata.entityType;
+
+        if (!to) {
+            let instantiatedType = args.type || type;
+            to = args.from.map(() => new instantiatedType());
+        }
+
+        let map: Map<IEntityClass<any>, CopyPrimitivesFunction> = null;
+
+        if (args.fromDto && args.toDto) {
+            map = this._dtoToDto;
+        } else if (args.fromDto && !args.toDto) {
+            map = this._dtoToEntity;
+        } else if (!args.fromDto && args.toDto) {
+            map = this._entityToDto;
+        } else {
+            map = this._entityToEntity;
+        }
+
+        let fn = map.get(args.metadata.entityType);
 
         if (!fn) {
             fn = this._compiler.compileCopyPrimitives({
-                fromDto: true,
-                metadata: metadata,
+                fromDto: args.fromDto,
+                toDto: args.toDto,
+                metadata: args.metadata,
                 predicate: p => !p.computed
             });
 
-            this._dtoToEntity.set(type, fn);
+            map.set(type, fn);
         }
 
-        let to: T[] = dtos.map(() => new type());
-        fn(dtos, to);
-
-        return to;
-    }
-
-    // todo: maybe rename, since it doesn't really require the items in the input array to be entities
-    static entitiesToEntities<T extends IEntity>(entities: T[], metadata: EntityMetadata<T>): T[] {
-        let type = metadata.entityType;
-        let fn = this._entityToEntity.get(type);
-
-        if (!fn) {
-            fn = this._compiler.compileCopyPrimitives({
-                metadata: metadata,
-                predicate: p => !p.computed
-            });
-
-            this._entityToEntity.set(type, fn);
-        }
-
-        let to: T[] = entities.map(() => new type());
-        fn(entities, to);
+        fn(args.from, to);
 
         return to;
     }
