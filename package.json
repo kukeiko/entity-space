@@ -1,6 +1,6 @@
 {
   "name": "entity-space",
-  "version": "0.5.4",
+  "version": "0.6.0-a",
   "description": "Client-side data caching library providing simple querying",
   "author": "kukeiko",
   "license": "MIT",

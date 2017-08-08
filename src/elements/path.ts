@@ -19,7 +19,7 @@ export class Path {
         return this.next == null ? this.property.name : `${this.property.name}/${this.next.toString()}`;
     }
 
-    toAliasedString(): string {
-        return this.next == null ? this.property.alias : `${this.property.alias}/${this.next.toAliasedString()}`;
+    toDtoString(): string {
+        return this.next == null ? this.property.dtoName : `${this.property.dtoName}/${this.next.toDtoString()}`;
     }
 }

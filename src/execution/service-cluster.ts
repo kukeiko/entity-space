@@ -1,145 +1,242 @@
 import * as _ from "lodash";
-import { getEntityMetadata, IEntityClass, IEntity, Children, NavigationType } from "../metadata";
-import { Path, Query, QueryType } from "../elements";
+import { ArrayLike, ToStringable, StringIndexable } from "../util";
+import { getEntityMetadata, AnyEntityType, EntityType, IEntity, Children, NavigationType, ValueType } from "../metadata";
+import { Path, Query, QueryType, Expansion, Saveable, Saveables } from "../elements";
 import { QueryCache, Workspace } from "../caching";
-import { EntityMapper } from "../entity-mapper";
-import { IQueryExecuter } from "./query-executer";
-import { QueryExecuterProvider } from "./query-executer.provider";
+import { IService } from "./service.type";
+import { EntityMapper } from "../mapping";
+import { ServiceProvider } from "./service.provider";
+
+export type IndexCriteria = { [key: string]: ToStringable };
 
 export class ServiceCluster {
-    private _executerProvider: QueryExecuterProvider = null;
-    private _executers = new Map<IEntityClass<any>, IQueryExecuter<any>>();
+    private _serviceProvider: ServiceProvider = null;
+    private _services = new Map<EntityType<any>, IService>();
     private _queryCache = new QueryCache();
-    private _workspace: Workspace;
-    private _pendingQueries = new Map<IEntityClass<any>, { query: QueryType<any>, promise: Promise<any> }[]>();
+    private _workspace = new Workspace();
+    private _pendingQueries = new Map<EntityType<any>, { query: QueryType<any>, promise: Promise<any> }[]>();
 
-    constructor(workspace: Workspace, executerProvider?: QueryExecuterProvider) {
-        this._workspace = workspace;
-        this._executerProvider = executerProvider || null;
+    constructor(serviceProvider?: ServiceProvider) {
+        this._serviceProvider = serviceProvider || null;
+    }
+
+    loadAll<T>(type: EntityType<T>, expand?: string | ArrayLike<Expansion>): Promise<T[]>;
+    loadAll<T, K>(type: EntityType<T>, expand: string | ArrayLike<Expansion>, asMap: true): Promise<Map<K, T>>;
+    loadAll<T, K>(...args: any[]): Promise<any> {
+        let type = args[0] as EntityType<T>;
+        let expand = (args[1] || []) as string | ArrayLike<Expansion>;
+        let asMap: true = args[2] != null ? true : null;
+
+        return this.executeQuery(new Query.All({
+            entityType: type,
+            expansions: expand
+        }), asMap);
+    }
+
+    loadByKey<T>(type: EntityType<T>, key: any, expand?: string | ArrayLike<Expansion>): Promise<T> {
+        return this.executeQuery(new Query.ByKey({
+            entityType: type,
+            key: key,
+            expansions: expand
+        })).then(items => {
+            return items[0] || null;
+        });
+    }
+
+    loadByKeys<T>(type: EntityType<T>, keys: any[], expand?: string | ArrayLike<Expansion>): Promise<T[]>;
+    loadByKeys<T, K>(type: EntityType<T>, keys: K[], expand: string | ArrayLike<Expansion>, asMap?: true): Promise<Map<K, T>>;
+    loadByKeys<T, K>(...args: any[]): Promise<T[] | Map<K, T>> {
+        let type = args[0] as EntityType<T>;
+        let keys = args[1] as any[];
+        let expand = (args[2] || []) as string | ArrayLike<Expansion>;
+        let asMap: true = args[3] != null ? true : null;
+
+        return this.executeQuery(new Query.ByKeys({
+            entityType: type,
+            expansions: expand,
+            keys: keys
+        }), asMap);
+    }
+
+    loadByIndexes<T>(type: EntityType<T>, indexes: IndexCriteria, expand?: string | ArrayLike<Expansion>): Promise<T[]>;
+    loadByIndexes<T, K>(type: EntityType<T>, indexes: IndexCriteria, expand: string | ArrayLike<Expansion>, asMap?: true): Promise<Map<K, T>>;
+    loadByIndexes<T, K>(...args: any[]): Promise<T[] | Map<K, T>> {
+        let type = args[0] as EntityType<T>;
+        let indexes = args[1] as IndexCriteria;
+        let expand = (args[2] || []) as string | ArrayLike<Expansion>;
+        let asMap: true = args[3] != null ? true : null;
+
+        return this.executeQuery(new Query.ByIndexes({
+            entityType: type,
+            expansions: expand,
+            indexes: indexes
+        }), asMap);
+    }
+
+    async saveOne<T extends IEntity>(entity: T): Promise<T> {
+        let saved = await this.saveMany([entity]);
+
+        return saved[0];
+    }
+
+    // todo: refine/refactor
+    // todo: consider something like Promise.all<T1, T2, T3...> to handle multiple entity types
+    async saveMany<T extends IEntity>(entities: T[]): Promise<T[]> {
+        if (entities.length == 0) return;
+
+        let type = entities[0].constructor as EntityType<T>;
+        let metadata = getEntityMetadata(type);
+        let service = await this._getService(type);
+
+        let saveablesArgs = new Map<AnyEntityType, Saveable<any>[]>();
+        let saveables: Saveable<any>[] = [];
+
+        saveablesArgs.set(type, saveables);
+
+        let entityCopies = EntityMapper.copyPrimitives({
+            from: entities,
+            metadata: metadata
+        });
+
+        EntityMapper.updateReferenceKeys({
+            from: entities,
+            to: entityCopies,
+            metadata: metadata
+        });
+
+        let dtoCopies = EntityMapper.copyPrimitives({
+            from: entityCopies,
+            toDto: true,
+            metadata: metadata
+        });
+
+        let dtoSaveables = EntityMapper.copySaveables({
+            from: entityCopies,
+            toDto: true,
+            metadata: metadata,
+        });
+
+        let entitiesPerKey = new Map<any, IEntity>();
+
+        for (let i = 0; i < entities.length; ++i) {
+            let key = entities[i][metadata.primaryKey.name];
+            if (key == null) continue;
+            entitiesPerKey.set(key, entities[i]);
+        }
+
+        let cached = this._workspace.execute(new Query.ByKeys({
+            entityType: type,
+            keys: Array.from(entitiesPerKey.keys())
+        }), true);
+
+        for (let i = 0; i < entities.length; ++i) {
+            let entity = entities[i];
+            let dtoPatch: StringIndexable = {};
+            let key = entity[metadata.primaryKey.name];
+
+            let cachedEntity = cached.get(key);
+
+            if (cachedEntity) {
+                let [dtoCachedSaveable] = EntityMapper.copySaveables({
+                    from: [cachedEntity],
+                    toDto: true,
+                    metadata: metadata
+                });
+
+                Object.keys(dtoCachedSaveable).forEach(k => {
+                    let property = metadata.getPrimitive(k);
+                    let newValue = dtoCachedSaveable[k];
+                    let oldValue = dtoSaveables[i][k];
+
+                    // note: not sure why, but _.isEqualWith + _.isMatch fails if an array is not wrapped in an object
+                    if (newValue instanceof Array || oldValue instanceof Array) {
+                        newValue = { workaround: newValue };
+                        oldValue = { workaround: oldValue };
+                    }
+
+                    if (!_.isEqualWith(newValue, oldValue, _.isMatch) || !_.isEqualWith(oldValue, newValue, _.isMatch)) {
+                        dtoPatch[k] = dtoSaveables[i][k];
+                    }
+                });
+
+                if (Object.keys(dtoPatch).length == 0) {
+                    continue;
+                }
+            } else {
+                [dtoPatch] = EntityMapper.copyPrimitives({
+                    from: [entityCopies[i]],
+                    metadata: metadata
+                });
+            }
+
+            saveables.push({
+                isNew: key == null,
+                origin: entity,
+                dto: {
+                    full: dtoCopies[i],
+                    patch: dtoPatch,
+                    saveable: dtoSaveables[i]
+                }
+            });
+        }
+
+        let saved = (await service.save(new Saveables(saveablesArgs))).get(type);
+        this._workspace.add(saved, metadata, null, true);
+
+        let pkName = metadata.primaryKey.name;
+        let pkDtoName = metadata.primaryKey.dtoName;
+        let keys = new Set<any>();
+        entities.forEach(e => e[pkName] && keys.add(e[pkName]));
+        saved.forEach(s => keys.add(s[pkDtoName]));
+
+        return this._workspace.execute(new Query.ByKeys({
+            entityType: type,
+            keys: Array.from(keys)
+        }));
+    }
+
+    executeQuery<T extends IEntity>(query: QueryType<T>): Promise<T[]>;
+    executeQuery<T extends IEntity>(query: QueryType<T>, asMap: true): Promise<Map<any, T>>;
+    executeQuery<T extends IEntity>(...args: any[]): Promise<T[] | Map<any, T>> {
+        let query = args[0] as QueryType<T>;
+        let asMap: true = args[1] != null ? true : null;
+
+        return this._loadIntoWorkspace(query).then(() => {
+            return this._workspace.execute(query, asMap);
+        });
     }
 
     flush(args?: {
-        entityType?: IEntityClass<any>;
+        entityType?: EntityType<any>;
     }): void {
         args = args || {};
 
         if (args.entityType) {
-            this._workspace.clear({
-                entityType: args.entityType
-            });
-
-            this._queryCache.clear({
-                entityType: args.entityType
-            });
+            this._workspace.clear(args.entityType);
+            this._queryCache.clear(args.entityType);
         } else {
             this._workspace.clear();
             this._queryCache.clear();
         }
     }
 
-    register<T>(entityType: IEntityClass<T>, executer: IQueryExecuter<T>): void {
-        this._executers.set(entityType, executer);
+    register<T>(entityType: EntityType<T>, executer: IService): void {
+        this._services.set(entityType, executer);
     }
 
-    async save<T extends IEntity>(args: {
-        entity: T;
-    }): Promise<T> {
-        let mapper = new EntityMapper();
-        let entityType = args.entity.constructor as IEntityClass<any>;
-        let metadata = getEntityMetadata(entityType);
-        let executer = await this._getQueryExecuter(entityType);
-        let toDto = true; // todo: make configurable
+    // todo: clean up children @ workspace
+    async delete(entities: IEntity[]): Promise<void> {
+        if (!entities || entities.length == 0) return;
+
+        let entityType = entities[0].constructor as EntityType<any>;
+        let executer = await this._getService(entityType);
 
         if (!executer) {
-            throw `no query executer for entity type ${entityType.name} registered`;
+            throw `no service for entity type ${entityType.name} registered`;
         }
 
-        let key = args.entity[metadata.primaryKey.name];
-
-        // todo: make configurable
-        mapper.updateReferenceKeys({
-            item: args.entity,
-            metadata: metadata
-        });
-
-        let saveable = mapper.createSaveable({
-            from: args.entity,
-            metadata: metadata,
-            toDto: toDto
-        });
-
-        let diff: { [key: string]: any } = null;
-
-        if (key != null) {
-            diff = {};
-
-            let cached = (await this.execute(new Query.ByKey({
-                entityType: entityType,
-                key: key
-            }))).get(key);
-
-            let cachedSaveable = mapper.createSaveable({
-                from: cached,
-                metadata: metadata,
-                toDto: toDto
-            });
-
-            metadata.primitives.forEach(p => {
-                if (!p.saveable) return;
-                let propName = p.getName(toDto);
-
-                if (!_.isEqual(saveable[propName], cachedSaveable[propName])) {
-                    diff[propName] = saveable[propName];
-                }
-            });
-
-            if (Object.keys(diff).length == 0) {
-                return args.entity;
-            }
-        }
-
-        let saved = await executer.save(args.entity, saveable, diff || null);
-
-        this._workspace.add({
-            entity: saved,
-            type: entityType
-        });
-
-        this._queryCache.merge(new Query.ByKey({
-            entityType: entityType,
-            key: key
-        }));
-
-        key = saved[metadata.primaryKey.name];
-
-        return (await this.execute(new Query.ByKey({
-            entityType: entityType,
-            key: key
-        }))).get(key) || null;
-    }
-
-    async delete(args: {
-        entity: IEntity;
-    }): Promise<void> {
-        let entityType = args.entity.constructor as IEntityClass<any>;
-        let executer = await this._getQueryExecuter(entityType);
-
-        if (!executer) {
-            throw `no query executer for entity type ${entityType.name} registered`;
-        }
-
-        await executer.delete(args.entity);
-
-        this._workspace.remove({
-            item: args.entity,
-            type: entityType
-        });
-    }
-
-    async execute<T extends IEntity>(query: QueryType<T>): Promise<Map<any, T>> {
-        await this._loadIntoWorkspace(query);
-
-        return await this._workspace.execute(query);
+        await executer.delete(entities);
+        this._workspace.remove(entities, getEntityMetadata(entityType));
     }
 
     /**
@@ -156,12 +253,7 @@ export class ServiceCluster {
         reduced.forEach(rq => {
             let promise = this._loadFromService(rq)
                 .then(entities => {
-                    this._workspace.addMany({
-                        entities: entities,
-                        type: rq.entityType,
-                        expansion: rq.expansions
-                    });
-
+                    this._workspace.add(entities, getEntityMetadata(query.entityType), rq.expansions, true);
                     this._queryCache.merge(rq, entities);
                 });
 
@@ -237,11 +329,17 @@ export class ServiceCluster {
     }
 
     /**
-     * Load entities from a service by looking up the query executer associated with the entity type of the query.
+     * Load entities from a service by looking up the service associated with the entity type of the query.
      *
      * The query must not contain any virtuals.
      */
     private async _loadFromService<T>(query: QueryType<T>): Promise<T[]> {
+        let executer = await this._getService(query.entityType);
+
+        if (!executer) {
+            throw `no service for entity type ${query.entityType.name} registered`;
+        }
+
         let pending = this._pendingQueries.get(query.entityType);
 
         if (!pending) {
@@ -253,12 +351,6 @@ export class ServiceCluster {
 
         if (superset) {
             return superset.promise;
-        }
-
-        let executer = await this._getQueryExecuter(query.entityType);
-
-        if (!executer) {
-            throw `no query executer for entity type ${query.entityType.name} registered`;
         }
 
         let throwNotSupported = (type: string) => {
@@ -303,22 +395,22 @@ export class ServiceCluster {
         return promise.then(x => x.filter(y => y));
     }
 
-    private async _getQueryExecuter<T extends IEntity>(entityType: IEntityClass<T>): Promise<IQueryExecuter<T>> {
-        let executer = this._executers.get(entityType);
+    private async _getService<T extends IEntity>(entityType: EntityType<T>): Promise<IService> {
+        let service = this._services.get(entityType);
 
-        if (!executer) {
-            if (this._executerProvider) {
-                executer = await this._executerProvider.get(entityType);
-                this.register(entityType, executer);
+        if (!service) {
+            if (this._serviceProvider) {
+                service = await this._serviceProvider.get(entityType);
+                this.register(entityType, service);
             } else {
-                throw `no query executer for entity type ${entityType.name} registered`;
+                throw `no service for entity type ${entityType.name} registered`;
             }
         }
 
-        return executer;
+        return service;
     }
 
-    private _crawl(entities: Map<any, any>, path: Path): any[] {
+    private _crawl(entities: any[], path: Path): any[] {
         let items = Array.from(entities.values());
 
         let next = path;

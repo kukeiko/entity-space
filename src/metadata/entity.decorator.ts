@@ -1,4 +1,4 @@
-import { IEntityClass, IEntity } from "./entity-class";
+import { EntityType, IEntity } from "./entity.type";
 import { EntityMetadata } from "./entity-metadata";
 import { Children, Collection, Reference } from "./navigation";
 import { Primitive } from "./primitive";
@@ -6,11 +6,11 @@ import { Primitive } from "./primitive";
 const METADATA_KEY = "entity-space:entity-metadata";
 const METADATA_ARGS_KEY = "entity-space:entity-metadata:ctor-args";
 
-let nameToTypeMap = new Map<string, IEntityClass<any>>();
+let nameToTypeMap = new Map<string, EntityType<any>>();
 
-function getOrCreateMetadataArgs(type: any): Partial<EntityMetadata.ICtorArgs> {
+function getOrCreateMetadataArgs(type: any): Partial<EntityMetadata.CtorArgs> {
     if (!Reflect.hasMetadata(METADATA_ARGS_KEY, type)) {
-        let args: Partial<EntityMetadata.ICtorArgs> = {
+        let args: Partial<EntityMetadata.CtorArgs> = {
             children: [],
             collections: [],
             primitives: [],
@@ -32,8 +32,8 @@ function getOrCreateMetadataArgs(type: any): Partial<EntityMetadata.ICtorArgs> {
  *
  * Each entity type must have a primary key defined, and names/aliases must be unique across all properties.
  */
-export function Entity(args?: Partial<EntityMetadata.ICtorArgs>) {
-    return (type: IEntityClass<any>) => {
+export function Entity(args?: Partial<EntityMetadata.CtorArgs>) {
+    return (type: EntityType<any>) => {
         let existing = getOrCreateMetadataArgs(type);
         existing.name = (args || {}).name || type.name;
         nameToTypeMap.set(existing.name.toLocaleLowerCase(), type);
@@ -48,7 +48,7 @@ export function Entity(args?: Partial<EntityMetadata.ICtorArgs>) {
     };
 }
 
-export function getEntityMetadata<T extends IEntity>(type: string | IEntityClass<T>): EntityMetadata<T> {
+export function getEntityMetadata<T extends IEntity>(type: string | EntityType<T> | Function): EntityMetadata<T> {
     if (typeof (type) == "string") {
         type = type.toLocaleLowerCase();
 
@@ -65,14 +65,14 @@ export function getEntityMetadata<T extends IEntity>(type: string | IEntityClass
         }
 
         let args = Reflect.getMetadata(METADATA_ARGS_KEY, type);
-        let metadata = new EntityMetadata(type, args);
+        let metadata = new EntityMetadata(type as EntityType<T>, args);
         Reflect.defineMetadata(METADATA_KEY, metadata, type);
     }
 
     return Reflect.getMetadata(METADATA_KEY, type);
 }
 
-export function isEntity(type: string | IEntityClass<any>): boolean {
+export function isEntity(type: string | EntityType<any>): boolean {
     if (typeof (type) == "string") {
         type = type.toLocaleLowerCase();
 
@@ -90,10 +90,10 @@ export function isEntity(type: string | IEntityClass<any>): boolean {
 }
 
 export module Entity {
-    export function PrimaryKey(args?: Partial<Primitive.ICtorArgs>) {
+    export function PrimaryKey(args?: Partial<Primitive.CtorArgs>) {
         return <T>(type: Object, key: string, descriptor?: TypedPropertyDescriptor<T>) => {
             args = args || {};
-            let defaults = <Primitive.ICtorArgs>{ name: key };
+            let defaults = <Primitive.CtorArgs>{ name: key };
 
             if (descriptor && !descriptor.set) {
                 args.computed = true;
@@ -103,10 +103,10 @@ export module Entity {
         };
     }
 
-    export function Primitive(args?: Partial<Primitive.ICtorArgs>) {
+    export function Primitive(args?: Partial<Primitive.CtorArgs>) {
         return <T>(type: Object, key: string, descriptor?: TypedPropertyDescriptor<T>) => {
             args = args || {};
-            let defaults = <Primitive.ICtorArgs>{ name: key };
+            let defaults = <Primitive.CtorArgs>{ name: key };
 
             if (descriptor && !descriptor.set) {
                 args.computed = true;
@@ -116,7 +116,7 @@ export module Entity {
         };
     }
 
-    export function ReferenceKey(args?: Partial<Primitive.ICtorArgs>) {
+    export function ReferenceKey(args?: Partial<Primitive.CtorArgs>) {
         return <T>(type: Object, key: string, descriptor?: TypedPropertyDescriptor<T>) => {
             args = args || {};
             args.index = true;
@@ -130,45 +130,45 @@ export module Entity {
     }
 
     export function Reference(args: {
-        alias?: string;
+        dtoName?: string;
         key: string;
         name?: string;
-        other: () => IEntityClass<any>;
+        other: () => EntityType<any>;
         saveable?: boolean;
         virtual?: boolean;
     }) {
         return (type: Object, key: string) => {
-            let defaults = <Reference.ICtorArgs>{ name: key };
+            let defaults = <Reference.CtorArgs>{ name: key };
 
             getOrCreateMetadataArgs(type.constructor).references.push({ ...defaults, ...args });
         };
     }
 
     export function Children(args: {
-        alias?: string;
+        dtoName?: string;
         back: string;
         name?: string;
-        other: () => IEntityClass<any>;
+        other: () => EntityType<any>;
         saveable?: boolean;
         virtual?: boolean;
     }) {
         return (type: Object, key: string) => {
-            let defaults = <Children.ICtorArgs>{ name: key };
+            let defaults = <Children.CtorArgs>{ name: key };
 
             getOrCreateMetadataArgs(type.constructor).children.push({ ...defaults, ...args });
         };
     }
 
     export function Collection(args: {
-        alias?: string;
+        dtoName?: string;
         keys: string;
         name?: string;
-        other: () => IEntityClass<any>;
+        other: () => EntityType<any>;
         saveable?: boolean;
         virtual?: boolean;
     }) {
         return (type: Object, key: string) => {
-            let defaults = <Collection.ICtorArgs>{ name: key };
+            let defaults = <Collection.CtorArgs>{ name: key };
 
             getOrCreateMetadataArgs(type.constructor).collections.push({ ...defaults, ...args });
         };

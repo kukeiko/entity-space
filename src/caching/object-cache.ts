@@ -1,8 +1,11 @@
+import { ArrayLike, ToStringable } from "../util";
+
 /**
  * Store and access objects via primary key & indexes. The ObjectCache is basically a Map on steroids
  * that is used to cache entities of a single type and retrieve them by their primary key or
  * a combination of indexes.
  */
+// todo: optimize via kill forEach where possible + getKey() => keyName
 export class ObjectCache<K, V> {
     readonly getKey: (item: V) => K;
     private _pkMap = new Map<K, V>();
@@ -27,35 +30,65 @@ export class ObjectCache<K, V> {
         }
     }
 
-    get(key: K): V {
+    all(into?: Map<K, V>): Map<K, V> {
+        into = into || new Map<K, V>();
+        this._pkMap.forEach((v, k) => into.set(k, v));
+
+        return into;
+    }
+
+    allAsArray(into?: V[]): V[] {
+        into = into || [];
+        this._pkMap.forEach(v => into.push(v));
+
+        return into;
+    }
+
+    byKey(key: K): V {
         return this._pkMap.get(key) || null;
     }
 
-    getMany(keys: K[]): Map<K, V> {
-        let map = new Map<K, V>();
-        keys.forEach(k => {
-            let v = this.get(k);
+    byKeys(keys: ArrayLike<K>, into?: Map<K, V>): Map<K, V> {
+        let map = into || new Map<K, V>();
+        let k: K;
+
+        for (let i = 0; i < keys.length; ++i) {
+            k = keys[i];
+            let v = this.byKey(k);
             if (v != null) map.set(k, v);
-        });
+        }
 
         return map;
     }
 
-    all(): Map<K, V> {
-        let map = new Map<K, V>();
-        this._pkMap.forEach((v, k) => map.set(k, v));
+    byKeysAsArray(keys: ArrayLike<K>): V[] {
+        let k: K;
+        let items: V[] = [];
 
-        return map;
+        for (let i = 0; i < keys.length; ++i) {
+            k = keys[i];
+            let v = this.byKey(k);
+            if (v != null) items.push(v);
+        }
+
+        return items;
     }
 
     byIndex(index: string, value: any): Map<K, V> {
+        let idx = this._indexes.get(index);
+        if (idx == null) throw `index ${index} doesn't exist`;
+
+        return idx.get(value);
+    }
+
+    byIndexAsArray(index: string, value: any): V[] {
         let ix = this._indexes.get(index);
         if (ix == null) throw `index ${index} doesn't exist`;
 
-        return ix.get(value);
+        return ix.getAsArray(value);
     }
 
-    byIndexes(indexes: { [key: string]: Object }): Map<K, V> {
+    byIndexes(indexes: { [key: string]: ToStringable }): Map<K, V> {
         let indexArray = new Array<string>();
         let items = new Map<K, V>();
         let itemsPerIndex = new Map<string, Map<K, V>>();
@@ -65,6 +98,7 @@ export class ObjectCache<K, V> {
             indexArray.push(key);
         }
 
+        // todo: i think amount of loops can be drastically reduced by deleting non-matches during iteration
         itemsPerIndex.forEach((map, index) => {
             let otherIndexes = indexArray.filter(i => i != index);
 
@@ -78,39 +112,49 @@ export class ObjectCache<K, V> {
         return items;
     }
 
-    removeByIndex(index: string, value: any): void {
+    byIndexesAsArray(indexes: { [key: string]: ToStringable }): V[] {
+        return Array.from(this.byIndexes(indexes).values());
+    }
+
+    add(items: V[]): void {
+        let length = items.length;
+        let item: V = null;
+
+        for (let i = 0; i < length; ++i) {
+            item = items[i];
+            if (!item) continue;
+
+            let key = this.getKey(item);
+            if (key == null) throw `can't add item to cache with undefined/null key: ${JSON.stringify(item)}`;
+
+            let existing = this._pkMap.get(key);
+
+            this._pkMap.set(key, item);
+            this._indexes.forEach(i => i.update(item, existing));
+        }
+    }
+
+    removeByIndex(index: string, value: ToStringable): void {
         let ix = this._indexes.get(index);
         if (ix == null) throw `index ${index} doesn't exist`;
 
+        ix.get(value).forEach(x => this._pkMap.delete(this.getKey(x)));
         ix.clear(value);
     }
 
-    remove(item: V): void {
-        this._pkMap.delete(this.getKey(item));
-        this._indexes.forEach(i => i.remove(item));
-    }
+    remove(items: V[]): void {
+        let length = items.length;
+        let item: V = null;
+        let cached: V = null;
 
-    add(item: V): V {
-        let key = this.getKey(item);
-        if (key == null) throw `can't add item to cache with undefined/null key: ${JSON.stringify(item)}`;
+        for (let i = 0; i < length; ++i) {
+            item = items[i];
+            cached = this._pkMap.get(this.getKey(item));
+            if (!cached) continue;
 
-        let existing = this._pkMap.get(key);
-
-        this._pkMap.set(key, item);
-        this._indexes.forEach(i => i.update(item, existing));
-
-        return item;
-    }
-
-    addMany(items: V[]): Map<K, V> {
-        let map = new Map<K, V>();
-
-        items.forEach(i => {
-            this.add(i);
-            map.set(this.getKey(i), i);
-        });
-
-        return map;
+            this._pkMap.delete(this.getKey(item));
+            this._indexes.forEach(i => i.remove(cached));
+        }
     }
 
     clear(): void {
@@ -126,6 +170,7 @@ export module ObjectCache {
         readonly getKey: (item: V) => K;
 
         private _maps = new Map<any, Map<K, V>>();
+        private _pkMaps = new Map<K, Map<K, V>>();
 
         constructor(args: {
             getIndexValue: (item: V) => any;
@@ -146,15 +191,27 @@ export module ObjectCache {
             return map ? new Map<K, V>(map) : new Map<K, V>();
         }
 
+        getAsArray(value: any): V[] {
+            let map = this._maps.get(value);
+            if (!map) return [];
+
+            return Array.from(map.values());
+        }
+
         clear(): void;
-        clear(value?: any): void;
+        clear(value: ToStringable): void;
         clear(...args: any[]): void {
             if (args.length == 0) {
                 this._maps.clear();
+                this._pkMaps.clear();
             } else {
                 let map = this._maps.get(args[0]);
+
                 if (map != null) {
                     map.clear();
+                    let keys: K[] = [];
+                    this._pkMaps.forEach((m, k) => m == map ? keys.push(k) : null);
+                    keys.forEach(k => this._pkMaps.delete(k));
                 }
             }
         }
@@ -174,7 +231,9 @@ export module ObjectCache {
                     this._maps.set(value, map);
                 }
 
-                map.set(this.getKey(item), item);
+                let key = this.getKey(item);
+                map.set(key, item);
+                this._pkMaps.set(key, map);
             } else {
                 let [newItem, oldItem] = <V[]>[args[0], args[1]];
 
@@ -186,15 +245,19 @@ export module ObjectCache {
                 let [newValue, oldValue] = [this.getIndexValue(newItem), this.getIndexValue(oldItem)];
                 let [newMap, oldMap] = [this._maps.get(newValue), this._maps.get(oldValue)];
 
-                if (oldMap != null) oldMap.delete(key);
-
-                if (newMap == null && newValue != null) {
-                    newMap = new Map<K, V>();
-                    this._maps.set(newValue, newMap);
+                if (oldMap != null) {
+                    oldMap.delete(key);
+                    this._pkMaps.delete(key);
                 }
 
                 if (newValue != null) {
+                    if (newMap == null) {
+                        newMap = new Map<K, V>();
+                        this._maps.set(newValue, newMap);
+                    }
+
                     newMap.set(key, newItem);
+                    this._pkMaps.set(key, newMap);
                 }
             }
         }
@@ -207,6 +270,7 @@ export module ObjectCache {
             if (map == null) return;
 
             map.delete(key);
+            this._pkMaps.delete(key);
         }
     }
 }

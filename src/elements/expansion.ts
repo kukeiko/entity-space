@@ -1,4 +1,4 @@
-import { getEntityMetadata, IEntityClass, Navigation } from "../metadata";
+import { getEntityMetadata, EntityType, Navigation } from "../metadata";
 import { Path } from "./path";
 import { Extraction } from "./extraction";
 
@@ -203,7 +203,7 @@ export class Expansion {
      *
      * Example: Expansion.parse(artistMetadata, "albums/{songs,tags}")
      */
-    static parse(ownerType: IEntityClass<any>, expansion: string): Expansion[] {
+    static parse(ownerType: EntityType<any>, expansion: string): Expansion[] {
         expansion = expansion.replace(/(\r?\n|\r)| /g, "");
 
         if (expansion.length == 0) return [];
@@ -214,7 +214,7 @@ export class Expansion {
     /**
      * Parses a single expansion string that may contain nested expansions.
      */
-    private static _parse(ownerType: IEntityClass<any>, expansion: string): Expansion {
+    private static _parse(ownerType: EntityType<any>, expansion: string): Expansion {
         // index for if there are nested expansions
         let nestedStart = expansion.indexOf("/");
         let name = nestedStart == -1 ? expansion : expansion.substring(0, nestedStart);

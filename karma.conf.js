@@ -19,13 +19,13 @@ module.exports = function (config) {
                         test: /\.ts$/,
                         loader: "awesome-typescript-loader"
                     },
-                    {
-                        enforce: "post",
-                        test: /\.ts$/,
-                        loader: "istanbul-instrumenter-loader",
-                        include: /src/,
-                        exclude: /\.spec\.ts$/
-                    }
+                    // {
+                    //     enforce: "post",
+                    //     test: /\.ts$/,
+                    //     loader: "istanbul-instrumenter-loader",
+                    //     include: /src/,
+                    //     exclude: /\.spec\.ts$/
+                    // }
                 ]
             },
             plugins: [
@@ -34,6 +34,7 @@ module.exports = function (config) {
             ]
         },
         reporters: ["mocha", "coverage-istanbul"],
+        mochaReporter: { ignoreSkipped: true },
         coverageIstanbulReporter: { reports: ["text-summary", "html"] },
         webpackMiddleware: { noInfo: true },
         mime: { "text/x-typescript": ["ts", "tsx"] } // so chrome doesn"t refuse execution

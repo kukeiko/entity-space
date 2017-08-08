@@ -1,4 +1,4 @@
-import { IEntityClass } from "../entity-class";
+import { EntityType } from "../entity.type";
 import { Navigation } from "./navigation";
 
 /**
@@ -8,9 +8,9 @@ export class Children extends Navigation {
     readonly type = "array:child";
     readonly backReferenceName: string;
 
-    constructor(args: Children.ICtorArgs) {
+    constructor(args: Children.CtorArgs) {
         super({
-            alias: args.alias,
+            dtoName: args.dtoName,
             virtual: args.virtual,
             name: args.name,
             other: args.other
@@ -21,11 +21,11 @@ export class Children extends Navigation {
 }
 
 export module Children {
-    export interface ICtorArgs {
-        alias?: string;
+    export interface CtorArgs {
+        dtoName?: string;
         back: string;
         name: string;
-        other: () => IEntityClass<any>;
+        other: () => EntityType<any>;
         virtual?: boolean;
     }
 }

@@ -1,4 +1,4 @@
-import { IEntityClass } from "../entity-class";
+import { EntityType } from "../entity.type";
 import { Navigation } from "./navigation";
 
 /**
@@ -8,9 +8,9 @@ export class Reference extends Navigation {
     readonly type = "ref";
     readonly keyName: string;
 
-    constructor(args: Reference.ICtorArgs) {
+    constructor(args: Reference.CtorArgs) {
         super({
-            alias: args.alias,
+            dtoName: args.dtoName,
             virtual: args.virtual,
             name: args.name,
             other: args.other
@@ -21,11 +21,11 @@ export class Reference extends Navigation {
 }
 
 export module Reference {
-    export interface ICtorArgs {
-        alias?: string;
+    export interface CtorArgs {
+        dtoName?: string;
         key: string;
         name: string;
-        other: () => IEntityClass<any>;
+        other: () => EntityType<any>;
         virtual?: boolean;
     }
 }
