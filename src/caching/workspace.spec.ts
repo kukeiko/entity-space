@@ -2,7 +2,8 @@ import { Expansion, Query } from "../elements";
 import { Entity, ValueType, getEntityMetadata } from "../metadata";
 import { Workspace } from "./workspace";
 
-fdescribe("workspace", () => {
+describe("workspace", () => {
+    debugger;
     @Entity() class Foo {
         constructor(args?: Partial<Foo>) { Object.assign(this, args || {}); };
         @Entity.PrimaryKey() id: number = null;
@@ -15,6 +16,7 @@ fdescribe("workspace", () => {
         @Entity.Primitive({ valueType: ValueType.Array }) bazIds: number[] = [];
         @Entity.Collection({ keys: "bazIds", other: () => Baz }) bazs: Baz[] = [];
     }
+
 
     @Entity() class Bar {
         constructor(args?: Partial<Bar>) { Object.assign(this, args || {}); };
