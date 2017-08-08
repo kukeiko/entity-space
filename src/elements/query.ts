@@ -1,6 +1,6 @@
 import * as _ from "lodash";
-import { IStringable } from "../util";
-import { getEntityMetadata, IEntityClass, IEntity } from "../metadata";
+import { ToStringable, ArrayLike } from "../util";
+import { getEntityMetadata, EntityType, IEntity } from "../metadata";
 import { Expansion } from "./expansion";
 import { Extraction } from "./extraction";
 
@@ -18,7 +18,7 @@ export abstract class Query<T extends IEntity> {
     /**
      * The entity type designated by this query.
      */
-    readonly entityType: IEntityClass<T>;
+    readonly entityType: EntityType<T>;
 
     /**
      * All expansions of this query.
@@ -39,14 +39,15 @@ export abstract class Query<T extends IEntity> {
      * Extending this class and trying to use it will lead to random exceptions.
      */
     protected constructor(args: {
-        entityType: IEntityClass<T>;
-        expansions?: string | Expansion[];
+        entityType: EntityType<T>;
+        expansions?: string | ArrayLike<Expansion>;
     }) {
         this.entityType = args.entityType;
 
         let expansions = (typeof (args.expansions) == "string"
             ? Expansion.parse(args.entityType, args.expansions)
             : (args.expansions || []))
+            .slice()
             .sort((a, b) => a.property.name.toLocaleLowerCase() < b.property.name.toLocaleLowerCase() ? -1 : 1);
 
         this.expansion = expansions.map(exp => exp.toString()).join(",");
@@ -150,8 +151,8 @@ export module Query {
         readonly type = "all";
 
         constructor(args: {
-            entityType: IEntityClass<T>;
-            expansions?: string | Expansion[];
+            entityType: EntityType<T>;
+            expansions?: string | ArrayLike<Expansion>;
         }) {
             super(args);
         }
@@ -193,12 +194,12 @@ export module Query {
      */
     export class ByKey<T extends IEntity> extends Query<T> {
         readonly type = "key";
-        readonly key: IStringable;
+        readonly key: ToStringable;
 
         constructor(args: {
-            key: IStringable;
-            entityType: IEntityClass<T>;
-            expansions?: string | Expansion[];
+            key: ToStringable;
+            entityType: EntityType<T>;
+            expansions?: string | ArrayLike<Expansion>;
         }) {
             super(args);
 
@@ -251,13 +252,13 @@ export module Query {
      */
     export class ByKeys<T extends IEntity> extends Query<T> {
         readonly type = "keys";
-        readonly keys: ReadonlyArray<IStringable>;
-        private readonly _sortedKeys: Array<IStringable>;
+        readonly keys: ReadonlyArray<ToStringable>;
+        private readonly _sortedKeys: Array<ToStringable>;
 
         constructor(args: {
-            keys: IStringable[];
-            entityType: IEntityClass<T>;
-            expansions?: string | Expansion[];
+            keys: ToStringable[];
+            entityType: EntityType<T>;
+            expansions?: string | ArrayLike<Expansion>;
         }) {
             super(args);
 
@@ -290,12 +291,12 @@ export module Query {
      */
     export class ByIndexes<T extends IEntity> extends Query<T> {
         readonly type = "indexes";
-        readonly indexes: Readonly<{ [key: string]: IStringable }>;
+        readonly indexes: Readonly<{ [key: string]: ToStringable }>;
 
         constructor(args: {
-            indexes: { [key: string]: IStringable };
-            entityType: IEntityClass<T>;
-            expansions?: string | Expansion[];
+            indexes: { [key: string]: ToStringable };
+            entityType: EntityType<T>;
+            expansions?: string | ArrayLike<Expansion>;
         }) {
             super(args);
 
@@ -305,7 +306,7 @@ export module Query {
         /**
          * Returns the indexes sorted by their name.
          */
-        static indexesToArray(indexes: { [key: string]: IStringable }): string[] {
+        static indexesToArray(indexes: { [key: string]: ToStringable }): string[] {
             return Object.keys(indexes).sort().map(k => `${k} == ${indexes[k].toString()}`);
         }
 

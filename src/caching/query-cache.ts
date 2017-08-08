@@ -1,13 +1,13 @@
-import { getEntityMetadata, IEntityClass, IEntity, NavigationType } from "../metadata";
+import { getEntityMetadata, EntityType, IEntity, NavigationType, EntityMetadata } from "../metadata";
 import { Expansion, Query, QueryType } from "../elements";
 import { AllQueryCache } from "./all-query-cache";
 import { ByIndexesQueryCache } from "./by-indexes-query-cache";
 import { ByKeyQueryCache } from "./by-key-query-cache";
 
 export class QueryCache {
-    private _allQueryCaches = new Map<IEntityClass<any>, AllQueryCache<any>>();
-    private _byIndexesCaches = new Map<IEntityClass<any>, ByIndexesQueryCache<any>>();
-    private _byKeyCaches = new Map<IEntityClass<any>, ByKeyQueryCache<any>>();
+    private _allQueryCaches = new Map<EntityType<any>, AllQueryCache<any>>();
+    private _byIndexesCaches = new Map<EntityType<any>, ByIndexesQueryCache<any>>();
+    private _byKeyCaches = new Map<EntityType<any>, ByKeyQueryCache<any>>();
 
     reduce<T extends IEntity>(query: QueryType<T>): QueryType<T>[] {
         let reducedViaAll = this._getAllQueryCache(query.entityType).reduce(query);
@@ -42,7 +42,7 @@ export class QueryCache {
                 this._getByKeyQueryCache(query.entityType).merge(query);
 
                 if (payload) {
-                    this._buildQueriesFromPayload(payload, query.expansions.slice());
+                    this._buildQueriesFromPayload(getEntityMetadata(query.entityType), payload, query.expansions.slice());
                 }
                 break;
 
@@ -53,7 +53,7 @@ export class QueryCache {
                     let metadata = getEntityMetadata(query.entityType);
                     let keys = new Set<any>();
 
-                    payload.forEach(entity => keys.add(entity[metadata.primaryKey.name]));
+                    payload.forEach(entity => keys.add(entity[metadata.primaryKey.dtoName]));
 
                     this.merge(new Query.ByKeys({
                         entityType: query.entityType,
@@ -67,7 +67,7 @@ export class QueryCache {
                 this._getAllQueryCache(query.entityType).merge(query);
 
                 if (payload) {
-                    this._buildQueriesFromPayload(payload, query.expansions.slice());
+                    this._buildQueriesFromPayload(getEntityMetadata(query.entityType), payload, query.expansions.slice());
                 }
                 break;
 
@@ -89,23 +89,19 @@ export class QueryCache {
         }
     }
 
-    clear(args?: {
-        entityType?: IEntityClass<any>;
-    }): void {
-        args = args || {};
-
-        if (args.entityType) {
-            this._allQueryCaches.delete(args.entityType);
-            this._byIndexesCaches.delete(args.entityType);
-            this._byKeyCaches.delete(args.entityType);
+    clear(entityType?: EntityType<any>): void {
+        if (entityType) {
+            this._allQueryCaches.delete(entityType);
+            this._byIndexesCaches.delete(entityType);
+            this._byKeyCaches.delete(entityType);
         } else {
-            this._allQueryCaches = new Map<IEntityClass<any>, AllQueryCache<any>>();
-            this._byIndexesCaches = new Map<IEntityClass<any>, ByIndexesQueryCache<any>>();
-            this._byKeyCaches = new Map<IEntityClass<any>, ByKeyQueryCache<any>>();
+            this._allQueryCaches = new Map<EntityType<any>, AllQueryCache<any>>();
+            this._byIndexesCaches = new Map<EntityType<any>, ByIndexesQueryCache<any>>();
+            this._byKeyCaches = new Map<EntityType<any>, ByKeyQueryCache<any>>();
         }
     }
 
-    private _getAllQueryCache<T>(entityType: IEntityClass<T>): AllQueryCache<T> {
+    private _getAllQueryCache<T>(entityType: EntityType<T>): AllQueryCache<T> {
         let cache = this._allQueryCaches.get(entityType) as AllQueryCache<T>;
 
         if (!cache) {
@@ -116,7 +112,7 @@ export class QueryCache {
         return cache;
     }
 
-    private _getByIndexesQueryCache<T>(entityType: IEntityClass<T>): ByIndexesQueryCache<T> {
+    private _getByIndexesQueryCache<T>(entityType: EntityType<T>): ByIndexesQueryCache<T> {
         let cache = this._byIndexesCaches.get(entityType) as ByIndexesQueryCache<T>;
 
         if (!cache) {
@@ -127,7 +123,7 @@ export class QueryCache {
         return cache;
     }
 
-    private _getByKeyQueryCache<T>(entityType: IEntityClass<T>): ByKeyQueryCache<T> {
+    private _getByKeyQueryCache<T>(entityType: EntityType<T>): ByKeyQueryCache<T> {
         let cache = this._byKeyCaches.get(entityType) as ByKeyQueryCache<T>;
 
         if (!cache) {
@@ -138,7 +134,9 @@ export class QueryCache {
         return cache;
     }
 
-    private _buildQueriesFromPayload(entities: IEntity[], expansions: Expansion[]): void {
+    private _buildQueriesFromPayload(metadata: EntityMetadata<any>, entities: IEntity[], expansions: Expansion[]): void {
+        if (entities.length == 0) return;
+
         expansions.forEach(exp => {
             let nav = exp.property as NavigationType;
 
@@ -150,9 +148,9 @@ export class QueryCache {
                         let keys = new Set<any>();
 
                         entities.forEach(e => {
-                            if (e[nav.name] == null) return;
+                            if (e[nav.dtoName] == null) return;
 
-                            let key = e[ref.keyName];
+                            let key = e[metadata.getPrimitive(ref.keyName).dtoName];
                             if (keys.has(key)) return;
 
                             keys.add(key);
@@ -173,13 +171,14 @@ export class QueryCache {
                 case "array:child":
                     {
                         let metadata = getEntityMetadata(nav.otherType);
-                        let keyName = metadata.primaryKey.name;
+                        let keyName = metadata.primaryKey.dtoName;
                         let items: any[] = [];
                         let keys = new Set<any>();
                         let backRef = metadata.getBackReference(nav);
+                        let backRefKeyName = metadata.getPrimitive(backRef.keyName).dtoName;
 
                         entities.forEach(e => {
-                            let children = e[nav.name] as any[];
+                            let children = e[nav.dtoName] as any[];
                             if (!(children instanceof Array) || children.length == 0) return;
 
                             children.forEach(child => {
@@ -194,7 +193,7 @@ export class QueryCache {
                                 entityType: nav.otherType,
                                 expansions: exp.expansions.slice(),
                                 indexes: {
-                                    [backRef.keyName]: children[0][backRef.keyName]
+                                    [backRefKeyName]: children[0][backRefKeyName]
                                 }
                             });
 
@@ -214,14 +213,14 @@ export class QueryCache {
                 case "array:ref":
                     {
                         let metadata = getEntityMetadata(nav.otherType);
-                        let keyName = metadata.primaryKey.name;
+                        let keyName = metadata.primaryKey.dtoName;
                         let items: any[] = [];
                         let keys = new Set<any>();
 
                         entities.forEach(e => {
-                            if (!(e[nav.name] instanceof Array)) return;
+                            if (!(e[nav.dtoName] instanceof Array)) return;
 
-                            (e[nav.name] as any[]).forEach(c => {
+                            (e[nav.dtoName] as any[]).forEach(c => {
                                 let key = c[keyName];
                                 if (keys.has(key)) return;
 

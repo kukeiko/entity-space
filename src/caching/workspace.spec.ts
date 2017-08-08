@@ -1,10 +1,8 @@
 import { Expansion, Query } from "../elements";
 import { Entity, ValueType, getEntityMetadata } from "../metadata";
-
 import { Workspace } from "./workspace";
-import { WorkspaceV2 } from "./workspace-v2";
 
-fdescribe("workspace-v2", () => {
+fdescribe("workspace", () => {
     @Entity() class Foo {
         constructor(args?: Partial<Foo>) { Object.assign(this, args || {}); };
         @Entity.PrimaryKey() id: number = null;
@@ -20,16 +18,16 @@ fdescribe("workspace-v2", () => {
 
     @Entity() class Bar {
         constructor(args?: Partial<Bar>) { Object.assign(this, args || {}); };
-        @Entity.PrimaryKey({ alias: "Id" }) id: number = null;
-        @Entity.Primitive({ alias: "A" }) string: string = null;
-        @Entity.Primitive({ alias: "B", valueType: ValueType.Date }) time: Date = null;
-        @Entity.Primitive({ alias: "C", valueType: ValueType.Object }) complex: Object = null;
+        @Entity.PrimaryKey({ dtoName: "Id" }) id: number = null;
+        @Entity.Primitive({ dtoName: "A" }) string: string = null;
+        @Entity.Primitive({ dtoName: "B", valueType: ValueType.Date }) time: Date = null;
+        @Entity.Primitive({ dtoName: "C", valueType: ValueType.Object }) complex: Object = null;
 
-        @Entity.ReferenceKey({ alias: "FooNr" }) fooId: number = null;
-        @Entity.Reference({ alias: "Foo", key: "fooId", other: () => Foo }) foo: Foo = null;
+        @Entity.ReferenceKey({ dtoName: "FooNr" }) fooId: number = null;
+        @Entity.Reference({ dtoName: "Foo", key: "fooId", other: () => Foo }) foo: Foo = null;
 
-        @Entity.ReferenceKey({ alias: "BazNr" }) bazId: number = null;
-        @Entity.Reference({ alias: "Baz", key: "bazId", other: () => Baz }) baz: Baz = null;
+        @Entity.ReferenceKey({ dtoName: "BazNr" }) bazId: number = null;
+        @Entity.Reference({ dtoName: "Baz", key: "bazId", other: () => Baz }) baz: Baz = null;
     }
 
     @Entity() class Baz {
@@ -42,7 +40,7 @@ fdescribe("workspace-v2", () => {
 
     it("???", () => {
         let ws = new Workspace();
-        let ws2 = new WorkspaceV2();
+        // let ws2 = new WorkspaceV2();
         let fooMetadata = getEntityMetadata(Foo);
         let barMetadata = getEntityMetadata(Bar);
         let bazMetadata = getEntityMetadata(Baz);
@@ -79,50 +77,42 @@ fdescribe("workspace-v2", () => {
         }
 
         let exp = Expansion.parse(fooMetadata.entityType, `bars/baz`);
-        ws.addMany({ entities: foos, type: Foo, expansion: exp })
-        ws2.add(foos, fooMetadata, exp);
+        ws.add(foos, fooMetadata, exp);
 
         let performanceTest = () => {
-            let allImproved: number[] = [];
+            let total = 0;
+            let samples = 70;
 
             // foos[0].bars = [new Bar({ id: 39812374, fooId: 0 })];
             // ws2.add([foos[0]], fooMetadata, Expansion.parse(fooMetadata.entityType, `bars/baz`));
 
-            for (let i = 0; i < 10; ++i) {
-                let wsv_start = new Date();
+            for (let i = 0; i < samples; ++i) {
+                let start = new Date();
                 ws.execute(new Query.All({
                     entityType: Foo,
                     expansions: `bazs,bars/baz`
                 }));
-                let wsv_end = new Date();
+                let end = new Date();
+                let run = end.getTime() - start.getTime();
 
-                let wsv2_start = new Date();
-                ws2.execute(new Query.All({
-                    entityType: Foo,
-                    expansions: `bazs,bars/baz`
-                }));
-                let wsv2_end = new Date();
+                total += run;
 
-                let wsv_time = (wsv_end.getTime() - wsv_start.getTime());
-                let wsv2_time = (wsv2_end.getTime() - wsv2_start.getTime());
+                // console.log(`${run}ms`)
 
-                let improved = (wsv2_time / wsv_time) * 100;
-                allImproved.push(improved);
-                console.log(`${improved.toFixed(2)}% (${wsv2_time}ms / ${wsv_time}ms)`);
-
-                if (i == 9) {
-                    setTimeout(() => console.log(ws2.execute(new Query.All({
-                        entityType: Foo,
-                        expansions: `bazs,bars/baz`
-                    }))));
-                }
+                // if (i == 9) {
+                //     setTimeout(() => console.log(ws.execute(new Query.All({
+                //         entityType: Foo,
+                //         expansions: `bazs,bars/baz`
+                //     }))));
+                // }
             }
 
-            let improvedAvg = allImproved.reduce((p, c) => p + c, 0) / allImproved.length;
-            console.log(`--------------------------`);
-            console.log(`${improvedAvg.toFixed(2)}%`);
+            let avg = total / samples;
 
-            console.log(ws2);
+            console.log(`--------------------------`);
+            console.log(`${avg.toFixed(2)}ms`);
+
+            console.log(ws);
         };
 
         performanceTest();

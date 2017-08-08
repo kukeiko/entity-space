@@ -79,10 +79,10 @@ describe("entity-metadata", () => {
             try {
                 @Entity()
                 class Foo {
-                    @Entity.PrimaryKey({ alias: "dan" })
+                    @Entity.PrimaryKey({ dtoName: "dan" })
                     khaz: string;
 
-                    @Entity.Primitive({ alias: "dan" })
+                    @Entity.Primitive({ dtoName: "dan" })
                     mo: string;
                 }
 
@@ -98,7 +98,7 @@ describe("entity-metadata", () => {
                     @Entity.PrimaryKey()
                     khaz: string;
 
-                    @Entity.Primitive({ alias: "khaz" })
+                    @Entity.Primitive({ dtoName: "khaz" })
                     mo: string;
                 }
 

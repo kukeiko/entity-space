@@ -1,4 +1,4 @@
-import { ArrayLike, IStringable } from "../util";
+import { ArrayLike, ToStringable } from "../util";
 
 /**
  * Store and access objects via primary key & indexes. The ObjectCache is basically a Map on steroids
@@ -88,7 +88,7 @@ export class ObjectCache<K, V> {
         return ix.getAsArray(value);
     }
 
-    byIndexes(indexes: { [key: string]: IStringable }): Map<K, V> {
+    byIndexes(indexes: { [key: string]: ToStringable }): Map<K, V> {
         let indexArray = new Array<string>();
         let items = new Map<K, V>();
         let itemsPerIndex = new Map<string, Map<K, V>>();
@@ -112,7 +112,7 @@ export class ObjectCache<K, V> {
         return items;
     }
 
-    byIndexesAsArray(indexes: { [key: string]: IStringable }): V[] {
+    byIndexesAsArray(indexes: { [key: string]: ToStringable }): V[] {
         return Array.from(this.byIndexes(indexes).values());
     }
 
@@ -134,7 +134,7 @@ export class ObjectCache<K, V> {
         }
     }
 
-    removeByIndex(index: string, value: IStringable): void {
+    removeByIndex(index: string, value: ToStringable): void {
         let ix = this._indexes.get(index);
         if (ix == null) throw `index ${index} doesn't exist`;
 
@@ -199,7 +199,7 @@ export module ObjectCache {
         }
 
         clear(): void;
-        clear(value: IStringable): void;
+        clear(value: ToStringable): void;
         clear(...args: any[]): void {
             if (args.length == 0) {
                 this._maps.clear();

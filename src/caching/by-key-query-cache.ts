@@ -1,10 +1,10 @@
-import { IStringable } from "../util";
+import { ToStringable } from "../util";
 import { IEntity } from "../metadata";
 import { Query } from "../elements";
 
 // todo: needs isolated testing
 export class ByKeyQueryCache<T extends IEntity> {
-    private _queriesPerKey = new Map<IStringable, Query.ByKey<T>>();
+    private _queriesPerKey = new Map<ToStringable, Query.ByKey<T>>();
 
     isCached(query: Query.ByKey<T>): boolean;
     isCached(query: Query.ByKeys<T>): boolean;

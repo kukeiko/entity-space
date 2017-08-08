@@ -1,6 +1,6 @@
-import { IEntityClass } from "../entity-class";
+import { EntityType } from "../entity.type";
+import { getEntityMetadata } from "../entity.decorator";
 import { Property } from "../property";
-import { getEntityMetadata } from "../entity-decorator";
 import { EntityMetadata } from "../entity-metadata";
 
 /**
@@ -9,15 +9,15 @@ import { EntityMetadata } from "../entity-metadata";
 export abstract class Navigation extends Property {
     readonly virtual: boolean;
 
-    get otherType(): IEntityClass<any> { return this._otherType(); };
-    private _otherType: () => IEntityClass<any>;
+    get otherType(): EntityType<any> { return this._otherType(); };
+    private _otherType: () => EntityType<any>;
 
     get otherTypeMetadata(): EntityMetadata<any> {
         return (this._otherTypeMetadata = this._otherTypeMetadata || getEntityMetadata(this.otherType));
     }
     private _otherTypeMetadata: EntityMetadata<any> = null;
 
-    constructor(args: Navigation.ICtorArgs) {
+    constructor(args: Navigation.CtorArgs) {
         super(args);
 
         this._otherType = args.other;
@@ -26,8 +26,8 @@ export abstract class Navigation extends Property {
 }
 
 export module Navigation {
-    export interface ICtorArgs extends Property.ICtorArgs {
-        other: () => IEntityClass<any>;
+    export interface CtorArgs extends Property.CtorArgs {
+        other: () => EntityType<any>;
         virtual?: boolean;
     }
 }

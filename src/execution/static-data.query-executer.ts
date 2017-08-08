@@ -1,14 +1,14 @@
-import { IEntityClass } from "../metadata";
+import { EntityType } from "../metadata";
 import { Query } from "../elements";
-import { IQueryExecuter } from "./query-executer";
+import { IService } from "./service.type";
 
-export class StaticDataQueryExecuter<K, V> implements IQueryExecuter<V> {
+export class StaticDataService<K, V> implements IService {
     private _items: V[] = [];
     private _onNotFound?: (key: K) => Promise<V> | V;
     private _keyGetter: (item: V) => K;
 
     constructor(args: {
-        entityType: IEntityClass<V>;
+        entityType: EntityType<any>;
         items: V[];
         keyGetter: (item: V) => K;
         onNotFound?: (key: K) => Promise<V> | V;

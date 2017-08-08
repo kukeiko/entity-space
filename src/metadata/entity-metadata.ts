@@ -1,14 +1,16 @@
 import * as _ from "lodash";
-import { IEntityClass, IEntity } from "./entity-class";
+import { EntityType, IEntity } from "./entity.type";
 import { Primitive } from "./primitive";
 import { Property } from "./property";
 import { NavigationType, Navigation, Children, Collection, Reference } from "./navigation";
 
+export type AnyEntityMetadata = EntityMetadata<IEntity>;
+
 /**
- * Contains information about properties and other metadata of an entity.
+ * Contains information about properties and other metadata of an entity type.
  */
 export class EntityMetadata<T extends IEntity> {
-    readonly entityType: IEntityClass<T>;
+    readonly entityType: EntityType<T>;
     readonly name: string;
     readonly primaryKey: Primitive;
     readonly properties: ReadonlyArray<Property>;
@@ -25,7 +27,7 @@ export class EntityMetadata<T extends IEntity> {
     private _childrenMap = new Map<string, Children>();
     private _collectionsMap = new Map<string, Collection>();
 
-    constructor(entityType: IEntityClass<T>, args: EntityMetadata.ICtorArgs) {
+    constructor(entityType: EntityType<T>, args: EntityMetadata.CtorArgs) {
         if (!args.primaryKey) throw `${entityType.name} has no primary key`;
 
         this.entityType = entityType;
@@ -34,7 +36,7 @@ export class EntityMetadata<T extends IEntity> {
         let aliases = new Set<string>();
 
         let addProperty = (p: Property) => {
-            let [name, alias] = [p.name.toLowerCase(), p.alias.toLowerCase()];
+            let [name, alias] = [p.name.toLowerCase(), p.dtoName.toLowerCase()];
 
             if (this._propertiesMap.has(name) || aliases.has(alias)) {
                 throw `names and aliases across all properties must be unique (type: ${entityType.name}, property: ${name}, alias: ${alias})`;
@@ -47,31 +49,31 @@ export class EntityMetadata<T extends IEntity> {
 
         let addPrimitive = (p: Primitive) => {
             this._primitivesMap.set(p.name.toLocaleLowerCase(), p);
-            this._primitivesMap.set(p.alias.toLocaleLowerCase(), p);
+            this._primitivesMap.set(p.dtoName.toLocaleLowerCase(), p);
             addProperty(p);
         };
 
         let addNavigation = (p: NavigationType) => {
             this._navigationsMap.set(p.name.toLocaleLowerCase(), p);
-            this._navigationsMap.set(p.alias.toLocaleLowerCase(), p);
+            this._navigationsMap.set(p.dtoName.toLocaleLowerCase(), p);
             addProperty(p);
         };
 
         let addReference = (p: Reference) => {
             this._referencesMap.set(p.name.toLocaleLowerCase(), p);
-            this._referencesMap.set(p.alias.toLocaleLowerCase(), p);
+            this._referencesMap.set(p.dtoName.toLocaleLowerCase(), p);
             addNavigation(p);
         };
 
         let addChildren = (p: Children) => {
             this._childrenMap.set(p.name.toLocaleLowerCase(), p);
-            this._childrenMap.set(p.alias.toLocaleLowerCase(), p);
+            this._childrenMap.set(p.dtoName.toLocaleLowerCase(), p);
             addNavigation(p);
         };
 
         let addCollection = (p: Collection) => {
             this._collectionsMap.set(p.name.toLocaleLowerCase(), p);
-            this._collectionsMap.set(p.alias.toLocaleLowerCase(), p);
+            this._collectionsMap.set(p.dtoName.toLocaleLowerCase(), p);
             addNavigation(p);
         };
 
@@ -126,7 +128,7 @@ export class EntityMetadata<T extends IEntity> {
         return this._childrenMap.get(nameOrAlias.toLocaleLowerCase()) || null;
     }
 
-    getBackReference(children: Children) : Reference {
+    getBackReference(children: Children): Reference {
         return this.getReference(children.backReferenceName);
     }
 
@@ -139,12 +141,12 @@ export class EntityMetadata<T extends IEntity> {
 }
 
 export module EntityMetadata {
-    export interface ICtorArgs {
+    export interface CtorArgs {
         name: string;
-        primaryKey: Primitive.ICtorArgs;
-        primitives?: Primitive.ICtorArgs[];
-        references?: Reference.ICtorArgs[];
-        children?: Children.ICtorArgs[];
-        collections?: Collection.ICtorArgs[];
+        primaryKey: Primitive.CtorArgs;
+        primitives?: Primitive.CtorArgs[];
+        references?: Reference.CtorArgs[];
+        children?: Children.CtorArgs[];
+        collections?: Collection.CtorArgs[];
     }
 }

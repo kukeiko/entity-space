@@ -1,45 +1,52 @@
 import * as _ from "lodash";
-import { Indexable, ITypeOf } from "../util";
-import { Expansion } from "../elements";
-import {
-    getEntityMetadata, EntityMetadata, IEntity, IEntityClass,
-    Primitive, Children, NavigationType, ValueType, Reference
-} from "../metadata";
+import { AnyType, StringIndexable } from "../util";
+import { AnyEntityMetadata, AnyEntityType, EntityType, IEntity, Primitive, Navigation, NavigationType, ValueType } from "../metadata";
 import { MappingCompiler, CopyPrimitivesFunction } from "./mapping-compiler";
 
 export class EntityMapper {
     private static _compiler = new MappingCompiler();
-    private static _dtoToEntity = new Map<IEntityClass<any>, CopyPrimitivesFunction>();
-    private static _dtoToDto = new Map<IEntityClass<any>, CopyPrimitivesFunction>();
-    private static _entityToEntity = new Map<IEntityClass<any>, CopyPrimitivesFunction>();
-    private static _entityToDto = new Map<IEntityClass<any>, CopyPrimitivesFunction>();
 
-    static copyPrimitives<T>(args: {
-        from: Indexable[];
+    // todo: meh
+    private static _copyPrimitives_dtoToEntity = new Map<AnyEntityType, CopyPrimitivesFunction>();
+    private static _copyPrimitives_dtoToDto = new Map<AnyEntityType, CopyPrimitivesFunction>();
+    private static _copyPrimitives_entityToEntity = new Map<AnyEntityType, CopyPrimitivesFunction>();
+    private static _copyPrimitives_entityToDto = new Map<AnyEntityType, CopyPrimitivesFunction>();
+
+    // todo: meh
+    private static _copySaveables_dtoToEntity = new Map<AnyEntityType, CopyPrimitivesFunction>();
+    private static _copySaveables_dtoToDto = new Map<AnyEntityType, CopyPrimitivesFunction>();
+    private static _copySaveables_entityToEntity = new Map<AnyEntityType, CopyPrimitivesFunction>();
+    private static _copySaveables_entityToDto = new Map<AnyEntityType, CopyPrimitivesFunction>();
+
+    static copyPrimitives(args: {
+        from: StringIndexable[];
         fromDto?: boolean;
-        to?: Partial<T>[];
+        to?: StringIndexable[];
         toDto?: boolean;
-        metadata: EntityMetadata<T>;
-        type?: ITypeOf<any>;
-    }): Partial<T>[] {
+        metadata: AnyEntityMetadata;
+        type?: AnyType;
+    }): StringIndexable[] {
         let to = args.to;
-        let type = args.metadata.entityType;
+        let entityType = args.metadata.entityType;
 
         if (!to) {
-            let instantiatedType = args.type || type;
+            let instantiatedType = args.type
+                ? args.type
+                : args.toDto ? Object : entityType;
+
             to = args.from.map(() => new instantiatedType());
         }
 
-        let map: Map<IEntityClass<any>, CopyPrimitivesFunction> = null;
+        let map: Map<AnyEntityType, CopyPrimitivesFunction> = null;
 
         if (args.fromDto && args.toDto) {
-            map = this._dtoToDto;
+            map = this._copyPrimitives_dtoToDto;
         } else if (args.fromDto && !args.toDto) {
-            map = this._dtoToEntity;
+            map = this._copyPrimitives_dtoToEntity;
         } else if (!args.fromDto && args.toDto) {
-            map = this._entityToDto;
+            map = this._copyPrimitives_entityToDto;
         } else {
-            map = this._entityToEntity;
+            map = this._copyPrimitives_entityToEntity;
         }
 
         let fn = map.get(args.metadata.entityType);
@@ -52,339 +59,162 @@ export class EntityMapper {
                 predicate: p => !p.computed
             });
 
-            map.set(type, fn);
+            map.set(entityType, fn);
         }
 
-        fn(args.from, to);
+        fn(args.from, to, _);
 
         return to;
     }
 
-    createEntity<T extends IEntity>(args: {
-        entityType: IEntityClass<T>;
-        expansions?: Expansion[];
-        from?: Indexable;
+    static copySaveables(args: {
+        from: StringIndexable[];
         fromDto?: boolean;
-    }): T {
-        let metadata = getEntityMetadata(args.entityType);
-        let entity = new args.entityType();
+        to?: StringIndexable[];
+        toDto?: boolean;
+        metadata: AnyEntityMetadata;
+        type?: AnyType;
+    }): StringIndexable[] {
+        let to = args.to;
+        let entityType = args.metadata.entityType;
 
-        if (args.from) {
-            this.copyPrimitives({
-                to: entity,
-                from: args.from,
-                fromDto: args.fromDto,
-                metadata: metadata
-            });
+        if (!to) {
+            let instantiatedType = args.type
+                ? args.type
+                : args.toDto ? Object : entityType;
 
-            if (args.expansions instanceof Array) {
-                this.copyNavigations({
-                    expansions: args.expansions,
-                    from: args.from,
-                    fromDto: args.fromDto,
-                    to: entity
-                });
-            }
+            to = args.from.map(() => new instantiatedType());
         }
 
-        return entity;
-    }
+        let map: Map<EntityType<any>, CopyPrimitivesFunction> = null;
 
-    createObject(args: {
-        expansions?: Expansion[];
-        from: Indexable;
-        fromDto?: boolean;
-        metadata: EntityMetadata<any>;
-        toDto?: boolean;
-    }): Indexable {
-        let obj = {};
-
-        this.copyPrimitives({
-            from: args.from,
-            fromDto: args.fromDto,
-            includeComputed: true,
-            metadata: args.metadata,
-            to: obj,
-            toDto: args.toDto
-        });
-
-        if (args.expansions instanceof Array) {
-            this.copyNavigations({
-                expansions: args.expansions,
-                from: args.from,
-                fromDto: args.fromDto,
-                to: obj,
-                toDto: args.toDto
-            });
-        }
-
-        return obj;
-    }
-
-    createSaveable(args: {
-        from: Indexable;
-        fromDto?: boolean;
-        metadata: EntityMetadata<any>;
-        toDto?: boolean;
-    }): Indexable {
-        let copy = this.createObject({
-            from: args.from,
-            fromDto: args.fromDto,
-            metadata: args.metadata,
-            toDto: args.toDto
-        });
-
-        return this.copyPrimitives({
-            from: copy,
-            fromDto: args.toDto,
-            metadata: args.metadata,
-            predicate: p => p.saveable,
-            toDto: args.toDto
-        });
-    }
-
-    /**
-     * Copies all primitive properties of an entity type from one object to another.
-     * An optional predicate can be supplied to filter copied primitives. Use fromDto & toDto to use aliases instead.
-     *
-     * * Objects, Arrays and Dates are cloned
-     * * undefined values are ignored
-     * * null values are included
-     */
-    copyPrimitives(args: {
-        from: Indexable;
-        fromDto?: boolean;
-        includeComputed?: boolean;
-        metadata: EntityMetadata<any>;
-        predicate?: (p: Primitive) => boolean;
-        to?: Indexable;
-        toDto?: boolean;
-    }): Indexable {
-        let to = args.to || {};
-
-        this._copyPrimitives(args);
-
-        return to;
-    }
-
-    private _copyPrimitives(args: {
-        from: Indexable;
-        fromDto?: boolean;
-        includeComputed?: boolean;
-        metadata: EntityMetadata<any>;
-        predicate?: (p: Primitive) => boolean;
-        to?: Indexable;
-        toDto?: boolean;
-    }): Indexable {
-        let to = args.to || {};
-
-        let predicate = args.predicate
-            ? args.includeComputed
-                ? args.predicate
-                : ((p: Primitive) => !p.computed && args.predicate(p))
-            : args.includeComputed
-                ? (() => true)
-                : ((p: Primitive) => !p.computed);
-
-        let fn = (p: Primitive) => {
-            if (!predicate(p)) return;
-            let fromName = p.getName(args.fromDto);
-            let toName = p.getName(args.toDto);
-
-            let value = args.from[fromName];
-            if (value === undefined) return;
-
-            if (value == null) {
-                to[toName] = value;
-            } else if ([ValueType.Array, ValueType.Object].includes(p.valueType)) {
-                to[toName] = _.cloneDeep(value);
-            } else if (p.valueType == ValueType.Date) {
-                if (args.fromDto && args.toDto) {
-                    to[toName] = value;
-                } else if (args.fromDto && !args.toDto) {
-                    if (value) {
-                        to[toName] = new Date(value);
-                    } else {
-                        to[toName] = null;
-                    }
-                } else if (!args.fromDto && args.toDto) {
-                    to[toName] = (value as Date).toISOString();
-                } else {
-                    to[toName] = new Date(value);
-                }
-            } else {
-                to[toName] = value;
-            }
-        };
-
-        args.metadata.primitives.forEach(fn);
-
-        return to;
-    }
-
-    copyNavigations(args: {
-        expansions: Expansion[];
-        from: Indexable;
-        fromDto?: boolean;
-        predicate?: (p: NavigationType) => boolean;
-        to?: Indexable;
-        toDto?: boolean;
-    }): Indexable {
-        let to = args.to || {};
-        let predicate = args.predicate || (() => true);
-
-        args.expansions.forEach(exp => {
-            let p = exp.property as NavigationType;
-            if (!predicate(p)) return;
-
-            let fromName = p.getName(args.fromDto);
-            let toName = p.getName(args.toDto);
-
-            let value = args.from[fromName];
-            if (value === undefined) return;
-
-            switch (p.type) {
-                case "ref":
-                    if (!(value instanceof Object)) return;
-
-                    // if (args.toDto) {
-                    //     to[toName] = this.createObject({
-                    //         expansions: exp.expansions.slice(),
-                    //         from: value,
-                    //         fromDto: args.fromDto,
-                    //         metadata: getEntityMetadata(p.otherType),
-                    //         toDto: args.toDto
-                    //     });
-                    // } else {
-                    //     to[toName] = this.createEntity({
-                    //         entityType: p.otherType,
-                    //         expansions: exp.expansions.slice(),
-                    //         from: value,
-                    //         fromDto: args.fromDto
-                    //     });
-                    // }
-                    this._copyReference({
-                        expansion: exp,
-                        fromDto: args.fromDto,
-                        property: p,
-                        to: to,
-                        toDto: args.toDto,
-                        toName: toName,
-                        value: value
-                    });
-                    break;
-
-                case "array:ref":
-                    if (!(value instanceof Array)) return;
-
-                    if (args.toDto) {
-                        let metadata = p.otherTypeMetadata;
-
-                        to[toName] = value
-                            .filter(ref => ref instanceof Object)
-                            .map(ref => this.createObject({
-                                expansions: exp.expansions.slice(),
-                                from: ref,
-                                fromDto: args.fromDto,
-                                metadata: metadata,
-                                toDto: args.toDto
-                            }));
-                    } else {
-                        to[toName] = value
-                            .filter(ref => ref instanceof Object)
-                            .map(ref => this.createEntity({
-                                entityType: p.otherType,
-                                expansions: exp.expansions.slice(),
-                                from: ref,
-                                fromDto: args.fromDto
-                            }));
-                    }
-                    break;
-
-                case "array:child":
-                    if (!(value instanceof Array)) return;
-
-                    if (args.toDto) {
-                        let metadata = p.otherTypeMetadata;
-                        to[toName] = value
-                            .filter(ref => ref instanceof Object)
-                            .map(ref => this.createObject({
-                                expansions: exp.expansions.slice(),
-                                from: ref,
-                                fromDto: args.fromDto,
-                                metadata: metadata,
-                                toDto: args.toDto
-                            }));
-                    } else {
-                        let children = value
-                            .filter(child => child instanceof Object)
-                            .map(child => this.createEntity({
-                                entityType: p.otherType,
-                                expansions: exp.expansions.slice(),
-                                from: child,
-                                fromDto: args.fromDto
-                            }));
-
-                        to[toName] = children;
-                        children.forEach(child => child[(p as Children).backReferenceName] = args.to);
-                    }
-                    break;
-            }
-        });
-
-        return to;
-    }
-
-    private _copyReference(args: {
-        expansion: Expansion;
-        property: Reference;
-        fromDto?: boolean;
-        to: Indexable;
-        toName: string;
-        toDto?: boolean;
-        value: Object;
-    }): void {
-        if (args.toDto) {
-            args.to[args.toName] = this.createObject({
-                expansions: args.expansion.expansions.slice(),
-                from: args.value,
-                fromDto: args.fromDto,
-                metadata: args.property.otherTypeMetadata,
-                toDto: args.toDto
-            });
+        if (args.fromDto && args.toDto) {
+            map = this._copySaveables_dtoToDto;
+        } else if (args.fromDto && !args.toDto) {
+            map = this._copySaveables_dtoToEntity;
+        } else if (!args.fromDto && args.toDto) {
+            map = this._copySaveables_entityToDto;
         } else {
-            args.to[args.toName] = this.createEntity({
-                entityType: args.property.otherType,
-                expansions: args.expansion.expansions.slice(),
-                from: args.value,
-                fromDto: args.fromDto
-            });
+            map = this._copySaveables_entityToEntity;
         }
+
+        let fn = map.get(args.metadata.entityType);
+
+        if (!fn) {
+            fn = this._compiler.compileCopyPrimitives({
+                fromDto: args.fromDto,
+                toDto: args.toDto,
+                metadata: args.metadata,
+                predicate: p => p.saveable
+            });
+
+            map.set(entityType, fn);
+        }
+
+        fn(args.from, to, _);
+
+        return to;
     }
 
-    updateReferenceKeys(args: {
-        isDto?: boolean;
-        item: Indexable;
-        metadata: EntityMetadata<any>;
+    static updateReferenceKeys(args: {
+        from: IEntity[];
+        to?: IEntity[];
+        metadata: AnyEntityMetadata;
     }): void {
-        args.metadata.references.forEach(refProp => {
-            let ref = args.item[refProp.getName(args.isDto)];
-            if (ref == null) return;
+        let to = args.to || args.from;
 
-            let refMetadata = refProp.otherTypeMetadata;
-            let refKeyProp = args.metadata.getPrimitive(refProp.keyName);
-            args.item[refKeyProp.getName(args.isDto)] = ref[refMetadata.primaryKey.getName(args.isDto)];
+        args.metadata.references.forEach(refProp => {
+            args.from.forEach((from, i) => {
+                let to_i = to[i];
+                let ref = from[refProp.name];
+                let refKeyProp = args.metadata.getPrimitive(refProp.keyName);
+                if (!refKeyProp.saveable) return;
+
+                if (ref == null) {
+                    to_i[refProp.keyName] = null;
+                } else {
+                    let refMetadata = refProp.otherTypeMetadata;
+                    let refKeyProp = args.metadata.getPrimitive(refProp.keyName);
+
+                    to_i[refKeyProp.name] = ref[refMetadata.primaryKey.name];
+                }
+            });
         });
 
         args.metadata.collections.forEach(colProp => {
-            let refs = args.item[colProp.getName(args.isDto)] as any[];
-            if (refs == null || refs.length == 0) return;
+            args.from.forEach((from, i) => {
+                let to_i = to[i];
+                let refs = from[colProp.name] as any[];
+                let refKeysProp = args.metadata.getPrimitive(colProp.keysName);
+                if (!refKeysProp.saveable) return;
 
-            let refKeysProp = args.metadata.getPrimitive(colProp.keysName);
-            let refMetadata = colProp.otherTypeMetadata;
-            let refSelfKeyName = refMetadata.primaryKey.getName(args.isDto);
-
-            args.item[refKeysProp.getName(args.isDto)] = _.uniq(refs.map(ref => ref[refSelfKeyName]).filter(id => id != null));
+                if (refs == null || refs.length == 0) {
+                    to_i[colProp.keysName] = [];
+                } else {
+                    let refMetadata = colProp.otherTypeMetadata;
+                    let refSelfKeyName = refMetadata.primaryKey.name;
+                    to_i[colProp.keysName] = _.uniq(refs.map(ref => ref[refSelfKeyName]).filter(id => id != null));
+                }
+            });
         });
+    }
+
+    static collect(items: ArrayLike<StringIndexable>, prop: Primitive | Navigation, isDto?: boolean): any[] {
+        let collected: any[] = [];
+        let name = prop.getName(isDto);
+
+        if (prop instanceof Navigation) {
+            let nav = prop as NavigationType;
+
+            switch (nav.type) {
+                case "ref":
+                    let item: any;
+
+                    for (let i = 0; i < items.length; ++i) {
+                        item = items[i][name];
+                        if (!item) continue;
+
+                        collected.push(item);
+                    }
+                    break;
+
+                case "array:ref":
+                case "array:child":
+                    for (let i = 0; i < items.length; ++i) {
+                        let array = items[i][name] as any[];
+
+                        for (let e = 0; e < array.length; ++e) {
+                            collected.push(array[e]);
+                        }
+                    }
+                    break;
+            }
+
+        } else {
+            switch (prop.valueType) {
+                case ValueType.Array:
+                    for (let i = 0; i < items.length; ++i) {
+                        let array = items[i][name] as any[];
+
+                        for (let e = 0; e < array.length; ++e) {
+                            collected.push(array[e]);
+                        }
+                    }
+                    break;
+
+                default:
+                    let value: any;
+
+                    for (let i = 0; i < items.length; ++i) {
+                        value = items[i][name];
+                        if (value == null) continue;
+
+                        collected.push(value);
+                    }
+                    break;
+            }
+        }
+
+        return collected;
     }
 }
