@@ -1,12 +1,11 @@
 import { NoArgsConstructable } from "../util";
-import { Property } from "./property";
+import { PropertyBase } from "./property-base";
 import { ValueType } from "./value-type";
 
-export class Primitive extends Property {
+export class Primitive extends PropertyBase {
     readonly index: boolean;
     readonly valueType: ValueType = ValueType.Unknown;
     readonly computed: boolean;
-    readonly type: NoArgsConstructable = null;
 
     constructor(args: Primitive.CtorArgs) {
         super({
@@ -17,7 +16,6 @@ export class Primitive extends Property {
 
         this.index = !!args.index;
         this.computed = !!args.computed;
-        this.type = args.type || null;
 
         if (ValueType[args.valueType] != null) {
             this.valueType = args.valueType;

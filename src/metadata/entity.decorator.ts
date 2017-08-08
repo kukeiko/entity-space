@@ -1,6 +1,6 @@
 import { EntityType, IEntity } from "./entity.type";
 import { EntityMetadata } from "./entity-metadata";
-import { Children, Collection, Reference } from "./navigation";
+import { Children, Collection, Reference } from "./navigations";
 import { Primitive } from "./primitive";
 
 const METADATA_KEY = "entity-space:entity-metadata";

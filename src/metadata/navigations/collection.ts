@@ -1,14 +1,14 @@
 import { EntityType } from "../entity.type";
-import { Navigation } from "./navigation";
+import { NavigationBase } from "./navigation-base";
 
 /**
- * A property that points to one related entity.
+ * Array of entities of which this entity has the keys stored in an array.
  */
-export class Reference extends Navigation {
-    readonly type = "ref";
-    readonly keyName: string;
+export class Collection extends NavigationBase {
+    readonly type = "array:ref";
+    readonly keysName: string;
 
-    constructor(args: Reference.CtorArgs) {
+    constructor(args: Collection.CtorArgs) {
         super({
             dtoName: args.dtoName,
             virtual: args.virtual,
@@ -16,14 +16,14 @@ export class Reference extends Navigation {
             other: args.other
         });
 
-        this.keyName = args.key;
+        this.keysName = args.keys;
     }
 }
 
-export module Reference {
+export module Collection {
     export interface CtorArgs {
         dtoName?: string;
-        key: string;
+        keys: string;
         name: string;
         other: () => EntityType<any>;
         virtual?: boolean;

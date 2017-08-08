@@ -1,4 +1,4 @@
-import { getEntityMetadata, Entity, EntityMetadata, Primitive, Navigation, Reference, Children } from "../../src";
+import { getEntityMetadata, Entity, EntityMetadata, Primitive, NavigationBase, Reference, Children } from "../../src";
 import { Album, Song, TagType } from "../common/entities";
 
 describe("entity-metadata", () => {
@@ -133,7 +133,7 @@ describe("entity-metadata", () => {
 
         it("should return a primitive, navigation, reference and collection", () => {
             expect(songMetadata.getProperty("name") instanceof Primitive).toBe(true, "primitive");
-            expect(songMetadata.getProperty("album") instanceof Navigation).toBe(true, "navigation");
+            expect(songMetadata.getProperty("album") instanceof NavigationBase).toBe(true, "navigation");
             expect(songMetadata.getProperty("album") instanceof Reference).toBe(true, "reference");
             expect(songMetadata.getProperty("tags") instanceof Children).toBe(true, "collection");
         });
@@ -172,7 +172,7 @@ describe("entity-metadata", () => {
         });
 
         it("should ignore case", () => {
-            expect(songMetadata.getNavigation("ALBUM") instanceof Navigation).toBe(true);
+            expect(songMetadata.getNavigation("ALBUM") instanceof NavigationBase).toBe(true);
         });
 
         it("should allow usage of alias (ignore case)", () => {

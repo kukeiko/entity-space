@@ -1,9 +1,9 @@
-export abstract class Property {
+export abstract class PropertyBase {
     readonly dtoName: string;
     readonly name: string;
     readonly saveable: boolean;
 
-    constructor(args: Property.CtorArgs) {
+    constructor(args: PropertyBase.CtorArgs) {
         this.dtoName = args.dtoName || args.name;
         this.name = args.name;
         this.saveable = args.saveable || false;
@@ -14,7 +14,7 @@ export abstract class Property {
     }
 }
 
-export module Property {
+export module PropertyBase {
     export interface CtorArgs {
         dtoName?: string;
         name: string;

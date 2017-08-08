@@ -1,6 +1,6 @@
 import * as _ from "lodash";
 import { AnyType, StringIndexable } from "../util";
-import { AnyEntityMetadata, AnyEntityType, EntityType, IEntity, Primitive, Navigation, NavigationType, ValueType } from "../metadata";
+import { AnyEntityMetadata, AnyEntityType, EntityType, IEntity, Primitive, NavigationBase, NavigationType, ValueType } from "../metadata";
 import { MappingCompiler, CopyPrimitivesFunction } from "./mapping-compiler";
 
 export class EntityMapper {
@@ -159,11 +159,11 @@ export class EntityMapper {
         });
     }
 
-    static collect(items: ArrayLike<StringIndexable>, prop: Primitive | Navigation, isDto?: boolean): any[] {
+    static collect(items: ArrayLike<StringIndexable>, prop: Primitive | NavigationBase, isDto?: boolean): any[] {
         let collected: any[] = [];
         let name = prop.getName(isDto);
 
-        if (prop instanceof Navigation) {
+        if (prop instanceof NavigationBase) {
             let nav = prop as NavigationType;
 
             switch (nav.type) {

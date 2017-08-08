@@ -1,5 +1,5 @@
 // base
-export * from "./navigation";
+export * from "./navigation-base";
 
 // implementations
 export * from "./children";

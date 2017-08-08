@@ -1,8 +1,8 @@
 import * as _ from "lodash";
 import { EntityType, IEntity } from "./entity.type";
 import { Primitive } from "./primitive";
-import { Property } from "./property";
-import { NavigationType, Navigation, Children, Collection, Reference } from "./navigation";
+import { PropertyBase } from "./property-base";
+import { NavigationType, NavigationBase, Children, Collection, Reference } from "./navigations";
 
 export type AnyEntityMetadata = EntityMetadata<IEntity>;
 
@@ -13,14 +13,14 @@ export class EntityMetadata<T extends IEntity> {
     readonly entityType: EntityType<T>;
     readonly name: string;
     readonly primaryKey: Primitive;
-    readonly properties: ReadonlyArray<Property>;
+    readonly properties: ReadonlyArray<PropertyBase>;
     readonly primitives: ReadonlyArray<Primitive>;
     readonly navigations: ReadonlyArray<NavigationType>;
     readonly references: ReadonlyArray<Reference>;
     readonly children: ReadonlyArray<Children>;
     readonly collections: ReadonlyArray<Collection>;
 
-    private _propertiesMap = new Map<string, Property>();
+    private _propertiesMap = new Map<string, PropertyBase>();
     private _primitivesMap = new Map<string, Primitive>();
     private _navigationsMap = new Map<string, NavigationType>();
     private _referencesMap = new Map<string, Reference>();
@@ -35,7 +35,7 @@ export class EntityMetadata<T extends IEntity> {
 
         let aliases = new Set<string>();
 
-        let addProperty = (p: Property) => {
+        let addProperty = (p: PropertyBase) => {
             let [name, alias] = [p.name.toLowerCase(), p.dtoName.toLowerCase()];
 
             if (this._propertiesMap.has(name) || aliases.has(alias)) {
@@ -96,7 +96,7 @@ export class EntityMetadata<T extends IEntity> {
     /**
      * Returns a property identified by its name or alias (case insensitive) or null if not found.
      */
-    getProperty(nameOrAlias: string): Property {
+    getProperty(nameOrAlias: string): PropertyBase {
         return this._propertiesMap.get(nameOrAlias.toLocaleLowerCase()) || null;
     }
 
@@ -110,7 +110,7 @@ export class EntityMetadata<T extends IEntity> {
     /**
      * Returns a navigation identified by its name or alias (case insensitive) or null if not found.
      */
-    getNavigation(nameOrAlias: string): Navigation {
+    getNavigation(nameOrAlias: string): NavigationBase {
         return this._navigationsMap.get(nameOrAlias.toLocaleLowerCase()) || null;
     }
 

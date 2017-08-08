@@ -1,10 +1,10 @@
 import { EntityType } from "../entity.type";
-import { Navigation } from "./navigation";
+import { NavigationBase } from "./navigation-base";
 
 /**
  * Array of entities which have a back reference to this entity (parent/child relationship).
  */
-export class Children extends Navigation {
+export class Children extends NavigationBase {
     readonly type = "array:child";
     readonly backReferenceName: string;
 
