@@ -148,14 +148,20 @@ export class ServiceCluster {
                     let newValue = dtoCachedSaveable[k];
                     let oldValue = dtoSaveables[i][k];
 
-                    // note: not sure why, but _.isEqualWith + _.isMatch fails if an array is not wrapped in an object
-                    if (newValue instanceof Array || oldValue instanceof Array) {
-                        newValue = { workaround: newValue };
-                        oldValue = { workaround: oldValue };
-                    }
+                    if ([ValueType.Array, ValueType.Object, ValueType.Instance].includes(property.valueType)) {
+                        // note: not sure why, but _.isEqualWith + _.isMatch fails if an array is not wrapped in an object
+                        if (newValue instanceof Array || oldValue instanceof Array) {
+                            newValue = { workaround: newValue };
+                            oldValue = { workaround: oldValue };
+                        }
 
-                    if (!_.isEqualWith(newValue, oldValue, _.isMatch) || !_.isEqualWith(oldValue, newValue, _.isMatch)) {
-                        dtoPatch[k] = dtoSaveables[i][k];
+                        if (!_.isEqualWith(newValue, oldValue, _.isMatch) || !_.isEqualWith(oldValue, newValue, _.isMatch)) {
+                            dtoPatch[k] = dtoSaveables[i][k];
+                        }
+                    } else {
+                        if (!_.isEqual(newValue, oldValue)) {
+                            dtoPatch[k] = dtoSaveables[i][k];
+                        }
                     }
                 });
 
