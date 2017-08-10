@@ -32,24 +32,24 @@ export class MappingCompiler {
             let assignment: string = null;
 
             if ([ValueType.Array, ValueType.Object].includes(p.valueType)) {
-                assignment = `JSON.parse(JSON.stringify(source.${fromName}));`;
+                assignment = `JSON.parse(JSON.stringify(source.${fromName}))`;
             } else if (p.valueType == ValueType.Instance) {
                 assignment = `lodash.cloneDeep(source.${fromName})`;
             } else if (p.valueType == ValueType.Date) {
                 if (args.fromDto && args.toDto) {
-                    assignment = `source.${fromName};`;
+                    assignment = `source.${fromName}`;
                 } else if (args.fromDto && !args.toDto) {
-                    assignment = `source.${fromName} ? new Date(source.${fromName}) : null;`;
+                    assignment = `new Date(source.${fromName})`;
                 } else if (!args.fromDto && args.toDto) {
-                    assignment = `source.${fromName}.toISOString();`;
+                    assignment = `source.${fromName}.toISOString()`;
                 } else {
-                    assignment = `new Date(source.${fromName});`;
+                    assignment = `new Date(source.${fromName})`;
                 }
             } else {
                 assignment = `source.${fromName}`;
             }
 
-            line(`\tif(source.${fromName} != null) target.${toName} = ${assignment};`);
+            line(`\ttarget.${toName} = source.${fromName} != null ? ${assignment} : null;`);
             // line(`\ttarget.${toName} = source.${fromName} == null ? null : ${assignment}`);
         });
 
