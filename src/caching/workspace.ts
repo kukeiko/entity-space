@@ -20,8 +20,8 @@ export class Workspace {
         let cached: T[] = [];
 
         switch (query.type) {
-            case "key": cached = [cache.byKey(query.key)].filter(x => x); break;
-            case "keys": cached = cache.byKeysAsArray(query.keys); break;
+            case "id": cached = [cache.byKey(query.id)].filter(x => x); break;
+            case "ids": cached = cache.byKeysAsArray(query.ids); break;
             case "indexes": cached = cache.byIndexesAsArray(query.indexes); break;
             case "all": cached = cache.allAsArray(); break;
         }
@@ -239,36 +239,5 @@ export class Workspace {
             getKey: item => item[metadata.primaryKey.name],
             indexes
         });
-    }
-
-    private _collect(items: StringIndexable[], nav: NavigationType, dto?: boolean): StringIndexable[] {
-        return EntityMapper.collect(items, nav, dto);
-        // let name = nav.getName(dto);
-        // let collected: StringIndexable[] = [];
-
-        // switch (nav.type) {
-        //     case "ref":
-        //         let item: any;
-        //         for (let i = 0; i < items.length; ++i) {
-        //             item = items[i][name];
-        //             if (!item) continue;
-
-        //             collected.push(item);
-        //         }
-        //         break;
-
-        //     case "array:ref":
-        //     case "array:child":
-        //         for (let i = 0; i < items.length; ++i) {
-        //             let array = items[i][name];
-
-        //             for (let e = 0; e < array.length; ++e) {
-        //                 collected.push(array[e]);
-        //             }
-        //         }
-        //         break;
-        // }
-
-        // return collected;
     }
 }

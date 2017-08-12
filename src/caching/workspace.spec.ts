@@ -1,43 +1,42 @@
 import { Expansion, Query } from "../elements";
-import { Entity, ValueType, getEntityMetadata } from "../metadata";
+import { EntityClass, getEntityMetadata, Property } from "../metadata";
 import { Workspace } from "./workspace";
 
 describe("workspace", () => {
-    debugger;
-    @Entity() class Foo {
+    @EntityClass() class Foo {
         constructor(args?: Partial<Foo>) { Object.assign(this, args || {}); };
-        @Entity.PrimaryKey() id: number = null;
-        @Entity.Primitive() string: string = null;
-        @Entity.Primitive({ valueType: ValueType.Date }) time: Date = null;
-        @Entity.Primitive({ valueType: ValueType.Object }) complex: Object = null;
+        @Property.Id() id: number = null;
+        @Property.Primitive() string: string = null;
+        @Property.Date() time: Date = null;
+        @Property.Complex() complex: Object = null;
 
-        @Entity.Children({ back: "foo", other: () => Bar }) bars: Bar[] = [];
+        @Property.Children({ back: "foo", other: () => Bar }) bars: Bar[] = [];
 
-        @Entity.Primitive({ valueType: ValueType.Array }) bazIds: number[] = [];
-        @Entity.Collection({ keys: "bazIds", other: () => Baz }) bazs: Baz[] = [];
+        @Property.Complex() bazIds: number[] = [];
+        @Property.Collection({ keys: "bazIds", other: () => Baz }) bazs: Baz[] = [];
     }
 
 
-    @Entity() class Bar {
+    @EntityClass() class Bar {
         constructor(args?: Partial<Bar>) { Object.assign(this, args || {}); };
-        @Entity.PrimaryKey({ dtoName: "Id" }) id: number = null;
-        @Entity.Primitive({ dtoName: "A" }) string: string = null;
-        @Entity.Primitive({ dtoName: "B", valueType: ValueType.Date }) time: Date = null;
-        @Entity.Primitive({ dtoName: "C", valueType: ValueType.Object }) complex: Object = null;
+        @Property.Id({ dtoName: "Id" }) id: number = null;
+        @Property.Primitive({ dtoName: "A" }) string: string = null;
+        @Property.Date({ dtoName: "B" }) time: Date = null;
+        @Property.Complex({ dtoName: "C" }) complex: Object = null;
 
-        @Entity.ReferenceKey({ dtoName: "FooNr" }) fooId: number = null;
-        @Entity.Reference({ dtoName: "Foo", key: "fooId", other: () => Foo }) foo: Foo = null;
+        @Property.Key({ dtoName: "FooNr" }) fooId: number = null;
+        @Property.Reference({ dtoName: "Foo", key: "fooId", other: () => Foo }) foo: Foo = null;
 
-        @Entity.ReferenceKey({ dtoName: "BazNr" }) bazId: number = null;
-        @Entity.Reference({ dtoName: "Baz", key: "bazId", other: () => Baz }) baz: Baz = null;
+        @Property.Key({ dtoName: "BazNr" }) bazId: number = null;
+        @Property.Reference({ dtoName: "Baz", key: "bazId", other: () => Baz }) baz: Baz = null;
     }
 
-    @Entity() class Baz {
+    @EntityClass() class Baz {
         constructor(args?: Partial<Baz>) { Object.assign(this, args || {}); };
-        @Entity.PrimaryKey() id: number = null;
-        @Entity.Primitive() string: string = null;
-        @Entity.Primitive({ valueType: ValueType.Date }) time: Date = null;
-        @Entity.Primitive({ valueType: ValueType.Object }) complex: Object = null;
+        @Property.Id() id: number = null;
+        @Property.Primitive() string: string = null;
+        @Property.Date() time: Date = null;
+        @Property.Complex() complex: Object = null;
     }
 
     it("???", () => {
@@ -92,7 +91,7 @@ describe("workspace", () => {
                 let start = new Date();
                 ws.execute(new Query.All({
                     entityType: Foo,
-                    expansions: `bazs,bars/baz`
+                    expand: `bazs,bars/baz`
                 }));
                 let end = new Date();
                 let run = end.getTime() - start.getTime();

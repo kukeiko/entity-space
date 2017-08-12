@@ -1,4 +1,3 @@
-import { EntityType } from "../entity.type";
 import { NavigationBase } from "./navigation-base";
 
 /**
@@ -8,24 +7,15 @@ export class Collection extends NavigationBase {
     readonly type = "array:ref";
     readonly keysName: string;
 
-    constructor(args: Collection.CtorArgs) {
-        super({
-            dtoName: args.dtoName,
-            virtual: args.virtual,
-            name: args.name,
-            other: args.other
-        });
+    constructor(name: string, args: Collection.CtorArgs) {
+        super(name, args);
 
         this.keysName = args.keys;
     }
 }
 
 export module Collection {
-    export interface CtorArgs {
-        dtoName?: string;
+    export interface CtorArgs extends NavigationBase.CtorArgs {
         keys: string;
-        name: string;
-        other: () => EntityType<any>;
-        virtual?: boolean;
     }
 }

@@ -50,12 +50,12 @@ describe("service-cluster", () => {
             sc.register(SongTag, { loadOne: () => { throw ("expected to not call SongTag query executer"); } });
 
             try {
-                await sc.executeQuery(new Query.ByKey({ entityType: Album, key: 1, expansions: `artist,songs/tags` }));
-                await sc.executeQuery(new Query.ByKey({ entityType: Song, key: 1337 }));
-                await sc.executeQuery(new Query.ByKey({ entityType: Song, key: 64 }));
-                await sc.executeQuery(new Query.ByKey({ entityType: Song, key: 32, expansions: `tags` }));
-                await sc.executeQuery(new Query.ByKey({ entityType: Artist, key: 7 }));
-                await sc.executeQuery(new Query.ByKey({ entityType: SongTag, key: 777 }));
+                await sc.executeQuery(new Query.ById({ entityType: Album, id: 1, expand: `artist,songs/tags` }));
+                await sc.executeQuery(new Query.ById({ entityType: Song, id: 1337 }));
+                await sc.executeQuery(new Query.ById({ entityType: Song, id: 64 }));
+                await sc.executeQuery(new Query.ById({ entityType: Song, id: 32, expand: `tags` }));
+                await sc.executeQuery(new Query.ById({ entityType: Artist, id: 7 }));
+                await sc.executeQuery(new Query.ById({ entityType: SongTag, id: 777 }));
                 done();
             } catch (error) {
                 fail(error);
@@ -96,13 +96,13 @@ describe("service-cluster", () => {
             sc.register(
                 Album,
                 {
-                    loadOne: (q: Query.ByKey<Album>) => Promise.resolve(new Album({ id: q.key as number }))
+                    loadOne: (q: Query.ById<Album>) => Promise.resolve(new Album({ id: q.id as number }))
                 });
 
             try {
-                let map = await sc.executeQuery(new Query.ByKey({
+                let map = await sc.executeQuery(new Query.ById({
                     entityType: Album,
-                    key: id
+                    id: id
                 }));
 
                 loaded = Array.from(map.values());
@@ -124,13 +124,13 @@ describe("service-cluster", () => {
             sc.register(
                 Album,
                 {
-                    loadMany: (q: Query.ByKeys<Album>) => Promise.resolve(q.keys.map(k => new Album({ id: k as number })))
+                    loadMany: (q: Query.ByIds<Album>) => Promise.resolve(q.ids.map(k => new Album({ id: k as number })))
                 });
 
             try {
-                let map = await sc.executeQuery(new Query.ByKeys({
+                let map = await sc.executeQuery(new Query.ByIds({
                     entityType: Album,
-                    keys: ids
+                    ids: ids
                 }));
 
                 loaded = Array.from(map.values());
@@ -188,7 +188,7 @@ describe("service-cluster", () => {
             try {
                 await sc.executeQuery(new Query.All({
                     entityType: Album,
-                    expansions: Expansion.parse(Album, `reviews`)
+                    expand: Expansion.parse(Album, `reviews`)
                 }));
 
                 fail("expected to throw");
@@ -211,7 +211,7 @@ describe("service-cluster", () => {
             try {
                 let loaded = await sc.executeQuery(new Query.All({
                     entityType: Album,
-                    expansions: Expansion.parse(Album, `reviews`)
+                    expand: Expansion.parse(Album, `reviews`)
                 }));
 
                 loaded.forEach(i => albumMap.set(i.id, i));
@@ -243,7 +243,7 @@ describe("service-cluster", () => {
                 let artistMap = new Map<number, Artist>();
                 let loaded = await sc.executeQuery(new Query.All({
                     entityType: Artist,
-                    expansions: Expansion.parse(Artist, `albums/reviews`)
+                    expand: Expansion.parse(Artist, `albums/reviews`)
                 }));
 
                 loaded.forEach(i => artistMap.set(i.id, i));
@@ -275,7 +275,7 @@ describe("service-cluster", () => {
                 let artistMap = new Map<number, Artist>();
                 let loaded = await sc.executeQuery(new Query.All({
                     entityType: Artist,
-                    expansions: Expansion.parse(Artist, `albums/reviews/review`)
+                    expand: Expansion.parse(Artist, `albums/reviews/review`)
                 }));
 
                 loaded.forEach(i => artistMap.set(i.id, i));

@@ -1,30 +1,30 @@
-import { Entity } from "../../../src";
+import { EntityClass, Property } from "../../../src";
 import { Album } from "./album";
 import { Review } from "./review";
 
-@Entity()
+@EntityClass()
 export class AlbumReview {
-    @Entity.PrimaryKey()
+    @Property.Id()
     id: number = null;
 
-    @Entity.ReferenceKey()
+    @Property.Key()
     albumId: number = null;
 
-    @Entity.Reference({ key: "albumId", other: () => Album })
+    @Property.Reference({ key: "albumId", other: () => Album })
     album: Album = null;
 
-    @Entity.ReferenceKey()
+    @Property.Key()
     get reviewId(): string {
         return `${this.reviewExternalId}@${this.systemId}`;
     }
 
-    @Entity.Reference({ key: "reviewId", other: () => Review, virtual: true })
+    @Property.Reference({ key: "reviewId", other: () => Review, virtual: true })
     review: Review = null;
 
-    @Entity.Primitive()
+    @Property.Primitive()
     reviewExternalId: string = null;
 
-    @Entity.Primitive()
+    @Property.Primitive()
     systemId: number = null;
 
     constructor(args?: Partial<AlbumReview>) {

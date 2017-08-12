@@ -1,4 +1,3 @@
-import { EntityType } from "../entity.type";
 import { NavigationBase } from "./navigation-base";
 
 /**
@@ -8,24 +7,15 @@ export class Children extends NavigationBase {
     readonly type = "array:child";
     readonly backReferenceName: string;
 
-    constructor(args: Children.CtorArgs) {
-        super({
-            dtoName: args.dtoName,
-            virtual: args.virtual,
-            name: args.name,
-            other: args.other
-        });
+    constructor(name: string, args: Children.CtorArgs) {
+        super(name, args);
 
         this.backReferenceName = args.back;
     }
 }
 
 export module Children {
-    export interface CtorArgs {
-        dtoName?: string;
+    export interface CtorArgs extends NavigationBase.CtorArgs {
         back: string;
-        name: string;
-        other: () => EntityType<any>;
-        virtual?: boolean;
     }
 }

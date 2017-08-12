@@ -1,11 +1,11 @@
-import { Entity } from "../metadata";
+import { EntityClass, Property } from "../metadata";
 import { ServiceCluster } from "./service-cluster";
 
 describe("service-cluster", () => {
-    @Entity()
+    @EntityClass()
     class Item {
         constructor(args?: Partial<Item>) { Object.assign(this, args || {}); }
-        @Entity.PrimaryKey() id: number;
+        @Property.Id() id: number;
     }
 
     it("should not load more than once from service due to being cached", async done => {

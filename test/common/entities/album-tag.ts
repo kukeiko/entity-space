@@ -1,26 +1,18 @@
-import { Entity } from "../../../src";
+import { EntityClass } from "../../../src";
 import { Album } from "./album";
 import { Tag } from "./tag";
 
-@Entity({
+@EntityClass({
     name: "AlbumTag",
     primaryKey: { name: "id" },
-    primitives: [{
-        name: "albumId",
-        index: true
-    }, {
-        name: "tagId",
-        index: true
-    }],
-    references: [{
-        key: "albumId",
-        name: "album",
-        other: () => Album
-    }, {
-        key: "tagId",
-        name: "tag",
-        other: () => Tag
-    }]
+    primitives: {
+        albumId: { index: true },
+        tagId: { index: true }
+    },
+    references: {
+        album: { key: "albumId", other: () => Album },
+        tag: { key: "tagId", other: () => Tag }
+    }
 })
 export class AlbumTag {
     id: number;

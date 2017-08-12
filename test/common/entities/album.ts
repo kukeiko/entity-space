@@ -1,30 +1,30 @@
-import { Entity } from "../../../src";
+import { EntityClass, Property } from "../../../src";
 import { Artist } from "./artist";
 import { Song } from "./song";
 import { AlbumTag } from "./album-tag";
 import { AlbumReview } from "./album-review";
 
-@Entity()
+@EntityClass()
 export class Album {
-    @Entity.PrimaryKey()
+    @Property.Id()
     id: number = null;
 
-    @Entity.Primitive({ index: true })
+    @Property.Primitive({ index: true })
     name: string = null;
 
-    @Entity.ReferenceKey()
+    @Property.Key()
     artistId: number = null;
 
-    @Entity.Reference({ key: "artistId", other: () => Artist })
+    @Property.Reference({ key: "artistId", other: () => Artist })
     artist: Artist = null;
 
-    @Entity.Children({ back: "album", other: () => Song })
+    @Property.Children({ back: "album", other: () => Song })
     songs: Song[] = [];
 
-    @Entity.Children({ back: "album", other: () => AlbumTag })
+    @Property.Children({ back: "album", other: () => AlbumTag })
     tags: AlbumTag[] = [];
 
-    @Entity.Children({ back: "album", other: () => AlbumReview, virtual: true })
+    @Property.Children({ back: "album", other: () => AlbumReview, virtual: true })
     reviews: AlbumReview[] = [];
 
     constructor(args?: Partial<Album>) {

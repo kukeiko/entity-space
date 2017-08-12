@@ -1,21 +1,21 @@
-import { Entity, Query, QueryCache } from "../../src";
+import { EntityClass, Query, QueryCache, Property } from "../../src";
 
 describe("query-cache", () => {
     describe("isCached()", () => {
         describe("identity only", () => {
-            @Entity() class Foo { @Entity.PrimaryKey() id: string; }
+            @EntityClass() class Foo { @Property.Id() id: string; }
 
             it("Foo(mo) should be cached via Foo(khaz,mo,dan)", () => {
                 let cache = new QueryCache();
 
-                let byKeys = new Query.ByKeys({
+                let byKeys = new Query.ByIds({
                     entityType: Foo,
-                    keys: ["khaz", "mo", "dan"]
+                    ids: ["khaz", "mo", "dan"]
                 });
 
-                let byMo = new Query.ByKey({
+                let byMo = new Query.ById({
                     entityType: Foo,
-                    key: "mo"
+                    id: "mo"
                 });
 
                 cache.merge(byKeys);
@@ -26,24 +26,24 @@ describe("query-cache", () => {
             it("Foo(khaz,mo,dan) should be cached via Foo(mo), Foo(dan), Foo(khaz)", () => {
                 let cache = new QueryCache();
 
-                let byMo = new Query.ByKey({
+                let byMo = new Query.ById({
                     entityType: Foo,
-                    key: "mo"
+                    id: "mo"
                 });
 
-                let byDan = new Query.ByKey({
+                let byDan = new Query.ById({
                     entityType: Foo,
-                    key: "dan"
+                    id: "dan"
                 });
 
-                let byKhaz = new Query.ByKey({
+                let byKhaz = new Query.ById({
                     entityType: Foo,
-                    key: "khaz"
+                    id: "khaz"
                 });
 
-                let byKeys = new Query.ByKeys({
+                let byKeys = new Query.ByIds({
                     entityType: Foo,
-                    keys: ["khaz", "mo", "dan"]
+                    ids: ["khaz", "mo", "dan"]
                 });
 
                 cache.merge(byMo);
@@ -56,19 +56,19 @@ describe("query-cache", () => {
             it("Foo(mo,zul) should be cached via Foo(khaz,mo), Foo(zul,jin)", () => {
                 let cache = new QueryCache();
 
-                let byKhazMo = new Query.ByKeys({
+                let byKhazMo = new Query.ByIds({
                     entityType: Foo,
-                    keys: ["khaz", "mo"]
+                    ids: ["khaz", "mo"]
                 });
 
-                let byZulJin = new Query.ByKeys({
+                let byZulJin = new Query.ByIds({
                     entityType: Foo,
-                    keys: ["zul", "jin"]
+                    ids: ["zul", "jin"]
                 });
 
-                let byMoZul = new Query.ByKeys({
+                let byMoZul = new Query.ByIds({
                     entityType: Foo,
-                    keys: ["mo", "zul"]
+                    ids: ["mo", "zul"]
                 });
 
                 cache.merge(byKhazMo);
@@ -79,29 +79,29 @@ describe("query-cache", () => {
         });
 
         describe("w/ expansions", () => {
-            @Entity() class Foo {
-                @Entity.PrimaryKey() id: string;
-                @Entity.Children({ back: "parent", other: () => Bar }) children: Bar[];
+            @EntityClass() class Foo {
+                @Property.Id() id: string;
+                @Property.Children({ back: "parent", other: () => Bar }) children: Bar[];
             }
 
-            @Entity() class Bar {
-                @Entity.PrimaryKey() id: string;
-                @Entity.Reference({ key: "parentId", other: () => Foo }) parent: Foo;
+            @EntityClass() class Bar {
+                @Property.Id() id: string;
+                @Property.Reference({ key: "parentId", other: () => Foo }) parent: Foo;
             }
 
             it("Foo(mo)/children should be cached via Foo(khaz,mo,dan)/children", () => {
                 let cache = new QueryCache();
 
-                let byKeys = new Query.ByKeys({
+                let byKeys = new Query.ByIds({
                     entityType: Foo,
-                    keys: ["khaz", "mo", "dan"],
-                    expansions: `children`
+                    ids: ["khaz", "mo", "dan"],
+                    expand: `children`
                 });
 
-                let byMo = new Query.ByKey({
+                let byMo = new Query.ById({
                     entityType: Foo,
-                    key: "mo",
-                    expansions: `children`
+                    id: "mo",
+                    expand: `children`
                 });
 
                 cache.merge(byKeys);

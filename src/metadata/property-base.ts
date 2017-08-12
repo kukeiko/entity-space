@@ -1,12 +1,10 @@
 export abstract class PropertyBase {
     readonly dtoName: string;
     readonly name: string;
-    readonly saveable: boolean;
 
-    constructor(args: PropertyBase.CtorArgs) {
-        this.dtoName = args.dtoName || args.name;
-        this.name = args.name;
-        this.saveable = args.saveable || false;
+    constructor(name: string, args: PropertyBase.CtorArgs) {
+        this.name = name;
+        this.dtoName = args.dtoName || name;
     }
 
     getName(dto?: boolean): string {
@@ -17,7 +15,5 @@ export abstract class PropertyBase {
 export module PropertyBase {
     export interface CtorArgs {
         dtoName?: string;
-        name: string;
-        saveable?: boolean;
     }
 }

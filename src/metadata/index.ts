@@ -3,8 +3,7 @@
  */
 export * from "./entity.type";
 export * from "./property-base";
-export * from "./value-type";
-export * from "./primitive";
+export * from "./locals";
 export * from "./navigations";
 
 // todo: cyclic reference, both depend on each other

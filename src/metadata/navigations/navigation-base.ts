@@ -17,8 +17,8 @@ export abstract class NavigationBase extends PropertyBase {
     }
     private _otherTypeMetadata: EntityMetadata<any> = null;
 
-    constructor(args: NavigationBase.CtorArgs) {
-        super(args);
+    constructor(name: string, args: NavigationBase.CtorArgs) {
+        super(name, args);
 
         this._otherType = args.other;
         this.virtual = !!args.virtual;

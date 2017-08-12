@@ -22,21 +22,21 @@ export class StaticDataService<K, V> implements IService {
         return Promise.resolve(this._items.slice());
     }
 
-    async loadOne(q: Query.ByKey<V>): Promise<V> {
-        let item = this._items.find(i => this._keyGetter(i) == q.key);
+    async loadOne(q: Query.ById<V>): Promise<V> {
+        let item = this._items.find(i => this._keyGetter(i) == q.id);
 
         if (!item && this._onNotFound) {
-            item = await this._onNotFound(q.key as K);
+            item = await this._onNotFound(q.id as K);
         }
 
-        return item ? Promise.resolve(item) : Promise.reject<any>(`${q.entityType.name} with id ${q.key} not found`);
+        return item ? Promise.resolve(item) : Promise.reject<any>(`${q.entityType.name} with id ${q.id} not found`);
     }
 
-    async loadMany(q: Query.ByKeys<V>): Promise<V[]> {
-        return await Promise.all(q.keys.map(k => this.loadOne(new Query.ByKey({
+    async loadMany(q: Query.ByIds<V>): Promise<V[]> {
+        return await Promise.all(q.ids.map(k => this.loadOne(new Query.ById({
             entityType: q.entityType,
-            expansions: q.expansions.slice(),
-            key: k
+            expand: q.expansions.slice(),
+            id: k
         }))));
     }
 }
