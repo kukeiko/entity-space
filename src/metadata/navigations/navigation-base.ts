@@ -1,12 +1,12 @@
 import { EntityType } from "../entity.type";
 import { getEntityMetadata } from "../entity.decorator";
-import { Property } from "../property";
+import { PropertyBase } from "../property-base";
 import { EntityMetadata } from "../entity-metadata";
 
 /**
  * A property that points to one (Reference) or many (Children, Collection) related entities.
  */
-export abstract class Navigation extends Property {
+export abstract class NavigationBase extends PropertyBase {
     readonly virtual: boolean;
 
     get otherType(): EntityType<any> { return this._otherType(); };
@@ -17,16 +17,16 @@ export abstract class Navigation extends Property {
     }
     private _otherTypeMetadata: EntityMetadata<any> = null;
 
-    constructor(args: Navigation.CtorArgs) {
-        super(args);
+    constructor(name: string, args: NavigationBase.CtorArgs) {
+        super(name, args);
 
         this._otherType = args.other;
         this.virtual = !!args.virtual;
     }
 }
 
-export module Navigation {
-    export interface CtorArgs extends Property.CtorArgs {
+export module NavigationBase {
+    export interface CtorArgs extends PropertyBase.CtorArgs {
         other: () => EntityType<any>;
         virtual?: boolean;
     }

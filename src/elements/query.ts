@@ -7,7 +7,7 @@ import { Extraction } from "./extraction";
 /**
  * All the supported query identities by which the initial set of an operation is narrowed down.
  */
-export type QueryIdentity = "all" | "key" | "keys" | "index" | "indexes";
+export type QueryIdentity = "all" | "id" | "ids" | "index" | "indexes";
 
 /**
  * Describes which entities and expansions should be considered for an operation.
@@ -40,13 +40,13 @@ export abstract class Query<T extends IEntity> {
      */
     protected constructor(args: {
         entityType: EntityType<T>;
-        expansions?: string | ArrayLike<Expansion>;
+        expand?: string | ArrayLike<Expansion>;
     }) {
         this.entityType = args.entityType;
 
-        let expansions = (typeof (args.expansions) == "string"
-            ? Expansion.parse(args.entityType, args.expansions)
-            : (args.expansions || []))
+        let expansions = (typeof (args.expand) == "string"
+            ? Expansion.parse(args.entityType, args.expand)
+            : (args.expand || []))
             .slice()
             .sort((a, b) => a.property.name.toLocaleLowerCase() < b.property.name.toLocaleLowerCase() ? -1 : 1);
 
@@ -92,19 +92,19 @@ export abstract class Query<T extends IEntity> {
 
         switch (self.type) {
             case "all":
-                q = new Query.All<T>({ entityType: self.entityType, expansions: expansions });
+                q = new Query.All<T>({ entityType: self.entityType, expand: expansions });
                 break;
 
-            case "key":
-                q = new Query.ByKey<T>({ key: self.key, entityType: self.entityType, expansions: expansions });
+            case "id":
+                q = new Query.ById<T>({ id: self.id, entityType: self.entityType, expand: expansions });
                 break;
 
-            case "keys":
-                q = new Query.ByKeys<T>({ keys: self.keys.slice(), entityType: self.entityType, expansions: expansions });
+            case "ids":
+                q = new Query.ByIds<T>({ ids: self.ids.slice(), entityType: self.entityType, expand: expansions });
                 break;
 
             case "indexes":
-                q = new Query.ByIndexes<T>({ indexes: self.indexes, entityType: self.entityType, expansions: expansions });
+                q = new Query.ByIndexes<T>({ indexes: self.indexes, entityType: self.entityType, expand: expansions });
                 break;
 
             default:
@@ -152,7 +152,7 @@ export module Query {
 
         constructor(args: {
             entityType: EntityType<T>;
-            expansions?: string | ArrayLike<Expansion>;
+            expand?: string | ArrayLike<Expansion>;
         }) {
             super(args);
         }
@@ -171,10 +171,10 @@ export module Query {
             if (remainingExpansions.length == 0) return null;
 
             switch (other.type) {
-                case "all": return new Query.All<T>({ entityType: other.entityType, expansions: remainingExpansions });
-                case "key": return new Query.ByKey<T>({ key: other.key, entityType: other.entityType, expansions: remainingExpansions });
-                case "keys": return new Query.ByKeys<T>({ keys: other.keys.slice(), entityType: other.entityType, expansions: remainingExpansions });
-                case "indexes": return new Query.ByIndexes<T>({ indexes: other.indexes, entityType: other.entityType, expansions: remainingExpansions });
+                case "all": return new Query.All<T>({ entityType: other.entityType, expand: remainingExpansions });
+                case "id": return new Query.ById<T>({ id: other.id, entityType: other.entityType, expand: remainingExpansions });
+                case "ids": return new Query.ByIds<T>({ ids: other.ids.slice(), entityType: other.entityType, expand: remainingExpansions });
+                case "indexes": return new Query.ByIndexes<T>({ indexes: other.indexes, entityType: other.entityType, expand: remainingExpansions });
                 default: throw `unsupported query ${other}`;
             }
         }
@@ -182,7 +182,7 @@ export module Query {
         merge(other: Query.All<T>): Query.All<T> {
             return new Query.All({
                 entityType: this.entityType,
-                expansions: Expansion.add(this.expansions.slice(), other.expansions.slice())
+                expand: Expansion.add(this.expansions.slice(), other.expansions.slice())
             });
         }
     }
@@ -192,23 +192,23 @@ export module Query {
      *
      * Immutable
      */
-    export class ByKey<T extends IEntity> extends Query<T> {
-        readonly type = "key";
-        readonly key: ToStringable;
+    export class ById<T extends IEntity> extends Query<T> {
+        readonly type = "id";
+        readonly id: ToStringable;
 
         constructor(args: {
-            key: ToStringable;
+            id: ToStringable;
             entityType: EntityType<T>;
-            expansions?: string | ArrayLike<Expansion>;
+            expand?: string | ArrayLike<Expansion>;
         }) {
             super(args);
 
-            this.key = args.key;
+            this.id = args.id;
         }
 
         isSupersetOf(other: Query<T>): boolean {
             if (other.entityType != this.entityType) return false;
-            if (other instanceof ByKey && other.key == this.key) {
+            if (other instanceof ById && other.id == this.id) {
                 return Expansion.isSuperset(this.expansions.slice(), other.expansions.slice());
             }
 
@@ -217,30 +217,30 @@ export module Query {
 
         toString(): string {
             return this._toString({
-                suffix: this.key
+                suffix: this.id
             });
         }
 
-        reduce(other: Query.ByKey<T>): Query.ByKey<T> {
-            if (other.key != this.key) throw `can't reduce using two by-key queries with different keys`;
+        reduce(other: Query.ById<T>): Query.ById<T> {
+            if (other.id != this.id) throw `can't reduce using two by-key queries with different keys`;
 
             let remainingExpansions = Expansion.minus(other.expansions.slice(), this.expansions.slice());
             if (remainingExpansions.length == 0) return null;
 
-            return new Query.ByKey({
+            return new Query.ById({
                 entityType: this.entityType,
-                expansions: remainingExpansions,
-                key: this.key
+                expand: remainingExpansions,
+                id: this.id
             });
         }
 
-        merge(other: Query.ByKey<T>): Query.ByKey<T> {
-            if (other.key != this.key) throw `can't merge two by-key queries with different keys`;
+        merge(other: Query.ById<T>): Query.ById<T> {
+            if (other.id != this.id) throw `can't merge two by-key queries with different keys`;
 
-            return new Query.ByKey({
+            return new Query.ById({
                 entityType: this.entityType,
-                expansions: Expansion.add(this.expansions.slice(), other.expansions.slice()),
-                key: this.key
+                expand: Expansion.add(this.expansions.slice(), other.expansions.slice()),
+                id: this.id
             });
         }
     }
@@ -250,27 +250,27 @@ export module Query {
      *
      * Immutable
      */
-    export class ByKeys<T extends IEntity> extends Query<T> {
-        readonly type = "keys";
-        readonly keys: ReadonlyArray<ToStringable>;
+    export class ByIds<T extends IEntity> extends Query<T> {
+        readonly type = "ids";
+        readonly ids: ReadonlyArray<ToStringable>;
         private readonly _sortedKeys: Array<ToStringable>;
 
         constructor(args: {
-            keys: ToStringable[];
+            ids: ToStringable[];
             entityType: EntityType<T>;
-            expansions?: string | ArrayLike<Expansion>;
+            expand?: string | ArrayLike<Expansion>;
         }) {
             super(args);
 
-            this.keys = args.keys.slice();
-            this._sortedKeys = args.keys.slice().sort();
+            this.ids = args.ids.slice();
+            this._sortedKeys = args.ids.slice().sort();
         }
 
         isSupersetOf(other: Query<T>): boolean {
             if (other.entityType != this.entityType) return false;
-            if (other instanceof ByKey && this._sortedKeys.includes(other.key)) {
+            if (other instanceof ById && this._sortedKeys.includes(other.id)) {
                 return Expansion.isSuperset(this.expansions.slice(), other.expansions.slice());
-            } else if (other instanceof ByKeys && _.difference(other._sortedKeys, this._sortedKeys).length == 0) {
+            } else if (other instanceof ByIds && _.difference(other._sortedKeys, this._sortedKeys).length == 0) {
                 return Expansion.isSuperset(this.expansions.slice(), other.expansions.slice());
             }
 
@@ -279,7 +279,7 @@ export module Query {
 
         toString(): string {
             return this._toString({
-                suffix: this.keys.join(",")
+                suffix: this.ids.join(",")
             });
         }
     }
@@ -296,7 +296,7 @@ export module Query {
         constructor(args: {
             indexes: { [key: string]: ToStringable };
             entityType: EntityType<T>;
-            expansions?: string | ArrayLike<Expansion>;
+            expand?: string | ArrayLike<Expansion>;
         }) {
             super(args);
 
@@ -352,7 +352,7 @@ export module Query {
 
             return new Query.ByIndexes({
                 entityType: this.entityType,
-                expansions: remainingExpansions,
+                expand: remainingExpansions,
                 indexes: this.indexes
             });
         }
@@ -361,7 +361,7 @@ export module Query {
         merge(other: Query.ByIndexes<T>): Query.ByIndexes<T> {
             return new Query.ByIndexes({
                 entityType: this.entityType,
-                expansions: Expansion.add(this.expansions.slice(), other.expansions.slice()),
+                expand: Expansion.add(this.expansions.slice(), other.expansions.slice()),
                 indexes: this.indexes
             });
         }
@@ -370,6 +370,6 @@ export module Query {
 
 export type QueryType<T extends IEntity> =
     Query.All<T>
-    | Query.ByKey<T>
-    | Query.ByKeys<T>
+    | Query.ById<T>
+    | Query.ByIds<T>
     | Query.ByIndexes<T>;

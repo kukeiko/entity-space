@@ -1,7 +1,7 @@
 import { EntityType, IEntity } from "./entity.type";
 import { EntityMetadata } from "./entity-metadata";
-import { Children, Collection, Reference } from "./navigation";
-import { Primitive } from "./primitive";
+import { Children, Collection, Reference } from "./navigations";
+import { Primitive, DateTime, Complex, Instance } from "./locals";
 
 const METADATA_KEY = "entity-space:entity-metadata";
 const METADATA_ARGS_KEY = "entity-space:entity-metadata:ctor-args";
@@ -11,10 +11,13 @@ let nameToTypeMap = new Map<string, EntityType<any>>();
 function getOrCreateMetadataArgs(type: any): Partial<EntityMetadata.CtorArgs> {
     if (!Reflect.hasMetadata(METADATA_ARGS_KEY, type)) {
         let args: Partial<EntityMetadata.CtorArgs> = {
-            children: [],
-            collections: [],
-            primitives: [],
-            references: []
+            primitives: {},
+            dates: {},
+            complexes: {},
+            instances: {},
+            references: {},
+            children: {},
+            collections: {}
         };
 
         Reflect.defineMetadata(METADATA_ARGS_KEY, args, type);
@@ -27,12 +30,12 @@ function getOrCreateMetadataArgs(type: any): Partial<EntityMetadata.CtorArgs> {
  * Define a class as a type of entity, describing all its cacheable, loadable and saveable properties.
  *
  * Property metadata can be defined by:
- * * using property decorators (e.g. @Entity.PrimaryKey(), @Entity.Reference())
+ * * using property decorators (e.g. @Property.PrimaryKey(), @Property.Reference())
  * * passing constructor arguments via this decorator
  *
  * Each entity type must have a primary key defined, and names/aliases must be unique across all properties.
  */
-export function Entity(args?: Partial<EntityMetadata.CtorArgs>) {
+export function EntityClass(args?: Partial<EntityMetadata.CtorArgs>) {
     return (type: EntityType<any>) => {
         let existing = getOrCreateMetadataArgs(type);
         existing.name = (args || {}).name || type.name;
@@ -41,10 +44,13 @@ export function Entity(args?: Partial<EntityMetadata.CtorArgs>) {
         if (!args) return;
 
         existing.primaryKey = args.primaryKey || existing.primaryKey;
-        existing.primitives = [...existing.primitives, ...(args.primitives || [])];
-        existing.references = [...existing.references, ...(args.references || [])];
-        existing.children = [...existing.children, ...(args.children || [])];
-        existing.collections = [...existing.collections, ...(args.collections || [])];
+        existing.primitives = { ...existing.primitives, ...(args.primitives || {}) };
+        existing.dates = { ...existing.dates, ...(args.dates || {}) };
+        existing.complexes = { ...existing.complexes, ...(args.complexes || {}) };
+        existing.instances = { ...existing.instances, ...(args.instances || {}) };
+        existing.references = { ...existing.references, ...(args.references || {}) };
+        existing.children = { ...existing.children, ...(args.children || {}) };
+        existing.collections = { ...existing.collections, ...(args.collections || {}) };
     };
 }
 
@@ -89,88 +95,97 @@ export function isEntity(type: string | EntityType<any>): boolean {
     return false;
 }
 
-export module Entity {
-    export function PrimaryKey(args?: Partial<Primitive.CtorArgs>) {
+export class Property {
+    static Id(args?: Primitive.CtorArgs) {
         return <T>(type: Object, key: string, descriptor?: TypedPropertyDescriptor<T>) => {
             args = args || {};
-            let defaults = <Primitive.CtorArgs>{ name: key };
 
             if (descriptor && !descriptor.set) {
                 args.computed = true;
             }
 
-            getOrCreateMetadataArgs(type.constructor).primaryKey = { ...defaults, ...args };
+            getOrCreateMetadataArgs(type.constructor).primaryKey = { name: key, args: args };
         };
     }
 
-    export function Primitive(args?: Partial<Primitive.CtorArgs>) {
+    static Primitive(args?: Primitive.CtorArgs) {
         return <T>(type: Object, key: string, descriptor?: TypedPropertyDescriptor<T>) => {
             args = args || {};
-            let defaults = <Primitive.CtorArgs>{ name: key };
 
             if (descriptor && !descriptor.set) {
                 args.computed = true;
             }
 
-            getOrCreateMetadataArgs(type.constructor).primitives.push({ ...defaults, ...args });
+            getOrCreateMetadataArgs(type.constructor).primitives[key] = args;
         };
     }
 
-    export function ReferenceKey(args?: Partial<Primitive.CtorArgs>) {
+    static Key(args?: Primitive.CtorArgs) {
         return <T>(type: Object, key: string, descriptor?: TypedPropertyDescriptor<T>) => {
             args = args || {};
             args.index = true;
 
+            Property.Primitive(args)(type, key, descriptor);
+        };
+    }
+
+    static Date(args?: DateTime.CtorArgs) {
+        return (type: Object, key: string, descriptor?: TypedPropertyDescriptor<Date>) => {
+            getOrCreateMetadataArgs(type.constructor).dates[key] = args;
+        };
+    }
+
+    static Complex(args?: Complex.CtorArgs) {
+        return <T>(type: Object, key: string, descriptor?: TypedPropertyDescriptor<T>) => {
+            args = args || {};
+
             if (descriptor && !descriptor.set) {
                 args.computed = true;
             }
 
-            Primitive(args)(type, key);
+            getOrCreateMetadataArgs(type.constructor).complexes[key] = args;
         };
     }
 
-    export function Reference(args: {
-        dtoName?: string;
-        key: string;
-        name?: string;
-        other: () => EntityType<any>;
-        saveable?: boolean;
-        virtual?: boolean;
-    }) {
-        return (type: Object, key: string) => {
-            let defaults = <Reference.CtorArgs>{ name: key };
+    static Instance(args?: Instance.CtorArgs) {
+        return <T>(type: Object, key: string, descriptor?: TypedPropertyDescriptor<T>) => {
+            args = args || {};
 
-            getOrCreateMetadataArgs(type.constructor).references.push({ ...defaults, ...args });
+            if (descriptor && !descriptor.set) {
+                args.computed = true;
+            }
+
+            getOrCreateMetadataArgs(type.constructor).instances[key] = args;
         };
     }
 
-    export function Children(args: {
-        dtoName?: string;
-        back: string;
-        name?: string;
-        other: () => EntityType<any>;
-        saveable?: boolean;
-        virtual?: boolean;
-    }) {
-        return (type: Object, key: string) => {
-            let defaults = <Children.CtorArgs>{ name: key };
+    static Reference(args: Reference.CtorArgs) {
+        return <T>(type: Object, key: string, descriptor?: TypedPropertyDescriptor<T>) => {
+            if (descriptor && !descriptor.set) {
+                throw new Error(`a reference can not be readonly (${key} @ ${type.constructor.name})`);
+            }
 
-            getOrCreateMetadataArgs(type.constructor).children.push({ ...defaults, ...args });
+            getOrCreateMetadataArgs(type.constructor).references[key] = args;
         };
     }
 
-    export function Collection(args: {
-        dtoName?: string;
-        keys: string;
-        name?: string;
-        other: () => EntityType<any>;
-        saveable?: boolean;
-        virtual?: boolean;
-    }) {
-        return (type: Object, key: string) => {
-            let defaults = <Collection.CtorArgs>{ name: key };
+    static Children(args: Children.CtorArgs) {
+        return <T>(type: Object, key: string, descriptor?: TypedPropertyDescriptor<T>) => {
+            if (descriptor && !descriptor.set) {
+                throw new Error(`a child array can not be readonly (${key} @ ${type.constructor.name})`);
+            }
 
-            getOrCreateMetadataArgs(type.constructor).collections.push({ ...defaults, ...args });
+            getOrCreateMetadataArgs(type.constructor).children[key] = args;
+        };
+    }
+
+    static Collection(args: Collection.CtorArgs) {
+        return <T>(type: Object, key: string, descriptor?: TypedPropertyDescriptor<T>) => {
+            if (descriptor && !descriptor.set) {
+                throw new Error(`a reference array can not be readonly (${key} @ ${type.constructor.name})`);
+            }
+
+            getOrCreateMetadataArgs(type.constructor).collections[key] = args;
         };
     }
 }

@@ -1,20 +1,18 @@
-import { Entity } from "../../../src";
+import { EntityClass, Property } from "../../../src";
 import { Album } from "./album";
 
-@Entity({
+@EntityClass({
     name: "Artist",
-    primaryKey: { name: "id" },
-    primitives: [{ name: "name" }],
-    children: [{
-        back: "artist",
-        name: "albums",
-        other: () => Album
-    }]
+    primaryKey: { name: "id", args: {} },
+    primitives: { name: {} },
+    children: {
+        albums: { back: "artist", other: () => Album }
+    }
 })
 export class Artist {
     id: number = null;
 
-    @Entity.Primitive()
+    @Property.Primitive()
     age: number = null;
     name: string = null;
     albums: Album[] = [];

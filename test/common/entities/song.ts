@@ -1,22 +1,22 @@
-import { Entity } from "../../../src";
+import { EntityClass, Property } from "../../../src";
 import { Album } from "./album";
 import { SongTag } from "./song-tag";
 
-@Entity()
+@EntityClass()
 export class Song {
-    @Entity.PrimaryKey({ dtoName: "SongId" })
+    @Property.Id({ dtoName: "SongId" })
     id: number;
 
-    @Entity.Primitive({ dtoName: "SongName" })
+    @Property.Primitive({ dtoName: "SongName" })
     name: string;
 
-    @Entity.ReferenceKey()
+    @Property.Key()
     albumId: number;
 
-    @Entity.Reference({ key: "albumId", other: () => Album, dtoName: "DerAlbumSpieltSchweissfrei" })
+    @Property.Reference({ key: "albumId", other: () => Album, dtoName: "DerAlbumSpieltSchweissfrei" })
     album: Album;
 
-    @Entity.Children({ back: "song", other: () => SongTag, dtoName: "SongTags" })
+    @Property.Children({ back: "song", other: () => SongTag, dtoName: "SongTags" })
     tags: SongTag[];
 
     constructor(args?: Partial<Song>) {

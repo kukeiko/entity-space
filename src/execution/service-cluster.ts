@@ -1,11 +1,11 @@
 import * as _ from "lodash";
 import { ArrayLike, ToStringable, StringIndexable } from "../util";
-import { getEntityMetadata, AnyEntityType, EntityType, IEntity, Children, NavigationType, ValueType } from "../metadata";
+import { getEntityMetadata, AnyEntityType, EntityType, IEntity, Children, NavigationType } from "../metadata";
 import { Path, Query, QueryType, Expansion, Saveable, Saveables } from "../elements";
 import { QueryCache, Workspace } from "../caching";
 import { IService } from "./service.type";
 import { EntityMapper } from "../mapping";
-import { ServiceProvider } from "./service.provider";
+import { ServiceProvider } from "./service-provider";
 
 export type IndexCriteria = { [key: string]: ToStringable };
 
@@ -29,15 +29,15 @@ export class ServiceCluster {
 
         return this.executeQuery(new Query.All({
             entityType: type,
-            expansions: expand
+            expand: expand
         }), asMap);
     }
 
     loadByKey<T>(type: EntityType<T>, key: any, expand?: string | ArrayLike<Expansion>): Promise<T> {
-        return this.executeQuery(new Query.ByKey({
+        return this.executeQuery(new Query.ById({
             entityType: type,
-            key: key,
-            expansions: expand
+            id: key,
+            expand: expand
         })).then(items => {
             return items[0] || null;
         });
@@ -51,10 +51,10 @@ export class ServiceCluster {
         let expand = (args[2] || []) as string | ArrayLike<Expansion>;
         let asMap: true = args[3] != null ? true : null;
 
-        return this.executeQuery(new Query.ByKeys({
+        return this.executeQuery(new Query.ByIds({
             entityType: type,
-            expansions: expand,
-            keys: keys
+            expand: expand,
+            ids: keys
         }), asMap);
     }
 
@@ -68,7 +68,7 @@ export class ServiceCluster {
 
         return this.executeQuery(new Query.ByIndexes({
             entityType: type,
-            expansions: expand,
+            expand: expand,
             indexes: indexes
         }), asMap);
     }
@@ -124,9 +124,9 @@ export class ServiceCluster {
             entitiesPerKey.set(key, entities[i]);
         }
 
-        let cached = this._workspace.execute(new Query.ByKeys({
+        let cached = this._workspace.execute(new Query.ByIds({
             entityType: type,
-            keys: Array.from(entitiesPerKey.keys())
+            ids: Array.from(entitiesPerKey.keys())
         }), true);
 
         for (let i = 0; i < entities.length; ++i) {
@@ -144,24 +144,46 @@ export class ServiceCluster {
                 });
 
                 Object.keys(dtoCachedSaveable).forEach(k => {
-                    let property = metadata.getPrimitive(k);
+                    let property = metadata.getLocal(k);
                     let newValue = dtoCachedSaveable[k];
                     let oldValue = dtoSaveables[i][k];
 
-                    if ([ValueType.Array, ValueType.Object, ValueType.Instance].includes(property.valueType)) {
-                        // note: not sure why, but _.isEqualWith + _.isMatch fails if an array is not wrapped in an object
-                        if (newValue instanceof Array || oldValue instanceof Array) {
-                            newValue = { workaround: newValue };
-                            oldValue = { workaround: oldValue };
-                        }
+                    switch (property.type) {
+                        case "primitive":
+                            if (newValue !== oldValue) {
+                                dtoPatch[k] = dtoSaveables[i][k];
+                            }
+                            break;
 
-                        if (!_.isEqualWith(newValue, oldValue, _.isMatch) || !_.isEqualWith(oldValue, newValue, _.isMatch)) {
-                            dtoPatch[k] = dtoSaveables[i][k];
-                        }
-                    } else {
-                        if (!_.isEqual(newValue, oldValue)) {
-                            dtoPatch[k] = dtoSaveables[i][k];
-                        }
+                        case "date":
+                            if (!_.isEqual(newValue, oldValue)) {
+                                dtoPatch[k] = dtoSaveables[i][k];
+                            }
+                            break;
+
+                        case "complex":
+                        case "instance":
+                            switch (property.compareMethod) {
+                                case "equals":
+                                    // note: not sure why, but _.isEqualWith + _.isMatch fails if the input value is an array is not wrapped in an object
+                                    if (newValue instanceof Array || oldValue instanceof Array) {
+                                        newValue = { workaround: newValue };
+                                        oldValue = { workaround: oldValue };
+                                    }
+
+                                    if (!_.isEqualWith(newValue, oldValue, _.isMatch) || !_.isEqualWith(oldValue, newValue, _.isMatch)) {
+                                        dtoPatch[k] = dtoSaveables[i][k];
+                                    }
+
+                                    break;
+
+                                case "equals-ordered":
+                                    if (!_.isEqual(newValue, oldValue)) {
+                                        dtoPatch[k] = dtoSaveables[i][k];
+                                    }
+                                    break;
+                            }
+                            break;
                     }
                 });
 
@@ -195,9 +217,9 @@ export class ServiceCluster {
         entities.forEach(e => e[pkName] && keys.add(e[pkName]));
         saved.forEach(s => keys.add(s[pkDtoName]));
 
-        return this._workspace.execute(new Query.ByKeys({
+        return this._workspace.execute(new Query.ByIds({
             entityType: type,
-            keys: Array.from(keys)
+            ids: Array.from(keys)
         }));
     }
 
@@ -286,10 +308,10 @@ export class ServiceCluster {
                             keys.add(e[keyName]);
                         });
 
-                        promises.push(this._loadIntoWorkspace(new Query.ByKeys({
+                        promises.push(this._loadIntoWorkspace(new Query.ByIds({
                             entityType: nav.otherType,
-                            expansions: v.extracted.expansions.slice(),
-                            keys: Array.from(keys)
+                            expand: v.extracted.expansions.slice(),
+                            ids: Array.from(keys)
                         })));
                         break;
 
@@ -303,7 +325,7 @@ export class ServiceCluster {
 
                             promises.push(this._loadIntoWorkspace(new Query.ByIndexes({
                                 entityType: nav.otherType,
-                                expansions: v.extracted.expansions.slice(),
+                                expand: v.extracted.expansions.slice(),
                                 indexes: {
                                     [parentKeyName]: parentKey
                                 }
@@ -321,10 +343,10 @@ export class ServiceCluster {
                             keys.forEach(k => refKeys.add(k));
                         });
 
-                        promises.push(this._loadIntoWorkspace(new Query.ByKeys({
+                        promises.push(this._loadIntoWorkspace(new Query.ByIds({
                             entityType: nav.otherType,
-                            expansions: v.extracted.expansions.slice(),
-                            keys: Array.from(keys)
+                            expand: v.extracted.expansions.slice(),
+                            ids: Array.from(keys)
                         })));
                         break;
                 }
@@ -339,7 +361,7 @@ export class ServiceCluster {
      *
      * The query must not contain any virtuals.
      */
-    private async _loadFromService<T>(query: QueryType<T>): Promise<T[]> {
+    private async _loadFromService(query: QueryType<any>): Promise<StringIndexable[]> {
         let executer = await this._getService(query.entityType);
 
         if (!executer) {
@@ -363,7 +385,7 @@ export class ServiceCluster {
             throw `query of type ${type} for entity ${query.entityType.name} not supported`;
         };
 
-        let promise: Promise<T[]> = null;
+        let promise: Promise<StringIndexable[]> = null;
 
         switch (query.type) {
             case "all":
@@ -371,12 +393,12 @@ export class ServiceCluster {
                 promise = executer.loadAll(query);
                 break;
 
-            case "key":
+            case "id":
                 if (!executer.loadOne) throwNotSupported("ByKey");
                 promise = Promise.all([executer.loadOne(query)]);
                 break;
 
-            case "keys":
+            case "ids":
                 if (!executer.loadMany) throwNotSupported("ByKeys");
                 promise = executer.loadMany(query);
                 break;

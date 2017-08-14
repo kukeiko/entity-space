@@ -1,16 +1,16 @@
-import { Entity } from "../../../src";
+import { EntityClass, Property } from "../../../src";
 
-@Entity()
+@EntityClass()
 export class Review {
-    @Entity.PrimaryKey()
+    @Property.Id()
     get globalId(): string {
         return `${this.id}@${this.systemId}`;
     }
 
-    @Entity.Primitive()
+    @Property.Primitive()
     id: string = null;
 
-    @Entity.Primitive()
+    @Property.Primitive()
     systemId: number = null;
 
     constructor(args?: Partial<Review>) {

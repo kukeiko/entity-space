@@ -1,9 +1,9 @@
-import { Entity } from "../../../src";
+import { EntityClass } from "../../../src";
 
-@Entity({
+@EntityClass({
     name: "TagType",
     primaryKey: { name: "id" },
-    primitives: [{ name: "name" }]
+    primitives: { name: {} }
 })
 export class TagType {
     id: number;

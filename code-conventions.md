@@ -1,28 +1,34 @@
 # code style
 in addition to the tslint rules, the following should apply:
 * private class members are prefixed with _
-* every getter/function must specify a return type
-* use typed arg objects as arguments whenever appropriate
-    * increases readability/usability if there are multiple arguments
-    * increases backwards compatibility when you add optional arguments
+* everything that can have a return type should have one
+
+## function arguments
+a decision should be made between using a single typed object literal and multiple arguments in sequence.
+a single typed object literal makes sense when there will be a lot of optional flags or if the total number
+of arguments might ever exceed 4.
+
+depending on how it is used code readability can improve or worsen quite a bit.
 
 # git commit message prefixes
-a ! should be suffixed to a prefix to denote a breaking change
-## **add**:
+indicators to denote the type of change to the codebase.
+any of these may be used even if there are breaking changes (except maybe 'test'), since we are not at 1.0.0 yet
+
+## **add**
 functionality is added
-## **mod**:
+## **mod**
 functionality changes
-## **del**:
-functionality is removed
 ## **test**
-tests were added, removed, changed, activated/deactivated
-## **polish**:
-changes/additions to improve clarity / follow conventions / cleanup the codebase:
-* files/folders are moved/renamed
-* classes/properties/methods/functions are renamed
-* code guidelines are applied (e.g. tslint rules, file naming conventions, etc.)
+tests were added, removed, changed, enabled/disabled
+## **polish**
+pretty much everything that has to do with improving the health of the codebase, e.g.
+changes to improve clarity / follow conventions / cleanup:
+* linter errors/warnings
+* classes/files/folders are moved/renamed
+* properties/methods/functions are renamed
 * comments to illustrate functionality
 * unused files/functions are removed
-* code usability is increased via small means
+* code usability is increased
+
 ## **meta**
 anything about the project itself - readme, setup, build pipeline, etc.
