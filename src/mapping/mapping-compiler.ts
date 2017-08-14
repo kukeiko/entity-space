@@ -44,28 +44,6 @@ export class MappingCompiler {
             let toName = p.getName(args.toDto);
             let assignment: string = null;
 
-<<<<<<< HEAD
-            if ([ValueType.Array, ValueType.Object].includes(p.valueType)) {
-                assignment = `JSON.parse(JSON.stringify(source.${fromName}))`;
-            } else if (p.valueType == ValueType.Instance) {
-                assignment = `lodash.cloneDeep(source.${fromName})`;
-            } else if (p.valueType == ValueType.Date) {
-                if (args.fromDto && args.toDto) {
-                    assignment = `source.${fromName}`;
-                } else if (args.fromDto && !args.toDto) {
-                    assignment = `new Date(source.${fromName})`;
-                } else if (!args.fromDto && args.toDto) {
-                    assignment = `source.${fromName}.toISOString()`;
-                } else {
-                    assignment = `new Date(source.${fromName})`;
-                }
-            } else {
-                assignment = `source.${fromName}`;
-            }
-
-            line(`\ttarget.${toName} = source.${fromName} != null ? ${assignment} : null;`);
-            // line(`\ttarget.${toName} = source.${fromName} == null ? null : ${assignment}`);
-=======
             switch (p.type) {
                 case "complex":
                     assignment = `JSON.parse(JSON.stringify(source.${fromName}));`;
@@ -101,7 +79,6 @@ export class MappingCompiler {
             }
 
             line(`\ttarget.${toName} = source.${fromName} == null ? null : ${assignment}`);
->>>>>>> repolish
         });
 
         line(`}`);
