@@ -60,6 +60,7 @@ export abstract class Query<T extends IEntity> {
     }
 
     abstract isSupersetOf(other: Query<T>): boolean;
+    abstract reduce(other: QueryType<any>): QueryType<any>;
 
     isSubsetOf(other: Query<T>): boolean {
         return other.isSupersetOf(this);
@@ -167,6 +168,8 @@ export module Query {
          * Reduce another query by this query.
          */
         reduce(other: QueryType<T>): QueryType<T> {
+            if (this.entityType != other.entityType) return other;
+
             let remainingExpansions = Expansion.minus(other.expansions.slice(), this.expansions.slice());
             if (remainingExpansions.length == 0) return null;
 
@@ -222,7 +225,7 @@ export module Query {
         }
 
         reduce(other: Query.ById<T>): Query.ById<T> {
-            if (other.id != this.id) throw `can't reduce using two by-key queries with different keys`;
+            if (this.entityType != other.entityType || other.id != this.id) return other;
 
             let remainingExpansions = Expansion.minus(other.expansions.slice(), this.expansions.slice());
             if (remainingExpansions.length == 0) return null;
@@ -275,6 +278,20 @@ export module Query {
             }
 
             return false;
+        }
+
+        reduce(other: QueryType<any>): QueryType<any> {
+            if (other.type != this.type) return other;
+            if (this.entityType != other.entityType) return other;
+
+            let remainingExpansions = Expansion.minus(other.expansions.slice(), this.expansions.slice());
+            if (remainingExpansions.length > 0) return other;
+
+            return new Query.ByIds({
+                entityType: this.entityType,
+                expand: remainingExpansions,
+                ids: _.difference(other.ids, this.ids)
+            });
         }
 
         toString(): string {
@@ -345,8 +362,15 @@ export module Query {
             });
         }
 
+        reduce(other: Query.ByIndexes<T>): Query.ByIndexes<T>;
+        reduce(other: QueryType<any>): QueryType<any>;
         // todo: throw if indexes are incompatible
-        reduce(other: Query.ByIndexes<T>): Query.ByIndexes<T> {
+        reduce(other: QueryType<any>): QueryType<any> {
+            if (other.type != this.type) return other;
+            if (this.entityType != other.entityType) return other;
+
+            if (!_.isEqual(other.indexes, this.indexes)) return other;
+
             let remainingExpansions = Expansion.minus(other.expansions.slice(), this.expansions.slice());
             if (remainingExpansions.length == 0) return null;
 
@@ -359,6 +383,7 @@ export module Query {
 
         // todo: throw if indexes are incompatible
         merge(other: Query.ByIndexes<T>): Query.ByIndexes<T> {
+            if (this.entityType != other.entityType) return other;
             return new Query.ByIndexes({
                 entityType: this.entityType,
                 expand: Expansion.add(this.expansions.slice(), other.expansions.slice()),
