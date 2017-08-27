@@ -1,4 +1,4 @@
-import { getEntityMetadata, EntityType, NavigationBase } from "../metadata";
+import { getEntityMetadata, EntityType, Navigation } from "../metadata";
 import { Path } from "./path";
 import { Extraction } from "./extraction";
 
@@ -16,7 +16,7 @@ export class Expansion {
     /**
      * The navigation that is being expanded.
      */
-    readonly property: NavigationBase;
+    readonly property: Navigation;
 
     /**
      * Further expansions on the navigation.
@@ -34,7 +34,7 @@ export class Expansion {
     private _toStringValue: string;
 
     private constructor(args: {
-        property: NavigationBase;
+        property: Navigation;
         expansions?: Expansion[];
     }) {
         this.property = args.property;

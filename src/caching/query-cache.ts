@@ -1,4 +1,4 @@
-import { getEntityMetadata, EntityType, IEntity, NavigationType, EntityMetadata } from "../metadata";
+import { getEntityMetadata, EntityType, IEntity, Navigation, EntityMetadata } from "../metadata";
 import { Expansion, Query, QueryType } from "../elements";
 import { AllQueryCache } from "./all-query-cache";
 import { ByIndexesQueryCache } from "./by-indexes-query-cache";
@@ -140,7 +140,7 @@ export class QueryCache {
         if (entities.length == 0) return;
 
         expansions.forEach(exp => {
-            let nav = exp.property as NavigationType;
+            let nav = exp.property as Navigation;
 
             switch (nav.type) {
                 case "ref":

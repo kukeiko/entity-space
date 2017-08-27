@@ -25,7 +25,9 @@ export interface DtoLike {
 }
 
 /**
- * Returns all possible combinations of the given items.
+ * Returns all possible combinations of the given items (including those with length < n).
+ *
+ * Order of items within the returned combinations is the same as of the given input array.
  */
 export function combinations<T>(items: T[]): T[][] {
     if (items.length == 0) return [];

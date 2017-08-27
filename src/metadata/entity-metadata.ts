@@ -1,8 +1,8 @@
 import * as _ from "lodash";
 import { EntityType, IEntity } from "./entity.type";
 import { PropertyBase } from "./property-base";
-import { LocalType, Primitive, DateTime, Complex, Instance } from "./locals";
-import { NavigationType, NavigationBase, Children, Collection, Reference } from "./navigations";
+import { Local, Primitive, DateTime, Complex, Instance } from "./locals";
+import { Navigation, Children, Collection, Reference } from "./navigations";
 
 export type AnyEntityMetadata = EntityMetadata<IEntity>;
 
@@ -20,25 +20,25 @@ export class EntityMetadata<T extends IEntity> {
     readonly properties: ReadonlyArray<PropertyBase>;
 
     // locals
-    private _locals = new Map<string, LocalType>();
+    private _locals = new Map<string, Local>();
     private _primitives = new Map<string, Primitive>();
     private _dates = new Map<string, DateTime>();
     private _complexes = new Map<string, Complex>();
     private _instances = new Map<string, Instance>();
 
-    readonly locals: ReadonlyArray<LocalType>;
+    readonly locals: ReadonlyArray<Local>;
     readonly primitives: ReadonlyArray<Primitive>;
     readonly dates: ReadonlyArray<DateTime>;
     readonly complexes: ReadonlyArray<Complex>;
     readonly instances: ReadonlyArray<Instance>;
 
     // navigations
-    private _navigations = new Map<string, NavigationType>();
+    private _navigations = new Map<string, Navigation>();
     private _references = new Map<string, Reference>();
     private _children = new Map<string, Children>();
     private _collections = new Map<string, Collection>();
 
-    readonly navigations: ReadonlyArray<NavigationType>;
+    readonly navigations: ReadonlyArray<Navigation>;
     readonly references: ReadonlyArray<Reference>;
     readonly children: ReadonlyArray<Children>;
     readonly collections: ReadonlyArray<Collection>;
@@ -63,7 +63,7 @@ export class EntityMetadata<T extends IEntity> {
             this._properties.set(dtoName, p);
         };
 
-        let addLocal = (p: LocalType) => {
+        let addLocal = (p: Local) => {
             this._locals.set(p.name, p);
             this._locals.set(p.dtoName, p);
             addProperty(p);
@@ -93,7 +93,7 @@ export class EntityMetadata<T extends IEntity> {
             addLocal(p);
         };
 
-        let addNavigation = (p: NavigationType) => {
+        let addNavigation = (p: Navigation) => {
             this._navigations.set(p.name, p);
             this._navigations.set(p.dtoName, p);
             addProperty(p);
@@ -150,7 +150,7 @@ export class EntityMetadata<T extends IEntity> {
     /**
      * Returns a primitive identified by its name or dtoName or null if not found.
      */
-    getLocal(name: string): LocalType {
+    getLocal(name: string): Local {
         return this._locals.get(name) || null;
     }
 
@@ -186,7 +186,7 @@ export class EntityMetadata<T extends IEntity> {
      * Returns a navigation identified by its name or dtoName or null if not found.
      */
     // todo: maybe return NavigationType instead
-    getNavigation(name: string): NavigationBase {
+    getNavigation(name: string): Navigation {
         return this._navigations.get(name) || null;
     }
 

@@ -6,7 +6,7 @@ import { Primitive } from "./primitive";
 /**
  * All the supported types of local properties.
  */
-export type LocalType =
+export type Local =
     Complex
     | DateTime
     | Instance

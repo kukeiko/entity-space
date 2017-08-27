@@ -5,7 +5,7 @@ import { Collection } from "./collection";
 /**
  * All the supported types of navigation.
  */
-export type NavigationType =
+export type Navigation =
     Reference
     | Children
     | Collection;

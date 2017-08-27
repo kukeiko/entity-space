@@ -1,6 +1,6 @@
 import * as _ from "lodash";
 import { ArrayLike, ToStringable, StringIndexable } from "../util";
-import { getEntityMetadata, AnyEntityType, EntityType, IEntity, Children, NavigationType } from "../metadata";
+import { getEntityMetadata, AnyEntityType, EntityType, IEntity, Children, Navigation } from "../metadata";
 import { Path, Query, QueryType, Expansion, Saveable, Saveables } from "../elements";
 import { QueryCache, Workspace } from "../caching";
 import { IService } from "./service.type";
@@ -296,7 +296,7 @@ export class ServiceCluster {
 
             virtuals.forEach(v => {
                 let crawled = this._crawl(entities, v.path);
-                let nav = v.extracted.property as NavigationType;
+                let nav = v.extracted.property as Navigation;
 
                 switch (nav.type) {
                     case "ref":

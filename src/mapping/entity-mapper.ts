@@ -1,6 +1,6 @@
 import * as _ from "lodash";
 import { AnyType, StringIndexable } from "../util";
-import { AnyEntityMetadata, AnyEntityType, EntityType, IEntity, Primitive, NavigationBase, NavigationType } from "../metadata";
+import { AnyEntityMetadata, AnyEntityType, EntityType, IEntity, Primitive, NavigationBase, Navigation } from "../metadata";
 import { MappingCompiler, CopyLocals } from "./mapping-compiler";
 
 // todo: refactor common bodies of copyPrimitives() & copySaveables()
@@ -172,46 +172,47 @@ export class EntityMapper {
         });
     }
 
-    static collect(items: ArrayLike<StringIndexable>, prop: Primitive | NavigationBase, isDto?: boolean): any[] {
+    static collect(items: ArrayLike<StringIndexable>, prop: Primitive | Navigation, isDto?: boolean): any[] {
         let collected: any[] = [];
         let name = prop.getName(isDto);
 
-        if (prop instanceof NavigationBase) {
-            let nav = prop as NavigationType;
+        switch (prop.base) {
+            case "navigation":
+                switch (prop.type) {
+                    case "ref":
+                        let item: any;
 
-            switch (nav.type) {
-                case "ref":
-                    let item: any;
+                        for (let i = 0; i < items.length; ++i) {
+                            item = items[i][name];
+                            if (!item) continue;
 
-                    for (let i = 0; i < items.length; ++i) {
-                        item = items[i][name];
-                        if (!item) continue;
-
-                        collected.push(item);
-                    }
-                    break;
-
-                case "array:ref":
-                case "array:child":
-                    for (let i = 0; i < items.length; ++i) {
-                        let array = items[i][name] as any[];
-
-                        for (let e = 0; e < array.length; ++e) {
-                            collected.push(array[e]);
+                            collected.push(item);
                         }
-                    }
-                    break;
-            }
+                        break;
 
-        } else {
-            let value: any;
+                    case "array:ref":
+                    case "array:child":
+                        for (let i = 0; i < items.length; ++i) {
+                            let array = items[i][name] as any[];
 
-            for (let i = 0; i < items.length; ++i) {
-                value = items[i][name];
-                if (value == null) continue;
+                            for (let e = 0; e < array.length; ++e) {
+                                collected.push(array[e]);
+                            }
+                        }
+                        break;
+                }
+                break;
 
-                collected.push(value);
-            }
+            case "local":
+                let value: any;
+
+                for (let i = 0; i < items.length; ++i) {
+                    value = items[i][name];
+                    if (value == null) continue;
+
+                    collected.push(value);
+                }
+                break;
         }
 
         return collected;

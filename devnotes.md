@@ -1,15 +1,13 @@
 # feature roadmap / milestones:
-- 0.6.0 entity-mapper, copy compilation
+- 0.7.0 ???
 - 0.?.0 debug output interface, cache invalidation, contexts, validation, query statistics, indexedb support, abstract entities
 
 # todos
-- remove "name" from property decorator arguments
-- use custom decorator arguments instead of Partial<ICtorArgs>
 - allow reference key convention => "template" => "templateId"
 - decorators should bleed through from super classes, allowing inheritance
 - support expansions @ workspace.remove()
 - possibly introduce expansion pool to reduce memory footprint
-- improve performance in various cache-checking places by using utlizing Expansion.equals()
+- improve performance in various cache-checking places by using Expansion.equals()
 - reduce pending queries @ service-cluster: Foo(1), then Foo([1,2]) => should be reduced to Foo([2])
 
 # test-todos

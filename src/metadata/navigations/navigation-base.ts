@@ -7,6 +7,7 @@ import { EntityMetadata } from "../entity-metadata";
  * A property that points to one (Reference) or many (Children, Collection) related entities.
  */
 export abstract class NavigationBase extends PropertyBase {
+    readonly base = "navigation";
     readonly virtual: boolean;
 
     get otherType(): EntityType<any> { return this._otherType(); };

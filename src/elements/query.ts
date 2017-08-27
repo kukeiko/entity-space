@@ -3,11 +3,7 @@ import { ToStringable, ArrayLike } from "../util";
 import { getEntityMetadata, EntityType, IEntity } from "../metadata";
 import { Expansion } from "./expansion";
 import { Extraction } from "./extraction";
-
-/**
- * All the supported query identities by which the initial set of an operation is narrowed down.
- */
-export type QueryIdentity = "all" | "id" | "ids" | "index" | "indexes";
+import { Identity, All as $All, ById as $ById, ByIds as $ByIds, ByIndexes as $ByIndexes } from "./identity";
 
 /**
  * Describes which entities and expansions should be considered for an operation.
@@ -16,12 +12,17 @@ export type QueryIdentity = "all" | "id" | "ids" | "index" | "indexes";
  */
 export abstract class Query<T extends IEntity> {
     /**
-     * The entity type designated by this query.
+     * The entity type operated on.
      */
     readonly entityType: EntityType<T>;
 
     /**
-     * All expansions of this query.
+     * Idenfitication of the set of entities operated on.
+     */
+    readonly identity: Identity;
+
+    /**
+     * Included navigations for the operation.
      */
     readonly expansions: ReadonlyArray<Expansion>;
 
@@ -40,9 +41,11 @@ export abstract class Query<T extends IEntity> {
      */
     protected constructor(args: {
         entityType: EntityType<T>;
+        identity: Identity;
         expand?: string | ArrayLike<Expansion>;
     }) {
         this.entityType = args.entityType;
+        this.identity = args.identity;
 
         let expansions = (typeof (args.expand) == "string"
             ? Expansion.parse(args.entityType, args.expand)
@@ -154,7 +157,11 @@ export module Query {
             entityType: EntityType<T>;
             expand?: string | ArrayLike<Expansion>;
         }) {
-            super(args);
+            super({
+                entityType: args.entityType,
+                identity: new $All(),
+                expand: args.expand
+            });
         }
 
         isSupersetOf(other: Query<T>): boolean {
@@ -201,7 +208,11 @@ export module Query {
             entityType: EntityType<T>;
             expand?: string | ArrayLike<Expansion>;
         }) {
-            super(args);
+            super({
+                entityType: args.entityType,
+                identity: new $ById(args.id),
+                expand: args.expand
+            });
 
             this.id = args.id;
         }
@@ -256,11 +267,15 @@ export module Query {
         private readonly _sortedKeys: Array<ToStringable>;
 
         constructor(args: {
-            ids: ToStringable[];
+            ids: ArrayLike<ToStringable>;
             entityType: EntityType<T>;
             expand?: string | ArrayLike<Expansion>;
         }) {
-            super(args);
+            super({
+                entityType: args.entityType,
+                identity: new $ByIds(args.ids),
+                expand: args.expand
+            });
 
             this.ids = args.ids.slice();
             this._sortedKeys = args.ids.slice().sort();
@@ -298,7 +313,11 @@ export module Query {
             entityType: EntityType<T>;
             expand?: string | ArrayLike<Expansion>;
         }) {
-            super(args);
+            super({
+                entityType: args.entityType,
+                identity: new $ByIndexes(args.indexes),
+                expand: args.expand
+            });
 
             this.indexes = Object.freeze({ ...args.indexes });
         }

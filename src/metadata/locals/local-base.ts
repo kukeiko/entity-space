@@ -1,6 +1,7 @@
 import { PropertyBase } from "../property-base";
 
 export abstract class LocalBase extends PropertyBase {
+    readonly base = "local";
     readonly computed: boolean;
     readonly saveable: boolean;
 

@@ -1,14 +1,14 @@
-import { NavigationBase } from "../metadata";
+import { Navigation } from "../metadata";
 
 /**
  * A path is a chain of navigations.
  */
 export class Path {
-    readonly property: NavigationBase;
+    readonly property: Navigation;
     readonly next: Path;
 
     constructor(args: {
-        property: NavigationBase;
+        property: Navigation;
         next?: Path;
     }) {
         this.property = args.property;

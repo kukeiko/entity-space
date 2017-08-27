@@ -1,7 +1,7 @@
 import { ArrayLike, StringIndexable } from "../util";
 import { Expansion, QueryType } from "../elements";
 import { EntityMapper } from "../mapping";
-import { IEntity, EntityType, EntityMetadata, NavigationType, getEntityMetadata, Reference, Children, Collection } from "../metadata";
+import { IEntity, EntityType, EntityMetadata, Navigation, getEntityMetadata, Reference, Children, Collection } from "../metadata";
 import { ObjectCache } from "./object-cache";
 
 type EntityCache = ObjectCache<any, IEntity>;
@@ -74,7 +74,7 @@ export class Workspace {
             let related = EntityMapper.collect(items, expansion.property, isDto);
             if (related.length == 0) continue;
 
-            let nav = expansion.property as NavigationType;
+            let nav = expansion.property as Navigation;
 
             if (nav.type == "array:child") {
                 let childCache = this._getEntityCache(nav.otherTypeMetadata);
@@ -120,7 +120,7 @@ export class Workspace {
 
         for (let i = 0; i < expand.length; ++i) {
             expansion = expand[i];
-            let nav = expansion.property as NavigationType;
+            let nav = expansion.property as Navigation;
 
             switch (nav.type) {
                 case "ref":
