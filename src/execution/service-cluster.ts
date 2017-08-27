@@ -33,7 +33,7 @@ export class ServiceCluster {
         }), asMap);
     }
 
-    loadByKey<T>(type: EntityType<T>, key: any, expand?: string | ArrayLike<Expansion>): Promise<T> {
+    loadById<T>(type: EntityType<T>, key: any, expand?: string | ArrayLike<Expansion>): Promise<T> {
         return this.executeQuery(new Query.ById({
             entityType: type,
             id: key,
@@ -43,9 +43,9 @@ export class ServiceCluster {
         });
     }
 
-    loadByKeys<T>(type: EntityType<T>, keys: any[], expand?: string | ArrayLike<Expansion>): Promise<T[]>;
-    loadByKeys<T, K>(type: EntityType<T>, keys: K[], expand: string | ArrayLike<Expansion>, asMap?: true): Promise<Map<K, T>>;
-    loadByKeys<T, K>(...args: any[]): Promise<T[] | Map<K, T>> {
+    loadByIds<T>(type: EntityType<T>, keys: any[], expand?: string | ArrayLike<Expansion>): Promise<T[]>;
+    loadByIds<T, K>(type: EntityType<T>, keys: K[], expand: string | ArrayLike<Expansion>, asMap: true): Promise<Map<K, T>>;
+    loadByIds<T, K>(...args: any[]): Promise<T[] | Map<K, T>> {
         let type = args[0] as EntityType<T>;
         let keys = args[1] as any[];
         let expand = (args[2] || []) as string | ArrayLike<Expansion>;
@@ -59,7 +59,7 @@ export class ServiceCluster {
     }
 
     loadByIndexes<T>(type: EntityType<T>, indexes: IndexCriteria, expand?: string | ArrayLike<Expansion>): Promise<T[]>;
-    loadByIndexes<T, K>(type: EntityType<T>, indexes: IndexCriteria, expand: string | ArrayLike<Expansion>, asMap?: true): Promise<Map<K, T>>;
+    loadByIndexes<T, K>(type: EntityType<T>, indexes: IndexCriteria, expand: string | ArrayLike<Expansion>, asMap: true): Promise<Map<K, T>>;
     loadByIndexes<T, K>(...args: any[]): Promise<T[] | Map<K, T>> {
         let type = args[0] as EntityType<T>;
         let indexes = args[1] as IndexCriteria;
