@@ -3,6 +3,18 @@
 - 0.?.0 debug output interface, cache invalidation, contexts, validation, query statistics, indexedb support, abstract entities
 
 # todos
+## 0.6.0
+- remove concrete query implementations and implement identities
+    - same for query caches
+    - @ service: single method for loading
+
+## 0.7.0
+- entity base class
+    - static $ prop @ child class for useful stuff, like $.metadata
+    - child class instance must implement $ getter for general access
+
+## ???
+- remove inline property initializations if ctor initializes them safely
 - allow reference key convention => "template" => "templateId"
 - decorators should bleed through from super classes, allowing inheritance
 - support expansions @ workspace.remove()
