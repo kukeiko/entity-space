@@ -1,13 +1,11 @@
 import * as _ from "lodash";
 import { ArrayLike, ToStringable, StringIndexable } from "../util";
 import { getEntityMetadata, AnyEntityType, EntityType, IEntity, Children, Navigation } from "../metadata";
-import { Path, Query, QueryType, Expansion, Saveable, Saveables } from "../elements";
+import { Path, Query, QueryType, Expansion, Saveable, Saveables, IndexCriteria } from "../elements";
 import { QueryCache, Workspace } from "../caching";
 import { IService } from "./service.type";
 import { EntityMapper } from "../mapping";
 import { ServiceProvider } from "./service-provider";
-
-export type IndexCriteria = { [key: string]: ToStringable };
 
 export class ServiceCluster {
     private _serviceProvider: ServiceProvider = null;

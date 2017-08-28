@@ -1,4 +1,4 @@
-import { Expansion, Query } from "../elements";
+import { Expansion, Query, All } from "../elements";
 import { EntityClass, getEntityMetadata, Property } from "../metadata";
 import { Workspace } from "./workspace";
 
@@ -89,7 +89,8 @@ describe("workspace", () => {
 
             for (let i = 0; i < samples; ++i) {
                 let start = new Date();
-                ws.execute(new Query.All({
+                ws.execute(new Query({
+                    identity: new All(),
                     entityType: Foo,
                     expand: `bazs,bars/baz`
                 }));

@@ -1,5 +1,5 @@
 import { ArrayLike, StringIndexable } from "../util";
-import { Expansion, QueryType } from "../elements";
+import { Expansion, Query } from "../elements";
 import { EntityMapper } from "../mapping";
 import { IEntity, EntityType, EntityMetadata, Navigation, getEntityMetadata, Reference, Children, Collection } from "../metadata";
 import { ObjectCache } from "./object-cache";
@@ -9,20 +9,20 @@ type EntityCache = ObjectCache<any, IEntity>;
 export class Workspace {
     private _caches = new Map<EntityType<IEntity>, EntityCache>();
 
-    execute<T>(query: QueryType<T>): T[];
-    execute<T>(query: QueryType<T>, asMap: true): Map<any, T>;
+    execute<T>(query: Query<T>): T[];
+    execute<T>(query: Query<T>, asMap: true): Map<any, T>;
     execute<T>(...args: any[]): T[] | Map<any, T> {
-        let query = args[0] as QueryType<T>;
+        let query = args[0] as Query<T>;
         let asMap = args[1] != null;
 
         let metadata = getEntityMetadata(query.entityType);
         let cache = this._getEntityCache(metadata);
         let cached: T[] = [];
 
-        switch (query.type) {
-            case "id": cached = [cache.byKey(query.id)].filter(x => x); break;
-            case "ids": cached = cache.byKeysAsArray(query.ids); break;
-            case "indexes": cached = cache.byIndexesAsArray(query.indexes); break;
+        switch (query.identity.type) {
+            case "id": cached = [cache.byKey(query.identity.id)].filter(x => x); break;
+            case "ids": cached = cache.byKeysAsArray(query.identity.ids); break;
+            case "indexes": cached = cache.byIndexesAsArray(query.identity.indexes); break;
             case "all": cached = cache.allAsArray(); break;
         }
 

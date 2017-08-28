@@ -1,3 +1,4 @@
+import { ArrayLike } from "../util";
 import { getEntityMetadata, EntityType, Navigation } from "../metadata";
 import { Path } from "./path";
 import { Extraction } from "./extraction";
@@ -54,10 +55,10 @@ export class Expansion {
      * leads to a superset of y if the same operation were to be used with expansion(s) y.
      */
     static isSuperset(x: Expansion, y: Expansion): boolean;
-    static isSuperset(x: Expansion[], y: Expansion[]): boolean;
+    static isSuperset(x: ArrayLike<Expansion>, y: ArrayLike<Expansion>): boolean;
     static isSuperset(...args: any[]): boolean {
-        let x = args[0] as Expansion | Expansion[];
-        let y = args[1] as Expansion | Expansion[];
+        let x = args[0] as Expansion | ArrayLike<Expansion>;
+        let y = args[1] as Expansion | ArrayLike<Expansion>;
 
         if (x instanceof Array && y instanceof Array) {
             // x can not be a superset if y contains more expansions
@@ -105,10 +106,10 @@ export class Expansion {
     }
 
     /**
-     * Merges two expansions together.
+     * Merges (?) two expansions together.
      */
     // todo: throw if expansions are not of same entity type
-    static add(x: Expansion[], y: Expansion[]): Expansion[] {
+    static add(x: ArrayLike<Expansion>, y: ArrayLike<Expansion>): Expansion[] {
         x = x.slice().sort((a, b) => a.property.name < b.property.name ? -1 : 1);
         y = y.slice().sort((a, b) => a.property.name < b.property.name ? -1 : 1);
 
@@ -156,8 +157,9 @@ export class Expansion {
      * Subtracts y from x.
      */
     // todo: throw if expansions are not of same entity type
-    static minus(x: Expansion[], y: Expansion[]): Expansion[] {
-        if (x.length == 0 || y.length == 0) return x;
+    // todo #2: consider not throwing & follow naming + return null convention from identity.ts
+    static minus(x: ArrayLike<Expansion>, y: ArrayLike<Expansion>): Expansion[] {
+        if (x.length == 0 || y.length == 0) return x.slice();
 
         let result: Expansion[] = [];
         let xi = 0;

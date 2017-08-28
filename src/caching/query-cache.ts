@@ -1,5 +1,5 @@
 import { getEntityMetadata, EntityType, IEntity, Navigation, EntityMetadata } from "../metadata";
-import { Expansion, Query, QueryType } from "../elements";
+import { Expansion, Query } from "../elements";
 import { AllQueryCache } from "./all-query-cache";
 import { ByIndexesQueryCache } from "./by-indexes-query-cache";
 import { ByIdsQueryKeyCache } from "./by-ids-query-cache";
