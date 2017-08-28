@@ -375,6 +375,14 @@ export class ServiceCluster {
             this._pendingQueries.set(query.entityType, pending);
         }
 
+        let reduced = query;
+
+        for (let i = 0; i < pending.length; ++i) {
+            // todo: no idea why cast to Query<any> is necessary
+            reduced = (pending[i].query as Query<any>).reduce(reduced);
+            if (!reduced) return pending[i].promise;
+        }
+
         let superset = pending.find(x => x.query.isSupersetOf(query));
 
         if (superset) {
@@ -387,37 +395,37 @@ export class ServiceCluster {
 
         let promise: Promise<StringIndexable[]> = null;
 
-        switch (query.type) {
+        switch (reduced.type) {
             case "all":
-                if (!executer.loadAll) throwNotSupported("All");
-                promise = executer.loadAll(query);
+                if (!executer.loadAll) throwNotSupported("all");
+                promise = executer.loadAll(reduced);
                 break;
 
             case "id":
-                if (!executer.loadOne) throwNotSupported("ByKey");
-                promise = Promise.all([executer.loadOne(query)]);
+                if (!executer.loadOne) throwNotSupported("id");
+                promise = Promise.all([executer.loadOne(reduced)]);
                 break;
 
             case "ids":
-                if (!executer.loadMany) throwNotSupported("ByKeys");
-                promise = executer.loadMany(query);
+                if (!executer.loadMany) throwNotSupported("ids");
+                promise = executer.loadMany(reduced);
                 break;
 
             case "indexes":
-                if (!executer.loadByIndexes) throwNotSupported("ByIndexes");
-                promise = executer.loadByIndexes(query);
+                if (!executer.loadByIndexes) throwNotSupported("indexes");
+                promise = executer.loadByIndexes(reduced);
                 break;
 
             default:
-                throw `unknown query type ${(query as any).type}`;
+                throw `unknown query type ${(reduced as any).type}`;
         }
 
         pending.push({
-            query: query,
+            query: reduced,
             promise: promise
         });
 
-        let cleanup = () => pending.splice(pending.findIndex(x => x.query == query), 1);
+        let cleanup = () => pending.splice(pending.findIndex(x => x.query == reduced), 1);
         promise.then(cleanup, cleanup);
 
         return promise.then(x => x.filter(y => y));
