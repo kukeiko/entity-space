@@ -137,11 +137,12 @@ export class EntityMapper {
         let to = args.to || args.from;
 
         args.metadata.references.forEach(refProp => {
+            let refKey = args.metadata.getPrimitive(refProp.keyName);
+            if (!refKey.saveable) return;
+
             args.from.forEach((from, i) => {
                 let to_i = to[i];
                 let ref = from[refProp.name];
-                let refKeyProp = args.metadata.getPrimitive(refProp.keyName);
-                if (!refKeyProp.saveable) return;
 
                 if (ref == null) {
                     to_i[refProp.keyName] = null;

@@ -7,9 +7,14 @@ export type IndexCriteria = { [key: string]: ToStringable };
 
 export abstract class IdentityBase {
     abstract type: any;
+    abstract priority: any;
     abstract reduce(other: Identity): Identity;
-    abstract merge(other: Identity): Identity;
-    abstract toString(): string;
+
+    private readonly _toString: string;
+
+    constructor(toString: string) {
+        this._toString = toString;
+    }
 
     isSupersetOf(other: Identity): boolean {
         return this.reduce(other) == null;
@@ -18,10 +23,23 @@ export abstract class IdentityBase {
     isSubsetOf(other: Identity): boolean {
         return other.isSupersetOf(this);
     }
+
+    equals(other: Identity): boolean {
+        return this._toString == other.toString();
+    }
+
+    toString(): string {
+        return this._toString;
+    }
 }
 
 export class All extends IdentityBase {
     readonly type = "all";
+    readonly priority = 0;
+
+    constructor() {
+        super("all");
+    }
 
     /**
      * Returns null if it completely consumes the other (is a superset).
@@ -29,22 +47,15 @@ export class All extends IdentityBase {
     reduce(other: Identity): Identity | null {
         return null;
     }
-
-    merge(other: Identity): Identity | null {
-        return this;
-    }
-
-    toString(): string {
-        return "all";
-    }
 }
 
 export class ById extends IdentityBase {
     readonly type = "id";
+    readonly priority = 2;
     readonly id: ToStringable;
 
     constructor(id: ToStringable) {
-        super();
+        super(id.toString());
         this.id = id;
 
         Object.freeze(this);
@@ -59,35 +70,17 @@ export class ById extends IdentityBase {
                 return other;
         }
     }
-
-    merge(other: Identity): Identity | null {
-        switch (other.type) {
-            // case "all":
-            //     return other;
-
-            case "id":
-                return this.id == other.id ? this : null;
-
-            // case "ids":
-            //     return other.merge(this);
-
-            default:
-                return null;
-        }
-    }
-
-    toString(): string {
-        return this.id.toString();
-    }
 }
 
 export class ByIds extends IdentityBase {
     readonly type = "ids";
+    readonly priority = 1;
     readonly ids: ReadonlyArray<ToStringable>;
 
     constructor(ids: ArrayLike<ToStringable>) {
-        super();
-        this.ids = Object.freeze(ids.slice().sort());
+        // todo: escape commas in ids
+        super(Object.freeze(ids.slice().sort()).join(","));
+        this.ids = Object.freeze(ids.slice());
 
         Object.freeze(this);
     }
@@ -107,40 +100,17 @@ export class ByIds extends IdentityBase {
                 return other;
         }
     }
-
-    merge(other: Identity): Identity | null {
-        switch (other.type) {
-            // case "all":
-            //     return other;
-
-            case "id":
-                return this.ids.includes(other.id) ? this : new ByIds([...this.ids, other.id]);
-
-            case "ids":
-                let diff = _.difference(other.ids, this.ids);
-
-                return diff.length == 0 ? this : new ByIds([...this.ids, ...diff]);
-
-            default:
-                return null;
-        }
-    }
-
-    toString(): string {
-        return this.ids.join(",");
-    }
 }
 
 export class ByIndexes extends IdentityBase {
     readonly type = "indexes";
+    readonly priority = 3;
     readonly indexes: Readonly<IndexCriteria>;
 
-    private readonly _toString: string;
-
     constructor(indexes: IndexCriteria) {
-        super();
+        // todo: escape colons & commas in indexes
+        super(Object.keys(indexes).sort().map(k => `${k}:${indexes[k].toString()}`).join(","));
         this.indexes = Object.freeze({ ...indexes });
-        this._toString = Object.keys(this.indexes).sort().map(k => `${k}:${indexes[k].toString()}`).join(",");
 
         Object.freeze(this);
     }
@@ -158,22 +128,5 @@ export class ByIndexes extends IdentityBase {
             default:
                 return other;
         }
-    }
-
-    merge(other: Identity): Identity | null {
-        switch (other.type) {
-            case "all":
-                return other;
-
-            case "indexes":
-                return this.reduce(other) == null ? this : null;
-
-            default:
-                return null;
-        }
-    }
-
-    toString(): string {
-        return this._toString;
     }
 }

@@ -58,9 +58,7 @@ export class Query<T extends IEntity> {
         this.numExpansions = this.expansions.map(exp => exp.numExpansions).reduce((p, c) => p + c, 0) + this.expansions.length;
     }
 
-    reduce(other: Query<any>): Query<any> {
-        if (other.entityType != this.entityType) return other;
-
+    reduce(other: Query<T>): Query<T> {
         let identity = this.identity.reduce(other.identity);
 
         if (identity == null) {
@@ -83,24 +81,6 @@ export class Query<T extends IEntity> {
                 return other;
             }
         }
-    }
-
-    merge(other: Query<T>): Query<T> {
-
-
-
-        if (!this.identity.isSubsetOf(other.identity)) return null;
-
-        let identity = this.identity.merge(other.identity);
-        if (identity == null) return null;
-
-        if (!Expansion.isSuperset(other.expansions, this.expansions)) return null;
-
-        return new Query({
-            entityType: this.entityType,
-            expand: other.expansions,
-            identity: identity
-        });
     }
 
     isSupersetOf(other: Query<T>): boolean {

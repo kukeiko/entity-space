@@ -1,7 +1,7 @@
 import * as _ from "lodash";
 import { ArrayLike, ToStringable, StringIndexable } from "../util";
 import { getEntityMetadata, AnyEntityType, EntityType, IEntity, Children, Navigation } from "../metadata";
-import { Path, Query, QueryType, Expansion, Saveable, Saveables, IndexCriteria } from "../elements";
+import { Path, Query, Expansion, Saveable, Saveables, IndexCriteria, All, ById, ByIds, ByIndexes } from "../elements";
 import { QueryCache, Workspace } from "../caching";
 import { IService } from "./service.type";
 import { EntityMapper } from "../mapping";
@@ -12,7 +12,7 @@ export class ServiceCluster {
     private _services = new Map<EntityType<any>, IService>();
     private _queryCache = new QueryCache();
     private _workspace = new Workspace();
-    private _pendingQueries = new Map<EntityType<any>, { query: QueryType<any>, promise: Promise<any> }[]>();
+    private _pendingQueries = new Map<EntityType<any>, { query: Query<any>, promise: Promise<any> }[]>();
 
     constructor(serviceProvider?: ServiceProvider) {
         this._serviceProvider = serviceProvider || null;
@@ -25,16 +25,17 @@ export class ServiceCluster {
         let expand = (args[1] || []) as string | ArrayLike<Expansion>;
         let asMap: true = args[2] != null ? true : null;
 
-        return this.executeQuery(new Query.All({
+        return this.executeQuery(new Query({
+            identity: new All(),
             entityType: type,
             expand: expand
         }), asMap);
     }
 
     loadById<T>(type: EntityType<T>, key: any, expand?: string | ArrayLike<Expansion>): Promise<T> {
-        return this.executeQuery(new Query.ById({
+        return this.executeQuery(new Query({
+            identity: new ById(key),
             entityType: type,
-            id: key,
             expand: expand
         })).then(items => {
             return items[0] || null;
@@ -49,10 +50,10 @@ export class ServiceCluster {
         let expand = (args[2] || []) as string | ArrayLike<Expansion>;
         let asMap: true = args[3] != null ? true : null;
 
-        return this.executeQuery(new Query.ByIds({
+        return this.executeQuery(new Query({
+            identity: new ByIds(keys),
             entityType: type,
-            expand: expand,
-            ids: keys
+            expand: expand
         }), asMap);
     }
 
@@ -64,10 +65,10 @@ export class ServiceCluster {
         let expand = (args[2] || []) as string | ArrayLike<Expansion>;
         let asMap: true = args[3] != null ? true : null;
 
-        return this.executeQuery(new Query.ByIndexes({
+        return this.executeQuery(new Query({
+            identity: new ByIndexes(indexes),
             entityType: type,
-            expand: expand,
-            indexes: indexes
+            expand: expand
         }), asMap);
     }
 
@@ -122,9 +123,9 @@ export class ServiceCluster {
             entitiesPerKey.set(key, entities[i]);
         }
 
-        let cached = this._workspace.execute(new Query.ByIds({
-            entityType: type,
-            ids: Array.from(entitiesPerKey.keys())
+        let cached = this._workspace.execute(new Query({
+            identity: new ByIds(Array.from(entitiesPerKey.keys())),
+            entityType: type
         }), true);
 
         for (let i = 0; i < entities.length; ++i) {
@@ -215,16 +216,16 @@ export class ServiceCluster {
         entities.forEach(e => e[pkName] && keys.add(e[pkName]));
         saved.forEach(s => keys.add(s[pkDtoName]));
 
-        return this._workspace.execute(new Query.ByIds({
-            entityType: type,
-            ids: Array.from(keys)
+        return this._workspace.execute(new Query({
+            identity: new ByIds(Array.from(keys)),
+            entityType: type
         }));
     }
 
-    executeQuery<T extends IEntity>(query: QueryType<T>): Promise<T[]>;
-    executeQuery<T extends IEntity>(query: QueryType<T>, asMap: true): Promise<Map<any, T>>;
+    executeQuery<T extends IEntity>(query: Query<T>): Promise<T[]>;
+    executeQuery<T extends IEntity>(query: Query<T>, asMap: true): Promise<Map<any, T>>;
     executeQuery<T extends IEntity>(...args: any[]): Promise<T[] | Map<any, T>> {
-        let query = args[0] as QueryType<T>;
+        let query = args[0] as Query<T>;
         let asMap: true = args[1] != null ? true : null;
 
         return this._loadIntoWorkspace(query).then(() => {
@@ -268,12 +269,12 @@ export class ServiceCluster {
     /**
      * Make sure that the payload of the provided query exists in the workspace.
      */
-    private async _loadIntoWorkspace(query: QueryType<any>): Promise<void> {
+    private async _loadIntoWorkspace(query: Query<any>): Promise<void> {
         // remove all navigations that should be loaded separately
         let [noVirtuals, virtuals] = query.extract(exp => exp.property.virtual);
 
         // reduce the query by removing navigations that are already loaded
-        let reduced = this._queryCache.reduce(noVirtuals);
+        let reduced = this._queryCache._reduce(noVirtuals);
         let loadReducedPromises: Promise<any>[] = [];
 
         reduced.forEach(rq => {
@@ -306,10 +307,10 @@ export class ServiceCluster {
                             keys.add(e[keyName]);
                         });
 
-                        promises.push(this._loadIntoWorkspace(new Query.ByIds({
+                        promises.push(this._loadIntoWorkspace(new Query({
+                            identity: new ByIds(Array.from(keys)),
                             entityType: nav.otherType,
-                            expand: v.extracted.expansions.slice(),
-                            ids: Array.from(keys)
+                            expand: v.extracted.expansions
                         })));
                         break;
 
@@ -321,12 +322,10 @@ export class ServiceCluster {
                         crawled.forEach(item => {
                             let parentKey = item[pkName];
 
-                            promises.push(this._loadIntoWorkspace(new Query.ByIndexes({
+                            promises.push(this._loadIntoWorkspace(new Query({
+                                identity: new ByIndexes({ [parentKeyName]: parentKey }),
                                 entityType: nav.otherType,
-                                expand: v.extracted.expansions.slice(),
-                                indexes: {
-                                    [parentKeyName]: parentKey
-                                }
+                                expand: v.extracted.expansions
                             })));
                         });
                         break;
@@ -341,10 +340,10 @@ export class ServiceCluster {
                             keys.forEach(k => refKeys.add(k));
                         });
 
-                        promises.push(this._loadIntoWorkspace(new Query.ByIds({
+                        promises.push(this._loadIntoWorkspace(new Query({
+                            identity: new ByIds(Array.from(keys)),
                             entityType: nav.otherType,
-                            expand: v.extracted.expansions.slice(),
-                            ids: Array.from(keys)
+                            expand: v.extracted.expansions
                         })));
                         break;
                 }
@@ -359,10 +358,10 @@ export class ServiceCluster {
      *
      * The query must not contain any virtuals.
      */
-    private async _loadFromService(query: QueryType<any>): Promise<StringIndexable[]> {
-        let executer = await this._getService(query.entityType);
+    private async _loadFromService(query: Query<any>): Promise<StringIndexable[]> {
+        let service = await this._getService(query.entityType);
 
-        if (!executer) {
+        if (!service) {
             throw `no service for entity type ${query.entityType.name} registered`;
         }
 
@@ -376,8 +375,9 @@ export class ServiceCluster {
         let reduced = query;
 
         for (let i = 0; i < pending.length; ++i) {
-            // todo: no idea why cast to Query<any> is necessary
-            reduced = (pending[i].query as Query<any>).reduce(reduced);
+            reduced = pending[i].query.reduce(reduced);
+
+            // can return bigger payload than expected if pending was a superset
             if (!reduced) return pending[i].promise;
         }
 
@@ -387,41 +387,8 @@ export class ServiceCluster {
             return superset.promise;
         }
 
-        let throwNotSupported = (type: string) => {
-            throw `query of type ${type} for entity ${query.entityType.name} not supported`;
-        };
-
-        let promise: Promise<StringIndexable[]> = null;
-
-        switch (reduced.type) {
-            case "all":
-                if (!executer.loadAll) throwNotSupported("all");
-                promise = executer.loadAll(reduced);
-                break;
-
-            case "id":
-                if (!executer.loadOne) throwNotSupported("id");
-                promise = Promise.all([executer.loadOne(reduced)]);
-                break;
-
-            case "ids":
-                if (!executer.loadMany) throwNotSupported("ids");
-                promise = executer.loadMany(reduced);
-                break;
-
-            case "indexes":
-                if (!executer.loadByIndexes) throwNotSupported("indexes");
-                promise = executer.loadByIndexes(reduced);
-                break;
-
-            default:
-                throw `unknown query type ${(reduced as any).type}`;
-        }
-
-        pending.push({
-            query: reduced,
-            promise: promise
-        });
+        let promise = service.load(reduced);
+        pending.push({ query: reduced, promise: promise });
 
         let cleanup = () => pending.splice(pending.findIndex(x => x.query == reduced), 1);
         promise.then(cleanup, cleanup);

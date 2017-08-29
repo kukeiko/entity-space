@@ -1,142 +1,77 @@
-import { getEntityMetadata, EntityType, IEntity, Navigation, EntityMetadata } from "../metadata";
-import { Expansion, Query } from "../elements";
-import { AllQueryCache } from "./all-query-cache";
-import { ByIndexesQueryCache } from "./by-indexes-query-cache";
-import { ByIdsQueryKeyCache } from "./by-ids-query-cache";
+import { TypeOf } from "../util";
+import { getEntityMetadata, AnyEntityType, EntityType, IEntity, Navigation, EntityMetadata } from "../metadata";
+import { Expansion, Query, ByIds, ByIndexes } from "../elements";
 
 export class QueryCache {
-    private _allQueryCaches = new Map<EntityType<any>, AllQueryCache<any>>();
-    private _byIndexesCaches = new Map<EntityType<any>, ByIndexesQueryCache<any>>();
-    private _byKeyCaches = new Map<EntityType<any>, ByIdsQueryKeyCache<any>>();
+    private _queries = new Map<AnyEntityType, Query<any>[]>();
 
-    reduce<T extends IEntity>(query: QueryType<T>): QueryType<T>[] {
-        let reducedViaAll = this._getAllQueryCache(query.entityType).reduce(query);
-        if (reducedViaAll == null) return [];
-
-        switch (reducedViaAll.type) {
-            case "id":
-                {
-                    let reduced = this._getByKeyQueryCache(reducedViaAll.entityType).reduce(reducedViaAll);
-                    return reduced ? [reduced] : [];
-                }
-
-            case "ids":
-                {
-                    return this._getByKeyQueryCache(reducedViaAll.entityType).reduce(reducedViaAll);
-                }
-
-            case "indexes":
-                {
-                    let reduced = this._getByIndexesQueryCache(reducedViaAll.entityType).reduce(reducedViaAll);
-                    return reduced ? [reduced] : [];
-                }
-        }
-
-        return [query];
+    isCached<T>(query: Query<T>): boolean {
+        return this.reduce(query) == null;
     }
 
-    merge(query: QueryType<any>, payload?: any[]): void {
-        switch (query.type) {
-            case "id":
-            case "ids":
-                this._getByKeyQueryCache(query.entityType).merge(query);
+    merge<T>(query: Query<T>, payload?: any[]): void {
+        this._merge(query);
 
-                if (payload) {
-                    this._buildQueriesFromPayload(getEntityMetadata(query.entityType), payload, query.expansions.slice());
-                }
-                break;
-
-            case "indexes":
-                this._getByIndexesQueryCache(query.entityType).merge(query);
-
-                if (payload) {
-                    let metadata = getEntityMetadata(query.entityType);
-                    let keys = new Set<any>();
-
-                    payload.forEach(entity => keys.add(entity[metadata.primaryKey.dtoName]));
-
-                    this.merge(new Query.ByIds({
-                        entityType: query.entityType,
-                        expand: query.expansions.slice(),
-                        ids: Array.from(keys.values())
-                    }), payload);
-                }
-                break;
-
-            case "all":
-                this._getAllQueryCache(query.entityType).merge(query);
-
-                if (payload) {
-                    this._buildQueriesFromPayload(getEntityMetadata(query.entityType), payload, query.expansions.slice());
-                }
-                break;
-
-            default:
-                throw `incompatible query: ${query}`;
+        if (payload) {
+            this._buildQueriesFromPayload(getEntityMetadata(query.entityType), payload, query.expansions.slice());
         }
     }
 
-    isCached(query: QueryType<any>): boolean {
-        let allCache = this._getAllQueryCache(query.entityType);
-        if (allCache.isCached(query)) return true;
+    reduce<T>(query: Query<T>): Query<T> {
+        let queries = this._getQueries(query.entityType);
+        let reduced: Query<T> = null;
 
-        switch (query.type) {
-            case "id": return this._getByKeyQueryCache(query.entityType).isCached(query);
-            case "ids": return this._getByKeyQueryCache(query.entityType).isCached(query);
-            case "indexes": return this._getByIndexesQueryCache(query.entityType).isCached(query);
-
-            default: return false;
+        for (let i = 0; i < queries.length; ++i) {
+            reduced = queries[i].reduce(query);
+            if (!reduced) break;
         }
+
+        return reduced;
     }
 
     clear(entityType?: EntityType<any>): void {
         if (entityType) {
-            this._allQueryCaches.delete(entityType);
-            this._byIndexesCaches.delete(entityType);
-            this._byKeyCaches.delete(entityType);
+            this._queries.delete(entityType);
         } else {
-            this._allQueryCaches = new Map<EntityType<any>, AllQueryCache<any>>();
-            this._byIndexesCaches = new Map<EntityType<any>, ByIndexesQueryCache<any>>();
-            this._byKeyCaches = new Map<EntityType<any>, ByIdsQueryKeyCache<any>>();
+            this._queries.clear();
         }
     }
 
-    private _getAllQueryCache<T>(entityType: EntityType<T>): AllQueryCache<T> {
-        let cache = this._allQueryCaches.get(entityType) as AllQueryCache<T>;
+    private _getQueries<T>(entityType: TypeOf<T>): Query<T>[] {
+        let queries = this._queries.get(entityType);
 
-        if (!cache) {
-            cache = new AllQueryCache<T>();
-            this._allQueryCaches.set(entityType, cache);
+        if (!queries) {
+            queries = [];
+            this._queries.set(entityType, queries);
         }
 
-        return cache;
+        return queries;
     }
 
-    private _getByIndexesQueryCache<T>(entityType: EntityType<T>): ByIndexesQueryCache<T> {
-        let cache = this._byIndexesCaches.get(entityType) as ByIndexesQueryCache<T>;
+    private _merge<T>(query: Query<T>, sort?: true): void {
+        let queries = this._getQueries(query.entityType);
+        let updated: Query<T>[] = [];
 
-        if (!cache) {
-            cache = new ByIndexesQueryCache<T>();
-            this._byIndexesCaches.set(entityType, cache);
+        for (let i = 0; i < queries.length; ++i) {
+            let reduced = query.reduce(queries[i]);
+
+            if (reduced) {
+                updated.push(reduced);
+            }
         }
 
-        return cache;
-    }
+        updated.push(query);
 
-    private _getByKeyQueryCache<T>(entityType: EntityType<T>): ByIdsQueryKeyCache<T> {
-        let cache = this._byKeyCaches.get(entityType) as ByIdsQueryKeyCache<T>;
-
-        if (!cache) {
-            cache = new ByIdsQueryKeyCache<T>();
-            this._byKeyCaches.set(entityType, cache);
+        if (sort) {
+            this._queries.set(query.entityType, updated.sort((a, b) => a.identity.priority - b.identity.priority));
+        } else {
+            this._queries.set(query.entityType, updated);
         }
-
-        return cache;
     }
 
     // todo: use for loops + make use of EntityMapper.collect() if possible (if not, make it happen),
     // since this function slows down loading from services quite a bit
-    private _buildQueriesFromPayload(metadata: EntityMetadata<any>, entities: IEntity[], expansions: Expansion[]): void {
+    private _buildQueriesFromPayload(metadata: EntityMetadata<any>, entities: IEntity[], expansions: ArrayLike<Expansion>): void {
         if (entities.length == 0) return;
 
         expansions.forEach(exp => {
@@ -159,13 +94,14 @@ export class QueryCache {
                             references.push(e);
                         });
 
-                        let q = new Query.ByIds({
+                        let q = new Query({
+                            identity: new ByIds(Array.from(keys)),
                             entityType: nav.otherType,
-                            expand: exp.expansions.slice(),
-                            ids: Array.from(keys)
+                            expand: exp.expansions,
                         });
 
-                        this.merge(q, references);
+                        this._merge(q);
+                        this._buildQueriesFromPayload(nav.otherTypeMetadata, references, q.expansions);
                     }
                     break;
 
@@ -191,24 +127,24 @@ export class QueryCache {
                                 items.push(child);
                             });
 
-                            let byParentIdQuery = new Query.ByIndexes({
+                            let byParentIdQuery = new Query({
+                                identity: new ByIndexes({ [backRefKeyName]: children[0][backRefKeyName] }),
                                 entityType: nav.otherType,
-                                expand: exp.expansions.slice(),
-                                indexes: {
-                                    [backRefKeyName]: children[0][backRefKeyName]
-                                }
+                                expand: exp.expansions
                             });
 
-                            this.merge(byParentIdQuery, children);
+                            this._merge(byParentIdQuery);
+                            this._buildQueriesFromPayload(nav.otherTypeMetadata, children, byParentIdQuery.expansions);
                         });
 
-                        let q = new Query.ByIds({
+                        let q = new Query({
+                            identity: new ByIds(Array.from(keys)),
                             entityType: nav.otherType,
-                            expand: exp.expansions.slice(),
-                            ids: Array.from(keys)
+                            expand: exp.expansions
                         });
 
-                        this.merge(q, items);
+                        this._merge(q);
+                        this._buildQueriesFromPayload(nav.otherTypeMetadata, items, q.expansions);
                     }
                     break;
 
@@ -231,13 +167,14 @@ export class QueryCache {
                             });
                         });
 
-                        let q = new Query.ByIds({
+                        let q = new Query({
+                            identity: new ByIds(Array.from(keys)),
                             entityType: nav.otherType,
-                            expand: exp.expansions.slice(),
-                            ids: Array.from(keys)
+                            expand: exp.expansions
                         });
 
-                        this.merge(q, items);
+                        this._merge(q);
+                        this._buildQueriesFromPayload(nav.otherTypeMetadata, items, q.expansions);
                     }
                     break;
             }
