@@ -1,5 +1,5 @@
-import { getEntityMetadata, EntityClass, EntityMetadata, Property } from "../../src";
-import { Album, TagType } from "..//common";
+import { EntityMetadata } from "./entity-metadata";
+import { getEntityMetadata, Property, EntityClass } from "./entity.decorator";
 
 describe("entity-metadata", () => {
     describe("getEntityMetadata()", () => {
@@ -93,10 +93,10 @@ describe("entity-metadata", () => {
     });
 
     it("should have the correct entity class name", () => {
-        let albumMetadata = getEntityMetadata(Album);
-        let tagTypeMetadata = getEntityMetadata(TagType);
+        @EntityClass()
+        class Foo { @Property.Id() id: string; }
+        let fooMetadata = getEntityMetadata(Foo);
 
-        expect(albumMetadata.name).toEqual("Album");
-        expect(tagTypeMetadata.name).toEqual("TagType");
+        expect(fooMetadata.name).toEqual("Foo");
     });
 });

@@ -1,5 +1,7 @@
-import { getEntityMetadata, Query, Expansion } from "../../src/";
-import { Artist, Album } from "../common";
+import { Query } from "./query";
+import { Expansion } from "./expansion";
+import { getEntityMetadata } from "../../src/";
+import { Artist, Album } from "../../test/facade";
 
 describe("query", () => {
     it("expansion string should be sorted by name", () => {

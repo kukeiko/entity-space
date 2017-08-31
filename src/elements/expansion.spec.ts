@@ -1,5 +1,6 @@
-import { Expansion, getEntityMetadata, EntityClass, Property } from "../../src";
-import { Artist, Album, Song } from "../common";
+import { getEntityMetadata, EntityClass, Property } from "../metadata";
+import { Expansion } from "./expansion";
+import { Artist, Album, Song } from "../../test/facade";
 
 describe("expansion", () => {
     it("return value of toString() should be parsable by parse()", () => {

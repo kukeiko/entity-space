@@ -1,4 +1,6 @@
-import { EntityClass, Query, QueryCache, Property } from "../../src";
+import { EntityClass, Property } from "../metadata";
+import { Query } from "../elements";
+import { QueryCache } from "./query-cache";
 
 describe("query-cache", () => {
     describe("isCached()", () => {

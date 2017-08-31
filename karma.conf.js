@@ -6,8 +6,8 @@ module.exports = function (config) {
         frameworks: ["jasmine"],
         browsers: ["Chrome"],
         port: 6400,
-        files: ["./test/main.ts"],
-        preprocessors: { "./test/main.ts": ["webpack"], },
+        files: ["./test/entry.ts"],
+        preprocessors: { "./test/entry.ts": ["webpack"], },
         webpack: {
             devtool: "inline-source-map",
             resolve: {
