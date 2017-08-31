@@ -14,6 +14,7 @@
     - child class instance must implement $ getter for general access
 
 ## ???
+- consider using strict null checks flag @ tsc
 - remove inline property initializations if ctor initializes them safely
 - allow reference key convention => "template" => "templateId"
 - decorators should bleed through from super classes, allowing inheritance

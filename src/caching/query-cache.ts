@@ -19,10 +19,10 @@ export class QueryCache {
 
     reduce<T>(query: Query<T>): Query<T> {
         let queries = this._getQueries(query.entityType);
-        let reduced: Query<T> = null;
+        let reduced = query;
 
         for (let i = 0; i < queries.length; ++i) {
-            reduced = queries[i].reduce(query);
+            reduced = queries[i].reduce(reduced);
             if (!reduced) break;
         }
 
@@ -48,7 +48,7 @@ export class QueryCache {
         return queries;
     }
 
-    private _merge<T>(query: Query<T>, sort?: true): void {
+    private _merge<T>(query: Query<T>): void {
         let queries = this._getQueries(query.entityType);
         let updated: Query<T>[] = [];
 
@@ -61,12 +61,7 @@ export class QueryCache {
         }
 
         updated.push(query);
-
-        if (sort) {
-            this._queries.set(query.entityType, updated.sort((a, b) => a.identity.priority - b.identity.priority));
-        } else {
-            this._queries.set(query.entityType, updated);
-        }
+        this._queries.set(query.entityType, updated.sort((a, b) => a.identity.priority - b.identity.priority));
     }
 
     // todo: use for loops + make use of EntityMapper.collect() if possible (if not, make it happen),
@@ -74,7 +69,10 @@ export class QueryCache {
     private _buildQueriesFromPayload(metadata: EntityMetadata<any>, entities: IEntity[], expansions: ArrayLike<Expansion>): void {
         if (entities.length == 0) return;
 
-        expansions.forEach(exp => {
+        let exp: Expansion;
+
+        for (let i = 0; i < expansions.length; ++i) {
+            exp = expansions[i];
             let nav = exp.property as Navigation;
 
             switch (nav.type) {
@@ -178,6 +176,6 @@ export class QueryCache {
                     }
                     break;
             }
-        });
+        };
     }
 }

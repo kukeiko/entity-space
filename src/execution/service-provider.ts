@@ -1,19 +1,18 @@
 import { TypeOf } from "../util";
 import { EntityType } from "../metadata";
-import { IService } from "./service.type";
-import { getServiceType } from "./service.decorator";
+import { getServiceType, Service } from "./service";
 
-export type ResolveService = (type: TypeOf<IService>) => IService;
+export type ResolveService = (type: TypeOf<Service>) => Service;
 
 export class ServiceProvider {
-    private _services = new Map<EntityType<any>, IService>();
+    private _services = new Map<EntityType<any>, Service>();
     private _resolve: ResolveService = null;
 
     constructor(resolve: ResolveService) {
         this._resolve = resolve;
     }
 
-    async get<T>(entityType: EntityType<T>): Promise<IService> {
+    async get<T>(entityType: EntityType<T>): Promise<Service> {
         let service = this._services.get(entityType);
 
         if (!service) {

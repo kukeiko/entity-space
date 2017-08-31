@@ -1,15 +1,15 @@
 import * as _ from "lodash";
-import { ArrayLike, ToStringable, StringIndexable } from "../util";
+import { ArrayLike, StringIndexable } from "../util";
 import { getEntityMetadata, AnyEntityType, EntityType, IEntity, Children, Navigation } from "../metadata";
-import { Path, Query, Expansion, Saveable, Saveables, IndexCriteria, All, ById, ByIds, ByIndexes } from "../elements";
+import { Path, Query, Expansion, Saveable, Saveables, Indexes, All, ById, ByIds, ByIndexes } from "../elements";
 import { QueryCache, Workspace } from "../caching";
-import { IService } from "./service.type";
+import { Service } from "./service";
 import { EntityMapper } from "../mapping";
 import { ServiceProvider } from "./service-provider";
 
 export class ServiceCluster {
     private _serviceProvider: ServiceProvider = null;
-    private _services = new Map<EntityType<any>, IService>();
+    private _services = new Map<EntityType<any>, Service>();
     private _queryCache = new QueryCache();
     private _workspace = new Workspace();
     private _pendingQueries = new Map<EntityType<any>, { query: Query<any>, promise: Promise<any> }[]>();
@@ -57,11 +57,11 @@ export class ServiceCluster {
         }), asMap);
     }
 
-    loadByIndexes<T>(type: EntityType<T>, indexes: IndexCriteria, expand?: string | ArrayLike<Expansion>): Promise<T[]>;
-    loadByIndexes<T, K>(type: EntityType<T>, indexes: IndexCriteria, expand: string | ArrayLike<Expansion>, asMap: true): Promise<Map<K, T>>;
+    loadByIndexes<T>(type: EntityType<T>, indexes: Indexes, expand?: string | ArrayLike<Expansion>): Promise<T[]>;
+    loadByIndexes<T, K>(type: EntityType<T>, indexes: Indexes, expand: string | ArrayLike<Expansion>, asMap: true): Promise<Map<K, T>>;
     loadByIndexes<T, K>(...args: any[]): Promise<T[] | Map<K, T>> {
         let type = args[0] as EntityType<T>;
-        let indexes = args[1] as IndexCriteria;
+        let indexes = args[1] as Indexes;
         let expand = (args[2] || []) as string | ArrayLike<Expansion>;
         let asMap: true = args[3] != null ? true : null;
 
@@ -78,7 +78,7 @@ export class ServiceCluster {
         return saved[0];
     }
 
-    // todo: refine/refactor
+    // todo: refine/refactor (put some stuff into entity-mapper maybe?)
     // todo: consider something like Promise.all<T1, T2, T3...> to handle multiple entity types
     async saveMany<T extends IEntity>(entities: T[]): Promise<T[]> {
         if (entities.length == 0) return;
@@ -247,7 +247,7 @@ export class ServiceCluster {
         }
     }
 
-    register<T>(entityType: EntityType<T>, executer: IService): void {
+    register<T>(entityType: EntityType<T>, executer: Service): void {
         this._services.set(entityType, executer);
     }
 
@@ -270,24 +270,17 @@ export class ServiceCluster {
      * Make sure that the payload of the provided query exists in the workspace.
      */
     private async _loadIntoWorkspace(query: Query<any>): Promise<void> {
-        // remove all navigations that should be loaded separately
+        // extract all navigations that should be loaded separately
         let [noVirtuals, virtuals] = query.extract(exp => exp.property.virtual);
 
-        // reduce the query by removing navigations that are already loaded
-        let reduced = this._queryCache._reduce(noVirtuals);
-        let loadReducedPromises: Promise<any>[] = [];
+        let reduced = this._queryCache.reduce(noVirtuals);
 
-        reduced.forEach(rq => {
-            let promise = this._loadFromService(rq)
-                .then(entities => {
-                    this._workspace.add(entities, getEntityMetadata(query.entityType), rq.expansions, true);
-                    this._queryCache.merge(rq, entities);
-                });
+        if (reduced) {
+            let entities = await this._loadFromService(reduced);
 
-            loadReducedPromises.push(promise);
-        });
-
-        await Promise.all(loadReducedPromises);
+            this._workspace.add(entities, getEntityMetadata(query.entityType), reduced.expansions, true);
+            this._queryCache.merge(reduced, entities);
+        }
 
         if (virtuals.length > 0) {
             let entities = this._workspace.execute(noVirtuals);
@@ -377,14 +370,13 @@ export class ServiceCluster {
         for (let i = 0; i < pending.length; ++i) {
             reduced = pending[i].query.reduce(reduced);
 
-            // can return bigger payload than expected if pending was a superset
+            // todo(?): figure out if returning just one of them can result in payloads
+            // that are bigger/smaller (or even invalid?) than expected
+
+            // one fix could be to collect all promises of queries that actually reduced something,
+            // then await them and return a flattened array
+
             if (!reduced) return pending[i].promise;
-        }
-
-        let superset = pending.find(x => x.query.isSupersetOf(query));
-
-        if (superset) {
-            return superset.promise;
         }
 
         let promise = service.load(reduced);
@@ -396,7 +388,7 @@ export class ServiceCluster {
         return promise.then(x => x.filter(y => y));
     }
 
-    private async _getService<T extends IEntity>(entityType: EntityType<T>): Promise<IService> {
+    private async _getService<T extends IEntity>(entityType: EntityType<T>): Promise<Service> {
         let service = this._services.get(entityType);
 
         if (!service) {
@@ -417,6 +409,7 @@ export class ServiceCluster {
         let next = path;
 
         while (next) {
+            // todo: figure out if Collection should also be considered
             let isArray = next.property instanceof Children;
 
             if (isArray) {

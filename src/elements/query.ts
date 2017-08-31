@@ -111,7 +111,7 @@ export class Query<T extends IEntity> {
 
         let query = new Query({
             entityType: this.entityType,
-            expand: this.expansions,
+            expand: expansions,
             identity: this.identity
         });
 
@@ -119,7 +119,7 @@ export class Query<T extends IEntity> {
     }
 
     toString(): string {
-        let val = `(${this.identity})${getEntityMetadata(this.entityType).name}`;
+        let val = `${getEntityMetadata(this.entityType).name}(${this.identity})`;
 
         if (this.expansions.length > 0) {
             val += "/";

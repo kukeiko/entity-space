@@ -4,20 +4,20 @@ import { SongTag } from "./song-tag";
 
 @EntityClass()
 export class Song {
-    @Property.Id({ dtoName: "SongId" })
-    id: number;
+    @Property.Id()
+    id: number = null;
 
-    @Property.Primitive({ dtoName: "SongName" })
-    name: string;
+    @Property.Primitive()
+    name: string = null;
 
     @Property.Key()
-    albumId: number;
+    albumId: number = null;
 
-    @Property.Reference({ key: "albumId", other: () => Album, dtoName: "DerAlbumSpieltSchweissfrei" })
-    album: Album;
+    @Property.Reference({ key: "albumId", other: () => Album })
+    album: Album = null;
 
-    @Property.Children({ back: "song", other: () => SongTag, dtoName: "SongTags" })
-    tags: SongTag[];
+    @Property.Children({ back: "song", other: () => SongTag })
+    tags: SongTag[] = [];
 
     constructor(args?: Partial<Song>) {
         Object.assign(this, args || {});

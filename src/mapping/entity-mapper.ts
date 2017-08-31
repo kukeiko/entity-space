@@ -173,6 +173,7 @@ export class EntityMapper {
         });
     }
 
+    // todo: maybe Path could find a use as an argument?
     static collect(items: ArrayLike<StringIndexable>, prop: Primitive | Navigation, isDto?: boolean): any[] {
         let collected: any[] = [];
         let name = prop.getName(isDto);

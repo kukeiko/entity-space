@@ -1,9 +1,10 @@
-import { EntityType } from "../metadata";
-import { Query } from "../elements";
-import { IService } from "./service.type";
+import { ToStringable } from "../util";
+import { EntityType, IEntity } from "../metadata";
+import { Query, ByIds } from "../elements";
+import { Service } from "./service";
 
-export class StaticDataService<K, V> implements IService {
-    private _items: V[] = [];
+export class StaticDataService<K extends ToStringable, V extends IEntity> implements Service {
+    private _items = new Map<string, V>();
     private _onNotFound?: (key: K) => Promise<V> | V;
     private _keyGetter: (item: V) => K;
 
@@ -13,30 +14,62 @@ export class StaticDataService<K, V> implements IService {
         keyGetter: (item: V) => K;
         onNotFound?: (key: K) => Promise<V> | V;
     }) {
-        this._items = args.items.slice();
+        let item: V;
+
+        for (let i = 0; i < args.items.length; ++i) {
+            item = args.items[0];
+            this._items.set(args.keyGetter(item).toString(), item);
+        }
+
         this._onNotFound = args.onNotFound || null;
         this._keyGetter = args.keyGetter;
     }
 
-    async loadAll(q?: Query.All<V>): Promise<V[]> {
-        return Promise.resolve(this._items.slice());
-    }
+    async load(q: Query<V>): Promise<V[]> {
+        switch (q.identity.type) {
+            case "all":
+                return Array.from(this._items.values());
 
-    async loadOne(q: Query.ById<V>): Promise<V> {
-        let item = this._items.find(i => this._keyGetter(i) == q.id);
+            case "id":
+                return this.load(new Query({
+                    identity: new ByIds([q.identity.id]),
+                    entityType: q.entityType,
+                    expand: q.expansions
+                }));
 
-        if (!item && this._onNotFound) {
-            item = await this._onNotFound(q.id as K);
+            case "ids":
+                let items = await Promise.all(q.identity.ids.map(async id => {
+                    let item = this._items.get(id.toString());
+
+                    if (!item && this._onNotFound) {
+                        item = await this._onNotFound(id as K);
+                    }
+
+                    return item;
+                }));
+
+                return items.filter(x => x);
+
+            case "indexes":
+                {
+                    let indexes = q.identity.indexes;
+                    let items: V[] = [];
+
+                    this._items.forEach(item => {
+                        for (let k in indexes) {
+                            if (item[k] != indexes[k]) {
+                                return;
+                            }
+                        }
+
+                        items.push(item);
+                    });
+
+                    return items;
+                }
+
+            default:
+                throw new Error(`unexpected query identity '${(q.identity as any).type}'`);
         }
-
-        return item ? Promise.resolve(item) : Promise.reject<any>(`${q.entityType.name} with id ${q.id} not found`);
-    }
-
-    async loadMany(q: Query.ByIds<V>): Promise<V[]> {
-        return await Promise.all(q.ids.map(k => this.loadOne(new Query.ById({
-            entityType: q.entityType,
-            expand: q.expansions.slice(),
-            id: k
-        }))));
     }
 }

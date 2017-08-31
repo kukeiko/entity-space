@@ -2,8 +2,8 @@ import * as _ from "lodash";
 import { ArrayLike, ToStringable } from "../util";
 
 export type Identity = All | ById | ByIds | ByIndexes;
-export type Identites = Identity["type"];
-export type IndexCriteria = { [key: string]: ToStringable };
+export type Identities = Identity["type"];
+export type Indexes = { [key: string]: ToStringable };
 
 export abstract class IdentityBase {
     abstract type: any;
@@ -56,8 +56,12 @@ export class ById extends IdentityBase {
 
     constructor(id: ToStringable) {
         super(id.toString());
-        this.id = id;
 
+        if (id == null) {
+            throw new Error(`can't create an [id] identity with a null/undefined id`);
+        }
+
+        this.id = id;
         Object.freeze(this);
     }
 
@@ -65,6 +69,17 @@ export class ById extends IdentityBase {
         switch (other.type) {
             case "id":
                 return this.id == other.id ? null : other;
+
+            case "ids":
+                let hasMe = other.ids.includes(this.id);
+
+                if (hasMe) {
+                    let withoutMe = other.ids.filter(id => id != this.id);
+
+                    return withoutMe.length == 0 ? null : new ByIds(withoutMe);
+                }
+
+                return other;
 
             default:
                 return other;
@@ -80,8 +95,12 @@ export class ByIds extends IdentityBase {
     constructor(ids: ArrayLike<ToStringable>) {
         // todo: escape commas in ids
         super(Object.freeze(ids.slice().sort()).join(","));
-        this.ids = Object.freeze(ids.slice());
 
+        if (ids.length == 0) {
+            throw new Error(`can't create an [ids] identity with an empty array of ids`);
+        }
+
+        this.ids = Object.freeze(ids.slice());
         Object.freeze(this);
     }
 
@@ -105,13 +124,18 @@ export class ByIds extends IdentityBase {
 export class ByIndexes extends IdentityBase {
     readonly type = "indexes";
     readonly priority = 3;
-    readonly indexes: Readonly<IndexCriteria>;
+    readonly indexes: Readonly<Indexes>;
+    readonly isEmpty: boolean = false;
 
-    constructor(indexes: IndexCriteria) {
+    constructor(indexes: Indexes) {
         // todo: escape colons & commas in indexes
         super(Object.keys(indexes).sort().map(k => `${k}:${indexes[k].toString()}`).join(","));
-        this.indexes = Object.freeze({ ...indexes });
 
+        if (Object.keys(indexes).length == 0) {
+            throw new Error(`can't create an [indexes] identity with empty index criteria`);
+        }
+
+        this.indexes = Object.freeze({ ...indexes });
         Object.freeze(this);
     }
 

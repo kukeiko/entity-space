@@ -16,7 +16,7 @@ describe("service-cluster", () => {
         sc.register(
             Item,
             {
-                loadAll: () => {
+                load: () => {
                     numLoadCalled++;
                     return Promise.resolve(items);
                 }
@@ -39,7 +39,7 @@ describe("service-cluster", () => {
         let sc = new ServiceCluster();
         let items = [new Item({ id: 1 }), new Item({ id: 2 })];
 
-        sc.register(Item, { loadAll: () => Promise.resolve(items) });
+        sc.register(Item, { load: () => Promise.resolve(items) });
 
         try {
             let loaded = await sc.loadAll(Item);

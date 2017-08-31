@@ -25,11 +25,11 @@ import { Tag } from "./tag";
     }
 })
 export class SongTag {
-    id: number;
-    songId: number;
-    song: Song;
-    tagId: number;
-    tag: Tag;
+    id: number = null;
+    songId: number = null;
+    song: Song = null;
+    tagId: number = null;
+    tag: Tag = null;
 
     constructor(args?: Partial<SongTag>) {
         Object.assign(this, args || {});
