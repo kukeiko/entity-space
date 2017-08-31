@@ -10,12 +10,12 @@ describe("query-cache", () => {
 
                 let byKeys = Query.ByIds({
                     ids: ["khaz", "mo", "dan"],
-                    entityType: Foo
+                    entity: Foo
                 });
 
                 let byMo = Query.ByIds({
                     ids: ["mo"],
-                    entityType: Foo
+                    entity: Foo
                 });
 
                 cache.merge(byKeys);
@@ -28,22 +28,22 @@ describe("query-cache", () => {
 
                 let byMo = Query.ByIds({
                     ids: ["mo"],
-                    entityType: Foo
+                    entity: Foo
                 });
 
                 let byDan = Query.ByIds({
                     ids: ["dan"],
-                    entityType: Foo
+                    entity: Foo
                 });
 
                 let byKhaz = Query.ByIds({
                     ids: ["khaz"],
-                    entityType: Foo
+                    entity: Foo
                 });
 
                 let byKeys = Query.ByIds({
                     ids: ["khaz", "mo", "dan"],
-                    entityType: Foo
+                    entity: Foo
                 });
 
                 cache.merge(byMo);
@@ -58,17 +58,17 @@ describe("query-cache", () => {
 
                 let byKhazMo = Query.ByIds({
                     ids: ["khaz", "mo"],
-                    entityType: Foo
+                    entity: Foo
                 });
 
                 let byZulJin = Query.ByIds({
                     ids: ["zul", "jin"],
-                    entityType: Foo
+                    entity: Foo
                 });
 
                 let byKhazZul = Query.ByIds({
                     ids: ["khaz", "zul"],
-                    entityType: Foo
+                    entity: Foo
                 });
 
                 cache.merge(byKhazMo);
@@ -94,13 +94,13 @@ describe("query-cache", () => {
 
                 let byKeys = Query.ByIds({
                     ids: ["khaz", "mo", "dan"],
-                    entityType: Foo,
+                    entity: Foo,
                     expand: `children`
                 });
 
                 let byMo = Query.ByIds({
                     ids: ["mo"],
-                    entityType: Foo,
+                    entity: Foo,
                     expand: `children`
                 });
 

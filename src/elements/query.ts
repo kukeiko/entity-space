@@ -132,35 +132,35 @@ export class Query<T extends IEntity> {
     }
 
     static All<T>(args: {
-        entityType: EntityType<T>;
+        entity: EntityType<T>;
         expand?: string | ArrayLike<Expansion>;
     }): Query<T> {
         return new Query({
-            entityType: args.entityType,
+            entityType: args.entity,
             expand: args.expand,
             identity: new All()
         });
     }
 
     static ByIds<T>(args: {
-        entityType: EntityType<T>;
+        entity: EntityType<T>;
         ids: ArrayLike<ToStringable>;
         expand?: string | ArrayLike<Expansion>;
     }): Query<T> {
         return new Query({
-            entityType: args.entityType,
+            entityType: args.entity,
             expand: args.expand,
             identity: new ByIds(args.ids)
         });
     }
 
     static ByIndexes<T>(args: {
-        entityType: EntityType<T>;
+        entity: EntityType<T>;
         indexes: Indexes;
         expand?: string | ArrayLike<Expansion>;
     }): Query<T> {
         return new Query({
-            entityType: args.entityType,
+            entityType: args.entity,
             expand: args.expand,
             identity: new ByIndexes(args.indexes)
         });

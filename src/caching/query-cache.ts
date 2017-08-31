@@ -94,7 +94,7 @@ export class QueryCache {
 
                         let q = Query.ByIds({
                             ids: Array.from(keys),
-                            entityType: nav.otherType,
+                            entity: nav.otherType,
                             expand: exp.expansions,
                         });
 
@@ -127,7 +127,7 @@ export class QueryCache {
 
                             let byParentIdQuery = Query.ByIndexes({
                                 indexes: { [backRefKeyName]: children[0][backRefKeyName] },
-                                entityType: nav.otherType,
+                                entity: nav.otherType,
                                 expand: exp.expansions
                             });
 
@@ -137,7 +137,7 @@ export class QueryCache {
 
                         let q = Query.ByIds({
                             ids: Array.from(keys),
-                            entityType: nav.otherType,
+                            entity: nav.otherType,
                             expand: exp.expansions
                         });
 
@@ -167,7 +167,7 @@ export class QueryCache {
 
                         let q = Query.ByIds({
                             ids: Array.from(keys),
-                            entityType: nav.otherType,
+                            entity: nav.otherType,
                             expand: exp.expansions
                         });
 

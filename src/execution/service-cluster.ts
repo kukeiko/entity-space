@@ -26,7 +26,7 @@ export class ServiceCluster {
         let asMap: true = args[2] != null ? true : null;
 
         return this.executeQuery(Query.All({
-            entityType: type,
+            entity: type,
             expand: expand
         }), asMap);
     }
@@ -34,7 +34,7 @@ export class ServiceCluster {
     loadById<T>(type: EntityType<T>, key: any, expand?: string | ArrayLike<Expansion>): Promise<T> {
         return this.executeQuery(Query.ByIds({
             ids: [key],
-            entityType: type,
+            entity: type,
             expand: expand
         })).then(items => {
             return items[0] || null;
@@ -51,7 +51,7 @@ export class ServiceCluster {
 
         return this.executeQuery(Query.ByIds({
             ids: keys,
-            entityType: type,
+            entity: type,
             expand: expand
         }), asMap);
     }
@@ -66,7 +66,7 @@ export class ServiceCluster {
 
         return this.executeQuery(Query.ByIndexes({
             indexes: indexes,
-            entityType: type,
+            entity: type,
             expand: expand
         }), asMap);
     }
@@ -122,9 +122,9 @@ export class ServiceCluster {
             entitiesPerKey.set(key, entities[i]);
         }
 
-        let cached = this._workspace.execute(new Query({
-            identity: new ByIds(Array.from(entitiesPerKey.keys())),
-            entityType: type
+        let cached = this._workspace.execute(Query.ByIds({
+            ids: Array.from(entitiesPerKey.keys()),
+            entity: type
         }), true);
 
         for (let i = 0; i < entities.length; ++i) {
@@ -215,10 +215,7 @@ export class ServiceCluster {
         entities.forEach(e => e[pkName] && keys.add(e[pkName]));
         saved.forEach(s => keys.add(s[pkDtoName]));
 
-        return this._workspace.execute(new Query({
-            identity: new ByIds(Array.from(keys)),
-            entityType: type
-        }));
+        return this._workspace.execute(Query.ByIds({ ids: Array.from(keys), entity: type }));
     }
 
     executeQuery<T extends IEntity>(query: Query<T>): Promise<T[]>;
@@ -301,7 +298,7 @@ export class ServiceCluster {
 
                         promises.push(this._loadIntoWorkspace(Query.ByIds({
                             ids: Array.from(keys),
-                            entityType: nav.otherType,
+                            entity: nav.otherType,
                             expand: v.extracted.expansions
                         })));
                         break;
@@ -316,7 +313,7 @@ export class ServiceCluster {
 
                             promises.push(this._loadIntoWorkspace(Query.ByIndexes({
                                 indexes: { [parentKeyName]: parentKey },
-                                entityType: nav.otherType,
+                                entity: nav.otherType,
                                 expand: v.extracted.expansions
                             })));
                         });
@@ -334,7 +331,7 @@ export class ServiceCluster {
 
                         promises.push(this._loadIntoWorkspace(Query.ByIds({
                             ids: Array.from(keys),
-                            entityType: nav.otherType,
+                            entity: nav.otherType,
                             expand: v.extracted.expansions
                         })));
                         break;

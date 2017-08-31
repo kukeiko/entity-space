@@ -88,7 +88,7 @@ describe("workspace", () => {
             for (let i = 0; i < samples; ++i) {
                 let start = new Date();
                 ws.execute(Query.All({
-                    entityType: Foo,
+                    entity: Foo,
                     expand: `bazs,bars/baz`
                 }));
                 let end = new Date();
