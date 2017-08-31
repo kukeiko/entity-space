@@ -1,4 +1,4 @@
-import { Expansion, ServiceCluster, Query, All, ByIds, ByIndexes, Identities } from "../../src";
+import { Expansion, ServiceCluster, Query, Identities } from "../../src";
 import { Album, AlbumReview, Artist, Review, Song, SongTag } from "../common/entities";
 
 function loadHelper<V>(q: Query<V>, expected: Identities, payload: V[]): Promise<V[]> {
@@ -12,7 +12,7 @@ describe("service-cluster", () => {
             let sc = new ServiceCluster();
 
             try {
-                await sc.executeQuery(new Query({ identity: new All(), entityType: Album }));
+                await sc.executeQuery(Query.All({ entityType: Album }));
                 fail("expected to throw");
                 done();
             } catch (error) {
@@ -49,12 +49,12 @@ describe("service-cluster", () => {
             sc.register(SongTag, { load: () => { throw ("expected to not call SongTag query executer"); } });
 
             try {
-                await sc.executeQuery(new Query({ identity: new ByIds([1]), entityType: Album, expand: `artist,songs/tags` }));
-                await sc.executeQuery(new Query({ identity: new ByIds([1337]), entityType: Song }));
-                await sc.executeQuery(new Query({ identity: new ByIds([64]), entityType: Song, }));
-                await sc.executeQuery(new Query({ identity: new ByIds([32]), entityType: Song, expand: `tags` }));
-                await sc.executeQuery(new Query({ identity: new ByIds([7]), entityType: Artist }));
-                await sc.executeQuery(new Query({ identity: new ByIds([777]), entityType: SongTag }));
+                await sc.executeQuery(Query.ByIds({ ids: [1], entityType: Album, expand: `artist,songs/tags` }));
+                await sc.executeQuery(Query.ByIds({ ids: [1337], entityType: Song }));
+                await sc.executeQuery(Query.ByIds({ ids: [64], entityType: Song, }));
+                await sc.executeQuery(Query.ByIds({ ids: [32], entityType: Song, expand: `tags` }));
+                await sc.executeQuery(Query.ByIds({ ids: [7], entityType: Artist }));
+                await sc.executeQuery(Query.ByIds({ ids: [777], entityType: SongTag }));
                 done();
             } catch (error) {
                 fail(error);
@@ -75,10 +75,7 @@ describe("service-cluster", () => {
                 });
 
             try {
-                let map = await sc.executeQuery(new Query({
-                    identity: new All(),
-                    entityType: Album
-                }));
+                let map = await sc.executeQuery(Query.All({ entityType: Album }));
 
                 loaded = Array.from(map.values());
                 expect(loaded).toEqual(albums);
@@ -102,8 +99,8 @@ describe("service-cluster", () => {
                 });
 
             try {
-                let map = await sc.executeQuery(new Query({
-                    identity: new ByIds([id]),
+                let map = await sc.executeQuery(Query.ByIds({
+                    ids: [id],
                     entityType: Album,
                 }));
 
@@ -131,8 +128,8 @@ describe("service-cluster", () => {
                 });
 
             try {
-                let map = await sc.executeQuery(new Query({
-                    identity: new ByIds(ids),
+                let map = await sc.executeQuery(Query.ByIds({
+                    ids: ids,
                     entityType: Album
                 }));
 
@@ -162,11 +159,8 @@ describe("service-cluster", () => {
                 });
 
             try {
-                let map = await sc.executeQuery(new Query({
-                    identity: new ByIndexes({
-                        artistId: 77,
-                        name: "khaz"
-                    }),
+                let map = await sc.executeQuery(Query.ByIndexes({
+                    indexes: { artistId: 77, name: "khaz" },
                     entityType: Album
                 }));
 
@@ -190,12 +184,7 @@ describe("service-cluster", () => {
                 });
 
             try {
-                await sc.executeQuery(new Query({
-                    identity: new All(),
-                    entityType: Album,
-                    expand: Expansion.parse(Album, `reviews`)
-                }));
-
+                await sc.executeQuery(Query.All({ entityType: Album, expand: "reviews" }));
                 fail("expected to throw");
                 done();
             } catch (error) {
@@ -214,11 +203,7 @@ describe("service-cluster", () => {
             sc.register(AlbumReview, { load: q => loadHelper(q, "indexes", [new AlbumReview({ id: 64, albumId: 1 })]) });
 
             try {
-                let loaded = await sc.executeQuery(new Query({
-                    identity: new All(),
-                    entityType: Album,
-                    expand: Expansion.parse(Album, `reviews`)
-                }));
+                let loaded = await sc.executeQuery(Query.All({ entityType: Album, expand: "reviews" }));
 
                 loaded.forEach(i => albumMap.set(i.id, i));
 
@@ -247,8 +232,7 @@ describe("service-cluster", () => {
 
             try {
                 let artistMap = new Map<number, Artist>();
-                let loaded = await sc.executeQuery(new Query({
-                    identity: new All(),
+                let loaded = await sc.executeQuery(Query.All({
                     entityType: Artist,
                     expand: Expansion.parse(Artist, `albums/reviews`)
                 }));
@@ -280,8 +264,7 @@ describe("service-cluster", () => {
 
             try {
                 let artistMap = new Map<number, Artist>();
-                let loaded = await sc.executeQuery(new Query({
-                    identity: new All(),
+                let loaded = await sc.executeQuery(Query.All({
                     entityType: Artist,
                     expand: Expansion.parse(Artist, `albums/reviews/review`)
                 }));

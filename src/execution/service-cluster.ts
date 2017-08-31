@@ -1,7 +1,7 @@
 import * as _ from "lodash";
 import { ArrayLike, StringIndexable } from "../util";
 import { getEntityMetadata, AnyEntityType, EntityType, IEntity, Children, Navigation } from "../metadata";
-import { Path, Query, Expansion, Saveable, Saveables, Indexes, All, ByIds, ByIndexes } from "../elements";
+import { Path, Query, Expansion, Saveable, Saveables, Indexes } from "../elements";
 import { QueryCache, Workspace } from "../caching";
 import { Service } from "./service";
 import { EntityMapper } from "../mapping";
@@ -25,16 +25,15 @@ export class ServiceCluster {
         let expand = (args[1] || []) as string | ArrayLike<Expansion>;
         let asMap: true = args[2] != null ? true : null;
 
-        return this.executeQuery(new Query({
-            identity: new All(),
+        return this.executeQuery(Query.All({
             entityType: type,
             expand: expand
         }), asMap);
     }
 
     loadById<T>(type: EntityType<T>, key: any, expand?: string | ArrayLike<Expansion>): Promise<T> {
-        return this.executeQuery(new Query({
-            identity: new ByIds([key]),
+        return this.executeQuery(Query.ByIds({
+            ids: [key],
             entityType: type,
             expand: expand
         })).then(items => {
@@ -50,8 +49,8 @@ export class ServiceCluster {
         let expand = (args[2] || []) as string | ArrayLike<Expansion>;
         let asMap: true = args[3] != null ? true : null;
 
-        return this.executeQuery(new Query({
-            identity: new ByIds(keys),
+        return this.executeQuery(Query.ByIds({
+            ids: keys,
             entityType: type,
             expand: expand
         }), asMap);
@@ -65,8 +64,8 @@ export class ServiceCluster {
         let expand = (args[2] || []) as string | ArrayLike<Expansion>;
         let asMap: true = args[3] != null ? true : null;
 
-        return this.executeQuery(new Query({
-            identity: new ByIndexes(indexes),
+        return this.executeQuery(Query.ByIndexes({
+            indexes: indexes,
             entityType: type,
             expand: expand
         }), asMap);
@@ -300,8 +299,8 @@ export class ServiceCluster {
                             keys.add(e[keyName]);
                         });
 
-                        promises.push(this._loadIntoWorkspace(new Query({
-                            identity: new ByIds(Array.from(keys)),
+                        promises.push(this._loadIntoWorkspace(Query.ByIds({
+                            ids: Array.from(keys),
                             entityType: nav.otherType,
                             expand: v.extracted.expansions
                         })));
@@ -315,8 +314,8 @@ export class ServiceCluster {
                         crawled.forEach(item => {
                             let parentKey = item[pkName];
 
-                            promises.push(this._loadIntoWorkspace(new Query({
-                                identity: new ByIndexes({ [parentKeyName]: parentKey }),
+                            promises.push(this._loadIntoWorkspace(Query.ByIndexes({
+                                indexes: { [parentKeyName]: parentKey },
                                 entityType: nav.otherType,
                                 expand: v.extracted.expansions
                             })));
@@ -333,8 +332,8 @@ export class ServiceCluster {
                             keys.forEach(k => refKeys.add(k));
                         });
 
-                        promises.push(this._loadIntoWorkspace(new Query({
-                            identity: new ByIds(Array.from(keys)),
+                        promises.push(this._loadIntoWorkspace(Query.ByIds({
+                            ids: Array.from(keys),
                             entityType: nav.otherType,
                             expand: v.extracted.expansions
                         })));

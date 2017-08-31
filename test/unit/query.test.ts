@@ -1,10 +1,9 @@
-import { getEntityMetadata, Query, Expansion, All, ByIds, ByIndexes } from "../../src/";
+import { getEntityMetadata, Query, Expansion } from "../../src/";
 import { Artist, Album } from "../common";
 
 describe("query", () => {
     it("expansion string should be sorted by name", () => {
-        let q = new Query({
-            identity: new All(),
+        let q = Query.All({
             entityType: Album,
             expand: `songs,artist,tags,reviews`
         });
@@ -13,8 +12,7 @@ describe("query", () => {
     });
 
     it("expansions should be sorted by name", () => {
-        let q = new Query({
-            identity: new All(),
+        let q = Query.All({
             entityType: Album,
             expand: `songs,artist,tags,reviews`
         });
@@ -26,13 +24,13 @@ describe("query", () => {
     // todo: byKey & byIndex combinations are missing
     describe("isSuperset()/isSubsetOf()", () => {
         it("Artist(64,3,128) should be superset of Artist(3)", () => {
-            let a = new Query({
-                identity: new ByIds([64, 3, 128]),
+            let a = Query.ByIds({
+                ids: [64, 3, 128],
                 entityType: Artist
             });
 
-            let b = new Query({
-                identity: new ByIds([3]),
+            let b = Query.ByIds({
+                ids: [3],
                 entityType: Artist
             });
 
@@ -43,13 +41,13 @@ describe("query", () => {
         });
 
         it("Artist(64,3,128) should be superset of Artist(3,64)", () => {
-            let a = new Query({
-                identity: new ByIds([64, 3, 128]),
+            let a = Query.ByIds({
+                ids: [64, 3, 128],
                 entityType: Artist
             });
 
-            let b = new Query({
-                identity: new ByIds([3, 64]),
+            let b = Query.ByIds({
+                ids: [3, 64],
                 entityType: Artist
             });
 
@@ -60,14 +58,12 @@ describe("query", () => {
         });
 
         it("all:artist/albums/{songs,tags} should be superset of all:artist", () => {
-            let a = new Query({
-                identity: new All(),
+            let a = Query.All({
                 entityType: Artist,
                 expand: Expansion.parse(Artist, "albums/{songs,tags}")
             });
 
-            let b = new Query({
-                identity: new All(),
+            let b = Query.All({
                 entityType: Artist
             });
 
@@ -78,14 +74,12 @@ describe("query", () => {
         });
 
         it("all:artist/albums/{songs,tags} should be superset of all:artist/albums", () => {
-            let a = new Query({
-                identity: new All(),
+            let a = Query.All({
                 entityType: Artist,
                 expand: Expansion.parse(Artist, "albums/{songs,tags}")
             });
 
-            let b = new Query({
-                identity: new All(),
+            let b = Query.All({
                 entityType: Artist,
                 expand: Expansion.parse(Artist, "albums")
             });
@@ -97,14 +91,12 @@ describe("query", () => {
         });
 
         it("all:artist/albums/{songs,tags} should be superset of all:artist/albums/songs", () => {
-            let a = new Query({
-                identity: new All(),
+            let a = Query.All({
                 entityType: Artist,
                 expand: Expansion.parse(Artist, "albums/{songs,tags}")
             });
 
-            let b = new Query({
-                identity: new All(),
+            let b = Query.All({
                 entityType: Artist,
                 expand: Expansion.parse(Artist, "albums/songs")
             });
@@ -116,14 +108,12 @@ describe("query", () => {
         });
 
         it("all:artist/albums/{songs,tags} should be superset of all:artist/albums/{songs,tags}", () => {
-            let a = new Query({
-                identity: new All(),
+            let a = Query.All({
                 entityType: Artist,
                 expand: Expansion.parse(Artist, "albums/{songs,tags}")
             });
 
-            let b = new Query({
-                identity: new All(),
+            let b = Query.All({
                 entityType: Artist,
                 expand: Expansion.parse(Artist, "albums/{songs,tags}")
             });
@@ -135,14 +125,12 @@ describe("query", () => {
         });
 
         it("all:artist/albums/{songs,tags} should be superset of all:artist/albums/{tags,songs}", () => {
-            let a = new Query({
-                identity: new All(),
+            let a = Query.All({
                 entityType: Artist,
                 expand: Expansion.parse(Artist, "albums/{songs,tags}")
             });
 
-            let b = new Query({
-                identity: new All(),
+            let b = Query.All({
                 entityType: Artist,
                 expand: Expansion.parse(Artist, "albums/{songs,tags}")
             });
@@ -154,14 +142,13 @@ describe("query", () => {
         });
 
         it("all:artist/albums/{songs,tags} should be superset of byKey:artist/albums/{songs,tags}", () => {
-            let a = new Query({
-                identity: new All(),
+            let a = Query.All({
                 entityType: Artist,
                 expand: Expansion.parse(Artist, "albums/{songs,tags}")
             });
 
-            let b = new Query({
-                identity: new ByIds([1]),
+            let b = Query.ByIds({
+                ids: [1],
                 entityType: Artist,
                 expand: Expansion.parse(Artist, "albums/{songs,tags}")
             });
@@ -175,8 +162,7 @@ describe("query", () => {
 
     describe("toString()", () => {
         it("all: Artist(all)/albums/{songs,tags}", () => {
-            let q = new Query({
-                identity: new All(),
+            let q = Query.All({
                 entityType: Artist,
                 expand: Expansion.parse(Artist, "albums/{songs,tags}")
             });
@@ -185,8 +171,8 @@ describe("query", () => {
         });
 
         it("byId: Artist(64)/albums/{songs,tags}", () => {
-            let q = new Query({
-                identity: new ByIds([64]),
+            let q = Query.ByIds({
+                ids: [64],
                 entityType: Artist,
                 expand: Expansion.parse(Artist, "albums/{songs,tags}")
             });
@@ -195,8 +181,8 @@ describe("query", () => {
         });
 
         it("byIds: Artist(1337,23,42,64)/albums/{songs,tags}", () => {
-            let q = new Query({
-                identity: new ByIds([64, 1337, 42, 23]),
+            let q = Query.ByIds({
+                ids: [64, 1337, 42, 23],
                 entityType: Artist,
                 expand: Expansion.parse(Artist, "albums/{songs,tags}")
             });
@@ -205,11 +191,8 @@ describe("query", () => {
         });
 
         it("byIndexes: Artist(khaz:64,mo:dan)/albums/{songs,tags}", () => {
-            let q = new Query({
-                identity: new ByIndexes({
-                    khaz: 64,
-                    mo: "dan"
-                }),
+            let q = Query.ByIndexes({
+                indexes: { khaz: 64, mo: "dan" },
                 entityType: Artist,
                 expand: Expansion.parse(Artist, "albums/{songs,tags}")
             });
@@ -221,8 +204,7 @@ describe("query", () => {
     describe("extract()", () => {
         it("should extract 1st level expansion", () => {
             // arrange
-            let q = new Query({
-                identity: new All(),
+            let q = Query.All({
                 entityType: Artist,
                 expand: Expansion.parse(Artist, "albums/{songs/album,tags}")
             });
@@ -243,8 +225,7 @@ describe("query", () => {
 
         it("should extract 2nd level expansions", () => {
             // arrange
-            let q = new Query({
-                identity: new All(),
+            let q = Query.All({
                 entityType: Artist,
                 expand: Expansion.parse(Artist, "albums/{songs/album,tags}")
             });
@@ -296,8 +277,7 @@ describe("query", () => {
     });
 
     it("should have correct number of expansions", () => {
-        let q = new Query({
-            identity: new All(),
+        let q = Query.All({
             entityType: Artist,
             expand: `albums/{tags/tag,songs/tags/tag}`
         });

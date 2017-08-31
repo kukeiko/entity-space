@@ -1,4 +1,4 @@
-import { EntityClass, Query, QueryCache, Property, ByIds } from "../../src";
+import { EntityClass, Query, QueryCache, Property } from "../../src";
 
 describe("query-cache", () => {
     describe("isCached()", () => {
@@ -8,13 +8,13 @@ describe("query-cache", () => {
             it("Foo(mo) should be cached via Foo(khaz,mo,dan)", () => {
                 let cache = new QueryCache();
 
-                let byKeys = new Query({
-                    identity: new ByIds(["khaz", "mo", "dan"]),
+                let byKeys = Query.ByIds({
+                    ids: ["khaz", "mo", "dan"],
                     entityType: Foo
                 });
 
-                let byMo = new Query({
-                    identity: new ByIds(["mo"]),
+                let byMo = Query.ByIds({
+                    ids: ["mo"],
                     entityType: Foo
                 });
 
@@ -26,23 +26,23 @@ describe("query-cache", () => {
             it("Foo(khaz,mo,dan) should be cached via Foo(mo), Foo(dan), Foo(khaz)", () => {
                 let cache = new QueryCache();
 
-                let byMo = new Query({
-                    identity: new ByIds(["mo"]),
+                let byMo = Query.ByIds({
+                    ids: ["mo"],
                     entityType: Foo
                 });
 
-                let byDan = new Query({
-                    identity: new ByIds(["dan"]),
+                let byDan = Query.ByIds({
+                    ids: ["dan"],
                     entityType: Foo
                 });
 
-                let byKhaz = new Query({
-                    identity: new ByIds(["khaz"]),
+                let byKhaz = Query.ByIds({
+                    ids: ["khaz"],
                     entityType: Foo
                 });
 
-                let byKeys = new Query({
-                    identity: new ByIds(["khaz", "mo", "dan"]),
+                let byKeys = Query.ByIds({
+                    ids: ["khaz", "mo", "dan"],
                     entityType: Foo
                 });
 
@@ -56,18 +56,18 @@ describe("query-cache", () => {
             it("Foo(khaz,zul) should be cached via Foo(khaz,mo), Foo(zul,jin)", () => {
                 let cache = new QueryCache();
 
-                let byKhazMo = new Query({
-                    identity: new ByIds(["khaz", "mo"]),
+                let byKhazMo = Query.ByIds({
+                    ids: ["khaz", "mo"],
                     entityType: Foo
                 });
 
-                let byZulJin = new Query({
-                    identity: new ByIds(["zul", "jin"]),
+                let byZulJin = Query.ByIds({
+                    ids: ["zul", "jin"],
                     entityType: Foo
                 });
 
-                let byKhazZul = new Query({
-                    identity: new ByIds(["khaz", "zul"]),
+                let byKhazZul = Query.ByIds({
+                    ids: ["khaz", "zul"],
                     entityType: Foo
                 });
 
@@ -92,14 +92,14 @@ describe("query-cache", () => {
             it("Foo(mo)/children should be cached via Foo(khaz,mo,dan)/children", () => {
                 let cache = new QueryCache();
 
-                let byKeys = new Query({
-                    identity: new ByIds(["khaz", "mo", "dan"]),
+                let byKeys = Query.ByIds({
+                    ids: ["khaz", "mo", "dan"],
                     entityType: Foo,
                     expand: `children`
                 });
 
-                let byMo = new Query({
-                    identity: new ByIds(["mo"]),
+                let byMo = Query.ByIds({
+                    ids: ["mo"],
                     entityType: Foo,
                     expand: `children`
                 });

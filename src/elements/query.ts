@@ -1,8 +1,8 @@
-import { ArrayLike } from "../util";
+import { ArrayLike, ToStringable } from "../util";
 import { getEntityMetadata, EntityType, IEntity } from "../metadata";
 import { Expansion } from "./expansion";
 import { Extraction } from "./extraction";
-import { Identity } from "./identity";
+import { Identity, All, ByIds, ByIndexes, Indexes } from "./identity";
 
 /**
  * Describes which entities and expansions should be considered for an operation.
@@ -129,5 +129,40 @@ export class Query<T extends IEntity> {
         }
 
         return val;
+    }
+
+    static All<T>(args: {
+        entityType: EntityType<T>;
+        expand?: string | ArrayLike<Expansion>;
+    }): Query<T> {
+        return new Query({
+            entityType: args.entityType,
+            expand: args.expand,
+            identity: new All()
+        });
+    }
+
+    static ByIds<T>(args: {
+        entityType: EntityType<T>;
+        ids: ArrayLike<ToStringable>;
+        expand?: string | ArrayLike<Expansion>;
+    }): Query<T> {
+        return new Query({
+            entityType: args.entityType,
+            expand: args.expand,
+            identity: new ByIds(args.ids)
+        });
+    }
+
+    static ByIndexes<T>(args: {
+        entityType: EntityType<T>;
+        indexes: Indexes;
+        expand?: string | ArrayLike<Expansion>;
+    }): Query<T> {
+        return new Query({
+            entityType: args.entityType,
+            expand: args.expand,
+            identity: new ByIndexes(args.indexes)
+        });
     }
 }

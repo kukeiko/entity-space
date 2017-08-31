@@ -1,6 +1,6 @@
 import { TypeOf } from "../util";
 import { getEntityMetadata, AnyEntityType, EntityType, IEntity, Navigation, EntityMetadata } from "../metadata";
-import { Expansion, Query, ByIds, ByIndexes } from "../elements";
+import { Expansion, Query } from "../elements";
 
 export class QueryCache {
     private _queries = new Map<AnyEntityType, Query<any>[]>();
@@ -92,8 +92,8 @@ export class QueryCache {
                             references.push(e);
                         });
 
-                        let q = new Query({
-                            identity: new ByIds(Array.from(keys)),
+                        let q = Query.ByIds({
+                            ids: Array.from(keys),
                             entityType: nav.otherType,
                             expand: exp.expansions,
                         });
@@ -125,8 +125,8 @@ export class QueryCache {
                                 items.push(child);
                             });
 
-                            let byParentIdQuery = new Query({
-                                identity: new ByIndexes({ [backRefKeyName]: children[0][backRefKeyName] }),
+                            let byParentIdQuery = Query.ByIndexes({
+                                indexes: { [backRefKeyName]: children[0][backRefKeyName] },
                                 entityType: nav.otherType,
                                 expand: exp.expansions
                             });
@@ -135,8 +135,8 @@ export class QueryCache {
                             this._buildQueriesFromPayload(nav.otherTypeMetadata, children, byParentIdQuery.expansions);
                         });
 
-                        let q = new Query({
-                            identity: new ByIds(Array.from(keys)),
+                        let q = Query.ByIds({
+                            ids: Array.from(keys),
                             entityType: nav.otherType,
                             expand: exp.expansions
                         });
@@ -165,8 +165,8 @@ export class QueryCache {
                             });
                         });
 
-                        let q = new Query({
-                            identity: new ByIds(Array.from(keys)),
+                        let q = Query.ByIds({
+                            ids: Array.from(keys),
                             entityType: nav.otherType,
                             expand: exp.expansions
                         });
