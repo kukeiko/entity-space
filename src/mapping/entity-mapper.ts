@@ -1,6 +1,6 @@
 import * as _ from "lodash";
 import { AnyType, StringIndexable } from "../util";
-import { AnyEntityMetadata, AnyEntityType, EntityType, IEntity, Primitive, NavigationBase, Navigation } from "../metadata";
+import { AnyEntityMetadata, AnyEntityType, EntityType, IEntity, Primitive, Navigation } from "../metadata";
 import { MappingCompiler, CopyLocals } from "./mapping-compiler";
 
 // todo: refactor common bodies of copyPrimitives() & copySaveables()

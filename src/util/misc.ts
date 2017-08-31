@@ -45,7 +45,7 @@ export function combinations<T>(items: T[]): T[][] {
 
 /**
  * Generates a globally unique identifier.
- * 
+ *
  * https://stackoverflow.com/a/2117523
  */
 export function guid(): string {

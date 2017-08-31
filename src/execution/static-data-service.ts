@@ -1,6 +1,6 @@
 import { ToStringable } from "../util";
 import { EntityType, IEntity } from "../metadata";
-import { Query, ByIds } from "../elements";
+import { Query } from "../elements";
 import { Service } from "./service";
 
 export class StaticDataService<K extends ToStringable, V extends IEntity> implements Service {
@@ -29,13 +29,6 @@ export class StaticDataService<K extends ToStringable, V extends IEntity> implem
         switch (q.identity.type) {
             case "all":
                 return Array.from(this._items.values());
-
-            case "id":
-                return this.load(new Query({
-                    identity: new ByIds([q.identity.id]),
-                    entityType: q.entityType,
-                    expand: q.expansions
-                }));
 
             case "ids":
                 let items = await Promise.all(q.identity.ids.map(async id => {

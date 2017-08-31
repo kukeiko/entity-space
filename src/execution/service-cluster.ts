@@ -1,7 +1,7 @@
 import * as _ from "lodash";
 import { ArrayLike, StringIndexable } from "../util";
 import { getEntityMetadata, AnyEntityType, EntityType, IEntity, Children, Navigation } from "../metadata";
-import { Path, Query, Expansion, Saveable, Saveables, Indexes, All, ById, ByIds, ByIndexes } from "../elements";
+import { Path, Query, Expansion, Saveable, Saveables, Indexes, All, ByIds, ByIndexes } from "../elements";
 import { QueryCache, Workspace } from "../caching";
 import { Service } from "./service";
 import { EntityMapper } from "../mapping";
@@ -34,7 +34,7 @@ export class ServiceCluster {
 
     loadById<T>(type: EntityType<T>, key: any, expand?: string | ArrayLike<Expansion>): Promise<T> {
         return this.executeQuery(new Query({
-            identity: new ById(key),
+            identity: new ByIds([key]),
             entityType: type,
             expand: expand
         })).then(items => {

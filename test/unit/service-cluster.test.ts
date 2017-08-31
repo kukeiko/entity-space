@@ -1,13 +1,5 @@
-import {
-    Expansion, ServiceCluster, Query, All, ById, ByIds, ByIndexes, Identity, Identities
-} from "../../src";
-import {
-    Album, AlbumReview,
-    Artist,
-    Review,
-    Song, SongTag
-} from "../common/entities";
-
+import { Expansion, ServiceCluster, Query, All, ByIds, ByIndexes, Identities } from "../../src";
+import { Album, AlbumReview, Artist, Review, Song, SongTag } from "../common/entities";
 
 function loadHelper<V>(q: Query<V>, expected: Identities, payload: V[]): Promise<V[]> {
     if (q.identity.type == expected) return Promise.resolve(payload);
@@ -51,18 +43,18 @@ describe("service-cluster", () => {
                 })
             });
 
-            sc.register(Album, { load: q => loadHelper(q, "id", [album]) });
+            sc.register(Album, { load: q => loadHelper(q, "ids", [album]) });
             sc.register(Artist, { load: () => { throw ("expected to not call Artist query executer"); } });
             sc.register(Song, { load: () => { throw ("expected to not call Song query executer"); } });
             sc.register(SongTag, { load: () => { throw ("expected to not call SongTag query executer"); } });
 
             try {
-                await sc.executeQuery(new Query({ identity: new ById(1), entityType: Album, expand: `artist,songs/tags` }));
-                await sc.executeQuery(new Query({ identity: new ById(1337), entityType: Song }));
-                await sc.executeQuery(new Query({ identity: new ById(64), entityType: Song, }));
-                await sc.executeQuery(new Query({ identity: new ById(32), entityType: Song, expand: `tags` }));
-                await sc.executeQuery(new Query({ identity: new ById(7), entityType: Artist }));
-                await sc.executeQuery(new Query({ identity: new ById(777), entityType: SongTag }));
+                await sc.executeQuery(new Query({ identity: new ByIds([1]), entityType: Album, expand: `artist,songs/tags` }));
+                await sc.executeQuery(new Query({ identity: new ByIds([1337]), entityType: Song }));
+                await sc.executeQuery(new Query({ identity: new ByIds([64]), entityType: Song, }));
+                await sc.executeQuery(new Query({ identity: new ByIds([32]), entityType: Song, expand: `tags` }));
+                await sc.executeQuery(new Query({ identity: new ByIds([7]), entityType: Artist }));
+                await sc.executeQuery(new Query({ identity: new ByIds([777]), entityType: SongTag }));
                 done();
             } catch (error) {
                 fail(error);
@@ -106,12 +98,12 @@ describe("service-cluster", () => {
             sc.register(
                 Album,
                 {
-                    load: q => loadHelper(q, "id", [album])
+                    load: q => loadHelper(q, "ids", [album])
                 });
 
             try {
                 let map = await sc.executeQuery(new Query({
-                    identity: new ById(id),
+                    identity: new ByIds([id]),
                     entityType: Album,
                 }));
 

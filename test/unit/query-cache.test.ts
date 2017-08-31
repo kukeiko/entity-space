@@ -1,4 +1,4 @@
-import { EntityClass, Query, QueryCache, Property, ById, ByIds } from "../../src";
+import { EntityClass, Query, QueryCache, Property, ByIds } from "../../src";
 
 describe("query-cache", () => {
     describe("isCached()", () => {
@@ -14,7 +14,7 @@ describe("query-cache", () => {
                 });
 
                 let byMo = new Query({
-                    identity: new ById("mo"),
+                    identity: new ByIds(["mo"]),
                     entityType: Foo
                 });
 
@@ -27,17 +27,17 @@ describe("query-cache", () => {
                 let cache = new QueryCache();
 
                 let byMo = new Query({
-                    identity: new ById("mo"),
+                    identity: new ByIds(["mo"]),
                     entityType: Foo
                 });
 
                 let byDan = new Query({
-                    identity: new ById("dan"),
+                    identity: new ByIds(["dan"]),
                     entityType: Foo
                 });
 
                 let byKhaz = new Query({
-                    identity: new ById("khaz"),
+                    identity: new ByIds(["khaz"]),
                     entityType: Foo
                 });
 
@@ -99,7 +99,7 @@ describe("query-cache", () => {
                 });
 
                 let byMo = new Query({
-                    identity: new ById("mo"),
+                    identity: new ByIds(["mo"]),
                     entityType: Foo,
                     expand: `children`
                 });

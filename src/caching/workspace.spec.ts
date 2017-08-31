@@ -43,8 +43,6 @@ describe("workspace", () => {
         let ws = new Workspace();
         // let ws2 = new WorkspaceV2();
         let fooMetadata = getEntityMetadata(Foo);
-        let barMetadata = getEntityMetadata(Bar);
-        let bazMetadata = getEntityMetadata(Baz);
         let foos: Foo[] = [];
         let numRootEntities = 50;
 

@@ -1,4 +1,4 @@
-import { getEntityMetadata, Query, Expansion, All, ById, ByIds, ByIndexes } from "../../src/";
+import { getEntityMetadata, Query, Expansion, All, ByIds, ByIndexes } from "../../src/";
 import { Artist, Album } from "../common";
 
 describe("query", () => {
@@ -32,7 +32,7 @@ describe("query", () => {
             });
 
             let b = new Query({
-                identity: new ById(3),
+                identity: new ByIds([3]),
                 entityType: Artist
             });
 
@@ -161,7 +161,7 @@ describe("query", () => {
             });
 
             let b = new Query({
-                identity: new ById(1),
+                identity: new ByIds([1]),
                 entityType: Artist,
                 expand: Expansion.parse(Artist, "albums/{songs,tags}")
             });
@@ -186,7 +186,7 @@ describe("query", () => {
 
         it("byId: Artist(64)/albums/{songs,tags}", () => {
             let q = new Query({
-                identity: new ById(64),
+                identity: new ByIds([64]),
                 entityType: Artist,
                 expand: Expansion.parse(Artist, "albums/{songs,tags}")
             });

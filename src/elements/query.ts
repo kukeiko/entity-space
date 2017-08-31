@@ -1,4 +1,3 @@
-import * as _ from "lodash";
 import { ArrayLike } from "../util";
 import { getEntityMetadata, EntityType, IEntity } from "../metadata";
 import { Expansion } from "./expansion";

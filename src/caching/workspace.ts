@@ -20,7 +20,6 @@ export class Workspace {
         let cached: T[] = [];
 
         switch (query.identity.type) {
-            case "id": cached = [cache.byKey(query.identity.id)].filter(x => x); break;
             case "ids": cached = cache.byKeysAsArray(query.identity.ids); break;
             case "indexes": cached = cache.byIndexesAsArray(query.identity.indexes); break;
             case "all": cached = cache.allAsArray(); break;
