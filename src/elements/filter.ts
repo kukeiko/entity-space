@@ -1,8 +1,12 @@
 let lookup = new Map<Filter.Operations, (a: Filter.Criterion, b: Filter.Criterion) => Filter.Criterion | null>();
 
+let unexpected = (criterion: Filter.Criterion) =>
+    new Error(`unexpected filter criteria op: ${criterion.op} (${JSON.stringify(criterion)})`);
+
 lookup.set("==", (a: Filter.EqualityCriterion, b) => {
     switch (b.op) {
         case "==": return a.value == b.value ? null : b;
+        case "!=": return b;
         case "<": return (a.value as number) + b.step == b.value ? { op: "<", value: (a.value as number), step: b.step } : b;
         case "<=": return a.value == b.value ? { op: "<", value: a.value, step: b.step } : b;
         case ">": return (a.value as number) - b.step == b.value ? { op: ">", value: (a.value as number), step: b.step } : b;
@@ -14,7 +18,17 @@ lookup.set("==", (a: Filter.EqualityCriterion, b) => {
 
                 return { op: "in", values: copy };
             }
-        default: return b;
+
+            return b;
+        case "from-to":
+            if (a.value == b.range[0]) {
+                return { op: "from-to", range: [a.value + b.step, b.range[1]], step: b.step };
+            } else if (a.value == b.range[1]) {
+                return { op: "from-to", range: [b.range[0], a.value - b.step], step: b.step };
+            }
+            return b;
+
+        default: throw unexpected(b);
     }
     // return b.op == "==" ?  : b;
 });

@@ -20,20 +20,20 @@ function expectCriteria(filter: Filter) {
 describe("filter", () => {
     describe("reduce", () => {
         describe("==", () => {
-            it("should reduce in / common", () => {
+            it("== / !=", () => {
                 let equals = filter({ op: "==", value: 7 });
 
-                let inside = filter({ op: "in", values: new Set([-1, 7, 64]) });
-                let insideReduced = equals.reduce(inside);
+                let equalEquals = filter({ op: "==", value: 7 });
+                expect(equals.reduce(equalEquals)).toBeNull();
 
-                let common = filter({ op: "common", values: new Set([-1, 7, 64]) });
-                let commonReduced = equals.reduce(common);
+                let otherEquals = filter({ op: "==", value: 8 });
+                expect(equals.reduce(otherEquals)).toEqual(otherEquals);
 
-                expectArray(insideReduced).toEqual([-1, 64]);
-                expectArray(commonReduced).toEqual([-1, 64]);
+                let notEquals = filter({ op: "!=", value: 6 });
+                expect(equals.reduce(notEquals)).toEqual(notEquals);
             });
 
-            it("should reduce < / <= / > / >=", () => {
+            it("< / <= / > / >=", () => {
                 let equals = filter({ op: "==", value: 7, step: 1 });
 
                 // reduces
@@ -68,7 +68,6 @@ describe("filter", () => {
                     let lessThanEquals = filter({ op: "<=", value: 6, step: 1 });
                     expect(equals.reduce(lessThanEquals)).toEqual(lessThanEquals);
 
-                    // stopped here
                     let greaterThan = filter({ op: ">", value: 7, step: 1 });
                     expect(equals.reduce(greaterThan)).toEqual(greaterThan);
 
@@ -91,10 +90,40 @@ describe("filter", () => {
                     expect(equals.reduce(greaterThanEquals)).toEqual(greaterThanEquals);
                 }
             });
+
+            it("in / common", () => {
+                let equals = filter({ op: "==", value: 7 });
+
+                let inside = filter({ op: "in", values: new Set([-1, 7, 64]) });
+                let insideReduced = equals.reduce(inside);
+
+                let common = filter({ op: "common", values: new Set([-1, 7, 64]) });
+                let commonReduced = equals.reduce(common);
+
+                expectArray(insideReduced).toEqual([-1, 64]);
+                expectArray(commonReduced).toEqual([-1, 64]);
+            });
+
+            it("from-to", () => {
+                let equals = filter({ op: "==", value: 7 });
+
+                let lowerBound = filter({ op: "from-to", range: [7, 64], step: 1 });
+                expectCriteria(equals.reduce(lowerBound)).toEqual({ op: "from-to", range: [8, 64], step: 1 });
+
+                let higherBound = filter({ op: "from-to", range: [-13, 7], step: 1 });
+                expectCriteria(equals.reduce(higherBound)).toEqual({ op: "from-to", range: [-13, 6], step: 1 });
+            });
+
+            it("throw on unknown operation", () => {
+                let equals = filter({ op: "==", value: 7 });
+                let invalid = filter({ op: "invalid" as any, value: 7 });
+
+                expect(() => equals.reduce(invalid)).toThrow();
+            });
         });
 
         describe("from-to", () => {
-            it("should reduce from-to", () => {
+            it("from-to", () => {
                 let a = filter({ op: "from-to", range: [1, 7], step: 1 });
 
                 {
@@ -144,7 +173,7 @@ describe("filter", () => {
                 }
             });
 
-            it("should reduce ==", () => {
+            it("==", () => {
                 let a = filter({ op: "from-to", range: [1, 7], step: 1 });
 
                 {
@@ -154,7 +183,7 @@ describe("filter", () => {
                 }
             });
 
-            it("should reduce <", () => {
+            it("<", () => {
                 let a = filter({ op: "from-to", range: [1, 7], step: 1 });
 
                 {
@@ -174,7 +203,7 @@ describe("filter", () => {
                 }
             });
 
-            it("should reduce <=", () => {
+            it("<=", () => {
                 let a = filter({ op: "from-to", range: [1, 7], step: 1 });
 
                 {
@@ -194,7 +223,7 @@ describe("filter", () => {
                 }
             });
 
-            it("should reduce in & intersect", () => {
+            it("in & intersect", () => {
                 let a = filter({ op: "from-to", range: [1, 7], step: 1 });
 
                 {
