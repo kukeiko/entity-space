@@ -1,56 +1,143 @@
 import { Filter } from "./filter";
 
-function expectEqualSets(a: Set<any>, b: Set<any>) {
-    expect(Array.from(a.values())).toEqual(Array.from(b.values()));
+
+function filter(criterion: Filter.Criterion): Filter {
+    return new Filter({ foo: criterion });
+}
+
+function get(filter: Filter): Filter.Criterion {
+    return filter.criteria.foo;
+}
+
+function expectArray(filter: Filter) {
+    return expect(Array.from((get(filter) as Filter.SetCriterion).values as Set<any>));
+}
+
+function expectCriteria(filter: Filter) {
+    return expect(get(filter));
 }
 
 describe("filter", () => {
     describe("reduce", () => {
+        describe("==", () => {
+            it("should reduce in / common", () => {
+                let equals = filter({ op: "==", value: 7 });
+
+                let inside = filter({ op: "in", values: new Set([-1, 7, 64]) });
+                let insideReduced = equals.reduce(inside);
+
+                let common = filter({ op: "common", values: new Set([-1, 7, 64]) });
+                let commonReduced = equals.reduce(common);
+
+                expectArray(insideReduced).toEqual([-1, 64]);
+                expectArray(commonReduced).toEqual([-1, 64]);
+            });
+
+            it("should reduce < / <= / > / >=", () => {
+                let equals = filter({ op: "==", value: 7, step: 1 });
+
+                // reduces
+                {
+                    let lessThan = filter({ op: "<", value: 8, step: 1 });
+                    expectCriteria(equals.reduce(lessThan)).toEqual({ op: "<", value: 7, step: 1 });
+
+                    let lessThanEquals = filter({ op: "<=", value: 7, step: 1 });
+                    expectCriteria(equals.reduce(lessThanEquals)).toEqual({ op: "<", value: 7, step: 1 });
+
+                    let greaterThan = filter({ op: ">", value: 6, step: 1 });
+                    expectCriteria(equals.reduce(greaterThan)).toEqual({ op: ">", value: 7, step: 1 });
+
+                    let greaterThanEquals = filter({ op: ">=", value: 7, step: 1 });
+                    expectCriteria(equals.reduce(greaterThanEquals)).toEqual({ op: ">", value: 7, step: 1 });
+                }
+
+                // reduces: stepping
+                {
+                    let lessThan = filter({ op: "<", value: 7.1, step: 0.1 });
+                    expectCriteria(equals.reduce(lessThan)).toEqual({ op: "<", value: 7, step: 0.1 });
+
+                    let greaterThan = filter({ op: ">", value: 6.9, step: 0.1 });
+                    expectCriteria(equals.reduce(greaterThan)).toEqual({ op: ">", value: 7, step: 0.1 });
+                }
+
+                // does'nt reduce: lower bound
+                {
+                    let lessThan = filter({ op: "<", value: 7, step: 1 });
+                    expect(equals.reduce(lessThan)).toEqual(lessThan);
+
+                    let lessThanEquals = filter({ op: "<=", value: 6, step: 1 });
+                    expect(equals.reduce(lessThanEquals)).toEqual(lessThanEquals);
+
+                    // stopped here
+                    let greaterThan = filter({ op: ">", value: 7, step: 1 });
+                    expect(equals.reduce(greaterThan)).toEqual(greaterThan);
+
+                    let greaterThanEquals = filter({ op: ">=", value: 8, step: 1 });
+                    expect(equals.reduce(greaterThanEquals)).toEqual(greaterThanEquals);
+                }
+
+                // does'nt reduce: higher bound
+                {
+                    let lessThan = filter({ op: "<", value: 9, step: 1 });
+                    expect(equals.reduce(lessThan)).toEqual(lessThan);
+
+                    let lessThanEquals = filter({ op: "<=", value: 8, step: 1 });
+                    expect(equals.reduce(lessThanEquals)).toEqual(lessThanEquals);
+
+                    let greaterThan = filter({ op: ">", value: 5, step: 1 });
+                    expect(equals.reduce(greaterThan)).toEqual(greaterThan);
+
+                    let greaterThanEquals = filter({ op: ">=", value: 6, step: 1 });
+                    expect(equals.reduce(greaterThanEquals)).toEqual(greaterThanEquals);
+                }
+            });
+        });
+
         describe("from-to", () => {
             it("should reduce from-to", () => {
-                let a = new Filter({ rank: { op: "from-to", range: [1, 7] } });
+                let a = filter({ op: "from-to", range: [1, 7], step: 1 });
 
                 {
                     // A reduces lower bound of B
-                    let b = new Filter({ rank: { op: "from-to", range: [3, 9] } });
+                    let b = filter({ op: "from-to", range: [3, 9], step: 1 });
                     let r = a.reduce(b);
                     expect(r).not.toBeNull();
-                    expect(r.criteria).toEqual({ rank: { op: "from-to", range: [8, 9] } });
+                    expect(get(r)).toEqual({ op: "from-to", range: [7, 9], step: 1 });
                 }
 
                 {
                     // A reduces higher bound of B
-                    let b = new Filter({ rank: { op: "from-to", range: [-3, 3] } });
+                    let b = filter({ op: "from-to", range: [-3, 3], step: 1 });
                     let r = a.reduce(b);
                     expect(r).not.toBeNull();
-                    expect(r.criteria).toEqual({ rank: { op: "from-to", range: [-3, 0] } });
+                    expect(get(r)).toEqual({ op: "from-to", range: [-3, 1], step: 1 });
                 }
 
                 {
                     // A completely reduces B due to being greater than B
-                    let b = new Filter({ rank: { op: "from-to", range: [2, 6] } });
+                    let b = filter({ op: "from-to", range: [2, 6], step: 1 });
                     let r = a.reduce(b);
                     expect(r).toBeNull();
                 }
 
                 {
                     // A completely reduces B due to being equal
-                    let b = new Filter({ rank: { op: "from-to", range: [1, 7] } });
+                    let b = filter({ op: "from-to", range: [1, 7], step: 1 });
                     let r = a.reduce(b);
                     expect(r).toBeNull();
                 }
 
                 {
                     // A does not reduce B due to being consumed by B
-                    let b = new Filter({ rank: { op: "from-to", range: [-3, 9] } });
+                    let b = filter({ op: "from-to", range: [-3, 9], step: 1 });
                     let r = a.reduce(b);
                     expect(r).not.toBeNull();
-                    expect(r.criteria).toEqual({ rank: { op: "from-to", range: [-3, 9] } });
+                    expect(get(r)).toEqual({ op: "from-to", range: [-3, 9], step: 1 });
                 }
 
                 {
                     // A does not reduce B due to non-intersecting ranges
-                    let b = new Filter({ rank: { op: "from-to", range: [-64, 0] } });
+                    let b = filter({ op: "from-to", range: [-64, 0], step: 1 });
                     let r = a.reduce(b);
                     expect(r).not.toBeNull();
                     expect(r).toEqual(b);
@@ -58,81 +145,80 @@ describe("filter", () => {
             });
 
             it("should reduce ==", () => {
-                let a = new Filter({ rank: { op: "from-to", range: [1, 7] } });
+                let a = filter({ op: "from-to", range: [1, 7], step: 1 });
 
                 {
-                    let b = new Filter({ rank: { op: "==", value: 3 } });
+                    let b = filter({ op: "==", value: 3 });
                     let r = a.reduce(b);
                     expect(r).toBeNull();
                 }
             });
 
             it("should reduce <", () => {
-                let a = new Filter({ rank: { op: "from-to", range: [1, 7] } });
+                let a = filter({ op: "from-to", range: [1, 7], step: 1 });
 
                 {
-                    let b = new Filter({ rank: { op: "<", value: 2 } });
+                    let b = filter({ op: "<", value: 2, step: 1 });
                     let r = a.reduce(b);
 
                     expect(r).not.toBeNull();
-                    expect(r.criteria).toEqual({ rank: { op: "<", value: 1 } });
+                    expect(get(r)).toEqual({ op: "<", value: 1, step: 1 });
                 }
 
                 {
-                    let b = new Filter({ rank: { op: "<", value: 8 } });
+                    let b = filter({ op: "<", value: 8, step: 1 });
                     let r = a.reduce(b);
 
                     expect(r).not.toBeNull();
-                    expect(r.criteria).toEqual({ rank: { op: "<", value: 1 } });
+                    expect(get(r)).toEqual({ op: "<", value: 1, step: 1 });
                 }
             });
 
             it("should reduce <=", () => {
-                let a = new Filter({ rank: { op: "from-to", range: [1, 7] } });
+                let a = filter({ op: "from-to", range: [1, 7], step: 1 });
 
                 {
-                    let b = new Filter({ rank: { op: "<=", value: 2 } });
+                    let b = filter({ op: "<=", value: 2, step: 1 });
                     let r = a.reduce(b);
 
                     expect(r).not.toBeNull();
-                    expect(r.criteria).toEqual({ rank: { op: "<=", value: 0 } });
+                    expect(get(r)).toEqual({ op: "<", value: 1, step: 1 });
                 }
 
                 {
-                    let b = new Filter({ rank: { op: "<=", value: 7 } });
+                    let b = filter({ op: "<=", value: 7, step: 1 });
                     let r = a.reduce(b);
 
                     expect(r).not.toBeNull();
-                    expect(r.criteria).toEqual({ rank: { op: "<=", value: 0 } });
+                    expect(get(r)).toEqual({ op: "<", value: 1, step: 1 });
                 }
             });
 
             it("should reduce in & intersect", () => {
-                let a = new Filter({ rank: { op: "from-to", range: [1, 7] } });
+                let a = filter({ op: "from-to", range: [1, 7], step: 1 });
 
                 {
-                    let include = new Filter({ rank: { op: "include", values: new Set([1, 2, 3]) } });
-                    let intersect = new Filter({ rank: { op: "intersect", values: new Set([1, 2, 3]) } });
+                    let include = filter({ op: "in", values: new Set([1, 2, 3]) });
+                    let intersect = filter({ op: "common", values: new Set([1, 2, 3]) });
 
                     expect(a.reduce(include)).toBeNull();
                     expect(a.reduce(intersect)).toBeNull();
                 }
 
                 {
-                    let include = new Filter({ rank: { op: "include", values: new Set([-1, 2, 3, 64]) } });
-                    let intersect = new Filter({ rank: { op: "intersect", values: new Set([-1, 2, 3, 64]) } });
+                    let include = filter({ op: "in", values: new Set([-1, 2, 3, 64]) });
+                    let intersect = filter({ op: "common", values: new Set([-1, 2, 3, 64]) });
 
                     expect(a.reduce(include)).not.toBeNull();
-                    expectEqualSets((a.reduce(include).criteria.rank as Filter.SetCriterion).values, new Set([-1, 64]));
+                    expectArray(a.reduce(include)).toEqual([-1, 64]);
                     expect(a.reduce(intersect)).not.toBeNull();
-                    expectEqualSets((a.reduce(intersect).criteria.rank as Filter.SetCriterion).values, new Set([-1, 64]));
+                    expectArray(a.reduce(intersect)).toEqual([-1, 64]);
                 }
             });
 
             it("should not reduce !=", () => {
-                let fromTo = new Filter({ rank: { op: "from-to", range: [1, 7] } });
-
-                let notEquals = new Filter({ rank: { op: "!=", value: 3 } });
+                let fromTo = filter({ op: "from-to", range: [1, 7], step: 1 });
+                let notEquals = filter({ op: "!=", value: 3 });
                 expect(fromTo.reduce(notEquals)).toEqual(notEquals);
             });
         });

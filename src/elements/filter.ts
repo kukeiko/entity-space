@@ -1,3 +1,81 @@
+let lookup = new Map<Filter.Operations, (a: Filter.Criterion, b: Filter.Criterion) => Filter.Criterion | null>();
+
+lookup.set("==", (a: Filter.EqualityCriterion, b) => {
+    switch (b.op) {
+        case "==": return a.value == b.value ? null : b;
+        case "<": return (a.value as number) + b.step == b.value ? { op: "<", value: (a.value as number), step: b.step } : b;
+        case "<=": return a.value == b.value ? { op: "<", value: a.value, step: b.step } : b;
+        case ">": return (a.value as number) - b.step == b.value ? { op: ">", value: (a.value as number), step: b.step } : b;
+        case ">=": return a.value == b.value ? { op: ">", value: a.value, step: b.step } : b;
+        case "in": case "common":
+            if ((b.values as Set<any>).has(a.value)) {
+                let copy = new Set((b.values as Set<any>));
+                copy.delete(a.value);
+
+                return { op: "in", values: copy };
+            }
+        default: return b;
+    }
+    // return b.op == "==" ?  : b;
+});
+
+lookup.set("!=", (a: Filter.EqualityCriterion, b) => {
+    return b.op == "!=" ? a.value == b.value ? null : b : b;
+});
+
+lookup.set("<", (a: Filter.PointCriterion, b) => {
+    switch (b.op) {
+        case "<": return a.value >= b.value ? null : { op: "from-to", range: [b.value, a.value], step: b.step };
+        case "<=": return a.value > b.value ? null : b;
+        default: return b;
+    }
+});
+
+lookup.set("from-to", (a: Filter.RangeCriterion, b) => {
+    let [minA, maxA] = a.range;
+
+    switch (b.op) {
+        case "==": return b.value >= minA && b.value <= maxA ? null : b;
+        case "<=": return b.value >= minA && b.value <= maxA ? { op: "<", value: minA, step: b.step } : b;
+        case "<": return b.value > minA && b.value <= (maxA + b.step) ? { op: "<", value: minA, step: b.step } : b;
+        case ">=": return b.value >= minA && b.value <= maxA ? { op: ">=", value: maxA + 1, step: b.step } : b;
+        case ">": return b.value >= (minA - 1) && b.value < maxA ? { op: ">", value: maxA, step: b.step } : b;
+
+        case "in":
+        case "common":
+            let copy = new Set(b.values as Set<any>);
+            (b.values as Set<any>).forEach(v => (v >= minA && v <= maxA) && copy.delete(v));
+
+            if (copy.size == 0) return null;
+
+            return { op: b.op, values: copy };
+
+        case "from-to":
+            let [minB, maxB] = b.range;
+            let minInside = minB <= maxA && minB >= minA;
+            let maxInside = maxB <= maxA && maxB >= minA;
+
+            if (minInside && maxInside) {
+                return null;
+            } else if (minInside) {
+                return { op: "from-to", range: [minB + (maxA - minB), maxB], step: b.step };
+            } else if (maxInside) {
+                return { op: "from-to", range: [minB, maxB - (maxB - minA)], step: b.step };
+            } else {
+                return b;
+            }
+
+        default: return b;
+    }
+});
+
+/**
+ * Describes some criteria entities that are loaded via a query should have.
+ *
+ * [devnote] there is nothing preventing comparison between a number and a string,
+ * since it is expected that only criteria pointing to the same property are compared
+ * against each other
+ */
 export class Filter {
     readonly criteria: Filter.Criteria;
 
@@ -18,13 +96,6 @@ export class Filter {
             let b = other.criteria[k];
 
             switch (a.op) {
-                case "==":
-                    switch (b.op) {
-                        case "==": if (a.value == b.value) break;
-                        default: reduced[k] = b;
-                    }
-                    break;
-
                 case "!=":
                     switch (b.op) {
                         case "!=": if (a.value == b.value) break;
@@ -64,20 +135,20 @@ export class Filter {
                     }
                     break;
 
-                case "include":
-                case "intersect":
+                case "in":
+                case "common":
                     switch (b.op) {
                         case "==":
                             // todo: 'as any' is a bit dirty, but right now i see no other way
                             // other than type checking for number/string beforehand
-                            if (a.values.has(b.value as any)) break;
+                            if ((a.values as Set<any>).has(b.value)) break;
                             reduced[k] = b;
                             break;
 
-                        case "include":
-                        case "intersect":
-                            let copy = new Set(b.values);
-                            a.values.forEach(v => copy.delete(v));
+                        case "in":
+                        case "common":
+                            let copy = new Set(b.values as Set<any>);
+                            (a.values as Set<any>).forEach(v => copy.delete(v));
 
                             if (copy.size == 0) {
                                 break;
@@ -91,87 +162,15 @@ export class Filter {
                     }
                     break;
 
+                case "==":
                 case "from-to":
-                    let [minA, maxA] = a.range;
+                    let result = lookup.get(a.op)(a, b);
 
-                    switch (b.op) {
-                        case "==":
-                            // todo: possible bool/null to number/string comparison
-                            if (b.value >= minA && b.value <= maxA) {
-                                break;
-                            }
-
-                            reduced[k] = b;
-                            break;
-
-                        case "<=":
-                            if (b.value >= minA && b.value <= maxA) {
-                                reduced[k] = { op: "<=", value: minA - 1 };
-                            } else {
-                                reduced[k] = b;
-                            }
-                            break;
-
-                        case "<":
-                            if (b.value > minA && b.value <= (maxA + 1)) {
-                                reduced[k] = { op: "<", value: minA };
-                            } else {
-                                reduced[k] = b;
-                            }
-                            break;
-
-                        case ">=":
-                            if (b.value >= minA && b.value <= maxA) {
-                                reduced[k] = { op: ">=", value: maxA + 1 };
-                            } else {
-                                reduced[k] = b;
-                            }
-                            break;
-
-                        case ">":
-                            if (b.value >= (minA - 1) && b.value < maxA) {
-                                reduced[k] = { op: ">", value: maxA };
-                            } else {
-                                reduced[k] = b;
-                            }
-                            break;
-
-                        case "include":
-                        case "intersect":
-                            let copy = new Set(b.values);
-
-                            b.values.forEach(v => (v >= minA && v <= maxA) && copy.delete(v));
-
-                            if (copy.size == 0) {
-                                break;
-                            } else {
-                                reduced[k] = { op: b.op, values: copy };
-                            }
-                            break;
-
-                        case "from-to":
-                            let [minB, maxB] = b.range;
-                            let minInside = minB <= maxA && minB >= minA;
-                            let maxInside = maxB <= maxA && maxB >= minA;
-
-                            if (minInside && maxInside) {
-                                break;
-                            } else if (minInside) {
-                                reduced[k] = { op: "from-to", range: [minB + (maxA - minB) + 1, maxB] };
-                            } else if (maxInside) {
-                                reduced[k] = { op: "from-to", range: [minB, maxB - (maxB - minA) - 1] };
-                            } else {
-                                reduced[k] = b;
-                            }
-                            break;
-
-                        default:
-                            reduced[k] = b;
+                    if (result == null) {
+                        break;
                     }
-                    break;
 
-                case "between":
-                    // todo: implement
+                    reduced[k] = result;
                     break;
 
                 default:
@@ -194,87 +193,33 @@ export class Filter {
 }
 
 export module Filter {
-    export type Value = null | string | number;
-
     export interface EqualityCriterion {
         op: "==" | "!=";
-        value: string | number | null | true | false;
+        value: string | number | null | boolean;
     }
 
     export interface PointCriterion {
         op: "<" | "<=" | ">" | ">=";
-        value: string | number;
+        value: number;
+        step: number;
     }
 
     export interface SetCriterion {
-        op: "include" | "intersect";
-        values: Set<string | number>;
+        op: "in" | "common";
+        values: Set<string> | Set<number>;
     }
 
     export interface RangeCriterion {
-        op: "from-to" | "between";
+        op: "from-to";
         range: [number, number];
+        step: number;
     }
 
     export type Criterion = EqualityCriterion | PointCriterion | SetCriterion | RangeCriterion;
+
+    export type Operations = Criterion["op"];
 
     export interface Criteria {
         [property: string]: Criterion;
     }
 }
-
-// export module Filter {
-//     export type SingleOperator = "==" | "!=" | "<" | "<=" | ">" | ">=";
-//     export type SetOperator = "include" | "intersect";
-//     export type RangeOperator = "from-to" | "between";
-//     export type Value = null | string | number | true | false;
-
-//     export type Expression
-//         = [SingleOperator, Value]
-//         | [RangeOperator, [Value, Value]]
-//         | [SetOperator, Set<Value>];
-
-//     export type Criteria = { [property: string]: Filter.Expression };
-// }
-
-// type Member = [string];
-// type Value = null | string | number | Date | true | false;
-// type Operand = Member | Value;
-
-// type Logical = "&&" | "||" | "!=" | "==" | "<=" | ">=";
-// type Operator = Logical;
-
-// type Expression = [Operand, Operator, Operand];
-// // type Criteria = Expression | [Expression, Operator, Expression];
-
-
-// class Criteria {
-//     and(exp: Expression | Criteria): Criteria {
-//         return this;
-//     }
-
-//     or(exp: Expression | Criteria): Criteria {
-//         return this;
-//     }
-// }
-
-// function Where(expression: Expression): Criteria {
-//     return new Criteria();
-// }
-
-// let x = new Criteria()
-//     .and([["foo"], "==", "123"])
-//     .or(Where([["created"], "<=", new Date()])
-//         .or(null)
-//     )
-
-
-// function foo(ex: Criteria): void {
-
-// }
-
-// foo([
-//     [["foo"], "==", true],
-//     "!=",
-//     [["foo"], "<=", new Date()]
-// ]);
