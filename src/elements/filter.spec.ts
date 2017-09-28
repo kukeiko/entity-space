@@ -1,6 +1,5 @@
 import { Filter } from "./filter";
 
-
 function filter(criterion: Filter.Criterion): Filter {
     return new Filter({ foo: criterion });
 }
@@ -28,7 +27,7 @@ describe("filter", () => {
 
         describe("==", () => {
             describe("bool", () => {
-                fit("== / !=", () => {
+                it("== / !=", () => {
                     let isTrue = filter(Filter.equals(true));
 
                     // the only case it'll reduce
@@ -161,6 +160,39 @@ describe("filter", () => {
                     let invalid = filter({ op: "invalid" as any, type: "number", value: 7 });
 
                     expect(() => equals.reduce(invalid)).toThrow();
+                });
+            });
+        });
+
+        describe("!=", () => {
+            describe("bool", () => {
+                it("== / !=", () => {
+                    let notTrue = filter(Filter.notEquals(true));
+
+                    let alsoNotTrue = filter(Filter.notEquals(true));
+                    expect(notTrue.reduce(alsoNotTrue)).toBeNull();
+
+                    let isFalse = filter(Filter.equals(false));
+                    expect(notTrue.reduce(isFalse)).toBeNull();
+
+                    let isNull = filter(Filter.isNull("bool"));
+                    expect(notTrue.reduce(isNull)).toBeNull();
+
+                    let isTrue = filter(Filter.equals(true));
+                    expect(notTrue.reduce(isTrue)).toEqual(isTrue);
+
+                    let notFalse = filter(Filter.notEquals(false));
+                    expectCriteria(notTrue.reduce(notFalse)).toEqual({ op: "==", type: "bool", value: true });
+
+                    let notNull = filter(Filter.notNull("bool"));
+                    expectCriteria(notTrue.reduce(notNull)).toEqual({ op: "==", type: "bool", value: true })
+                });
+
+                it("throws if criteria are incompatible", () => {
+                    let unequals = filter(Filter.notEquals(true));
+                    let invalid = filter({ op: "invalid" as any, type: "bool", value: true });
+
+                    expect(() => unequals.reduce(invalid)).toThrow();
                 });
             });
         });

@@ -49,6 +49,15 @@ let reducers = new Map<Filter.Operations, Reducers>([
                 default: throw unexpectedOp(b);
             }
         }]
+    ])],
+    ["!=", new Map<Filter.Types, Reducer>([
+        ["bool", (a: Filter.BooleanEqualityCriterion, b: Filter.BooleanEqualityCriterion): ReduceResult => {
+            switch (b.op) {
+                case "==": return a.value == b.value ? b : null;
+                case "!=": return a.value == b.value ? null : { op: "==", type: "bool", value: a.value };
+                default: throw unexpectedOp(b);
+            }
+        }]
     ])]
 ]);
 
