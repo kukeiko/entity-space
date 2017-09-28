@@ -9,14 +9,14 @@ let unexpectedValueType = (value: any) =>
 
 type ReduceResult = Filter.Criterion | null;
 type Reducer = (a: Filter.Criterion, b: Filter.Criterion) => Filter.Criterion | null;
-type ReducerMap = Map<Filter.Types, Reducer>;
+type Reducers = Map<Filter.Types, Reducer>;
 
-let lookup = new Map<Filter.Operations, ReducerMap>([
+let reducers = new Map<Filter.Operations, Reducers>([
     ["==", new Map<Filter.Types, Reducer>([
         ["bool", (a: Filter.BooleanEqualityCriterion, b: Filter.BooleanEqualityCriterion): ReduceResult => {
             switch (b.op) {
                 case "==": return a.value == b.value ? null : b;
-                case "!=": return b;
+                case "!=": return a.value != b.value ? { op: "==", type: "bool", value: [true, false, null].filter(x => x != b.value && x != a.value)[0] } : b;
                 default: throw unexpectedOp(b);
             }
         }],
@@ -59,34 +59,6 @@ let lookup = new Map<Filter.Operations, ReducerMap>([
 //         ["null", (a, b) => void 0]
 //     ])]
 // ]);
-// lookup.set("==", (a: Filter.EqualityCriterion, b) => {
-//     switch (b.op) {
-//         case "==": return a.value == b.value ? null : b;
-//         case "!=": return b;
-//         case "<": return (a.value as number) + b.step == b.value ? { op: "<", value: (a.value as number), step: b.step } : b;
-//         case "<=": return a.value == b.value ? { op: "<", value: a.value, step: b.step } : b;
-//         case ">": return (a.value as number) - b.step == b.value ? { op: ">", value: (a.value as number), step: b.step } : b;
-//         case ">=": return a.value == b.value ? { op: ">", value: a.value, step: b.step } : b;
-//         case "in": case "common":
-//             if ((b.values as Set<any>).has(a.value)) {
-//                 let copy = new Set((b.values as Set<any>));
-//                 copy.delete(a.value);
-
-//                 return { op: "in", values: copy };
-//             }
-
-//             return b;
-//         case "from-to":
-//             if (a.value == b.range[0]) {
-//                 return { op: "from-to", range: [a.value + b.step, b.range[1]], step: b.step };
-//             } else if (a.value == b.range[1]) {
-//                 return { op: "from-to", range: [b.range[0], a.value - b.step], step: b.step };
-//             }
-//             return b;
-
-//         default: throw unexpected(b);
-//     }
-// });
 
 // lookup.set("!=", (a: Filter.NumberEqualityCriterion, b) => {
 //     switch (b.op) {
@@ -143,12 +115,9 @@ let lookup = new Map<Filter.Operations, ReducerMap>([
 // });
 
 /**
- * Describes some criteria entities that are loaded via a query should have.
+ * Describes some criteria entities processed by a query should have.
  *
- * todo: possibly outdated devnote
- * [devnote] there is nothing preventing comparison between a number and a string,
- * since it is expected that only criteria pointing to the same property are compared
- * against each other
+ * Immutable
  */
 export class Filter {
     readonly criteria: Filter.Criteria;
@@ -158,10 +127,19 @@ export class Filter {
         Object.freeze(this);
     }
 
-    // todo: refactor into lookup table
-    // todo: not all comparions are type safe
+    /**
+     * Reduces another filter by reducing common (i.e. pointing to the same property) criteria.
+     *
+     * Returns null if the given filter is completely reduced, otherwise a new filter
+     * where criteria where either partially reduced or left alone.
+     *
+     * Throws if the filters share a criteria where the value types are incompatible.
+     */
     reduce(other: Filter): Filter | null {
         let reduced: Filter.Criteria = {};
+
+        // todo: first check if this filter is a superset based on existing criteria
+        // this way we might be able to not even start reducing single criteria
 
         for (let k in this.criteria) {
             if (other.criteria[k] == null) return other;
@@ -169,7 +147,11 @@ export class Filter {
             let a = this.criteria[k];
             let b = other.criteria[k];
 
-            let criterion = lookup.get(a.op).get(b.type)(a, b);
+            if (a.type != b.type) {
+                throw new Error(`trying to reduce criteria of incompatible types: ${a.type} and ${b.type}`);
+            }
+
+            let criterion = reducers.get(a.op).get(b.type)(a, b);
 
             if (criterion != null) {
                 reduced[k] = criterion;
@@ -308,6 +290,14 @@ export module Filter {
         [property: string]: Criterion;
     }
 
+    export function isNull(type: Types): EqualityCriterion {
+        return <EqualityCriterion>{ op: "==", type: type, value: null };
+    }
+
+    export function notNull(type: Types): EqualityCriterion {
+        return <EqualityCriterion>{ op: "!=", type: type, value: null };
+    }
+
     export function equals(value: boolean): BooleanEqualityCriterion;
     export function equals(value: number): NumberEqualityCriterion;
     export function equals(value: string): StringEqualityCriterion;
@@ -317,7 +307,21 @@ export module Filter {
             case "boolean": return { op: "==", type: "bool", value: value as boolean };
             case "number": return { op: "==", type: "number", value: value as number };
             case "string": return { op: "==", type: "string", value: value as string };
-            case "object": if (value instanceof Date) { return { op: "==", type: "date", value: value } };
+            case "object": if (value instanceof Date) { return { op: "==", type: "date", value: value }; };
+            default: throw unexpectedValueType(value);
+        }
+    }
+
+    export function notEquals(value: boolean): BooleanEqualityCriterion;
+    export function notEquals(value: number): NumberEqualityCriterion;
+    export function notEquals(value: string): StringEqualityCriterion;
+    export function notEquals(value: Date): DateEqualityCriterion;
+    export function notEquals(value: boolean | number | string | Date): EqualityCriterion {
+        switch (typeof (value)) {
+            case "boolean": return { op: "!=", type: "bool", value: value as boolean };
+            case "number": return { op: "!=", type: "number", value: value as number };
+            case "string": return { op: "!=", type: "string", value: value as string };
+            case "object": if (value instanceof Date) { return { op: "!=", type: "date", value: value } };
             default: throw unexpectedValueType(value);
         }
     }

@@ -19,7 +19,46 @@ function expectCriteria(filter: Filter) {
 
 describe("filter", () => {
     describe("reduce", () => {
-        fdescribe("==", () => {
+        it("throws if types of criteria are incompatible", () => {
+            let bool = filter(Filter.equals(true));
+            let number = filter(Filter.equals(7));
+
+            expect(() => bool.reduce(number)).toThrow();
+        });
+
+        describe("==", () => {
+            describe("bool", () => {
+                fit("== / !=", () => {
+                    let isTrue = filter(Filter.equals(true));
+
+                    // the only case it'll reduce
+                    let isAlsoTrue = filter(Filter.equals(true));
+                    expect(isTrue.reduce(isAlsoTrue)).toBeNull();
+
+                    let isFalse = filter(Filter.equals(false));
+                    expect(isTrue.reduce(isFalse)).toEqual(isFalse);
+
+                    let isNotFalse = filter(Filter.notEquals(false));
+                    expectCriteria(isTrue.reduce(isNotFalse)).toEqual({ op: "==", type: "bool", value: null });
+
+                    let notTrue = filter(Filter.notEquals(true));
+                    expect(isTrue.reduce(notTrue)).toEqual(notTrue);
+
+                    let isNull = filter(Filter.isNull("bool"));
+                    expect(isTrue.reduce(isNull)).toEqual(isNull);
+
+                    let isNotNull = filter(Filter.notNull("bool"));
+                    expectCriteria(isTrue.reduce(isNotNull)).toEqual({ op: "==", type: "bool", value: false });
+                });
+
+                it("throws if criteria are incompatible", () => {
+                    let equals = filter(Filter.equals(true));
+                    let invalid = filter({ op: "invalid" as any, type: "bool", value: true });
+
+                    expect(() => equals.reduce(invalid)).toThrow();
+                });
+            });
+
             describe("number", () => {
                 it("== / !=", () => {
                     let equals = filter(Filter.equals(7));
@@ -30,7 +69,7 @@ describe("filter", () => {
                     let otherEquals = filter(Filter.equals(8));
                     expect(equals.reduce(otherEquals)).toEqual(otherEquals);
 
-                    let notEquals = filter(Filter.equals(6));
+                    let notEquals = filter(Filter.notEquals(6));
                     expect(equals.reduce(notEquals)).toEqual(notEquals);
                 });
 
@@ -115,8 +154,10 @@ describe("filter", () => {
                     expectCriteria(equals.reduce(higherBound)).toEqual({ op: "from-to", type: "number", range: [-13, 6], step: 1 });
                 });
 
-                it("throw on unknown operation", () => {
+                it("throws if criteria are incompatible", () => {
                     let equals = filter(Filter.equals(7));
+
+                    // had to use "invalid" since it covers all ops
                     let invalid = filter({ op: "invalid" as any, type: "number", value: 7 });
 
                     expect(() => equals.reduce(invalid)).toThrow();
