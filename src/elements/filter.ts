@@ -167,13 +167,6 @@ export class Filter {
             }
 
             // switch (a.op) {
-            //     case "!=":
-            //         switch (b.op) {
-            //             case "!=": if (a.value == b.value) break;
-            //             default: reduced[k] = b;
-            //         }
-            //         break;
-
             //     case "<":
             //         switch (b.op) {
             //             case "<": if (a.value >= b.value) break;

@@ -60,73 +60,73 @@ describe("filter", () => {
 
             describe("number", () => {
                 it("== / !=", () => {
-                    let equals = filter(Filter.equals(7));
+                    let is7 = filter(Filter.equals(7));
 
-                    let equalEquals = filter(Filter.equals(7));
-                    expect(equals.reduce(equalEquals)).toBeNull();
+                    let alsoIs7 = filter(Filter.equals(7));
+                    expect(is7.reduce(alsoIs7)).toBeNull();
 
-                    let otherEquals = filter(Filter.equals(8));
-                    expect(equals.reduce(otherEquals)).toEqual(otherEquals);
+                    let is8 = filter(Filter.equals(8));
+                    expect(is7.reduce(is8)).toEqual(is8);
 
-                    let notEquals = filter(Filter.notEquals(6));
-                    expect(equals.reduce(notEquals)).toEqual(notEquals);
+                    let not6 = filter(Filter.notEquals(6));
+                    expect(is7.reduce(not6)).toEqual(not6);
                 });
 
                 it("< / <= / > / >=", () => {
-                    let equals = filter({ op: "==", type: "number", value: 7, step: 1 });
+                    let is7 = filter({ op: "==", type: "number", value: 7, step: 1 });
 
                     // reduces
                     {
-                        let lessThan = filter({ op: "<", type: "number", value: 8, step: 1 });
-                        expectCriteria(equals.reduce(lessThan)).toEqual({ op: "<", type: "number", value: 7, step: 1 });
+                        let lessThan8 = filter({ op: "<", type: "number", value: 8, step: 1 });
+                        expectCriteria(is7.reduce(lessThan8)).toEqual({ op: "<", type: "number", value: 7, step: 1 });
 
-                        let lessThanEquals = filter({ op: "<=", type: "number", value: 7, step: 1 });
-                        expectCriteria(equals.reduce(lessThanEquals)).toEqual({ op: "<", type: "number", value: 7, step: 1 });
+                        let lessThanEquals7 = filter({ op: "<=", type: "number", value: 7, step: 1 });
+                        expectCriteria(is7.reduce(lessThanEquals7)).toEqual({ op: "<", type: "number", value: 7, step: 1 });
 
-                        let greaterThan = filter({ op: ">", type: "number", value: 6, step: 1 });
-                        expectCriteria(equals.reduce(greaterThan)).toEqual({ op: ">", type: "number", value: 7, step: 1 });
+                        let greaterThan6 = filter({ op: ">", type: "number", value: 6, step: 1 });
+                        expectCriteria(is7.reduce(greaterThan6)).toEqual({ op: ">", type: "number", value: 7, step: 1 });
 
-                        let greaterThanEquals = filter({ op: ">=", type: "number", value: 7, step: 1 });
-                        expectCriteria(equals.reduce(greaterThanEquals)).toEqual({ op: ">", type: "number", value: 7, step: 1 });
+                        let greaterThanEquals7 = filter({ op: ">=", type: "number", value: 7, step: 1 });
+                        expectCriteria(is7.reduce(greaterThanEquals7)).toEqual({ op: ">", type: "number", value: 7, step: 1 });
                     }
 
                     // reduces: stepping
                     {
-                        let lessThan = filter({ op: "<", type: "number", value: 7.1, step: 0.1 });
-                        expectCriteria(equals.reduce(lessThan)).toEqual({ op: "<", type: "number", value: 7, step: 0.1 });
+                        let lessThan7p1 = filter({ op: "<", type: "number", value: 7.1, step: 0.1 });
+                        expectCriteria(is7.reduce(lessThan7p1)).toEqual({ op: "<", type: "number", value: 7, step: 0.1 });
 
-                        let greaterThan = filter({ op: ">", type: "number", value: 6.9, step: 0.1 });
-                        expectCriteria(equals.reduce(greaterThan)).toEqual({ op: ">", type: "number", value: 7, step: 0.1 });
+                        let greaterThan6p9 = filter({ op: ">", type: "number", value: 6.9, step: 0.1 });
+                        expectCriteria(is7.reduce(greaterThan6p9)).toEqual({ op: ">", type: "number", value: 7, step: 0.1 });
                     }
 
                     // does'nt reduce: lower bound
                     {
                         let lessThan = filter({ op: "<", type: "number", value: 7, step: 1 });
-                        expect(equals.reduce(lessThan)).toEqual(lessThan);
+                        expect(is7.reduce(lessThan)).toEqual(lessThan);
 
                         let lessThanEquals = filter({ op: "<=", type: "number", value: 6, step: 1 });
-                        expect(equals.reduce(lessThanEquals)).toEqual(lessThanEquals);
+                        expect(is7.reduce(lessThanEquals)).toEqual(lessThanEquals);
 
                         let greaterThan = filter({ op: ">", type: "number", value: 7, step: 1 });
-                        expect(equals.reduce(greaterThan)).toEqual(greaterThan);
+                        expect(is7.reduce(greaterThan)).toEqual(greaterThan);
 
                         let greaterThanEquals = filter({ op: ">=", type: "number", value: 8, step: 1 });
-                        expect(equals.reduce(greaterThanEquals)).toEqual(greaterThanEquals);
+                        expect(is7.reduce(greaterThanEquals)).toEqual(greaterThanEquals);
                     }
 
                     // does'nt reduce: higher bound
                     {
                         let lessThan = filter({ op: "<", type: "number", value: 9, step: 1 });
-                        expect(equals.reduce(lessThan)).toEqual(lessThan);
+                        expect(is7.reduce(lessThan)).toEqual(lessThan);
 
                         let lessThanEquals = filter({ op: "<=", type: "number", value: 8, step: 1 });
-                        expect(equals.reduce(lessThanEquals)).toEqual(lessThanEquals);
+                        expect(is7.reduce(lessThanEquals)).toEqual(lessThanEquals);
 
                         let greaterThan = filter({ op: ">", type: "number", value: 5, step: 1 });
-                        expect(equals.reduce(greaterThan)).toEqual(greaterThan);
+                        expect(is7.reduce(greaterThan)).toEqual(greaterThan);
 
                         let greaterThanEquals = filter({ op: ">=", type: "number", value: 6, step: 1 });
-                        expect(equals.reduce(greaterThanEquals)).toEqual(greaterThanEquals);
+                        expect(is7.reduce(greaterThanEquals)).toEqual(greaterThanEquals);
                     }
                 });
 
