@@ -96,11 +96,12 @@ export class ServiceCluster {
             metadata: metadata
         });
 
-        EntityMapper.updateReferenceKeys({
-            from: entities,
-            to: entityCopies,
-            metadata: metadata
-        });
+        // todo: maybe make configurable? commented out for now since it does more harm than good
+        // EntityMapper.updateReferenceKeys({
+        //     from: entities,
+        //     to: entityCopies,
+        //     metadata: metadata
+        // });
 
         let dtoCopies = EntityMapper.copyPrimitives({
             from: entityCopies,
