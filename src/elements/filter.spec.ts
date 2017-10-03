@@ -241,134 +241,135 @@ describe("filter", () => {
                 });
             });
         });
-        // describe("from-to", () => {
-        //     it("from-to", () => {
-        //         let a = filter({ op: "from-to", range: [1, 7], step: 1 });
 
-        //         {
-        //             // A reduces lower bound of B
-        //             let b = filter({ op: "from-to", range: [3, 9], step: 1 });
-        //             let r = a.reduce(b);
-        //             expect(r).not.toBeNull();
-        //             expect(get(r)).toEqual({ op: "from-to", range: [7, 9], step: 1 });
-        //         }
+        describe("from-to", () => {
+            it("from-to", () => {
+                let a = filter({ op: "from-to", type: "number", range: [1, 7], step: 1 });
 
-        //         {
-        //             // A reduces higher bound of B
-        //             let b = filter({ op: "from-to", range: [-3, 3], step: 1 });
-        //             let r = a.reduce(b);
-        //             expect(r).not.toBeNull();
-        //             expect(get(r)).toEqual({ op: "from-to", range: [-3, 1], step: 1 });
-        //         }
+                {
+                    // A reduces lower bound of B
+                    let b = filter({ op: "from-to", type: "number", range: [3, 9], step: 1 });
+                    let r = a.reduce(b);
+                    expect(r).not.toBeNull();
+                    expect(get(r)).toEqual({ op: "from-to", type: "number", range: [7, 9], step: 1 });
+                }
 
-        //         {
-        //             // A completely reduces B due to being greater than B
-        //             let b = filter({ op: "from-to", range: [2, 6], step: 1 });
-        //             let r = a.reduce(b);
-        //             expect(r).toBeNull();
-        //         }
+                {
+                    // A reduces higher bound of B
+                    let b = filter({ op: "from-to", type: "number", range: [-3, 3], step: 1 });
+                    let r = a.reduce(b);
+                    expect(r).not.toBeNull();
+                    expect(get(r)).toEqual({ op: "from-to", type: "number", range: [-3, 1], step: 1 });
+                }
 
-        //         {
-        //             // A completely reduces B due to being equal
-        //             let b = filter({ op: "from-to", range: [1, 7], step: 1 });
-        //             let r = a.reduce(b);
-        //             expect(r).toBeNull();
-        //         }
+                {
+                    // A completely reduces B due to being greater than B
+                    let b = filter({ op: "from-to", type: "number", range: [2, 6], step: 1 });
+                    let r = a.reduce(b);
+                    expect(r).toBeNull();
+                }
 
-        //         {
-        //             // A does not reduce B due to being consumed by B
-        //             let b = filter({ op: "from-to", range: [-3, 9], step: 1 });
-        //             let r = a.reduce(b);
-        //             expect(r).not.toBeNull();
-        //             expect(get(r)).toEqual({ op: "from-to", range: [-3, 9], step: 1 });
-        //         }
+                {
+                    // A completely reduces B due to being equal
+                    let b = filter({ op: "from-to", type: "number", range: [1, 7], step: 1 });
+                    let r = a.reduce(b);
+                    expect(r).toBeNull();
+                }
 
-        //         {
-        //             // A does not reduce B due to non-intersecting ranges
-        //             let b = filter({ op: "from-to", range: [-64, 0], step: 1 });
-        //             let r = a.reduce(b);
-        //             expect(r).not.toBeNull();
-        //             expect(r).toEqual(b);
-        //         }
-        //     });
+                {
+                    // A does not reduce B due to being consumed by B
+                    let b = filter({ op: "from-to", type: "number", range: [-3, 9], step: 1 });
+                    let r = a.reduce(b);
+                    expect(r).not.toBeNull();
+                    expect(get(r)).toEqual({ op: "from-to", type: "number", range: [-3, 9], step: 1 });
+                }
 
-        //     it("==", () => {
-        //         let a = filter({ op: "from-to", range: [1, 7], step: 1 });
+                {
+                    // A does not reduce B due to non-intersecting ranges
+                    let b = filter({ op: "from-to", type: "number", range: [-64, 0], step: 1 });
+                    let r = a.reduce(b);
+                    expect(r).not.toBeNull();
+                    expect(r).toEqual(b);
+                }
+            });
 
-        //         {
-        //             let b = filter({ op: "==", type: "number", value:3 });
-        //             let r = a.reduce(b);
-        //             expect(r).toBeNull();
-        //         }
-        //     });
+            it("==", () => {
+                let a = filter({ op: "from-to", type: "number", range: [1, 7], step: 1 });
 
-        //     it("<", () => {
-        //         let a = filter({ op: "from-to", range: [1, 7], step: 1 });
+                {
+                    let b = filter({ op: "==", type: "number", value: 3 });
+                    let r = a.reduce(b);
+                    expect(r).toBeNull();
+                }
+            });
 
-        //         {
-        //             let b = filter({ op: "<", type: "number", value:2, step: 1 });
-        //             let r = a.reduce(b);
+            it("<", () => {
+                let a = filter({ op: "from-to", type: "number", range: [1, 7], step: 1 });
 
-        //             expect(r).not.toBeNull();
-        //             expect(get(r)).toEqual({ op: "<", type: "number", value:1, step: 1 });
-        //         }
+                {
+                    let b = filter({ op: "<", type: "number", value: 2, step: 1 });
+                    let r = a.reduce(b);
 
-        //         {
-        //             let b = filter({ op: "<", type: "number", value:8, step: 1 });
-        //             let r = a.reduce(b);
+                    expect(r).not.toBeNull();
+                    expect(get(r)).toEqual({ op: "<", type: "number", value: 1, step: 1 });
+                }
 
-        //             expect(r).not.toBeNull();
-        //             expect(get(r)).toEqual({ op: "<", type: "number", value:1, step: 1 });
-        //         }
-        //     });
+                {
+                    let b = filter({ op: "<", type: "number", value: 8, step: 1 });
+                    let r = a.reduce(b);
 
-        //     it("<=", () => {
-        //         let a = filter({ op: "from-to", range: [1, 7], step: 1 });
+                    expect(r).not.toBeNull();
+                    expect(get(r)).toEqual({ op: "<", type: "number", value: 1, step: 1 });
+                }
+            });
 
-        //         {
-        //             let b = filter({ op: "<=", type: "number", value:2, step: 1 });
-        //             let r = a.reduce(b);
+            it("<=", () => {
+                let a = filter({ op: "from-to", type: "number", range: [1, 7], step: 1 });
 
-        //             expect(r).not.toBeNull();
-        //             expect(get(r)).toEqual({ op: "<", type: "number", value:1, step: 1 });
-        //         }
+                {
+                    let b = filter({ op: "<=", type: "number", value: 2, step: 1 });
+                    let r = a.reduce(b);
 
-        //         {
-        //             let b = filter({ op: "<=", type: "number", value:7, step: 1 });
-        //             let r = a.reduce(b);
+                    expect(r).not.toBeNull();
+                    expect(get(r)).toEqual({ op: "<", type: "number", value: 1, step: 1 });
+                }
 
-        //             expect(r).not.toBeNull();
-        //             expect(get(r)).toEqual({ op: "<", type: "number", value:1, step: 1 });
-        //         }
-        //     });
+                {
+                    let b = filter({ op: "<=", type: "number", value: 7, step: 1 });
+                    let r = a.reduce(b);
 
-        //     it("in & intersect", () => {
-        //         let a = filter({ op: "from-to", range: [1, 7], step: 1 });
+                    expect(r).not.toBeNull();
+                    expect(get(r)).toEqual({ op: "<", type: "number", value: 1, step: 1 });
+                }
+            });
 
-        //         {
-        //             let include = filter({ op: "in", values: new Set([1, 2, 3]) });
-        //             let intersect = filter({ op: "common", values: new Set([1, 2, 3]) });
+            it("in / common", () => {
+                let a = filter({ op: "from-to", type: "number", range: [1, 7], step: 1 });
 
-        //             expect(a.reduce(include)).toBeNull();
-        //             expect(a.reduce(intersect)).toBeNull();
-        //         }
+                {
+                    let include = filter({ op: "in", type: "number", values: new Set([1, 2, 3]) });
+                    let intersect = filter({ op: "common", type: "number", values: new Set([1, 2, 3]) });
 
-        //         {
-        //             let include = filter({ op: "in", values: new Set([-1, 2, 3, 64]) });
-        //             let intersect = filter({ op: "common", values: new Set([-1, 2, 3, 64]) });
+                    expect(a.reduce(include)).toBeNull();
+                    expect(a.reduce(intersect)).toBeNull();
+                }
 
-        //             expect(a.reduce(include)).not.toBeNull();
-        //             expectArray(a.reduce(include)).toEqual([-1, 64]);
-        //             expect(a.reduce(intersect)).not.toBeNull();
-        //             expectArray(a.reduce(intersect)).toEqual([-1, 64]);
-        //         }
-        //     });
+                {
+                    let include = filter({ op: "in", type: "number", values: new Set([-1, 2, 3, 64]) });
+                    let intersect = filter({ op: "common", type: "number", values: new Set([-1, 2, 3, 64]) });
 
-        //     it("should not reduce !=", () => {
-        //         let fromTo = filter({ op: "from-to", range: [1, 7], step: 1 });
-        //         let notEquals = filter({ op: "!=", type: "number", value:3 });
-        //         expect(fromTo.reduce(notEquals)).toEqual(notEquals);
-        //     });
-        // });
+                    expect(a.reduce(include)).not.toBeNull();
+                    expectArray(a.reduce(include)).toEqual([-1, 64]);
+                    expect(a.reduce(intersect)).not.toBeNull();
+                    expectArray(a.reduce(intersect)).toEqual([-1, 64]);
+                }
+            });
+
+            it("should not reduce !=", () => {
+                let fromTo = filter({ op: "from-to", type: "number", range: [1, 7], step: 1 });
+                let notEquals = filter({ op: "!=", type: "number", value: 3 });
+                expect(fromTo.reduce(notEquals)).toEqual(notEquals);
+            });
+        });
     });
 });

@@ -13,6 +13,7 @@ type ReduceResult = Filter.Criterion | null;
 type Reducer = (a: Filter.Criterion, b: Filter.Criterion) => Filter.Criterion | null;
 type Reducers = Map<Filter.Types, Reducer>;
 
+// todo: a lot of ops missing
 let reducers = new Map<Filter.Operations, Reducers>([
     // todo: other data types are missing
     ["==", new Map<Filter.Types, Reducer>([
@@ -53,6 +54,7 @@ let reducers = new Map<Filter.Operations, Reducers>([
             }
         }]
     ])],
+    // todo: other data types are missing
     ["!=", new Map<Filter.Types, Reducer>([
         ["bool", (a: Filter.BooleanEqualityCriterion, b: Filter.BooleanEqualityCriterion): ReduceResult => {
             switch (b.op) {
@@ -62,6 +64,7 @@ let reducers = new Map<Filter.Operations, Reducers>([
             }
         }]
     ])],
+    // todo: incomplete
     ["<", new Map<Filter.Types, Reducer>([
         ["number", (a: Filter.NumberPointCriterion, b: Filter.NumberCriterion): ReduceResult => {
             switch (b.op) {
@@ -74,68 +77,65 @@ let reducers = new Map<Filter.Operations, Reducers>([
                 default: return b;
             }
         }]
+    ])],
+    // todo: incomplete
+    ["from-to", new Map<Filter.Types, Reducer>([
+        ["number", (a: Filter.NumberRangeCriterion, b: Filter.NumberCriterion): ReduceResult => {
+            let [minA, maxA] = a.range;
+
+            switch (b.op) {
+                case "==": return b.value >= minA && b.value <= maxA ? null : b;
+                case "!=": return b;
+                case "<=": return b.value >= minA && b.value <= maxA ? { op: "<", type: "number", value: minA, step: b.step } : b;
+                case "<": return b.value > minA && b.value <= (maxA + b.step) ? { op: "<", type: "number", value: minA, step: b.step } : b;
+                case ">=": return b.value >= minA && b.value <= maxA ? { op: ">=", type: "number", value: maxA + b.step, step: b.step } : b;
+                case ">": return b.value >= (minA - b.step) && b.value < maxA ? { op: ">", type: "number", value: maxA, step: b.step } : b;
+
+                case "in":
+                case "common":
+                    let copy = new Set(b.values);
+                    b.values.forEach(v => (v >= minA && v <= maxA) && copy.delete(v));
+
+                    if (copy.size == 0) return null;
+
+                    return { op: b.op, type: "number", values: copy };
+
+                case "from-to":
+                    let [minB, maxB] = b.range;
+                    let minInside = minB <= maxA && minB >= minA;
+                    let maxInside = maxB <= maxA && maxB >= minA;
+
+                    if (minInside && maxInside) {
+                        return null;
+                    } else if (minInside) {
+                        return { op: "from-to", type: "number", range: [minB + (maxA - minB), maxB], step: b.step };
+                    } else if (maxInside) {
+                        return { op: "from-to", type: "number", range: [minB, maxB - (maxB - minA)], step: b.step };
+                    } else {
+                        return b;
+                    }
+
+                default: throw unexpectedOp(b);
+            }
+        }]
+    ])],
+    ["in", new Map<Filter.Types, Reducer>([
+        ["number", (a: Filter.NumberSetCriterion, b: Filter.NumberCriterion): ReduceResult => {
+            switch (b.op) {
+                case "==": return a.values.has(b.value) ? null : b;
+                case "in":
+                case "common":
+                    let copy = new Set(b.values);
+                    a.values.forEach(v => copy.delete(v));
+
+                    return copy.size == 0 ? null : { op: b.op, type: "number", values: copy };
+
+                default: return b;
+            }
+        }]
     ])]
 ]);
 
-// lookup = new Map([
-//     ["==", new Map([
-//         ["null", (a, b) => void 0]
-//     ])]
-// ]);
-
-// lookup.set("!=", (a: Filter.NumberEqualityCriterion, b) => {
-//     switch (b.op) {
-//         case "==": return a.value != b.value ? null : b;
-//         case "!=": return a.value == b.value ? null : b;
-//         default: return b;
-//     }
-// });
-
-// lookup.set("<", (a: Filter.NumberPointCriterion, b) => {
-//     switch (b.op) {
-//         case "<": return a.value >= b.value ? null : { op: "from-to", range: [b.value, a.value], step: b.step };
-//         case "<=": return a.value > b.value ? null : b;
-//         default: return b;
-//     }
-// });
-
-// lookup.set("from-to", (a: Filter.NumberRangeCriterion, b) => {
-//     let [minA, maxA] = a.range;
-
-//     switch (b.op) {
-//         case "==": return b.value >= minA && b.value <= maxA ? null : b;
-//         case "<=": return b.value >= minA && b.value <= maxA ? { op: "<", value: minA, step: b.step } : b;
-//         case "<": return b.value > minA && b.value <= (maxA + b.step) ? { op: "<", value: minA, step: b.step } : b;
-//         case ">=": return b.value >= minA && b.value <= maxA ? { op: ">=", value: maxA + 1, step: b.step } : b;
-//         case ">": return b.value >= (minA - 1) && b.value < maxA ? { op: ">", value: maxA, step: b.step } : b;
-
-//         case "in":
-//         case "common":
-//             let copy = new Set(b.values as Set<any>);
-//             (b.values as Set<any>).forEach(v => (v >= minA && v <= maxA) && copy.delete(v));
-
-//             if (copy.size == 0) return null;
-
-//             return { op: b.op, values: copy };
-
-//         case "from-to":
-//             let [minB, maxB] = b.range;
-//             let minInside = minB <= maxA && minB >= minA;
-//             let maxInside = maxB <= maxA && maxB >= minA;
-
-//             if (minInside && maxInside) {
-//                 return null;
-//             } else if (minInside) {
-//                 return { op: "from-to", range: [minB + (maxA - minB), maxB], step: b.step };
-//             } else if (maxInside) {
-//                 return { op: "from-to", range: [minB, maxB - (maxB - minA)], step: b.step };
-//             } else {
-//                 return b;
-//             }
-
-//         default: return b;
-//     }
-// });
 
 /**
  * Describes some criteria entities processed by a query should have.
@@ -174,6 +174,10 @@ export class Filter {
                 throw new Error(`trying to reduce criteria of incompatible types: ${a.type} and ${b.type}`);
             }
 
+            if (!reducers.has(a.op)) {
+                throw unexpectedOp(a);
+            }
+
             let criterion = reducers.get(a.op).get(b.type)(a, b);
 
             if (criterion != null) {
@@ -183,85 +187,6 @@ export class Filter {
 
                 reduced = [k, criterion];
             }
-
-            // if (criterion != null) {
-            //     reduced[k] = criterion;
-            // }
-
-            // switch (a.op) {
-            //     case "<":
-            //         switch (b.op) {
-            //             case "<": if (a.value >= b.value) break;
-            //             case "<=": if (a.value > b.value) break;
-            //             default: reduced[k] = b;
-            //         }
-            //         break;
-
-            //     case "<=":
-            //         switch (b.op) {
-            //             case "<": if (a.value >= b.value) break;
-            //             case "<=": if (a.value >= b.value) break;
-            //             default: reduced[k] = b;
-            //         }
-            //         break;
-
-            //     case ">":
-            //         switch (b.op) {
-            //             case ">": if (a.value <= b.value) break;
-            //             case ">=": if (a.value < b.value) break;
-            //             default: reduced[k] = b;
-            //         }
-            //         break;
-
-            //     case ">=":
-            //         switch (b.op) {
-            //             case ">": if (a.value <= b.value) break;
-            //             case "<=": if (a.value <= b.value) break;
-            //             default: reduced[k] = b;
-            //         }
-            //         break;
-
-            //     case "in":
-            //     case "common":
-            //         switch (b.op) {
-            //             case "==":
-            //                 // todo: 'as any' is a bit dirty, but right now i see no other way
-            //                 // other than type checking for number/string beforehand
-            //                 if ((a.values as Set<any>).has(b.value)) break;
-            //                 reduced[k] = b;
-            //                 break;
-
-            //             case "in":
-            //             case "common":
-            //                 let copy = new Set(b.values as Set<any>);
-            //                 (a.values as Set<any>).forEach(v => copy.delete(v));
-
-            //                 if (copy.size == 0) {
-            //                     break;
-            //                 } else {
-            //                     reduced[k] = { op: b.op, values: copy };
-            //                 }
-            //                 break;
-
-            //             default:
-            //                 reduced[k] = b;
-            //         }
-            //         break;
-
-            //     case "==":
-            //     case "from-to":
-            //         let result = lookup.get(a.op)(a, b);
-
-            //         if (result == null) {
-            //             break;
-            //         }
-
-            //         reduced[k] = result;
-            //         break;
-
-            //     default:
-            //         reduced[k] = b;
-            // }
         }
 
         if (reduced == null) return null;
@@ -340,7 +265,7 @@ export module Filter {
             case "boolean": return { op: "!=", type: "bool", value: value as boolean };
             case "number": return { op: "!=", type: "number", value: value as number };
             case "string": return { op: "!=", type: "string", value: value as string };
-            case "object": if (value instanceof Date) { return { op: "!=", type: "date", value: value } };
+            case "object": if (value instanceof Date) { return { op: "!=", type: "date", value: value }; };
             default: throw unexpectedValueType(value);
         }
     }
