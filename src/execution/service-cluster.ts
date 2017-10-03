@@ -1,7 +1,7 @@
 import * as _ from "lodash";
 import { ArrayLike, StringIndexable } from "../util";
 import { getEntityMetadata, AnyEntityType, EntityType, IEntity, Children, Navigation } from "../metadata";
-import { Path, Query, Expansion, Saveable, Saveables, Indexes } from "../elements";
+import { Path, Query, Expansion, Saveable, Saveables, ByIndexes } from "../elements";
 import { QueryCache, Workspace } from "../caching";
 import { Service } from "./service";
 import { EntityMapper } from "../mapping";
@@ -56,11 +56,11 @@ export class ServiceCluster {
         }), asMap);
     }
 
-    loadByIndexes<T>(type: EntityType<T>, indexes: Indexes, expand?: string | ArrayLike<Expansion>): Promise<T[]>;
-    loadByIndexes<T, K>(type: EntityType<T>, indexes: Indexes, expand: string | ArrayLike<Expansion>, asMap: true): Promise<Map<K, T>>;
+    loadByIndexes<T>(type: EntityType<T>, criteria: ByIndexes.Criteria, expand?: string | ArrayLike<Expansion>): Promise<T[]>;
+    loadByIndexes<T, K>(type: EntityType<T>, criteria: ByIndexes.Criteria, expand: string | ArrayLike<Expansion>, asMap: true): Promise<Map<K, T>>;
     loadByIndexes<T, K>(...args: any[]): Promise<T[] | Map<K, T>> {
         let type = args[0] as EntityType<T>;
-        let indexes = args[1] as Indexes;
+        let indexes = args[1] as ByIndexes.Criteria;
         let expand = (args[2] || []) as string | ArrayLike<Expansion>;
         let asMap: true = args[3] != null ? true : null;
 

@@ -2,7 +2,7 @@ import { ArrayLike, ToStringable } from "../util";
 import { getEntityMetadata, EntityType, IEntity } from "../metadata";
 import { Expansion } from "./expansion";
 import { Extraction } from "./extraction";
-import { Identity, All, ByIds, ByIndexes, Indexes } from "./identity";
+import { Identity, All, ByIds, ByIndexes } from "./identity";
 import { Filter } from "./filter";
 
 /**
@@ -213,7 +213,7 @@ export class Query<T extends IEntity> {
 
     static ByIndexes<T>(args: {
         entity: EntityType<T>;
-        indexes: Indexes;
+        indexes: ByIndexes.Criteria;
         expand?: string | ArrayLike<Expansion>;
         filter?: Filter.Criteria;
     }): Query<T> {

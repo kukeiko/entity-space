@@ -21,7 +21,7 @@ export class Workspace {
 
         switch (query.identity.type) {
             case "ids": cached = cache.byKeysAsArray(query.identity.ids); break;
-            case "indexes": cached = cache.byIndexesAsArray(query.identity.indexes); break;
+            case "indexes": cached = cache.byIndexesAsArray(query.identity.criteria); break;
             case "all": cached = cache.allAsArray(); break;
         }
 

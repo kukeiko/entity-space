@@ -1,13 +1,30 @@
 import * as _ from "lodash";
 import { ArrayLike, ToStringable } from "../util";
 
+/**
+ * An Identity points to a specific set of entities.
+ */
 export type Identity = All | ByIds | ByIndexes;
-export type Identities = Identity["type"];
-export type Indexes = { [key: string]: ToStringable };
 
+/**
+ * All the types of identities.
+ */
+export type Identities = Identity["type"];
+
+/**
+ * Common code of identities.
+ */
 export abstract class IdentityBase {
     abstract type: any;
+
+    /**
+     * How likely it is to reduce another identity (lower is better).
+     */
     abstract priority: any;
+
+    /**
+     * Reduce another identity, trying to make its resulting set smaller.
+     */
     abstract reduce(other: Identity): Identity;
 
     private readonly _toString: string;
@@ -16,14 +33,23 @@ export abstract class IdentityBase {
         this._toString = toString;
     }
 
+    /**
+     * If this identity points to a bigger or equal set of entities.
+     */
     isSupersetOf(other: Identity): boolean {
         return this.reduce(other) == null;
     }
 
+    /**
+     * If this identity points to a lesser or equal set of entities.
+     */
     isSubsetOf(other: Identity): boolean {
         return other.isSupersetOf(this);
     }
 
+    /**
+     * If this identity points to the same set of entities.
+     */
     equals(other: Identity): boolean {
         return this._toString == other.toString();
     }
@@ -33,24 +59,32 @@ export abstract class IdentityBase {
     }
 }
 
+/**
+ * Points to all entities.
+ */
 export class All extends IdentityBase {
     readonly type = "all";
+
+    /** @inheritdoc */
     readonly priority = 0;
 
     constructor() {
         super("all");
     }
 
-    /**
-     * Returns null if it completely consumes the other (is a superset).
-     */
+    /** @inheritdoc */
     reduce(other: Identity): Identity | null {
         return null;
     }
 }
 
+/**
+ * Points a set of entities referenced by their primary keys.
+ */
 export class ByIds extends IdentityBase {
     readonly type = "ids";
+
+    /** @inheritdoc */
     readonly priority = 1;
     readonly ids: ReadonlyArray<ToStringable>;
 
@@ -66,6 +100,7 @@ export class ByIds extends IdentityBase {
         Object.freeze(this);
     }
 
+    /** @inheritdoc */
     reduce(other: Identity): Identity | null {
         switch (other.type) {
             case "ids":
@@ -80,29 +115,38 @@ export class ByIds extends IdentityBase {
     }
 }
 
+/**
+ * Points to a set of entities referenced by indexed properties.
+ */
 export class ByIndexes extends IdentityBase {
     readonly type = "indexes";
+
+    /** @inheritdoc */
     readonly priority = 2;
-    readonly indexes: Readonly<Indexes>;
-    readonly isEmpty: boolean = false;
 
-    constructor(indexes: Indexes) {
+    /**
+     * Specific values indexed properties of entities must have.
+     */
+    readonly criteria: Readonly<ByIndexes.Criteria>;
+
+    constructor(criteria: ByIndexes.Criteria) {
         // todo: escape colons & commas in indexes
-        super(Object.keys(indexes).sort().map(k => `${k}:${indexes[k].toString()}`).join(","));
+        super(Object.keys(criteria).sort().map(k => `${k}:${criteria[k].toString()}`).join(","));
 
-        if (Object.keys(indexes).length == 0) {
+        if (Object.keys(criteria).length == 0) {
             throw new Error(`can't create an [indexes] identity with empty index criteria`);
         }
 
-        this.indexes = Object.freeze({ ...indexes });
+        this.criteria = Object.freeze({ ...criteria });
         Object.freeze(this);
     }
 
+    /** @inheritdoc */
     reduce(other: Identity): Identity | null {
         switch (other.type) {
             case "indexes":
-                for (let key in other.indexes) {
-                    if (!(key in this.indexes) || this.indexes[key] != other.indexes[key]) {
+                for (let key in other.criteria) {
+                    if (!(key in this.criteria) || this.criteria[key] != other.criteria[key]) {
                         return other;
                     }
                 }
@@ -112,4 +156,11 @@ export class ByIndexes extends IdentityBase {
                 return other;
         }
     }
+}
+
+export module ByIndexes {
+    /**
+     * Specific values indexed properties of entities must have.
+     */
+    export type Criteria = { [key: string]: ToStringable };
 }

@@ -45,7 +45,7 @@ export class StaticDataService<K extends ToStringable, V extends IEntity> implem
 
             case "indexes":
                 {
-                    let indexes = q.identity.indexes;
+                    let indexes = q.identity.criteria;
                     let items: V[] = [];
 
                     this._items.forEach(item => {
