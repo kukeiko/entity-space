@@ -25,6 +25,51 @@ describe("filter", () => {
             expect(() => bool.reduce(number)).toThrow();
         });
 
+        it("should not reduce if one criteria is completely reduced, but another is not reduced at all", () => {
+            let a = new Filter({
+                id: { op: "==", type: "number", value: 1 },
+                rank: { op: "<", type: "number", value: 64, step: 1 }
+            });
+
+            let b = new Filter({
+                id: { op: "==", type: "number", value: 1 },
+                rank: { op: ">", type: "number", value: 64, step: 1 }
+            });
+
+            expect(a.reduce(b)).toBe(b);
+        });
+
+        it("should not reduce if both criteria were only partially reduced", () => {
+            let a = new Filter({
+                id: { op: "<", type: "number", value: 7, step: 1 },
+                rank: { op: "<", type: "number", value: 64, step: 1 }
+            });
+
+            let b = new Filter({
+                id: { op: "<", type: "number", value: 9, step: 1 },
+                rank: { op: ">", type: "number", value: 64, step: 1 }
+            });
+
+            expect(a.reduce(b)).toBe(b);
+        });
+
+        it("should not kill fully reduced criteria if other criteria were only partially reduced", () => {
+            let a = new Filter({
+                id: { op: "==", type: "number", value: 1 },
+                rank: { op: "<", type: "number", value: 64, step: 1 }
+            });
+
+            let b = new Filter({
+                id: { op: "==", type: "number", value: 1 },
+                rank: { op: "<", type: "number", value: 128, step: 1 }
+            });
+
+            expect(a.reduce(b)).toEqual(new Filter({
+                id: { op: "==", type: "number", value: 1 },
+                rank: { op: "from-to", type: "number", range: [64, 127], step: 1 }
+            }));
+        });
+
         describe("==", () => {
             describe("bool", () => {
                 it("== / !=", () => {
