@@ -79,7 +79,7 @@ export class All extends IdentityBase {
 }
 
 /**
- * Points a set of entities referenced by their primary keys.
+ * Points a set of entities specified by their primary keys.
  */
 export class ByIds extends IdentityBase {
     readonly type = "ids";
@@ -116,7 +116,7 @@ export class ByIds extends IdentityBase {
 }
 
 /**
- * Points to a set of entities referenced by indexed properties.
+ * Points to a set of entities specified by the values of indexed properties.
  */
 export class ByIndexes extends IdentityBase {
     readonly type = "indexes";
