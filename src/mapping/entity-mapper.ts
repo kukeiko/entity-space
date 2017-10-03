@@ -3,21 +3,36 @@ import { AnyType, StringIndexable } from "../util";
 import { AnyEntityMetadata, AnyEntityType, EntityType, IEntity, Primitive, Navigation } from "../metadata";
 import { MappingCompiler, CopyLocals } from "./mapping-compiler";
 
+
+type CopyEntityLocals = Map<AnyEntityType, CopyLocals>;
+
 // todo: refactor common bodies of copyPrimitives() & copySaveables()
 export class EntityMapper {
     private static _compiler = new MappingCompiler();
 
-    // todo: meh
-    private static _copyPrimitives_dtoToEntity = new Map<AnyEntityType, CopyLocals>();
-    private static _copyPrimitives_dtoToDto = new Map<AnyEntityType, CopyLocals>();
-    private static _copyPrimitives_entityToEntity = new Map<AnyEntityType, CopyLocals>();
-    private static _copyPrimitives_entityToDto = new Map<AnyEntityType, CopyLocals>();
+    // [fromDto => [toDto => [EntityType => CopyLocals]]]
+    private static _copyPrimitives = new Map([
+        [true, new Map([
+            [true, new Map<AnyEntityType, CopyLocals>()],
+            [false, new Map<AnyEntityType, CopyLocals>()]
+        ])],
+        [false, new Map([
+            [true, new Map<AnyEntityType, CopyLocals>()],
+            [false, new Map<AnyEntityType, CopyLocals>()]
+        ])],
+    ]);
 
-    // todo: meh
-    private static _copySaveables_dtoToEntity = new Map<AnyEntityType, CopyLocals>();
-    private static _copySaveables_dtoToDto = new Map<AnyEntityType, CopyLocals>();
-    private static _copySaveables_entityToEntity = new Map<AnyEntityType, CopyLocals>();
-    private static _copySaveables_entityToDto = new Map<AnyEntityType, CopyLocals>();
+    // [fromDto => [toDto => [EntityType => CopyLocals]]]
+    private static _copySaveables = new Map([
+        [true, new Map([
+            [true, new Map<AnyEntityType, CopyLocals>()],
+            [false, new Map<AnyEntityType, CopyLocals>()]
+        ])],
+        [false, new Map([
+            [true, new Map<AnyEntityType, CopyLocals>()],
+            [false, new Map<AnyEntityType, CopyLocals>()]
+        ])],
+    ]);
 
     static copyPrimitives(args: {
         from: StringIndexable[];
@@ -27,35 +42,27 @@ export class EntityMapper {
         metadata: AnyEntityMetadata;
         type?: AnyType;
     }): StringIndexable[] {
+        let fromDto = !!args.fromDto;
+        let toDto = !!args.toDto;
+
         let to = args.to;
         let entityType = args.metadata.entityType;
 
         if (!to) {
             let instantiatedType = args.type
                 ? args.type
-                : args.toDto ? Object : entityType;
+                : toDto ? Object : entityType;
 
             to = args.from.map(() => new instantiatedType());
         }
 
-        let map: Map<AnyEntityType, CopyLocals> = null;
-
-        if (args.fromDto && args.toDto) {
-            map = this._copyPrimitives_dtoToDto;
-        } else if (args.fromDto && !args.toDto) {
-            map = this._copyPrimitives_dtoToEntity;
-        } else if (!args.fromDto && args.toDto) {
-            map = this._copyPrimitives_entityToDto;
-        } else {
-            map = this._copyPrimitives_entityToEntity;
-        }
-
+        let map = this._copyPrimitives.get(fromDto).get(toDto);
         let fn = map.get(args.metadata.entityType);
 
         if (!fn) {
             fn = this._compiler.compileCopyLocals({
-                fromDto: args.fromDto,
-                toDto: args.toDto,
+                fromDto: fromDto,
+                toDto: toDto,
                 metadata: args.metadata,
                 predicate: p => !p.computed
             });
@@ -83,35 +90,26 @@ export class EntityMapper {
         metadata: AnyEntityMetadata;
         type?: AnyType;
     }): StringIndexable[] {
+        let fromDto = !!args.fromDto;
+        let toDto = !!args.toDto;
         let to = args.to;
         let entityType = args.metadata.entityType;
 
         if (!to) {
             let instantiatedType = args.type
                 ? args.type
-                : args.toDto ? Object : entityType;
+                : toDto ? Object : entityType;
 
             to = args.from.map(() => new instantiatedType());
         }
 
-        let map: Map<EntityType<any>, CopyLocals> = null;
-
-        if (args.fromDto && args.toDto) {
-            map = this._copySaveables_dtoToDto;
-        } else if (args.fromDto && !args.toDto) {
-            map = this._copySaveables_dtoToEntity;
-        } else if (!args.fromDto && args.toDto) {
-            map = this._copySaveables_entityToDto;
-        } else {
-            map = this._copySaveables_entityToEntity;
-        }
-
+        let map = this._copySaveables.get(fromDto).get(toDto);
         let fn = map.get(args.metadata.entityType);
 
         if (!fn) {
             fn = this._compiler.compileCopyLocals({
-                fromDto: args.fromDto,
-                toDto: args.toDto,
+                fromDto: fromDto,
+                toDto: toDto,
                 metadata: args.metadata,
                 predicate: p => p.saveable
             });
@@ -174,6 +172,8 @@ export class EntityMapper {
     }
 
     // todo: maybe Path could find a use as an argument?
+    // todo: why is ist just Primitive | Navigation, and not any property?
+    // todo: it flattens array properties
     static collect(items: ArrayLike<StringIndexable>, prop: Primitive | Navigation, isDto?: boolean): any[] {
         let collected: any[] = [];
         let name = prop.getName(isDto);
