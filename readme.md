@@ -22,7 +22,7 @@ ability to specify a query filter describing valid value ranges an entity should
 
 requires:
 - proper reduction (as far as it makes sense) of 2 filters
-- proper reudction of 2 queries with one or both of them having filters
+- proper reduction of 2 queries with one or both of them having filters
 - filtering arrays of entities
 
 
