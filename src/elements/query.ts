@@ -3,6 +3,7 @@ import { getEntityMetadata, EntityType, IEntity } from "../metadata";
 import { Expansion } from "./expansion";
 import { Extraction } from "./extraction";
 import { Identity, All, ByIds, ByIndexes, Indexes } from "./identity";
+import { Filter } from "./filter";
 
 /**
  * Describes which entities and expansions should be considered for an operation.
@@ -35,6 +36,8 @@ export class Query<T extends IEntity> {
      */
     readonly numExpansions: number;
 
+    readonly filter?: Filter;
+
     /**
      * Extending this class and trying to use it will lead to random exceptions.
      */
@@ -42,9 +45,11 @@ export class Query<T extends IEntity> {
         entityType: EntityType<T>;
         identity: Identity;
         expand?: string | ArrayLike<Expansion>;
+        filter?: Filter;
     }) {
         this.entityType = args.entityType;
         this.identity = args.identity;
+        this.filter = args.filter || null;
 
         let expansions = (typeof (args.expand) == "string"
             ? Expansion.parse(args.entityType, args.expand)
@@ -58,23 +63,70 @@ export class Query<T extends IEntity> {
     }
 
     reduce(other: Query<T>): Query<T> {
+        if (this.filter != null && other.filter == null) {
+            return other;
+        }
+
         let identity = this.identity.reduce(other.identity);
 
         if (identity == null) {
+            if (this.filter != null) {
+                let filter = this.filter.reduce(other.filter);
+                if (filter == other.filter) return other;
+
+                if (filter == null) {
+                    let expansions = Expansion.minus(other.expansions, this.expansions);
+                    if (expansions.length == 0) return null;
+
+                    return new Query({
+                        entityType: this.entityType,
+                        expand: expansions,
+                        identity: other.identity,
+                        filter: filter
+                    });
+                } else if (Expansion.isSuperset(this.expansions, other.expansions)) {
+                    return new Query({
+                        entityType: this.entityType,
+                        expand: other.expansions,
+                        identity: other.identity,
+                        filter: filter
+                    });
+                } else {
+                    return other;
+                }
+            }
+
             let expansions = Expansion.minus(other.expansions, this.expansions);
             if (expansions.length == 0) return null;
 
             return new Query({
                 entityType: this.entityType,
                 expand: expansions,
-                identity: other.identity
+                identity: other.identity,
+                filter: other.filter
             });
         } else {
+            if (this.filter != null) {
+                let filter = this.filter.reduce(other.filter);
+
+                if (filter == null && Expansion.isSuperset(this.expansions, other.expansions)) {
+                    return new Query({
+                        entityType: this.entityType,
+                        expand: other.expansions,
+                        identity: identity,
+                        filter: other.filter
+                    });
+                } else {
+                    return other;
+                }
+            }
+
             if (Expansion.isSuperset(this.expansions, other.expansions)) {
                 return new Query({
                     entityType: this.entityType,
                     expand: other.expansions,
-                    identity: identity
+                    identity: identity,
+                    filter: other.filter
                 });
             } else {
                 return other;
@@ -117,6 +169,7 @@ export class Query<T extends IEntity> {
         return [query, extractions];
     }
 
+    // todo: include filter string representation
     toString(): string {
         let val = `${getEntityMetadata(this.entityType).name}(${this.identity})`;
 
@@ -134,11 +187,13 @@ export class Query<T extends IEntity> {
     static All<T>(args: {
         entity: EntityType<T>;
         expand?: string | ArrayLike<Expansion>;
+        filter?: Filter.Criteria;
     }): Query<T> {
         return new Query({
             entityType: args.entity,
             expand: args.expand,
-            identity: new All()
+            identity: new All(),
+            filter: args.filter ? new Filter(args.filter) : null
         });
     }
 
@@ -146,11 +201,13 @@ export class Query<T extends IEntity> {
         entity: EntityType<T>;
         ids: ArrayLike<ToStringable>;
         expand?: string | ArrayLike<Expansion>;
+        filter?: Filter.Criteria;
     }): Query<T> {
         return new Query({
             entityType: args.entity,
             expand: args.expand,
-            identity: new ByIds(args.ids)
+            identity: new ByIds(args.ids),
+            filter: args.filter ? new Filter(args.filter) : null
         });
     }
 
@@ -158,11 +215,13 @@ export class Query<T extends IEntity> {
         entity: EntityType<T>;
         indexes: Indexes;
         expand?: string | ArrayLike<Expansion>;
+        filter?: Filter.Criteria;
     }): Query<T> {
         return new Query({
             entityType: args.entity,
             expand: args.expand,
-            identity: new ByIndexes(args.indexes)
+            identity: new ByIndexes(args.indexes),
+            filter: args.filter ? new Filter(args.filter) : null
         });
     }
 }

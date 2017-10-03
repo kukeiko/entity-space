@@ -1,5 +1,7 @@
-// let lookup = new Map<Filter.Operations, (a: Filter.Criterion, b: Filter.Criterion) => Filter.Criterion | null>();
-// let lookup = new Map<Filter.Operations, Map<Filter.Types, (a: Filter.Criterion, b: Filter.Criterion) => Filter.Criterion | null>>();
+// todo: before switching out all inline strings with constants,
+// check if it actually helps reduce the frequency / impact of GC calls
+// (and not just in chrome)
+const FROM_TO = "from-to";
 
 let unexpectedOp = (criterion: Filter.Criterion) =>
     new Error(`unexpected filter criteria op: ${criterion.op} (${JSON.stringify(criterion)})`);
@@ -12,6 +14,7 @@ type Reducer = (a: Filter.Criterion, b: Filter.Criterion) => Filter.Criterion | 
 type Reducers = Map<Filter.Types, Reducer>;
 
 let reducers = new Map<Filter.Operations, Reducers>([
+    // todo: other data types are missing
     ["==", new Map<Filter.Types, Reducer>([
         ["bool", (a: Filter.BooleanEqualityCriterion, b: Filter.BooleanEqualityCriterion): ReduceResult => {
             switch (b.op) {
@@ -58,10 +61,21 @@ let reducers = new Map<Filter.Operations, Reducers>([
                 default: throw unexpectedOp(b);
             }
         }]
+    ])],
+    ["<", new Map<Filter.Types, Reducer>([
+        ["number", (a: Filter.NumberPointCriterion, b: Filter.NumberCriterion): ReduceResult => {
+            switch (b.op) {
+                // todo: maybe makes sense to test that it may also produce "=="
+                case "<": return a.value >= b.value ? null
+                    : (b.value - b.step) == a.value
+                        ? { op: "==", type: "number", value: a.value, step: b.step }
+                        : { op: FROM_TO, type: "number", range: [a.value, b.value - b.step], step: b.step };
+                case "<=": return a.value > b.value ? null : b;
+                default: return b;
+            }
+        }]
     ])]
 ]);
-
-
 
 // lookup = new Map([
 //     ["==", new Map([
@@ -145,7 +159,7 @@ export class Filter {
      * Throws if the filters share a criteria where the value types are incompatible.
      */
     reduce(other: Filter): Filter | null {
-        let reduced: Filter.Criteria = {};
+        let reduced: [string, Filter.Criterion] = null;
 
         // todo: first check if this filter is a superset based on existing criteria
         // this way we might be able to not even start reducing single criteria
@@ -163,8 +177,16 @@ export class Filter {
             let criterion = reducers.get(a.op).get(b.type)(a, b);
 
             if (criterion != null) {
-                reduced[k] = criterion;
+                if (reduced != null || criterion == b) {
+                    return other;
+                }
+
+                reduced = [k, criterion];
             }
+
+            // if (criterion != null) {
+            //     reduced[k] = criterion;
+            // }
 
             // switch (a.op) {
             //     case "<":
@@ -242,17 +264,12 @@ export class Filter {
             // }
         }
 
-        if (Object.keys(reduced).length == 0) {
-            return null;
-        }
+        if (reduced == null) return null;
 
-        for (let k in other.criteria) {
-            if (reduced[k]) continue;
+        let newCriteria = Object.assign({}, other.criteria);
+        newCriteria[reduced[0]] = reduced[1];
 
-            reduced[k] = other.criteria[k];
-        }
-
-        return new Filter(reduced);
+        return new Filter(newCriteria);
     }
 
     // filter()

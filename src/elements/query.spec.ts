@@ -1,6 +1,6 @@
 import { Query } from "./query";
 import { Expansion } from "./expansion";
-import { getEntityMetadata } from "../../src/";
+import { getEntityMetadata, EntityClass, Property } from "../metadata";
 import { Artist, Album } from "../../test/facade";
 
 describe("query", () => {
@@ -285,5 +285,167 @@ describe("query", () => {
         });
 
         expect(q.numExpansions).toEqual(6);
+    });
+
+    describe("reduce()", () => {
+        @EntityClass() class Baz {
+            @Property.Id() id: number;
+        }
+
+        @EntityClass() class Bar {
+            @Property.Id() id: number;
+            @Property.Key() bazId: number;
+            @Property.Reference({ key: "bazId", other: () => Baz }) baz: Baz;
+        }
+
+        @EntityClass() class Foo {
+            @Property.Id() id: number;
+            @Property.Key() fooId: number;
+            @Property.Reference({ key: "fooId", other: () => Foo }) foo: Foo;
+            @Property.Key() barId: number;
+            @Property.Reference({ key: "barId", other: () => Bar }) bar: Bar;
+        }
+
+        it("should return null if reducing itself", () => {
+            let q = Query.All({
+                entity: Foo,
+                expand: "foo",
+                filter: { id: { op: "<", type: "number", value: 3, step: 1 } }
+            });
+
+            expect(q.reduce(q)).toBeNull();
+        });
+
+        it("should return null if reducing equivalent", () => {
+            let a = Query.All({
+                entity: Foo,
+                expand: "foo",
+                filter: { id: { op: "<", type: "number", value: 3, step: 1 } }
+            });
+
+            let b = Query.All({
+                entity: Foo,
+                expand: "foo",
+                filter: { id: { op: "<", type: "number", value: 3, step: 1 } }
+            });
+
+            expect(a.reduce(b)).toBeNull();
+        });
+
+        it("should return a query with a reduced expansion", () => {
+            let a = Query.All({
+                entity: Foo,
+                expand: "foo"
+            });
+
+            let b = Query.All({
+                entity: Foo,
+                expand: "bar,foo"
+            });
+
+            let reduced = a.reduce(b);
+
+            expect(reduced).not.toBeNull();
+            expect(reduced).toEqual(Query.All({
+                entity: Foo,
+                expand: "bar"
+            }));
+        });
+
+        it("should return a query with a reduced filter", () => {
+            let lessThan3 = Query.All({
+                entity: Foo,
+                filter: { id: { op: "<", type: "number", value: 3, step: 1 } }
+            });
+
+            let lessThan7 = Query.All({
+                entity: Foo,
+                filter: { id: { op: "<", type: "number", value: 7, step: 1 } }
+            });
+
+            let reduced = lessThan3.reduce(lessThan7);
+
+            expect(reduced).not.toBeNull();
+            expect(reduced.filter.criteria.id).toEqual({ op: "from-to", type: "number", range: [3, 6], step: 1 });
+        });
+
+        it("should not reduce the filter if the expansions are not a superset", () => {
+            {
+                let a = Query.All({
+                    entity: Foo,
+                    expand: "bar/baz",
+                    filter: { id: { op: "<", type: "number", value: 3, step: 1 } }
+                });
+
+                let b = Query.All({
+                    entity: Foo,
+                    expand: "bar",
+                    filter: { id: { op: "<", type: "number", value: 7, step: 1 } }
+                });
+
+                let reduced = a.reduce(b);
+
+                expect(reduced).toEqual(Query.All({
+                    entity: Foo,
+                    expand: "bar",
+                    filter: { id: { op: "from-to", type: "number", range: [3, 6], step: 1 } }
+                }));
+            }
+
+            {
+                let a = Query.All({
+                    entity: Foo,
+                    expand: "bar",
+                    filter: { id: { op: "<", type: "number", value: 3, step: 1 } }
+                });
+
+                let b = Query.All({
+                    entity: Foo,
+                    expand: "bar/baz",
+                    filter: { id: { op: "<", type: "number", value: 7, step: 1 } }
+                });
+
+                let reduced = a.reduce(b);
+
+                expect(reduced).toBe(b);
+            }
+        });
+
+        it("should only reduce identity if the filter is completely reduced", () => {
+            {
+                let a = Query.ByIds({
+                    entity: Foo,
+                    filter: { id: { op: "<", type: "number", value: 2, step: 1 } },
+                    ids: [1, 2]
+                });
+
+                let b = Query.ByIds({
+                    entity: Foo,
+                    filter: { id: { op: "<", type: "number", value: 3, step: 1 } },
+                    ids: [2, 3]
+                });
+
+                expect(a.reduce(b)).toBe(b);
+            }
+            {
+                let a = Query.ByIds({
+                    entity: Foo,
+                    filter: { id: { op: "<", type: "number", value: 4, step: 1 } },
+                    ids: [1, 2]
+                });
+
+                let b = Query.ByIds({
+                    entity: Foo,
+                    filter: { id: { op: "<", type: "number", value: 3, step: 1 } },
+                    ids: [2, 3]
+                });
+
+                expect(a.reduce(b)).toEqual(Query.ByIds({
+                    entity: Foo,
+                    filter: { id: { op: "<", type: "number", value: 3, step: 1 } },
+                    ids: [3]
+                }));
+            }
+        });
     });
 });
