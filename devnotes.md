@@ -1,29 +1,74 @@
-# feature roadmap / milestones:
-- 0.7.0 ???
-- 0.?.0 debug output interface, cache invalidation, contexts, validation, query statistics, indexedb support, abstract entities
+# goals for 0.6.0
+## filter criteria
+ability to specify a query filter describing valid value ranges an entity should have (root level only, not navigations).
 
-# todos
-## 0.6.0
-- remove concrete query implementations and implement identities
-    - same for query caches
-    - @ service: single method for loading
+requires:
+- proper reduction (as far as it makes sense) of 2 filters
+- proper reudction of 2 queries with one or both of them having filters
+- filtering arrays of entities
 
-## 0.7.0
-- entity base class
-    - static $ prop @ child class for useful stuff, like $.metadata
-    - child class instance must implement $ getter for general access
 
-## ???
+nice to have:
+- helper to format filter into valid OData format
+
+# 0.7.0+
+## result, payload
+intermediate object to improve loading/saving capabilities @ service-cluster.
+
+- helps dealing with partial success / errors
+- possibly a "live" result object that populates it with entities as they are loaded
+
+## OData utils
+required feature to make entity-space user-friendly.
+
+- generate entity classes from metadata
+    - ideally puts properties & decorators "in-place", so that users can keep their custom getters/setters etc.
+    - a small app would be fantastic, since there might be a ton of options
+- OData entity-service implementations
+    - should be rich in features but thin in abstraction, so users are not forced to write workarounds
+    - provides common loading/saving logic
+    - query/filter/expansion toString() implementations
+
+## debug utils
+give users a way to see what is happening during the execution of a query.
+
+## cache invalidation
+more granularity in removing entities from the cache (instead of just by entity class).
+
+## contexts
+contexts are attached to a query and represent a filter on the entities & navigations that
+can only be evaluated @ server.
+
+the use case this feature stems from is an entity (which has a child collection of its own type, i.e. a tree)
+that can be filtered by a boolan & date range value which we have no knowledge of or access to @ client.
+
+## entity validation
+would be nice to be able to validate an entity before trying to save it.
+
+## query statistics
+just because it would be interesting, but it also might help identify issues in the code.
+
+## indexedDB support
+wouldn't it be awesome to be able to replace the object-caches with an indexedDB?
+
+the way i see it it can be done already, without having to shove around existing code too much.
+
+## abstract entities
+ability to transform/map entities into an abstraction of them.
+
+## top & skip
+ability to do offset load results - was high priority, but not soo much anymore due to filter critera.
+
+## entity base class
+controversial, since it would require users to extend from it, but it would help a lot with fetching
+the metadata of an entity class.
+
+- static $ prop @ child class for useful stuff, like $.metadata
+- child class instance must implement $ getter for access via instance
+
+# todos / notes
 - consider using strict null checks flag @ tsc
 - remove inline property initializations if ctor initializes them safely
 - allow reference key convention => "template" => "templateId"
 - decorators should bleed through from super classes, allowing inheritance
 - support expansions @ workspace.remove()
-- possibly introduce expansion pool to reduce memory footprint
-- improve performance in various cache-checking places by using Expansion.equals()
-- reduce pending queries @ service-cluster: Foo(1), then Foo([1,2]) => should be reduced to Foo([2])
-
-# test-todos
-- write query-cache tests which state: "if isCached(q) returns true, reduce(q) must return null"
-- write expansion test thats states that if A and B are equal, A must be a superset/subset of B and vice verse
-- sourcemaps are broken due to coverage. right now its ok, since it actually helps (cause of the async generators and whatnot)
