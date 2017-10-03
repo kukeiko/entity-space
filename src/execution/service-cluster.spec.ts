@@ -215,7 +215,7 @@ describe("service-cluster", () => {
 
             try {
                 let map = await sc.executeQuery(Query.ByIndexes({
-                    indexes: { artistId: 77, name: "khaz" },
+                    criteria: { artistId: 77, name: "khaz" },
                     entity: Album
                 }));
 

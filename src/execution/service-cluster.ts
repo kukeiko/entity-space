@@ -65,7 +65,7 @@ export class ServiceCluster {
         let asMap: true = args[3] != null ? true : null;
 
         return this.executeQuery(Query.ByIndexes({
-            indexes: indexes,
+            criteria: indexes,
             entity: type,
             expand: expand
         }), asMap);
@@ -312,7 +312,7 @@ export class ServiceCluster {
                             let parentKey = item[pkName];
 
                             promises.push(this._loadIntoWorkspace(Query.ByIndexes({
-                                indexes: { [parentKeyName]: parentKey },
+                                criteria: { [parentKeyName]: parentKey },
                                 entity: nav.otherType,
                                 expand: v.extracted.expansions
                             })));

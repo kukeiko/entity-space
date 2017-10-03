@@ -194,7 +194,7 @@ describe("query", () => {
 
         it("byIndexes: Artist(khaz:64,mo:dan)/albums/{songs,tags}", () => {
             let q = Query.ByIndexes({
-                indexes: { khaz: 64, mo: "dan" },
+                criteria: { khaz: 64, mo: "dan" },
                 entity: Artist,
                 expand: Expansion.parse(Artist, "albums/{songs,tags}")
             });

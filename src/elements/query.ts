@@ -62,6 +62,23 @@ export class Query<T extends IEntity> {
         this.numExpansions = this.expansions.map(exp => exp.numExpansions).reduce((p, c) => p + c, 0) + this.expansions.length;
     }
 
+    /**
+     * If this query points to a bigger or equal set of entities.
+     */
+    isSupersetOf(other: Query<T>): boolean {
+        return this.reduce(other) == null;
+    }
+
+    /**
+     * If this query points to a lesser or equal set of entities.
+     */
+    isSubsetOf(other: Query<T>): boolean {
+        return other.isSupersetOf(this);
+    }
+
+    /**
+     * Reduce another query, trying to make its resulting set smaller.
+     */
     reduce(other: Query<T>): Query<T> {
         if (this.filter != null && other.filter == null) {
             return other;
@@ -134,14 +151,12 @@ export class Query<T extends IEntity> {
         }
     }
 
-    isSupersetOf(other: Query<T>): boolean {
-        return this.reduce(other) == null;
-    }
-
-    isSubsetOf(other: Query<T>): boolean {
-        return other.isSupersetOf(this);
-    }
-
+    /**
+     * Returns a query with all expansions matching the given predicate missing
+     * and the expansions extracted in the process.
+     *
+     * Extractions are not applied recursively on extraced expansions.
+     */
     extract(predicate: (p: Expansion) => boolean): [Query<T>, Extraction[]] {
         let extractions = new Array<Extraction>();
         let expansions = new Array<Expansion>();
@@ -184,6 +199,9 @@ export class Query<T extends IEntity> {
         return val;
     }
 
+    /**
+     * Create a query pointing to all entities, with an optional expansion & filter.
+     */
     static All<T>(args: {
         entity: EntityType<T>;
         expand?: string | ArrayLike<Expansion>;
@@ -197,6 +215,9 @@ export class Query<T extends IEntity> {
         });
     }
 
+    /**
+     * Create a query pointing to entities with matching primary keys, with an optional expansion & filter.
+     */
     static ByIds<T>(args: {
         entity: EntityType<T>;
         ids: ArrayLike<ToStringable>;
@@ -211,16 +232,19 @@ export class Query<T extends IEntity> {
         });
     }
 
+    /**
+     * Create a query pointing to entities with matching indexed values, with an optional expansion & filter.
+     */
     static ByIndexes<T>(args: {
         entity: EntityType<T>;
-        indexes: ByIndexes.Criteria;
+        criteria: ByIndexes.Criteria;
         expand?: string | ArrayLike<Expansion>;
         filter?: Filter.Criteria;
     }): Query<T> {
         return new Query({
             entityType: args.entity,
             expand: args.expand,
-            identity: new ByIndexes(args.indexes),
+            identity: new ByIndexes(args.criteria),
             filter: args.filter ? new Filter(args.filter) : null
         });
     }

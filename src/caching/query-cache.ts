@@ -126,7 +126,7 @@ export class QueryCache {
                             });
 
                             let byParentIdQuery = Query.ByIndexes({
-                                indexes: { [backRefKeyName]: children[0][backRefKeyName] },
+                                criteria: { [backRefKeyName]: children[0][backRefKeyName] },
                                 entity: nav.otherType,
                                 expand: exp.expansions
                             });
