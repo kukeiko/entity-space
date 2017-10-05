@@ -17,6 +17,19 @@ function expectCriteria(filter: Filter) {
 }
 
 describe("filter", () => {
+    it("length property should reflect number of criteria", () => {
+        let zero = new Filter({});
+
+        let three = new Filter({
+            foo: { op: "==", type: "number", value: 7 },
+            bar: { op: "==", type: "number", value: 64 },
+            baz: { op: "==", type: "number", value: 128 }
+        });
+
+        expect(zero.length).toBe(0);
+        expect(three.length).toBe(3);
+    });
+
     describe("reduce", () => {
         it("throws if types of criteria are incompatible", () => {
             let bool = filter(Filter.equals(true));

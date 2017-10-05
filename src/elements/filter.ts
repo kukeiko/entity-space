@@ -136,7 +136,6 @@ let reducers = new Map<Filter.Operations, Reducers>([
     ])]
 ]);
 
-
 /**
  * Describes some criteria entities processed by a query should have.
  *
@@ -144,29 +143,29 @@ let reducers = new Map<Filter.Operations, Reducers>([
  */
 export class Filter {
     readonly criteria: Filter.Criteria;
+    readonly length: number;
 
     constructor(criteria: Filter.Criteria) {
         this.criteria = Object.freeze(criteria);
+        this.length = Object.keys(criteria).length;
+
         Object.freeze(this);
     }
 
     /**
      * Reduces another filter by reducing common (i.e. pointing to the same property) criteria.
      *
-     * Returns null if the given filter is completely reduced, otherwise a new filter
-     * where criteria where either partially reduced or left alone.
+     * Returns null if the given filter is completely reduced, otherwise a new filter where one criteria has been partially reduced.
      *
-     * Throws if the filters share a criteria where the value types are incompatible.
+     * Throws if the filters have a common criteria with incompatible value types.
      */
     reduce(other: Filter): Filter | null {
+        if (this.length > other.length) return other;
+        for (let k in this.criteria) if (other.criteria[k] == null) return other;
+
         let reduced: [string, Filter.Criterion] = null;
 
-        // todo: first check if this filter is a superset based on existing criteria
-        // this way we might be able to not even start reducing single criteria
-
         for (let k in this.criteria) {
-            if (other.criteria[k] == null) return other;
-
             let a = this.criteria[k];
             let b = other.criteria[k];
 
