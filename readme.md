@@ -83,3 +83,7 @@ the metadata of an entity class.
 
 - static $ prop @ child class for useful stuff, like $.metadata
 - child class instance must implement $ getter for access via instance
+
+### query merging
+as of now, queries just reduce each other, but none are ever merged. would increase performance since
+less query reductions would be made (especially if filters are used in order to page results).

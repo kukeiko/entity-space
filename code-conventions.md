@@ -18,6 +18,8 @@ any of these may be used even if there are breaking changes (except maybe 'test'
 functionality is added
 ## **mod**
 functionality changes
+## **fix**
+existing functionality is fixed
 ## **test**
 tests were added, removed, changed, enabled/disabled
 ## **polish**
