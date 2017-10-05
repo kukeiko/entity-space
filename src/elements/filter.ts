@@ -1,3 +1,5 @@
+import { StringIndexable } from "../util";
+
 // todo: before switching out all inline strings with constants,
 // check if it actually helps reduce the frequency / impact of GC calls
 // (and not just in chrome)
@@ -196,7 +198,92 @@ export class Filter {
         return new Filter(newCriteria);
     }
 
-    // filter()
+    filter<T extends StringIndexable>(items: T[]): T[] {
+        let matches: T[] = [];
+        let length = items.length;
+
+        for (let i = 0; i < length; ++i) {
+            this._itemMatches(items[i]) && matches.push(items[i]);
+        }
+
+        return matches;
+    }
+
+    private _itemMatches(item: StringIndexable): boolean {
+        let c: Filter.Criterion;
+        let v: any;
+
+        for (let k in this.criteria) {
+            c = this.criteria[k];
+            v = item[k];
+
+            if (v == null) {
+                if (c.op == "==") {
+                    if (c.value != null) return false;
+                } else if (c.op == "!=") {
+                    if (c.value == null) return false;
+                } else {
+                    return false;
+                }
+            } else if (Filter.isRangeCriterion(c)) {
+                if (v < c.range[0] || v > c.range[1]) {
+                    return false;
+                }
+            } else if (Filter.isSetCriterion(c)) {
+                let set = c.values as Set<any>;
+
+                if (v instanceof Array) {
+                    if (c.op == "common") {
+                        let matched = false;
+
+                        for (let e = 0; e < v.length; ++e) {
+                            if (set.has(v[e])) {
+                                matched = true;
+                                break;
+                            }
+                        }
+
+                        if (!matched) return false;
+                    } else if (c.op == "in") {
+                        for (let e = 0; e < v.length; ++e) {
+                            if (!set.has(v[e])) return false;
+                        }
+                    }
+                } else if (!set.has(v)) {
+                    return false;
+                }
+            } else {
+                switch (c.op) {
+                    case "==":
+                        if (c.type == "date") {
+                            if ((v as Date).getTime() != c.value.getTime()) {
+                                return false;
+                            }
+                        } else if (v != c.value) {
+                            return false;
+                        }
+                        break;
+
+                    case "!=":
+                        if (c.type == "date") {
+                            if ((v as Date).getTime() == c.value.getTime()) {
+                                return false;
+                            }
+                        } else if (v == c.value) {
+                            return false;
+                        }
+                        break;
+
+                    case "<": if (v >= c.value) { return false; } break;
+                    case "<=": if (v > c.value) { return false; } break;
+                    case ">": if (v <= c.value) { return false; } break;
+                    case ">=": if (v < c.value) { return false; } break;
+                }
+            }
+        }
+
+        return true;
+    }
 }
 
 export module Filter {

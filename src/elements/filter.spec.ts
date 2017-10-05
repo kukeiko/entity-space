@@ -30,6 +30,32 @@ describe("filter", () => {
         expect(three.length).toBe(3);
     });
 
+    describe("filter", () => {
+        it("should filter an array of items", () => {
+            interface Item { id: number; flag: boolean; date: Date; }
+
+            let expected: Item[] = [
+                { id: 2, flag: true, date: new Date(2017, 4) },
+                { id: 4, flag: null, date: new Date(2017, 7) }
+            ];
+
+            let items: Item[] = [
+                { id: 1, flag: true, date: new Date(2017, 3) }, // date doesn't match
+                { id: 3, flag: false, date: new Date(2017, 7) }, // flag doesn't match
+                { id: 5, flag: false, date: new Date(2017, 8) }, // nothing matches
+                ...expected
+            ];
+
+            let filter = new Filter({
+                id: { op: "in", type: "number", values: new Set([1, 2, 3, 4]), },
+                flag: { op: "!=", type: "bool", value: false },
+                date: { op: "from-to", type: "date", range: [new Date(2017, 4), new Date(2017, 7)] }
+            });
+
+            expect(filter.filter(items)).toEqual(expected);
+        });
+    });
+
     describe("reduce", () => {
         it("throws if types of criteria are incompatible", () => {
             let bool = filter(Filter.equals(true));
@@ -243,7 +269,7 @@ describe("filter", () => {
                     expectCriteria(notTrue.reduce(notFalse)).toEqual({ op: "==", type: "bool", value: true });
 
                     let notNull = filter(Filter.notNull("bool"));
-                    expectCriteria(notTrue.reduce(notNull)).toEqual({ op: "==", type: "bool", value: true })
+                    expectCriteria(notTrue.reduce(notNull)).toEqual({ op: "==", type: "bool", value: true });
                 });
 
                 it("throws if criteria are incompatible", () => {
