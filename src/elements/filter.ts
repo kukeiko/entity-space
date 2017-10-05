@@ -203,8 +203,9 @@ export module Filter {
     export interface BooleanEqualityCriterion { op: "==" | "!="; type: "bool"; value: boolean | null; }
     export interface NumberEqualityCriterion { op: "==" | "!="; type: "number"; value: number | null; }
     export interface StringEqualityCriterion { op: "==" | "!="; type: "string"; value: string | null; }
+    export interface GuidEqualityCriterion { op: "==" | "!="; type: "guid"; value: string | null; }
     export interface DateEqualityCriterion { op: "==" | "!="; type: "date"; value: Date | null; }
-    export type EqualityCriterion = BooleanEqualityCriterion | NumberEqualityCriterion | StringEqualityCriterion | DateEqualityCriterion;
+    export type EqualityCriterion = BooleanEqualityCriterion | NumberEqualityCriterion | StringEqualityCriterion | GuidEqualityCriterion | DateEqualityCriterion;
 
     export interface NumberPointCriterion { op: "<" | "<=" | ">" | ">="; type: "number"; value: number; step: number; }
     export interface StringPointCriterion { op: "<" | "<=" | ">" | ">="; type: "string"; value: string; }
@@ -213,15 +214,19 @@ export module Filter {
 
     export interface NumberSetCriterion { op: "in" | "common"; type: "number"; values: Set<number>; }
     export interface StringSetCriterion { op: "in" | "common"; type: "string"; values: Set<string>; }
-    export type SetCriterion = NumberSetCriterion | StringSetCriterion;
+    export interface GuidSetCriterion { op: "in" | "common"; type: "guid"; values: Set<string>; }
+    export type SetCriterion = NumberSetCriterion | GuidSetCriterion | StringSetCriterion;
 
     export interface NumberRangeCriterion { op: "from-to"; type: "number"; range: [number, number]; step: number; }
     export interface StringRangeCriterion { op: "from-to"; type: "string"; range: [string, string]; }
     export interface DateRangeCriterion { op: "from-to"; type: "date"; range: [Date, Date]; }
     export type RangeCriterion = NumberRangeCriterion | StringRangeCriterion | DateRangeCriterion;
 
+    export type SingleValueCriterion = EqualityCriterion | PointCriterion;
+
     export type Criterion = EqualityCriterion | PointCriterion | SetCriterion | RangeCriterion;
     export type Operations = Criterion["op"];
+    export type SingleValueOperations = SingleValueCriterion["op"];
     export type Types = Criterion["type"];
 
     export type BooleanCriterion = BooleanEqualityCriterion; // for completeness' sake
@@ -231,6 +236,14 @@ export module Filter {
 
     export interface Criteria {
         [property: string]: Criterion;
+    }
+
+    export function isSetCriterion(criterion: Criterion): criterion is SetCriterion {
+        return criterion.op == "in" || criterion.op == "common";
+    }
+
+    export function isRangeCriterion(criterion: Criterion): criterion is RangeCriterion {
+        return criterion.op == "from-to";
     }
 
     export function isNull(type: Types): EqualityCriterion {
