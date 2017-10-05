@@ -7,3 +7,4 @@ export * from "./elements";
 export * from "./mapping";
 export * from "./caching";
 export * from "./execution";
+export * from "./integration";
