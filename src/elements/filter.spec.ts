@@ -30,7 +30,7 @@ describe("filter", () => {
         expect(three.length).toBe(3);
     });
 
-    describe("filter", () => {
+    describe("filter()", () => {
         it("should filter an array of items", () => {
             interface Item { id: number; flag: boolean; date: Date; }
 
@@ -56,58 +56,60 @@ describe("filter", () => {
         });
     });
 
-    describe("reduce", () => {
-        it("throws if types of criteria are incompatible", () => {
-            let bool = filter(Filter.equals(true));
-            let number = filter(Filter.equals(7));
+    describe("reduce()", () => {
+        {
+            it("throws if types of criteria are incompatible", () => {
+                let bool = filter(Filter.equals(true));
+                let number = filter(Filter.equals(7));
 
-            expect(() => bool.reduce(number)).toThrow();
-        });
-
-        it("should not reduce if one criteria is completely reduced, but another is not reduced at all", () => {
-            let a = new Filter({
-                id: { op: "==", type: "number", value: 1 },
-                rank: { op: "<", type: "number", value: 64, step: 1 }
+                expect(() => bool.reduce(number)).toThrow();
             });
 
-            let b = new Filter({
-                id: { op: "==", type: "number", value: 1 },
-                rank: { op: ">", type: "number", value: 64, step: 1 }
+            it("should not reduce if one criteria is completely reduced, but another is not reduced at all", () => {
+                let a = new Filter({
+                    id: { op: "==", type: "number", value: 1 },
+                    rank: { op: "<", type: "number", value: 64, step: 1 }
+                });
+
+                let b = new Filter({
+                    id: { op: "==", type: "number", value: 1 },
+                    rank: { op: ">", type: "number", value: 64, step: 1 }
+                });
+
+                expect(a.reduce(b)).toBe(b);
             });
 
-            expect(a.reduce(b)).toBe(b);
-        });
+            it("should not reduce if both criteria were only partially reduced", () => {
+                let a = new Filter({
+                    id: { op: "<", type: "number", value: 7, step: 1 },
+                    rank: { op: "<", type: "number", value: 64, step: 1 }
+                });
 
-        it("should not reduce if both criteria were only partially reduced", () => {
-            let a = new Filter({
-                id: { op: "<", type: "number", value: 7, step: 1 },
-                rank: { op: "<", type: "number", value: 64, step: 1 }
+                let b = new Filter({
+                    id: { op: "<", type: "number", value: 9, step: 1 },
+                    rank: { op: ">", type: "number", value: 64, step: 1 }
+                });
+
+                expect(a.reduce(b)).toBe(b);
             });
 
-            let b = new Filter({
-                id: { op: "<", type: "number", value: 9, step: 1 },
-                rank: { op: ">", type: "number", value: 64, step: 1 }
+            it("should not kill fully reduced criteria if other criteria were only partially reduced", () => {
+                let a = new Filter({
+                    id: { op: "==", type: "number", value: 1 },
+                    rank: { op: "<", type: "number", value: 64, step: 1 }
+                });
+
+                let b = new Filter({
+                    id: { op: "==", type: "number", value: 1 },
+                    rank: { op: "<", type: "number", value: 128, step: 1 }
+                });
+
+                expect(a.reduce(b)).toEqual(new Filter({
+                    id: { op: "==", type: "number", value: 1 },
+                    rank: { op: "from-to", type: "number", range: [64, 127], step: 1 }
+                }));
             });
-
-            expect(a.reduce(b)).toBe(b);
-        });
-
-        it("should not kill fully reduced criteria if other criteria were only partially reduced", () => {
-            let a = new Filter({
-                id: { op: "==", type: "number", value: 1 },
-                rank: { op: "<", type: "number", value: 64, step: 1 }
-            });
-
-            let b = new Filter({
-                id: { op: "==", type: "number", value: 1 },
-                rank: { op: "<", type: "number", value: 128, step: 1 }
-            });
-
-            expect(a.reduce(b)).toEqual(new Filter({
-                id: { op: "==", type: "number", value: 1 },
-                rank: { op: "from-to", type: "number", range: [64, 127], step: 1 }
-            }));
-        });
+        }
 
         describe("==", () => {
             describe("bool", () => {
@@ -161,20 +163,20 @@ describe("filter", () => {
 
                     // reduces
                     {
-                        let lessThan8 = filter({ op: "<", type: "number", value: 8, step: 1 });
-                        expectCriteria(is7.reduce(lessThan8)).toEqual({ op: "<", type: "number", value: 7, step: 1 });
+                        let lessThan8 = filter(Filter.lessThan(8, 1));
+                        expectCriteria(is7.reduce(lessThan8)).toEqual(Filter.lessThan(7, 1));
 
-                        let lessThanEquals7 = filter({ op: "<=", type: "number", value: 7, step: 1 });
-                        expectCriteria(is7.reduce(lessThanEquals7)).toEqual({ op: "<", type: "number", value: 7, step: 1 });
+                        let lessThanEquals7 = filter(Filter.lessThanEquals(7, 1));
+                        expectCriteria(is7.reduce(lessThanEquals7)).toEqual(Filter.lessThan(7, 1));
 
-                        let greaterThan6 = filter({ op: ">", type: "number", value: 6, step: 1 });
-                        expectCriteria(is7.reduce(greaterThan6)).toEqual({ op: ">", type: "number", value: 7, step: 1 });
+                        let greaterThan6 = filter(Filter.greaterThan(6, 1));
+                        expectCriteria(is7.reduce(greaterThan6)).toEqual(Filter.greaterThan(7, 1));
 
                         let greaterThanEquals7 = filter({ op: ">=", type: "number", value: 7, step: 1 });
-                        expectCriteria(is7.reduce(greaterThanEquals7)).toEqual({ op: ">", type: "number", value: 7, step: 1 });
+                        expectCriteria(is7.reduce(greaterThanEquals7)).toEqual(Filter.greaterThan(7, 1));
                     }
 
-                    // reduces: stepping
+                    // reduces: w/ step
                     {
                         let lessThan7p1 = filter({ op: "<", type: "number", value: 7.1, step: 0.1 });
                         expectCriteria(is7.reduce(lessThan7p1)).toEqual({ op: "<", type: "number", value: 7, step: 0.1 });

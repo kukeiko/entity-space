@@ -1,4 +1,5 @@
 import { StringIndexable } from "../util";
+import { AnyEntityMetadata } from "../metadata";
 
 // todo: before switching out all inline strings with constants,
 // check if it actually helps reduce the frequency / impact of GC calls
@@ -17,7 +18,6 @@ type Reducers = Map<Filter.Types, Reducer>;
 
 // todo: a lot of ops missing
 let reducers = new Map<Filter.Operations, Reducers>([
-    // todo: other data types are missing
     ["==", new Map<Filter.Types, Reducer>([
         ["bool", (a: Filter.BooleanEqualityCriterion, b: Filter.BooleanEqualityCriterion): ReduceResult => {
             switch (b.op) {
@@ -27,6 +27,8 @@ let reducers = new Map<Filter.Operations, Reducers>([
             }
         }],
         ["number", (a: Filter.NumberEqualityCriterion, b: Filter.NumberCriterion): ReduceResult => {
+            if (a.value == null && b.op != "==" && b.op != "!=" && b.op != "in" && b.op != "common") return b;
+
             switch (b.op) {
                 case "==": return a.value == b.value ? null : b;
                 case "!=": return b;
@@ -54,6 +56,58 @@ let reducers = new Map<Filter.Operations, Reducers>([
                     }
                 default: throw unexpectedOp(b);
             }
+        }],
+        // todo: needs testing
+        ["string", (a: Filter.StringEqualityCriterion, b: Filter.StringCriterion): ReduceResult => {
+            if (a.value == null && b.op != "==" && b.op != "!=" && b.op != "in" && b.op != "common") return b;
+
+            switch (b.op) {
+                case "==": return a.value == b.value ? null : b;
+                case "<=": return a.value == b.value ? { op: "<", type: "string", value: a.value } : b;
+                case ">=": return a.value == b.value ? { op: ">", type: "string", value: a.value } : b;
+                case "in": case "common":
+                    if (b.values.has(a.value)) {
+                        let copy = new Set(b.values);
+                        copy.delete(a.value);
+
+                        return { op: "in", type: "string", values: copy };
+                    } else {
+                        return b;
+                    }
+
+                case "!=": case "<": case ">": case "from-to": return b;
+                default: throw unexpectedOp(b);
+            }
+        }],
+        // todo: needs testing
+        ["guid", (a: Filter.StringEqualityCriterion, b: Filter.StringCriterion): ReduceResult => {
+            switch (b.op) {
+                case "==": return a.value == b.value ? null : b;
+                case "in": case "common":
+                    if (b.values.has(a.value)) {
+                        let copy = new Set(b.values);
+                        copy.delete(a.value);
+
+                        return { op: "in", type: "guid", values: copy };
+                    } else {
+                        return b;
+                    }
+
+                case "!=": case "<": case "<=": case ">": case ">=": case "from-to": return b;
+                default: throw unexpectedOp(b);
+            }
+        }],
+        // todo: needs testing
+        ["date", (a: Filter.DateEqualityCriterion, b: Filter.DateCriterion): ReduceResult => {
+            if (a.value == null && b.op != "==" && b.op != "!=") return b;
+
+            switch (b.op) {
+                case "==": return a.value.getTime() == b.value.getTime() ? null : b;
+                case "<=": return a.value.getTime() == b.value.getTime() ? { op: "<", type: "date", value: a.value } : b;
+                case ">=": return a.value.getTime() == b.value.getTime() ? { op: ">", type: "date", value: a.value } : b;
+                case "!=": case "<": case ">": case "from-to": return b;
+                default: throw unexpectedOp(b);
+            }
         }]
     ])],
     // todo: other data types are missing
@@ -62,6 +116,22 @@ let reducers = new Map<Filter.Operations, Reducers>([
             switch (b.op) {
                 case "==": return a.value == b.value ? b : null;
                 case "!=": return a.value == b.value ? null : { op: "==", type: "bool", value: a.value };
+                default: throw unexpectedOp(b);
+            }
+        }],
+        // todo: needs testing
+        ["number", (a: Filter.NumberEqualityCriterion, b: Filter.NumberCriterion): ReduceResult => {
+            if (a.value == null && b.op != "==" && b.op != "!=" && b.op != "in" && b.op != "common") return b;
+
+            switch (b.op) {
+                case "==": return a.value == b.value ? b : null;
+                case "!=": return a.value == b.value ? null : b;
+                case "<": return a.value >= b.value ? null : { op: "==", type: "number", value: a.value };
+                case "<=": return a.value > b.value ? null : { op: "==", type: "number", value: a.value };
+                case ">": return a.value <= b.value ? null : { op: "==", type: "number", value: a.value };
+                case ">=": return a.value < b.value ? null : { op: "==", type: "number", value: a.value };
+                case "in": case "common": return b.values.has(a.value) ? { op: "==", type: "number", value: a.value } : null;
+                case "from-to": return a.value < b.range[0] && a.value > b.range[1] ? null : b;
                 default: throw unexpectedOp(b);
             }
         }]
@@ -284,6 +354,26 @@ export class Filter {
 
         return true;
     }
+
+    toDtoFormat(metadata: AnyEntityMetadata): Filter {
+        let criteria: Filter.Criteria = {};
+
+        for (let k in this.criteria) {
+            criteria[metadata.getProperty(k).dtoName] = this.criteria[k];
+        }
+
+        return new Filter(criteria);
+    }
+
+    toEntityFormat(metadata: AnyEntityMetadata): Filter {
+        let criteria: Filter.Criteria = {};
+
+        for (let k in this.criteria) {
+            criteria[metadata.getProperty(k).name] = this.criteria[k];
+        }
+
+        return new Filter(criteria);
+    }
 }
 
 export module Filter {
@@ -365,6 +455,54 @@ export module Filter {
             case "number": return { op: "!=", type: "number", value: value as number };
             case "string": return { op: "!=", type: "string", value: value as string };
             case "object": if (value instanceof Date) { return { op: "!=", type: "date", value: value }; };
+            default: throw unexpectedValueType(value);
+        }
+    }
+
+    export function lessThan(value: number, step?: number): NumberPointCriterion;
+    export function lessThan(value: string): StringPointCriterion;
+    export function lessThan(value: Date): DatePointCriterion;
+    export function lessThan(value: number | string | Date, step?: number): PointCriterion {
+        switch (typeof (value)) {
+            case "number": return { op: "<", type: "number", value: value as number, step: step || 1 };
+            case "string": return { op: "<", type: "string", value: value as string };
+            case "object": if (value instanceof Date) return { op: "<", type: "date", value: value };
+            default: throw unexpectedValueType(value);
+        }
+    }
+
+    export function lessThanEquals(value: number, step?: number): NumberPointCriterion;
+    export function lessThanEquals(value: string): StringPointCriterion;
+    export function lessThanEquals(value: Date): DatePointCriterion;
+    export function lessThanEquals(value: number | string | Date, step?: number): PointCriterion {
+        switch (typeof (value)) {
+            case "number": return { op: "<=", type: "number", value: value as number, step: step || 1 };
+            case "string": return { op: "<=", type: "string", value: value as string };
+            case "object": if (value instanceof Date) return { op: "<=", type: "date", value: value };
+            default: throw unexpectedValueType(value);
+        }
+    }
+
+    export function greaterThan(value: number, step?: number): NumberPointCriterion;
+    export function greaterThan(value: string): StringPointCriterion;
+    export function greaterThan(value: Date): DatePointCriterion;
+    export function greaterThan(value: number | string | Date, step?: number): PointCriterion {
+        switch (typeof (value)) {
+            case "number": return { op: ">", type: "number", value: value as number, step: step || 1 };
+            case "string": return { op: ">", type: "string", value: value as string };
+            case "object": if (value instanceof Date) return { op: ">", type: "date", value: value };
+            default: throw unexpectedValueType(value);
+        }
+    }
+
+    export function greaterThanEquals(value: number, step?: number): NumberPointCriterion;
+    export function greaterThanEquals(value: string): StringPointCriterion;
+    export function greaterThanEquals(value: Date): DatePointCriterion;
+    export function greaterThanEquals(value: number | string | Date, step?: number): PointCriterion {
+        switch (typeof (value)) {
+            case "number": return { op: ">=", type: "number", value: value as number, step: step || 1 };
+            case "string": return { op: ">=", type: "string", value: value as string };
+            case "object": if (value instanceof Date) return { op: ">=", type: "date", value: value };
             default: throw unexpectedValueType(value);
         }
     }
