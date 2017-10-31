@@ -78,6 +78,8 @@ export class Query<T extends IEntity> {
 
     /**
      * Reduce another query, trying to make its resulting set smaller.
+     *
+     * Returns the reduced query, or null if it was completely reduced.
      */
     reduce(other: Query<T>): Query<T> {
         if (this.filter != null && other.filter == null) {
