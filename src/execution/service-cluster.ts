@@ -84,6 +84,7 @@ export class ServiceCluster {
 
         let type = entities[0].constructor as EntityType<T>;
         let metadata = getEntityMetadata(type);
+        let pkName = metadata.primaryKey.name;
         let service = await this._getService(type);
 
         let saveablesArgs = new Map<AnyEntityType, Saveable<any>[]>();
@@ -97,11 +98,11 @@ export class ServiceCluster {
         });
 
         // todo: maybe make configurable? commented out for now since it does more harm than good
-        // EntityMapper.updateReferenceKeys({
-        //     from: entities,
-        //     to: entityCopies,
-        //     metadata: metadata
-        // });
+        EntityMapper.updateReferenceKeys({
+            from: entities,
+            to: entityCopies,
+            metadata: metadata
+        });
 
         let dtoCopies = EntityMapper.copyPrimitives({
             from: entityCopies,
@@ -118,7 +119,7 @@ export class ServiceCluster {
         let entitiesPerKey = new Map<any, IEntity>();
 
         for (let i = 0; i < entities.length; ++i) {
-            let key = entities[i][metadata.primaryKey.name];
+            let key = entities[i][pkName];
             if (key == null) continue;
             entitiesPerKey.set(key, entities[i]);
         }
@@ -210,9 +211,9 @@ export class ServiceCluster {
         let saved = (await service.save(new Saveables(saveablesArgs))).get(type);
         this._workspace.add(saved, metadata, null, true);
 
-        let pkName = metadata.primaryKey.name;
         let pkDtoName = metadata.primaryKey.dtoName;
         let keys = new Set<any>();
+
         entities.forEach(e => e[pkName] && keys.add(e[pkName]));
         saved.forEach(s => keys.add(s[pkDtoName]));
 
