@@ -137,19 +137,19 @@ export class EntityMapper {
         let to = args.to || args.from;
 
         args.metadata.references.forEach(refProp => {
+            let refPkName = refProp.otherTypeMetadata.primaryKey.name;
+
             args.from.forEach((from, i) => {
-                let to_i = to[i];
-                let ref = from[refProp.name];
                 let refKeyProp = args.metadata.getPrimitive(refProp.keyName);
                 if (!refKeyProp.saveable) return;
 
-                if (ref == null) {
-                    to_i[refProp.keyName] = null;
-                } else {
-                    let refMetadata = refProp.otherTypeMetadata;
-                    let refKeyProp = args.metadata.getPrimitive(refProp.keyName);
+                let to_i = to[i];
+                let ref = from[refProp.name];
 
-                    to_i[refKeyProp.name] = ref[refMetadata.primaryKey.name];
+                if (ref == null) {
+                    to_i[refProp.keyName] = from[refKeyProp.name];
+                } else {
+                    to_i[refProp.keyName] = ref[refPkName];
                 }
             });
         });
@@ -162,7 +162,7 @@ export class EntityMapper {
                 if (!refKeysProp.saveable) return;
 
                 if (refs == null || refs.length == 0) {
-                    to_i[colProp.keysName] = [];
+                    to_i[colProp.keysName] = (from[colProp.keysName] as Array<any>).slice();
                 } else {
                     let refMetadata = colProp.otherTypeMetadata;
                     let refSelfKeyName = refMetadata.primaryKey.name;
