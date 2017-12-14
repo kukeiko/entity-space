@@ -9,19 +9,26 @@ export module OData {
 
             if (Filter.isRangeCriterion(c)) {
                 shards.push(`(${k} ge ${formatFilterValue(c.type, c.range[0])} and ${k} le ${formatFilterValue(c.type, c.range[1])})`)
-            } else if (Filter.isSetCriterion(c)) {
+            } else if (Filter.isMemberCriterion(c)) {
                 if (c.values.size == 0) continue;
 
+                let operator = c.op == "in" ? "eq" : "ne";
+                let logical = c.op == "in" ? "or" : "and";
+
                 if (c.values.size == 1) {
-                    shards.push(`${k} eq ${formatFilterValue(c.type, c.values.values().next().value)}`);
+                    shards.push(`${k} ${operator} ${formatFilterValue(c.type, c.values.values().next().value)}`);
                 } else {
-                    shards.push(`(${k} eq ` +
+                    // todo: cast is meh
+                    shards.push(`(${k} ${operator}` +
                         Array.from(c.values.values() as IterableIterator<any>)
                             .map(v => formatFilterValue(c.type, v))
-                            .join(` or ${k} eq `) + ")");
+                            .join(` ${logical} ${k} ${operator} `) + ")");
                 }
+            } else if (Filter.isSetCriterion(c)) {
+                // todo: implement via any/all (@ OData spec)
+                throw new Error(`OData.formatFilter() doesn't yet support set criteria`);
             } else {
-                shards.push(`${k} ${formatFilterOp(c.op)} ${formatFilterValue(c.type, c.value)}`)
+                shards.push(`${k} ${formatFilterOp(c.op)} ${formatFilterValue(c.type, c.value)}`);
             }
         }
 

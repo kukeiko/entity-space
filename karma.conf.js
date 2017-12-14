@@ -19,13 +19,13 @@ module.exports = function (config) {
                         test: /\.ts$/,
                         loader: "awesome-typescript-loader"
                     },
-                    // {
-                    //     enforce: "post",
-                    //     test: /\.ts$/,
-                    //     loader: "istanbul-instrumenter-loader",
-                    //     include: /src/,
-                    //     exclude: /\.spec\.ts$/
-                    // }
+                    {
+                        enforce: "post",
+                        test: /\.ts$/,
+                        loader: "istanbul-instrumenter-loader",
+                        include: /src/,
+                        exclude: /\.spec\.ts$/
+                    }
                 ]
             },
             plugins: [

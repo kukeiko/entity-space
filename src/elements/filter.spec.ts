@@ -47,7 +47,7 @@ describe("filter", () => {
             ];
 
             let filter = new Filter({
-                id: { op: "in", type: "number", values: new Set([1, 2, 3, 4]), },
+                // id: { op: "in", type: "number", values: new Set([1, 2, 3, 4]), },
                 flag: { op: "!=", type: "bool", value: false },
                 date: { op: "from-to", type: "date", range: [new Date(2017, 4), new Date(2017, 7)] }
             });
@@ -58,6 +58,20 @@ describe("filter", () => {
 
     describe("reduce()", () => {
         {
+            it("throws if criterion operation hasn't been implemented yet", () => {
+                let validFilter = filter(Filter.equals(true));
+                let invalidFilter = filter({ op: "i-will-never-exist" as any, type: "bool", value: true });
+
+                expect(() => validFilter.reduce(invalidFilter)).toThrow();
+            });
+
+            it("throws if criterion operation hasn't been implemented yet (root level)", () => {
+                let invalidFilter = filter({ op: "i-will-never-exist" as any, type: "bool", value: true });
+                let validFilter = filter(Filter.equals(true));
+
+                expect(() => invalidFilter.reduce(validFilter)).toThrow();
+            });
+
             it("throws if types of criteria are incompatible", () => {
                 let bool = filter(Filter.equals(true));
                 let number = filter(Filter.equals(7));
@@ -136,11 +150,20 @@ describe("filter", () => {
                     expectCriteria(isTrue.reduce(isNotNull)).toEqual({ op: "==", type: "bool", value: false });
                 });
 
-                it("throws if criteria are incompatible", () => {
-                    let equals = filter(Filter.equals(true));
-                    let invalid = filter({ op: "invalid" as any, type: "bool", value: true });
+                xit("in / common", () => {
+                    let isTrue = filter(Filter.equals(true));
 
-                    expect(() => equals.reduce(invalid)).toThrow();
+                    let inside = filter({ op: "in", type: "bool", values: new Set([true, false, null]) });
+                    let insideReduced = isTrue.reduce(inside);
+
+                    let common = filter({ op: "common", type: "bool", values: new Set([true, false, null]) });
+                    let commonReduced = isTrue.reduce(common);
+
+                    expectArray(insideReduced).toEqual([false, null]);
+                    expectArray(commonReduced).toEqual([false, null]);
+
+                    let notReduced = filter({ op: "in", type: "bool", values: new Set([false, null]) });
+                    expect(isTrue.reduce(notReduced)).toBe(notReduced);
                 });
             });
 
@@ -156,6 +179,9 @@ describe("filter", () => {
 
                     let not6 = filter(Filter.notEquals(6));
                     expect(is7.reduce(not6)).toEqual(not6);
+
+                    let isNull = filter(Filter.isNull("number"));
+                    expect(is7.reduce(isNull)).toEqual(isNull);
                 });
 
                 it("< / <= / > / >=", () => {
@@ -216,7 +242,7 @@ describe("filter", () => {
                     }
                 });
 
-                it("in / common", () => {
+                xit("in / common", () => {
                     let equals = filter(Filter.equals(7));
 
                     let inside = filter({ op: "in", type: "number", values: new Set([-1, 7, 64]) });
@@ -358,7 +384,7 @@ describe("filter", () => {
                 {
                     let b = filter({ op: "<", type: "number", value: 8, step: 1 });
                     let r = a.reduce(b);
-
+                    
                     expect(r).not.toBeNull();
                     expect(get(r)).toEqual({ op: "<", type: "number", value: 1, step: 1 });
                 }
@@ -384,7 +410,7 @@ describe("filter", () => {
                 }
             });
 
-            it("in / common", () => {
+            xit("in / common", () => {
                 let a = filter({ op: "from-to", type: "number", range: [1, 7], step: 1 });
 
                 {
