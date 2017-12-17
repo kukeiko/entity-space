@@ -9,7 +9,7 @@ function get(filter: Filter): Filter.Criterion {
 }
 
 function expectArray(filter: Filter) {
-    return expect(Array.from((get(filter) as Filter.NumberSetCriterion).values as Set<any>));
+    return expect(Array.from((get(filter) as Filter.SetCriterion).values as Set<any>));
 }
 
 function expectCriteria(filter: Filter) {
@@ -59,14 +59,7 @@ describe("filter", () => {
     describe("reduce()", () => {
         {
             it("throws if criterion operation hasn't been implemented yet", () => {
-                let validFilter = filter(Filter.equals(true));
-                let invalidFilter = filter({ op: "i-will-never-exist" as any, type: "bool", value: true });
-
-                expect(() => validFilter.reduce(invalidFilter)).toThrow();
-            });
-
-            it("throws if criterion operation hasn't been implemented yet (root level)", () => {
-                let invalidFilter = filter({ op: "i-will-never-exist" as any, type: "bool", value: true });
+                let invalidFilter = filter({ op: "i-will-never-exist-in-the-future" as any, type: "bool", value: true });
                 let validFilter = filter(Filter.equals(true));
 
                 expect(() => invalidFilter.reduce(validFilter)).toThrow();
@@ -127,9 +120,9 @@ describe("filter", () => {
 
         describe("==", () => {
             describe("bool", () => {
-                it("== / !=", () => {
-                    let isTrue = filter(Filter.equals(true));
+                let isTrue = filter(Filter.equals(true));
 
+                it("== / !=", () => {
                     // the only case it'll reduce
                     let isAlsoTrue = filter(Filter.equals(true));
                     expect(isTrue.reduce(isAlsoTrue)).toBeNull();
@@ -150,56 +143,63 @@ describe("filter", () => {
                     expectCriteria(isTrue.reduce(isNotNull)).toEqual({ op: "==", type: "bool", value: false });
                 });
 
-                xit("in / common", () => {
-                    let isTrue = filter(Filter.equals(true));
+                it("in / not-in", () => {
+                    {
+                        // in
+                        let completely = filter(Filter.memberOf([true]));
+                        let transformed = filter(Filter.memberOf([true, false]));
+                        let partially = filter(Filter.memberOf([true, false, null]));
+                        let untouched = filter(Filter.memberOf([false, null]));
 
-                    let inside = filter({ op: "in", type: "bool", values: new Set([true, false, null]) });
-                    let insideReduced = isTrue.reduce(inside);
+                        expect(isTrue.reduce(completely)).toBeNull();
+                        expectCriteria(isTrue.reduce(transformed)).toEqual(Filter.equals(false));
+                        expectCriteria(isTrue.reduce(partially)).toEqual(Filter.memberOf([false, null]));
+                        expect(isTrue.reduce(untouched)).toBe(untouched);
+                    }
 
-                    let common = filter({ op: "common", type: "bool", values: new Set([true, false, null]) });
-                    let commonReduced = isTrue.reduce(common);
+                    {
+                        // not-in
+                        let completely = filter(Filter.notMemberOf([false, null]));
+                        let transformed = filter(Filter.notMemberOf([false]));
+                        let untouched = filter(Filter.notMemberOf([true, null]));
 
-                    expectArray(insideReduced).toEqual([false, null]);
-                    expectArray(commonReduced).toEqual([false, null]);
-
-                    let notReduced = filter({ op: "in", type: "bool", values: new Set([false, null]) });
-                    expect(isTrue.reduce(notReduced)).toBe(notReduced);
+                        expect(isTrue.reduce(completely)).toBeNull();
+                        expectCriteria(isTrue.reduce(transformed)).toEqual(Filter.isNull("bool"));
+                        // note: not transforming to "equals false" is on purpose
+                        expect(isTrue.reduce(untouched)).toBe(untouched);
+                    }
                 });
             });
 
             describe("number", () => {
-                it("== / !=", () => {
-                    let is7 = filter(Filter.equals(7));
+                let is7 = filter(Filter.equals(7));
 
+                it("== / !=", () => {
                     let alsoIs7 = filter(Filter.equals(7));
                     expect(is7.reduce(alsoIs7)).toBeNull();
 
                     let is8 = filter(Filter.equals(8));
-                    expect(is7.reduce(is8)).toEqual(is8);
+                    expect(is7.reduce(is8)).toBe(is8);
 
                     let not6 = filter(Filter.notEquals(6));
-                    expect(is7.reduce(not6)).toEqual(not6);
+                    expect(is7.reduce(not6)).toBe(not6);
 
                     let isNull = filter(Filter.isNull("number"));
-                    expect(is7.reduce(isNull)).toEqual(isNull);
+                    expect(is7.reduce(isNull)).toBe(isNull);
                 });
 
                 it("< / <= / > / >=", () => {
-                    let is7 = filter({ op: "==", type: "number", value: 7, step: 1 });
-
                     // reduces
                     {
                         let lessThan8 = filter(Filter.lessThan(8, 1));
-                        expectCriteria(is7.reduce(lessThan8)).toEqual(Filter.lessThan(7, 1));
-
                         let lessThanEquals7 = filter(Filter.lessThanEquals(7, 1));
-                        expectCriteria(is7.reduce(lessThanEquals7)).toEqual(Filter.lessThan(7, 1));
-
                         let greaterThan6 = filter(Filter.greaterThan(6, 1));
-                        expectCriteria(is7.reduce(greaterThan6)).toEqual(Filter.greaterThan(7, 1));
+                        let greaterThanEquals7 = filter(Filter.greaterThanEquals(7));
 
-                        let greaterThanEquals7 = filter({ op: ">=", type: "number", value: 7, step: 1 });
-                        expectCriteria(is7.reduce(greaterThanEquals7)).toEqual(Filter.greaterThan(7, 1));
+                        expectCriteria(is7.reduce(lessThan8)).toEqual(Filter.lessThan(7));
+                        expectCriteria(is7.reduce(lessThanEquals7)).toEqual(Filter.lessThan(7));
+                        expectCriteria(is7.reduce(greaterThan6)).toEqual(Filter.greaterThan(7));
+                        expectCriteria(is7.reduce(greaterThanEquals7)).toEqual(Filter.greaterThan(7));
                     }
 
                     // reduces: w/ step
@@ -242,36 +242,132 @@ describe("filter", () => {
                     }
                 });
 
-                xit("in / common", () => {
-                    let equals = filter(Filter.equals(7));
+                it("in / not-in", () => {
+                    {
+                        // in
+                        let completely = filter(Filter.memberOf([7]));
+                        let transformed = filter(Filter.memberOf([7, 64]));
+                        let partially = filter(Filter.memberOf([-3, 7, 64]));
+                        let untouched = filter(Filter.memberOf([-3, 64]));
 
-                    let inside = filter({ op: "in", type: "number", values: new Set([-1, 7, 64]) });
-                    let insideReduced = equals.reduce(inside);
+                        expect(is7.reduce(completely)).toBeNull();
+                        expectCriteria(is7.reduce(transformed)).toEqual(Filter.equals(64));
+                        expectCriteria(is7.reduce(partially)).toEqual(Filter.memberOf([-3, 64]));
+                        expect(is7.reduce(untouched)).toBe(untouched);
+                    }
 
-                    let common = filter({ op: "common", type: "number", values: new Set([-1, 7, 64]) });
-                    let commonReduced = equals.reduce(common);
+                    {
+                        // not-in
+                        let transformed = filter(Filter.notMemberOf([8]));
+                        let untouched = filter(Filter.notMemberOf([7, 64]));
 
-                    expectArray(insideReduced).toEqual([-1, 64]);
-                    expectArray(commonReduced).toEqual([-1, 64]);
+                        expectCriteria(is7.reduce(transformed)).toEqual(Filter.notMemberOf([8, 7]));
+                        expect(is7.reduce(untouched)).toBe(untouched);
+                    }
                 });
 
                 it("from-to", () => {
-                    let equals = filter(Filter.equals(7));
+                    let lowerBound = filter(Filter.inRange(7, 64));
+                    let higherBound = filter(Filter.inRange(-13, 7));
+                    let untouched = filter(Filter.inRange(8, 64));
 
-                    let lowerBound = filter({ op: "from-to", type: "number", range: [7, 64], step: 1 });
-                    expectCriteria(equals.reduce(lowerBound)).toEqual({ op: "from-to", type: "number", range: [8, 64], step: 1 });
-
-                    let higherBound = filter({ op: "from-to", type: "number", range: [-13, 7], step: 1 });
-                    expectCriteria(equals.reduce(higherBound)).toEqual({ op: "from-to", type: "number", range: [-13, 6], step: 1 });
+                    expectCriteria(is7.reduce(lowerBound)).toEqual(Filter.inRange(8, 64));
+                    expectCriteria(is7.reduce(higherBound)).toEqual(Filter.inRange(-13, 6));
+                    expect(is7.reduce(untouched)).toBe(untouched);
                 });
 
-                it("throws if criteria are incompatible", () => {
-                    let equals = filter(Filter.equals(7));
+                it("untouched due to null w/ point criterion", () => {
+                    let isNull = filter(Filter.isNull("number"));
 
-                    // had to use "invalid" since it covers all ops
-                    let invalid = filter({ op: "invalid" as any, type: "number", value: 7 });
+                    let lessThan3 = filter(Filter.lessThan(3));
+                    expect(isNull.reduce(lessThan3)).toBe(lessThan3);
+                });
+            });
 
-                    expect(() => equals.reduce(invalid)).toThrow();
+            describe("string", () => {
+                let isFoo = filter(Filter.equals("foo"));
+
+                it("== / !=", () => {
+                    {
+                        // ==
+                        let completely = filter(Filter.equals("foo"));
+                        let untouched = filter(Filter.equals("bar"));
+                        let isNull = filter(Filter.isNull("string"));
+
+                        expect(isFoo.reduce(completely)).toBeNull();
+                        expect(isFoo.reduce(untouched)).toBe(untouched);
+                        expect(isFoo.reduce(isNull)).toBe(isNull);
+                    }
+
+                    {
+                        // !=
+                        let notBar = filter(Filter.notEquals("bar"));
+                        expect(isFoo.reduce(notBar)).toBe(notBar);
+                    }
+                });
+
+                it("< / <= / > / >=", () => {
+                    {
+                        // <
+                        let untouched = filter(Filter.lessThan("bar"));
+                        expect(isFoo.reduce(untouched)).toBe(untouched);
+                    }
+
+                    {
+                        // <= 
+                        let partially = filter(Filter.lessThanEquals("foo"));
+                        let untouched = filter(Filter.lessThanEquals("bar"));
+
+                        expectCriteria(isFoo.reduce(partially)).toEqual(Filter.lessThan("foo"));
+                        expect(isFoo.reduce(untouched)).toBe(untouched);
+                    }
+
+                    {
+                        // >
+                        let untouched = filter(Filter.greaterThan("bar"));
+                        expect(isFoo.reduce(untouched)).toBe(untouched);
+                    }
+
+                    {
+                        // >=
+                        let partially = filter(Filter.greaterThanEquals("foo"));
+                        let untouched = filter(Filter.greaterThanEquals("bar"));
+
+                        expectCriteria(isFoo.reduce(partially)).toEqual(Filter.greaterThan("foo"));
+                        expect(isFoo.reduce(untouched)).toBe(untouched);
+                    }
+
+                });
+
+                it("in / not-in", () => {
+                    {
+                        // in
+                        let completely = filter(Filter.memberOf(["foo"]));
+                        let transformed = filter(Filter.memberOf(["foo", "bar"]));
+                        let partially = filter(Filter.memberOf(["foo", "bar", "baz"]));
+                        let untouched = filter(Filter.memberOf(["bar", "baz"]));
+
+                        expect(isFoo.reduce(completely)).toBeNull();
+                        expectCriteria(isFoo.reduce(transformed)).toEqual(Filter.equals("bar"));
+                        expectCriteria(isFoo.reduce(partially)).toEqual(Filter.memberOf(["bar", "baz"]));
+                        expect(isFoo.reduce(untouched)).toBe(untouched);
+                    }
+
+                    {
+                        // not-in
+                        let transformed = filter(Filter.notMemberOf(["bar"]));
+                        let untouched = filter(Filter.notMemberOf(["foo", "bar"]));
+
+                        expectCriteria(isFoo.reduce(transformed)).toEqual(Filter.notMemberOf(["bar", "foo"]));
+                        expect(isFoo.reduce(untouched)).toBe(untouched);
+                    }
+                });
+
+                it("untouched due to null w/ point criterion", () => {
+                    let isNull = filter(Filter.isNull("string"));
+
+                    let lessThanFoo = filter(Filter.lessThan("foo"));
+                    expect(isNull.reduce(lessThanFoo)).toBe(lessThanFoo);
                 });
             });
         });
@@ -299,12 +395,99 @@ describe("filter", () => {
                     let notNull = filter(Filter.notNull("bool"));
                     expectCriteria(notTrue.reduce(notNull)).toEqual({ op: "==", type: "bool", value: true });
                 });
+            });
+        });
 
-                it("throws if criteria are incompatible", () => {
-                    let unequals = filter(Filter.notEquals(true));
-                    let invalid = filter({ op: "invalid" as any, type: "bool", value: true });
+        describe("<", () => {
+            describe("number", () => {
+                let lessThan7 = filter(Filter.lessThan(7));
 
-                    expect(() => unequals.reduce(invalid)).toThrow();
+                it("== / !=", () => {
+                    // ==
+                    let equals3 = filter(Filter.equals(3));
+                    let equals7 = filter(Filter.equals(7));
+                    let equals8 = filter(Filter.equals(8));
+
+                    expect(lessThan7.reduce(equals3)).toBeNull();
+                    expect(lessThan7.reduce(equals7)).toBe(equals7);
+                    expect(lessThan7.reduce(equals8)).toBe(equals8);
+
+                    // !=
+                    let not3 = filter(Filter.notEquals(3));
+                    let not7 = filter(Filter.notEquals(3));
+                    let not8 = filter(Filter.notEquals(8));
+
+                    expectCriteria(lessThan7.reduce(not3)).toEqual(Filter.greaterThanEquals(7));
+                    expectCriteria(lessThan7.reduce(not7)).toEqual(Filter.greaterThanEquals(7));
+                    expectCriteria(lessThan7.reduce(not8)).toEqual(Filter.greaterThanEquals(7));
+                });
+
+                it("< / <=", () => {
+                    // <
+                    let lessThan3 = filter(Filter.lessThan(3));
+                    let alsoLessThan7 = filter(Filter.lessThan(7));
+                    let lessThan8 = filter(Filter.lessThan(8));
+                    let lessThan9 = filter(Filter.lessThan(9));
+
+                    expect(lessThan7.reduce(lessThan3)).toBeNull();
+                    expect(lessThan7.reduce(alsoLessThan7)).toBeNull();
+                    expectCriteria(lessThan7.reduce(lessThan8)).toEqual(Filter.equals(7));
+                    expectCriteria(lessThan7.reduce(lessThan9)).toEqual(Filter.inRange(7, 8));
+
+                    // <=
+                    let lessThanEquals3 = filter(Filter.lessThanEquals(3));
+                    let lessThanEquals7 = filter(Filter.lessThanEquals(7));
+                    let lessThanEquals8 = filter(Filter.lessThanEquals(8));
+
+                    expect(lessThan7.reduce(lessThanEquals3)).toBeNull();
+                    expectCriteria(lessThan7.reduce(lessThanEquals7)).toEqual(Filter.equals(7));
+                    expectCriteria(lessThan7.reduce(lessThanEquals8)).toEqual(Filter.inRange(7, 8));
+                });
+
+                it("> / >=", () => {
+                    // >
+                    let greaterThan3 = filter(Filter.greaterThan(3));
+                    let greaterThan6 = filter(Filter.greaterThan(6));
+
+                    expectCriteria(lessThan7.reduce(greaterThan3)).toEqual(Filter.greaterThanEquals(7));
+                    expect(lessThan7.reduce(greaterThan6)).toBe(greaterThan6);
+
+                    // >=
+                    let greaterEquals6 = filter(Filter.greaterThanEquals(6));
+                    let greaterEquals7 = filter(Filter.greaterThanEquals(7));
+
+                    expectCriteria(lessThan7.reduce(greaterEquals6)).toEqual(Filter.greaterThanEquals(7));
+                    expect(lessThan7.reduce(greaterEquals7)).toBe(greaterEquals7);
+                });
+
+                it("from / to", () => {
+                    let from3To6 = filter(Filter.inRange(3, 6));
+                    let from3To7 = filter(Filter.inRange(3, 7));
+                    let from3To8 = filter(Filter.inRange(3, 8));
+                    let from7to64 = filter(Filter.inRange(7, 64));
+
+                    expect(lessThan7.reduce(from3To6)).toBeNull();
+                    expectCriteria(lessThan7.reduce(from3To7)).toEqual(Filter.equals(7));
+                    expectCriteria(lessThan7.reduce(from3To8)).toEqual(Filter.inRange(7, 8));
+                    expect(lessThan7.reduce(from7to64)).toBe(from7to64);
+                });
+
+                it("in / not-in", () => {
+                    // in
+                    let completely = filter(Filter.memberOf([-3, 6]));
+                    let transformed = filter(Filter.memberOf([-3, 6, 8]));
+                    let partially = filter(Filter.memberOf([-3, 6, 8, 64]));
+                    let untouched = filter(Filter.memberOf([8, 64]));
+
+                    expect(lessThan7.reduce(completely)).toBeNull();
+                    expectCriteria(lessThan7.reduce(transformed)).toEqual(Filter.equals(8));
+                    expectCriteria(lessThan7.reduce(partially)).toEqual(Filter.memberOf([8, 64]));
+                    expect(lessThan7.reduce(untouched)).toBe(untouched);
+
+                    // not-in
+                    let alwaysUntouched = filter(Filter.notMemberOf([-3, 6]));
+
+                    expect(lessThan7.reduce(alwaysUntouched)).toBe(alwaysUntouched);
                 });
             });
         });
@@ -384,7 +567,7 @@ describe("filter", () => {
                 {
                     let b = filter({ op: "<", type: "number", value: 8, step: 1 });
                     let r = a.reduce(b);
-                    
+
                     expect(r).not.toBeNull();
                     expect(get(r)).toEqual({ op: "<", type: "number", value: 1, step: 1 });
                 }

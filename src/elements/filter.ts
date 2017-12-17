@@ -32,10 +32,14 @@ let reducers = new Map<Filter.Operations, Reducers>([
                 case "!=": return a.value != b.value ? { op: "==", type: "bool", value: [true, false, null].filter(x => x != b.value && x != a.value)[0] } : b;
                 case "in":
                     if (b.values.has(a.value)) {
+                        if (b.values.size == 1) return null;
+
                         let copy = new Set(b.values);
                         copy.delete(a.value);
 
-                        return copy.size == 0 ? null : { op: b.op, type: "bool", values: copy };
+                        return copy.size == 1
+                            ? { op: "==", type: "bool", value: copy.values().next().value }
+                            : { op: b.op, type: "bool", values: copy };
                     } else {
                         return b;
                     }
@@ -44,10 +48,7 @@ let reducers = new Map<Filter.Operations, Reducers>([
                     if (!b.values.has(a.value)) {
                         if (b.values.size == 2) return null;
 
-                        let copy = new Set(b.values);
-                        copy.add(a.value);
-
-                        return { op: "not-in", type: "bool", values: copy };
+                        return { op: "==", type: "bool", value: [true, false, null].filter(x => a.value !== x && !b.values.has(x))[0] };
                     } else {
                         return b;
                     }
@@ -56,7 +57,7 @@ let reducers = new Map<Filter.Operations, Reducers>([
             }
         }],
         ["number", (a: Filter.NumberEqualityCriterion, b: Filter.NumberCriterion): ReduceResult => {
-            if (a.value == null && b.op != "==" && b.op != "!=" && b.op != "in" && b.op != "common") return b;
+            if (a.value == null && Filter.isPointCriterion(b)) return b;
 
             switch (b.op) {
                 case "==": return a.value == b.value ? null : b;
@@ -67,10 +68,14 @@ let reducers = new Map<Filter.Operations, Reducers>([
                 case ">=": return a.value == b.value ? { op: ">", type: "number", value: a.value, step: b.step } : b;
                 case "in":
                     if (b.values.has(a.value)) {
+                        if (b.values.size == 1) return null;
+
                         let copy = new Set(b.values);
                         copy.delete(a.value);
 
-                        return copy.size == 0 ? null : { op: b.op, type: "number", values: copy };
+                        return copy.size == 1
+                            ? { op: "==", type: "number", value: copy.values().next().value }
+                            : { op: b.op, type: "number", values: copy };
                     } else {
                         return b;
                     }
@@ -98,7 +103,7 @@ let reducers = new Map<Filter.Operations, Reducers>([
             }
         }],
         ["string", (a: Filter.StringEqualityCriterion, b: Filter.StringCriterion): ReduceResult => {
-            if (a.value == null && b.op != "==" && b.op != "!=" && b.op != "in" && b.op != "common") return b;
+            if (a.value == null && Filter.isPointCriterion(b)) return b;
 
             switch (b.op) {
                 case "==": return a.value == b.value ? null : b;
@@ -106,10 +111,14 @@ let reducers = new Map<Filter.Operations, Reducers>([
                 case ">=": return a.value == b.value ? { op: ">", type: "string", value: a.value } : b;
                 case "in":
                     if (b.values.has(a.value)) {
+                        if (b.values.size == 1) return null;
+
                         let copy = new Set(b.values);
                         copy.delete(a.value);
 
-                        return copy.size == 0 ? null : { op: b.op, type: "string", values: copy };
+                        return copy.size == 1
+                            ? { op: "==", type: "string", value: copy.values().next().value }
+                            : { op: b.op, type: "string", values: copy };
                     } else {
                         return b;
                     }
@@ -124,7 +133,6 @@ let reducers = new Map<Filter.Operations, Reducers>([
                         return b;
                     }
 
-                case "!=": case "<": case ">": case "from-to": return b;
                 default: return b;
             }
         }],
@@ -133,10 +141,14 @@ let reducers = new Map<Filter.Operations, Reducers>([
                 case "==": return a.value == b.value ? null : b;
                 case "in":
                     if (b.values.has(a.value)) {
+                        if (b.values.size == 1) return null;
+
                         let copy = new Set(b.values);
                         copy.delete(a.value);
 
-                        return copy.size == 0 ? null : { op: b.op, type: "guid", values: copy };
+                        return copy.size == 1
+                            ? { op: "==", type: "guid", value: copy.values().next().value }
+                            : { op: b.op, type: "guid", values: copy };
                     } else {
                         return b;
                     }
@@ -151,7 +163,6 @@ let reducers = new Map<Filter.Operations, Reducers>([
                         return b;
                     }
 
-                case "!=": return b;
                 default: return b;
             }
         }],
@@ -324,26 +335,33 @@ let reducers = new Map<Filter.Operations, Reducers>([
                 case "!=": return { op: ">=", type: "number", value: a.value, step: a.step };
                 case "<": return b.value <= a.value ? null
                     : (a.value + b.step) == b.value
-                        ? { op: "==", type: "number", value: a.value, step: b.step }
+                        ? { op: "==", type: "number", value: a.value }
                         : { op: FROM_TO, type: "number", range: [a.value, b.value - b.step], step: b.step };
 
                 case "<=": return b.value < a.value ? null
                     : a.value == b.value
-                        ? { op: "==", type: "number", value: a.value, step: b.step }
+                        ? { op: "==", type: "number", value: a.value }
                         : { op: FROM_TO, type: "number", range: [a.value, b.value], step: b.step };
 
-                case ">": return b.value < a.value ? { op: ">=", type: "number", value: a.value, step: b.step } : b;
-                case ">=": return b.value <= a.value ? { op: ">=", type: "number", value: a.value, step: b.step } : b;
-                case "from-to": return a.value > b.range[1] ? null
-                    : a.value > b.range[0]
-                        ? { op: FROM_TO, type: "number", range: [a.value, b.range[1]], step: b.step }
-                        : b;
+                case ">": return b.value + b.step < a.value ? { op: ">=", type: "number", value: a.value, step: b.step } : b;
+                case ">=": return b.value < a.value ? { op: ">=", type: "number", value: a.value, step: b.step } : b;
+                case "from-to": {
+                    if (a.value > b.range[1]) return null;
+                    if (a.value == b.range[1]) return { op: "==", type: "number", value: a.value };
+                    if (a.value > b.range[0]) return { op: FROM_TO, type: "number", range: [a.value, b.range[1]], step: b.step };
+
+                    return b;
+                }
 
                 case "in": {
                     let copy = new Set(b.values);
                     copy.forEach(v => v < a.value && copy.delete(v));
 
-                    return copy.size == 0 ? null : { op: "in", type: "number", values: copy };
+                    if (copy.size == b.values.size) return b;
+                    if (copy.size == 0) return null;
+                    if (copy.size == 1) return { op: "==", type: "number", value: copy.values().next().value };
+
+                    return { op: "in", type: "number", values: copy };
                 }
 
                 default: return b;
@@ -359,12 +377,12 @@ let reducers = new Map<Filter.Operations, Reducers>([
                 case "!=": return { op: ">", type: "number", value: a.value, step: a.step };
                 case "<": return b.value <= a.value + b.step ? null
                     : (a.value + (b.step * 2)) == b.value
-                        ? { op: "==", type: "number", value: a.value + b.step, step: b.step }
+                        ? { op: "==", type: "number", value: a.value + b.step }
                         : { op: FROM_TO, type: "number", range: [a.value + b.step, b.value - b.step], step: b.step };
 
                 case "<=": return b.value <= a.value ? null
                     : a.value + b.step == b.value
-                        ? { op: "==", type: "number", value: b.value, step: b.step }
+                        ? { op: "==", type: "number", value: b.value }
                         : { op: FROM_TO, type: "number", range: [a.value + b.step, b.value], step: b.step };
 
                 case ">": return b.value < a.value ? { op: ">", type: "number", value: a.value, step: b.step } : b;
@@ -396,11 +414,11 @@ let reducers = new Map<Filter.Operations, Reducers>([
                 case "<=": return b.value >= a.value ? { op: "<=", type: "number", value: a.value, step: b.step } : b;
                 case ">": return b.value >= a.value ? null
                     : (a.value - b.step) == b.value
-                        ? { op: "==", type: "number", value: a.value, step: b.step }
+                        ? { op: "==", type: "number", value: a.value }
                         : { op: FROM_TO, type: "number", range: [b.value + b.step, a.value], step: b.step };
                 case ">=": return b.value > a.value ? null
                     : a.value == b.value
-                        ? { op: "==", type: "number", value: a.value, step: b.step }
+                        ? { op: "==", type: "number", value: a.value }
                         : { op: FROM_TO, type: "number", range: [b.value, a.value], step: b.step };
 
                 case "from-to": return a.value < b.range[0] ? null
@@ -430,12 +448,12 @@ let reducers = new Map<Filter.Operations, Reducers>([
                 case "<=": return b.value >= a.value ? { op: "<", type: "number", value: a.value, step: b.step } : b;
                 case ">": return b.value >= a.value - b.step ? null
                     : (a.value - (b.step * 2)) == b.value
-                        ? { op: "==", type: "number", value: a.value - b.step, step: b.step }
+                        ? { op: "==", type: "number", value: a.value - b.step }
                         : { op: FROM_TO, type: "number", range: [b.value, a.value - b.step], step: b.step };
 
                 case ">=": return b.value <= a.value ? null
                     : a.value - b.step == b.value
-                        ? { op: "==", type: "number", value: b.value, step: b.step }
+                        ? { op: "==", type: "number", value: b.value }
                         : { op: FROM_TO, type: "number", range: [b.value, a.value - b.step], step: b.step };
 
 
@@ -802,6 +820,12 @@ export module Filter {
         return criterion.op == "from-to";
     }
 
+    let pointOperations = new Set<Operations>(["<", "<=", ">", ">="]);
+
+    export function isPointCriterion(criterion: Criterion): criterion is PointCriterion {
+        return pointOperations.has(criterion.op);
+    }
+
     export function isNull(type: Types): EqualityCriterion {
         return <EqualityCriterion>{ op: "==", type: type, value: null };
     }
@@ -810,6 +834,7 @@ export module Filter {
         return <EqualityCriterion>{ op: "!=", type: type, value: null };
     }
 
+    // todo: guid missing (not just for equals)
     export function equals(value: boolean): BooleanEqualityCriterion;
     export function equals(value: number): NumberEqualityCriterion;
     export function equals(value: string): StringEqualityCriterion;
@@ -883,6 +908,52 @@ export module Filter {
             case "string": return { op: ">=", type: "string", value: value as string };
             case "object": if (value instanceof Date) return { op: ">=", type: "date", value: value };
             default: throw unexpectedValueType(value);
+        }
+    }
+
+    export function inRange(from: number, to: number, step?: number): NumberRangeCriterion;
+    export function inRange(from: string, to: string): StringRangeCriterion;
+    export function inRange(from: Date, to: Date): DateRangeCriterion;
+    export function inRange(from: number | string | Date, to: number | string | Date, step?: number): RangeCriterion {
+        switch (typeof (from)) {
+            case "number": return { op: FROM_TO, type: "number", range: [from as number, to as number], step: step || 1 };
+            case "string": return { op: FROM_TO, type: "string", range: [from as string, to as string] };
+            case "object": if (from instanceof Date) return { op: FROM_TO, type: "date", range: [from as Date, to as Date] };
+            default: throw unexpectedValueType(from);
+        }
+    }
+
+    export function memberOf(values: Iterable<boolean>): BooleanMemberCriterion;
+    export function memberOf(values: Iterable<number>): NumberMemberCriterion;
+    export function memberOf(values: Iterable<string>): StringMemberCriterion;
+    export function memberOf(values: Iterable<boolean | number | string>): MemberCriterion {
+        let set = new Set(values);
+        if (set.size == 0) throw new Error("no values provided");
+
+        let sample = set.values().next().value;
+
+        switch (typeof (sample)) {
+            case "boolean": return { op: "in", type: "bool", values: set as Set<boolean> };
+            case "number": return { op: "in", type: "number", values: set as Set<number> };
+            case "string": return { op: "in", type: "string", values: set as Set<string> };
+            default: throw unexpectedValueType(sample);
+        }
+    }
+
+    export function notMemberOf(values: Iterable<boolean>): BooleanMemberCriterion;
+    export function notMemberOf(values: Iterable<number>): NumberMemberCriterion;
+    export function notMemberOf(values: Iterable<string>): StringMemberCriterion;
+    export function notMemberOf(values: Iterable<boolean | number | string>): MemberCriterion {
+        let set = new Set(values);
+        if (set.size == 0) throw new Error("no values provided");
+
+        let sample = set.values().next().value;
+
+        switch (typeof (sample)) {
+            case "boolean": return { op: "not-in", type: "bool", values: set as Set<boolean> };
+            case "number": return { op: "not-in", type: "number", values: set as Set<number> };
+            case "string": return { op: "not-in", type: "string", values: set as Set<string> };
+            default: throw unexpectedValueType(sample);
         }
     }
 }
