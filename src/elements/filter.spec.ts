@@ -489,6 +489,95 @@ describe("filter", () => {
                     expect(lessThan7.reduce(alwaysUntouched)).toBe(alwaysUntouched);
                 });
             });
+
+            describe("string", () => {
+                let lessThanFoo = filter(Filter.less("foo"));
+
+                it("== / !=", () => {
+                    // ==
+                    let equalsBar = filter(Filter.equals("bar"));
+                    let equalsFoo = filter(Filter.equals("foo"));
+
+                    expect(lessThanFoo.reduce(equalsBar)).toBeNull();
+                    expect(lessThanFoo.reduce(equalsFoo)).toBe(equalsFoo);
+
+                    // !=
+                    let notBar = filter(Filter.notEquals("bar"));
+                    let notFoo = filter(Filter.notEquals("foo"));
+                    let notBaz = filter(Filter.notEquals("baz"));
+
+                    // todo: inconsistent behaviour between "!=" and "not-in"
+                    expectCriteria(lessThanFoo.reduce(notBar)).toEqual(Filter.greaterEquals("foo"));
+                    expectCriteria(lessThanFoo.reduce(notFoo)).toEqual(Filter.greaterEquals("foo"));
+                    expectCriteria(lessThanFoo.reduce(notBaz)).toEqual(Filter.greaterEquals("foo"));
+                });
+
+                it("< / <=", () => {
+                    // <
+                    let lessBar = filter(Filter.less("bar"));
+                    let alsoLessFoo = filter(Filter.less("foo"));
+                    let lessKhaz = filter(Filter.less("khaz"));
+
+                    expect(lessThanFoo.reduce(lessBar)).toBeNull();
+                    expect(lessThanFoo.reduce(alsoLessFoo)).toBeNull();
+                    expectCriteria(lessThanFoo.reduce(lessKhaz)).toEqual(Filter.inRange("foo", "khaz"));
+
+                    // <=
+                    let lessEqualsBar = filter(Filter.lessEquals("bar"));
+                    let lessEqualsFoo = filter(Filter.lessEquals("foo"));
+                    let lessEqualsKhaz = filter(Filter.lessEquals("khaz"));
+
+                    expect(lessThanFoo.reduce(lessEqualsBar)).toBeNull();
+                    expectCriteria(lessThanFoo.reduce(lessEqualsFoo)).toEqual(Filter.equals("foo"));
+                    expectCriteria(lessThanFoo.reduce(lessEqualsKhaz)).toEqual(Filter.inRange("foo", "khaz"));
+                });
+
+                it("> / >=", () => {
+                    // >
+                    let greaterBar = filter(Filter.greater("bar"));
+                    let greaterFoo = filter(Filter.greater("foo"));
+
+                    expectCriteria(lessThanFoo.reduce(greaterBar)).toEqual(Filter.greaterEquals("foo"));
+                    expect(lessThanFoo.reduce(greaterFoo)).toBe(greaterFoo);
+
+                    // >=
+                    let greaterEqualsBar = filter(Filter.greaterEquals("bar"));
+                    let greaterEqualsFoo = filter(Filter.greaterEquals("foo"));
+
+                    expectCriteria(lessThanFoo.reduce(greaterEqualsBar)).toEqual(Filter.greaterEquals("foo"));
+                    expect(lessThanFoo.reduce(greaterEqualsFoo)).toBe(greaterEqualsFoo);
+                });
+
+                it("from / to", () => {
+                    let fromBarToBaz = filter(Filter.inRange("bar", "baz"));
+                    let fromBarToFoo = filter(Filter.inRange("bar", "foo"));
+                    let fromBarToKhaz = filter(Filter.inRange("bar", "khaz"));
+                    let fromFooToKhaz = filter(Filter.inRange("foo", "khaz"));
+
+                    expect(lessThanFoo.reduce(fromBarToBaz)).toBeNull();
+                    expectCriteria(lessThanFoo.reduce(fromBarToFoo)).toEqual(Filter.equals("foo"));
+                    expectCriteria(lessThanFoo.reduce(fromBarToKhaz)).toEqual(Filter.inRange("foo", "khaz"));
+                    expect(lessThanFoo.reduce(fromFooToKhaz)).toBe(fromFooToKhaz);
+                });
+
+                it("in / not-in", () => {
+                    // in
+                    let completely = filter(Filter.memberOf(["bar", "baz"]));
+                    let transformed = filter(Filter.memberOf(["bar", "baz", "khaz"]));
+                    let partially = filter(Filter.memberOf(["bar", "baz", "khaz", "mo"]));
+                    let untouched = filter(Filter.memberOf(["khaz", "mo"]));
+
+                    expect(lessThanFoo.reduce(completely)).toBeNull();
+                    expectCriteria(lessThanFoo.reduce(transformed)).toEqual(Filter.equals("khaz"));
+                    expectCriteria(lessThanFoo.reduce(partially)).toEqual(Filter.memberOf(["khaz", "mo"]));
+                    expect(lessThanFoo.reduce(untouched)).toBe(untouched);
+
+                    // not-in
+                    let alwaysUntouched = filter(Filter.notMemberOf(["foo", "bar"]));
+
+                    expect(lessThanFoo.reduce(alwaysUntouched)).toBe(alwaysUntouched);
+                });
+            });
         });
 
         describe("<=", () => {
