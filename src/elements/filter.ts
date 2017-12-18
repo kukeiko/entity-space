@@ -387,16 +387,23 @@ let reducers = new Map<Filter.Operations, Reducers>([
 
                 case ">": return b.value < a.value ? { op: ">", type: "number", value: a.value, step: b.step } : b;
                 case ">=": return b.value <= a.value ? { op: ">", type: "number", value: a.value, step: b.step } : b;
-                case "from-to": return a.value >= b.range[1] ? null
-                    : a.value >= b.range[0]
-                        ? { op: FROM_TO, type: "number", range: [a.value + b.step, b.range[1]], step: b.step }
-                        : b;
+                case "from-to": {
+                    if (a.value >= b.range[1]) return null;
+                    if (a.value + b.step == b.range[1]) return { op: "==", type: "number", value: b.range[1] };
+                    if (a.value >= b.range[0]) return { op: FROM_TO, type: "number", range: [a.value + b.step, b.range[1]], step: b.step };
+
+                    return b;
+                }
 
                 case "in": {
                     let copy = new Set(b.values);
                     copy.forEach(v => v <= a.value && copy.delete(v));
 
-                    return copy.size == 0 ? null : { op: "in", type: "number", values: copy };
+                    if (copy.size == b.values.size) return b;
+                    if (copy.size == 0) return null;
+                    if (copy.size == 1) return { op: "==", type: "number", value: copy.values().next().value };
+
+                    return { op: "in", type: "number", values: copy };
                 }
 
                 default: return b;
@@ -421,16 +428,23 @@ let reducers = new Map<Filter.Operations, Reducers>([
                         ? { op: "==", type: "number", value: a.value }
                         : { op: FROM_TO, type: "number", range: [b.value, a.value], step: b.step };
 
-                case "from-to": return a.value < b.range[0] ? null
-                    : a.value < b.range[1]
-                        ? { op: FROM_TO, type: "number", range: [b.range[0], a.value], step: b.step }
-                        : b;
+                case "from-to": {
+                    if (a.value < b.range[0]) return null;
+                    if (a.value == b.range[0]) return { op: "==", type: "number", value: a.value };
+                    if (a.value < b.range[1]) return { op: FROM_TO, type: "number", range: [b.range[0], a.value], step: b.step };
+
+                    return b;
+                }
 
                 case "in": {
                     let copy = new Set(b.values);
                     copy.forEach(v => v > a.value && copy.delete(v));
 
-                    return copy.size == 0 ? null : { op: "in", type: "number", values: copy };
+                    if (copy.size == b.values.size) return b;
+                    if (copy.size == 0) return null;
+                    if (copy.size == 1) return { op: "==", type: "number", value: copy.values().next().value };
+
+                    return { op: "in", type: "number", values: copy };
                 }
 
                 default: return b;
@@ -446,27 +460,34 @@ let reducers = new Map<Filter.Operations, Reducers>([
                 case "!=": return { op: "<", type: "number", value: a.value, step: a.step };
                 case "<": return b.value > a.value ? { op: "<", type: "number", value: a.value, step: b.step } : b;
                 case "<=": return b.value >= a.value ? { op: "<", type: "number", value: a.value, step: b.step } : b;
-                case ">": return b.value >= a.value - b.step ? null
+                case ">": return a.value - b.step <= b.value ? null
                     : (a.value - (b.step * 2)) == b.value
                         ? { op: "==", type: "number", value: a.value - b.step }
-                        : { op: FROM_TO, type: "number", range: [b.value, a.value - b.step], step: b.step };
+                        : { op: FROM_TO, type: "number", range: [b.value + b.step, a.value - b.step], step: b.step };
 
-                case ">=": return b.value <= a.value ? null
+                case ">=": return a.value <= b.value ? null
                     : a.value - b.step == b.value
                         ? { op: "==", type: "number", value: b.value }
                         : { op: FROM_TO, type: "number", range: [b.value, a.value - b.step], step: b.step };
 
 
-                case "from-to": return a.value <= b.range[0] ? null
-                    : a.value <= b.range[1]
-                        ? { op: FROM_TO, type: "number", range: [b.range[0], a.value - b.step], step: b.step }
-                        : b;
+                case "from-to": {
+                    if (a.value <= b.range[0]) return null;
+                    if (a.value - b.step == b.range[0]) return { op: "==", type: "number", value: b.range[0] };
+                    if (a.value <= b.range[1]) return { op: FROM_TO, type: "number", range: [b.range[0], a.value - b.step], step: b.step };
+
+                    return b;
+                }
 
                 case "in": {
                     let copy = new Set(b.values);
                     copy.forEach(v => v >= a.value && copy.delete(v));
 
-                    return copy.size == 0 ? null : { op: "in", type: "number", values: copy };
+                    if (copy.size == b.values.size) return b;
+                    if (copy.size == 0) return null;
+                    if (copy.size == 1) return { op: "==", type: "number", value: copy.values().next().value };
+
+                    return { op: "in", type: "number", values: copy };
                 }
 
                 default: return b;
@@ -863,10 +884,10 @@ export module Filter {
         }
     }
 
-    export function lessThan(value: number, step?: number): NumberPointCriterion;
-    export function lessThan(value: string): StringPointCriterion;
-    export function lessThan(value: Date): DatePointCriterion;
-    export function lessThan(value: number | string | Date, step?: number): PointCriterion {
+    export function less(value: number, step?: number): NumberPointCriterion;
+    export function less(value: string): StringPointCriterion;
+    export function less(value: Date): DatePointCriterion;
+    export function less(value: number | string | Date, step?: number): PointCriterion {
         switch (typeof (value)) {
             case "number": return { op: "<", type: "number", value: value as number, step: step || 1 };
             case "string": return { op: "<", type: "string", value: value as string };
@@ -875,10 +896,10 @@ export module Filter {
         }
     }
 
-    export function lessThanEquals(value: number, step?: number): NumberPointCriterion;
-    export function lessThanEquals(value: string): StringPointCriterion;
-    export function lessThanEquals(value: Date): DatePointCriterion;
-    export function lessThanEquals(value: number | string | Date, step?: number): PointCriterion {
+    export function lessEquals(value: number, step?: number): NumberPointCriterion;
+    export function lessEquals(value: string): StringPointCriterion;
+    export function lessEquals(value: Date): DatePointCriterion;
+    export function lessEquals(value: number | string | Date, step?: number): PointCriterion {
         switch (typeof (value)) {
             case "number": return { op: "<=", type: "number", value: value as number, step: step || 1 };
             case "string": return { op: "<=", type: "string", value: value as string };
@@ -887,10 +908,10 @@ export module Filter {
         }
     }
 
-    export function greaterThan(value: number, step?: number): NumberPointCriterion;
-    export function greaterThan(value: string): StringPointCriterion;
-    export function greaterThan(value: Date): DatePointCriterion;
-    export function greaterThan(value: number | string | Date, step?: number): PointCriterion {
+    export function greater(value: number, step?: number): NumberPointCriterion;
+    export function greater(value: string): StringPointCriterion;
+    export function greater(value: Date): DatePointCriterion;
+    export function greater(value: number | string | Date, step?: number): PointCriterion {
         switch (typeof (value)) {
             case "number": return { op: ">", type: "number", value: value as number, step: step || 1 };
             case "string": return { op: ">", type: "string", value: value as string };
@@ -899,10 +920,10 @@ export module Filter {
         }
     }
 
-    export function greaterThanEquals(value: number, step?: number): NumberPointCriterion;
-    export function greaterThanEquals(value: string): StringPointCriterion;
-    export function greaterThanEquals(value: Date): DatePointCriterion;
-    export function greaterThanEquals(value: number | string | Date, step?: number): PointCriterion {
+    export function greaterEquals(value: number, step?: number): NumberPointCriterion;
+    export function greaterEquals(value: string): StringPointCriterion;
+    export function greaterEquals(value: Date): DatePointCriterion;
+    export function greaterEquals(value: number | string | Date, step?: number): PointCriterion {
         switch (typeof (value)) {
             case "number": return { op: ">=", type: "number", value: value as number, step: step || 1 };
             case "string": return { op: ">=", type: "string", value: value as string };
