@@ -25,7 +25,6 @@ type Reducers = Map<Filter.Types, Reducer>;
 // todo: can return criterions with empty sets (in / common)
 // todo: when comparing a and b, a should always be first (consistency + readability)
 let reducers = new Map<Filter.Operations, Reducers>([
-    // note: seems complete
     ["==", new Map<Filter.Types, Reducer>([
         ["bool", (a: Filter.BooleanEqualityCriterion, b: Filter.BooleanCriterion): ReduceResult => {
             switch (b.op) {
@@ -183,7 +182,6 @@ let reducers = new Map<Filter.Operations, Reducers>([
             }
         }]
     ])],
-    // note: seems complete
     ["!=", new Map<Filter.Types, Reducer>([
         ["bool", (a: Filter.BooleanEqualityCriterion, b: Filter.BooleanCriterion): ReduceResult => {
             switch (b.op) {
@@ -248,7 +246,7 @@ let reducers = new Map<Filter.Operations, Reducers>([
             }
         }]
     ])],
-    // note: not yet checked if complete
+    // todo: not yet checked if complete
     ["in", new Map<Filter.Types, Reducer>([
         ["bool", (a: Filter.BooleanMemberCriterion, b: Filter.BooleanCriterion): ReduceResult => {
             switch (b.op) {
@@ -335,9 +333,7 @@ let reducers = new Map<Filter.Operations, Reducers>([
             }
         }]
     ])],
-    // todo: incomplete
     ["<", new Map<Filter.Types, Reducer>([
-        // note: seems complete
         ["number", (a: Filter.NumberPointCriterion, b: Filter.NumberCriterion): ReduceResult => {
             switch (b.op) {
                 case "==": return b.value < a.value ? null : b;
@@ -378,7 +374,6 @@ let reducers = new Map<Filter.Operations, Reducers>([
                 default: return b;
             }
         }],
-        // note: seems complete
         ["string", (a: Filter.StringPointCriterion, b: Filter.StringCriterion): ReduceResult => {
             switch (b.op) {
                 case "==": return b.value < a.value ? null : b;
@@ -413,11 +408,34 @@ let reducers = new Map<Filter.Operations, Reducers>([
 
                 default: return b;
             }
+        }],
+        ["date", (a: Filter.DatePointCriterion, b: Filter.DateCriterion): ReduceResult => {
+            switch (b.op) {
+                case "==": return safeGetTime(b.value) < safeGetTime(a.value) ? null : b;
+                case "!=": return { op: ">=", type: "date", value: a.value };
+                case "<": return b.value <= a.value ? null : { op: FROM_TO, type: "date", range: [a.value, new Date(b.value.getTime() - 1)] };
+
+                case "<=": return b.value < a.value ? null
+                    : a.value.getTime() == b.value.getTime()
+                        ? { op: "==", type: "date", value: a.value }
+                        : { op: FROM_TO, type: "date", range: [a.value, b.value] };
+
+                case ">": return a.value.getTime() > b.value.getTime() + 1 ? { op: ">=", type: "date", value: a.value } : b;
+                case ">=": return a.value > b.value ? { op: ">=", type: "date", value: a.value } : b;
+
+                case "from-to": {
+                    if (a.value > b.range[1]) return null;
+                    if (a.value.getTime() == b.range[1].getTime()) return { op: "==", type: "date", value: a.value };
+                    if (a.value > b.range[0]) return { op: FROM_TO, type: "date", range: [a.value, b.range[1]] };
+
+                    return b;
+                }
+
+                default: return b;
+            }
         }]
     ])],
-    // todo: incomplete
     ["<=", new Map<Filter.Types, Reducer>([
-        // note: seems complete
         ["number", (a: Filter.NumberPointCriterion, b: Filter.NumberCriterion): ReduceResult => {
             switch (b.op) {
                 case "==": return b.value <= a.value ? null : b;
@@ -458,7 +476,6 @@ let reducers = new Map<Filter.Operations, Reducers>([
                 default: return b;
             }
         }],
-        // note: seems complete
         ["string", (a: Filter.StringPointCriterion, b: Filter.StringCriterion): ReduceResult => {
             switch (b.op) {
                 case "==": return b.value <= a.value ? null : b;
@@ -487,17 +504,41 @@ let reducers = new Map<Filter.Operations, Reducers>([
 
                 default: return b;
             }
+        }],
+        ["date", (a: Filter.DatePointCriterion, b: Filter.DateCriterion): ReduceResult => {
+            switch (b.op) {
+                case "==": return a.value >= b.value ? null : b;
+                case "!=": return { op: ">", type: "date", value: a.value };
+
+                case "<": return b.value.getTime() <= a.value.getTime() + 1 ? null
+                    : { op: FROM_TO, type: "date", range: [new Date(a.value.getTime() + 1), new Date(b.value.getTime() - 1)] };
+
+                case "<=": return b.value <= a.value ? null
+                    : { op: FROM_TO, type: "date", range: [new Date(a.value.getTime() + 1), b.value] };
+
+                case ">": return b.value < a.value ? { op: ">", type: "date", value: a.value } : b;
+                case ">=": return b.value <= a.value ? { op: ">", type: "date", value: a.value } : b;
+
+                case "from-to": {
+                    // todo: here!
+                    if (a.value >= b.range[1]) return null;
+                    if ((a.value.getTime() + 1) == b.range[1].getTime()) return { op: "==", type: "date", value: b.range[1] };
+                    if (a.value >= b.range[0]) return { op: FROM_TO, type: "date", range: [new Date(a.value.getTime() + 1), b.range[1]] };
+
+                    return b;
+                }
+
+                default: return b;
+            }
         }]
     ])],
-    // todo: incomplete
     [">", new Map<Filter.Types, Reducer>([
-        // note: seems complete
         ["number", (a: Filter.NumberPointCriterion, b: Filter.NumberCriterion): ReduceResult => {
             switch (b.op) {
                 case "==": return b.value > a.value ? null : b;
                 case "!=": return { op: "<=", type: "number", value: a.value, step: a.step };
-                case "<": return b.value > a.value ? { op: "<=", type: "number", value: a.value, step: b.step } : b;
-                case "<=": return b.value >= a.value ? { op: "<=", type: "number", value: a.value, step: b.step } : b;
+                case "<": return a.value + b.step < b.value ? { op: "<=", type: "number", value: a.value, step: b.step } : b;
+                case "<=": return a.value < b.value ? { op: "<=", type: "number", value: a.value, step: b.step } : b;
 
                 case ">": return b.value >= a.value ? null
                     : (a.value - b.step) == b.value
@@ -531,7 +572,6 @@ let reducers = new Map<Filter.Operations, Reducers>([
                 default: return b;
             }
         }],
-        // note: seems complete
         ["string", (a: Filter.StringPointCriterion, b: Filter.StringCriterion): ReduceResult => {
             switch (b.op) {
                 case "==": return b.value > a.value ? null : b;
@@ -565,11 +605,33 @@ let reducers = new Map<Filter.Operations, Reducers>([
 
                 default: return b;
             }
+        }],
+        ["date", (a: Filter.DatePointCriterion, b: Filter.DateCriterion): ReduceResult => {
+            switch (b.op) {
+                case "==": return b.value > a.value ? null : b;
+                case "!=": return { op: "<=", type: "date", value: a.value };
+                case "<": return a.value.getTime() + 1 < b.value.getTime() ? { op: "<=", type: "date", value: a.value } : b;
+                case "<=": return a.value < b.value ? { op: "<=", type: "date", value: a.value } : b;
+                case ">": return b.value >= a.value ? null : { op: FROM_TO, type: "date", range: [new Date(b.value.getTime() + 1), a.value] };
+
+                case ">=": return b.value > a.value ? null
+                    : a.value.getTime() == b.value.getTime()
+                        ? { op: "==", type: "date", value: a.value }
+                        : { op: FROM_TO, type: "date", range: [b.value, a.value] };
+
+                case "from-to": {
+                    if (a.value < b.range[0]) return null;
+                    if (a.value.getTime() == b.range[0].getTime()) return { op: "==", type: "date", value: a.value };
+                    if (a.value < b.range[1]) return { op: FROM_TO, type: "date", range: [b.range[0], a.value] };
+
+                    return b;
+                }
+
+                default: return b;
+            }
         }]
     ])],
-    // todo: incomplete
     [">=", new Map<Filter.Types, Reducer>([
-        // note: seems complete
         ["number", (a: Filter.NumberPointCriterion, b: Filter.NumberCriterion): ReduceResult => {
             switch (b.op) {
                 case "==": return b.value >= a.value ? null : b;
@@ -609,7 +671,6 @@ let reducers = new Map<Filter.Operations, Reducers>([
                 default: return b;
             }
         }],
-        // note: seems complete
         ["string", (a: Filter.StringPointCriterion, b: Filter.StringCriterion): ReduceResult => {
             switch (b.op) {
                 case "==": return a.value <= b.value ? null : b;
@@ -634,6 +695,30 @@ let reducers = new Map<Filter.Operations, Reducers>([
                     if (copy.size == 1) return { op: "==", type: "string", value: copy.values().next().value };
 
                     return { op: "in", type: "string", values: copy };
+                }
+
+                default: return b;
+            }
+        }],
+        ["date", (a: Filter.DatePointCriterion, b: Filter.DateCriterion): ReduceResult => {
+            switch (b.op) {
+                case "==": return b.value >= a.value ? null : b;
+                case "!=": return { op: "<", type: "date", value: a.value };
+                case "<": return b.value > a.value ? { op: "<", type: "date", value: a.value } : b;
+                case "<=": return b.value >= a.value ? { op: "<", type: "date", value: a.value } : b;
+
+                case ">": return a.value.getTime() - 1 <= b.value.getTime() ? null
+                        : { op: FROM_TO, type: "date", range: [new Date(b.value.getTime() + 1), new Date(a.value.getTime() - 1)] };
+
+                case ">=": return a.value <= b.value ? null
+                        : { op: FROM_TO, type: "date", range: [b.value, new Date(a.value.getTime() - 1)]};
+
+                case "from-to": {
+                    if (a.value <= b.range[0]) return null;
+                    if (a.value.getTime() - 1 == b.range[0].getTime()) return { op: "==", type: "date", value: b.range[0] };
+                    if (a.value <= b.range[1]) return { op: FROM_TO, type: "date", range: [b.range[0], new Date(a.value.getTime() - 1)] };
+
+                    return b;
                 }
 
                 default: return b;

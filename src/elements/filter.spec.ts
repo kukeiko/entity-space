@@ -16,6 +16,11 @@ function expectCriteria(filter: Filter) {
     return expect(get(filter));
 }
 
+function makeDate(year: number, deltaMs = 0): Date {
+    return new Date(Date.UTC(year, 0) + deltaMs);
+}
+
+// todo: properly re-check tests for reduce() implementations
 describe("filter", () => {
     it("length property should reflect number of criteria", () => {
         let zero = new Filter({});
@@ -58,7 +63,9 @@ describe("filter", () => {
 
     describe("reduce()", () => {
         {
-            it("throws if criterion operation hasn't been implemented yet", () => {
+            // todo: figure out if it makes sense to allow unknown filter ops even though filtering impl. would be missing
+            //       reason: user might want to pass query on to api call and filter it on their own
+            it("throws if the operation of the reducing criterion hasn't been implemented yet", () => {
                 let invalidFilter = filter({ op: "i-will-never-exist-in-the-future" as any, type: "bool", value: true });
                 let validFilter = filter(Filter.equals(true));
 
@@ -412,6 +419,7 @@ describe("filter", () => {
 
                     // !=
                     let not3 = filter(Filter.notEquals(3));
+                    // todo: is not3 instead of not7 - this error will be in several places due to copy & paste
                     let not7 = filter(Filter.notEquals(3));
                     let not8 = filter(Filter.notEquals(8));
 
@@ -578,6 +586,77 @@ describe("filter", () => {
                     expect(lessThanFoo.reduce(alwaysUntouched)).toBe(alwaysUntouched);
                 });
             });
+
+            describe("date", () => {
+                let less2017 = filter(Filter.less(makeDate(2017)));
+
+                it("== / !=", () => {
+                    // ==
+                    let equals2016 = filter(Filter.equals(makeDate(2016)));
+                    let equals2018 = filter(Filter.equals(makeDate(2018)));
+
+                    expect(less2017.reduce(equals2016)).toBeNull();
+                    expect(less2017.reduce(equals2018)).toBe(equals2018);
+
+                    // !=
+                    let not2016 = filter(Filter.notEquals(makeDate(2016)));
+                    let not2017 = filter(Filter.notEquals(makeDate(2017)));
+                    let not2018 = filter(Filter.notEquals(makeDate(2018)));
+
+                    // todo: inconsistent behaviour between "!=" and "not-in"
+                    expectCriteria(less2017.reduce(not2016)).toEqual(Filter.greaterEquals(makeDate(2017)));
+                    expectCriteria(less2017.reduce(not2017)).toEqual(Filter.greaterEquals(makeDate(2017)));
+                    expectCriteria(less2017.reduce(not2018)).toEqual(Filter.greaterEquals(makeDate(2017)));
+                });
+
+                it("< / <=", () => {
+                    // <
+                    let less2016 = filter(Filter.less(makeDate(2016)));
+                    let alsoLess2017 = filter(Filter.less(makeDate(2017)));
+                    let less2018 = filter(Filter.less(makeDate(2018)));
+
+                    expect(less2017.reduce(less2016)).toBeNull();
+                    expect(less2017.reduce(alsoLess2017)).toBeNull();
+                    expectCriteria(less2017.reduce(less2018)).toEqual(Filter.inRange(makeDate(2017), makeDate(2018, -1)));
+
+                    // <=
+                    let lessEquals2016 = filter(Filter.lessEquals(makeDate(2016)));
+                    let lessEquals2017 = filter(Filter.lessEquals(makeDate(2017)));
+                    let lessEquals2018 = filter(Filter.lessEquals(makeDate(2018)));
+
+                    expect(less2017.reduce(lessEquals2016)).toBeNull();
+                    expectCriteria(less2017.reduce(lessEquals2017)).toEqual(Filter.equals(makeDate(2017)));
+                    expectCriteria(less2017.reduce(lessEquals2018)).toEqual(Filter.inRange(makeDate(2017), makeDate(2018)));
+                });
+
+                it("> / >=", () => {
+                    // >
+                    let greater2016 = filter(Filter.greater(makeDate(2016)));
+                    let greaterLastOf2016 = filter(Filter.greater(makeDate(2017, -1)));
+
+                    expectCriteria(less2017.reduce(greater2016)).toEqual(Filter.greaterEquals(makeDate(2017)));
+                    expect(less2017.reduce(greaterLastOf2016)).toBe(greaterLastOf2016);
+
+                    // >=
+                    let greaterEquals2016 = filter(Filter.greaterEquals(makeDate(2016)));
+                    let greaterEquals2017 = filter(Filter.greaterEquals(makeDate(2017)));
+
+                    expectCriteria(less2017.reduce(greaterEquals2016)).toEqual(Filter.greaterEquals(makeDate(2017)));
+                    expect(less2017.reduce(greaterEquals2017)).toBe(greaterEquals2017);
+                });
+
+                it("from / to", () => {
+                    let from2015to2016 = filter(Filter.inRange(makeDate(2015), makeDate(2016)));
+                    let from2015to2017 = filter(Filter.inRange(makeDate(2015), makeDate(2017)));
+                    let from2015to2018 = filter(Filter.inRange(makeDate(2015), makeDate(2018)));
+                    let from2017to2018 = filter(Filter.inRange(makeDate(2017), makeDate(2018)));
+
+                    expect(less2017.reduce(from2015to2016)).toBeNull();
+                    expectCriteria(less2017.reduce(from2015to2017)).toEqual(Filter.equals(makeDate(2017)));
+                    expectCriteria(less2017.reduce(from2015to2018)).toEqual(Filter.inRange(makeDate(2017), makeDate(2018)));
+                    expect(less2017.reduce(from2017to2018)).toBe(from2017to2018);
+                });
+            });
         });
 
         describe("<=", () => {
@@ -596,7 +675,7 @@ describe("filter", () => {
 
                     // !=
                     let not3 = filter(Filter.notEquals(3));
-                    let not7 = filter(Filter.notEquals(3));
+                    let not7 = filter(Filter.notEquals(7));
                     let not8 = filter(Filter.notEquals(8));
 
                     // todo: inconsistent behaviour between "!=" and "not-in"
@@ -770,6 +849,81 @@ describe("filter", () => {
                     expect(lessEqualsFoo.reduce(alwaysUntouched)).toBe(alwaysUntouched);
                 });
             });
+
+            describe("date", () => {
+                let lessEquals2017 = filter(Filter.lessEquals(makeDate(2017)));
+
+                it("== / !=", () => {
+                    // ==
+                    let equals2016 = filter(Filter.equals(makeDate(2016)));
+                    let equals2017 = filter(Filter.equals(makeDate(2017)));
+                    let equals2018 = filter(Filter.equals(makeDate(2018)));
+
+                    expect(lessEquals2017.reduce(equals2016)).toBeNull();
+                    expect(lessEquals2017.reduce(equals2017)).toBeNull();
+                    expect(lessEquals2017.reduce(equals2018)).toBe(equals2018);
+
+                    // !=
+                    let not3 = filter(Filter.notEquals(makeDate(2016)));
+                    let not7 = filter(Filter.notEquals(makeDate(2017)));
+                    let not8 = filter(Filter.notEquals(makeDate(2018)));
+
+                    // todo: inconsistent behaviour between "!=" and "not-in"
+                    expectCriteria(lessEquals2017.reduce(not3)).toEqual(Filter.greater(makeDate(2017)));
+                    expectCriteria(lessEquals2017.reduce(not7)).toEqual(Filter.greater(makeDate(2017)));
+                    expectCriteria(lessEquals2017.reduce(not8)).toEqual(Filter.greater(makeDate(2017)));
+                });
+
+                it("< / <=", () => {
+                    // <
+                    let less2016 = filter(Filter.less(makeDate(2016)));
+                    let less2017 = filter(Filter.less(makeDate(2017)));
+                    let lessSecondOf2017 = filter(Filter.less(makeDate(2017, 1)));
+                    let less2018 = filter(Filter.less(makeDate(2018)));
+
+                    expect(lessEquals2017.reduce(less2016)).toBeNull();
+                    expect(lessEquals2017.reduce(less2017)).toBeNull();
+                    expect(lessEquals2017.reduce(lessSecondOf2017)).toBeNull();
+                    expectCriteria(lessEquals2017.reduce(less2018)).toEqual(Filter.inRange(makeDate(2017, 1), makeDate(2018, -1)));
+
+                    // <=
+                    let lessEquals2016 = filter(Filter.lessEquals(makeDate(2016)));
+                    let alsoLessEquals2017 = filter(Filter.lessEquals(makeDate(2017)));
+                    let lessEquals2018 = filter(Filter.lessEquals(makeDate(2018)));
+
+                    expect(lessEquals2017.reduce(lessEquals2016)).toBeNull();
+                    expect(lessEquals2017.reduce(alsoLessEquals2017)).toBeNull();
+                    expectCriteria(lessEquals2017.reduce(lessEquals2018)).toEqual(Filter.inRange(makeDate(2017, 1), makeDate(2018)));
+                });
+
+                it("> / >=", () => {
+                    // >
+                    let greater2016 = filter(Filter.greater(makeDate(2016)));
+                    let greater2017 = filter(Filter.greater(makeDate(2017)));
+
+                    expectCriteria(lessEquals2017.reduce(greater2016)).toEqual(Filter.greater(makeDate(2017)));
+                    expect(lessEquals2017.reduce(greater2017)).toBe(greater2017);
+
+                    // >=
+                    let greaterEquals2017 = filter(Filter.greaterEquals(makeDate(2017)));
+                    let greaterEquals2018 = filter(Filter.greaterEquals(makeDate(2018)));
+
+                    expectCriteria(lessEquals2017.reduce(greaterEquals2017)).toEqual(Filter.greater(makeDate(2017)));
+                    expect(lessEquals2017.reduce(greaterEquals2018)).toBe(greaterEquals2018);
+                });
+
+                it("from / to", () => {
+                    let from2016to2017 = filter(Filter.inRange(makeDate(2016), makeDate(2017)));
+                    let from2016toSecondOf2017 = filter(Filter.inRange(makeDate(2016), makeDate(2017, 1)));
+                    let from2016to2018 = filter(Filter.inRange(makeDate(2016), makeDate(2018)));
+                    let from2018to2019 = filter(Filter.inRange(makeDate(2018), makeDate(2019)));
+
+                    expect(lessEquals2017.reduce(from2016to2017)).toBeNull();
+                    expectCriteria(lessEquals2017.reduce(from2016toSecondOf2017)).toEqual(Filter.equals(makeDate(2017, 1)));
+                    expectCriteria(lessEquals2017.reduce(from2016to2018)).toEqual(Filter.inRange(makeDate(2017, 1), makeDate(2018)));
+                    expect(lessEquals2017.reduce(from2018to2019)).toBe(from2018to2019);
+                });
+            });
         });
 
         describe(">", () => {
@@ -797,17 +951,21 @@ describe("filter", () => {
 
                 it("< / <=", () => {
                     // <
-                    let lessThan9 = filter(Filter.less(9));
-                    let lessThan6 = filter(Filter.less(6));
+                    let less9 = filter(Filter.less(9));
+                    let less8 = filter(Filter.less(8));
+                    let less6 = filter(Filter.less(6));
 
-                    expectCriteria(greater7.reduce(lessThan9)).toEqual(Filter.lessEquals(7));
-                    expect(greater7.reduce(lessThan6)).toBe(lessThan6);
+                    expectCriteria(greater7.reduce(less9)).toEqual(Filter.lessEquals(7));
+                    expect(greater7.reduce(less8)).toBe(less8);
+                    expect(greater7.reduce(less6)).toBe(less6);
 
                     // <=
                     let lessEquals9 = filter(Filter.lessEquals(9));
+                    let lessEquals7 = filter(Filter.lessEquals(7));
                     let lessEquals6 = filter(Filter.lessEquals(6));
 
                     expectCriteria(greater7.reduce(lessEquals9)).toEqual(Filter.lessEquals(7));
+                    expect(greater7.reduce(lessEquals7)).toBe(lessEquals7);
                     expect(greater7.reduce(lessEquals6)).toBe(lessEquals6);
                 });
 
@@ -948,6 +1106,79 @@ describe("filter", () => {
                     let alwaysUntouched = filter(Filter.notMemberOf(["foo", "khaz"]));
 
                     expect(greaterFoo.reduce(alwaysUntouched)).toBe(alwaysUntouched);
+                });
+            });
+
+            describe("date", () => {
+                let greater2017 = filter(Filter.greater(makeDate(2017)));
+
+                it("== / !=", () => {
+                    // ==
+                    let equals2018 = filter(Filter.equals(makeDate(2018)));
+                    let equals2017 = filter(Filter.equals(makeDate(2017)));
+
+                    expect(greater2017.reduce(equals2018)).toBeNull();
+                    expect(greater2017.reduce(equals2017)).toBe(equals2017);
+
+                    // !=
+                    let not2016 = filter(Filter.notEquals(makeDate(2016)));
+                    let not2017 = filter(Filter.notEquals(makeDate(2017)));
+                    let not2018 = filter(Filter.notEquals(makeDate(2018)));
+
+                    // todo: inconsistent behaviour between "!=" and "not-in"
+                    expectCriteria(greater2017.reduce(not2016)).toEqual(Filter.lessEquals(makeDate(2017)));
+                    expectCriteria(greater2017.reduce(not2017)).toEqual(Filter.lessEquals(makeDate(2017)));
+                    expectCriteria(greater2017.reduce(not2018)).toEqual(Filter.lessEquals(makeDate(2017)));
+                });
+
+                it("< / <=", () => {
+                    // <
+                    let less2018 = filter(Filter.less(makeDate(2018)));
+                    let lessSecondOf2017 = filter(Filter.less(makeDate(2017, 1)));
+                    let less2017 = filter(Filter.less(makeDate(2017)));
+
+                    expectCriteria(greater2017.reduce(less2018)).toEqual(Filter.lessEquals(makeDate(2017)));
+                    expect(greater2017.reduce(lessSecondOf2017)).toBe(lessSecondOf2017);
+                    expect(greater2017.reduce(less2017)).toBe(less2017);
+
+                    // <=
+                    let lessEquals2018 = filter(Filter.lessEquals(makeDate(2018)));
+                    let lessEquals2017 = filter(Filter.lessEquals(makeDate(2017)));
+
+                    expectCriteria(greater2017.reduce(lessEquals2018)).toEqual(Filter.lessEquals(makeDate(2017)));
+                    expect(greater2017.reduce(lessEquals2017)).toBe(lessEquals2017);
+                });
+
+                it("> / >=", () => {
+                    // >
+                    let greater2018 = filter(Filter.greater(makeDate(2018)));
+                    let greater2017 = filter(Filter.greater(makeDate(2017)));
+                    let greater2016 = filter(Filter.greater(makeDate(2016)));
+
+                    expect(greater2017.reduce(greater2018)).toBeNull();
+                    expect(greater2017.reduce(greater2017)).toBeNull();
+                    expectCriteria(greater2017.reduce(greater2016)).toEqual(Filter.inRange(makeDate(2016, 1), makeDate(2017)));
+
+                    // >=
+                    let greaterEquals2018 = filter(Filter.greaterEquals(makeDate(2018)));
+                    let greaterEquals2017 = filter(Filter.greaterEquals(makeDate(2017)));
+                    let greaterEquals2016 = filter(Filter.greaterEquals(makeDate(2016)));
+
+                    expect(greater2017.reduce(greaterEquals2018)).toBeNull();
+                    expectCriteria(greater2017.reduce(greaterEquals2017)).toEqual(Filter.equals(makeDate(2017)));
+                    expectCriteria(greater2017.reduce(greaterEquals2016)).toEqual(Filter.inRange(makeDate(2016), makeDate(2017)));
+                });
+
+                it("from / to", () => {
+                    let from2018to2019 = filter(Filter.inRange(makeDate(2018), makeDate(2019)));
+                    let from2017to2018 = filter(Filter.inRange(makeDate(2017), makeDate(2018)));
+                    let from2016to2018 = filter(Filter.inRange(makeDate(2016), makeDate(2018)));
+                    let from2016to2017 = filter(Filter.inRange(makeDate(2016), makeDate(2017)));
+
+                    expect(greater2017.reduce(from2018to2019)).toBeNull();
+                    expectCriteria(greater2017.reduce(from2017to2018)).toEqual(Filter.equals(makeDate(2017)));
+                    expectCriteria(greater2017.reduce(from2016to2018)).toEqual(Filter.inRange(makeDate(2016), makeDate(2017)));
+                    expect(greater2017.reduce(from2016to2017)).toBe(from2016to2017);
                 });
             });
         });
@@ -1132,6 +1363,73 @@ describe("filter", () => {
                     let alwaysUntouched = filter(Filter.notMemberOf(["foo", "bar"]));
 
                     expect(greaterEqualsFoo.reduce(alwaysUntouched)).toBe(alwaysUntouched);
+                });
+            });
+
+            describe("date", () => {
+                let greaterEquals2017 = filter(Filter.greaterEquals(makeDate(2017)));
+
+                it("== / !=", () => {
+                    // ==
+                    let equals2017 = filter(Filter.equals(makeDate(2017)));
+                    let equals2016 = filter(Filter.equals(makeDate(2016)));
+
+                    expect(greaterEquals2017.reduce(equals2017)).toBeNull();
+                    expect(greaterEquals2017.reduce(equals2016)).toBe(equals2016);
+
+                    // !=
+                    let not2016 = filter(Filter.notEquals(makeDate(2016)));
+                    let not2017 = filter(Filter.notEquals(makeDate(2017)));
+                    let not2018 = filter(Filter.notEquals(makeDate(2018)));
+
+                    // todo: inconsistent behaviour between "!=" and "not-in"
+                    expectCriteria(greaterEquals2017.reduce(not2016)).toEqual(Filter.less(makeDate(2017)));
+                    expectCriteria(greaterEquals2017.reduce(not2017)).toEqual(Filter.less(makeDate(2017)));
+                    expectCriteria(greaterEquals2017.reduce(not2018)).toEqual(Filter.less(makeDate(2017)));
+                });
+
+                it("< / <=", () => {
+                    // <
+                    let less2018 = filter(Filter.less(makeDate(2018)));
+                    let less2017 = filter(Filter.less(makeDate(2017)));
+
+                    expectCriteria(greaterEquals2017.reduce(less2018)).toEqual(Filter.less(makeDate(2017)));
+                    expect(greaterEquals2017.reduce(less2017)).toBe(less2017);
+
+                    // <=
+                    let lessEquals2017 = filter(Filter.lessEquals(makeDate(2017)));
+                    let lessEquals2016 = filter(Filter.lessEquals(makeDate(2016)));
+
+                    expectCriteria(greaterEquals2017.reduce(lessEquals2017)).toEqual(Filter.less(makeDate(2017)));
+                    expect(greaterEquals2017.reduce(lessEquals2016)).toBe(lessEquals2016);
+                });
+
+                it("> / >=", () => {
+                    // >
+                    let greaterLastOf2016 = filter(Filter.greater(makeDate(2017, -1)));
+                    let greater2016 = filter(Filter.greater(makeDate(2016)));
+
+                    expect(greaterEquals2017.reduce(greaterLastOf2016)).toBeNull();
+                    expectCriteria(greaterEquals2017.reduce(greater2016)).toEqual(Filter.inRange(makeDate(2016, 1), makeDate(2017, -1)));
+
+                    // // >=
+                    let greaterEquals2018 = filter(Filter.greaterEquals(makeDate(2018)));
+                    let greaterEquals2016 = filter(Filter.greaterEquals(makeDate(2016)));
+
+                    expect(greaterEquals2017.reduce(greaterEquals2018)).toBeNull();
+                    expectCriteria(greaterEquals2017.reduce(greaterEquals2016)).toEqual(Filter.inRange(makeDate(2016), makeDate(2017, -1)));
+                });
+
+                it("from / to", () => {
+                    let from2017to2018 = filter(Filter.inRange(makeDate(2017), makeDate(2018)));
+                    let fromLastOf2016to2018 = filter(Filter.inRange(makeDate(2017, -1), makeDate(2018)));
+                    let from2016to2018 = filter(Filter.inRange(makeDate(2016), makeDate(2018)));
+                    let from2015to2016 = filter(Filter.inRange(makeDate(2015), makeDate(2016)));
+
+                    expect(greaterEquals2017.reduce(from2017to2018)).toBeNull();
+                    expectCriteria(greaterEquals2017.reduce(fromLastOf2016to2018)).toEqual(Filter.equals(makeDate(2017, -1)));
+                    expectCriteria(greaterEquals2017.reduce(from2016to2018)).toEqual(Filter.inRange(makeDate(2016), makeDate(2017, -1)));
+                    expect(greaterEquals2017.reduce(from2015to2016)).toBe(from2015to2016);
                 });
             });
         });
