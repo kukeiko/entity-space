@@ -515,6 +515,39 @@ let reducers = new Map<Filter.Operations, Reducers>([
 
                 default: return b;
             }
+        }],
+        ["string", (a: Filter.StringPointCriterion, b: Filter.StringCriterion): ReduceResult => {
+            switch (b.op) {
+                case "==": return b.value > a.value ? null : b;
+                case "!=": return { op: "<=", type: "string", value: a.value };
+                case "<": case "<=": return a.value < b.value ? { op: "<=", type: "string", value: a.value } : b;
+                case ">": return b.value >= a.value ? null : { op: FROM_TO, type: "string", range: [b.value, a.value] };
+                case ">=": return b.value > a.value ? null
+                    : a.value == b.value
+                        ? { op: "==", type: "string", value: a.value }
+                        : { op: FROM_TO, type: "string", range: [b.value, a.value] };
+
+                case "from-to": {
+                    if (a.value < b.range[0]) return null;
+                    if (a.value == b.range[0]) return { op: "==", type: "string", value: a.value };
+                    if (a.value < b.range[1]) return { op: FROM_TO, type: "string", range: [b.range[0], a.value] };
+
+                    return b;
+                }
+
+                case "in": {
+                    let copy = new Set(b.values);
+                    copy.forEach(v => v > a.value && copy.delete(v));
+
+                    if (copy.size == b.values.size) return b;
+                    if (copy.size == 0) return null;
+                    if (copy.size == 1) return { op: "==", type: "string", value: copy.values().next().value };
+
+                    return { op: "in", type: "string", values: copy };
+                }
+
+                default: return b;
+            }
         }]
     ])],
     // todo: incomplete
