@@ -367,6 +367,7 @@ let reducers = new Map<Filter.Operations, Reducers>([
                 default: return b;
             }
         }],
+        // note: seems complete
         ["string", (a: Filter.StringPointCriterion, b: Filter.StringCriterion): ReduceResult => {
             switch (b.op) {
                 case "==": return b.value < a.value ? null : b;
@@ -438,6 +439,37 @@ let reducers = new Map<Filter.Operations, Reducers>([
                     if (copy.size == 1) return { op: "==", type: "number", value: copy.values().next().value };
 
                     return { op: "in", type: "number", values: copy };
+                }
+
+                default: return b;
+            }
+        }],
+        // note: seems complete
+        ["string", (a: Filter.StringPointCriterion, b: Filter.StringCriterion): ReduceResult => {
+            switch (b.op) {
+                case "==": return b.value <= a.value ? null : b;
+                case "!=": return { op: ">", type: "string", value: a.value };
+                case "<": case "<=": return b.value <= a.value ? null : { op: FROM_TO, type: "string", range: [a.value, b.value] };
+
+                case ">": return a.value > b.value ? { op: ">", type: "string", value: a.value } : b;
+                case ">=": return a.value >= b.value ? { op: ">", type: "string", value: a.value } : b;
+
+                case "from-to": {
+                    if (a.value >= b.range[1]) return null;
+                    if (a.value > b.range[0]) return { op: FROM_TO, type: "string", range: [a.value, b.range[1]] };
+
+                    return b;
+                }
+
+                case "in": {
+                    let copy = new Set(b.values);
+                    copy.forEach(v => v <= a.value && copy.delete(v));
+
+                    if (copy.size == b.values.size) return b;
+                    if (copy.size == 0) return null;
+                    if (copy.size == 1) return { op: "==", type: "string", value: copy.values().next().value };
+
+                    return { op: "in", type: "string", values: copy };
                 }
 
                 default: return b;
