@@ -23,6 +23,7 @@ type Reducers = Map<Filter.Types, Reducer>;
 // todo: a lot of ops missing
 // todo: use strict comparions === && !==
 // todo: can return criterions with empty sets (in / common)
+// todo: when comparing a and b, a should always be first (consistency + readability)
 let reducers = new Map<Filter.Operations, Reducers>([
     // note: seems complete
     ["==", new Map<Filter.Types, Reducer>([
@@ -30,6 +31,7 @@ let reducers = new Map<Filter.Operations, Reducers>([
             switch (b.op) {
                 case "==": return a.value == b.value ? null : b;
                 case "!=": return a.value != b.value ? { op: "==", type: "bool", value: [true, false, null].filter(x => x != b.value && x != a.value)[0] } : b;
+
                 case "in":
                     if (b.values.has(a.value)) {
                         if (b.values.size == 1) return null;
@@ -66,6 +68,7 @@ let reducers = new Map<Filter.Operations, Reducers>([
                 case "<=": return a.value == b.value ? { op: "<", type: "number", value: a.value, step: b.step } : b;
                 case ">": return a.value - b.step == b.value ? { op: ">", type: "number", value: a.value, step: b.step } : b;
                 case ">=": return a.value == b.value ? { op: ">", type: "number", value: a.value, step: b.step } : b;
+
                 case "in":
                     if (b.values.has(a.value)) {
                         if (b.values.size == 1) return null;
@@ -109,6 +112,7 @@ let reducers = new Map<Filter.Operations, Reducers>([
                 case "==": return a.value == b.value ? null : b;
                 case "<=": return a.value == b.value ? { op: "<", type: "string", value: a.value } : b;
                 case ">=": return a.value == b.value ? { op: ">", type: "string", value: a.value } : b;
+
                 case "in":
                     if (b.values.has(a.value)) {
                         if (b.values.size == 1) return null;
@@ -139,6 +143,7 @@ let reducers = new Map<Filter.Operations, Reducers>([
         ["guid", (a: Filter.GuidEqualityCriterion, b: Filter.GuidCriterion): ReduceResult => {
             switch (b.op) {
                 case "==": return a.value == b.value ? null : b;
+
                 case "in":
                     if (b.values.has(a.value)) {
                         if (b.values.size == 1) return null;
@@ -248,6 +253,7 @@ let reducers = new Map<Filter.Operations, Reducers>([
         ["bool", (a: Filter.BooleanMemberCriterion, b: Filter.BooleanCriterion): ReduceResult => {
             switch (b.op) {
                 case "==": return a.values.has(b.value) ? null : b;
+
                 case "in": {
                     let copy = new Set(b.values);
                     a.values.forEach(v => copy.delete(v));
@@ -268,6 +274,7 @@ let reducers = new Map<Filter.Operations, Reducers>([
         ["number", (a: Filter.NumberMemberCriterion, b: Filter.NumberCriterion): ReduceResult => {
             switch (b.op) {
                 case "==": return a.values.has(b.value) ? null : b;
+
                 case "in": {
                     let copy = new Set(b.values);
                     a.values.forEach(v => copy.delete(v));
@@ -288,6 +295,7 @@ let reducers = new Map<Filter.Operations, Reducers>([
         ["string", (a: Filter.StringMemberCriterion, b: Filter.StringCriterion): ReduceResult => {
             switch (b.op) {
                 case "==": return a.values.has(b.value) ? null : b;
+
                 case "in": {
                     let copy = new Set(b.values);
                     a.values.forEach(v => copy.delete(v));
@@ -308,6 +316,7 @@ let reducers = new Map<Filter.Operations, Reducers>([
         ["guid", (a: Filter.GuidMemberCriterion, b: Filter.GuidCriterion): ReduceResult => {
             switch (b.op) {
                 case "==": return a.values.has(b.value) ? null : b;
+
                 case "in": {
                     let copy = new Set(b.values);
                     a.values.forEach(v => copy.delete(v));
@@ -333,6 +342,7 @@ let reducers = new Map<Filter.Operations, Reducers>([
             switch (b.op) {
                 case "==": return b.value < a.value ? null : b;
                 case "!=": return { op: ">=", type: "number", value: a.value, step: a.step };
+
                 case "<": return b.value <= a.value ? null
                     : (a.value + b.step) == b.value
                         ? { op: "==", type: "number", value: a.value }
@@ -345,6 +355,7 @@ let reducers = new Map<Filter.Operations, Reducers>([
 
                 case ">": return b.value + b.step < a.value ? { op: ">=", type: "number", value: a.value, step: b.step } : b;
                 case ">=": return b.value < a.value ? { op: ">=", type: "number", value: a.value, step: b.step } : b;
+
                 case "from-to": {
                     if (a.value > b.range[1]) return null;
                     if (a.value == b.range[1]) return { op: "==", type: "number", value: a.value };
@@ -373,6 +384,7 @@ let reducers = new Map<Filter.Operations, Reducers>([
                 case "==": return b.value < a.value ? null : b;
                 case "!=": return { op: ">=", type: "string", value: a.value };
                 case "<": return b.value <= a.value ? null : { op: FROM_TO, type: "string", range: [a.value, b.value] };
+
                 case "<=": return b.value < a.value ? null
                     : a.value == b.value
                         ? { op: "==", type: "string", value: a.value }
@@ -410,6 +422,7 @@ let reducers = new Map<Filter.Operations, Reducers>([
             switch (b.op) {
                 case "==": return b.value <= a.value ? null : b;
                 case "!=": return { op: ">", type: "number", value: a.value, step: a.step };
+
                 case "<": return b.value <= a.value + b.step ? null
                     : (a.value + (b.step * 2)) == b.value
                         ? { op: "==", type: "number", value: a.value + b.step }
@@ -422,6 +435,7 @@ let reducers = new Map<Filter.Operations, Reducers>([
 
                 case ">": return b.value < a.value ? { op: ">", type: "number", value: a.value, step: b.step } : b;
                 case ">=": return b.value <= a.value ? { op: ">", type: "number", value: a.value, step: b.step } : b;
+
                 case "from-to": {
                     if (a.value >= b.range[1]) return null;
                     if (a.value + b.step == b.range[1]) return { op: "==", type: "number", value: b.range[1] };
@@ -450,7 +464,6 @@ let reducers = new Map<Filter.Operations, Reducers>([
                 case "==": return b.value <= a.value ? null : b;
                 case "!=": return { op: ">", type: "string", value: a.value };
                 case "<": case "<=": return b.value <= a.value ? null : { op: FROM_TO, type: "string", range: [a.value, b.value] };
-
                 case ">": return a.value > b.value ? { op: ">", type: "string", value: a.value } : b;
                 case ">=": return a.value >= b.value ? { op: ">", type: "string", value: a.value } : b;
 
@@ -485,10 +498,12 @@ let reducers = new Map<Filter.Operations, Reducers>([
                 case "!=": return { op: "<=", type: "number", value: a.value, step: a.step };
                 case "<": return b.value > a.value ? { op: "<=", type: "number", value: a.value, step: b.step } : b;
                 case "<=": return b.value >= a.value ? { op: "<=", type: "number", value: a.value, step: b.step } : b;
+
                 case ">": return b.value >= a.value ? null
                     : (a.value - b.step) == b.value
                         ? { op: "==", type: "number", value: a.value }
                         : { op: FROM_TO, type: "number", range: [b.value + b.step, a.value], step: b.step };
+
                 case ">=": return b.value > a.value ? null
                     : a.value == b.value
                         ? { op: "==", type: "number", value: a.value }
@@ -516,12 +531,14 @@ let reducers = new Map<Filter.Operations, Reducers>([
                 default: return b;
             }
         }],
+        // note: seems complete
         ["string", (a: Filter.StringPointCriterion, b: Filter.StringCriterion): ReduceResult => {
             switch (b.op) {
                 case "==": return b.value > a.value ? null : b;
                 case "!=": return { op: "<=", type: "string", value: a.value };
                 case "<": case "<=": return a.value < b.value ? { op: "<=", type: "string", value: a.value } : b;
                 case ">": return b.value >= a.value ? null : { op: FROM_TO, type: "string", range: [b.value, a.value] };
+
                 case ">=": return b.value > a.value ? null
                     : a.value == b.value
                         ? { op: "==", type: "string", value: a.value }
@@ -559,6 +576,7 @@ let reducers = new Map<Filter.Operations, Reducers>([
                 case "!=": return { op: "<", type: "number", value: a.value, step: a.step };
                 case "<": return b.value > a.value ? { op: "<", type: "number", value: a.value, step: b.step } : b;
                 case "<=": return b.value >= a.value ? { op: "<", type: "number", value: a.value, step: b.step } : b;
+
                 case ">": return a.value - b.step <= b.value ? null
                     : (a.value - (b.step * 2)) == b.value
                         ? { op: "==", type: "number", value: a.value - b.step }
@@ -568,7 +586,6 @@ let reducers = new Map<Filter.Operations, Reducers>([
                     : a.value - b.step == b.value
                         ? { op: "==", type: "number", value: b.value }
                         : { op: FROM_TO, type: "number", range: [b.value, a.value - b.step], step: b.step };
-
 
                 case "from-to": {
                     if (a.value <= b.range[0]) return null;
@@ -587,6 +604,36 @@ let reducers = new Map<Filter.Operations, Reducers>([
                     if (copy.size == 1) return { op: "==", type: "number", value: copy.values().next().value };
 
                     return { op: "in", type: "number", values: copy };
+                }
+
+                default: return b;
+            }
+        }],
+        // note: seems complete
+        ["string", (a: Filter.StringPointCriterion, b: Filter.StringCriterion): ReduceResult => {
+            switch (b.op) {
+                case "==": return a.value <= b.value ? null : b;
+                case "!=": return { op: "<", type: "string", value: a.value };
+                case "<": return a.value < b.value ? { op: "<", type: "string", value: a.value } : b;
+                case "<=": return a.value <= b.value ? { op: "<", type: "string", value: a.value } : b;
+                case ">": case ">=": return a.value <= b.value ? null : { op: FROM_TO, type: "string", range: [b.value, a.value] };
+
+                case "from-to": {
+                    if (a.value <= b.range[0]) return null;
+                    if (a.value < b.range[1]) return { op: FROM_TO, type: "string", range: [b.range[0], a.value] };
+
+                    return b;
+                }
+
+                case "in": {
+                    let copy = new Set(b.values);
+                    copy.forEach(v => v >= a.value && copy.delete(v));
+
+                    if (copy.size == b.values.size) return b;
+                    if (copy.size == 0) return null;
+                    if (copy.size == 1) return { op: "==", type: "string", value: copy.values().next().value };
+
+                    return { op: "in", type: "string", values: copy };
                 }
 
                 default: return b;
