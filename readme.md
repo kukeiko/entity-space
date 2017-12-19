@@ -87,3 +87,9 @@ the metadata of an entity class.
 ### query merging
 as of now, queries just reduce each other, but none are ever merged. would increase performance since
 less query reductions would be made (especially if filters are used in order to page results).
+
+### domains
+the support to have multiple entity-space instances at a time
+
+### aggregate keys
+aggregate keys for references that are not virtual (=> [indexes] identity)

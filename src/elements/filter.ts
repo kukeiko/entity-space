@@ -903,6 +903,7 @@ export class Filter {
 
     // todo: maybe rework, is a bit wonky due to "is value null" check
     // todo: casts to Set<any> are meh
+    // todo: use strict comparisons
     private _itemMatches(item: StringIndexable): boolean {
         let c: Filter.Criterion;
         let v: any;
@@ -912,6 +913,7 @@ export class Filter {
             v = item[k];
 
             if (v == null) {
+                // todo: refactor into switch statement
                 if (c.op == "==") {
                     if (c.value != null) return false;
                 } else if (c.op == "!=") {

@@ -202,7 +202,7 @@ export class Query<T extends IEntity> {
     }
 
     /**
-     * Create a query pointing to all entities, with an optional expansion & filter.
+     * Create a query pointing to all entities with an optional expansion & filter.
      */
     static All<T>(args: {
         entity: EntityType<T>;
@@ -218,7 +218,7 @@ export class Query<T extends IEntity> {
     }
 
     /**
-     * Create a query pointing to entities with matching primary keys, with an optional expansion & filter.
+     * Create a query pointing to entities with matching primary keys with an optional expansion & filter.
      */
     static ByIds<T>(args: {
         entity: EntityType<T>;
@@ -235,7 +235,7 @@ export class Query<T extends IEntity> {
     }
 
     /**
-     * Create a query pointing to entities with matching indexed values, with an optional expansion & filter.
+     * Create a query pointing to entities with matching indexed values with an optional expansion & filter.
      */
     static ByIndexes<T>(args: {
         entity: EntityType<T>;

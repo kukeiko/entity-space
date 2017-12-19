@@ -299,8 +299,7 @@ export class Expansion {
     }
 
     /**
-     * Extract all expansions that match against the predicate.
-     * Only first occurences are extracted.
+     * Extract expansions that match the predicate. Children of extracted expansions are not extracted again.
      *
      * Returns the reduced expansion and the extractions.
      */
