@@ -321,7 +321,7 @@ describe("filter", () => {
                     }
 
                     {
-                        // <= 
+                        // <=
                         let partially = filter(Filter.lessEquals("foo"));
                         let untouched = filter(Filter.lessEquals("bar"));
 
@@ -377,13 +377,70 @@ describe("filter", () => {
                     expect(isNull.reduce(lessThanFoo)).toBe(lessThanFoo);
                 });
             });
+
+            describe("date", () => {
+                let is2017 = filter(Filter.equals(makeDate(2017)));
+
+                it("== / !=", () => {
+                    let alsoIs2017 = filter(Filter.equals(makeDate(2017)));
+                    expect(is2017.reduce(alsoIs2017)).toBeNull();
+
+                    let is2018 = filter(Filter.equals(makeDate(2018)));
+                    expect(is2017.reduce(is2018)).toBe(is2018);
+
+                    let not2016 = filter(Filter.notEquals(makeDate(2016)));
+                    expect(is2017.reduce(not2016)).toBe(not2016);
+
+                    let isNull = filter(Filter.isNull("date"));
+                    expect(is2017.reduce(isNull)).toBe(isNull);
+                });
+
+                it("< / <= / > / >=", () => {
+                    {
+                        // <
+                        let lessSecondOf2017 = filter(Filter.less(makeDate(2017, 1)));
+                        expect(is2017.reduce(lessSecondOf2017)).toBe(lessSecondOf2017);
+                    }
+
+                    {
+                        // <=
+                        let lessEquals2017 = filter(Filter.lessEquals(makeDate(2017)));
+                        let lessEqualsSecondOf2017 = filter(Filter.lessEquals(makeDate(2017, 1)));
+
+                        expectCriteria(is2017.reduce(lessEquals2017)).toEqual(Filter.less(makeDate(2017)));
+                        expect(is2017.reduce(lessEqualsSecondOf2017)).toBe(lessEqualsSecondOf2017);
+                    }
+
+                    {
+                        // >
+                        let greaterLastOf2016 = filter(Filter.greater(makeDate(2017, -1)));
+                        expect(is2017.reduce(greaterLastOf2016)).toBe(greaterLastOf2016);
+                    }
+
+                    {
+                        // >=
+                        let greaterEquals2017 = filter(Filter.greaterEquals(makeDate(2017)));
+                        let greaterEqualsLastOf2016 = filter(Filter.greaterEquals(makeDate(2017, -1)));
+
+                        expectCriteria(is2017.reduce(greaterEquals2017)).toEqual(Filter.greater(makeDate(2017)));
+                        expect(is2017.reduce(greaterEqualsLastOf2016)).toBe(greaterEqualsLastOf2016);
+                    }
+                });
+
+                it("untouched due to null w/ point criterion", () => {
+                    let isNull = filter(Filter.isNull("date"));
+                    let less2017 = filter(Filter.less(makeDate(2017)));
+
+                    expect(isNull.reduce(less2017)).toBe(less2017);
+                });
+            });
         });
 
         describe("!=", () => {
             describe("bool", () => {
-                it("== / !=", () => {
-                    let notTrue = filter(Filter.notEquals(true));
+                let notTrue = filter(Filter.notEquals(true));
 
+                it("== / !=", () => {
                     let alsoNotTrue = filter(Filter.notEquals(true));
                     expect(notTrue.reduce(alsoNotTrue)).toBeNull();
 
@@ -401,6 +458,285 @@ describe("filter", () => {
 
                     let notNull = filter(Filter.notNull("bool"));
                     expectCriteria(notTrue.reduce(notNull)).toEqual({ op: "==", type: "bool", value: true });
+                });
+
+                it("in / not-in", () => {
+                    let inFalseAndNull = filter(Filter.memberOf([false, null]));
+                    let inTrueAndFalse = filter(Filter.memberOf([true, false]));
+
+                    expect(notTrue.reduce(inFalseAndNull)).toBeNull();
+                    expectCriteria(notTrue.reduce(inTrueAndFalse)).toEqual(Filter.equals(true));
+
+                    let notInTrueAndFalse = filter(Filter.notMemberOf([true, false]));
+                    let notInFalseAndNull = filter(Filter.notMemberOf([false, null]));
+
+                    expect(notTrue.reduce(notInTrueAndFalse)).toBeNull();
+                    expectCriteria(notTrue.reduce(notInFalseAndNull)).toEqual(Filter.equals(true));
+                });
+            });
+
+            describe("number", () => {
+                let not7 = filter(Filter.notEquals(7));
+
+                it("== / !=", () => {
+                    let is3 = filter(Filter.equals(3));
+                    let is7 = filter(Filter.equals(7));
+
+                    expect(not7.reduce(is3)).toBeNull();
+                    expect(not7.reduce(is7)).toBe(is7);
+
+                    let not3 = filter(Filter.notEquals(3));
+                    let alsoNot7 = filter(Filter.notEquals(7));
+
+                    expectCriteria(not7.reduce(not3)).toEqual(Filter.equals(7));
+                    expect(not7.reduce(alsoNot7)).toBeNull();
+                });
+
+                it("< / <= / > / >=", () => {
+                    {
+                        // <
+                        let less3 = filter(Filter.less(3));
+                        let less7 = filter(Filter.less(7));
+                        let less8 = filter(Filter.less(8));
+
+                        expect(not7.reduce(less3)).toBeNull();
+                        expect(not7.reduce(less7)).toBeNull();
+                        expectCriteria(not7.reduce(less8)).toEqual(Filter.equals(7));
+                    }
+
+                    {
+                        // <=
+                        let lessEquals3 = filter(Filter.lessEquals(3));
+                        let lessEquals7 = filter(Filter.lessEquals(7));
+                        let lessEquals8 = filter(Filter.lessEquals(8));
+
+                        expect(not7.reduce(lessEquals3)).toBeNull();
+                        expectCriteria(not7.reduce(lessEquals7)).toEqual(Filter.equals(7));
+                        expectCriteria(not7.reduce(lessEquals8)).toEqual(Filter.equals(7));
+                    }
+
+                    {
+                        // >
+                        let greater8 = filter(Filter.greater(8));
+                        let greater7 = filter(Filter.greater(7));
+                        let greater6 = filter(Filter.greater(6));
+
+                        expect(not7.reduce(greater8)).toBeNull();
+                        expect(not7.reduce(greater7)).toBeNull();
+                        expectCriteria(not7.reduce(greater6)).toEqual(Filter.equals(7));
+                    }
+
+                    {
+                        // >=
+                        let greaterEquals8 = filter(Filter.greaterEquals(8));
+                        let greaterEquals7 = filter(Filter.greaterEquals(7));
+                        let greaterEquals6 = filter(Filter.greaterEquals(6));
+
+                        expect(not7.reduce(greaterEquals8)).toBeNull();
+                        expectCriteria(not7.reduce(greaterEquals7)).toEqual(Filter.equals(7));
+                        expectCriteria(not7.reduce(greaterEquals6)).toEqual(Filter.equals(7));
+                    }
+                });
+
+                it("in / not-in", () => {
+                    let in3and8 = filter(Filter.memberOf([3, 8]));
+                    let in3and7 = filter(Filter.memberOf([3, 7]));
+
+                    expect(not7.reduce(in3and8)).toBeNull();
+                    expectCriteria(not7.reduce(in3and7)).toEqual(Filter.equals(7));
+
+                    let notIn3and8 = filter(Filter.notMemberOf([3, 8]));
+                    let notIn3and7 = filter(Filter.notMemberOf([3, 7]));
+
+                    expectCriteria(not7.reduce(notIn3and8)).toEqual(Filter.equals(7));
+                    expect(not7.reduce(notIn3and7)).toBeNull();
+                });
+
+                it("from-to", () => {
+                    let from3to7 = filter(Filter.inRange(3, 7));
+                    let from8to9 = filter(Filter.inRange(8, 9));
+
+                    expectCriteria(not7.reduce(from3to7)).toEqual(Filter.equals(7));
+                    expect(not7.reduce(from8to9)).toBeNull();
+                });
+
+                it("null due to null w/ point criterion", () => {
+                    let notNull = filter(Filter.notNull("number"));
+
+                    let lessThan3 = filter(Filter.less(3));
+                    expect(notNull.reduce(lessThan3)).toBeNull();
+                });
+            });
+
+            describe("string", () => {
+                let notFoo = filter(Filter.notEquals("foo"));
+
+                it("== / !=", () => {
+                    let isBar = filter(Filter.equals("bar"));
+                    let isFoo = filter(Filter.equals("foo"));
+
+                    expect(notFoo.reduce(isBar)).toBeNull();
+                    expect(notFoo.reduce(isFoo)).toBe(isFoo);
+
+                    let notBar = filter(Filter.notEquals("bar"));
+                    let alsoNotFoo = filter(Filter.notEquals("foo"));
+
+                    expectCriteria(notFoo.reduce(notBar)).toEqual(Filter.equals("foo"));
+                    expect(notFoo.reduce(alsoNotFoo)).toBeNull();
+                });
+
+                it("< / <= / > / >=", () => {
+                    {
+                        // <
+                        let lessBar = filter(Filter.less("bar"));
+                        let lessFoo = filter(Filter.less("foo"));
+                        let lessKhaz = filter(Filter.less("khaz"));
+
+                        expect(notFoo.reduce(lessBar)).toBeNull();
+                        expect(notFoo.reduce(lessFoo)).toBeNull();
+                        expectCriteria(notFoo.reduce(lessKhaz)).toEqual(Filter.equals("foo"));
+                    }
+
+                    {
+                        // <=
+                        let lessEqualsBar = filter(Filter.lessEquals("bar"));
+                        let lessEqualsFoo = filter(Filter.lessEquals("foo"));
+                        let lessEqualsKhaz = filter(Filter.lessEquals("khaz"));
+
+                        expect(notFoo.reduce(lessEqualsBar)).toBeNull();
+                        expectCriteria(notFoo.reduce(lessEqualsFoo)).toEqual(Filter.equals("foo"));
+                        expectCriteria(notFoo.reduce(lessEqualsKhaz)).toEqual(Filter.equals("foo"));
+                    }
+
+                    {
+                        // >
+                        let greaterKhaz = filter(Filter.greater("khaz"));
+                        let greaterFoo = filter(Filter.greater("foo"));
+                        let greaterBar = filter(Filter.greater("bar"));
+
+                        expect(notFoo.reduce(greaterKhaz)).toBeNull();
+                        expect(notFoo.reduce(greaterFoo)).toBeNull();
+                        expectCriteria(notFoo.reduce(greaterBar)).toEqual(Filter.equals("foo"));
+                    }
+
+                    {
+                        // >=
+                        let greaterEqualsKhaz = filter(Filter.greaterEquals("khaz"));
+                        let greaterEqualsFoo = filter(Filter.greaterEquals("foo"));
+                        let greaterEqualsBar = filter(Filter.greaterEquals("bar"));
+
+                        expect(notFoo.reduce(greaterEqualsKhaz)).toBeNull();
+                        expectCriteria(notFoo.reduce(greaterEqualsFoo)).toEqual(Filter.equals("foo"));
+                        expectCriteria(notFoo.reduce(greaterEqualsBar)).toEqual(Filter.equals("foo"));
+                    }
+                });
+
+                it("in / not-in", () => {
+                    let inBarAndKhaz = filter(Filter.memberOf(["bar", "khaz"]));
+                    let inBarAndFoo = filter(Filter.memberOf(["bar", "foo"]));
+
+                    expect(notFoo.reduce(inBarAndKhaz)).toBeNull();
+                    expectCriteria(notFoo.reduce(inBarAndFoo)).toEqual(Filter.equals("foo"));
+
+                    let notInBarAndKhaz = filter(Filter.notMemberOf(["bar", "khaz"]));
+                    let notInBarAndFoo = filter(Filter.notMemberOf(["bar", "foo"]));
+
+                    expectCriteria(notFoo.reduce(notInBarAndKhaz)).toEqual(Filter.equals("foo"));
+                    expect(notFoo.reduce(notInBarAndFoo)).toBeNull();
+                });
+
+                it("from-to", () => {
+                    let fromBarToFoo = filter(Filter.inRange("bar", "foo"));
+                    let fromKhazToMo = filter(Filter.inRange("khaz", "mo"));
+
+                    expectCriteria(notFoo.reduce(fromBarToFoo)).toEqual(Filter.equals("foo"));
+                    expect(notFoo.reduce(fromKhazToMo)).toBeNull();
+                });
+
+                it("null due to null w/ point criterion", () => {
+                    let notNull = filter(Filter.notNull("string"));
+
+                    let lessBar = filter(Filter.less("bar"));
+                    expect(notNull.reduce(lessBar)).toBeNull();
+                });
+            });
+
+            describe("date", () => {
+                let not2017 = filter(Filter.notEquals(makeDate(2017)));
+
+                it("== / !=", () => {
+                    let is2016 = filter(Filter.equals(makeDate(2016)));
+                    let is2017 = filter(Filter.equals(makeDate(2017)));
+
+                    expect(not2017.reduce(is2016)).toBeNull();
+                    expect(not2017.reduce(is2017)).toBe(is2017);
+
+                    let not2016 = filter(Filter.notEquals(makeDate(2016)));
+                    let alsoNot2017 = filter(Filter.notEquals(makeDate(2017)));
+
+                    expectCriteria(not2017.reduce(not2016)).toEqual(Filter.equals(makeDate(2017)));
+                    expect(not2017.reduce(alsoNot2017)).toBeNull();
+                });
+
+                it("< / <= / > / >=", () => {
+                    {
+                        // <
+                        let less2016 = filter(Filter.less(makeDate(2016)));
+                        let less2017 = filter(Filter.less(makeDate(2017)));
+                        let less2018 = filter(Filter.less(makeDate(2018)));
+
+                        expect(not2017.reduce(less2016)).toBeNull();
+                        expect(not2017.reduce(less2017)).toBeNull();
+                        expectCriteria(not2017.reduce(less2018)).toEqual(Filter.equals(makeDate(2017)));
+                    }
+
+                    {
+                        // <=
+                        let lessEquals2016 = filter(Filter.lessEquals(makeDate(2016)));
+                        let lessEquals2017 = filter(Filter.lessEquals(makeDate(2017)));
+                        let lessEquals2018 = filter(Filter.lessEquals(makeDate(2018)));
+
+                        expect(not2017.reduce(lessEquals2016)).toBeNull();
+                        expectCriteria(not2017.reduce(lessEquals2017)).toEqual(Filter.equals(makeDate(2017)));
+                        expectCriteria(not2017.reduce(lessEquals2018)).toEqual(Filter.equals(makeDate(2017)));
+                    }
+
+                    {
+                        // >
+                        let greater2018 = filter(Filter.greater(makeDate(2018)));
+                        let greater2017 = filter(Filter.greater(makeDate(2017)));
+                        let greater2016 = filter(Filter.greater(makeDate(2016)));
+
+                        expect(not2017.reduce(greater2018)).toBeNull();
+                        expect(not2017.reduce(greater2017)).toBeNull();
+                        expectCriteria(not2017.reduce(greater2016)).toEqual(Filter.equals(makeDate(2017)));
+                    }
+
+                    {
+                        // >=
+                        let greaterEquals2018 = filter(Filter.greaterEquals(makeDate(2018)));
+                        let greaterEquals2017 = filter(Filter.greaterEquals(makeDate(2017)));
+                        let greaterEquals2016 = filter(Filter.greaterEquals(makeDate(2016)));
+
+                        expect(not2017.reduce(greaterEquals2018)).toBeNull();
+                        expectCriteria(not2017.reduce(greaterEquals2017)).toEqual(Filter.equals(makeDate(2017)));
+                        expectCriteria(not2017.reduce(greaterEquals2016)).toEqual(Filter.equals(makeDate(2017)));
+                    }
+                });
+
+                it("from-to", () => {
+                    let from2016to2017 = filter(Filter.inRange(makeDate(2016), makeDate(2017)));
+                    let from2018to2019 = filter(Filter.inRange(makeDate(2018), makeDate(2019)));
+
+                    expectCriteria(not2017.reduce(from2016to2017)).toEqual(Filter.equals(makeDate(2017)));
+                    expect(not2017.reduce(from2018to2019)).toBeNull();
+                });
+
+                it("null due to null w/ point criterion", () => {
+                    let notNull = filter(Filter.notNull("date"));
+
+                    let lessThan3 = filter(Filter.less(makeDate(2017)));
+                    expect(notNull.reduce(lessThan3)).toBeNull();
                 });
             });
         });
@@ -1434,133 +1770,257 @@ describe("filter", () => {
             });
         });
 
+        describe("in", () => {
+            describe("bool", () => {
+                let inTrueAndFalse = filter(Filter.memberOf([true, false]));
+
+                it("==", () => {
+                    let isTrue = filter(Filter.equals(true));
+                    let isNull = filter(Filter.isNull("bool"));
+
+                    expect(inTrueAndFalse.reduce(isTrue)).toBeNull();
+                    expect(inTrueAndFalse.reduce(isNull)).toBe(isNull);
+                });
+
+                fit("in / not-in", () => {
+                    let inTrueAndNull = filter(Filter.memberOf([true, null]));
+                    let inNull = filter(Filter.memberOf([null]));
+
+                    expectCriteria(inTrueAndFalse.reduce(inTrueAndNull)).toEqual(Filter.isNull("bool"));
+                    // expect(inTrueAndFalse.reduce(inNull)).toBe(Filter.isNull("bool"));
+                });
+            });
+        });
+
         describe("from-to", () => {
-            it("from-to", () => {
-                let a = filter({ op: "from-to", type: "number", range: [1, 7], step: 1 });
+            describe("number", () => {
+                let from3to7 = filter(Filter.inRange(3, 7));
 
-                {
-                    // A reduces lower bound of B
-                    let b = filter({ op: "from-to", type: "number", range: [3, 9], step: 1 });
-                    let r = a.reduce(b);
-                    expect(r).not.toBeNull();
-                    expect(get(r)).toEqual({ op: "from-to", type: "number", range: [7, 9], step: 1 });
-                }
+                it("==", () => {
+                    let equals3 = filter(Filter.equals(3));
+                    let equals8 = filter(Filter.equals(8));
 
-                {
-                    // A reduces higher bound of B
-                    let b = filter({ op: "from-to", type: "number", range: [-3, 3], step: 1 });
-                    let r = a.reduce(b);
-                    expect(r).not.toBeNull();
-                    expect(get(r)).toEqual({ op: "from-to", type: "number", range: [-3, 1], step: 1 });
-                }
+                    expect(from3to7.reduce(equals3)).toBeNull();
+                    expect(from3to7.reduce(equals8)).toBe(equals8);
+                });
 
-                {
-                    // A completely reduces B due to being greater than B
-                    let b = filter({ op: "from-to", type: "number", range: [2, 6], step: 1 });
-                    let r = a.reduce(b);
-                    expect(r).toBeNull();
-                }
+                it("< / <= / > / >=", () => {
+                    {
+                        // <
+                        let less4 = filter(Filter.less(4));
+                        let less2 = filter(Filter.less(2));
 
-                {
-                    // A completely reduces B due to being equal
-                    let b = filter({ op: "from-to", type: "number", range: [1, 7], step: 1 });
-                    let r = a.reduce(b);
-                    expect(r).toBeNull();
-                }
+                        expectCriteria(from3to7.reduce(less4)).toEqual(Filter.less(3));
+                        expect(from3to7.reduce(less2)).toBe(less2);
+                    }
 
-                {
-                    // A does not reduce B due to being consumed by B
-                    let b = filter({ op: "from-to", type: "number", range: [-3, 9], step: 1 });
-                    let r = a.reduce(b);
-                    expect(r).not.toBeNull();
-                    expect(get(r)).toEqual({ op: "from-to", type: "number", range: [-3, 9], step: 1 });
-                }
+                    {
+                        // <=
+                        let lessEquals3 = filter(Filter.lessEquals(3));
+                        let lessEquals2 = filter(Filter.lessEquals(2));
 
-                {
-                    // A does not reduce B due to non-intersecting ranges
-                    let b = filter({ op: "from-to", type: "number", range: [-64, 0], step: 1 });
-                    let r = a.reduce(b);
-                    expect(r).not.toBeNull();
-                    expect(r).toEqual(b);
-                }
+                        expectCriteria(from3to7.reduce(lessEquals3)).toEqual(Filter.less(3));
+                        expect(from3to7.reduce(lessEquals2)).toBe(lessEquals2);
+                    }
+
+                    {
+                        // >
+                        let greater6 = filter(Filter.greater(6));
+                        let greater7 = filter(Filter.greater(7));
+
+                        expectCriteria(from3to7.reduce(greater6)).toEqual(Filter.greater(7));
+                        expect(from3to7.reduce(greater7)).toBe(greater7);
+                    }
+
+                    {
+                        // >=
+                        let greaterEquals7 = filter(Filter.greaterEquals(7));
+                        let greaterEquals8 = filter(Filter.greaterEquals(8));
+
+                        expectCriteria(from3to7.reduce(greaterEquals7)).toEqual(Filter.greater(7));
+                        expect(from3to7.reduce(greaterEquals8)).toBe(greaterEquals8);
+                    }
+                });
+
+                it("in", () => {
+                    // in
+                    let completely = filter(Filter.memberOf([3, 7]));
+                    let transformed = filter(Filter.memberOf([3, 7, 8]));
+                    let partially = filter(Filter.memberOf([3, 7, 8, 64]));
+                    let untouched = filter(Filter.memberOf([8, 64]));
+
+                    expect(from3to7.reduce(completely)).toBeNull();
+                    expectCriteria(from3to7.reduce(transformed)).toEqual(Filter.equals(8));
+                    expectCriteria(from3to7.reduce(partially)).toEqual(Filter.memberOf([8, 64]));
+                    expect(from3to7.reduce(untouched)).toBe(untouched);
+
+                    // not-in
+                    let alwaysUntouched = filter(Filter.notMemberOf([3, 7]));
+
+                    expect(from3to7.reduce(alwaysUntouched)).toBe(alwaysUntouched);
+                });
+
+                it("from-to", () => {
+                    let from1to6 = filter(Filter.inRange(1, 6));
+                    let from5to9 = filter(Filter.inRange(5, 9));
+                    let from4to6 = filter(Filter.inRange(4, 6));
+                    let from1to9 = filter(Filter.inRange(1, 9));
+                    let from9to16 = filter(Filter.inRange(9, 16));
+
+                    expectCriteria(from3to7.reduce(from1to6)).toEqual(Filter.inRange(1, 2));
+                    expectCriteria(from3to7.reduce(from5to9)).toEqual(Filter.inRange(8, 9));
+                    expect(from3to7.reduce(from4to6)).toBeNull();
+                    expect(from3to7.reduce(from1to9)).toBe(from1to9);
+                    expect(from3to7.reduce(from9to16)).toBe(from9to16);
+                });
             });
 
-            it("==", () => {
-                let a = filter({ op: "from-to", type: "number", range: [1, 7], step: 1 });
+            describe("string", () => {
+                let fromBarToFoo = filter(Filter.inRange("bar", "foo"));
 
-                {
-                    let b = filter({ op: "==", type: "number", value: 3 });
-                    let r = a.reduce(b);
-                    expect(r).toBeNull();
-                }
+                it("==", () => {
+                    let equalsBar = filter(Filter.equals("bar"));
+                    let equalsKhaz = filter(Filter.equals("khaz"));
+
+                    expect(fromBarToFoo.reduce(equalsBar)).toBeNull();
+                    expect(fromBarToFoo.reduce(equalsKhaz)).toBe(equalsKhaz);
+                });
+
+                it("< / <= / > / >=", () => {
+                    {
+                        // <
+                        let lessBaz = filter(Filter.less("baz"));
+                        let lessBar = filter(Filter.less("bar"));
+
+                        expectCriteria(fromBarToFoo.reduce(lessBaz)).toEqual(Filter.less("bar"));
+                        expect(fromBarToFoo.reduce(lessBar)).toBe(lessBar);
+                    }
+
+                    {
+                        // <=
+                        let lessEqualsBar = filter(Filter.lessEquals("bar"));
+                        let lessEqualsA = filter(Filter.lessEquals("a"));
+
+                        expectCriteria(fromBarToFoo.reduce(lessEqualsBar)).toEqual(Filter.less("bar"));
+                        expect(fromBarToFoo.reduce(lessEqualsA)).toBe(lessEqualsA);
+                    }
+
+                    {
+                        // >
+                        let greaterDan = filter(Filter.greater("dan"));
+                        let greaterFoo = filter(Filter.greater("foo"));
+
+                        expectCriteria(fromBarToFoo.reduce(greaterDan)).toEqual(Filter.greater("foo"));
+                        expect(fromBarToFoo.reduce(greaterFoo)).toBe(greaterFoo);
+                    }
+
+                    {
+                        // >=
+                        let greaterEqualsFoo = filter(Filter.greaterEquals("foo"));
+                        let greaterEqualsKhaz = filter(Filter.greaterEquals("khaz"));
+
+                        expectCriteria(fromBarToFoo.reduce(greaterEqualsFoo)).toEqual(Filter.greater("foo"));
+                        expect(fromBarToFoo.reduce(greaterEqualsKhaz)).toBe(greaterEqualsKhaz);
+                    }
+                });
+
+                it("in", () => {
+                    // in
+                    let completely = filter(Filter.memberOf(["bar", "foo"]));
+                    let transformed = filter(Filter.memberOf(["bar", "foo", "khaz"]));
+                    let partially = filter(Filter.memberOf(["bar", "foo", "khaz", "mo"]));
+                    let untouched = filter(Filter.memberOf(["khaz", "mo"]));
+
+                    expect(fromBarToFoo.reduce(completely)).toBeNull();
+                    expectCriteria(fromBarToFoo.reduce(transformed)).toEqual(Filter.equals("khaz"));
+                    expectCriteria(fromBarToFoo.reduce(partially)).toEqual(Filter.memberOf(["khaz", "mo"]));
+                    expect(fromBarToFoo.reduce(untouched)).toBe(untouched);
+
+                    // not-in
+                    let alwaysUntouched = filter(Filter.notMemberOf(["foo", "bar"]));
+
+                    expect(fromBarToFoo.reduce(alwaysUntouched)).toBe(alwaysUntouched);
+                });
+
+                it("from-to", () => {
+                    let fromAtoBar = filter(Filter.inRange("a", "dan"));
+                    let fromBazToKhaz = filter(Filter.inRange("baz", "khaz"));
+                    let fromBaztoDan = filter(Filter.inRange("baz", "dan"));
+                    let fromAtoKhaz = filter(Filter.inRange("a", "khaz"));
+                    let fromKhazToMo = filter(Filter.inRange("khaz", "mo"));
+
+                    expectCriteria(fromBarToFoo.reduce(fromAtoBar)).toEqual(Filter.inRange("a", "bar"));
+                    expectCriteria(fromBarToFoo.reduce(fromBazToKhaz)).toEqual(Filter.inRange("foo", "khaz"));
+                    expect(fromBarToFoo.reduce(fromBaztoDan)).toBeNull();
+                    expect(fromBarToFoo.reduce(fromAtoKhaz)).toBe(fromAtoKhaz);
+                    expect(fromBarToFoo.reduce(fromKhazToMo)).toBe(fromKhazToMo);
+                });
             });
 
-            it("<", () => {
-                let a = filter({ op: "from-to", type: "number", range: [1, 7], step: 1 });
+            describe("date", () => {
+                let from2016to2018 = filter(Filter.inRange(makeDate(2016), makeDate(2018)));
 
-                {
-                    let b = filter({ op: "<", type: "number", value: 2, step: 1 });
-                    let r = a.reduce(b);
+                it("==", () => {
+                    let equals2017 = filter(Filter.equals(makeDate(2017)));
+                    let equals2018 = filter(Filter.equals(makeDate(2018)));
+                    let equals2019 = filter(Filter.equals(makeDate(2019)));
 
-                    expect(r).not.toBeNull();
-                    expect(get(r)).toEqual({ op: "<", type: "number", value: 1, step: 1 });
-                }
+                    expect(from2016to2018.reduce(equals2017)).toBeNull();
+                    expect(from2016to2018.reduce(equals2018)).toBeNull();
+                    expect(from2016to2018.reduce(equals2019)).toBe(equals2019);
+                });
 
-                {
-                    let b = filter({ op: "<", type: "number", value: 8, step: 1 });
-                    let r = a.reduce(b);
+                it("< / <= / > / >=", () => {
+                    {
+                        // <
+                        let less2017 = filter(Filter.less(makeDate(2017)));
+                        let less2016 = filter(Filter.less(makeDate(2016)));
 
-                    expect(r).not.toBeNull();
-                    expect(get(r)).toEqual({ op: "<", type: "number", value: 1, step: 1 });
-                }
-            });
+                        expectCriteria(from2016to2018.reduce(less2017)).toEqual(Filter.less(makeDate(2016)));
+                        expect(from2016to2018.reduce(less2016)).toBe(less2016);
+                    }
 
-            it("<=", () => {
-                let a = filter({ op: "from-to", type: "number", range: [1, 7], step: 1 });
+                    {
+                        // <=
+                        let lessEquals2016 = filter(Filter.lessEquals(makeDate(2016)));
+                        let lessEquals2015 = filter(Filter.lessEquals(makeDate(2015)));
 
-                {
-                    let b = filter({ op: "<=", type: "number", value: 2, step: 1 });
-                    let r = a.reduce(b);
+                        expectCriteria(from2016to2018.reduce(lessEquals2016)).toEqual(Filter.less(makeDate(2016)));
+                        expect(from2016to2018.reduce(lessEquals2015)).toBe(lessEquals2015);
+                    }
 
-                    expect(r).not.toBeNull();
-                    expect(get(r)).toEqual({ op: "<", type: "number", value: 1, step: 1 });
-                }
+                    {
+                        // >
+                        let greater2017 = filter(Filter.greater(makeDate(2017)));
+                        let greater2018 = filter(Filter.greater(makeDate(2018)));
 
-                {
-                    let b = filter({ op: "<=", type: "number", value: 7, step: 1 });
-                    let r = a.reduce(b);
+                        expectCriteria(from2016to2018.reduce(greater2017)).toEqual(Filter.greater(makeDate(2018)));
+                        expect(from2016to2018.reduce(greater2018)).toBe(greater2018);
+                    }
 
-                    expect(r).not.toBeNull();
-                    expect(get(r)).toEqual({ op: "<", type: "number", value: 1, step: 1 });
-                }
-            });
+                    {
+                        // >=
+                        let greaterEquals2018 = filter(Filter.greaterEquals(makeDate(2018)));
+                        let greaterEquals2019 = filter(Filter.greaterEquals(makeDate(2019)));
 
-            xit("in / common", () => {
-                let a = filter({ op: "from-to", type: "number", range: [1, 7], step: 1 });
+                        expectCriteria(from2016to2018.reduce(greaterEquals2018)).toEqual(Filter.greater(makeDate(2018)));
+                        expect(from2016to2018.reduce(greaterEquals2019)).toBe(greaterEquals2019);
+                    }
+                });
 
-                {
-                    let include = filter({ op: "in", type: "number", values: new Set([1, 2, 3]) });
-                    let intersect = filter({ op: "common", type: "number", values: new Set([1, 2, 3]) });
+                it("from-to", () => {
+                    let from2015to2017 = filter(Filter.inRange(makeDate(2015), makeDate(2017)));
+                    let from2017to2019 = filter(Filter.inRange(makeDate(2017), makeDate(2019)));
+                    let fromSecondOf2016toLastOf2018 = filter(Filter.inRange(makeDate(2016, 1), makeDate(2018, -1)));
+                    let from2013to2020 = filter(Filter.inRange(makeDate(2013), makeDate(2020)));
+                    let from2020to2030 = filter(Filter.inRange(makeDate(2020), makeDate(2030)));
 
-                    expect(a.reduce(include)).toBeNull();
-                    expect(a.reduce(intersect)).toBeNull();
-                }
-
-                {
-                    let include = filter({ op: "in", type: "number", values: new Set([-1, 2, 3, 64]) });
-                    let intersect = filter({ op: "common", type: "number", values: new Set([-1, 2, 3, 64]) });
-
-                    expect(a.reduce(include)).not.toBeNull();
-                    expectArray(a.reduce(include)).toEqual([-1, 64]);
-                    expect(a.reduce(intersect)).not.toBeNull();
-                    expectArray(a.reduce(intersect)).toEqual([-1, 64]);
-                }
-            });
-
-            it("should not reduce !=", () => {
-                let fromTo = filter({ op: "from-to", type: "number", range: [1, 7], step: 1 });
-                let notEquals = filter({ op: "!=", type: "number", value: 3 });
-                expect(fromTo.reduce(notEquals)).toEqual(notEquals);
+                    expectCriteria(from2016to2018.reduce(from2015to2017)).toEqual(Filter.inRange(makeDate(2015), makeDate(2016)));
+                    expectCriteria(from2016to2018.reduce(from2017to2019)).toEqual(Filter.inRange(makeDate(2018), makeDate(2019)));
+                    expect(from2016to2018.reduce(fromSecondOf2016toLastOf2018)).toBeNull();
+                    expect(from2016to2018.reduce(from2013to2020)).toBe(from2013to2020);
+                    expect(from2016to2018.reduce(from2020to2030)).toBe(from2020to2030);
+                });
             });
         });
     });
