@@ -7,8 +7,6 @@
         "eofline": true,
         "no-use-before-declare": true,
         "no-unused-variable": true,
-        "semicolon": [
-            "always"
-        ]
+        "semicolon": true
     }
 }
