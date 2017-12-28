@@ -63,7 +63,8 @@ export abstract class IdentityBase {
  * Points to all entities.
  */
 export class All extends IdentityBase {
-    readonly type = "all";
+    // we have to explicitly state the type, otherwise its missing @ d.ts
+    readonly type: "all" = "all";
 
     /** @inheritdoc */
     readonly priority = 0;
@@ -82,7 +83,8 @@ export class All extends IdentityBase {
  * Points a set of entities specified by their primary keys.
  */
 export class ByIds extends IdentityBase {
-    readonly type = "ids";
+    // we have to explicitly state the type, otherwise its missing @ d.ts
+    readonly type: "ids" = "ids";
 
     /** @inheritdoc */
     readonly priority = 1;
@@ -119,7 +121,8 @@ export class ByIds extends IdentityBase {
  * Points to a set of entities specified by the values of indexed properties.
  */
 export class ByIndexes extends IdentityBase {
-    readonly type = "indexes";
+    // we have to explicitly state the type, otherwise its missing @ d.ts
+    readonly type: "indexes" = "indexes";
 
     /** @inheritdoc */
     readonly priority = 2;
