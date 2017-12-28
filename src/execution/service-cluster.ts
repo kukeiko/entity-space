@@ -298,11 +298,13 @@ export class ServiceCluster {
                             keys.add(e[keyName]);
                         });
 
-                        promises.push(this._loadIntoWorkspace(Query.ByIds({
-                            ids: Array.from(keys),
-                            entity: nav.otherType,
-                            expand: v.extracted.expansions
-                        })));
+                        if (keys.size > 0) {
+                            promises.push(this._loadIntoWorkspace(Query.ByIds({
+                                ids: Array.from(keys),
+                                entity: nav.otherType,
+                                expand: v.extracted.expansions
+                            })));
+                        }
                         break;
 
                     case "array:child":
@@ -331,11 +333,13 @@ export class ServiceCluster {
                             keys.forEach(k => refKeys.add(k));
                         });
 
-                        promises.push(this._loadIntoWorkspace(Query.ByIds({
-                            ids: Array.from(keys),
-                            entity: nav.otherType,
-                            expand: v.extracted.expansions
-                        })));
+                        if (keys.size > 0) {
+                            promises.push(this._loadIntoWorkspace(Query.ByIds({
+                                ids: Array.from(keys),
+                                entity: nav.otherType,
+                                expand: v.extracted.expansions
+                            })));
+                        }
                         break;
                 }
             });
