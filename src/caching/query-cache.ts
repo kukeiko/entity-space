@@ -13,6 +13,21 @@ export class QueryCache {
         this._merge(query);
 
         if (payload) {
+            // todo: hackity hack to to this here
+            let metadata = getEntityMetadata(query.entityType);
+            let pkName = metadata.primaryKey.dtoName;
+            let ids = new Set();
+
+            for (let i = 0; i < payload.length; ++i) {
+                ids.add(payload[i][pkName]);
+            }
+
+            this._merge(Query.ByIds({
+                entity: metadata.entityType,
+                ids: Array.from(ids.values()),
+                expand: query.expansions
+            }));
+
             this._buildQueriesFromPayload(getEntityMetadata(query.entityType), payload, query.expansions.slice());
         }
     }
