@@ -1772,22 +1772,220 @@ describe("filter", () => {
 
         describe("in", () => {
             describe("bool", () => {
-                let inTrueAndFalse = filter(Filter.memberOf([true, false]));
+                let inTrueFalse = filter(Filter.memberOf([true, false]));
+                let inTrue = filter(Filter.memberOf([true]));
 
                 it("==", () => {
                     let isTrue = filter(Filter.equals(true));
                     let isNull = filter(Filter.isNull("bool"));
+                    let isFalse = filter(Filter.equals(false));
 
-                    expect(inTrueAndFalse.reduce(isTrue)).toBeNull();
-                    expect(inTrueAndFalse.reduce(isNull)).toBe(isNull);
+                    expect(inTrueFalse.reduce(isTrue)).toBeNull();
+                    expect(inTrueFalse.reduce(isFalse)).toBeNull();
+                    expect(inTrueFalse.reduce(isNull)).toBe(isNull);
                 });
 
-                fit("in / not-in", () => {
-                    let inTrueAndNull = filter(Filter.memberOf([true, null]));
-                    let inNull = filter(Filter.memberOf([null]));
+                it("in / not-in", () => {
+                    let inTrueNull = filter(Filter.memberOf([true, null]));
+                    let alsoInTrueFalse = filter(Filter.memberOf([true, false]));
+                    let inFalseNull = filter(Filter.memberOf([false, null]));
+                    let inTrueFalseNull = filter(Filter.memberOf([true, false, null]));
+                    // todo: solve this
+                    // let inNull = filter(Filter.memberOf([null]));
 
-                    expectCriteria(inTrueAndFalse.reduce(inTrueAndNull)).toEqual(Filter.isNull("bool"));
+                    expectCriteria(inTrueFalse.reduce(inTrueNull)).toEqual(Filter.isNull("bool"));
+                    expect(inTrueFalse.reduce(alsoInTrueFalse)).toBeNull();
+                    expect(inTrue.reduce(inFalseNull)).toBe(inFalseNull);
+                    expectCriteria(inTrue.reduce(inTrueFalseNull)).toEqual(Filter.memberOf([false, null]));
                     // expect(inTrueAndFalse.reduce(inNull)).toBe(Filter.isNull("bool"));
+
+                    let notInFalseNull = filter(Filter.notMemberOf([false, null]));
+                    let notInFalse = filter(Filter.notMemberOf([false]));
+                    let notInTrue = filter(Filter.notMemberOf([true]));
+
+                    expect(inTrue.reduce(notInFalseNull)).toBeNull();
+                    expectCriteria(inTrue.reduce(notInFalse)).toEqual(Filter.isNull("bool"));
+                    expect(inTrue.reduce(notInTrue)).toBe(notInTrue);
+                });
+            });
+
+            describe("number", () => {
+                let in3and7 = filter(Filter.memberOf([3, 7]));
+
+                it("==", () => {
+                    let is3 = filter(Filter.equals(3));
+                    let is7 = filter(Filter.equals(7));
+                    let is8 = filter(Filter.equals(8));
+
+                    expect(in3and7.reduce(is3)).toBeNull();
+                    expect(in3and7.reduce(is7)).toBeNull();
+                    expect(in3and7.reduce(is8)).toBe(is8);
+                });
+
+                it("in / not-in", () => {
+                    {
+                        // in
+                        let completely = filter(Filter.memberOf([3, 7]));
+                        let transformed = filter(Filter.memberOf([3, 7, 8]));
+                        let partially = filter(Filter.memberOf([3, 7, 8, 64]));
+                        let untouched = filter(Filter.memberOf([8, 64]));
+
+                        expect(in3and7.reduce(completely)).toBeNull();
+                        expectCriteria(in3and7.reduce(transformed)).toEqual(Filter.equals(8));
+                        expectCriteria(in3and7.reduce(partially)).toEqual(Filter.memberOf([8, 64]));
+                        expect(in3and7.reduce(untouched)).toBe(untouched);
+                    }
+
+                    {
+                        // not-in
+                        let untouched = filter(Filter.notMemberOf([3, 7]));
+                        let reduced = filter(Filter.notMemberOf([1, 2, 3]));
+
+                        expect(in3and7.reduce(untouched)).toBe(untouched);
+                        expectCriteria(in3and7.reduce(reduced)).toEqual(Filter.notMemberOf([1, 2, 3, 7]));
+                    }
+                });
+            });
+
+            describe("string", () => {
+                let inFooAndBar = filter(Filter.memberOf(["foo", "bar"]));
+
+                it("==", () => {
+                    let isBar = filter(Filter.equals("bar"));
+                    let isFoo = filter(Filter.equals("foo"));
+                    let isKhaz = filter(Filter.equals("khaz"));
+
+                    expect(inFooAndBar.reduce(isBar)).toBeNull();
+                    expect(inFooAndBar.reduce(isFoo)).toBeNull();
+                    expect(inFooAndBar.reduce(isKhaz)).toBe(isKhaz);
+                });
+
+                it("in / not-in", () => {
+                    {
+                        // in
+                        let completely = filter(Filter.memberOf(["bar", "foo"]));
+                        let transformed = filter(Filter.memberOf(["foo", "bar", "khaz"]));
+                        let partially = filter(Filter.memberOf(["foo", "bar", "khaz", "mo"]));
+                        let untouched = filter(Filter.memberOf(["khaz", "mo"]));
+
+                        expect(inFooAndBar.reduce(completely)).toBeNull();
+                        expectCriteria(inFooAndBar.reduce(transformed)).toEqual(Filter.equals("khaz"));
+                        expectCriteria(inFooAndBar.reduce(partially)).toEqual(Filter.memberOf(["khaz", "mo"]));
+                        expect(inFooAndBar.reduce(untouched)).toBe(untouched);
+                    }
+
+                    {
+                        // not-in
+                        let untouched = filter(Filter.notMemberOf(["bar", "foo"]));
+                        let reduced = filter(Filter.notMemberOf(["bar", "baz"]));
+
+                        expect(inFooAndBar.reduce(untouched)).toBe(untouched);
+                        expectCriteria(inFooAndBar.reduce(reduced)).toEqual(Filter.notMemberOf(["foo", "bar", "baz"]));
+                    }
+                });
+            });
+        });
+
+        describe("not-in", () => {
+            describe("bool", () => {
+                let notInTrue = filter(Filter.notMemberOf([true]));
+                let notInTrueFalse = filter(Filter.notMemberOf([true, false]));
+
+                it("== / !=", () => {
+                    let isFalse = filter(Filter.equals(false));
+                    let isTrue = filter(Filter.equals(true));
+
+                    expect(notInTrue.reduce(isFalse)).toBeNull();
+                    expect(notInTrue.reduce(isTrue)).toBe(isTrue);
+
+                    let notFalse = filter(Filter.notEquals(false));
+                    let notTrue = filter(Filter.notEquals(true));
+                    let notNull = filter(Filter.notNull("bool"));
+
+                    expectCriteria(notInTrue.reduce(notFalse)).toEqual(Filter.equals(true));
+                    expect(notInTrue.reduce(notTrue)).toBeNull();
+                    expectCriteria(notInTrueFalse.reduce(notNull)).toEqual(Filter.memberOf([true, false]));
+                });
+            });
+
+            describe("number", () => {
+                let notIn3and7 = filter(Filter.notMemberOf([3, 7]));
+                let notIn7 = filter(Filter.notMemberOf([7]));
+                let notIn3and7and8 = filter(Filter.notMemberOf([3, 7, 8]));
+
+                it("== / !=", () => {
+                    let is7 = filter(Filter.equals(7));
+                    let is8 = filter(Filter.equals(8));
+
+                    expect(notIn3and7.reduce(is7)).toBe(is7);
+                    expect(notIn3and7.reduce(is8)).toBeNull();
+
+                    let not7 = filter(Filter.notEquals(7));
+                    let not8 = filter(Filter.notEquals(8));
+
+                    expectCriteria(notIn3and7.reduce(not7)).toEqual(Filter.equals(3));
+                    expectCriteria(notIn3and7.reduce(not8)).toEqual(Filter.memberOf([3, 7]));
+                    expect(notIn7.reduce(not7)).toBeNull();
+                });
+
+                it("in / not-in", () => {
+                    let in4and6 = filter(Filter.memberOf([4, 6]));
+                    let in3and6 = filter(Filter.memberOf([3, 6]));
+                    let in3 = filter(Filter.memberOf([3]));
+                    let in3and7and8 = filter(Filter.memberOf([3, 7, 8]));
+
+                    expect(notIn3and7.reduce(in4and6)).toBeNull();
+                    expectCriteria(notIn3and7.reduce(in3and6)).toEqual(Filter.equals(3));
+                    expect(notIn3and7.reduce(in3)).toBe(in3);
+                    expectCriteria(notIn3and7.reduce(in3and7and8)).toEqual(Filter.memberOf([3, 7]));
+
+                    let notIn3and8 = filter(Filter.notMemberOf([3, 8]));
+                    let notIn3and6 = filter(Filter.notMemberOf([3, 6]));
+                    let notIn3 = filter(Filter.notMemberOf([3]));
+
+                    expectCriteria(notIn3and7.reduce(notIn3and8)).toEqual(Filter.equals(7));
+                    expectCriteria(notIn3and7and8.reduce(notIn3and6)).toEqual(Filter.memberOf([7, 8]));
+                    expect(notIn3.reduce(notIn3and8)).toBeNull();
+                });
+            });
+
+            describe("string", () => {
+                let notInFooAndBar = filter(Filter.notMemberOf(["foo", "bar"]));
+                let notInFooAndBarAndKhaz = filter(Filter.notMemberOf(["foo", "bar", "khaz"]));
+                let notInFoo = filter(Filter.notMemberOf(["foo"]));
+
+                it("== / !=", () => {
+                    let isFoo = filter(Filter.equals("foo"));
+                    let isKhaz = filter(Filter.equals("khaz"));
+
+                    expect(notInFooAndBar.reduce(isFoo)).toBe(isFoo);
+                    expect(notInFooAndBar.reduce(isKhaz)).toBeNull();
+
+                    let notFoo = filter(Filter.notEquals("foo"));
+                    let notKhaz = filter(Filter.notEquals("khaz"));
+
+                    expectCriteria(notInFooAndBar.reduce(notFoo)).toEqual(Filter.equals("bar"));
+                    expectCriteria(notInFooAndBar.reduce(notKhaz)).toEqual(Filter.memberOf(["foo", "bar"]));
+                    expect(notInFoo.reduce(notFoo)).toBeNull();
+                });
+
+                it("in / not-in", () => {
+                    let inKhazAndMo = filter(Filter.memberOf(["khaz", "mo"]));
+                    let inFooAndMo = filter(Filter.memberOf(["foo", "mo"]));
+                    let inFoo = filter(Filter.memberOf(["foo"]));
+                    let inFooAndBarAndKhaz = filter(Filter.memberOf(["foo", "bar", "khaz"]))
+
+                    expect(notInFooAndBar.reduce(inKhazAndMo)).toBeNull();
+                    expectCriteria(notInFooAndBar.reduce(inFooAndMo)).toEqual(Filter.equals("foo"));
+                    expect(notInFooAndBar.reduce(inFoo)).toBe(inFoo);
+                    expectCriteria(notInFooAndBar.reduce(inFooAndBarAndKhaz)).toEqual(Filter.memberOf(["foo", "bar"]));
+
+                    let notInFooAndKhaz = filter(Filter.notMemberOf(["foo", "khaz"]));
+                    let notInFoo = filter(Filter.notMemberOf(["foo"]));
+
+                    expectCriteria(notInFooAndBar.reduce(notInFooAndKhaz)).toEqual(Filter.equals("bar"));
+                    expectCriteria(notInFooAndBarAndKhaz.reduce(notInFoo)).toEqual(Filter.memberOf(["bar", "khaz"]));
+                    expect(notInFoo.reduce(notInFooAndKhaz)).toBeNull();
                 });
             });
         });

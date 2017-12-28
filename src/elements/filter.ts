@@ -1,6 +1,6 @@
 // todo: set criteria implementations missing
 // todo: consider storing Date.getTime() instead of Date - would clean up and eliminate some "instanceof Date" checks
-import { StringIndexable } from "../util";
+import { StringIndexable, UUID } from "../util";
 import { AnyEntityMetadata } from "../metadata";
 
 // todo: before switching out all inline strings with constants,
@@ -650,9 +650,9 @@ let reducers = new Map<Filter.Operations, Reducers>([
                     let copy = new Set(b.values);
                     a.values.forEach(v => copy.delete(v));
 
+                    if (copy.size == b.values.size) return b;
                     if (copy.size == 0) return null;
                     if (copy.size == 1) return { op: "==", type: "bool", value: copy.values().next().value };
-                    if (copy.size == b.values.size) return b;
 
                     return { op: "in", type: "bool", values: copy };
                 }
@@ -661,7 +661,10 @@ let reducers = new Map<Filter.Operations, Reducers>([
                     let copy = new Set(b.values);
                     a.values.forEach(v => copy.add(v));
 
-                    return copy.size == 3 ? null : { op: b.op, type: "bool", values: copy };
+                    if (copy.size == 3) return null;
+                    if (copy.size == 2) return { op: "==", type: "bool", value: [true, false, null].filter(x => !copy.has(x))[0] };
+
+                    return b;
                 }
 
                 default: return b;
@@ -675,12 +678,18 @@ let reducers = new Map<Filter.Operations, Reducers>([
                     let copy = new Set(b.values);
                     a.values.forEach(v => copy.delete(v));
 
-                    return copy.size == 0 ? null : { op: b.op, type: "number", values: copy };
+                    if (copy.size == b.values.size) return b;
+                    if (copy.size == 0) return null;
+                    if (copy.size == 1) return { op: "==", type: "number", value: copy.values().next().value };
+
+                    return { op: "in", type: "number", values: copy };
                 }
 
                 case "not-in": {
                     let copy = new Set(b.values);
                     a.values.forEach(v => copy.add(v));
+
+                    if (copy.size == b.values.size) return b;
 
                     return { op: b.op, type: "number", values: copy };
                 }
@@ -696,12 +705,18 @@ let reducers = new Map<Filter.Operations, Reducers>([
                     let copy = new Set(b.values);
                     a.values.forEach(v => copy.delete(v));
 
-                    return copy.size == 0 ? null : { op: b.op, type: "string", values: copy };
+                    if (copy.size == b.values.size) return b;
+                    if (copy.size == 0) return null;
+                    if (copy.size == 1) return { op: "==", type: "string", value: copy.values().next().value };
+
+                    return { op: "in", type: "string", values: copy };
                 }
 
                 case "not-in": {
                     let copy = new Set(b.values);
                     a.values.forEach(v => copy.add(v));
+
+                    if (copy.size == b.values.size) return b;
 
                     return { op: b.op, type: "string", values: copy };
                 }
@@ -717,14 +732,174 @@ let reducers = new Map<Filter.Operations, Reducers>([
                     let copy = new Set(b.values);
                     a.values.forEach(v => copy.delete(v));
 
-                    return copy.size == 0 ? null : { op: b.op, type: "guid", values: copy };
+                    if (copy.size == b.values.size) return b;
+                    if (copy.size == 0) return null;
+                    if (copy.size == 1) return { op: "==", type: "guid", value: copy.values().next().value };
+
+                    return { op: "in", type: "guid", values: copy };
                 }
 
                 case "not-in": {
                     let copy = new Set(b.values);
                     a.values.forEach(v => copy.add(v));
 
+                    if (copy.size == b.values.size) return b;
+
                     return { op: b.op, type: "guid", values: copy };
+                }
+
+                default: return b;
+            }
+        }]
+    ])],
+    ["not-in", new Map<Filter.Types, Reducer>([
+        ["bool", (a: Filter.BooleanMemberCriterion, b: Filter.BooleanCriterion): ReduceResult => {
+            switch (b.op) {
+                case "==": return a.values.has(b.value) ? b : null;
+
+                case "!=": {
+                    let copy = new Set(a.values);
+                    copy.delete(b.value);
+
+                    if (copy.size == 0) return null;
+                    if (copy.size == 1) return { op: "==", type: "bool", value: copy.values().next().value };
+
+                    return { op: "in", type: "bool", values: copy };
+                }
+
+                case "in": {
+                    let copy = new Set(b.values);
+                    copy.forEach(v => !a.values.has(v) && copy.delete(v));
+
+                    if (copy.size == b.values.size) return b;
+                    if (copy.size == 0) return null;
+                    if (copy.size == 1) return { op: "==", type: "bool", value: copy.values().next().value }
+
+                    return { op: "in", type: "bool", values: copy };
+                }
+
+                case "not-in": {
+                    let copy = new Set(a.values);
+                    b.values.forEach(v => copy.delete(v));
+
+                    if (copy.size == 0) return null;
+                    if (copy.size == 1) return { op: "==", type: "bool", value: copy.values().next().value };
+
+                    return { op: "in", type: "bool", values: copy };
+                }
+
+                default: return b;
+            }
+        }],
+        ["number", (a: Filter.NumberMemberCriterion, b: Filter.NumberCriterion): ReduceResult => {
+            switch (b.op) {
+                case "==": return a.values.has(b.value) ? b : null;
+
+                case "!=": {
+                    let copy = new Set(a.values);
+                    copy.delete(b.value);
+
+                    if (copy.size == 0) return null;
+                    if (copy.size == 1) return { op: "==", type: "number", value: copy.values().next().value };
+
+                    return { op: "in", type: "number", values: copy };
+                }
+
+                case "in": {
+                    let copy = new Set(b.values);
+                    copy.forEach(v => !a.values.has(v) && copy.delete(v));
+
+                    if (copy.size == b.values.size) return b;
+                    if (copy.size == 0) return null;
+                    if (copy.size == 1) return { op: "==", type: "number", value: copy.values().next().value }
+
+                    return { op: "in", type: "number", values: copy };
+                }
+
+                case "not-in": {
+                    let copy = new Set(a.values);
+                    b.values.forEach(v => copy.delete(v));
+
+                    if (copy.size == 0) return null;
+                    if (copy.size == 1) return { op: "==", type: "number", value: copy.values().next().value };
+
+                    return { op: "in", type: "number", values: copy };
+                }
+
+                default: return b;
+            }
+        }],
+        ["string", (a: Filter.StringMemberCriterion, b: Filter.StringCriterion): ReduceResult => {
+            switch (b.op) {
+                case "==": return a.values.has(b.value) ? b : null;
+
+                case "!=": {
+                    let copy = new Set(a.values);
+                    copy.delete(b.value);
+
+                    if (copy.size == 0) return null;
+                    if (copy.size == 1) return { op: "==", type: "string", value: copy.values().next().value };
+
+                    return { op: "in", type: "string", values: copy };
+                }
+
+                case "in": {
+                    let copy = new Set(b.values);
+                    copy.forEach(v => !a.values.has(v) && copy.delete(v));
+
+                    if (copy.size == b.values.size) return b;
+                    if (copy.size == 0) return null;
+                    if (copy.size == 1) return { op: "==", type: "string", value: copy.values().next().value }
+
+                    return { op: "in", type: "string", values: copy };
+                }
+
+                case "not-in": {
+                    let copy = new Set(a.values);
+                    b.values.forEach(v => copy.delete(v));
+
+                    if (copy.size == 0) return null;
+                    if (copy.size == 1) return { op: "==", type: "string", value: copy.values().next().value };
+
+                    return { op: "in", type: "string", values: copy };
+                }
+
+                default: return b;
+            }
+        }],
+        ["guid", (a: Filter.GuidMemberCriterion, b: Filter.GuidCriterion): ReduceResult => {
+            switch (b.op) {
+                case "==": return a.values.has(b.value) ? b : null;
+
+                case "!=": {
+                    let copy = new Set(a.values);
+                    copy.delete(b.value);
+
+                    if (copy.size == 0) return null;
+                    if (copy.size == 1) return { op: "==", type: "guid", value: copy.values().next().value };
+
+                    return { op: "in", type: "guid", values: copy };
+                }
+
+                case "in": {
+                    let copy = new Set(b.values);
+                    copy.forEach(v => !a.values.has(v) && copy.delete(v));
+
+                    if (copy.size == b.values.size) return b;
+                    if (copy.size == 0) return null;
+                    if (copy.size == 1) return { op: "==", type: "guid", value: copy.values().next().value }
+
+                    return { op: "in", type: "guid", values: copy };
+                }
+
+                case "not-in": {
+                    let copy = new Set(a.values);
+                    b.values.forEach(v => copy.delete(v));
+
+                    if (copy.size == 0) return null;
+                    if (copy.size == 1) return { op: "==", type: "guid", value: copy.values().next().value };
+
+                    return { op: "in", type: "guid", values: copy };
                 }
 
                 default: return b;
