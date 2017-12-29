@@ -1,5 +1,5 @@
 import * as _ from "lodash";
-import { ArrayLike, ToStringable } from "../util";
+import { ToStringable } from "../util";
 
 /**
  * An Identity points to a specific set of entities.
@@ -27,10 +27,10 @@ export abstract class IdentityBase {
      */
     abstract reduce(other: Identity): Identity;
 
-    private readonly _toString: string;
+    protected _toString: string;
 
-    constructor(toString: string) {
-        this._toString = toString;
+    constructor(toString?: string) {
+        this._toString = toString || undefined;
     }
 
     /**
@@ -90,15 +90,19 @@ export class ByIds extends IdentityBase {
     readonly priority = 1;
     readonly ids: ReadonlyArray<ToStringable>;
 
+    // todo: escape commas in ids
+    // todo: test that ids are uniquified
     constructor(ids: ArrayLike<ToStringable>) {
-        // todo: escape commas in ids
-        super(Object.freeze(ids.slice().sort()).join(","));
+        super();
 
-        if (ids.length == 0) {
+        let uniques = Array.from(new Set(Array.from(ids)));
+
+        if (uniques.length == 0) {
             throw new Error(`can't create an [ids] identity with an empty array of ids`);
         }
 
-        this.ids = Object.freeze(ids.slice());
+        this._toString = uniques.join(",");
+        this.ids = Object.freeze(uniques);
         Object.freeze(this);
     }
 
@@ -148,8 +152,8 @@ export class ByIndexes extends IdentityBase {
     reduce(other: Identity): Identity | null {
         switch (other.type) {
             case "indexes":
-                for (let key in other.criteria) {
-                    if (!(key in this.criteria) || this.criteria[key] != other.criteria[key]) {
+                for (let key in this.criteria) {
+                    if (!(key in other.criteria) || this.criteria[key] != other.criteria[key]) {
                         return other;
                     }
                 }

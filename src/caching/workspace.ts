@@ -1,4 +1,4 @@
-import { ArrayLike, StringIndexable } from "../util";
+import { StringIndexable } from "../util";
 import { Expansion, Query } from "../elements";
 import { EntityMapper } from "../mapping";
 import { IEntity, EntityType, EntityMetadata, Navigation, getEntityMetadata, Reference, Children, Collection } from "../metadata";
@@ -70,7 +70,7 @@ export class Workspace {
         for (let i = 0; i < length; ++i) {
             expansion = expand[i];
 
-            let related = EntityMapper.collect(items, expansion.property, isDto);
+            let related = EntityMapper.collectNavigation(items, expansion.property, isDto);
             if (related.length == 0) continue;
 
             let nav = expansion.property as Navigation;
@@ -101,7 +101,7 @@ export class Workspace {
         for (let i = 0; i < length; ++i) {
             expansion = expand[i];
 
-            let related = EntityMapper.collect(items, expansion.property);
+            let related = EntityMapper.collectNavigation(items, expansion.property);
             this.remove(related, expansion.property.otherTypeMetadata, expansion.expansions);
         }
     }
@@ -143,7 +143,7 @@ export class Workspace {
         let ref = expansion.property as Reference;
         let keyName = ref.keyName;
         let otherTypeKeyName = ref.otherTypeMetadata.primaryKey.name;
-        let relatedIds = EntityMapper.collect(entities, metadata.getPrimitive(keyName));
+        let relatedIds = EntityMapper.collectLocal(Array.from(entities), metadata.getPrimitive(keyName));
         let related = new Map<any, any>();
 
         {

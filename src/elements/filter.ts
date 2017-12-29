@@ -1,6 +1,6 @@
 // todo: set criteria implementations missing
 // todo: consider storing Date.getTime() instead of Date - would clean up and eliminate some "instanceof Date" checks
-import { StringIndexable, UUID } from "../util";
+import { StringIndexable } from "../util";
 import { AnyEntityMetadata } from "../metadata";
 
 // todo: before switching out all inline strings with constants,

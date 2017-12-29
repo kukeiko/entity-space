@@ -1,4 +1,4 @@
-import { ArrayLike, ToStringable } from "../util";
+import { ToStringable } from "../util";
 import { getEntityMetadata, EntityType, IEntity } from "../metadata";
 import { Expansion } from "./expansion";
 import { Extraction } from "./extraction";
@@ -53,8 +53,7 @@ export class Query<T extends IEntity> {
 
         let expansions = (typeof (args.expand) == "string"
             ? Expansion.parse(args.entityType, args.expand)
-            : (args.expand || []))
-            .slice()
+            : Array.from((args.expand || [])))
             .sort((a, b) => a.property.name.toLocaleLowerCase() < b.property.name.toLocaleLowerCase() ? -1 : 1);
 
         this.expansion = expansions.map(exp => exp.toString()).join(",");
@@ -180,7 +179,8 @@ export class Query<T extends IEntity> {
         let query = new Query({
             entityType: this.entityType,
             expand: expansions,
-            identity: this.identity
+            identity: this.identity,
+            filter: this.filter
         });
 
         return [query, extractions];

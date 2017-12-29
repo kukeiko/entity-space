@@ -1,4 +1,4 @@
-import { ArrayLike, ToStringable } from "../util";
+import { ToStringable } from "../util";
 
 /**
  * Store and access objects via primary key & indexes. The ObjectCache is basically a Map on steroids

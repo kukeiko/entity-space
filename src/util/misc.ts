@@ -16,10 +16,6 @@ export interface ToStringable {
     toString(): string;
 }
 
-export type ArrayLike<T>
-    = Array<T>
-    | ReadonlyArray<T>;
-
 export interface DtoLike {
     [key: string]: string | string[] | number | number[] | DtoLike | DtoLike[];
 }

@@ -1,4 +1,3 @@
-import { ArrayLike } from "../util";
 import { getEntityMetadata, EntityType, Navigation } from "../metadata";
 import { Path } from "./path";
 import { Extraction } from "./extraction";
@@ -110,8 +109,8 @@ export class Expansion {
      */
     // todo: throw if expansions are not of same entity type
     static add(x: ArrayLike<Expansion>, y: ArrayLike<Expansion>): Expansion[] {
-        x = x.slice().sort((a, b) => a.property.name < b.property.name ? -1 : 1);
-        y = y.slice().sort((a, b) => a.property.name < b.property.name ? -1 : 1);
+        x = Array.from(x).sort((a, b) => a.property.name < b.property.name ? -1 : 1);
+        y = Array.from(y).sort((a, b) => a.property.name < b.property.name ? -1 : 1);
 
         let merged: Expansion[] = [];
         let xi = 0;
@@ -122,10 +121,10 @@ export class Expansion {
             if (x[xi] == null && y[yi] == null) {
                 break;
             } else if (x[xi] == null) {
-                merged = [...merged, ...y.slice(yi)];
+                merged = [...merged, ...Array.from(y).slice(yi)];
                 break;
             } else if (y[yi] == null) {
-                merged = [...merged, ...x.slice(xi)];
+                merged = [...merged, ...Array.from(x).slice(xi)];
                 break;
             }
 
@@ -159,20 +158,20 @@ export class Expansion {
     // todo: throw if expansions are not of same entity type
     // todo #2: consider not throwing & follow naming + return null convention from identity.ts
     static minus(x: ArrayLike<Expansion>, y: ArrayLike<Expansion>): Expansion[] {
-        if (x.length == 0 || y.length == 0) return x.slice();
+        if (x.length == 0 || y.length == 0) return Array.from(x).slice();
 
         let result: Expansion[] = [];
         let xi = 0;
         let yi = 0;
 
-        x = x.slice().sort((a, b) => a.property.name < b.property.name ? -1 : 1);
-        y = y.slice().sort((a, b) => a.property.name < b.property.name ? -1 : 1);
+        x = Array.from(x).slice().sort((a, b) => a.property.name < b.property.name ? -1 : 1);
+        y = Array.from(y).slice().sort((a, b) => a.property.name < b.property.name ? -1 : 1);
 
         while (true) {
             if (x[xi] == null) {
                 break;
             } else if (y[yi] == null) {
-                result = [...result, ...x.slice(xi)];
+                result = [...result, ...Array.from(x).slice(xi)];
                 break;
             } else if (x[xi].property == y[yi].property) {
                 let remaining = Expansion.minus(x[xi].expansions.slice(), y[yi].expansions.slice());
