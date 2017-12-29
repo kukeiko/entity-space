@@ -1,6 +1,7 @@
 import * as _ from "lodash";
 import { AnyType, StringIndexable } from "../util";
-import { AnyEntityMetadata, AnyEntityType, EntityType, IEntity, Primitive, Navigation } from "../metadata";
+import { Path } from "../elements";
+import { AnyEntityMetadata, AnyEntityType, IEntity, Local, Navigation } from "../metadata";
 import { MappingCompiler, CopyLocals } from "./mapping-compiler";
 
 
@@ -170,50 +171,48 @@ export class EntityMapper {
         });
     }
 
-    // todo: maybe Path could find a use as an argument?
-    // todo: why is ist just Primitive | Navigation, and not any property?
-    // todo: it flattens array properties
-    static collect(items: ArrayLike<StringIndexable>, prop: Primitive | Navigation, isDto?: boolean): any[] {
-        let collected: any[] = [];
-        let name = prop.getName(isDto);
+    static collectPath(items: IEntity[], path: Path, isDto = false): IEntity[] {
+        let next = path;
+        let collected = items;
 
-        switch (prop.base) {
-            case "navigation":
-                switch (prop.type) {
-                    case "ref":
-                        let item: any;
+        do {
+            collected = this.collectNavigation(collected, next.property, isDto);
+        } while ((next = next.next));
 
-                        for (let i = 0; i < items.length; ++i) {
-                            item = items[i][name];
-                            if (!item) continue;
+        return collected;
+    }
 
-                            collected.push(item);
-                        }
-                        break;
+    static collectPathedLocal(items: IEntity[], path: Path, local: Local, isDto = false): any[] {
+        items = this.collectPath(items, path, isDto);
 
-                    case "array:ref":
-                    case "array:child":
-                        for (let i = 0; i < items.length; ++i) {
-                            let array = items[i][name] as any[];
+        return this.collectLocal(items, local, isDto);
+    }
 
-                            for (let e = 0; e < array.length; ++e) {
-                                collected.push(array[e]);
-                            }
-                        }
-                        break;
-                }
-                break;
+    static collectNavigation(items: IEntity[], nav: Navigation, isDto = false): IEntity[] {
+        let l = items.length;
+        let collected: IEntity[] = [];
+        let navName = nav.getName(isDto);
 
-            case "local":
-                let value: any;
+        if (nav.type == "ref") {
+            for (let i = 0; i < l; ++i) {
+                collected.push(items[i][navName]);
+            }
+        } else {
+            for (let i = 0; i < l; ++i) {
+                collected = collected.concat(items[i][navName]);
+            }
+        }
 
-                for (let i = 0; i < items.length; ++i) {
-                    value = items[i][name];
-                    if (value == null) continue;
+        return collected;
+    }
 
-                    collected.push(value);
-                }
-                break;
+    static collectLocal(items: IEntity[], local: Local, isDto = false): any[] {
+        let l = items.length;
+        let collected: IEntity[] = [];
+        let localName = local.getName(isDto);
+
+        for (let i = 0; i < l; ++i) {
+            collected.push(items[i][localName]);
         }
 
         return collected;
