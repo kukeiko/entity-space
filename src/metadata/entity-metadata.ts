@@ -52,7 +52,7 @@ export class EntityMetadata<T extends IEntity> {
         let dtoNames = new Set<string>();
 
         let addProperty = (p: PropertyBase) => {
-            let [name, dtoName] = [p.name.toLowerCase(), p.dtoName.toLowerCase()];
+            let [name, dtoName] = [p.name, p.dtoName];
 
             if (this._properties.has(name) || dtoNames.has(dtoName)) {
                 throw `identifiers must be unique across all properties (type: ${entityType.name}, name: ${name}, dtoName: ${dtoName})`;
