@@ -1,6 +1,7 @@
 import { TypeOf } from "../util";
-import { getEntityMetadata, AnyEntityType, EntityType, IEntity, Navigation, EntityMetadata } from "../metadata";
+import { getEntityMetadata, AnyEntityType, EntityType, IEntity, AnyEntityMetadata } from "../metadata";
 import { Expansion, Query } from "../elements";
+import { EntityMapper } from "../mapping";
 
 export class QueryCache {
     private _queries = new Map<AnyEntityType, Query<any>[]>();
@@ -13,22 +14,13 @@ export class QueryCache {
         this._merge(query);
 
         if (payload) {
-            // todo: hackity hack to to this here
-            let metadata = getEntityMetadata(query.entityType);
-            let pkName = metadata.primaryKey.dtoName;
-            let ids = new Set();
-
-            for (let i = 0; i < payload.length; ++i) {
-                ids.add(payload[i][pkName]);
-            }
-
-            this._merge(Query.ByIds({
-                entity: metadata.entityType,
-                ids: Array.from(ids.values()),
-                expand: query.expansions
-            }));
-
-            this._buildQueriesFromPayload(getEntityMetadata(query.entityType), payload, query.expansions.slice());
+            this._buildQueriesFromPayload({
+                metadata: getEntityMetadata(query.entityType),
+                payload: payload,
+                expand: query.expansions,
+                isDto: true,
+                skipRoot: query.identity.type == "ids"
+            });
         }
     }
 
@@ -79,118 +71,42 @@ export class QueryCache {
         this._queries.set(query.entityType, updated.sort((a, b) => a.identity.priority - b.identity.priority));
     }
 
-    // todo: use for loops + make use of EntityMapper.collect() if possible (if not, make it happen),
-    // since this function slows down loading from services quite a bit
-    private _buildQueriesFromPayload(metadata: EntityMetadata<any>, entities: IEntity[], expansions: ArrayLike<Expansion>): void {
-        if (entities.length == 0) return;
+    private _buildQueriesFromPayload(args: {
+        metadata: AnyEntityMetadata;
+        payload: IEntity[];
+        expand?: ArrayLike<Expansion>;
+        skipRoot?: boolean;
+        isDto?: boolean;
+    }): void {
+        if (args.payload.length == 0) return;
 
-        let exp: Expansion;
+        let metadata = args.metadata;
+        let payload = args.payload;
+        let expand = args.expand || [];
+        let skipRoot = args.skipRoot || false;
+        let isDto = args.isDto || false;
 
-        for (let i = 0; i < expansions.length; ++i) {
-            exp = expansions[i];
-            let nav = exp.property as Navigation;
+        if (!skipRoot) {
+            let ids = EntityMapper.collectLocal(payload, metadata.primaryKey, isDto);
+            let q = Query.ByIds({
+                entity: metadata.entityType,
+                expand: expand,
+                ids: ids
+            });
 
-            switch (nav.type) {
-                case "ref":
-                    {
-                        let ref = nav;
-                        let references: any[] = [];
-                        let keys = new Set<any>();
 
-                        entities.forEach(e => {
-                            if (e[nav.dtoName] == null) return;
+            this._merge(q);
+        }
 
-                            let key = e[metadata.getPrimitive(ref.keyName).dtoName];
-                            if (keys.has(key)) return;
+        for (let i = 0; i < expand.length; ++i) {
+            let expansion = expand[i];
 
-                            keys.add(key);
-                            references.push(e);
-                        });
-
-                        let q = Query.ByIds({
-                            ids: Array.from(keys),
-                            entity: nav.otherType,
-                            expand: exp.expansions,
-                        });
-
-                        this._merge(q);
-                        this._buildQueriesFromPayload(nav.otherTypeMetadata, references, q.expansions);
-                    }
-                    break;
-
-                // todo: array:child payload can be built into byindexes query (i think)
-                case "array:child":
-                    {
-                        let metadata = getEntityMetadata(nav.otherType);
-                        let keyName = metadata.primaryKey.dtoName;
-                        let items: any[] = [];
-                        let keys = new Set<any>();
-                        let backRef = metadata.getBackReference(nav);
-                        let backRefKeyName = metadata.getPrimitive(backRef.keyName).dtoName;
-
-                        entities.forEach(e => {
-                            let children = e[nav.dtoName] as any[];
-                            if (!(children instanceof Array) || children.length == 0) return;
-
-                            children.forEach(child => {
-                                let key = child[keyName];
-                                if (keys.has(key)) return;
-
-                                keys.add(key);
-                                items.push(child);
-                            });
-
-                            let byParentIdQuery = Query.ByIndexes({
-                                criteria: { [backRefKeyName]: children[0][backRefKeyName] },
-                                entity: nav.otherType,
-                                expand: exp.expansions
-                            });
-
-                            this._merge(byParentIdQuery);
-                            this._buildQueriesFromPayload(nav.otherTypeMetadata, children, byParentIdQuery.expansions);
-                        });
-
-                        let q = Query.ByIds({
-                            ids: Array.from(keys),
-                            entity: nav.otherType,
-                            expand: exp.expansions
-                        });
-
-                        this._merge(q);
-                        this._buildQueriesFromPayload(nav.otherTypeMetadata, items, q.expansions);
-                    }
-                    break;
-
-                case "array:ref":
-                    {
-                        let metadata = getEntityMetadata(nav.otherType);
-                        let keyName = metadata.primaryKey.dtoName;
-                        let items: any[] = [];
-                        let keys = new Set<any>();
-
-                        entities.forEach(e => {
-                            if (!(e[nav.dtoName] instanceof Array)) return;
-
-                            (e[nav.dtoName] as any[]).forEach(c => {
-                                let key = c[keyName];
-                                if (keys.has(key)) return;
-
-                                keys.add(key);
-                                items.push(c);
-                            });
-                        });
-
-                        let q = Query.ByIds({
-                            ids: Array.from(keys),
-                            entity: nav.otherType,
-                            expand: exp.expansions
-                        });
-
-                        this._merge(q);
-                        this._buildQueriesFromPayload(nav.otherTypeMetadata, items, q.expansions);
-                    }
-                    break;
-            }
-        };
+            this._buildQueriesFromPayload({
+                metadata: expansion.property.otherTypeMetadata,
+                payload: EntityMapper.collectNavigation(payload, expansion.property, isDto),
+                expand: expansion.expansions,
+                isDto: isDto
+            });
+        }
     }
 }
