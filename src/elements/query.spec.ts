@@ -182,14 +182,14 @@ describe("query", () => {
             expect(q.toString()).toEqual("Artist(64)/albums/{songs,tags}");
         });
 
-        it("byIds: Artist(1337,23,42,64)/albums/{songs,tags}", () => {
+        it("byIds: Artist(64,1337,42,23)/albums/{songs,tags}", () => {
             let q = Query.ByIds({
                 ids: [64, 1337, 42, 23],
                 entity: Artist,
                 expand: Expansion.parse(Artist, "albums/{songs,tags}")
             });
 
-            expect(q.toString()).toEqual("Artist(1337,23,42,64)/albums/{songs,tags}");
+            expect(q.toString()).toEqual("Artist(64,1337,42,23)/albums/{songs,tags}");
         });
 
         it("byIndexes: Artist(khaz:64,mo:dan)/albums/{songs,tags}", () => {
