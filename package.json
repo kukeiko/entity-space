@@ -20,18 +20,16 @@
     "test:watch": "karma start",
     "prepublish": "npm run build && npm run test"
   },
-  "dependencies": {
-    "@types/core-js": "0.9.41",
-    "@types/jasmine": "2.5.46",
-    "@types/lodash": "4.14.58",
-    "@types/reflect-metadata": "0.0.5"
-  },
   "peerDependencies": {
     "core-js": "^2.4.1",
     "lodash": "^4.17.4",
     "reflect-metadata": "^0.1.10"
   },
   "devDependencies": {
+    "@types/core-js": "0.9.41",
+    "@types/jasmine": "2.5.46",
+    "@types/lodash": "4.14.58",
+    "@types/reflect-metadata": "0.0.5",
     "awesome-typescript-loader": "3.1.2",
     "core-js": "2.4.1",
     "istanbul-instrumenter-loader": "2.0.0",
