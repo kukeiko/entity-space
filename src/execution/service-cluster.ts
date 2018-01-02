@@ -130,10 +130,14 @@ export class ServiceCluster {
             entitiesPerKey.set(key, entities[i]);
         }
 
-        let cached = this._workspace.execute(Query.ByIds({
-            ids: Array.from(entitiesPerKey.keys()),
-            entity: type
-        }), true);
+        let cached = new Map<any, T>();
+
+        if (entitiesPerKey.size > 0) {
+            cached = this._workspace.execute(Query.ByIds({
+                ids: Array.from(entitiesPerKey.keys()),
+                entity: type
+            }), true);
+        }
 
         for (let i = 0; i < entities.length; ++i) {
             let entity = entities[i];
