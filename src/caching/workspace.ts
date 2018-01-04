@@ -25,6 +25,10 @@ export class Workspace {
             case "all": cached = cache.allAsArray(); break;
         }
 
+        if (query.filter) {
+            cached = query.filter.filter(cached);
+        }
+
         let entities = EntityMapper.copyPrimitives({
             from: cached,
             metadata: metadata
