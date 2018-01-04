@@ -17,7 +17,7 @@ export class StaticDataService<K extends ToStringable, V extends IEntity> implem
         let item: V;
 
         for (let i = 0; i < args.items.length; ++i) {
-            item = args.items[0];
+            item = args.items[i];
             this._items.set(args.keyGetter(item).toString(), item);
         }
 
