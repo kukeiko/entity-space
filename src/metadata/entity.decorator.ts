@@ -39,6 +39,7 @@ export function EntityClass(args?: Partial<EntityMetadata.CtorArgs>) {
     return (type: EntityType<any>) => {
         let existing = getOrCreateMetadataArgs(type);
         existing.name = (args || {}).name || type.name;
+        existing.sorter = (args || {}).sorter || null;
         nameToTypeMap.set(existing.name.toLocaleLowerCase(), type);
 
         if (!args) return;

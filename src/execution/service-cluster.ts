@@ -2,20 +2,21 @@ import * as _ from "lodash";
 import { StringIndexable } from "../util";
 import { getEntityMetadata, AnyEntityType, EntityType, IEntity, Children, Navigation } from "../metadata";
 import { Path, Query, Expansion, Filter, Saveable, Saveables, ByIndexes } from "../elements";
-import { QueryCache, Workspace } from "../caching";
+import { QueryCache, Workspace, BuilderProvider } from "../caching";
 import { Service } from "./service";
-import { EntityMapper } from "../mapping";
 import { ServiceProvider } from "./service-provider";
+import { EntityMapper } from "../mapping";
 
 export class ServiceCluster {
     private _serviceProvider: ServiceProvider = null;
     private _services = new Map<EntityType<any>, Service>();
     private _queryCache = new QueryCache();
-    private _workspace = new Workspace();
+    private _workspace: Workspace;
     private _pendingQueries = new Map<EntityType<any>, { query: Query<any>, promise: Promise<any> }[]>();
 
-    constructor(serviceProvider?: ServiceProvider) {
+    constructor(serviceProvider?: ServiceProvider, builderProvider?: BuilderProvider) {
         this._serviceProvider = serviceProvider || null;
+        this._workspace = new Workspace(builderProvider);
     }
 
     loadAll<T>(type: EntityType<T>, expand?: string | ArrayLike<Expansion>): Promise<T[]>;
@@ -88,7 +89,7 @@ export class ServiceCluster {
     async saveMany<T extends IEntity>(entities: T[]): Promise<T[]> {
         if (entities.length == 0) return;
 
-        let type = entities[0].constructor as EntityType<T>;
+        let type = entities[0].constructor as EntityType<T>
         let metadata = getEntityMetadata(type);
         let pkName = metadata.primaryKey.name;
         let service = await this._getService(type);

@@ -5,6 +5,7 @@ import { Local, Primitive, DateTime, Complex, Instance } from "./locals";
 import { Navigation, Children, Collection, Reference } from "./navigations";
 
 export type AnyEntityMetadata = EntityMetadata<IEntity>;
+export type EntitySorter = (a: IEntity, b: IEntity) => number;
 
 /**
  * Contains information about properties and other metadata of an entity type.
@@ -13,6 +14,7 @@ export class EntityMetadata<T extends IEntity> {
     readonly entityType: EntityType<T>;
     readonly name: string;
     readonly primaryKey: Primitive;
+    readonly sorter: EntitySorter;
 
     // root
     private _properties = new Map<string, PropertyBase>();
@@ -48,6 +50,7 @@ export class EntityMetadata<T extends IEntity> {
 
         this.entityType = entityType;
         this.name = args.name;
+        this.sorter = args.sorter || null;
 
         let dtoNames = new Set<string>();
 
@@ -227,5 +230,6 @@ export module EntityMetadata {
         references?: { [name: string]: Reference.CtorArgs };
         children?: { [name: string]: Children.CtorArgs };
         collections?: { [name: string]: Collection.CtorArgs };
+        sorter?: (a: IEntity, b: IEntity) => number;
     }
 }

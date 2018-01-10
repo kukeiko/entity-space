@@ -3,11 +3,18 @@ import { Expansion, Query } from "../elements";
 import { EntityMapper } from "../mapping";
 import { IEntity, EntityType, EntityMetadata, Navigation, getEntityMetadata, Reference, Children, Collection } from "../metadata";
 import { ObjectCache } from "./object-cache";
+import { hasBuilderFor } from "./builder";
+import { BuilderProvider } from "./builder-provider";
 
 type EntityCache = ObjectCache<any, IEntity>;
 
 export class Workspace {
     private _caches = new Map<EntityType<IEntity>, EntityCache>();
+    private _builderProvider: BuilderProvider;
+
+    constructor(builderProvider?: BuilderProvider) {
+        this._builderProvider = builderProvider || null;
+    }
 
     execute<T>(query: Query<T>): T[];
     execute<T>(query: Query<T>, asMap: true): Map<any, T>;
@@ -41,18 +48,23 @@ export class Workspace {
             let pkName = metadata.primaryKey.name;
 
             for (let i = 0; i < hydrated.length; ++i) {
-                // todo: cast to T is a dirty hack
+                // todo: dirty cast to T
                 map.set(entities[i][pkName], hydrated[i] as T);
             }
 
             return map;
         } else {
-            // todo: cast to T[] is a dirty hack
+            if (metadata.sorter) {
+                // todo: dirty cast to T[]
+                return (hydrated as T[]).sort(metadata.sorter);
+            }
+
+            // todo: dirty cast to T[]
             return hydrated as T[];
         }
     }
 
-    hydrate(entities: ArrayLike<IEntity>, expand: ArrayLike<Expansion>): ArrayLike<IEntity> {
+    hydrate(entities: IEntity[], expand: ArrayLike<Expansion>): ArrayLike<IEntity> {
         if (entities.length == 0) return [];
 
         return this._hydrateNavigations(entities, getEntityMetadata(entities[0].constructor), expand);
@@ -118,7 +130,7 @@ export class Workspace {
         }
     }
 
-    private _hydrateNavigations(entities: ArrayLike<IEntity>, metadata: EntityMetadata<any>, expand: ArrayLike<Expansion>): ArrayLike<IEntity> {
+    private _hydrateNavigations(entities: IEntity[], metadata: EntityMetadata<any>, expand: ArrayLike<Expansion>): ArrayLike<IEntity> {
         let expansion: Expansion;
 
         for (let i = 0; i < expand.length; ++i) {
@@ -138,6 +150,10 @@ export class Workspace {
                     this._hydrateCollection(entities, metadata, expansion);
                     break;
             }
+        }
+
+        if (this._builderProvider != null && hasBuilderFor(metadata.entityType)) {
+            this._builderProvider.get(metadata.entityType).build(entities);
         }
 
         return entities;
