@@ -204,6 +204,11 @@ export class Workspace {
             parent = parents[i];
 
             let children = EntityMapper.copyPrimitives({ from: cache.byIndexAsArray(backRefKeyName, parent[pkName]), metadata: otherMetadata });
+
+            if (metadata.sorter) {
+                children.sort(metadata.sorter);
+            }
+
             parent[childrenPropName] = children;
             let length_e = children.length;
 
@@ -232,6 +237,11 @@ export class Workspace {
         for (let i = 0; i < length_i; ++i) {
             collector = collectors[i];
             let collected = EntityMapper.copyPrimitives({ from: cache.byKeysAsArray(collector[keysName]), metadata: otherMetadata });
+
+            if (metadata.sorter) {
+                collected.sort(metadata.sorter);
+            }
+
             allPerEntity.push(collected);
             collector[prop] = collected;
         }
