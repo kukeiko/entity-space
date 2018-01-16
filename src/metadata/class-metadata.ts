@@ -168,7 +168,7 @@ export class ClassMetadata<T extends IEntity> {
         let p = this.getProperty(name, expected);
 
         if (p.family != "navigation") {
-            throw new Error(`${this.entityType.name}.${name} is not a local property`);
+            throw new Error(`${this.entityType.name}.${name} is not a navigation property`);
         }
 
         return p;
