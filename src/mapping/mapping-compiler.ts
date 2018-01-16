@@ -1,13 +1,13 @@
 import { LoDashStatic } from "lodash";
 import { StringIndexable } from "../util";
-import { AnyEntityMetadata, EntityMetadata, Local } from "../metadata";
+import { AnyClassMetadata, ClassMetadata, Local } from "../metadata";
 
 export module CopyLocals {
     export interface Args {
         from: StringIndexable[];
         to: StringIndexable[];
         lodash: LoDashStatic;
-        metadata: AnyEntityMetadata;
+        metadata: AnyClassMetadata;
     }
 }
 
@@ -18,7 +18,7 @@ export interface CopyLocals extends Function {
 export class MappingCompiler {
     compileCopyLocals(args: {
         fromDto?: boolean;
-        metadata: EntityMetadata<any>;
+        metadata: ClassMetadata<any>;
         predicate?: (p: Local) => boolean;
         toDto?: boolean;
     }): CopyLocals {

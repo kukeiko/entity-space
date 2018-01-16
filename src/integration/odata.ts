@@ -1,4 +1,4 @@
-import { getEntityMetadata, AnyEntityMetadata } from "../metadata";
+import { getMetadata, AnyClassMetadata } from "../metadata";
 import { Query, Expansion, Filter, ByIndexes } from "../elements";
 
 export module OData {
@@ -9,7 +9,7 @@ export module OData {
 
     export function buildUrlParams(q: Query<any>): OData.UrlParams {
         let params: OData.UrlParams = {};
-        let metadata = getEntityMetadata(q.entityType);
+        let metadata = getMetadata(q.entityType);
 
         if (q.expansions.length > 0) {
             params.$expand = OData.buildExpansions(q.expansions);
@@ -38,7 +38,7 @@ export module OData {
         return Array.from(expand).map(exp => exp.toPaths()).reduce((p, c) => p.concat(c), []).map(p => p.toDtoString()).join(",");
     }
 
-    export function buildCriteria(metadata: AnyEntityMetadata, criteria: ByIndexes.Criteria): string | null {
+    export function buildCriteria(metadata: AnyClassMetadata, criteria: ByIndexes.Criteria): string | null {
         let shards: string[] = [];
 
         for (let index in criteria) {
@@ -57,7 +57,7 @@ export module OData {
         return shards.join(" and ") || null;
     }
 
-    export function buildFilter(metadata: AnyEntityMetadata, filter: Filter): string | null {
+    export function buildFilter(metadata: AnyClassMetadata, filter: Filter): string | null {
         let shards: string[] = [];
         filter = filter.toDtoFormat(metadata);
 

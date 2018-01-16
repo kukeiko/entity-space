@@ -1,7 +1,7 @@
 import { StringIndexable } from "../util";
 import { Expansion, Query } from "../elements";
 import { EntityMapper } from "../mapping";
-import { IEntity, EntityType, EntityMetadata, Navigation, getEntityMetadata, Reference, Children, Collection } from "../metadata";
+import { IEntity, EntityType, ClassMetadata, Navigation, getMetadata, Reference, Children, Collection } from "../metadata";
 import { ObjectCache } from "./object-cache";
 import { hasBuilderFor } from "./builder";
 import { BuilderProvider } from "./builder-provider";
@@ -22,7 +22,7 @@ export class Workspace {
         let query = args[0] as Query<T>;
         let asMap = args[1] != null;
 
-        let metadata = getEntityMetadata(query.entityType);
+        let metadata = getMetadata(query.entityType);
         let cache = this._getEntityCache(metadata);
         let cached: T[] = [];
 
@@ -67,10 +67,10 @@ export class Workspace {
     hydrate(entities: IEntity[], expand: ArrayLike<Expansion>): ArrayLike<IEntity> {
         if (entities.length == 0) return [];
 
-        return this._hydrateNavigations(entities, getEntityMetadata(entities[0].constructor), expand);
+        return this._hydrateNavigations(entities, getMetadata(entities[0].constructor), expand);
     }
 
-    add(items: IEntity[] | StringIndexable[], metadata: EntityMetadata<any>, expand?: ArrayLike<Expansion>, isDto?: boolean): void {
+    add(items: IEntity[] | StringIndexable[], metadata: ClassMetadata<any>, expand?: ArrayLike<Expansion>, isDto?: boolean): void {
         let copied = EntityMapper.copyPrimitives({ from: items, metadata: metadata, fromDto: isDto });
         let cache = this._getEntityCache(metadata);
         cache.add(copied);
@@ -104,7 +104,7 @@ export class Workspace {
         }
     }
 
-    remove(items: IEntity[], metadata: EntityMetadata<any>, expand?: ArrayLike<Expansion>): void {
+    remove(items: IEntity[], metadata: ClassMetadata<any>, expand?: ArrayLike<Expansion>): void {
         this._getEntityCache(metadata).remove(items);
 
         if (!expand) return;
@@ -130,7 +130,7 @@ export class Workspace {
         }
     }
 
-    private _hydrateNavigations(entities: IEntity[], metadata: EntityMetadata<any>, expand: ArrayLike<Expansion>): ArrayLike<IEntity> {
+    private _hydrateNavigations(entities: IEntity[], metadata: ClassMetadata<any>, expand: ArrayLike<Expansion>): ArrayLike<IEntity> {
         let expansion: Expansion;
 
         for (let i = 0; i < expand.length; ++i) {
@@ -159,7 +159,7 @@ export class Workspace {
         return entities;
     }
 
-    private _hydrateReference(entities: ArrayLike<IEntity>, metadata: EntityMetadata<any>, expansion: Expansion): void {
+    private _hydrateReference(entities: ArrayLike<IEntity>, metadata: ClassMetadata<any>, expansion: Expansion): void {
         let ref = expansion.property as Reference;
         let keyName = ref.keyName;
         let otherTypeKeyName = ref.otherTypeMetadata.primaryKey.name;
@@ -186,7 +186,7 @@ export class Workspace {
         this._hydrateNavigations(Array.from(related.values()), ref.otherTypeMetadata, expansion.expansions);
     }
 
-    private _hydrateChildren(parents: ArrayLike<IEntity>, metadata: EntityMetadata<any>, expansion: Expansion): void {
+    private _hydrateChildren(parents: ArrayLike<IEntity>, metadata: ClassMetadata<any>, expansion: Expansion): void {
         let childrenNav = expansion.property as Children;
         let otherMetadata = childrenNav.otherTypeMetadata;
         let childrenPropName = childrenNav.name;
@@ -216,7 +216,7 @@ export class Workspace {
         this._hydrateNavigations(all, otherMetadata, expansion.expansions);
     }
 
-    private _hydrateCollection(collectors: ArrayLike<IEntity>, metadata: EntityMetadata<any>, expansion: Expansion): void {
+    private _hydrateCollection(collectors: ArrayLike<IEntity>, metadata: ClassMetadata<any>, expansion: Expansion): void {
         let nav = expansion.property as Collection;
         let keysName = nav.keysName;
         let prop = nav.name;
@@ -239,7 +239,7 @@ export class Workspace {
         this._hydrateNavigations([].concat(...allPerEntity), otherMetadata, expansion.expansions);
     }
 
-    private _getEntityCache(metadata: EntityMetadata<any>): ObjectCache<any, any> {
+    private _getEntityCache(metadata: ClassMetadata<any>): ObjectCache<any, any> {
         let type = metadata.entityType;
 
         if (!this._caches.has(type)) {
@@ -249,7 +249,7 @@ export class Workspace {
         return this._caches.get(type);
     }
 
-    private _createEntityCache(metadata: EntityMetadata<any>): EntityCache {
+    private _createEntityCache(metadata: ClassMetadata<any>): EntityCache {
         let indexes: { [key: string]: (item: StringIndexable) => number | string } = {};
 
         metadata.primitives.filter(p => p.index).forEach(p => indexes[p.name] = item => item[p.name]);

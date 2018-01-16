@@ -1,7 +1,7 @@
 import { EntityType } from "../entity.type";
-import { getEntityMetadata } from "../entity.decorator";
+import { getMetadata } from "../entity.decorator";
 import { PropertyBase } from "../property-base";
-import { EntityMetadata } from "../entity-metadata";
+import { ClassMetadata } from "../class-metadata";
 
 /**
  * A property that points to one (Reference) or many (Children, Collection) related entities.
@@ -13,10 +13,10 @@ export abstract class NavigationBase extends PropertyBase {
     get otherType(): EntityType<any> { return this._otherType(); };
     private _otherType: () => EntityType<any>;
 
-    get otherTypeMetadata(): EntityMetadata<any> {
-        return (this._otherTypeMetadata = this._otherTypeMetadata || getEntityMetadata(this.otherType));
+    get otherTypeMetadata(): ClassMetadata<any> {
+        return (this._otherTypeMetadata = this._otherTypeMetadata || getMetadata(this.otherType));
     }
-    private _otherTypeMetadata: EntityMetadata<any> = null;
+    private _otherTypeMetadata: ClassMetadata<any> = null;
 
     constructor(name: string, args: NavigationBase.CtorArgs) {
         super(name, args);

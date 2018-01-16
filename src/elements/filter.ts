@@ -1,7 +1,7 @@
 // todo: set criteria implementations missing
 // todo: consider storing Date.getTime() instead of Date - would clean up and eliminate some "instanceof Date" checks
 import { StringIndexable } from "../util";
-import { AnyEntityMetadata } from "../metadata";
+import { AnyClassMetadata } from "../metadata";
 
 // todo: before switching out all inline strings with constants,
 // check if it actually helps reduce the frequency / impact of GC calls
@@ -1180,7 +1180,7 @@ export class Filter {
         return true;
     }
 
-    toDtoFormat(metadata: AnyEntityMetadata): Filter {
+    toDtoFormat(metadata: AnyClassMetadata): Filter {
         let criteria: Filter.Criteria = {};
 
         for (let k in this.criteria) {
@@ -1190,7 +1190,7 @@ export class Filter {
         return new Filter(criteria);
     }
 
-    toEntityFormat(metadata: AnyEntityMetadata): Filter {
+    toEntityFormat(metadata: AnyClassMetadata): Filter {
         let criteria: Filter.Criteria = {};
 
         for (let k in this.criteria) {

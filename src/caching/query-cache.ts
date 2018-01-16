@@ -1,5 +1,5 @@
 import { TypeOf } from "../util";
-import { getEntityMetadata, AnyEntityType, EntityType, IEntity, AnyEntityMetadata } from "../metadata";
+import { getMetadata, AnyEntityType, EntityType, IEntity, AnyClassMetadata } from "../metadata";
 import { Expansion, Query } from "../elements";
 import { EntityMapper } from "../mapping";
 
@@ -15,7 +15,7 @@ export class QueryCache {
 
         if (payload) {
             this._buildQueriesFromPayload({
-                metadata: getEntityMetadata(query.entityType),
+                metadata: getMetadata(query.entityType),
                 payload: payload,
                 expand: query.expansions,
                 isDto: true,
@@ -72,7 +72,7 @@ export class QueryCache {
     }
 
     private _buildQueriesFromPayload(args: {
-        metadata: AnyEntityMetadata;
+        metadata: AnyClassMetadata;
         payload: IEntity[];
         expand?: ArrayLike<Expansion>;
         skipRoot?: boolean;

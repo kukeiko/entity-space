@@ -1,5 +1,5 @@
 import { ToStringable } from "../util";
-import { getEntityMetadata, EntityType, IEntity } from "../metadata";
+import { getMetadata, EntityType, IEntity } from "../metadata";
 import { Expansion } from "./expansion";
 import { Extraction } from "./extraction";
 import { Identity, All, ByIds, ByIndexes } from "./identity";
@@ -188,7 +188,7 @@ export class Query<T extends IEntity> {
 
     // todo: include filter string representation
     toString(): string {
-        let val = `${getEntityMetadata(this.entityType).name}(${this.identity})`;
+        let val = `${getMetadata(this.entityType).name}(${this.identity})`;
 
         if (this.expansions.length > 0) {
             val += "/";

@@ -4,21 +4,20 @@ import { PropertyBase } from "./property-base";
 import { Local, Primitive, DateTime, Complex, Instance } from "./locals";
 import { Navigation, Children, Collection, Reference } from "./navigations";
 
-export type AnyEntityMetadata = EntityMetadata<IEntity>;
+export type AnyClassMetadata = ClassMetadata<IEntity>;
 export type EntitySorter = (a: IEntity, b: IEntity) => number;
 
 /**
  * Contains information about properties and other metadata of an entity type.
  */
-export class EntityMetadata<T extends IEntity> {
+export class ClassMetadata<T extends IEntity> {
     readonly entityType: EntityType<T>;
     readonly name: string;
     readonly primaryKey: Primitive;
     readonly sorter: EntitySorter;
 
-    // root
+    // all
     private _properties = new Map<string, PropertyBase>();
-
     readonly properties: ReadonlyArray<PropertyBase>;
 
     // locals
@@ -45,7 +44,7 @@ export class EntityMetadata<T extends IEntity> {
     readonly children: ReadonlyArray<Children>;
     readonly collections: ReadonlyArray<Collection>;
 
-    constructor(entityType: EntityType<T>, args: EntityMetadata.CtorArgs) {
+    constructor(entityType: EntityType<T>, args: ClassMetadata.CtorArgs) {
         if (!args.primaryKey) throw `${entityType.name} has no primary key`;
 
         this.entityType = entityType;
@@ -219,7 +218,7 @@ export class EntityMetadata<T extends IEntity> {
     }
 }
 
-export module EntityMetadata {
+export module ClassMetadata {
     export interface CtorArgs {
         name: string;
         primaryKey: { name: string, args?: Primitive.CtorArgs };

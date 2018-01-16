@@ -1,5 +1,5 @@
 import { Expansion, Query } from "../elements";
-import { EntityClass, getEntityMetadata, Property } from "../metadata";
+import { EntityClass, getMetadata, Property } from "../metadata";
 import { Workspace } from "./workspace";
 
 describe("workspace", () => {
@@ -42,7 +42,7 @@ describe("workspace", () => {
     it("???", () => {
         let ws = new Workspace();
         // let ws2 = new WorkspaceV2();
-        let fooMetadata = getEntityMetadata(Foo);
+        let fooMetadata = getMetadata(Foo);
         let foos: Foo[] = [];
         let numRootEntities = 50;
 

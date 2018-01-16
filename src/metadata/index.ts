@@ -7,5 +7,5 @@ export * from "./locals";
 export * from "./navigations";
 
 // todo: cyclic reference, both depend on each other
-export * from "./entity-metadata";
+export * from "./class-metadata";
 export * from "./entity.decorator";

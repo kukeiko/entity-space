@@ -1,7 +1,7 @@
-import { EntityMetadata } from "./entity-metadata";
-import { getEntityMetadata, Property, EntityClass } from "./entity.decorator";
+import { ClassMetadata } from "./class-metadata";
+import { getMetadata, Property, EntityClass } from "./entity.decorator";
 
-describe("entity-metadata", () => {
+describe("class-metadata", () => {
     describe("getEntityMetadata()", () => {
         @EntityClass()
         class Foo {
@@ -19,34 +19,34 @@ describe("entity-metadata", () => {
 
         it("should throw if not found", () => {
             try {
-                getEntityMetadata(Array);
+                getMetadata(Array);
                 fail("expected to throw");
             } catch (error) { }
         });
 
         it("should accept type", () => {
-            let metadata = getEntityMetadata(Foo);
+            let metadata = getMetadata(Foo);
 
-            expect(metadata instanceof EntityMetadata).toBe(true);
+            expect(metadata instanceof ClassMetadata).toBe(true);
             expect(metadata.entityType).toBe(Foo);
         });
 
         it("should accept entity type name", () => {
-            let metadata = getEntityMetadata("Barbar");
+            let metadata = getMetadata("Barbar");
 
-            expect(metadata instanceof EntityMetadata).toBe(true);
+            expect(metadata instanceof ClassMetadata).toBe(true);
             expect(metadata.entityType).toBe(Bar);
         });
 
         it("should accept entity type name (case insensitive check)", () => {
-            let metadata = getEntityMetadata("bARbAR");
+            let metadata = getMetadata("bARbAR");
 
-            expect(metadata instanceof EntityMetadata).toBe(true);
+            expect(metadata instanceof ClassMetadata).toBe(true);
             expect(metadata.entityType).toBe(Bar);
         });
 
         it("should return different instances for different types", () => {
-            expect(getEntityMetadata(Foo)).not.toBe(getEntityMetadata(Bar));
+            expect(getMetadata(Foo)).not.toBe(getMetadata(Bar));
         });
 
         it("should throw if no primary key is defined", () => {
@@ -54,7 +54,7 @@ describe("entity-metadata", () => {
                 @EntityClass()
                 class Foo { }
 
-                getEntityMetadata(Foo);
+                getMetadata(Foo);
                 fail("expected to throw");
             } catch (error) { }
         });
@@ -70,7 +70,7 @@ describe("entity-metadata", () => {
                     mo: string;
                 }
 
-                getEntityMetadata(Foo);
+                getMetadata(Foo);
                 fail("expected to throw");
             } catch (error) { }
         });
@@ -86,7 +86,7 @@ describe("entity-metadata", () => {
                     mo: string;
                 }
 
-                getEntityMetadata(Foo);
+                getMetadata(Foo);
                 fail("expected to throw");
             } catch (error) { }
         });
@@ -95,7 +95,7 @@ describe("entity-metadata", () => {
     it("should have the correct entity class name", () => {
         @EntityClass()
         class Foo { @Property.Id() id: string; }
-        let fooMetadata = getEntityMetadata(Foo);
+        let fooMetadata = getMetadata(Foo);
 
         expect(fooMetadata.name).toEqual("Foo");
     });

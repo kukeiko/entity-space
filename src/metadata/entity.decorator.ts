@@ -1,16 +1,16 @@
 import { EntityType, IEntity } from "./entity.type";
-import { EntityMetadata } from "./entity-metadata";
+import { ClassMetadata } from "./class-metadata";
 import { Children, Collection, Reference } from "./navigations";
 import { Primitive, DateTime, Complex, Instance } from "./locals";
 
-const METADATA_KEY = "entity-space:entity-metadata";
-const METADATA_ARGS_KEY = "entity-space:entity-metadata:ctor-args";
+const METADATA_KEY = "entity-space:class-metadata";
+const METADATA_ARGS_KEY = "entity-space:class-metadata:ctor-args";
 
 let nameToTypeMap = new Map<string, EntityType<any>>();
 
-function getOrCreateMetadataArgs(type: any): Partial<EntityMetadata.CtorArgs> {
+function getOrCreateMetadataArgs(type: any): Partial<ClassMetadata.CtorArgs> {
     if (!Reflect.hasMetadata(METADATA_ARGS_KEY, type)) {
-        let args: Partial<EntityMetadata.CtorArgs> = {
+        let args: Partial<ClassMetadata.CtorArgs> = {
             primitives: {},
             dates: {},
             complexes: {},
@@ -35,7 +35,7 @@ function getOrCreateMetadataArgs(type: any): Partial<EntityMetadata.CtorArgs> {
  *
  * Each entity type must have a primary key defined, and names/aliases must be unique across all properties.
  */
-export function EntityClass(args?: Partial<EntityMetadata.CtorArgs>) {
+export function EntityClass(args?: Partial<ClassMetadata.CtorArgs>) {
     return (type: EntityType<any>) => {
         let existing = getOrCreateMetadataArgs(type);
         existing.name = (args || {}).name || type.name;
@@ -55,7 +55,7 @@ export function EntityClass(args?: Partial<EntityMetadata.CtorArgs>) {
     };
 }
 
-export function getEntityMetadata<T extends IEntity>(type: string | EntityType<T> | Function): EntityMetadata<T> {
+export function getMetadata<T extends IEntity>(type: string | EntityType<T> | Function): ClassMetadata<T> {
     if (typeof (type) == "string") {
         type = type.toLocaleLowerCase();
 
@@ -72,7 +72,7 @@ export function getEntityMetadata<T extends IEntity>(type: string | EntityType<T
         }
 
         let args = Reflect.getMetadata(METADATA_ARGS_KEY, type);
-        let metadata = new EntityMetadata(type as EntityType<T>, args);
+        let metadata = new ClassMetadata(type as EntityType<T>, args);
         Reflect.defineMetadata(METADATA_KEY, metadata, type);
     }
 

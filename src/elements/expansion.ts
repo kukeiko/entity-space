@@ -1,4 +1,4 @@
-import { getEntityMetadata, EntityType, Navigation } from "../metadata";
+import { getMetadata, EntityType, Navigation } from "../metadata";
 import { Path } from "./path";
 import { Extraction } from "./extraction";
 
@@ -219,7 +219,7 @@ export class Expansion {
         // index for if there are nested expansions
         let nestedStart = expansion.indexOf("/");
         let name = nestedStart == -1 ? expansion : expansion.substring(0, nestedStart);
-        let property = getEntityMetadata(ownerType).getNavigation(name);
+        let property = getMetadata(ownerType).getNavigation(name);
 
         if (property == null) throw `unknown navigation property: ${name}`;
 

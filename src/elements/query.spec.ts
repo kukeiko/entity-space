@@ -1,6 +1,6 @@
 import { Query } from "./query";
 import { Expansion } from "./expansion";
-import { getEntityMetadata, EntityClass, Property } from "../metadata";
+import { getMetadata, EntityClass, Property } from "../metadata";
 import { Artist, Album } from "../../test/facade";
 
 describe("query", () => {
@@ -211,7 +211,7 @@ describe("query", () => {
                 expand: Expansion.parse(Artist, "albums/{songs/album,tags}")
             });
 
-            let albumsProp = getEntityMetadata(Artist).getNavigation("albums");
+            let albumsProp = getMetadata(Artist).getNavigation("albums");
 
             // act
             let [withoutAlbumsQuery, extracted] = q.extract(x => x.property == albumsProp);
@@ -232,8 +232,8 @@ describe("query", () => {
                 expand: Expansion.parse(Artist, "albums/{songs/album,tags}")
             });
 
-            let songsProp = getEntityMetadata(Album).getNavigation("songs");
-            let tagsProp = getEntityMetadata(Album).getNavigation("tags");
+            let songsProp = getMetadata(Album).getNavigation("songs");
+            let tagsProp = getMetadata(Album).getNavigation("tags");
 
             // act
             let [withoutSongsQuery, songExtracted] = q.extract(x => x.property == songsProp);

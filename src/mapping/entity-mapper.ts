@@ -1,7 +1,7 @@
 import * as _ from "lodash";
 import { AnyType, StringIndexable } from "../util";
 import { Path } from "../elements";
-import { AnyEntityMetadata, AnyEntityType, IEntity, Local, Navigation } from "../metadata";
+import { AnyClassMetadata, AnyEntityType, IEntity, Local, Navigation } from "../metadata";
 import { MappingCompiler, CopyLocals } from "./mapping-compiler";
 
 
@@ -40,7 +40,7 @@ export class EntityMapper {
         fromDto?: boolean;
         to?: StringIndexable[];
         toDto?: boolean;
-        metadata: AnyEntityMetadata;
+        metadata: AnyClassMetadata;
         type?: AnyType;
     }): StringIndexable[] {
         let fromDto = !!args.fromDto;
@@ -88,7 +88,7 @@ export class EntityMapper {
         fromDto?: boolean;
         to?: StringIndexable[];
         toDto?: boolean;
-        metadata: AnyEntityMetadata;
+        metadata: AnyClassMetadata;
         type?: AnyType;
     }): StringIndexable[] {
         let fromDto = !!args.fromDto;
@@ -131,7 +131,7 @@ export class EntityMapper {
     static updateReferenceKeys(args: {
         from: IEntity[];
         to?: IEntity[];
-        metadata: AnyEntityMetadata;
+        metadata: AnyClassMetadata;
     }): void {
         let to = args.to || args.from;
 

@@ -1,6 +1,6 @@
 import * as _ from "lodash";
 import { StringIndexable } from "../util";
-import { getEntityMetadata, AnyEntityType, EntityType, IEntity, Children, Navigation } from "../metadata";
+import { getMetadata, AnyEntityType, EntityType, IEntity, Children, Navigation } from "../metadata";
 import { Path, Query, Expansion, Filter, Saveable, Saveables, ByIndexes } from "../elements";
 import { QueryCache, Workspace, BuilderProvider } from "../caching";
 import { Service } from "./service";
@@ -90,7 +90,7 @@ export class ServiceCluster {
         if (entities.length == 0) return;
 
         let type = entities[0].constructor as EntityType<T>
-        let metadata = getEntityMetadata(type);
+        let metadata = getMetadata(type);
         let pkName = metadata.primaryKey.name;
         let service = await this._getService(type);
 
@@ -272,7 +272,7 @@ export class ServiceCluster {
         }
 
         await executer.delete(entities);
-        this._workspace.remove(entities, getEntityMetadata(entityType));
+        this._workspace.remove(entities, getMetadata(entityType));
     }
 
     /**
@@ -287,7 +287,7 @@ export class ServiceCluster {
         if (reduced) {
             let entities = await this._loadFromService(reduced);
 
-            this._workspace.add(entities, getEntityMetadata(query.entityType), reduced.expansions, true);
+            this._workspace.add(entities, getMetadata(query.entityType), reduced.expansions, true);
             this._queryCache.merge(reduced, entities);
         }
 
@@ -319,9 +319,9 @@ export class ServiceCluster {
                         break;
 
                     case "array:child":
-                        let backRef = getEntityMetadata(nav.otherType).getBackReference(nav);
+                        let backRef = getMetadata(nav.otherType).getBackReference(nav);
                         let parentKeyName = backRef.keyName;
-                        let pkName = getEntityMetadata(backRef.otherType).primaryKey.name;
+                        let pkName = getMetadata(backRef.otherType).primaryKey.name;
 
                         crawled.forEach(item => {
                             let parentKey = item[pkName];
