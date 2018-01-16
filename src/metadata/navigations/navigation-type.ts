@@ -11,3 +11,7 @@ export type Navigation =
     Reference
     | Children
     | Collection;
+
+export module Navigation {
+    export type Type = Navigation["type"];
+}

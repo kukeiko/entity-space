@@ -253,7 +253,7 @@ export class Workspace {
     private _createEntityCache(metadata: ClassMetadata<any>): EntityCache {
         let indexes: { [key: string]: (item: StringIndexable) => number | string } = {};
 
-        metadata.primitives.filter(p => p.index).forEach(p => indexes[p.name] = item => item[p.name]);
+        metadata.properties.primitives.filter(p => p.index).forEach(p => indexes[p.name] = item => item[p.name]);
 
         return new ObjectCache<any, any>({
             getKey: item => item[metadata.primaryKey.name],

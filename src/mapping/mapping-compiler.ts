@@ -37,7 +37,7 @@ export class MappingCompiler {
         line(`\tsource = from[i];`);
         line(``);
 
-        args.metadata.locals.forEach(p => {
+        args.metadata.properties.locals.forEach(p => {
             if (!predicate(p)) return;
 
             let fromName = p.getName(args.fromDto);

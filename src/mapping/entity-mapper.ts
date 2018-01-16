@@ -135,7 +135,7 @@ export class EntityMapper {
     }): void {
         let to = args.to || args.from;
 
-        args.metadata.references.forEach(refProp => {
+        args.metadata.properties.references.forEach(refProp => {
             let refKey = args.metadata.getPrimitive(refProp.keyName);
             if (!refKey.saveable) return;
 
@@ -153,7 +153,7 @@ export class EntityMapper {
             });
         });
 
-        args.metadata.collections.forEach(colProp => {
+        args.metadata.properties.collections.forEach(colProp => {
             args.from.forEach((from, i) => {
                 let to_i = to[i];
                 let refs = from[colProp.name] as any[];

@@ -11,3 +11,7 @@ export type Local =
     | DateTime
     | Instance
     | Primitive;
+
+export module Local {
+    export type Type = Local["type"];
+}

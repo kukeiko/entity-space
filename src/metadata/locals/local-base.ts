@@ -1,8 +1,9 @@
 import { PropertyBase } from "../property-base";
 
+// todo: figure out if we can prevent exporting it from index.ts
 export abstract class LocalBase extends PropertyBase {
     // we have to explicitly state the type, otherwise its missing @ .d.ts
-    readonly base: "local" = "local";
+    readonly family: "local" = "local";
     readonly computed: boolean;
     readonly saveable: boolean;
 

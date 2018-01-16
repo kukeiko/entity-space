@@ -1,6 +1,5 @@
 import * as _ from "lodash";
 import { EntityType, IEntity, AnyEntityType } from "./entity.type";
-import { PropertyBase } from "./property-base";
 import { Local, Primitive, DateTime, Complex, Instance } from "./locals";
 import { Navigation, Children, Collection, Reference } from "./navigations";
 
@@ -14,6 +13,25 @@ export type Property =
     Local
     | Navigation;
 
+export module Property {
+    export type Type = Property["type"];
+    export type Family = Property["family"];
+    export type TypeOrFamily = Type | Family;
+}
+
+export type ClassProperties = Readonly<{
+    all: ReadonlyArray<Property>;
+    children: ReadonlyArray<Children>;
+    collections: ReadonlyArray<Collection>;
+    complexes: ReadonlyArray<Complex>;
+    dates: ReadonlyArray<DateTime>;
+    instances: ReadonlyArray<Instance>;
+    locals: ReadonlyArray<Local>;
+    navigations: ReadonlyArray<Navigation>;
+    primitives: ReadonlyArray<Primitive>;
+    references: ReadonlyArray<Reference>;
+}>;
+
 /**
  * Contains information about properties and other metadata of an entity type.
  */
@@ -21,205 +39,192 @@ export class ClassMetadata<T extends IEntity> {
     readonly entityType: EntityType<T>;
     readonly primaryKey: Primitive;
     readonly sorter: EntitySorter;
+    private _properties: Readonly<ClassProperties>;
 
-    // all
-    private _properties = new Map<string, PropertyBase>();
-    readonly properties: ReadonlyArray<PropertyBase>;
+    get properties(): Readonly<ClassProperties> {
+        return this._properties;
+    }
 
-    // locals
-    private _locals = new Map<string, Local>();
-    private _primitives = new Map<string, Primitive>();
-    private _dates = new Map<string, DateTime>();
-    private _complexes = new Map<string, Complex>();
-    private _instances = new Map<string, Instance>();
-
-    readonly locals: ReadonlyArray<Local>;
-    readonly primitives: ReadonlyArray<Primitive>;
-    readonly dates: ReadonlyArray<DateTime>;
-    readonly complexes: ReadonlyArray<Complex>;
-    readonly instances: ReadonlyArray<Instance>;
-
-    // navigations
-    private _navigations = new Map<string, Navigation>();
-    private _references = new Map<string, Reference>();
-    private _children = new Map<string, Children>();
-    private _collections = new Map<string, Collection>();
-
-    readonly navigations: ReadonlyArray<Navigation>;
-    readonly references: ReadonlyArray<Reference>;
-    readonly children: ReadonlyArray<Children>;
-    readonly collections: ReadonlyArray<Collection>;
+    private _byName = new Map<string, Property>();
+    private _byDtoName = new Map<string, Property>();
 
     constructor(entityType: EntityType<T>, args: ClassMetadata.CtorArgs) {
         if (!args.primaryKey) throw `${entityType.name} has no primary key`;
 
         this.entityType = entityType;
         this.sorter = args.sorter || null;
-
-        let dtoNames = new Set<string>();
-
-        let addProperty = (p: PropertyBase) => {
-            let [name, dtoName] = [p.name, p.dtoName];
-
-            if (this._properties.has(name) || dtoNames.has(dtoName)) {
-                throw `identifiers must be unique across all properties (type: ${entityType.name}, name: ${name}, dtoName: ${dtoName})`;
-            }
-
-            dtoNames.add(dtoName);
-            this._properties.set(name, p);
-            this._properties.set(dtoName, p);
-        };
-
-        let addLocal = (p: Local) => {
-            this._locals.set(p.name, p);
-            this._locals.set(p.dtoName, p);
-            addProperty(p);
-        };
-
-        let addPrimitive = (p: Primitive) => {
-            this._primitives.set(p.name, p);
-            this._primitives.set(p.dtoName, p);
-            addLocal(p);
-        };
-
-        let addDate = (p: DateTime) => {
-            this._dates.set(p.name, p);
-            this._dates.set(p.dtoName, p);
-            addLocal(p);
-        };
-
-        let addComplex = (p: Complex) => {
-            this._complexes.set(p.name, p);
-            this._complexes.set(p.dtoName, p);
-            addLocal(p);
-        };
-
-        let addInstance = (p: Instance) => {
-            this._instances.set(p.name, p);
-            this._instances.set(p.dtoName, p);
-            addLocal(p);
-        };
-
-        let addNavigation = (p: Navigation) => {
-            this._navigations.set(p.name, p);
-            this._navigations.set(p.dtoName, p);
-            addProperty(p);
-        };
-
-        let addReference = (p: Reference) => {
-            this._references.set(p.name, p);
-            this._references.set(p.dtoName, p);
-            addNavigation(p);
-        };
-
-        let addChildren = (p: Children) => {
-            this._children.set(p.name, p);
-            this._children.set(p.dtoName, p);
-            addNavigation(p);
-        };
-
-        let addCollection = (p: Collection) => {
-            this._collections.set(p.name, p);
-            this._collections.set(p.dtoName, p);
-            addNavigation(p);
-        };
-
         this.primaryKey = new Primitive(args.primaryKey.name, args.primaryKey.args || {});
-        addPrimitive(this.primaryKey);
 
-        Object.keys(args.primitives || {}).forEach(k => addPrimitive(new Primitive(k, args.primitives[k] || {})));
-        Object.keys(args.dates || {}).forEach(k => addDate(new DateTime(k, args.dates[k] || {})));
-        Object.keys(args.complexes || {}).forEach(k => addComplex(new Complex(k, args.complexes[k] || {})));
-        Object.keys(args.instances || {}).forEach(k => addInstance(new Instance(k, args.instances[k] || {})));
-        Object.keys(args.references || {}).forEach(k => addReference(new Reference(k, args.references[k])));
-        Object.keys(args.children || {}).forEach(k => addChildren(new Children(k, args.children[k])));
-        Object.keys(args.collections || {}).forEach(k => addCollection(new Collection(k, args.collections[k])));
+        let properties: Property[] = [];
+        Object.keys(args.primitives || {}).forEach(k => properties.push(new Primitive(k, args.primitives[k] || {})));
+        Object.keys(args.dates || {}).forEach(k => properties.push(new DateTime(k, args.dates[k] || {})));
+        Object.keys(args.complexes || {}).forEach(k => properties.push(new Complex(k, args.complexes[k] || {})));
+        Object.keys(args.instances || {}).forEach(k => properties.push(new Instance(k, args.instances[k] || {})));
+        Object.keys(args.references || {}).forEach(k => properties.push(new Reference(k, args.references[k])));
+        Object.keys(args.children || {}).forEach(k => properties.push(new Children(k, args.children[k])));
+        Object.keys(args.collections || {}).forEach(k => properties.push(new Collection(k, args.collections[k])));
+        this.addProperties(properties);
+    }
 
-        this.properties = Object.freeze(_.uniq(Array.from(this._properties.values())).sort((a, b) => a.name < b.name ? -1 : 1));
-        this.locals = Object.freeze(_.uniq(Array.from(this._locals.values())).sort((a, b) => a.name < b.name ? -1 : 1));
-        this.primitives = Object.freeze(_.uniq(Array.from(this._primitives.values())).sort((a, b) => a.name < b.name ? -1 : 1));
-        this.dates = Object.freeze(_.uniq(Array.from(this._dates.values())).sort((a, b) => a.name < b.name ? -1 : 1));
-        this.complexes = Object.freeze(_.uniq(Array.from(this._complexes.values())).sort((a, b) => a.name < b.name ? -1 : 1));
-        this.instances = Object.freeze(_.uniq(Array.from(this._instances.values())).sort((a, b) => a.name < b.name ? -1 : 1));
-        this.navigations = Object.freeze(_.uniq(Array.from(this._navigations.values())).sort((a, b) => a.name < b.name ? -1 : 1));
-        this.references = Object.freeze(_.uniq(Array.from(this._references.values())).sort((a, b) => a.name < b.name ? -1 : 1));
-        this.children = Object.freeze(_.uniq(Array.from(this._children.values())).sort((a, b) => a.name < b.name ? -1 : 1));
-        this.collections = Object.freeze(_.uniq(Array.from(this._collections.values())).sort((a, b) => a.name < b.name ? -1 : 1));
+    private _addPropertyNoRebuild(p: Property, overwrite = false): void {
+        let [name, dtoName] = [p.name, p.dtoName];
+
+        if (!overwrite) {
+            if (this._byName.has(name)) {
+                throw new Error(`${this.entityType.name} already has a property named ${name}`);
+            } else if (this._byDtoName.has(name)) {
+                throw new Error(`${this.entityType.name} already has a property dto-named ${name}`);
+            }
+        }
+
+        this._byName.set(name, p);
+        this._byDtoName.set(dtoName, p);
+    }
+
+    private _rebuildPropertyIndex(): void {
+        let properties = Array.from(this._byName.values())
+            .concat([this.primaryKey])
+            .sort((a, b) => a.name.localeCompare(b.name));
+
+        let all: Property[] = [];
+        let map = new Map<Property.TypeOrFamily, Property[]>([
+            ["children", []],
+            ["collection", []],
+            ["complex", []],
+            ["date", []],
+            ["instance", []],
+            ["local", []],
+            ["navigation", []],
+            ["primitive", []],
+            ["reference", []]
+        ]);
+
+        for (let i = 0; i < properties.length; ++i) {
+            let p = properties[i];
+            all.push(p);
+            map.get(p.family).push(p);
+            map.get(p.type).push(p);
+        }
+
+        this._properties = Object.freeze({
+            all: Object.freeze(all),
+            children: Object.freeze(map.get("children")),
+            collections: Object.freeze(map.get("collection")),
+            complexes: Object.freeze(map.get("complex")),
+            dates: Object.freeze(map.get("date")),
+            instances: Object.freeze(map.get("instance")),
+            locals: Object.freeze(map.get("local")),
+            navigations: Object.freeze(map.get("navigation")),
+            primitives: Object.freeze(map.get("primitive")),
+            references: Object.freeze(map.get("reference"))
+        } as ClassProperties);
+    }
+
+    addProperty(property: Property, overwrite = false): void {
+        this._addPropertyNoRebuild(property, overwrite);
+        this._rebuildPropertyIndex();
+    }
+
+    addProperties(properties: Property[], overwrite = false): void {
+        for (let i = 0; i < properties.length; ++i) {
+            this._addPropertyNoRebuild(properties[i], overwrite);
+        }
+
+        this._rebuildPropertyIndex();
     }
 
     /**
      * Returns a property identified by its name or dtoName or null if not found.
      */
-    getProperty(name: string): PropertyBase {
-        return this._properties.get(name) || null;
+    getProperty(name: string, expected?: Property.Type): Property {
+        let p = this._byName.get(name);
+
+        if (!p) {
+            throw new Error(`${this.entityType.name} does not have a property named ${name}`);
+        } else if (expected && p.type !== expected) {
+            throw new Error(`${this.entityType.name}.${name} is not of the expected type ${expected}`);
+        }
+
+        return p;
     }
 
     /**
      * Returns a primitive identified by its name or dtoName or null if not found.
      */
-    getLocal(name: string): Local {
-        return this._locals.get(name) || null;
+    getLocal(name: string, expected?: Local.Type): Local {
+        let p = this.getProperty(name, expected);
+
+        if (p.family != "local") {
+            throw new Error(`${this.entityType.name}.${name} is not a local property`);
+        }
+
+        return p;
+    }
+
+    /**
+     * Returns a navigation identified by its name or dtoName or null if not found.
+     */
+    getNavigation(name: string, expected?: Navigation.Type): Navigation {
+        let p = this.getProperty(name, expected);
+
+        if (p.family != "navigation") {
+            throw new Error(`${this.entityType.name}.${name} is not a local property`);
+        }
+
+        return p;
     }
 
     /**
      * Returns a primitive identified by its name or dtoName or null if not found.
      */
     getPrimitive(name: string): Primitive {
-        return this._primitives.get(name) || null;
+        return this.getProperty(name, "primitive") as Primitive;
     }
 
     /**
      * Returns a primitive identified by its name or dtoName or null if not found.
      */
     getDate(name: string): DateTime {
-        return this._dates.get(name) || null;
+        return this.getProperty(name, "date") as DateTime;
     }
 
     /**
      * Returns a primitive identified by its name or dtoName or null if not found.
      */
     getComplex(name: string): Complex {
-        return this._complexes.get(name) || null;
+        return this.getProperty(name, "complex") as Complex;
     }
 
     /**
      * Returns a primitive identified by its name or dtoName or null if not found.
      */
     getInstance(name: string): Instance {
-        return this._instances.get(name) || null;
-    }
-
-    /**
-     * Returns a navigation identified by its name or dtoName or null if not found.
-     */
-    // todo: maybe return NavigationType instead
-    getNavigation(name: string): Navigation {
-        return this._navigations.get(name) || null;
+        return this.getProperty(name, "instance") as Instance;
     }
 
     /**
      * Returns a reference identified by its name or dtoName or null if not found.
      */
     getReference(name: string): Reference {
-        return this._references.get(name) || null;
+        return this.getProperty(name, "reference") as Reference;
     }
 
     /**
      * Returns a child collection identified by its name or dtoName or null if not found.
      */
     getChildren(name: string): Children {
-        return this._children.get(name) || null;
-    }
-
-    getBackReference(children: Children): Reference {
-        return this.getReference(children.backReferenceName);
+        return this.getProperty(name, "children") as Children;
     }
 
     /**
      * Returns a reference collection identified by its name or dtoName or null if not found.
      */
     getCollection(name: string): Collection {
-        return this._collections.get(name) || null;
+        return this.getProperty(name, "collection") as Collection;
+    }
+
+    getBackReference(children: Children): Reference {
+        return this.getReference(children.backReferenceName);
     }
 }
 
@@ -300,7 +305,6 @@ export function getMetadata<T extends IEntity>(type: EntityType<T>): ClassMetada
 export function isEntityClass(type: any): boolean {
     return typeToMetadata.has(type);
 }
-
 
 export module Property {
     export function Id(args?: Primitive.CtorArgs) {

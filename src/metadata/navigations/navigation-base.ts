@@ -5,9 +5,10 @@ import { ClassMetadata, getMetadata } from "../class-metadata";
 /**
  * A property that points to one (Reference) or many (Children, Collection) related entities.
  */
+// todo: figure out if we can prevent exporting it from index.ts
 export abstract class NavigationBase extends PropertyBase {
     // we have to explicitly state the type, otherwise its missing @ .d.ts
-    readonly base: "navigation" = "navigation";
+    readonly family: "navigation" = "navigation";
     readonly virtual: boolean;
 
     get otherType(): EntityType<any> { return this._otherType(); };
