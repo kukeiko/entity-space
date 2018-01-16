@@ -9,9 +9,7 @@ describe("class-metadata", () => {
             id: number = null;
         }
 
-        @EntityClass({
-            name: "Barbar"
-        })
+        @EntityClass()
         class Bar {
             @Property.Id()
             id: number = null;
@@ -29,20 +27,6 @@ describe("class-metadata", () => {
 
             expect(metadata instanceof ClassMetadata).toBe(true);
             expect(metadata.entityType).toBe(Foo);
-        });
-
-        it("should accept entity type name", () => {
-            let metadata = getMetadata("Barbar");
-
-            expect(metadata instanceof ClassMetadata).toBe(true);
-            expect(metadata.entityType).toBe(Bar);
-        });
-
-        it("should accept entity type name (case insensitive check)", () => {
-            let metadata = getMetadata("bARbAR");
-
-            expect(metadata instanceof ClassMetadata).toBe(true);
-            expect(metadata.entityType).toBe(Bar);
         });
 
         it("should return different instances for different types", () => {
@@ -97,6 +81,6 @@ describe("class-metadata", () => {
         class Foo { @Property.Id() id: string; }
         let fooMetadata = getMetadata(Foo);
 
-        expect(fooMetadata.name).toEqual("Foo");
+        expect(fooMetadata.entityType.name).toEqual("Foo");
     });
 });

@@ -1,15 +1,13 @@
-import { EntityType, IEntity } from "./entity.type";
-import { ClassMetadata } from "./class-metadata";
+import { AnyEntityType, EntityType, IEntity } from "./entity.type";
+import { AnyClassMetadata, ClassMetadata } from "./class-metadata";
 import { Children, Collection, Reference } from "./navigations";
 import { Primitive, DateTime, Complex, Instance } from "./locals";
 
-const METADATA_KEY = "entity-space:class-metadata";
-const METADATA_ARGS_KEY = "entity-space:class-metadata:ctor-args";
-
-let nameToTypeMap = new Map<string, EntityType<any>>();
+let typeToMetadata = new Map<AnyEntityType, AnyClassMetadata>();
+let typeToMetadataArgs = new Map<AnyEntityType, Partial<ClassMetadata.CtorArgs>>();
 
 function getOrCreateMetadataArgs(type: any): Partial<ClassMetadata.CtorArgs> {
-    if (!Reflect.hasMetadata(METADATA_ARGS_KEY, type)) {
+    if (!typeToMetadataArgs.has(type)) {
         let args: Partial<ClassMetadata.CtorArgs> = {
             primitives: {},
             dates: {},
@@ -20,10 +18,10 @@ function getOrCreateMetadataArgs(type: any): Partial<ClassMetadata.CtorArgs> {
             collections: {}
         };
 
-        Reflect.defineMetadata(METADATA_ARGS_KEY, args, type);
+        typeToMetadataArgs.set(type, args as ClassMetadata.CtorArgs);
     }
 
-    return Reflect.getMetadata(METADATA_ARGS_KEY, type);
+    return typeToMetadataArgs.get(type);
 }
 
 /**
@@ -38,9 +36,7 @@ function getOrCreateMetadataArgs(type: any): Partial<ClassMetadata.CtorArgs> {
 export function EntityClass(args?: Partial<ClassMetadata.CtorArgs>) {
     return (type: EntityType<any>) => {
         let existing = getOrCreateMetadataArgs(type);
-        existing.name = (args || {}).name || type.name;
         existing.sorter = (args || {}).sorter || null;
-        nameToTypeMap.set(existing.name.toLocaleLowerCase(), type);
 
         if (!args) return;
 
@@ -55,45 +51,20 @@ export function EntityClass(args?: Partial<ClassMetadata.CtorArgs>) {
     };
 }
 
-export function getMetadata<T extends IEntity>(type: string | EntityType<T> | Function): ClassMetadata<T> {
-    if (typeof (type) == "string") {
-        type = type.toLocaleLowerCase();
-
-        if (!nameToTypeMap.has(type)) {
-            throw `no entity metadata found with name/alias '${type}'`;
+export function getMetadata<T extends IEntity>(type: EntityType<T>): ClassMetadata<T> {
+    if (!typeToMetadata.has(type)) {
+        if (!typeToMetadataArgs.has(type)) {
+            throw new Error(`no entity class metadata found for type ${type.name}`);
         }
 
-        type = nameToTypeMap.get(type);
+        typeToMetadata.set(type, new ClassMetadata(type as EntityType<T>, (typeToMetadataArgs.get(type) as ClassMetadata.CtorArgs)));
     }
 
-    if (!Reflect.hasMetadata(METADATA_KEY, type)) {
-        if (!Reflect.hasMetadata(METADATA_ARGS_KEY, type)) {
-            throw `no entity metadata found for type ${type.name}`;
-        }
-
-        let args = Reflect.getMetadata(METADATA_ARGS_KEY, type);
-        let metadata = new ClassMetadata(type as EntityType<T>, args);
-        Reflect.defineMetadata(METADATA_KEY, metadata, type);
-    }
-
-    return Reflect.getMetadata(METADATA_KEY, type);
+    return typeToMetadata.get(type) as ClassMetadata<T>;
 }
 
-export function isEntity(type: string | EntityType<any>): boolean {
-    if (typeof (type) == "string") {
-        type = type.toLocaleLowerCase();
-
-        if (!nameToTypeMap.has(type)) {
-            return false;
-        }
-
-        type = nameToTypeMap.get(type);
-    }
-
-    if (Reflect.hasMetadata(METADATA_KEY, type)) return true;
-    if (Reflect.hasMetadata(METADATA_ARGS_KEY, type)) return true;
-
-    return false;
+export function isEntityClass(type: any): boolean {
+    return typeToMetadata.has(type);
 }
 
 export class Property {

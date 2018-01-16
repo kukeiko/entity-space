@@ -3,7 +3,6 @@ import { Song } from "./song";
 import { Tag } from "./tag";
 
 @EntityClass({
-    name: "SongTag",
     primaryKey: { name: "id" },
     primitives: {
         tagId: {

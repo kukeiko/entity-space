@@ -67,7 +67,8 @@ export class Workspace {
     hydrate(entities: IEntity[], expand: ArrayLike<Expansion>): ArrayLike<IEntity> {
         if (entities.length == 0) return [];
 
-        return this._hydrateNavigations(entities, getMetadata(entities[0].constructor), expand);
+        // todo: dirty casting
+        return this._hydrateNavigations(entities, getMetadata(entities[0].constructor as EntityType<any>), expand);
     }
 
     add(items: IEntity[] | StringIndexable[], metadata: ClassMetadata<any>, expand?: ArrayLike<Expansion>, isDto?: boolean): void {

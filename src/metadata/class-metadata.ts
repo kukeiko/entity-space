@@ -12,7 +12,6 @@ export type EntitySorter = (a: IEntity, b: IEntity) => number;
  */
 export class ClassMetadata<T extends IEntity> {
     readonly entityType: EntityType<T>;
-    readonly name: string;
     readonly primaryKey: Primitive;
     readonly sorter: EntitySorter;
 
@@ -48,7 +47,6 @@ export class ClassMetadata<T extends IEntity> {
         if (!args.primaryKey) throw `${entityType.name} has no primary key`;
 
         this.entityType = entityType;
-        this.name = args.name;
         this.sorter = args.sorter || null;
 
         let dtoNames = new Set<string>();
@@ -220,7 +218,6 @@ export class ClassMetadata<T extends IEntity> {
 
 export module ClassMetadata {
     export interface CtorArgs {
-        name: string;
         primaryKey: { name: string, args?: Primitive.CtorArgs };
         primitives?: { [name: string]: Primitive.CtorArgs };
         dates?: { [name: string]: DateTime.CtorArgs };

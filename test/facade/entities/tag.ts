@@ -3,7 +3,6 @@ import { Album } from "./album";
 import { TagType } from "./tag-type";
 
 @EntityClass({
-    name: "Tag",
     primaryKey: { name: "id" },
     primitives: {
         typeId: {

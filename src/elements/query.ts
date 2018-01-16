@@ -188,7 +188,7 @@ export class Query<T extends IEntity> {
 
     // todo: include filter string representation
     toString(): string {
-        let val = `${getMetadata(this.entityType).name}(${this.identity})`;
+        let val = `${getMetadata(this.entityType).entityType.name}(${this.identity})`;
 
         if (this.expansions.length > 0) {
             val += "/";

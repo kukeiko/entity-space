@@ -2,7 +2,6 @@ import { EntityClass, Property } from "../../../src";
 import { Album } from "./album";
 
 @EntityClass({
-    name: "Artist",
     primaryKey: { name: "id", args: {} },
     primitives: { name: {} },
     children: {
