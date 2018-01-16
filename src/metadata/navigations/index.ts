@@ -1,6 +1,3 @@
-// base
-export * from "./navigation-base";
-
 // implementations
 export * from "./children";
 export * from "./collection";
