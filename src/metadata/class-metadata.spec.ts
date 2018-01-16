@@ -1,5 +1,4 @@
-import { ClassMetadata } from "./class-metadata";
-import { getMetadata, Property, EntityClass } from "./entity.decorator";
+import { ClassMetadata, getMetadata, Property, EntityClass  } from "./class-metadata";
 
 describe("class-metadata", () => {
     describe("getEntityMetadata()", () => {

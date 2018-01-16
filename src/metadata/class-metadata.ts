@@ -1,11 +1,18 @@
 import * as _ from "lodash";
-import { EntityType, IEntity } from "./entity.type";
+import { EntityType, IEntity, AnyEntityType } from "./entity.type";
 import { PropertyBase } from "./property-base";
 import { Local, Primitive, DateTime, Complex, Instance } from "./locals";
 import { Navigation, Children, Collection, Reference } from "./navigations";
 
 export type AnyClassMetadata = ClassMetadata<IEntity>;
 export type EntitySorter = (a: IEntity, b: IEntity) => number;
+
+/**
+ * All supported types of properties.
+ */
+export type Property =
+    Local
+    | Navigation;
 
 /**
  * Contains information about properties and other metadata of an entity type.
@@ -227,5 +234,165 @@ export module ClassMetadata {
         children?: { [name: string]: Children.CtorArgs };
         collections?: { [name: string]: Collection.CtorArgs };
         sorter?: (a: IEntity, b: IEntity) => number;
+    }
+}
+
+let typeToMetadata = new Map<AnyEntityType, AnyClassMetadata>();
+let typeToMetadataArgs = new Map<AnyEntityType, Partial<ClassMetadata.CtorArgs>>();
+
+function getOrCreateMetadataArgs(type: any): Partial<ClassMetadata.CtorArgs> {
+    if (!typeToMetadataArgs.has(type)) {
+        let args: Partial<ClassMetadata.CtorArgs> = {
+            primitives: {},
+            dates: {},
+            complexes: {},
+            instances: {},
+            references: {},
+            children: {},
+            collections: {}
+        };
+
+        typeToMetadataArgs.set(type, args as ClassMetadata.CtorArgs);
+    }
+
+    return typeToMetadataArgs.get(type);
+}
+
+/**
+ * Define a class as a type of entity, describing all its cacheable, loadable and saveable properties.
+ *
+ * Property metadata can be defined by:
+ * * using property decorators (e.g. @Property.PrimaryKey(), @Property.Reference())
+ * * passing constructor arguments via this decorator
+ *
+ * Each entity type must have a primary key defined, and names/aliases must be unique across all properties.
+ */
+export function EntityClass(args?: Partial<ClassMetadata.CtorArgs>) {
+    return (type: EntityType<any>) => {
+        let existing = getOrCreateMetadataArgs(type);
+        existing.sorter = (args || {}).sorter || null;
+
+        if (!args) return;
+
+        existing.primaryKey = args.primaryKey || existing.primaryKey;
+        existing.primitives = { ...existing.primitives, ...(args.primitives || {}) };
+        existing.dates = { ...existing.dates, ...(args.dates || {}) };
+        existing.complexes = { ...existing.complexes, ...(args.complexes || {}) };
+        existing.instances = { ...existing.instances, ...(args.instances || {}) };
+        existing.references = { ...existing.references, ...(args.references || {}) };
+        existing.children = { ...existing.children, ...(args.children || {}) };
+        existing.collections = { ...existing.collections, ...(args.collections || {}) };
+    };
+}
+
+export function getMetadata<T extends IEntity>(type: EntityType<T>): ClassMetadata<T> {
+    if (!typeToMetadata.has(type)) {
+        if (!typeToMetadataArgs.has(type)) {
+            throw new Error(`no entity class metadata found for type ${type.name}`);
+        }
+
+        typeToMetadata.set(type, new ClassMetadata(type as EntityType<T>, (typeToMetadataArgs.get(type) as ClassMetadata.CtorArgs)));
+    }
+
+    return typeToMetadata.get(type) as ClassMetadata<T>;
+}
+
+export function isEntityClass(type: any): boolean {
+    return typeToMetadata.has(type);
+}
+
+
+export module Property {
+    export function Id(args?: Primitive.CtorArgs) {
+        return <T>(type: Object, key: string, descriptor?: TypedPropertyDescriptor<T>) => {
+            args = args || {};
+
+            if (descriptor && !descriptor.set) {
+                args.computed = true;
+            }
+
+            getOrCreateMetadataArgs(type.constructor).primaryKey = { name: key, args: args };
+        };
+    }
+
+    export function Primitive(args?: Primitive.CtorArgs) {
+        return <T>(type: Object, key: string, descriptor?: TypedPropertyDescriptor<T>) => {
+            args = args || {};
+
+            if (descriptor && !descriptor.set) {
+                args.computed = true;
+            }
+
+            getOrCreateMetadataArgs(type.constructor).primitives[key] = args;
+        };
+    }
+
+    export function Key(args?: Primitive.CtorArgs) {
+        return <T>(type: Object, key: string, descriptor?: TypedPropertyDescriptor<T>) => {
+            args = args || {};
+            args.index = true;
+
+            Property.Primitive(args)(type, key, descriptor);
+        };
+    }
+
+    export function Date(args?: DateTime.CtorArgs) {
+        return (type: Object, key: string, descriptor?: TypedPropertyDescriptor<Date>) => {
+            getOrCreateMetadataArgs(type.constructor).dates[key] = args;
+        };
+    }
+
+    export function Complex(args?: Complex.CtorArgs) {
+        return <T>(type: Object, key: string, descriptor?: TypedPropertyDescriptor<T>) => {
+            args = args || {};
+
+            if (descriptor && !descriptor.set) {
+                args.computed = true;
+            }
+
+            getOrCreateMetadataArgs(type.constructor).complexes[key] = args;
+        };
+    }
+
+    export function Instance(args?: Instance.CtorArgs) {
+        return <T>(type: Object, key: string, descriptor?: TypedPropertyDescriptor<T>) => {
+            args = args || {};
+
+            if (descriptor && !descriptor.set) {
+                args.computed = true;
+            }
+
+            getOrCreateMetadataArgs(type.constructor).instances[key] = args;
+        };
+    }
+
+    export function Reference(args: Reference.CtorArgs) {
+        return <T>(type: Object, key: string, descriptor?: TypedPropertyDescriptor<T>) => {
+            if (descriptor && !descriptor.set) {
+                throw new Error(`a reference can not be readonly (${key} @ ${type.constructor.name})`);
+            }
+
+            getOrCreateMetadataArgs(type.constructor).references[key] = args;
+        };
+    }
+
+    export function Children(args: Children.CtorArgs) {
+        return <T>(type: Object, key: string, descriptor?: TypedPropertyDescriptor<T>) => {
+            if (descriptor && !descriptor.set) {
+                throw new Error(`a child array can not be readonly (${key} @ ${type.constructor.name})`);
+            }
+
+            getOrCreateMetadataArgs(type.constructor).children[key] = args;
+        };
+    }
+
+    export function Collection(args: Collection.CtorArgs) {
+        return <T>(type: Object, key: string, descriptor?: TypedPropertyDescriptor<T>) => {
+            if (descriptor && !descriptor.set) {
+                throw new Error(`a reference array can not be readonly (${key} @ ${type.constructor.name})`);
+            }
+
+            getOrCreateMetadataArgs(type.constructor).collections[key] = args;
+        };
     }
 }

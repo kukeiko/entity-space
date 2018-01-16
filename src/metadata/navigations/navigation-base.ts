@@ -1,7 +1,6 @@
 import { EntityType } from "../entity.type";
-import { getMetadata } from "../entity.decorator";
 import { PropertyBase } from "../property-base";
-import { ClassMetadata } from "../class-metadata";
+import { ClassMetadata, getMetadata } from "../class-metadata";
 
 /**
  * A property that points to one (Reference) or many (Children, Collection) related entities.
