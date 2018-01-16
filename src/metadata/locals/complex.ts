@@ -1,7 +1,8 @@
 import { LocalBase } from "./local-base";
 
 export class Complex extends LocalBase {
-    readonly type = "complex";
+    // we have to explicitly state the type, otherwise its missing @ .d.ts
+    readonly type: "complex" = "complex";
     readonly compareMethod: Complex.CompareMethod;
 
     constructor(name: string, args: Complex.CtorArgs) {

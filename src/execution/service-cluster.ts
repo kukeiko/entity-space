@@ -300,7 +300,7 @@ export class ServiceCluster {
                 let nav = v.extracted.property as Navigation;
 
                 switch (nav.type) {
-                    case "ref":
+                    case "reference":
                         let keys = new Set<any>();
                         let keyName = nav.keyName;
 
@@ -318,7 +318,7 @@ export class ServiceCluster {
                         }
                         break;
 
-                    case "array:child":
+                    case "children":
                         let backRef = getMetadata(nav.otherType).getBackReference(nav);
                         let parentKeyName = backRef.keyName;
                         let pkName = getMetadata(backRef.otherType).primaryKey.name;
@@ -334,7 +334,7 @@ export class ServiceCluster {
                         });
                         break;
 
-                    case "array:ref":
+                    case "collection":
                         let refKeys = new Set<any>();
                         let keysName = nav.keysName;
 

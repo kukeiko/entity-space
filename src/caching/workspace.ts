@@ -92,7 +92,7 @@ export class Workspace {
 
             let nav = expansion.property as Navigation;
 
-            if (nav.type == "array:child") {
+            if (nav.type == "children") {
                 let childCache = this._getEntityCache(nav.otherTypeMetadata);
                 let backRef = nav.otherTypeMetadata.getBackReference(nav);
 
@@ -139,15 +139,15 @@ export class Workspace {
             let nav = expansion.property as Navigation;
 
             switch (nav.type) {
-                case "ref":
+                case "reference":
                     this._hydrateReference(entities, metadata, expansion);
                     break;
 
-                case "array:child":
+                case "children":
                     this._hydrateChildren(entities, metadata, expansion);
                     break;
 
-                case "array:ref":
+                case "collection":
                     this._hydrateCollection(entities, metadata, expansion);
                     break;
             }

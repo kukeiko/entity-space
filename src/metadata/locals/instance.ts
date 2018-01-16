@@ -1,7 +1,8 @@
 import { LocalBase } from "./local-base";
 
 export class Instance extends LocalBase {
-    readonly type = "instance";
+    // we have to explicitly state the type, otherwise its missing @ .d.ts
+    readonly type: "instance" = "instance";
     readonly cloneMethod: Instance.CloneMethod;
     readonly compareMethod: Instance.CompareMethod;
 

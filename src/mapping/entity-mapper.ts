@@ -193,7 +193,7 @@ export class EntityMapper {
         let collected: IEntity[] = [];
         let navName = nav.getName(isDto);
 
-        if (nav.type == "ref") {
+        if (nav.type == "reference") {
             for (let i = 0; i < l; ++i) {
                 collected.push(items[i][navName]);
             }

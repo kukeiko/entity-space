@@ -4,7 +4,8 @@ import { NavigationBase } from "./navigation-base";
  * A property that points to one related entity.
  */
 export class Reference extends NavigationBase {
-    readonly type = "ref";
+    // we have to explicitly state the type, otherwise its missing @ .d.ts
+    readonly type: "reference" = "reference";
     readonly keyName: string;
 
     constructor(name: string, args: Reference.CtorArgs) {
@@ -15,7 +16,7 @@ export class Reference extends NavigationBase {
 }
 
 export module Reference {
-    export interface CtorArgs extends NavigationBase.CtorArgs{
+    export interface CtorArgs extends NavigationBase.CtorArgs {
         key: string;
     }
 }

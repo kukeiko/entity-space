@@ -1,7 +1,8 @@
 import { LocalBase } from "./local-base";
 
 export class Primitive extends LocalBase {
-    readonly type = "primitive";
+    // we have to explicitly state the type, otherwise its missing @ .d.ts
+    readonly type: "primitive" = "primitive";
     readonly index: boolean;
     readonly valueType: Primitive.ValueType;
 

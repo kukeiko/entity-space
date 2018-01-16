@@ -3,7 +3,8 @@ import { LocalBase } from "./local-base";
 // the reason it is called DateTime instead of Date is to prevent
 // name collision with the native Date
 export class DateTime extends LocalBase {
-    readonly type = "date";
+    // we have to explicitly state the type, otherwise its missing @ .d.ts
+    readonly type: "date" = "date";
 
     constructor(name: string, args: LocalBase.CtorArgs) {
         super(name, args);
