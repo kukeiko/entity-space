@@ -344,9 +344,9 @@ export class ServiceCluster {
                             keys.forEach(k => refKeys.add(k));
                         });
 
-                        if (keys.size > 0) {
+                        if (refKeys.size > 0) {
                             promises.push(this._loadIntoWorkspace(Query.ByIds({
-                                ids: Array.from(keys),
+                                ids: Array.from(refKeys),
                                 entity: nav.otherType,
                                 expand: v.extracted.expansions
                             })));
