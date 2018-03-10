@@ -204,7 +204,8 @@ export class ServiceCluster {
             } else {
                 [dtoPatch] = EntityMapper.copyPrimitives({
                     from: [entityCopies[i]],
-                    metadata: metadata
+                    metadata: metadata,
+                    toDto: true
                 });
             }
 
