@@ -87,13 +87,11 @@ export class QueryCache {
         let isDto = args.isDto || false;
 
         if (!skipRoot) {
-            let ids = EntityMapper.collectLocal(payload, metadata.primaryKey, isDto);
             let q = Query.ByIds({
                 entity: metadata.entityType,
                 expand: expand,
-                ids: ids
+                ids: EntityMapper.collectLocal(payload, metadata.primaryKey, isDto)
             });
-
 
             this._merge(q);
         }
