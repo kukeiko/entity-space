@@ -8,6 +8,8 @@ import { BuilderProvider } from "./builder-provider";
 
 type EntityCache = ObjectCache<any, IEntity>;
 
+// todo: consider making entities of same type & id actually the same reference,
+// this already works partially during hydration
 export class Workspace {
     private _caches = new Map<EntityType<IEntity>, EntityCache>();
     private _builderProvider: BuilderProvider;
@@ -222,21 +224,49 @@ export class Workspace {
         let prop = nav.name;
         let cache = this._getEntityCache(nav.otherTypeMetadata);
         let otherMetadata = nav.otherTypeMetadata;
-        // note: i'm just guessing that concatenating them all at once is faster
-        // than doing it in each iteration
-        let allPerEntity: IEntity[][] = [];
+        let keys = new Set<any>();
 
-        let length_i = collectors.length;
-        let collector: IEntity;
+        // todo: create new method @ entity-mapper instead, e.g. "collectKeys"
+        for (let i = collectors.length; i >= 0; --i) {
+            let collectedKeys = collectors[i][keysName] as any[];
+            if (!(collectedKeys instanceof Array)) continue;
 
-        for (let i = 0; i < length_i; ++i) {
-            collector = collectors[i];
-            let collected = EntityMapper.copyPrimitives({ from: cache.byKeysAsArray(collector[keysName]), metadata: otherMetadata });
-            allPerEntity.push(collected);
-            collector[prop] = collected;
+            for (let e = collectedKeys.length - 1; e >= 0; --e) {
+                keys.add(collectedKeys[e]);
+            }
         }
 
-        this._hydrateNavigations([].concat(...allPerEntity), otherMetadata, expansion.expansions);
+        let allCollected = EntityMapper.copyPrimitives({
+            from: cache.byKeysAsArray(Array.from(keys.values())),
+            metadata: otherMetadata
+        });
+
+        let allCollectedMap = new Map<any, IEntity>();
+        let collectedPkName = otherMetadata.primaryKey.name;
+
+        for (let i = allCollected.length - 1; i >= 0; --i) {
+            allCollectedMap.set(allCollected[i][collectedPkName], allCollected[i]);
+        }
+
+        let collector: IEntity;
+
+        for (let i = collectors.length; i >= 0; --i) {
+            collector = collectors[i];
+
+            let collectedKeys = collector[keysName] as any[];
+            if (!(collectedKeys instanceof Array)) continue;
+
+            collector[prop] = [];
+
+            for (let e = 0; e < collectedKeys.length; ++e) {
+                let collectedItem = allCollectedMap.get(collectedKeys[e]);
+                if (collectedItem == null) continue;
+
+                (collector[prop] as any[]).push(collectedItem);
+            }
+        }
+
+        this._hydrateNavigations(allCollected, otherMetadata, expansion.expansions);
     }
 
     private _getEntityCache(metadata: EntityMetadata<any>): ObjectCache<any, any> {
