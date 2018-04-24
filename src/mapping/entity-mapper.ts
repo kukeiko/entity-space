@@ -128,6 +128,7 @@ export class EntityMapper {
         return to;
     }
 
+    // todo: use for loops
     static updateReferenceKeys(args: {
         from: IEntity[];
         to?: IEntity[];
@@ -192,14 +193,21 @@ export class EntityMapper {
         let l = items.length;
         let collected: IEntity[] = [];
         let navName = nav.getName(isDto);
+        let value: IEntity;
 
         if (nav.type == "ref") {
             for (let i = 0; i < l; ++i) {
-                collected.push(items[i][navName]);
+                value = items[i][navName];
+                if (value == null) continue;
+
+                collected.push(value);
             }
         } else {
             for (let i = 0; i < l; ++i) {
-                collected = collected.concat(items[i][navName]);
+                value = items[i][navName];
+                if (value == null) continue;
+
+                collected = collected.concat(value);
             }
         }
 
@@ -210,8 +218,12 @@ export class EntityMapper {
         let l = items.length;
         let collected: IEntity[] = [];
         let localName = local.getName(isDto);
+        let value: any;
 
         for (let i = 0; i < l; ++i) {
+            value = items[i][localName];
+            if (value == null) continue;
+
             collected.push(items[i][localName]);
         }
 
