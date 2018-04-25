@@ -232,7 +232,7 @@ export class Workspace {
         let keys = new Set<any>();
 
         // todo: create new method @ entity-mapper instead, e.g. "collectKeys"
-        for (let i = collectors.length; i >= 0; --i) {
+        for (let i = collectors.length - 1; i >= 0; --i) {
             let collectedKeys = collectors[i][keysName] as any[];
             if (!(collectedKeys instanceof Array)) continue;
 
@@ -255,7 +255,7 @@ export class Workspace {
 
         let collector: IEntity;
 
-        for (let i = collectors.length; i >= 0; --i) {
+        for (let i = collectors.length - 1; i >= 0; --i) {
             collector = collectors[i];
 
             let collectedKeys = collector[keysName] as any[];
@@ -263,7 +263,7 @@ export class Workspace {
 
             collector[prop] = [];
 
-            for (let e = 0; e < collectedKeys.length; ++e) {
+            for (let e = 0; e < collectedKeys.length - 1; ++e) {
                 let collectedItem = allCollectedMap.get(collectedKeys[e]);
                 if (collectedItem == null) continue;
 
