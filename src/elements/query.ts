@@ -90,9 +90,10 @@ export class Query<T extends IEntity> {
         if (identity == null) {
             if (this.filter != null) {
                 let filter = this.filter.reduce(other.filter);
-                if (filter == other.filter) return other;
 
-                if (filter == null) {
+                if (filter == other.filter) {
+                    return other;
+                } else if (filter == null) {
                     let expansions = Expansion.minus(other.expansions, this.expansions);
                     if (expansions.length == 0) return null;
 
@@ -100,7 +101,7 @@ export class Query<T extends IEntity> {
                         entityType: this.entityType,
                         expand: expansions,
                         identity: other.identity,
-                        filter: filter
+                        filter: other.filter
                     });
                 } else if (Expansion.isSuperset(this.expansions, other.expansions)) {
                     return new Query({
