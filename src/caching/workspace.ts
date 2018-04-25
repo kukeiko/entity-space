@@ -207,8 +207,8 @@ export class Workspace {
 
             let children = EntityMapper.copyPrimitives({ from: cache.byIndexAsArray(backRefKeyName, parent[pkName]), metadata: otherMetadata });
 
-            if (metadata.sorter) {
-                children.sort(metadata.sorter);
+            if (otherMetadata.sorter) {
+                children.sort(otherMetadata.sorter);
             }
 
             parent[childrenPropName] = children;
@@ -270,8 +270,8 @@ export class Workspace {
                 (collector[prop] as any[]).push(collectedItem);
             }
 
-            if (metadata.sorter) {
-                (collector[prop] as any[]).sort(metadata.sorter);
+            if (otherMetadata.sorter) {
+                (collector[prop] as any[]).sort(otherMetadata.sorter);
             }
         }
 
