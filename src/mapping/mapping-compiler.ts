@@ -27,12 +27,12 @@ export class MappingCompiler {
         let buffer: string[] = [];
         let line = (str: string) => buffer.push(str);
 
-        line(`let from = args.from, to = args.to;`);
-        line(`let lodash = args.lodash`);
-        line(`let metadata = args.metadata`);
+        line(`var from = args.from, to = args.to;`);
+        line(`var lodash = args.lodash`);
+        line(`var metadata = args.metadata`);
 
-        line(`let target, source;`);
-        line(`for(let i = 0; i < from.length; ++i) {`);
+        line(`var target, source;`);
+        line(`for(var i = 0; i < from.length; ++i) {`);
         line(`\ttarget = to[i];`);
         line(`\tsource = from[i];`);
         line(``);
