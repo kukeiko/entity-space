@@ -25,12 +25,14 @@ export abstract class IdentityBase {
     /**
      * Reduce another identity, trying to make its resulting set smaller.
      */
-    abstract reduce(other: Identity): Identity;
+    abstract reduce(other: Identity): Identity | null;
 
-    protected _toString: string;
+    protected _toString!: string;
 
     constructor(toString?: string) {
-        this._toString = toString || undefined;
+        if (toString !== void 0) {
+            this._toString = toString;
+        }
     }
 
     /**

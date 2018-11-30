@@ -9,6 +9,7 @@
     "outDir": "dist",
     "noImplicitAny": true,
     "noImplicitThis": true,
+    "strict": true,
     "typeRoots": [
       "node_modules/@types"
     ],
