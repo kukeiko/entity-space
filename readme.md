@@ -16,20 +16,12 @@ proper API documentation will follow as soon as version reaches stable v1.0.0
 * use the in-built query system to execute CRUD operations
 
 # goals
-## 0.6.0
-### filter criteria
-ability to specify a query filter describing valid value ranges an entity should have (root level only, not navigations).
 
-requires:
-- proper reduction (as far as it makes sense) of 2 filters
-- proper reduction of 2 queries with one or both of them having filters
-- filtering arrays of entities
+## immediate
+ * rewrite entity type definition & query system to provide more type safety (for strict mode)
+ * more genericity in how and what stuff can be loaded
 
-
-nice to have:
-- helper to format filter into valid OData format
-
-## 0.7.0+
+## future
 ### result, payload
 intermediate object to improve loading/saving capabilities @ service-cluster.
 
@@ -76,13 +68,6 @@ ability to transform/map entities into an abstraction of them.
 
 ### top & skip
 ability to do offset load results - was high priority, but not soo much anymore due to filter critera.
-
-### entity base class
-controversial, since it would require users to extend from it, but it would help a lot with fetching
-the metadata of an entity class.
-
-- static $ prop @ child class for useful stuff, like $.metadata
-- child class instance must implement $ getter for access via instance
 
 ### query merging
 as of now, queries just reduce each other, but none are ever merged. would increase performance since
