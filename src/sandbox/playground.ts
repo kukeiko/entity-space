@@ -15,6 +15,10 @@ export type Expandables<T> = ({ [P in keyof T]: T[P] extends Entity[] | undefine
 export type Locals<T> = Exclude<keyof T, Expandables<T> | "$">;
 export type NullIfNull<T, U> = U extends null ? T | null : T;
 
+interface Descriptor<T> {
+
+}
+
 export class ExpansionQuery<T> {
     expand<K extends Expandables<T>, E = ExcludeNullsy<T[K]>, X = Unbox<E>, R = X>(k: K, _?: (eq: ExpansionQuery<X>) => ExpansionQuery<R>): ExpansionQuery<Record<K, Box<R, E> | NullIfNull<Box<R, E>, T[K]>> & T> {
         return this as any;
@@ -54,6 +58,7 @@ class Customer implements Entity {
     name?: string;
     address?: Address;
     surname?: string;
+    level?: number;
 }
 
 interface Review extends Entity {
@@ -83,12 +88,14 @@ interface Kaz extends Entity {
 }
 
 interface Order extends Entity {
+    id?: number;
     customer?: Customer;
     products?: Product[];
     foo?: Foo | null;
 }
 
 let orders = (new RootQuery<Order>())
+    .select("id")
     .expand("products", q => q.expand("reviews", q => q.expand("customer")))
     // .expand("customer")
     // .expand("customer", q => q.selectAll())
@@ -110,6 +117,7 @@ orders.forEach(order => {
     let foo = order.customer.surname.length;
 
     order.products.forEach(product => {
+        // product.
         product.reviews.forEach(review => {
             if (review.customer !== null) {
                 let customerCheck = review.customer.name;

@@ -1,3 +1,4 @@
+export type Dummy = null;
 type Unbox<T> = T extends any[] ? T[number] : T;
 type Box<T, A = T> = A extends any[] ? T[] : T;
 type ExcludeVoid<T> = Exclude<T, void>;
@@ -41,14 +42,24 @@ module Navigation {
 }
 
 type PropertyValueType<T> = T extends Local<infer R> | Navigation<infer R> ? R : never;
+
 type LocalKeys<T> = ({ [P in keyof T]: T[P] extends Local<any> ? P : never; })[keyof T];
 type Locals<T> = { [P in LocalKeys<T>]: T[P]; };
 type SelectedLocals<T> = { [P in keyof Locals<T>]: T[P] extends Local<infer R> ? R : never; };
 type NavigationKeys<T> = ({ [P in keyof T]: T[P] extends Navigation<any> ? P : never; })[keyof T];
 
+type ComplexLocalKeys<T> = (
+    {
+        [P in keyof T]: T[P] extends Local<infer R>
+        ? R extends number | string | Date | null | number[] | string[] ? never : P : never;
+    }
+)[keyof T];
+
 interface ArticleType {
     title: Local<string>;
     author: Navigation<AuthorType | null>;
+    publishedAt: Local<Date>;
+    related: Navigation<ArticleType[]>;
 }
 
 interface AuthorType {
@@ -57,7 +68,31 @@ interface AuthorType {
     diedAt: Local<Date | null, number | null>;
     name: Local<string>;
     sex: Local<"male" | "female">;
+    metadata: Local<Metadata | null>;
 }
+
+interface User {
+    id: Local<number>;
+    name: Local<string>;
+}
+
+interface Metadata {
+    createdBy: Navigation<User>;
+    createdAt: Local<Date, number>;
+}
+
+type ComplexAuthorKeys = ComplexLocalKeys<AuthorType>;
+
+type Instance<T> = {
+    [P in LocalKeys<T> | NavigationKeys<T>]:
+    T[P] extends Local<infer R> ? R
+    : T[P] extends Navigation<infer R> ? Box<Instance<Unbox<R>>, R>
+    : never;
+};
+
+// let articleInstance: Instance<ArticleType> = {
+    
+// }
 
 function define<T>(def: {
     locals: { [K in LocalKeys<T>]: T[K] extends Local<infer RT, infer RD> ? Local.Options<RT, RD> : never; },
@@ -92,7 +127,8 @@ let domain = (new Domain())
                 toDto: date => date === null ? null : Math.round(date.getTime() / 1000)
             },
             name: {},
-            sex: {}
+            sex: {},
+            metadata: {}
         },
         navigations: {
             articles: {
@@ -103,12 +139,17 @@ let domain = (new Domain())
     }))
     .add("article", define<ArticleType>({
         locals: {
-            title: {}
+            title: {},
+            publishedAt: {}
         },
         navigations: {
             author: {
                 dtoName: "Author",
                 typeKey: "author"
+            },
+            related: {
+                dtoName: "Related",
+                typeKey: "article"
             }
         }
     }));
@@ -123,47 +164,99 @@ let domain = (new Domain())
 type ExpandedBlueprint<B, K extends NavigationKeys<B>> = ExcludeNull<Unbox<PropertyValueType<B[K]>>>;
 type SelectedValueType<B, K extends LocalKeys<B>> = PropertyValueType<B[K]>;
 type WithExpandedDescribed<B, K extends NavigationKeys<B>, O, Q> = Record<K, NullIfNull<Box<O, PropertyValueType<B[K]>>, PropertyValueType<B[K]>>> & Q;
+type WithOptionalExpandedDescribed<B, K extends NavigationKeys<B>, O, Q> = Record<K, NullIfNull<Box<O, PropertyValueType<B[K]>>, PropertyValueType<B[K]>> | undefined> & Q;
 
-class TypeDescriptor<B, D = {}> {
-    selectAll(): TypeDescriptor<B, SelectedLocals<B> & D> {
+class BuiltType {
+    selections!: string[];
+    expansions!: BuiltType[];
+
+    // [todo] add minus(), extract(), etc
+}
+
+class TypeBuilder<B, D = {}> {
+    selectAll(): TypeBuilder<B, SelectedLocals<B> & D> {
         return this as any;
     }
 
-    select<K extends LocalKeys<B>, S = SelectedValueType<B, K>>(k: K): TypeDescriptor<B, Record<K, S> & D> {
+    select<K extends LocalKeys<B>, S = SelectedValueType<B, K>>(k: K): this & TypeBuilder<B, Record<K, S> & D> {
         return this as any;
     }
 
-    expand<K extends NavigationKeys<B>, E = ExpandedBlueprint<B, K>, O = {}>(k: K, _: (eq: TypeDescriptor<E, {}>) => TypeDescriptor<E, O>): TypeDescriptor<B, WithExpandedDescribed<B, K, O, D>> {
+    expand<K extends NavigationKeys<B>, E = ExpandedBlueprint<B, K>, O = {}>(k: K, _: (eq: TypeBuilder<E, {}>) => TypeBuilder<E, O>): TypeBuilder<B, WithExpandedDescribed<B, K, O, D>> {
         return this as any;
     }
 
-    describe(): D {
+    expandIf<K extends NavigationKeys<B>, E = ExpandedBlueprint<B, K>, O = {}>(flag: boolean, k: K, _: (eq: TypeBuilder<E, {}>) => TypeBuilder<E, O>): TypeBuilder<B, WithOptionalExpandedDescribed<B, K, O, D>> {
+        return this as any;
+    }
+
+    buildType(): BuiltType {
         return null as any;
     }
-}
 
-let articleForMapping = (new TypeDescriptor<ArticleType>())
-    .select("title")
-    // .expand("author", q => q.select("bornAt").select("name").select("diedAt"))
-    .expand("author", q => q.selectAll().expand("articles", q => q.select("title")))
-    .describe();
+    quak(): D[] {
+        return [];
+    }
 
-class ArticleMapper {
-    toViewModel(articles: typeof articleForMapping[]) {
-        articles.forEach(article => {
-            if (article.author !== null) {
-                article.author.articles[0].title;
-
-                let foo = article.author.bornAt;
-                let diedAt = article.author.diedAt;
-
-                if (diedAt !== null) {
-                    diedAt.getDate();
-                }
-            }
-        });
+    foo(): D[] {
+        return [];
     }
 }
+
+type Wakkawakka<T> = T extends TypeBuilder<infer A, infer B> ? B : never;
+
+class Query<T> extends TypeBuilder<T> {
+    // foo<R>(foo: TypeBuilder<T, R>): Query<T, R & D> {
+    //     return this as any;
+    // }
+
+    // bar<R, O = R>(foo: (tb: TypeBuilder<T, R>) => TypeBuilder<T, O>): Query<T, O & D> {
+    //     return this as any;
+    // }
+
+    execute(): ReturnType<this["foo"]>[] {
+
+        return [];
+    }
+}
+
+// let articleTypeBuilder = (new TypeBuilder<ArticleType>())
+//     .select("title")
+//     .execute()
+//     .expand("author", q => q.select("bornAt").select("name").select("diedAt"))
+//     .expand("author", q => q.selectAll().expand("articles", q => q.select("title")))
+//     .expandIf(true, "related", q => q.selectAll())
+//     ;
+
+// type Moo = Wakkawakka<typeof articleTypeBuilder>;
+
+// let articleQuery = (new Query<ArticleType>())
+//     .select("title")
+//     .execute()
+//     // .expand("author", q => q.select("bornAt").select("name").select("diedAt"))
+//     .expand("author", q => q.selectAll().expand("articles", q => q.select("title")))
+//     .expandIf(true, "related", q => q.selectAll());
+
+// let doStuffWithArticles = (articles: Wakkawakka<typeof articleTypeBuilder>[]) => {
+//     articles.forEach(article => {
+//         if (article.related !== undefined) {
+//             let firstRelatedTitle = article.related[0].title;
+//         }
+
+//         if (article.author !== null) {
+//             article.author.articles[0].title;
+
+//             let foo = article.author.bornAt;
+//             let diedAt = article.author.diedAt;
+
+//             if (diedAt !== null) {
+//                 diedAt.getDate();
+//             }
+//         }
+//     });
+// };
+
+// doStuffWithArticles(articleQuery.execute());
 
 // class ExpansionQuery<B, Q = {}> {
 //     select<K extends LocalKeys<B>, S = SelectedValueType<B, K>>(k: K): ExpansionQuery<B, Record<K, S> & Q> {

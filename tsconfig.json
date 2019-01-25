@@ -1,27 +1,33 @@
 {
-  "compilerOptions": {
-    "target": "es5",
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "module": "commonjs",
-    "sourceMap": true,
-    "declaration": true,
-    "outDir": "dist",
-    "noImplicitAny": true,
-    "noImplicitThis": true,
-    "strict": true,
-    "typeRoots": [
-      "node_modules/@types"
-    ],
-    "lib": [
-      "dom",
-      "scripthost",
-      "es2015",
-      "es2016.array.include"
+    "compilerOptions": {
+        "target": "es5",
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "module": "commonjs",
+        "sourceMap": true,
+        "declaration": true,
+        "outDir": "dist",
+        "noImplicitAny": true,
+        "noImplicitThis": true,
+        "strict": true,
+        "typeRoots": [
+            "node_modules/@types"
+        ],
+        "lib": [
+            "dom",
+            "scripthost",
+            "es2015",
+            "es2016.array.include"
+        ],
+        "baseUrl": "./",
+        "paths": {
+            "@elements": ["src/elements"],
+            "@metadata": ["src/metadata"]
+        }
+    },
+    "include": [
+        "./src/**/*.ts",
+        "./test/**/*.ts",
+        "./old/**/*.ts" // [note] for checking out old src code only
     ]
-  },
-  "include": [
-    "./src/**/*.ts",
-    "./test/**/*.ts"
-  ]
 }
