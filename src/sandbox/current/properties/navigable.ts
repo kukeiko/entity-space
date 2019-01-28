@@ -5,7 +5,7 @@ import { Property } from "../property";
 
 // [todo] using "T extends Type<any>" might be a gud thing mon. try out later.
 // export type Navigable<T extends Type<any>, V, K extends string, A extends string = K> = Property.Dto<V, K, A, Box<Instance.Dto<T>, V>> & {
-export type Navigable<T, V, K extends string, A extends string = K> = Property.Dto<V, K, A, Box<Instance.Dto<T>, V>> & {
+export type Navigable<T, V, K extends string, A extends string = K> = Property<V, K, A, Box<Instance.Dto<T>, V>> & {
     navigable: true;
     navigated: T;
 };

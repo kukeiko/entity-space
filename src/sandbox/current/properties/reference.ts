@@ -1,14 +1,13 @@
 import { Box, Unbox } from "../lang";
 import { Property } from "../property";
+import { Instance } from "../instance";
 import { Local } from "./local";
 import { Unique } from "./unique";
 import { External } from "./external";
-import { Instance } from "../instance";
 
-export type Reference<T, K extends string, P extends Reference.Id<T, any, any, any, any, any>, A extends string = K, V = Box<Instance<Unbox<T>>, T>, U = Unbox<T>> = {
-    key: P;
-} & External<U, V, K, A>;
-// } & External<Unbox<T>, V, K, A>;
+export type Reference<T, K extends string, P extends Reference.Id<T, any, any, any, any, any>, A extends string = K, V = Box<Instance<Unbox<T>>, T>> = {
+    localKey: P;
+} & External<Unbox<T>, V, K, A>;
 
 export module Reference {
     export type Keys<T> = keyof T & Exclude<{ [P in keyof T]: T[P] extends Reference<infer _1, infer K, infer _3, infer _4, infer _5> | undefined ? K : never }[keyof T], undefined>;
@@ -16,11 +15,12 @@ export module Reference {
     export type Id<
         T,
         K extends string,
-        P extends Unique.Keys<Unbox<T>> & keyof Unbox<T>,
+        P extends Unique.Keys<U> & keyof U,
         A extends string = K,
-        V = Box<Property.ValueType<Property.WithKey<Unbox<T>, P>>, T>,
-        D = V> = {
-            otherKey: Unbox<T>[P];
+        V = Box<Property.ValueType<Property.WithKey<U, P>>, U>,
+        D = V,
+        U = Unbox<Exclude<T, null>>> = {
+            otherKey: U[P];
         } & Local<V, K, A, D>;
 
     export module Id {
@@ -29,20 +29,10 @@ export module Reference {
         export type Creatable<
             T,
             K extends string,
-            P extends Unique.Keys<Unbox<T>> & keyof Unbox<T>,
+            P extends Unique.Keys<Unbox<Exclude<T, null>>> & keyof Unbox<Exclude<T, null>>,
             A extends string = K,
-            V = Box<Property.ValueType<Property.WithKey<Unbox<T>, P>>, T>,
+            V = Box<Property.ValueType<Property.WithKey<Unbox<Exclude<T, null>>, P>>, Exclude<T, null>>,
             D = V> = Local.Creatable<V, K, A, D> & Id<T, K, P, A, V, D>;
-
-        // export type Creatable<
-        //     T,
-        //     K extends string,
-        //     P extends Unique.Keys<Unbox<T>> & keyof Unbox<T>,
-        //     A extends string = K,
-        //     V = Box<Property.ValueType<Property.WithKey<Unbox<T>, P>>, T>,
-        //     D = V> = {
-        //         creatable: true;
-        //     } & Key<T, K, P, A, V, D>;
 
         export module Creatable {
             // [note] the first "any" is on purpose, otherwise Patchable.Keys aren't included
@@ -55,27 +45,19 @@ export module Reference {
         export type Patchable<
             T,
             K extends string,
-            P extends Unique.Keys<Unbox<T>> & keyof Unbox<T>,
+            P extends Unique.Keys<Unbox<Exclude<T, null>>> & keyof Unbox<Exclude<T, null>>,
             A extends string = K,
-            V = Box<Property.ValueType<Property.WithKey<Unbox<T>, P>>, T>,
+            V = Box<Property.ValueType<Property.WithKey<Unbox<Exclude<T, null>>, P>>, Exclude<T, null>>,
             D = V> = Local.Patchable<V, K, A, D> & Creatable<T, K, P, A, V, D>;
-
-        // export type Patchable<
-        //     T,
-        //     K extends string,
-        //     P extends Unique.Keys<Unbox<T>> & keyof Unbox<T>,
-        //     A extends string = K,
-        //     V = Box<Property.ValueType<Property.WithKey<Unbox<T>, P>>, T>,
-        //     D = V> = {
-        //         patchable: true;
-        //     } & Creatable<T, K, P, A, V, D>;
 
         export module Patchable {
             export type Keys<T> = keyof T & Exclude<{ [P in keyof T]: T[P] extends Patchable<infer _1, infer K, infer _2, infer _3, infer _4, infer _5> | undefined ? K : never }[keyof T], undefined>;
         }
     }
 
-    export type Virtual<T, K extends string, P extends Id<T, any, any, any, any>, A extends string = K, U = Unbox<T>> = {
+    // export type Virtual<T, K extends string, P extends Id<T, any, any, any, any>, A extends string = K, U = Unbox<T>> = {
+    export type Virtual<T, K extends string, P extends Id<T, any, any, any, any>, A extends string = K, U = T extends any[] ? Instance<U>[] : Instance<T> | null> = {
         virtual: true;
     } & Reference<T, K, P, A, T extends any[] ? Instance<U>[] : Instance<T> | null>;
+    // } & Reference<T, K, P, A, T extends any[] ? Instance<U>[] : Instance<T> | null>;
 }

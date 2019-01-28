@@ -5,4 +5,6 @@ export * from "./id";
 export * from "./local";
 export * from "./navigable";
 export * from "./reference";
+export * from "./simple";
+export * from "./struct";
 export * from "./unique";

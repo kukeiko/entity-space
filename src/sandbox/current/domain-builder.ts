@@ -1,5 +1,5 @@
 import { Type } from "./type";
-import { Property as _Property, Property } from "./property";
+import { Property as _Property } from "./property";
 import { Id as _Id, Reference as _Reference, Local as _Local, Navigable as _Navigable, External as _External } from "./properties";
 
 type TypeCauldron = Map<string, Type<string>>;
@@ -67,12 +67,12 @@ export module DomainBuilder {
             }
         } & {
             [F in P]?
-            : T[F] extends _Id<infer V, infer K, infer A, infer D> ? PropertyDeclaration.Id<V, K, A, D>
             : T[F] extends _Reference.Id.Patchable<infer R, infer K, infer P, infer A, infer V, infer D> ? PropertyDeclaration.Reference.Key.Patchable<R, K, P, A, V, D>
+            : T[F] extends _Id<infer V, infer K, infer A, infer D> ? PropertyDeclaration.Id<V, K, A, D>
             : T[F] extends _Reference.Id.Creatable<infer R, infer K, infer P, infer A, infer V, infer D> ? PropertyDeclaration.Reference.Key.Creatable<R, K, P, A, V, D>
             : T[F] extends _Reference.Id<infer R, infer K, infer P, infer A, infer V, infer D> ? PropertyDeclaration.Reference.Key<R, K, P, A, V, D>
-            : T[F] extends _Reference.Virtual<infer R, infer K, infer P, infer A, infer V> ? PropertyDeclaration.Reference.Virtual<R, K, P, A, V>
             : T[F] extends _Reference<infer R, infer K, infer P, infer A, infer V> ? PropertyDeclaration.Reference<R, K, P, A, V>
+            : T[F] extends _Reference.Virtual<infer R, infer K, infer P, infer A, infer V> ? PropertyDeclaration.Reference.Virtual<R, K, P, A, V>
             : never;
         };
 
@@ -86,23 +86,22 @@ export module DomainBuilder {
         });
 
         // export type Property<V, K, A, D, L = V extends any[] ? true : false> = {
-        export type Property<V, K, A = K, D = V> = {
-            // isArray?: boolean;
-            dtoName?: A;
-        } & (K extends A ? {} : { dtoName: A; }) & (V extends any[] ? { isArray: true } : {});
+        export type Property<V, K, A = K, D = V> =
+            & (K extends A ? {} : { dtoKey: A; })
+            & (V extends any[] ? { array: true; ordered?: boolean; } : {});
 
         export module Property {
-            export function construct(name: string, isArray: boolean, options: Property<any, any, any, any>): _Property.Dto<any, any> {
-                let dtoName = options.dtoName || name;
+            // export function isDto(x: any) x is 
+            export function construct(key: string, isArray: boolean, options: Property<any, any, any, any>): _Property<any, any, any, any> {
+                let dtoKey = options.dtoKey || key;
 
                 return {
-                    dtoName: dtoName,
-                    isArray: isArray,
-                    name: name,
-                    readDtoValue: x => x[dtoName],
-                    readValue: x => x[name],
-                    writeDtoValue: (x, v) => x[dtoName] = v,
-                    writeValue: (x, v) => x[name] = v
+                    dtoKey: dtoKey,
+                    key: key,
+                    read: x => x[key],
+                    write: (x, v) => x[key] = v,
+                    readDto: x => x[dtoKey],
+                    writeDto: (x, v) => x[dtoKey] = v
                 };
             }
         }
@@ -112,12 +111,12 @@ export module DomainBuilder {
         } & Property<V, K, A, D> & DtoConversion<V, D>;
 
         export module Local {
-            export function construct(name: string, isArray: boolean, options: DomainBuilder.PropertyDeclaration.Local<any, any, any, any>): _Local<any, any> {
+            export function construct(name: string, isArray: boolean, options: Local<any, any, any, any>): _Local<any, any> {
                 return {
                     ...Property.construct(name, isArray, options),
-                    fromDto: options.fromDto || (x => x),
+                    // fromDto: options.fromDto || (x => x),
                     local: true,
-                    toDto: options.toDto || (x => x)
+                    // toDto: options.toDto || (x => x)
                 };
             }
         }
@@ -127,7 +126,7 @@ export module DomainBuilder {
         } & Property<V, K, A, D>;
 
         export module Navigable {
-            export function construct(name: string, isArray: boolean, options: DomainBuilder.PropertyDeclaration.Navigable<any, any, any, any, any>): _Navigable<any, any, any> {
+            export function construct(name: string, isArray: boolean, options: Navigable<any, any, any, any, any>): _Navigable<any, any, any> {
                 return {
                     ...Property.construct(name, isArray, options),
                     navigable: true,
@@ -148,6 +147,7 @@ export module DomainBuilder {
             export function construct(name: string, options: Id<any, any, any, any>): _Id<any, any> {
                 return {
                     ...Local.construct(name, false, options),
+                    id: true,
                     unique: true
                 };
             }
@@ -155,35 +155,41 @@ export module DomainBuilder {
 
         // export type Complex<T, K extends string, A extends string = K, V = Box<Instance<Unbox<T>>, T>>
 
-        export type Reference<T, K, P, A, V, N = P extends _Property<any, any> ? P["name"] : never> = {
-            key: N;
+        export type Reference<T, K, P, A, V, N = P extends _Property<any, any, any, any> ? P["key"] : never> = {
+            localKey: N;
             type: "reference";
         } & Property<V, K, A, any>;
 
         export module Reference {
-            export type Key<T, K, P, A, V, D, N = T extends Type<any> ? T["$"]["name"] : never> = {
+            // export type Key<T, K, P, A, V, D, N = T extends Type<string> ? T["$"]["name"] : never> = {
+            export type Key<T, K, P, A, V, D, U = Exclude<T, null>, N = U extends Type<string> ? U["$"]["name"] : never> = {
                 otherKey: P;
                 otherName: N;
                 type: "reference-key";
             } & Local<V, K, A, D>;
 
             export module Key {
-                export function construct(name: string, isArray: boolean, options: DomainBuilder.PropertyDeclaration.Reference.Key<any, any, any, any, any, any>, cauldron: TypeCauldron): _Reference.Id<any, any, any> {
+                export function construct(name: string, isArray: boolean, options: Key<any, any, any, any, any, any>, cauldron: TypeCauldron): _Reference.Id<any, any, any, any, any> {
                     return {
                         ...Local.construct(name, isArray, options),
                         otherKey: (cauldron.get(options.otherName) as any)[options.otherKey]
                     };
                 }
-                export type Creatable<T, K, P, A, V, D, N = T extends Type<any> ? T["$"]["name"] : never> = {
-                    creatable: true;
-                } & Key<T, K, P, A, V, D, N>;
 
-                export type Patchable<T, K, P, A, V, D, N = T extends Type<any> ? T["$"]["name"] : never> = {
+                // export type Creatable<T, K, P, A, V, D, N = T extends Type<any> ? T["$"]["name"] : never> = {
+                export type Creatable<T, K, P, A, V, D, U = Exclude<T, null>> = {
+                    creatable: true;
+                } & Key<T, K, P, A, V, D>;
+                // } & Key<T, K, P, A, V, D, N>;
+
+                // export type Patchable<T, K, P, A, V, D, N = T extends Type<any> ? T["$"]["name"] : never> = {
+                export type Patchable<T, K, P, A, V, D, U = Exclude<T, null>> = {
                     patchable: true;
-                } & Creatable<T, K, P, A, V, D, N>;
+                } & Creatable<T, K, P, A, V, D>;
+                // } & Creatable<T, K, P, A, V, D, N>;
             }
 
-            export type Virtual<T, K, P, A, V, N = P extends _Property<any, any> ? P["name"] : never> = {
+            export type Virtual<T, K, P, A, V, N = P extends _Property<any, any, any, any> ? P["key"] : never> = {
                 virtual: true;
             } & Reference<T, K, P, A, V, N>;
         }

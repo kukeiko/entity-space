@@ -2,9 +2,9 @@ import { Property } from "../property";
 
 export type Local<V, K extends string, A extends string = K, D = V> = {
     local: true;
-    fromDto: (dtoValue: D) => V;
-    toDto: (value: V) => D;
-} & Property.Dto<V, K, A, D>;
+    // fromDto: (dtoValue: D) => V;
+    // toDto: (value: V) => D;
+} & Property<V, K, A, D>;
 
 export module Local {
     export type Keys<T> = Exclude<{ [P in keyof T]: T[P] extends Local<any, any> | undefined ? P : never }[keyof T], undefined>;
