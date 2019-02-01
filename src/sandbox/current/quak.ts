@@ -4,6 +4,7 @@ import { Local, Complex, Id, Reference, Child, Navigable, Simple, Struct, Unique
 import { Box } from "./lang";
 import { DomainBuilder } from "./domain-builder";
 import { Type } from "./type";
+import { Modifier } from "./modifier";
 
 // [todo] think about supporting the different types of restrictions (e.g. EventNodeRestriction, which inherits from Restriction afaik)
 interface BonusRestrictionType {
@@ -32,11 +33,14 @@ interface BonusType {
 }
 
 module BonusType {
-    export type BonusInstance = Instance<BonusType>;
+    export type BonusInstance = Instance<BonusType[]>;
     export type BonusDtoInstance = Instance.Dto<BonusType>;
 }
 
-interface UserType {
+type Jarg = BonusType.BonusInstance;
+
+
+interface UserType extends Type<"user"> {
     id: Id.Computed<string, "id", UserType, "userId" | "systemId", "Id">;
     name: Local<string, "name", "Name">;
     systemId: Local<number, "systemId", "SystemId">;
@@ -55,50 +59,6 @@ const Uuid = function () {
     return "foo";
 };
 
-interface ArtistType extends Type<"artist"> {
-    id: Id<number, "id", "Id", string>;
-    // bornAt: Local.Creatable<Date, "bornAt", "BornAt", number>;
-    bornAt: Simple<typeof Date, "bornAt", "BornAt", number>;
-    bornInId: Reference.Id.Creatable<CountryType, "bornInId", "id", "BornInId">;
-    diedAt: Simple<typeof Date | null, "diedAt", "DiedAt">;
-    // name: Local<string, "name", "Name">;
-    name: Simple<typeof String | null, "name", "Name">;
-    nameHistory: Simple<(typeof String[]) | null, "nameHistory", "NameHistory">;
-    albums: Child<AlbumType[], "albums", "artist", "Albums">;
-    // countryId: Reference.Id<CountryType, "countryId", "fooId", "CountryId">;
-    countryId: Reference.Id.Patchable<CountryType | null, "countryId", "id", "CountryId">;
-    country: Reference<CountryType | null, "country", ArtistType["countryId"], "Country">;
-    reviewIds: Reference.Id<ReviewType[], "reviewIds", "id">;
-    reviews: Reference.Virtual<ReviewType[], "reviews", ArtistType["reviewIds"]>;
-    metadata: Complex<Metadata, "metadata", "Metadata">;
-}
-
-// type Foo = Box<Property.ValueType<Property.WithKey<U, P>>;
-// type Foo = Property.ValueType<Property.WithKey<CountryType, "id">>;
-// type Foo = ArtistType["countryId"] extends Reference.Key<infer A, infer B, infer C, infer D, infer E, infer F> ? true : false;
-// type Foo = ArtistType["country"] extends Reference<any, any, any, any> ? true : false;
-type Foo = ArtistType["country"]
-type Khaz = ArtistType["countryId"] extends Reference.Id.Creatable<any, any, any, any, any, any> ? true : false;
-type ArtistCreatableKeys = Local.Creatable.Keys<ArtistType>;
-type ArtistCreatableReferenceKeys = Reference.Id.Creatable.Keys<ArtistType>;
-type ArtistPatchableReferenceKeys = Reference.Id.Patchable.Keys<ArtistType>;
-type ArtistLocalKeys = Local.Keys<ArtistType>;
-type ArtistArrayKeys = Property.Array.Keys<ArtistType>;
-type ArtistUniqueKeys = Unique.Keys<ArtistType>;
-
-type ArtistNameValue = ReturnType<ArtistType["name"]["read"]>;
-type ArtistNameHistoryValue = ReturnType<ArtistType["nameHistory"]["read"]>;
-type ArtistNameDtoValue = ReturnType<ArtistType["name"]["readDto"]>;
-type ArtistNameValueConstructor = ArtistType["name"]["valueConstructor"];
-
-type ArtistDiedAt = ArtistType["diedAt"];
-type ArtistTypeDto = Instance.Dto<ArtistType>;
-// type blarb = ArtistType["name"][""];
-type DtoValue = Property.Dto.ValueType<ArtistType["bornAt"]>;
-type ArtistComplexKeys = Complex.Keys<ArtistType>;
-
-let reviewsShouldExtendArray: (ArtistType["reviews"] extends Property.Array<infer _V, infer _K> ? true : false) = true;
-let countryShouldNotExtendArray: (ArtistType["country"] extends Property.Array<infer _V, infer _K> ? true : false) = false;
 
 interface Metadata extends Type<"metadata"> {
     createdAt: Local<Date, "createdAt", "CreatedAt", number>;
@@ -133,6 +93,54 @@ type AlbumPriceHistoryValueType = ReturnType<AlbumType["priceHistory"]["read"]>;
 type AlbumPriceHistoryDtoValueType = ReturnType<AlbumType["priceHistory"]["readDto"]>;
 type AlbumDtoInstance = Instance.Dto<AlbumType>;
 type Foo3 = Property.WithKey<AlbumType, "priceHistory">;
+
+
+interface ArtistType extends Type<"artist"> {
+    id: Id<number, "id", "Id", string>;
+    // bornAt: Local.Creatable<Date, "bornAt", "BornAt", number>;
+    bornAt: Simple<typeof Date, "bornAt", "BornAt", number>;
+    bornInId: Reference.Id.Creatable<CountryType, "bornInId", "id", "BornInId">;
+    diedAt: Simple<typeof Date | null, "diedAt", "DiedAt">;
+    // name: Local<string, "name", "Name">;
+    name: Simple<typeof String | null, "name", "Name">;
+    nameHistory: Simple<typeof String[] | null, "nameHistory", "NameHistory">;
+    // albums: Child<AlbumType[], "albums", "artist", "Albums">;
+    albums: Child<AlbumType, "albums", "artist", "Albums">;
+    countryId: Reference.Id.Patchable<CountryType | null, "countryId", "id", "CountryId">;
+    country: Reference<CountryType | null, "country", ArtistType["countryId"], "Country">;
+    reviewIds: Reference.Id<ReviewType[], "reviewIds", "id">;
+    reviews: Reference.Virtual<ReviewType[], "reviews", ArtistType["reviewIds"]>;
+    metadata: Complex<Metadata, "metadata", "Metadata">;
+}
+
+// type Foo = Box<Property.ValueType<Property.WithKey<U, P>>;
+// type Foo = Property.ValueType<Property.WithKey<CountryType, "id">>;
+// type Foo = ArtistType["countryId"] extends Reference.Key<infer A, infer B, infer C, infer D, infer E, infer F> ? true : false;
+// type Foo = ArtistType["country"] extends Reference<any, any, any, any> ? true : false;
+type Foo = ArtistType["countryId"] extends (Reference.Id<infer R, infer K, infer P, infer A, infer V, infer D>) ? true : false;
+type Khaz = ArtistType["countryId"] extends Reference.Id.Creatable<any, any, any, any, any, any> ? true : false;
+type Mo = ArtistType["albums"] extends Navigable<any, infer _1, infer _2> ? true : false;
+
+type ArtistCreatableKeys = Local.Creatable.Keys<ArtistType>;
+type ArtistCreatableReferenceKeys = Reference.Id.Creatable.Keys<ArtistType>;
+type ArtistPatchableReferenceKeys = Reference.Id.Patchable.Keys<ArtistType>;
+type ArtistLocalKeys = Local.Keys<ArtistType>;
+type ArtistArrayKeys = Property.Array.Keys<ArtistType>;
+type ArtistUniqueKeys = Unique.Keys<ArtistType>;
+type ArtistNavigationKeys = Navigable.Keys<ArtistType>;
+type ArtistNameValue = ReturnType<ArtistType["name"]["read"]>;
+type ArtistNameHistoryValue = ReturnType<ArtistType["nameHistory"]["read"]>;
+type ArtistNameDtoValue = ReturnType<ArtistType["name"]["readDto"]>;
+type ArtistNameValueConstructor = ArtistType["name"]["valueConstructor"];
+
+type ArtistDiedAt = ArtistType["diedAt"];
+type ArtistTypeDto = Instance.Dto<ArtistType>;
+// type blarb = ArtistType["name"][""];
+type DtoValue = Property.Dto.ValueType<ArtistType["bornAt"]>;
+type ArtistComplexKeys = Complex.Keys<ArtistType>;
+
+let reviewsShouldExtendArray: (ArtistType["reviews"] extends Property.Array<infer _V, infer _K> ? true : false) = true;
+let countryShouldNotExtendArray: (ArtistType["country"] extends Property.Array<infer _V, infer _K> ? true : false) = false;
 
 // let albumDtoInstance : AlbumDtoInstance = {
 //     Price
@@ -176,46 +184,55 @@ let domainBuilder = new DomainBuilder()
         $: {
             name: "artist"
         },
-        id: {
-            dtoKey: "Id",
-            fromDto: x => +x,
-            toDto: x => x.toString(),
-            type: "id"
-        },
+        // id: {
+        //     dtoKey: "Id",
+        //     fromDto: x => +x,
+        //     toDto: x => x.toString(),
+        //     type: "id"
+        // },
         bornInId: {
-            otherName: "country"
-            // creatable: true,
-            // dtoKey: "BornInId",
-            // otherKey: "id",
-            // otherName: "country",
-            // type: "reference-key"
+            creatable: true,
+            dtoKey: "BornInId",
+            otherKey: "id",
+            otherName: "country",
+            type: "reference-key"
         },
         countryId: {
+            // array: true,
+            creatable: true,
+            dtoKey: "CountryId",
+            otherKey: "id",
             otherName: "country",
-            // creatable: true,
-            // dtoKey: "CountryId",
-            // // otherName: "country",
-            // otherKey: "id",
-            // patchable: true,
-            // type: "reference-key"
+            patchable: true,
+            type: "reference-key"
         },
-        country: {
-            dtoKey: "Country",
-            localKey: "countryId",
-            type: "reference"
-        },
-        metadata: undefined,
-        reviews: {
-            array: true,
-            // array: true,
-            virtual: true,
-            // array: true,
-            localKey: "reviewIds",
-            type: "reference",
+        // countryId: {
+        //     otherName: "country",
+        //     // creatable: true,
+        //     // dtoKey: "CountryId",
+        //     // // otherName: "country",
+        //     // otherKey: "id",
+        //     // patchable: true,
+        //     // type: "reference-key"
+        // },
+        // country: {
+        //     dtoKey: "Country",
+        //     localKey: "countryId",
+        //     type: "reference"
+        // },
+        // diedAt:
+        //     metadata: undefined,
+        // reviews: {
+        //     array: true,
+        //     // array: true,
+        //     virtual: true,
+        //     // array: true,
+        //     localKey: "reviewIds",
+        //     type: "reference",
 
-            // virtual
-            // virtual: true
-        }
+        //     // virtual
+        //     // virtual: true
+        // }
     })
     ;
 

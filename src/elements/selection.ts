@@ -13,9 +13,9 @@ export class Selection {
 }
 
 export module Selection {
-    export function minus(a: Selection, b: Selection): Selection {
+    // export function minus(a: Selection, b: Selection): Selection {
 
-    }
+    // }
 }
 
 // static minus(x: ArrayLike<Expansion>, y: ArrayLike<Expansion>): Expansion[] {

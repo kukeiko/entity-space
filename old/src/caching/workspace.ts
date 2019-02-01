@@ -138,7 +138,7 @@ export class Workspace {
 
         for (let i = 0; i < expand.length; ++i) {
             expansion = expand[i];
-            let nav = expansion.property as Navigation;
+            let nav = expansion.property;
 
             switch (nav.type) {
                 case "reference":

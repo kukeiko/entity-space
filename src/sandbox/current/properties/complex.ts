@@ -1,7 +1,7 @@
-import { Box, Unbox } from "../lang";
-import { Instance } from "../instance";
+// import { Box, Unbox } from "../lang";
+// import { Instance } from "../instance";
 import { Local } from "./local";
-import { Navigable } from "./navigable";
+// import { Navigable } from "./navigable";
 
 // export type Complex<T, K extends string, A extends string = K, V = Box<Instance<Unbox<T>>, T>> =
 export type Complex<V, K extends string, A extends string = K, D = V> =

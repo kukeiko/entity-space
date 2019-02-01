@@ -5,7 +5,7 @@ export type Property<V, K extends string, A extends string, D> = {
     readDto<U extends Record<A, D>>(dtoInstance: U): D;
     write<U extends Record<K, V>>(instance: U, value: V): void;
     writeDto<U extends Record<A, D>>(dtoInstance: U, value: D): void;
-} & (V extends any[] ? { array: true; ordered: boolean; } : {});
+} & (V extends any[] ? { array: true; ordered: boolean; } : {}) & (V extends null ? { nullable: true } : {});
 
 export module Property {
     export type Keys<T> = Keys.Optional<T> | Keys.Required<T>;

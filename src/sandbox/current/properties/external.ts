@@ -1,5 +1,5 @@
 import { Navigable } from "./navigable";
 
-export type External<T, V, K extends string, A extends string = K> = {
+export type External<T, K extends string, A extends string = K> = {
     external: true;
-} & Navigable<T, V, K, A>;
+} & Navigable<T, K, A>;

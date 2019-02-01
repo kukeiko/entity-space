@@ -1,6 +1,8 @@
 import { Type } from "./type";
 import { Property as _Property } from "./property";
 import { Id as _Id, Reference as _Reference, Local as _Local, Navigable as _Navigable, External as _External } from "./properties";
+import { Modifier } from "./modifier";
+import { Unbox } from "./lang";
 
 type TypeCauldron = Map<string, Type<string>>;
 
@@ -55,6 +57,8 @@ export class DomainBuilder<M = {}> {
     }
 }
 
+type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
+
 export module DomainBuilder {
     export type NameOfType<D, T> = D extends DomainBuilder<infer M>
         ? { [K in keyof M]: M[K] extends T ? K : never }[keyof M]
@@ -67,9 +71,14 @@ export module DomainBuilder {
             }
         } & {
             [F in P]?
+            // : T[F] extends _Reference.Id<infer _0, infer _1, infer _2> ? PropertyDeclaration.Reference.Key<any, any, any, any, any, any>
+            // // : T[F] extends Modifier.Patchable ? (T[F] extends _Reference.Id<infer R, infer K, infer P, infer A, infer V, infer D, infer U> ? PropertyDeclaration.Reference.Key<R, K, P, A, V, D> : false)
+            // // : T[F] extends (Modifier.Patchable & _Reference.Id<infer R, infer K, infer P, infer A, infer V, infer D, infer U>) ? PropertyDeclaration.Reference.Key<R, K, P, A, V, D>
+            // // : Exclude<T[F], Modifier.Patchable> extends _Reference.Id<infer R, infer K, infer P, infer A, infer V, infer D, infer U> ? PropertyDeclaration.Reference.Key<R, K, P, A, V, D>
+
             : T[F] extends _Reference.Id.Patchable<infer R, infer K, infer P, infer A, infer V, infer D> ? PropertyDeclaration.Reference.Key.Patchable<R, K, P, A, V, D>
-            : T[F] extends _Id<infer V, infer K, infer A, infer D> ? PropertyDeclaration.Id<V, K, A, D>
             : T[F] extends _Reference.Id.Creatable<infer R, infer K, infer P, infer A, infer V, infer D> ? PropertyDeclaration.Reference.Key.Creatable<R, K, P, A, V, D>
+            : T[F] extends _Id<infer V, infer K, infer A, infer D> ? PropertyDeclaration.Id<V, K, A, D>
             : T[F] extends _Reference.Id<infer R, infer K, infer P, infer A, infer V, infer D> ? PropertyDeclaration.Reference.Key<R, K, P, A, V, D>
             : T[F] extends _Reference<infer R, infer K, infer P, infer A, infer V> ? PropertyDeclaration.Reference<R, K, P, A, V>
             : T[F] extends _Reference.Virtual<infer R, infer K, infer P, infer A, infer V> ? PropertyDeclaration.Reference.Virtual<R, K, P, A, V>
@@ -162,7 +171,7 @@ export module DomainBuilder {
 
         export module Reference {
             // export type Key<T, K, P, A, V, D, N = T extends Type<string> ? T["$"]["name"] : never> = {
-            export type Key<T, K, P, A, V, D, U = Exclude<T, null>, N = U extends Type<string> ? U["$"]["name"] : never> = {
+            export type Key<T, K, P, A, V, D, U = Unbox<Exclude<T, null>>, N = U extends Type<string> ? U["$"]["name"] : never> = {
                 otherKey: P;
                 otherName: N;
                 type: "reference-key";
@@ -177,13 +186,13 @@ export module DomainBuilder {
                 }
 
                 // export type Creatable<T, K, P, A, V, D, N = T extends Type<any> ? T["$"]["name"] : never> = {
-                export type Creatable<T, K, P, A, V, D, U = Exclude<T, null>> = {
+                export type Creatable<T, K, P, A, V, D> = {
                     creatable: true;
                 } & Key<T, K, P, A, V, D>;
                 // } & Key<T, K, P, A, V, D, N>;
 
                 // export type Patchable<T, K, P, A, V, D, N = T extends Type<any> ? T["$"]["name"] : never> = {
-                export type Patchable<T, K, P, A, V, D, U = Exclude<T, null>> = {
+                export type Patchable<T, K, P, A, V, D> = {
                     patchable: true;
                 } & Creatable<T, K, P, A, V, D>;
                 // } & Creatable<T, K, P, A, V, D, N>;
