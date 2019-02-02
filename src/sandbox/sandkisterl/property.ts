@@ -118,6 +118,11 @@ export module Component {
         ethereal: true;
     };
 
+    export type Expanded<T extends Type<string>> = {
+        expanded: T;
+        // navigated: Partial<T>;
+    };
+
     // export type External<T> = {
     export type External = {
         external: true;
@@ -135,6 +140,7 @@ export module Component {
     export type Navigable<T extends Type<string>> = {
         navigable: true;
         navigated: T;
+        // navigated: Partial<T>;
     };
 
     export module Navigable {
@@ -157,12 +163,12 @@ export module Component {
     };
 
     export module Property {
-        // export type Keys<T> = Keys.Optional<T> | Keys.Required<T>;
-        export type Keys<T> = (Keys.Optional<T> | Keys.Required<T>) & keyof T;
+        export type Keys<T> = Keys.Optional<T> | Keys.Required<T>;
+        // export type Keys<T> = (Keys.Optional<T> | Keys.Required<T>) & keyof T;
 
         export module Keys {
-            export type Optional<T> = Exclude<{ [P in keyof T]: undefined extends T[P] ? (T[P] extends Property<infer K, any> | undefined ? K : never) : never }[keyof T], undefined>;
-            export type Required<T> = Exclude<{ [P in keyof T]: T[P] extends Property<infer K, any> ? K : never }[keyof T], undefined>;
+            export type Optional<T> = Exclude<{ [P in keyof T]: undefined extends T[P] ? (T[P] extends Property<infer K, any> | undefined ? K : never) : never }[keyof T], undefined> & keyof T;
+            export type Required<T> = Exclude<{ [P in keyof T]: T[P] extends Property<infer K, any> ? K : never }[keyof T], undefined> & keyof T;
         }
 
         export type ValueOf<T> = T extends Property<any, infer V> ? V : never;
@@ -207,22 +213,30 @@ export module Component {
  *    ██║██║ ╚████║███████║   ██║   ██║  ██║██║ ╚████║╚██████╗███████╗
  *    ╚═╝╚═╝  ╚═══╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝╚══════╝
  */
-// export type Instance<T> = Instance.Optional<T> & Instance.Required<T>;
 export type Instance<T> = NullIfNull<Box<Instance.Optional<Exclude<Unbox<T>, null>>, T> & Box<Instance.Required<Exclude<Unbox<T>, null>>, T>, T>;
 
 export module Instance {
-    // [note] not to be used by user
-    export type Optional<T> = { [K in Component.Property.Keys.Optional<T>]?: Component.Property.ValueOf<Component.Property.WithKey<T, K>> };
-    // [note] not to be used by user
-    export type Required<T> = { [K in Component.Property.Keys.Required<T>]: Component.Property.ValueOf<Component.Property.WithKey<T, K>> };
+    export type Optional<T> = {
+        [K in Component.Property.Keys.Optional<T>]?
+        : T[K] extends (Component.Expanded<infer E> & Component.Nullable) | undefined ? Instance<E> | null
+        : T[K] extends Component.Expanded<infer E> | undefined ? Instance<E>
+        : T[K] extends (Component.Property<K, infer V> | undefined) ? undefined extends T[K] ? undefined | V : V
+        : never
+    };
 
-    // export type Dto<T> = Dto.Optional<T> & Dto.Required<T>;
+    export type Required<T> = {
+        [K in Component.Property.Keys.Required<T>]
+        : T[K] extends (Component.Expanded<infer E> & Component.Nullable) ? Instance<E> | null
+        : T[K] extends Component.Expanded<infer E> ? Instance<E>
+        : T[K] extends Component.Property<K, infer V> ? V
+        : never
+    };
+
     export type Dto<T> = NullIfNull<Box<Dto.Optional<Exclude<Unbox<T>, null>>, T> & Box<Dto.Required<Exclude<Unbox<T>, null>>, T>, T>;
 
     export module Dto {
-        // [note] not to be used by user
+
         export type Optional<T> = { [K in Component.Dto.Aliases.Optional<T>]?: Component.Dto.ValueOf<Component.Dto.WithAlias<T, K>>; };
-        // [note] not to be used by user
         export type Required<T> = { [K in Component.Dto.Aliases.Required<T>]: Component.Dto.ValueOf<Component.Dto.WithAlias<T, K>>; };
     }
 }
@@ -264,6 +278,7 @@ export type Simple<
         clone: Exclude<C, null>;
     }
     & Component.Dto<A, D>
+    & Component.Local
     & Component.Property<K, NullIfNull<ReturnType<Exclude<C, null>>, C>>;
 
 export module Simple {
@@ -286,12 +301,21 @@ export type Reference<
         localKey: P;
     }
     & Component.Dto<A, Instance.Dto<T>>
+    // & Component.Dto<A, Partial<Instance.Dto<T>>>
     & Component.External
+    // & Component.Property<K, Instance<T> | undefined>
+    // [note] as of now i think it makes the most sense that the value of a reference is partial by default,
+    // since it can't know which parts of navigated type have been selected/expanded
+    // & Component.Property<K, Partial<Instance<T>>>
     & Component.Property<K, Instance<T>>
     & Component.Navigable<Exclude<T, null>>
-    & (T extends null ? Component.Nullable : {});
+    // & (T extends null ? Component.Nullable : {});
+    & (null extends T ? Component.Nullable : {});
 
 export module Reference {
+    // export type Mapped<R> = R extends Reference<infer K, infer T, infer P, infer A> ? Reference<K, T, P, A> : never;
+
+    // export type Keys<T> = Exclude<{ [P in keyof T]: T[P] extends Reference<any, any, any> | undefined ? P : never }[keyof T], undefined>;
     export type Keys<T> = Exclude<{ [P in keyof T]: T[P] extends Reference<any, any, any> | undefined ? P : never }[keyof T], undefined>;
 
     export type Id<
@@ -329,32 +353,6 @@ export module Reference {
     }
 
     export type Virtual = {};
-
-    // export type Id<
-    //     K extends string,
-    //     T extends (Type<string> | null) | Type<string>[],
-    //     P extends Component.Unique.Keys<U>,
-    //     A extends string = K,
-    //     U = T extends Type<string>[] ? T[number] : Exclude<T, null>,
-    //     D = Component.Dto.ValueOf<U[P]>,
-    //     V = Component.Property.ValueOf<U[P]>>
-    //     = {
-    //         otherKey: U[P];
-    //     }
-    //     & Component.Local
-    //     & (
-    //         any[] extends T
-    //         ? null extends T ? Component.Property<K, V[] | null> : Component.Property<K, V[]>
-    //         : null extends T ? Component.Property<K, V | null> : Component.Property<K, V>
-    //     )
-    //     & (
-    //         any[] extends T
-    //         ? null extends T ? Component.Dto<A, D[] | null> : Component.Dto<A, D[]>
-    //         : null extends T ? Component.Dto<A, D | null> : Component.Dto<A, D>
-    //     )
-    //     & (T extends null ? Component.Nullable : {})
-    //     & (T extends any[] ? Component.Array : {})
-    //     ;
 }
 
 /***
@@ -412,8 +410,6 @@ export type Children = {
 
 };
 
-// [missing]: Complex, Simple, Struct
-
 /***
  *    ████████╗██╗   ██╗██████╗ ███████╗    ███╗   ███╗ █████╗ ██████╗ ██████╗ ███████╗██████╗
  *    ╚══██╔══╝╚██╗ ██╔╝██╔══██╗██╔════╝    ████╗ ████║██╔══██╗██╔══██╗██╔══██╗██╔════╝██╔══██╗
@@ -423,6 +419,7 @@ export type Children = {
  *       ╚═╝      ╚═╝   ╚═╝     ╚══════╝    ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝     ╚══════╝╚═╝  ╚═╝
  */
 export class TypeMapper<T extends Type<string>, M = { $: T["$"] }> {
+    // export class TypeMapper<T extends Type<string>, M = Partial<T> & { $: T["$"] }> {
     // selectAll(): TypeBuilder<T, SelectedLocals<T> & D> {
     //     return this as any;
     // }
@@ -435,31 +432,28 @@ export class TypeMapper<T extends Type<string>, M = { $: T["$"] }> {
         return this as any;
     }
 
-    // select<K extends Local.Keys<T>, S = Exclude<T[K], undefined>>(k: K): TypeMapper<T, Record<K, S> & M> {
-    //     return this as any;
-    // }
-
-    // selectIf<K extends Local.Keys<T>, S = T[K] | undefined>(k: K, flag: boolean): TypeMapper<T, Record<K, S> & M> {
-    //     return this as any;
-    // }
-
-    // [todo] stopped here - expand needs to return a navigable property, not the navigated type itself
-    // expand<K extends Component.Navigable.Keys<T>, E extends Type<string> = Component.Navigable.OtherType<T[K]>, O = {}>(k: K, _: (eq: TypeMapper<E>) => TypeMapper<E, O>): TypeMapper<T, Record<K, O> & M> {
-    expand<K extends Component.Navigable.Keys<T>, E extends Type<string> = Component.Navigable.OtherType<T[K]>, O = {}>(k: K, _: (eq: TypeMapper<E>) => TypeMapper<E, O>): TypeMapper<T, Record<K, O> & M> {
+    selectIf<K extends Component.Local.Keys<T>, S = Exclude<T[K], undefined>>(k: K, flag: boolean): TypeMapper<T, Record<K, S | undefined> & M> {
         return this as any;
     }
 
-    expandIf<K extends Component.Navigable.Keys<T>, E extends Type<string> = Component.Navigable.OtherType<T[K]>, O = {}>(k: K, flag: boolean, _: (eq: TypeMapper<E>) => TypeMapper<E, O>): TypeMapper<T, Record<K, O | undefined> & M> {
+    // Pick<T, Exclude<keyof T, K>>
+    expand<
+        K extends Component.Navigable.Keys<T> & string,
+        E extends Type<string> = Component.Navigable.OtherType<T[K]>,
+        O extends Type<string> = E
+    >(k: K, _: (eq: TypeMapper<E>) => TypeMapper<E, O>):
+        TypeMapper<T, Record<K, T[K] & Component.Expanded<O>> & M> {
         return this as any;
     }
 
-    // expand<K extends Navigable.Keys<T> & string, E = Navigable.OtherType<T[K]>, O = {}>(k: K, _: (eq: TypeMapper<E>) => TypeMapper<E, O>): TypeMapper<T, Record<K, Navigable<O, Box<Instance<O>, Property.ValueType<T[K]>>, K>> & M> {
-    //     return this as any;
-    // }
-
-    // expandIf<K extends Navigable.Keys<T> & string, E = Navigable.OtherType<T[K]>, O = {}>(k: K, flag: boolean, _: (eq: TypeMapper<E>) => TypeMapper<E, O>): TypeMapper<T, Record<K, undefined | Navigable<O, Box<Instance<O>, Property.ValueType<T[K]>>, K>> & M> {
-    //     return this as any;
-    // }
+    expandIf<
+        K extends Component.Navigable.Keys<T> & string,
+        E extends Type<string> = Component.Navigable.OtherType<T[K]>,
+        O extends Type<string> = E
+    >(k: K, flag: boolean, _: (eq: TypeMapper<E>) => TypeMapper<E, O>):
+        TypeMapper<T, Record<K, undefined | (T[K] & Component.Expanded<O>)> & M> {
+        return this as any;
+    }
 
     get(): M {
         return null as any;
@@ -516,18 +510,38 @@ let artistTypeConstructionOptions: ArtistTypeConstructionOptions = {
 export interface UserType extends Type<"user"> {
     id: Id<"id", number>;
     name: Simple<"name", typeof String | null>;
+
+    createdById: Reference.Id<"createdById", UserType | null, "id", "CreatedById">;
+    createdBy: Reference<"createdBy", UserType | null, UserType["createdById"], "CreatedBy">;
+
+    changedAt: Simple<"changedAt", typeof Date | null, "ChangedAt">;
+    changedById: Reference.Id<"changedById", UserType | null, "id", "ChangedById">;
+    changedBy: Reference<"changedBy", UserType | null, UserType["changedById"], "ChangedBy">;
 }
 
 export interface CountryType extends Type<"country"> {
     id: Id<"id", string>;
+    name: Simple<"name", typeof String>;
+
+    createdById: Reference.Id<"createdById", UserType, "id", "CreatedById">;
+    createdBy: Reference<"createdBy", UserType, CountryType["createdById"], "CreatedBy">;
+
+    changedAt: Simple<"changedAt", typeof Date | null, "ChangedAt">;
+    changedById: Reference.Id<"changedById", UserType | null, "id", "ChangedById">;
+    changedBy: Reference<"changedBy", UserType | null, CountryType["changedById"], "ChangedBy">;
 }
 
 export interface ArtistType extends Type<"artist"> {
     id: Id<"id", number, "Id">;
+
     createdAt: Simple<"createdAt", typeof Date, "CreatedAt", number>;
     createdById: Reference.Id<"createdById", UserType, "id", "CreatedById">;
     createdBy: Reference<"createdBy", UserType, ArtistType["createdById"], "CreatedBy">;
+
     changedAt: Simple<"changedAt", typeof Date | null, "ChangedAt">;
+    changedById: Reference.Id<"changedById", UserType | null, "id", "ChangedById">;
+    changedBy: Reference<"changedBy", UserType | null, ArtistType["changedById"], "ChangedBy">;
+
     parentId: Reference.Id.Creatable<"parentId", ArtistType | null, "id", "ParentId">;
     parent: Reference<"parent", ArtistType | null, ArtistType["parentId"], "Parent">;
     // children: Child<"children", ArtistType, "parent">;
@@ -547,6 +561,8 @@ type ArtistParentValueType = Component.Property.ValueOf<ArtistType["parent"]>;
 type ArtistIdViaAlias = Component.Dto.WithAlias<ArtistType, "Id">;
 type ArtistInstance = Instance<ArtistType>;
 type ArtistDtoInstance = Instance.Dto<ArtistType>;
+type ArtistCountryValue = Component.Property.ValueOf<Component.Property.WithKey<ArtistType, "country">>;
+
 
 type Bar = Component.Dto.ValueOf<ArtistType["parentId"]>;
 // type Baz = Component.Property.ValueOf<ArtistType["reviewIds"]>;
@@ -579,11 +595,36 @@ let builtArtist: ArtistType = {
     changedAt: {
         dtoKey: "ChangedAt",
         key: "changedAt",
+        local: true,
         clone: Date,
         read: x => x.changedAt,
         readDto: x => x.ChangedAt,
         write: (x, v) => x.changedAt = v,
         writeDto: (x, v) => x.ChangedAt = v
+    },
+    changedBy: {
+        dtoKey: "ChangedBy",
+        external: true,
+        key: "changedBy",
+        localKey: null as any as ArtistType["changedById"],
+        navigable: true,
+        navigated: null as any as UserType,
+        nullable: true,
+        read: x => x.changedBy,
+        readDto: x => x.ChangedBy,
+        write: (x, v) => x.changedBy = v,
+        writeDto: (x, v) => x.ChangedBy = v
+    },
+    changedById: {
+        dtoKey: "ChangedById",
+        key: "changedById",
+        local: true,
+        nullable: true,
+        otherKey: null as any as UserType["id"],
+        read: x => x.changedById,
+        readDto: x => x.ChangedById,
+        write: (x, v) => x.changedById = v,
+        writeDto: (x, v) => x.ChangedById = v
     },
     // children: {
     //     parentReference: null as any as ArtistType["parent"],
@@ -618,6 +659,7 @@ let builtArtist: ArtistType = {
     createdAt: {
         dtoKey: "CreatedAt",
         key: "createdAt",
+        local: true,
         clone: Date,
         read: x => x.createdAt,
         readDto: x => x.CreatedAt,
@@ -661,64 +703,37 @@ let builtArtist: ArtistType = {
         writeDto: (u, v) => u.Parent = v,
         read: x => x.parent,
         write: (x, v) => x.parent = v,
-    },
-    // reviewIds: {
-    //     array: true,
-    //     dtoKey: "ReviewIds",
-    //     local: true,
-    //     key: "reviewIds",
-    //     nullable: true,
-    //     otherKey: null as any as ReviewType["id"],
-    //     read: x => x.reviewIds,
-    //     readDto: x => x.ReviewIds,
-    //     write: (x, v) => x.reviewIds = v,
-    //     writeDto: (x, v) => x.ReviewIds = v,
-    // }
-    // reviews: {
-    //     array: true,
-    //     dtoKey: "reviews",
-    //     external: true,
-    //     key: "reviews",
-    //     navigable: true,
-    //     navigated: null as any as ReviewType,
-    //     read: x => x.
-    // }
-};
-
-
-let artistInstances: Instance<ArtistType[]> = [
-    {
-        changedAt: "2019-01-30T21:06:50.514Z",
-        country: {
-            id: "at",
-        },
-        countryId: "at",
-        createdAt: "2017-06-30",
-        createdBy: null as any as Instance<UserType>,
-        createdById: 1,
-        id: 2,
-        parentId: null,
-        parent: {
-            createdAt: "2019-01-01",
-            changedAt: null,
-            country: null,
-            countryId: null,
-            createdBy: null as any as Instance<UserType>,
-            createdById: 123,
-            id: 987,
-            parent: null,
-            parentId: null,
-            // reviewIds: [98, 123]
-        },
-        // reviewIds: []
     }
-];
+};
 
 let artistDtoInstances: Instance.Dto<ArtistType[]> = [
     {
         ChangedAt: null,
+        // Country: null,
         Country: {
-            id: "at"
+            ChangedAt: "foo",
+            ChangedBy: {
+                ChangedAt: null,
+                ChangedBy: null,
+                ChangedById: 3,
+                CreatedBy: null,
+                CreatedById: 123,
+                id: 3,
+                name: "foo"
+            },
+            ChangedById: 123,
+            CreatedBy: {
+                ChangedAt: null,
+                ChangedBy: null,
+                ChangedById: null,
+                CreatedBy: null,
+                CreatedById: 3,
+                id: 3,
+                name: "foo"
+            },
+            CreatedById: 1,
+            id: "at",
+            name: "Austria"
         },
         CountryId: "at",
         CreatedAt: 123,
@@ -736,26 +751,97 @@ let artistDtoInstances: Instance.Dto<ArtistType[]> = [
             Id: 2,
             Parent: null,
             // ReviewIds: [1, 2, 3],
-            ParentId: null
+            ParentId: null,
+            ChangedBy: null,
+            ChangedById: null
         },
+        ChangedBy: null,
+        ChangedById: null
         // ReviewIds: []
     }
 ];
 
-
 let artistMapper = new TypeMapper<ArtistType>()
-    .select("id")
-    .expand("country", q => q.select("id"))
-    .expandIf("createdBy", true, q => q)
+    .selectIf("id", true)
+    .expand("createdBy", q => q.select("id"))
+    .expand("country", q => q
+        .expand("createdBy", q => q.select("name"))
+    )
+    .expand("country", q => q
+        .expand("changedBy", q => q.select("id"))
+        .expand("createdBy", q => q.select("id"))
+    )
+    .expand("country", q => q
+        .expand("changedBy", q => q.select("name"))
+    )
+    .expand("country", q => q.select("createdById").select("id").select("name"))
+    .expand("createdBy", q => q.select("id").select("name"))
+    .expand("parent", q => q.expand("country", q => q.select("createdById").select("id").select("name").expand("createdBy", q => q.select("id").select("name"))))
+    .expand("country", q => q.select("name"))
+    .expand("country", q => q.select("id").select("createdById"))
+    .expand("country", q => q.expand("createdBy", q => q))
+    .expand("country", q => q.expand("createdBy", q => q.select("id")))
+    .expand("country", q => q.expand("createdBy", q => q.select("name")))
+    .expandIf("changedBy", true, q => q.expandIf("createdBy", true, q => q.select("name")))
     ;
 
-
 let builtMappedArtist = artistMapper.get();
-builtMappedArtist.country.id;
-
-type Zuzl = Component.Property.Keys<typeof builtMappedArtist>;
-type Zazl = (typeof builtMappedArtist)["country"] extends Component.Property<infer A, infer B> ? true : false;
-
 let builtMappedArtistInstance: Instance<typeof builtMappedArtist> = {
-    id: 3
+    createdBy: {
+        id: 1,
+        name: null
+    },
+    country: {
+        createdById: 1,
+        id: "1",
+        name: "1",
+        changedBy: null,
+        createdBy: {
+            id: 1,
+            name: null
+        }
+    },
+    parent: null
 };
+
+function artistFoo(artist: Instance<typeof builtMappedArtist>): void {
+    artist.createdBy.id.toFixed();
+
+    if (artist.createdBy.name !== null) {
+        artist.createdBy.name.charAt(1);
+    }
+
+    if (artist.id !== undefined) {
+        artist.id.toFixed();
+    }
+
+    if (artist.changedBy != null) {
+        if (artist.changedBy.createdBy != null) {
+            if (artist.changedBy.createdBy.name !== null) {
+                artist.changedBy.createdBy.name.at(1);
+            }
+        }
+    }
+
+    if (artist.parent !== null) {
+        if (artist.parent.country !== null) {
+            artist.parent.country.createdById.toFixed();
+        }
+    }
+
+    if (artist.country !== null) {
+        artist.country.createdBy.id.toFixed();
+
+        if (artist.country.createdBy.name !== null) {
+            artist.country.createdBy.name.at(1);
+        }
+
+        if (artist.country.changedBy !== null) {
+            artist.country.changedBy.id.toFixed();
+
+            if (artist.country.changedBy.name !== null) {
+                artist.country.changedBy.name.at(1);
+            }
+        }
+    }
+}
