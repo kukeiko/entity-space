@@ -216,10 +216,12 @@ export module Component {
 export type Instance<T> = NullIfNull<Box<Instance.Optional<Exclude<Unbox<T>, null>>, T> & Box<Instance.Required<Exclude<Unbox<T>, null>>, T>, T>;
 
 export module Instance {
+    // [todo] figure out if "T[K] is in any way faster than "Component.Property.WithKey<T, K>"
     export type Optional<T> = {
         [K in Component.Property.Keys.Optional<T>]?
         : T[K] extends (Component.Expanded<infer E> & Component.Nullable) | undefined ? Instance<E> | null
         : T[K] extends Component.Expanded<infer E> | undefined ? Instance<E>
+        // [todo] not sure i need that additional "undefined extends T[K]" check
         : T[K] extends (Component.Property<K, infer V> | undefined) ? undefined extends T[K] ? undefined | V : V
         : never
     };
@@ -231,13 +233,41 @@ export module Instance {
         : T[K] extends Component.Property<K, infer V> ? V
         : never
     };
+    // export type Optional<T> = {
+    //     [K in Component.Property.Keys.Optional<T>]?
+    //     : Component.Property.WithKey<T, K> extends (Component.Expanded<infer E> & Component.Nullable) | undefined ? Instance<E> | null
+    //     : Component.Property.WithKey<T, K> extends Component.Expanded<infer E> | undefined ? Instance<E>
+    //     : Component.Property.WithKey<T, K> extends (Component.Property<K, infer V> | undefined) ? undefined extends T[K] ? undefined | V : V
+    //     : never
+    // };
+
+    // export type Required<T> = {
+    //     [K in Component.Property.Keys.Required<T>]
+    //     : Component.Property.WithKey<T, K> extends (Component.Expanded<infer E> & Component.Nullable) ? Instance<E> | null
+    //     : Component.Property.WithKey<T, K> extends Component.Expanded<infer E> ? Instance<E>
+    //     : Component.Property.WithKey<T, K> extends Component.Property<K, infer V> ? V
+    //     : never
+    // };
 
     export type Dto<T> = NullIfNull<Box<Dto.Optional<Exclude<Unbox<T>, null>>, T> & Box<Dto.Required<Exclude<Unbox<T>, null>>, T>, T>;
 
     export module Dto {
+        export type Optional<T> = {
+            [A in Component.Dto.Aliases.Optional<T>]?
+            : Component.Dto.WithAlias<T, A> extends (Component.Expanded<infer E> & Component.Nullable) | undefined ? Instance.Dto<E> | null
+            : Component.Dto.WithAlias<T, A> extends Component.Expanded<infer E> | undefined ? Instance<E>
+            // [todo] not sure i need that additional "undefined extends Component.Dto.WithAlias<T, A>" check
+            : Component.Dto.WithAlias<T, A> extends (Component.Dto<A, infer D> | undefined) ? undefined extends Component.Dto.WithAlias<T, A> ? undefined | D : D
+            : never
+        };
 
-        export type Optional<T> = { [K in Component.Dto.Aliases.Optional<T>]?: Component.Dto.ValueOf<Component.Dto.WithAlias<T, K>>; };
-        export type Required<T> = { [K in Component.Dto.Aliases.Required<T>]: Component.Dto.ValueOf<Component.Dto.WithAlias<T, K>>; };
+        export type Required<T> = {
+            [A in Component.Dto.Aliases.Required<T>]
+            : Component.Dto.WithAlias<T, A> extends (Component.Expanded<infer E> & Component.Nullable) ? Instance.Dto<E> | null
+            : Component.Dto.WithAlias<T, A> extends Component.Expanded<infer E> ? Instance.Dto<E>
+            : Component.Dto.WithAlias<T, A> extends (Component.Dto<A, infer D>) ? D
+            : never
+        };
     }
 }
 
@@ -804,7 +834,7 @@ let builtMappedArtistInstance: Instance<typeof builtMappedArtist> = {
     parent: null
 };
 
-function artistFoo(artist: Instance<typeof builtMappedArtist>): void {
+function takesArtistInstance(artist: Instance<typeof builtMappedArtist>): void {
     artist.createdBy.id.toFixed();
 
     if (artist.createdBy.name !== null) {
@@ -830,6 +860,7 @@ function artistFoo(artist: Instance<typeof builtMappedArtist>): void {
     }
 
     if (artist.country !== null) {
+        artist.country.createdById.toFixed();
         artist.country.createdBy.id.toFixed();
 
         if (artist.country.createdBy.name !== null) {
@@ -841,6 +872,49 @@ function artistFoo(artist: Instance<typeof builtMappedArtist>): void {
 
             if (artist.country.changedBy.name !== null) {
                 artist.country.changedBy.name.at(1);
+            }
+        }
+    }
+}
+
+function takesArtistDtoInstance(artist: Instance.Dto<typeof builtMappedArtist>): void {
+    artist.CreatedBy.id.toFixed();
+
+    if (artist.CreatedBy.name !== null) {
+        artist.CreatedBy.name.charAt(1);
+    }
+
+    if (artist.Id !== undefined) {
+        artist.Id.toFixed();
+    }
+
+    if (artist.ChangedBy != null) {
+        if (artist.ChangedBy.CreatedBy != null) {
+            if (artist.ChangedBy.CreatedBy.name !== null) {
+                artist.ChangedBy.CreatedBy.name.at(1);
+            }
+        }
+    }
+
+    if (artist.Parent !== null) {
+        if (artist.Parent.Country !== null) {
+            artist.Parent.Country.CreatedById.toFixed();
+        }
+    }
+
+    if (artist.Country !== null) {
+        artist.Country.CreatedById.toFixed();
+        artist.Country.CreatedBy.id.toFixed();
+
+        if (artist.Country.CreatedBy.name !== null) {
+            artist.Country.CreatedBy.name.at(1);
+        }
+
+        if (artist.Country.ChangedBy !== null) {
+            artist.Country.ChangedBy.id.toFixed();
+
+            if (artist.Country.ChangedBy.name !== null) {
+                artist.Country.ChangedBy.name.at(1);
             }
         }
     }
