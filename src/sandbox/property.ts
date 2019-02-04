@@ -12,7 +12,7 @@ export type NullIfNull<T, U> = U extends null ? T | null : T;
  */
 export interface Type<K extends string> {
     $: Type.Metadata<K>;
-}
+};
 
 export module Type {
     export interface Metadata<K extends string> {
