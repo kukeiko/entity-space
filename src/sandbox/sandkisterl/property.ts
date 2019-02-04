@@ -88,7 +88,6 @@ export module Component {
         }
     }
 
-    // [note] i think we can drop the "step" thingy @ filter
     export type Filterable = {
         filterable: true;
     };
@@ -201,8 +200,7 @@ export module Component {
  *    ██║██║ ╚████║███████║   ██║   ██║  ██║██║ ╚████║╚██████╗███████╗
  *    ╚═╝╚═╝  ╚═══╝╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝╚══════╝
  */
-// [todo] passing an array (e.g. ArtistType[]) doesn't seem to work properly
-export type Instance<T> = NullIfNull<Box<Instance.Optional<Exclude<Unbox<T>, null>>, T> & Box<Instance.Required<Exclude<Unbox<T>, null>>, T>, T>;
+export type Instance<T> = Box<Instance.Optional<Unbox<T>> & Instance.Required<Unbox<T>>, T>;
 
 export module Instance {
     type FetchM<T> = T extends Component.Property<any, any, infer M> ? M : never;
@@ -223,7 +221,7 @@ export module Instance {
         : never
     };
 
-    export type Dto<T> = NullIfNull<Box<Dto.Optional<Exclude<Unbox<T>, null>>, T> & Box<Dto.Required<Exclude<Unbox<T>, null>>, T>, T>;
+    export type Dto<T> = Box<Dto.Optional<Unbox<T>> & Dto.Required<Unbox<T>>, T>;
 
     export module Dto {
         export type Optional<T> = {
@@ -305,20 +303,14 @@ export type Reference<
     & Component.Dto<A, Instance.Dto<T>, M>
     // & Component.Dto<A, Partial<Instance.Dto<T>>>
     & Component.External
-    // & Component.Property<K, Instance<T> | undefined>
     // [note] as of now i think it makes the most sense that the value of a reference is partial by default,
     // since it can't know which parts of navigated type have been selected/expanded
     // & Component.Property<K, Partial<Instance<T>>>
     & Component.Property<K, Instance<T>, M>
     & Component.Navigable<T>
-    // & (T extends null ? Component.Nullable : {});
-    // & (null extends T ? Component.Nullable : {})
     ;
 
 export module Reference {
-    // export type Mapped<R> = R extends Reference<infer K, infer T, infer P, infer A> ? Reference<K, T, P, A> : never;
-
-    // export type Keys<T> = Exclude<{ [P in keyof T]: T[P] extends Reference<any, any, any> | undefined ? P : never }[keyof T], undefined>;
     export type Keys<T> = Exclude<{ [P in keyof T]: T[P] extends Reference<any, any, any> | undefined ? P : never }[keyof T], undefined>;
 
     export type Id<
@@ -334,7 +326,6 @@ export module Reference {
         & Component.Local
         & Component.Property<K, Component.Property.ValueOf<T[P]>, M>
         & Component.Dto<A, Component.Dto.ValueOf<T[P]>, M>
-        // & (T extends null ? Component.Nullable : {})
         ;
 
     export module Id {
@@ -408,15 +399,6 @@ export type Children = {
  *       ╚═╝      ╚═╝   ╚═╝     ╚══════╝    ╚═╝     ╚═╝╚═╝  ╚═╝╚═╝     ╚═╝     ╚══════╝╚═╝  ╚═╝
  */
 export class TypeMapper<T extends Type<string>, M = { $: T["$"] }> {
-    // export class TypeMapper<T extends Type<string>, M = Partial<T> & { $: T["$"] }> {
-    // selectAll(): TypeBuilder<T, SelectedLocals<T> & D> {
-    //     return this as any;
-    // }
-
-    // selectAll(): TypeMapper<T, Local.All<T> & M> {
-    //     return this as any;
-    // }
-
     select<K extends Component.Local.Keys<T>, S = Exclude<T[K], undefined>>(k: K): TypeMapper<T, Record<K, S> & M> {
         return this as any;
     }
@@ -425,7 +407,6 @@ export class TypeMapper<T extends Type<string>, M = { $: T["$"] }> {
         return this as any;
     }
 
-    // Pick<T, Exclude<keyof T, K>>
     expand<
         K extends Component.Navigable.Keys<T> & string,
         E extends Type<string> = Component.Navigable.OtherType<T[K]>,
@@ -877,20 +858,21 @@ let artistMapper = new TypeMapper<ArtistType>()
     ;
 
 let builtMappedArtist = artistMapper.get();
-let builtMappedArtistInstance: Instance<typeof builtMappedArtist> = {
+let builtMappedArtistInstances: Instance<typeof builtMappedArtist[]> = [
+    {
+        changedById: null,
+        changedBy: null,
+        countryId: null,
+        createdBy: {
+            id: 1,
+            name: "foo"
+        },
+        country: null,
+        parent: null
+    }
+];
 
-    changedById: null,
-    changedBy: null,
-    countryId: null,
-    createdBy: {
-        id: 1,
-        name: "foo"
-    },
-    country: null,
-    parent: null
-};
-
-let builtMappedArtistDtoInstances: Instance.Dto<(typeof builtMappedArtist)>[] = [
+let builtMappedArtistDtoInstances: Instance.Dto<(typeof builtMappedArtist)[]> = [
     {
         ChangedBy: null,
         ChangedById: null,
