@@ -534,7 +534,7 @@ function takesArtistInstance(artist: Instance<typeof builtMappedArtist>): void {
     if (artist.changedBy != null) {
         if (artist.changedBy.createdBy != null) {
             if (artist.changedBy.createdBy.name !== null) {
-                artist.changedBy.createdBy.name.at(1);
+                artist.changedBy.createdBy.name.charAt(1);
             }
         }
     }
@@ -550,14 +550,14 @@ function takesArtistInstance(artist: Instance<typeof builtMappedArtist>): void {
         artist.country.createdBy.id.toFixed();
 
         if (artist.country.createdBy.name !== null) {
-            artist.country.createdBy.name.at(1);
+            artist.country.createdBy.name.charAt(1);
         }
 
         if (artist.country.changedBy !== null) {
             artist.country.changedBy.id.toFixed();
 
             if (artist.country.changedBy.name !== null) {
-                artist.country.changedBy.name.at(1);
+                artist.country.changedBy.name.charAt(1);
             }
         }
     }
@@ -589,7 +589,7 @@ function takesArtistDtoInstance(artist: Instance.Dto<typeof builtMappedArtist>):
     if (artist.ChangedBy != null) {
         if (artist.ChangedBy.CreatedBy != null) {
             if (artist.ChangedBy.CreatedBy.Name !== null) {
-                artist.ChangedBy.CreatedBy.Name.at(1);
+                artist.ChangedBy.CreatedBy.Name.charAt(1);
             }
         }
     }
@@ -607,14 +607,14 @@ function takesArtistDtoInstance(artist: Instance.Dto<typeof builtMappedArtist>):
         artist.Country.CreatedBy.Id.toFixed();
 
         if (artist.Country.CreatedBy.Name !== null) {
-            artist.Country.CreatedBy.Name.at(1);
+            artist.Country.CreatedBy.Name.charAt(1);
         }
 
         if (artist.Country.ChangedBy !== null) {
             artist.Country.ChangedBy.Id.toFixed();
 
             if (artist.Country.ChangedBy.Name !== null) {
-                artist.Country.ChangedBy.Name.at(1);
+                artist.Country.ChangedBy.Name.charAt(1);
             }
         }
     }
