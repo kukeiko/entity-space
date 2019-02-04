@@ -30,6 +30,7 @@ export module Component {
         computed: true;
     };
 
+    // [todo] maybe merge back into Property (as Property.Dto)
     export type Dto<A extends string, D, M extends Dto.Modifier = never> = {
         dtoKey: A;
         options: Record<M, true>;
@@ -102,6 +103,19 @@ export module Component {
         export type Keys<T> = Exclude<{ [P in keyof T]: T[P] extends Navigable<any> | undefined ? P : never }[keyof T], undefined>;
         export type OtherType<N> = N extends Navigable<infer T> ? T : never;
     }
+
+    export type Primitive<T extends Primitive.Type> = {
+        primitiveType: T;
+    };
+
+    export module Primitive {
+        export type Type = BooleanConstructor | NumberConstructor | StringConstructor;
+        export type Keys<T> = Exclude<{ [P in keyof T]: T[P] extends Primitive<any> | undefined ? P : never }[keyof T], undefined>;
+    }
+
+    let x : Primitive<typeof String> = {
+        primitiveType: String
+    };
 
     export type Property<K extends string, V, M extends Property.Modifier = never> = {
         key: K;

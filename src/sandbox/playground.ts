@@ -3,6 +3,7 @@ import { Component } from "./component";
 import { Instance } from "./instance";
 import { Property } from "./property";
 import { TypeMapper } from "./type-mapper";
+import { Query } from "./query";
 
 /***
  *    ██████╗  ██████╗ ███╗   ███╗ █████╗ ██╗███╗   ██╗
@@ -109,7 +110,7 @@ export interface CountryType extends Type<"country"> {
 export interface ArtistType extends Type<"artist"> {
     id: Property.Id<"id", number, "Id", number, "n">;
 
-    createdAt: Property.Simple<"createdAt", typeof Date, "CreatedAt", number>;
+    createdAt: Property.Primitive<"createdAt", typeof String, "CreatedAt", number>;
     createdById: Property.Reference.Id<"createdById", UserType, "id", "CreatedById">;
     createdBy: Property.Reference<"createdBy", UserType, ArtistType["createdById"], "CreatedBy">;
 
@@ -330,8 +331,10 @@ let builtArtist: ArtistType = {
         dtoKey: "CreatedAt",
         key: "createdAt",
         local: true,
-        clone: Date,
         options: {},
+        primitiveType: String,
+        fromDto: v => v.toString(),
+        toDto: v => +v,
         read: x => x.createdAt,
         readDto: x => x.CreatedAt,
         write: (x, v) => x.createdAt = v,
@@ -440,7 +443,9 @@ let artistDtoInstances: Instance.Dto<ArtistType[]> = [
     }
 ];
 
-let artistMapper = new TypeMapper<ArtistType>()
+// let artistMapper = new TypeMapper<ArtistType>()
+let artistMapper = new Query<ArtistType>()
+    // .filter("createdAt", f => f.equals("foo").fromTo(["abc", "xyz"], [true, true]))
     .selectIf("id", true)
     .select("countryId")
     .select("changedById")
@@ -465,6 +470,7 @@ let artistMapper = new TypeMapper<ArtistType>()
     .expand("country", q => q.expand("createdBy", q => q.select("id")))
     .expand("country", q => q.expand("createdBy", q => q.select("name")))
     .expandIf("changedBy", true, q => q.expandIf("createdBy", true, q => q.select("name")))
+    .filter("createdAt", f => f.to("123"))
     ;
 
 let builtMappedArtist = artistMapper.get();

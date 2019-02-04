@@ -1,11 +1,12 @@
 /**
  * [notes]
  * i want proper and/or support for users:
- *  - a single filter should be a bag where each property points to an array of criterions
- *  - name of property is name of entity property to filter
- *  - array of criterions in a property are always combined with or
- *  - criterions across properties are always combined with and
- *  - user can also chain filters together which are then also combined with an or
+ *  - a single filter should be a bag where each property points to an array of criterions or expanded filters
+ *  - name of property is name of entity property to filter/expand
+ *  - array of criterions in a property are always combined with "or"
+ *  - array of expanded filters in a property are always combined with "or"
+ *  - criterions and expanded filters across properties are always combined with "and"
+ *  - user can also chain top-level filters together which are then also combined with "or"
  *
  * this way any filtering use case a user might have should be covered (such as the work-item filter builder @ oldschool TFS)
  */
@@ -78,7 +79,7 @@ export module Filter {
                         }
 
                         if (to.op === "<=" && to.value === a.value) {
-                            to = { op: "<", value: a.value }
+                            to = { op: "<", value: a.value };
                         }
 
                         return (from == b.from && to == b.to) ? b : { op: "from-to", from: from, to: to };
@@ -142,7 +143,7 @@ export module Filter {
         op: "never";
     }
 
-    export interface RangeCriterion {
+    export interface FromToCriterion {
         op: "from-to";
         from: FromCriterion;
         to: ToCriterion;
@@ -155,11 +156,36 @@ export module Filter {
         reduceSelf(by: Criterion): Criterion | null;
     }
 
-    // export type Criterion = CustomCriterion | EqualityCriterion | FromCriterion | MemberCriterion | NeverCriterion | RangeCriterion | ToCriterion;
-    export type Criterion = CustomCriterion | EqualityCriterion | FromCriterion | MemberCriterion | RangeCriterion | ToCriterion;
+    export type Criterion = CustomCriterion | EqualityCriterion | FromCriterion | MemberCriterion | FromToCriterion | ToCriterion;
+
+    export module Criterion {
+        export type ForConstructor<T>
+            = T extends StringConstructor ? EqualityCriterion | FromCriterion | ToCriterion | FromToCriterion | MemberCriterion
+            : never;
+    }
 
     export interface Criteria {
         [k: string]: Criterion;
+    }
+
+    export function equals<T extends EqualityCriterion["value"]>(value: T, invert = false): EqualityCriterion {
+        return { op: invert ? "!=" : "==", value: value };
+    }
+
+    export function notEquals<T extends EqualityCriterion["value"]>(value: T, invert = false): EqualityCriterion {
+        return { op: invert ? "==" : "!=", value: value };
+    }
+
+    export function from<T extends FromCriterion["value"]>(value: T, inclusive = false): FromCriterion {
+        return { op: inclusive ? ">=" : ">", value: value };
+    }
+
+    export function to<T extends ToCriterion["value"]>(value: T, inclusive = false): ToCriterion {
+        return { op: inclusive ? "<=" : "<", value: value };
+    }
+
+    export function fromTo<T extends FromCriterion["value"], U extends ToCriterion["value"]>(values: [T, U], inclusive: [boolean, boolean] = [false, false]): FromToCriterion {
+        return { op: "from-to", from: from(values[0], inclusive[0]), to: to(values[1], inclusive[1]) };
     }
 }
 

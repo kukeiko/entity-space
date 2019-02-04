@@ -12,13 +12,17 @@ export module Property {
      *    ██║██████╔╝
      *    ╚═╝╚═════╝
      */
-    export type Id<K extends string, V, A extends string = K, D = V, M extends Component.Property.Modifier = never>
+    export type Id<
+        K extends string,
+        V,
+        A extends string = K,
+        D = V,
+        M extends Component.Property.Modifier = never>
         = Component.Dto<A, D, M>
         & Component.Id
         & Component.Local
         & Component.Property<K, V, M>
-        & Component.Unique
-        ;
+        & Component.Unique;
 
     export module Id {
 
@@ -37,8 +41,8 @@ export module Property {
         C extends Simple.Cloner,
         A extends string = K,
         D = ReturnType<C>,
-        M extends Component.Property.Modifier = never
-        > = {
+        M extends Component.Property.Modifier = never>
+        = {
             clone: Exclude<C, null>;
         }
         & Component.Dto<A, D, M>
@@ -47,6 +51,33 @@ export module Property {
 
     export module Simple {
         export type Cloner = ((...args: any[]) => any);
+    }
+
+    /***
+     *    ██████╗ ██████╗ ██╗███╗   ███╗██╗████████╗██╗██╗   ██╗███████╗
+     *    ██╔══██╗██╔══██╗██║████╗ ████║██║╚══██╔══╝██║██║   ██║██╔════╝
+     *    ██████╔╝██████╔╝██║██╔████╔██║██║   ██║   ██║██║   ██║█████╗
+     *    ██╔═══╝ ██╔══██╗██║██║╚██╔╝██║██║   ██║   ██║╚██╗ ██╔╝██╔══╝
+     *    ██║     ██║  ██║██║██║ ╚═╝ ██║██║   ██║   ██║ ╚████╔╝ ███████╗
+     *    ╚═╝     ╚═╝  ╚═╝╚═╝╚═╝     ╚═╝╚═╝   ╚═╝   ╚═╝  ╚═══╝  ╚══════╝
+     */
+    export type Primitive<
+        K extends string,
+        T extends Component.Primitive.Type,
+        A extends string = K,
+        D = ReturnType<T>,
+        M extends Component.Property.Modifier = never>
+        = {
+            fromDto(v: D): ReturnType<T>;
+            toDto(v: ReturnType<T>): D;
+        }
+        & Component.Dto<A, D, M>
+        & Component.Local
+        & Component.Primitive<T>
+        & Component.Property<K, ReturnType<T>, M>;
+
+    export module Primitive {
+        export type Keys<T> = Exclude<{ [P in keyof T]: T[P] extends Primitive<any, any> | undefined ? P : never }[keyof T], undefined>;
     }
 
     /***
@@ -62,7 +93,8 @@ export module Property {
         T extends Type<string>,
         P extends Reference.Id<any, T, any>,
         A extends string = K,
-        M extends Component.Property.Modifier = never> = {
+        M extends Component.Property.Modifier = never>
+        = {
             localKey: P;
         }
         // [todo] for some reason, ", M" only needs to be put @ either Component.Dto or Component.Property
@@ -153,7 +185,8 @@ export module Property {
         T extends Type<string>,
         P extends Reference.Id.Keys<T>,
         A extends string = K,
-        M extends Component.Property.Modifier = never> = {
+        M extends Component.Property.Modifier = never>
+        = {
             parentIdKey: P;
         }
         & Component.Array
