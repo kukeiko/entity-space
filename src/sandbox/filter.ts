@@ -1,8 +1,8 @@
 /**
  * [notes]
  * i want proper and/or support for users:
- *  - a single filter should be a bag where each property points to an array of criterions or expanded filters
- *  - name of property is name of entity property to filter/expand
+ *  - a single filter should be a bag where each property points to an array of criterions or nested filters
+ *  - name of each property is the name of the property to filter on the entity
  *  - array of criterions in a property are always combined with "or"
  *  - array of expanded filters in a property are always combined with "or"
  *  - criterions and expanded filters across properties are always combined with "and"
@@ -136,7 +136,7 @@ export module Filter {
 
     export interface MemberCriterion {
         op: "in" | "not-in";
-        values: Set<boolean | number | string | null>;
+        values: Set<EqualityCriterion["value"]>;
     }
 
     export interface NeverCriterion {
@@ -190,6 +190,14 @@ export module Filter {
         }
 
         return { op: "from-to", from: from(values[0], inclusive[0]), to: to(values[1], inclusive[1]) };
+    }
+
+    export function memberOf<T extends EqualityCriterion["value"]>(values: Iterable<T>, invert = false): MemberCriterion {
+        return { op: invert ? "not-in" : "in", values: new Set(values) };
+    }
+
+    export function notMemberOf<T extends EqualityCriterion["value"]>(values: Iterable<T>, invert = false): MemberCriterion {
+        return { op: invert ? "in" : "not-in", values: new Set(values) };
     }
 }
 

@@ -113,12 +113,12 @@ export module Component {
         } & Navigable<T>;
     }
 
-    export type Primitive<T extends Primitive.Type> = {
+    export type Primitive<T extends Primitive.ValueType> = {
         primitiveType: T;
     };
 
     export module Primitive {
-        export type Type = BooleanConstructor | NumberConstructor | StringConstructor;
+        export type ValueType = BooleanConstructor | NumberConstructor | StringConstructor;
         export type Keys<T> = Exclude<{ [P in keyof T]: T[P] extends Primitive<any> | undefined ? P : never }[keyof T], undefined>;
     }
 

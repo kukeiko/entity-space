@@ -63,7 +63,7 @@ export module Property {
      */
     export type Primitive<
         K extends string,
-        T extends Component.Primitive.Type,
+        T extends Component.Primitive.ValueType,
         A extends string = K,
         D = ReturnType<T>,
         M extends Component.Property.Modifier = never>

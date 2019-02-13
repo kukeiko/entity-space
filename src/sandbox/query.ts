@@ -4,7 +4,7 @@ import { Filter } from "./filter";
 
 type FetchPrimitiveType<T> = T extends Component.Primitive<infer R> ? R : never;
 
-class CriterionBuilder<T extends Component.Primitive.Type> {
+class CriterionBuilder<T extends Component.Primitive.ValueType> {
     equals(value: ReturnType<T>, invert = false): this {
         let x = Filter.equals(value, invert);
         return this as any;
@@ -27,6 +27,16 @@ class CriterionBuilder<T extends Component.Primitive.Type> {
 
     fromTo(values: [ReturnType<T>, ReturnType<T>], inclusive: boolean | [boolean, boolean] = true): this {
         let x = Filter.fromTo(values, inclusive);
+        return this as any;
+    }
+
+    in(values: Iterable<ReturnType<T>>, invert = false) : this {
+        let x = Filter.memberOf(values, invert);
+        return this as any;
+    }
+
+    notIn(values: Iterable<ReturnType<T>>, invert = false) : this {
+        let x = Filter.notMemberOf(values, invert);
         return this as any;
     }
 }
