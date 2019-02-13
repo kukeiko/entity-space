@@ -443,33 +443,103 @@ let artistDtoInstances: Instance.Dto<ArtistType[]> = [
     }
 ];
 
+let typeMapper = new TypeMapper<ArtistType>()
+    .select(x => x.country, q => q.select(x => x.id))
+    .selectIf(x => x.changedAt)
+    .select(x => x.changedById)
+    .select(x => x.albums, q => q
+        .select(x => x.artistId)
+        .select(x => x.artist, q => q
+            .select(x => x.changedById)
+            .select(x => x.country, q => q.select(x => x.name))
+        )
+    )
+    .get();
+
+if (typeMapper.changedAt !== undefined) {
+    typeMapper.changedAt.selected;
+}
+
+typeMapper.country.selected.id;
+
+let mappedArtist: Instance<typeof typeMapper> = {
+    country: {
+        id: "at"
+    },
+    changedAt: "2019-01-01",
+    changedById: Math.random() > .5 ? 1 : null,
+    albums: [
+        {
+            artist: {
+                changedById: Math.random() > .5 ? 1 : null,
+                country: {
+                    name: "austria"
+                }
+            },
+            artistId: Math.random() > .5 ? 1 : null
+        }
+    ]
+};
+
+let mappedArtists: Instance<typeof typeMapper[]> = [
+    {
+        country: {
+            id: "at"
+        },
+        changedAt: Math.random() > .5 ? "2019-01-01" : undefined,
+        changedById: Math.random() > .5 ? 1 : null,
+        albums: [
+            {
+                artist: {
+                    changedById: Math.random() > .5 ? 1 : null,
+                    country: {
+                        name: "austria"
+                    }
+                },
+                artistId: Math.random() > .5 ? 1 : null
+            }
+        ]
+    }
+];
+
+let artistFooQuery = new Query<ArtistType>()
+    .select(x => x.country);
+
+
+let builtMappedFooArtist = artistFooQuery.get();
+// let builtMappedFooArtistInstances: Instance<typeof builtMappedFooArtist[]> = [
+//     {
+
+//     }
+// ];
+
 // let artistMapper = new TypeMapper<ArtistType>()
 let artistMapper = new Query<ArtistType>()
-    // .filter("createdAt", f => f.equals("foo").fromTo(["abc", "xyz"], [true, true]))
-    .selectIf("id", true)
-    .select("countryId")
-    .select("changedById")
-    .expandIf("albums", true, q => q.select("artistId").expand("artist", q => q.select("parentId")))
-    .expand("createdBy", q => q.select("id"))
-    .expand("country", q => q
-        .expand("createdBy", q => q.select("name"))
+    .filter("createdAt", f => f.equals("foo").fromTo(["abc", "xyz"], [true, true]))
+    .selectIf(x => x.id)
+    .select(x => x.countryId)
+    .select(x => x.changedById)
+    .selectIf(x => x.albums, q => q.selectIf(x => x.artistId).select(x => x.artist, q => q.select(x => x.parentId)))
+    .select(x => x.createdBy, q => q.select(x => x.id))
+    .select(x => x.country, q => q
+        .select(x => x.createdBy, q => q.select(x => x.name))
     )
-    .expand("country", q => q
-        .expand("changedBy", q => q.select("id"))
-        .expand("createdBy", q => q.select("id"))
+    .select(x => x.country, q => q
+        .select(x => x.changedBy, q => q.select(x => x.id))
+        .select(x => x.createdBy, q => q.select(x => x.id))
     )
-    .expand("country", q => q
-        .expand("changedBy", q => q.select("name"))
+    .select(x => x.country, q => q
+        .select(x => x.changedBy, q => q.select(x => x.name))
     )
-    .expand("country", q => q.select("createdById").select("id").select("name"))
-    .expand("createdBy", q => q.select("id").select("name"))
-    .expand("parent", q => q.expand("country", q => q.select("createdById").select("id").select("name").expand("createdBy", q => q.select("id").select("name"))))
-    .expand("country", q => q.select("name"))
-    .expand("country", q => q.select("id").select("createdById"))
-    .expand("country", q => q.expand("createdBy", q => q))
-    .expand("country", q => q.expand("createdBy", q => q.select("id")))
-    .expand("country", q => q.expand("createdBy", q => q.select("name")))
-    .expandIf("changedBy", true, q => q.expandIf("createdBy", true, q => q.select("name")))
+    .select(x => x.country, q => q.select(x => x.createdById).select(x => x.id).select(x => x.name))
+    .select(x => x.createdBy, q => q.select(x => x.id).select(x => x.name))
+    .select(x => x.parent, q => q.select(x => x.country, q => q.select(x => x.createdById).select(x => x.id).select(x => x.name).select(x => x.createdBy, q => q.select(x => x.id).select(x => x.name))))
+    .select(x => x.country, q => q.select(x => x.name))
+    .select(x => x.country, q => q.select(x => x.id).select(x => x.createdById))
+    .select(x => x.country, q => q.select(x => x.createdBy, q => q))
+    .select(x => x.country, q => q.select(x => x.createdBy, q => q.select(x => x.id)))
+    .select(x => x.country, q => q.select(x => x.createdBy, q => q.select(x => x.name)))
+    .selectIf(x => x.changedBy, q => q.selectIf(x => x.createdBy, q => q.select(x => x.name)))
     .filter("createdAt", f => f.to("123"))
     ;
 
@@ -489,7 +559,19 @@ let builtMappedArtistInstances: Instance<typeof builtMappedArtist[]> = [
             id: 1,
             name: "foo"
         },
-        country: null,
+        country: {
+            changedBy: {
+                id: 3,
+                name: "foo"
+            },
+            createdBy: {
+                id: 8,
+                name: null
+            },
+            createdById: 8,
+            id: "quak",
+            name: "khaz"
+        },
         parent: null
     }
 ];
@@ -497,10 +579,10 @@ let builtMappedArtistInstances: Instance<typeof builtMappedArtist[]> = [
 let builtMappedArtistDtoInstances: Instance.Dto<(typeof builtMappedArtist)[]> = [
     {
         Albums: [{
+            ArtistId: Math.random() > .5 ? 3 : undefined,
             Artist: {
-                ParentId: 3
-            },
-            ArtistId: 1
+                ParentId: null
+            }
         }],
         ChangedBy: null,
         ChangedById: null,
@@ -511,7 +593,17 @@ let builtMappedArtistDtoInstances: Instance.Dto<(typeof builtMappedArtist)[]> = 
             Name: null
         },
         Id: undefined,
-        Parent: null
+        Parent: {
+            Country: {
+                CreatedBy: {
+                    Id: 3,
+                    Name: "austria"
+                },
+                CreatedById: 3,
+                id: "moo",
+                name: "foo"
+            }
+        }
     }
 ];
 

@@ -92,6 +92,10 @@ export module Component {
 
     export module Local {
         export type Keys<T> = Exclude<{ [P in keyof T]: T[P] extends Local | undefined ? P : never }[keyof T], undefined>;
+
+        export type Selected<V> = {
+            selected: V;
+        } & Local;
     }
 
     export type Navigable<T extends Type<string>> = {
@@ -102,6 +106,11 @@ export module Component {
     export module Navigable {
         export type Keys<T> = Exclude<{ [P in keyof T]: T[P] extends Navigable<any> | undefined ? P : never }[keyof T], undefined>;
         export type OtherType<N> = N extends Navigable<infer T> ? T : never;
+        export type In<T> = { [K in Keys<T>]: T[K]; };
+
+        export type Selected<T extends Type<string>> = {
+            selected: T;
+        } & Navigable<T>;
     }
 
     export type Primitive<T extends Primitive.Type> = {
@@ -112,10 +121,6 @@ export module Component {
         export type Type = BooleanConstructor | NumberConstructor | StringConstructor;
         export type Keys<T> = Exclude<{ [P in keyof T]: T[P] extends Primitive<any> | undefined ? P : never }[keyof T], undefined>;
     }
-
-    let x : Primitive<typeof String> = {
-        primitiveType: String
-    };
 
     export type Property<K extends string, V, M extends Property.Modifier = never> = {
         key: K;

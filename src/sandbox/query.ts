@@ -33,18 +33,51 @@ class CriterionBuilder<T extends Component.Primitive.Type> {
 
 // export class Query<T extends Type<string>, M = { $: T["$"] }> extends TypeMapper<T, M> {
 export class Query<T extends Type<string>, M = { $: T["$"] }> {
+    select<
+        P extends Component.Navigable<any> & Component.Property<any, any>,
+        O extends Type<string>
+    >(
+        _: (foo: Required<T>) => P,
+        _q?: (eq: Query<Component.Navigable.OtherType<P>>) => Query<any, O>
+    ): Query<T, Record<P["key"], P & Component.Navigable.Selected<O>> & M>;
+
+    select<
+        P extends Component.Local & Component.Property<any, any>
+    >(
+        _: (foo: Required<T>) => P,
+        // _2?: (a: string, b: string) => boolean
+    ): Query<T, Record<P["key"], P & Component.Local.Selected<ReturnType<P["read"]>>> & M>;
+
+    select(...args: any[]): any {
+        return this as any;
+    }
+
+    selectIf<
+        P extends Component.Local & Component.Property<any, any>,
+        O extends Type<string>
+    >(_: (foo: Required<T>) => P): Query<T, Record<P["key"], undefined | (P & Component.Local.Selected<ReturnType<P["read"]>>)> & M>;
+
+    selectIf<
+        P extends Component.Navigable<any> & Component.Property<any, any>,
+        O extends Type<string>
+    >(_: (foo: Required<T>) => P, _q: (eq: Query<Component.Navigable.OtherType<P>>) => Query<any, O>): Query<T, Record<P["key"], undefined | (P & Component.Navigable.Selected<O>)> & M>;
+
+    selectIf(...args: any[]): any {
+        return this as any;
+    }
+
+    _select<K extends Component.Local.Keys<T>, S = Exclude<T[K], undefined>>(k: K): Query<T, Record<K, S> & M> {
+        return this as any;
+    }
+
+    _selectIf<K extends Component.Local.Keys<T>, S = Exclude<T[K], undefined>>(k: K, flag: boolean): Query<T, Record<K, S | undefined> & M> {
+        return this as any;
+    }
+
     filter<
         K extends Component.Primitive.Keys<T>
     // >(k: K, c: Filter.Criterion.ForConstructor<FetchPrimitiveType<T[K]>>): this {
     >(k: K, _: (f: CriterionBuilder<FetchPrimitiveType<T[K]>>) => any): Query<T, M> {
-        return this as any;
-    }
-
-    select<K extends Component.Local.Keys<T>, S = Exclude<T[K], undefined>>(k: K): Query<T, Record<K, S> & M> {
-        return this as any;
-    }
-
-    selectIf<K extends Component.Local.Keys<T>, S = Exclude<T[K], undefined>>(k: K, flag: boolean): Query<T, Record<K, S | undefined> & M> {
         return this as any;
     }
 
