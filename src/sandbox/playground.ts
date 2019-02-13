@@ -503,7 +503,7 @@ let mappedArtists: Instance<typeof typeMapper[]> = [
 ];
 
 let artistFooQuery = new Query<ArtistType>()
-    .select(x => x.country);
+    .select(x => x.country, x => x.select(x => x.id));
 
 
 let builtMappedFooArtist = artistFooQuery.get();
@@ -515,6 +515,8 @@ let builtMappedFooArtist = artistFooQuery.get();
 
 // let artistMapper = new TypeMapper<ArtistType>()
 let artistMapper = new Query<ArtistType>()
+    .select(x => x.createdAt, true, x => x.fromTo(["2018-01-01", "2019-01-01"], false))
+    .selectIf(x => x.changedAt)
     .filter("createdAt", f => f.equals("foo").fromTo(["abc", "xyz"], [true, true]))
     .selectIf(x => x.id)
     .select(x => x.countryId)
@@ -546,6 +548,8 @@ let artistMapper = new Query<ArtistType>()
 let builtMappedArtist = artistMapper.get();
 let builtMappedArtistInstances: Instance<typeof builtMappedArtist[]> = [
     {
+        createdAt: "2016-02-05",
+        changedAt: "2018-01-01",
         albums: [{
             artistId: null,
             artist: {
@@ -578,6 +582,8 @@ let builtMappedArtistInstances: Instance<typeof builtMappedArtist[]> = [
 
 let builtMappedArtistDtoInstances: Instance.Dto<(typeof builtMappedArtist)[]> = [
     {
+        CreatedAt: 123,
+        ChangedAt: "2018-01-01",
         Albums: [{
             ArtistId: Math.random() > .5 ? 3 : undefined,
             Artist: {

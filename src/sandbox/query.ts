@@ -25,27 +25,34 @@ class CriterionBuilder<T extends Component.Primitive.Type> {
         return this as any;
     }
 
-    fromTo(values: [ReturnType<T>, ReturnType<T>], inclusive: [boolean, boolean] = [false, false]): this {
+    fromTo(values: [ReturnType<T>, ReturnType<T>], inclusive: boolean | [boolean, boolean] = true): this {
         let x = Filter.fromTo(values, inclusive);
         return this as any;
     }
 }
 
-// export class Query<T extends Type<string>, M = { $: T["$"] }> extends TypeMapper<T, M> {
 export class Query<T extends Type<string>, M = { $: T["$"] }> {
+    // [note] we need to help the compiler by using different number of arguments for each overload (afaik)
     select<
         P extends Component.Navigable<any> & Component.Property<any, any>,
         O extends Type<string>
     >(
-        _: (foo: Required<T>) => P,
-        _q?: (eq: Query<Component.Navigable.OtherType<P>>) => Query<any, O>
+        _0: (foo: Required<T>) => P,
+        _1: (eq: Query<Component.Navigable.OtherType<P>>) => Query<any, O>
     ): Query<T, Record<P["key"], P & Component.Navigable.Selected<O>> & M>;
 
     select<
         P extends Component.Local & Component.Property<any, any>
     >(
         _: (foo: Required<T>) => P,
-        // _2?: (a: string, b: string) => boolean
+    ): Query<T, Record<P["key"], P & Component.Local.Selected<ReturnType<P["read"]>>> & M>;
+
+    select<
+        P extends Component.Primitive<any> & Component.Local & Component.Property<any, any>
+    >(
+        _0: (foo: Required<T>) => P,
+        _1: any,
+        _2: (f: CriterionBuilder<P["primitiveType"]>) => any
     ): Query<T, Record<P["key"], P & Component.Local.Selected<ReturnType<P["read"]>>> & M>;
 
     select(...args: any[]): any {

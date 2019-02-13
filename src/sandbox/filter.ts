@@ -184,7 +184,11 @@ export module Filter {
         return { op: inclusive ? "<=" : "<", value: value };
     }
 
-    export function fromTo<T extends FromCriterion["value"], U extends ToCriterion["value"]>(values: [T, U], inclusive: [boolean, boolean] = [false, false]): FromToCriterion {
+    export function fromTo<T extends FromCriterion["value"], U extends ToCriterion["value"]>(values: [T, U], inclusive: boolean | [boolean, boolean] = true): FromToCriterion {
+        if (typeof (inclusive) === "boolean") {
+            inclusive = [inclusive, inclusive];
+        }
+
         return { op: "from-to", from: from(values[0], inclusive[0]), to: to(values[1], inclusive[1]) };
     }
 }
