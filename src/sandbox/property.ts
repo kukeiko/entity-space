@@ -39,7 +39,7 @@ export module Property {
         T extends Component.Primitive.ValueType,
         A extends string = K,
         D = ReturnType<T>,
-        M extends Component.Property.Modifiers = never>
+        M extends Component.Modifier = never>
         = {
             fromDto(v: D): ReturnType<T>;
             toDto(v: ReturnType<T>): D;
@@ -85,7 +85,7 @@ export module Property {
         T extends Type<string>,
         P extends Reference.Id<any, T, any>,
         A extends string = K,
-        M extends Component.Property.Modifiers = never>
+        M extends Component.Modifier = never>
         = {
             localKey: P;
         }
@@ -102,10 +102,10 @@ export module Property {
         export type Id<
             K extends string,
             T extends Type<string>,
-            P extends Component.Property.Modifiers.Unique.Keys<T>,
+            P extends Component.Modifier.Unique.Keys<T>,
             // P extends Component.Unique.Keys<T>,
             A extends string = K,
-            M extends Component.Property.Modifiers = never>
+            M extends Component.Modifier = never>
             = {
                 // otherId: T[P];
                 otherIdKey: P;
@@ -178,7 +178,7 @@ export module Property {
         T extends Type<string>,
         P extends Reference.Id.Keys<T>,
         A extends string = K,
-        M extends Component.Property.Modifiers = never>
+        M extends Component.Modifier = never>
         = {
             parentIdKey: P;
         }

@@ -11,7 +11,7 @@ export module Component {
     };
 
     // [todo] maybe merge back into Property (as Property.Dto)
-    export type Dto<A extends string, D, M extends Dto.Modifiers = never> = {
+    export type Dto<A extends string, D, M extends Modifier = never> = {
         dtoKey: A;
         modifiers: Record<M, true>;
         readDto<U extends Record<A, D>>(dtoInstance: U): D;
@@ -19,7 +19,6 @@ export module Component {
     };
 
     export module Dto {
-        export type Modifiers = "p" | "c" | "n" | "u";
         export type Aliases<T> = Aliases.Optional<T> | Aliases.Required<T>;
 
         export module Aliases {
@@ -67,6 +66,19 @@ export module Component {
         } & Local;
     }
 
+    export type Modifier = Modifier.Creatable | Modifier.Nullable | Modifier.Patchable | Modifier.Unique;
+
+    export module Modifier {
+        export type Creatable = "c";
+        export type Nullable = "n";
+        export type Patchable = "p";
+        export type Unique = "u";
+
+        export module Unique {
+            export type Keys<T> = Exclude<{ [P in keyof T]: T[P] extends Property<any, any, infer M> | undefined ? "u" extends M ? P : never : never }[keyof T], undefined>;
+        }
+    }
+
     export type Navigable<T extends Type<string>> = {
         navigable: true;
         navigated: T;
@@ -91,7 +103,7 @@ export module Component {
         export type Keys<T> = Exclude<{ [P in keyof T]: T[P] extends Primitive<any> | undefined ? P : never }[keyof T], undefined>;
     }
 
-    export type Property<K extends string, V, M extends Property.Modifiers = never> = {
+    export type Property<K extends string, V, M extends Modifier = never> = {
         key: K;
         modifiers: Record<M, true>;
         read<U extends Record<K, V>>(instance: U): V;
@@ -99,14 +111,6 @@ export module Component {
     };
 
     export module Property {
-        export type Modifiers = "p" | "c" | "n" | "u";
-
-        export module Modifiers {
-            export module Unique {
-                export type Keys<T> = Exclude<{ [P in keyof T]: T[P] extends Property<any, any, infer M> | undefined ? "u" extends M ? P : never : never }[keyof T], undefined>;
-            }
-        }
-
         export type Keys<T> = Keys.Optional<T> | Keys.Required<T>;
         // export type Keys<T> = (Keys.Optional<T> | Keys.Required<T>) & keyof T;
 
