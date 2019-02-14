@@ -4,53 +4,57 @@ import { Filter } from "./filter";
 
 type FetchPrimitiveType<T> = T extends Component.Primitive<infer R> ? R : never;
 
+/**
+ * [notes]
+ * criteria chained via functions on same builder should be combined
+ * => "or" happens via using multiple criterion builders (array @ Query.select())
+ */
 class CriterionBuilder<T extends Component.Primitive.ValueType> {
+    // [note] is null if criteria have been combined that won't ever be reachable
+    private _criterion?: Filter.Criterion | null = null;
+
+    private _combine(criterion: Filter.Criterion): this {
+        if (this._criterion === null) return this;
+
+        if (this._criterion === undefined) {
+            this._criterion = criterion;
+        } else {
+            this._criterion = Filter.combineCriterion(this._criterion, criterion);
+        }
+
+        return this;
+    }
+
     equals(value: ReturnType<T>, invert = false): this {
-        let x = Filter.equals(value, invert);
-        return this as any;
+        return this._combine(Filter.equals(value, invert));
     }
 
     notEuals(value: ReturnType<T>, invert = false): this {
-        let x = Filter.notEquals(value, invert);
-        return this as any;
+        return this._combine(Filter.notEquals(value, invert));
     }
 
     from(value: ReturnType<T>, inclusive = false): this {
-        let x = Filter.from(value, inclusive);
-        return this as any;
+        return this._combine(Filter.from(value, inclusive));
     }
 
     to(value: ReturnType<T>, inclusive = false): this {
-        let x = Filter.to(value, inclusive);
-        return this as any;
+        return this._combine(Filter.to(value, inclusive));
     }
 
     fromTo(values: [ReturnType<T>, ReturnType<T>], inclusive: boolean | [boolean, boolean] = true): this {
-        let x = Filter.fromTo(values, inclusive);
-        return this as any;
+        return this._combine(Filter.fromTo(values, inclusive));
     }
 
-    in(values: Iterable<ReturnType<T>>, invert = false) : this {
-        let x = Filter.memberOf(values, invert);
-        return this as any;
+    in(values: Iterable<ReturnType<T>>, invert = false): this {
+        return this._combine(Filter.memberOf(values, invert));
     }
 
-    notIn(values: Iterable<ReturnType<T>>, invert = false) : this {
-        let x = Filter.notMemberOf(values, invert);
-        return this as any;
+    notIn(values: Iterable<ReturnType<T>>, invert = false): this {
+        return this._combine(Filter.notMemberOf(values, invert));
     }
 }
 
 export class Query<T extends Type<string>, M = { $: T["$"] }> {
-    // [note] we need to help the compiler by using different number of arguments for each overload (afaik)
-    select<
-        P extends Component.Navigable<any> & Component.Property<any, any>,
-        O extends Type<string>
-    >(
-        _0: (foo: Required<T>) => P,
-        _1: (eq: Query<Component.Navigable.OtherType<P>>) => Query<any, O>
-    ): Query<T, Record<P["key"], P & Component.Navigable.Selected<O>> & M>;
-
     select<
         P extends Component.Local & Component.Property<any, any>
     >(
@@ -61,23 +65,41 @@ export class Query<T extends Type<string>, M = { $: T["$"] }> {
         P extends Component.Primitive<any> & Component.Local & Component.Property<any, any>
     >(
         _0: (foo: Required<T>) => P,
-        _1: any,
-        _2: (f: CriterionBuilder<P["primitiveType"]>) => any
+        _1: ((f: CriterionBuilder<P["primitiveType"]>) => any)[]
     ): Query<T, Record<P["key"], P & Component.Local.Selected<ReturnType<P["read"]>>> & M>;
+
+    select<
+        P extends Component.Navigable<any> & Component.Property<any, any>,
+        O extends Type<string>
+    >(
+        _0: (foo: Required<T>) => P,
+        _1: (eq: Query<Component.Navigable.OtherType<P>>) => Query<any, O>
+    ): Query<T, Record<P["key"], P & Component.Navigable.Selected<O>> & M>;
 
     select(...args: any[]): any {
         return this as any;
     }
 
     selectIf<
-        P extends Component.Local & Component.Property<any, any>,
-        O extends Type<string>
-    >(_: (foo: Required<T>) => P): Query<T, Record<P["key"], undefined | (P & Component.Local.Selected<ReturnType<P["read"]>>)> & M>;
+        P extends Component.Local & Component.Property<any, any>
+    >(
+        _: (foo: Required<T>) => P,
+    ): Query<T, Record<P["key"], undefined | (P & Component.Local.Selected<ReturnType<P["read"]>>)> & M>;
+
+    selectIf<
+        P extends Component.Primitive<any> & Component.Local & Component.Property<any, any>
+    >(
+        _0: (foo: Required<T>) => P,
+        _1: ((f: CriterionBuilder<P["primitiveType"]>) => any)[]
+    ): Query<T, Record<P["key"], undefined | (P & Component.Local.Selected<ReturnType<P["read"]>>)> & M>;
 
     selectIf<
         P extends Component.Navigable<any> & Component.Property<any, any>,
         O extends Type<string>
-    >(_: (foo: Required<T>) => P, _q: (eq: Query<Component.Navigable.OtherType<P>>) => Query<any, O>): Query<T, Record<P["key"], undefined | (P & Component.Navigable.Selected<O>)> & M>;
+    >(
+        _0: (foo: Required<T>) => P,
+        _1: (eq: Query<Component.Navigable.OtherType<P>>) => Query<any, O>
+    ): Query<T, Record<P["key"], undefined | (P & Component.Navigable.Selected<O>)> & M>;
 
     selectIf(...args: any[]): any {
         return this as any;

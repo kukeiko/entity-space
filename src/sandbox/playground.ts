@@ -97,7 +97,10 @@ export interface UserType extends Type<"user"> {
 
 export interface CountryType extends Type<"country"> {
     id: Property.Id<"id", string>;
-    name: Property.Simple<"name", typeof String>;
+    // name: Property.Simple<"name", typeof String>;
+    name: Property.Primitive<"name", typeof String, "Name">;
+    population: Property.Primitive<"population", typeof Number, "Population">;
+
 
     createdById: Property.Reference.Id<"createdById", UserType, "id", "CreatedById">;
     createdBy: Property.Reference<"createdBy", UserType, CountryType["createdById"], "CreatedBy">;
@@ -515,16 +518,20 @@ let builtMappedFooArtist = artistFooQuery.get();
 
 // let artistMapper = new TypeMapper<ArtistType>()
 let artistMapper = new Query<ArtistType>()
-    .select(x => x.createdAt, true, x => x.fromTo(["2018-01-01", "2019-01-01"], false))
+    .select(x => x.createdAt, [
+        x => x.fromTo(["2018-01-01", "2019-01-01"], false),
+        x => x.to("1970-04-06")
+    ])
     .selectIf(x => x.changedAt)
     .filter("createdAt", f => f.equals("foo").fromTo(["abc", "xyz"], [true, true]))
     .selectIf(x => x.id)
     .select(x => x.countryId)
     .select(x => x.changedById)
     .selectIf(x => x.albums, q => q.selectIf(x => x.artistId).select(x => x.artist, q => q.select(x => x.parentId)))
-    .select(x => x.createdBy, q => q.select(x => x.id))
     .select(x => x.country, q => q
         .select(x => x.createdBy, q => q.select(x => x.name))
+        .select(x => x.name, [x => x.in(["austria", "germany", "hungary"])])
+        .select(x => x.population)
     )
     .select(x => x.country, q => q
         .select(x => x.changedBy, q => q.select(x => x.id))
@@ -533,9 +540,10 @@ let artistMapper = new Query<ArtistType>()
     .select(x => x.country, q => q
         .select(x => x.changedBy, q => q.select(x => x.name))
     )
-    .select(x => x.country, q => q.select(x => x.createdById).select(x => x.id).select(x => x.name))
+    .select(x => x.createdBy, q => q.select(x => x.id))
     .select(x => x.createdBy, q => q.select(x => x.id).select(x => x.name))
     .select(x => x.parent, q => q.select(x => x.country, q => q.select(x => x.createdById).select(x => x.id).select(x => x.name).select(x => x.createdBy, q => q.select(x => x.id).select(x => x.name))))
+    .select(x => x.country, q => q.select(x => x.createdById).select(x => x.id).select(x => x.name))
     .select(x => x.country, q => q.select(x => x.name))
     .select(x => x.country, q => q.select(x => x.id).select(x => x.createdById))
     .select(x => x.country, q => q.select(x => x.createdBy, q => q))
@@ -557,13 +565,14 @@ let builtMappedArtistInstances: Instance<typeof builtMappedArtist[]> = [
             }
         }],
         changedById: null,
-        changedBy: null,
+        changedBy: Math.random() > .5 ? null : undefined,
         countryId: null,
         createdBy: {
             id: 1,
             name: "foo"
         },
         country: {
+            population: 64,
             changedBy: {
                 id: 3,
                 name: "foo"
@@ -607,7 +616,7 @@ let builtMappedArtistDtoInstances: Instance.Dto<(typeof builtMappedArtist)[]> = 
                 },
                 CreatedById: 3,
                 id: "moo",
-                name: "foo"
+                Name: "foo"
             }
         }
     }

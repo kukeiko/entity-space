@@ -9,6 +9,10 @@
  *  - user can also chain top-level filters together which are then also combined with "or"
  *
  * this way any filtering use case a user might have should be covered (such as the work-item filter builder @ oldschool TFS)
+ *
+ * [2019-02-14] a case we can't support with current concept: P matches ([0-4] or [10-16]) and ([1-7] or [64-128])
+ * => should actually be able to do it via trying to .combine() each pair of criterions, if there is a non-null result
+ * we can express it as a single criterion (result from example would be [1-4])
  */
 export module Filter {
     // [note] purpose: "and" two filters together per property
@@ -139,9 +143,9 @@ export module Filter {
         values: Set<EqualityCriterion["value"]>;
     }
 
-    export interface NeverCriterion {
-        op: "never";
-    }
+    // export interface NeverCriterion {
+    //     op: "never";
+    // }
 
     export interface FromToCriterion {
         op: "from-to";
