@@ -17,7 +17,7 @@ export module Property {
         V,
         A extends string = K,
         D = V,
-        M extends Component.Property.Modifier = never>
+        M extends Component.Property.Modifiers = never>
         = Component.Dto<A, D, M>
         & Component.Id
         & Component.Local
@@ -41,7 +41,7 @@ export module Property {
         C extends Simple.Cloner,
         A extends string = K,
         D = ReturnType<C>,
-        M extends Component.Property.Modifier = never>
+        M extends Component.Property.Modifiers = never>
         = {
             clone: Exclude<C, null>;
         }
@@ -66,7 +66,7 @@ export module Property {
         T extends Component.Primitive.ValueType,
         A extends string = K,
         D = ReturnType<T>,
-        M extends Component.Property.Modifier = never>
+        M extends Component.Property.Modifiers = never>
         = {
             fromDto(v: D): ReturnType<T>;
             toDto(v: ReturnType<T>): D;
@@ -93,7 +93,7 @@ export module Property {
         T extends Type<string>,
         P extends Reference.Id<any, T, any>,
         A extends string = K,
-        M extends Component.Property.Modifier = never>
+        M extends Component.Property.Modifiers = never>
         = {
             localKey: P;
         }
@@ -112,7 +112,7 @@ export module Property {
             T extends Type<string>,
             P extends Component.Unique.Keys<T>,
             A extends string = K,
-            M extends Component.Property.Modifier = never>
+            M extends Component.Property.Modifiers = never>
             = {
                 // otherId: T[P];
                 otherIdKey: P;
@@ -185,7 +185,7 @@ export module Property {
         T extends Type<string>,
         P extends Reference.Id.Keys<T>,
         A extends string = K,
-        M extends Component.Property.Modifier = never>
+        M extends Component.Property.Modifiers = never>
         = {
             parentIdKey: P;
         }

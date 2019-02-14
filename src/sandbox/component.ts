@@ -6,17 +6,6 @@ export module Component {
         ordered: boolean;
     };
 
-    export type Clonable<T> = {
-        clonable: true;
-        factory: (value: T) => T;
-    };
-
-    type Foo = Clonable<boolean>;
-    type Bar = StringConstructor extends Foo["factory"] ? true : false;
-    type Baz = NumberConstructor extends Foo["factory"] ? true : false;
-    type Khaz = DateConstructor extends Foo["factory"] ? true : false;
-    type Mo = BooleanConstructor extends Foo["factory"] ? true : false;
-
     export type Complex = {
         complex: true;
     };
@@ -31,7 +20,7 @@ export module Component {
     };
 
     // [todo] maybe merge back into Property (as Property.Dto)
-    export type Dto<A extends string, D, M extends Dto.Modifier = never> = {
+    export type Dto<A extends string, D, M extends Dto.Modifiers = never> = {
         dtoKey: A;
         options: Record<M, true>;
         readDto<U extends Record<A, D>>(dtoInstance: U): D;
@@ -39,7 +28,7 @@ export module Component {
     };
 
     export module Dto {
-        export type Modifier = "p" | "c" | "n";
+        export type Modifiers = "p" | "c" | "n";
         export type Aliases<T> = Aliases.Optional<T> | Aliases.Required<T>;
 
         export module Aliases {
@@ -57,14 +46,6 @@ export module Component {
         }
     }
 
-    export type Filterable = {
-        filterable: true;
-    };
-
-    export module Filterable {
-        export type Type = "boolean" | "number" | "string";
-    }
-
     export type Id = {
         id: true;
     };
@@ -76,10 +57,6 @@ export module Component {
     // since it therefore can't be inferred from a dto, it has to be supplied to the thing that creates instances from dtos
     export type Ethereal = {
         ethereal: true;
-    };
-
-    export type Expanded<T extends Type<string>> = {
-        expanded: T;
     };
 
     export type External = {
@@ -122,7 +99,7 @@ export module Component {
         export type Keys<T> = Exclude<{ [P in keyof T]: T[P] extends Primitive<any> | undefined ? P : never }[keyof T], undefined>;
     }
 
-    export type Property<K extends string, V, M extends Property.Modifier = never> = {
+    export type Property<K extends string, V, M extends Property.Modifiers = never> = {
         key: K;
         options: Record<M, true>;
         read<U extends Record<K, V>>(instance: U): V;
@@ -130,7 +107,7 @@ export module Component {
     };
 
     export module Property {
-        export type Modifier = "p" | "c" | "n";
+        export type Modifiers = "p" | "c" | "n";
         export type Keys<T> = Keys.Optional<T> | Keys.Required<T>;
         // export type Keys<T> = (Keys.Optional<T> | Keys.Required<T>) & keyof T;
 
@@ -148,10 +125,6 @@ export module Component {
             export type Required<T, K extends string> = Exclude<{ [P in keyof T]: T[P] extends Property<K, any> ? T[P] : never }[keyof T], undefined>;
         }
     }
-
-    export type Simple = {
-        simple: true;
-    };
 
     export type Unique = {
         unique: true;

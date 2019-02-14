@@ -120,24 +120,6 @@ export class Query<T extends Type<string>, M = { $: T["$"] }> {
         return this as any;
     }
 
-    expand<
-        K extends Component.Navigable.Keys<T> & string,
-        E extends Type<string> = Component.Navigable.OtherType<T[K]>,
-        O extends Type<string> = E
-    >(k: K, _: (eq: Query<E>) => Query<E, O>):
-        Query<T, Record<K, T[K] & Component.Expanded<O>> & M> {
-        return this as any;
-    }
-
-    expandIf<
-        K extends Component.Navigable.Keys<T> & string,
-        E extends Type<string> = Component.Navigable.OtherType<T[K]>,
-        O extends Type<string> = E
-    >(k: K, flag: boolean, _: (eq: Query<E>) => Query<E, O>):
-        Query<T, Record<K, undefined | (T[K] & Component.Expanded<O>)> & M> {
-        return this as any;
-    }
-
     get(): M {
         return null as any;
     }
