@@ -111,6 +111,10 @@ export interface CountryType extends Type<"country"> {
 
 export interface ArtistType extends Type<"artist"> {
     id: Property.Id<"id", number, "Id", number, "n">;
+    name: Property.Primitive<"name", typeof String, "Name", string>;
+
+    systemId: Property.Primitive<"systemId", typeof Number, "SystemId", number, "n">;
+    globalId: Property.Primitive.Aggregate<"globalId", typeof String, ArtistType, "systemId" | "name">;
 
     createdAt: Property.Primitive<"createdAt", typeof String, "CreatedAt", number>;
     createdById: Property.Reference.Id<"createdById", UserType, "id", "CreatedById">;
@@ -205,7 +209,9 @@ let artistCtorOptions: ConstructionOptions<ArtistType> = {
         otherKey: "user",
         otherIdKey: "id"
     },
+    globalId: {},
     id: {},
+    name: {},
     parent: {
         localIdKey: "parentId",
         options: {
@@ -218,6 +224,9 @@ let artistCtorOptions: ConstructionOptions<ArtistType> = {
         },
         otherIdKey: "id",
         otherKey: "artist"
+    },
+    systemId: {
+
     }
 };
 
@@ -358,6 +367,28 @@ let builtArtist: ArtistType = {
         writeDto: (x, v) => x.CreatedBy = v
     },
     createdById: null as any,
+    globalId: {
+        aggregateValue: x => `${x.name}@${x.systemId}`,
+        key: "globalId",
+        local: true,
+        modifiers: {},
+        primitiveType: String,
+        read: x => x.globalId,
+        write: (x, v) => x.globalId = v
+    },
+    name: {
+        dtoKey: "Name",
+        key: "name",
+        local: true,
+        modifiers: {},
+        primitiveType: String,
+        fromDto: v => v.toString(),
+        toDto: v => v,
+        read: x => x.name,
+        readDto: x => x.Name,
+        write: (x, v) => x.name = v,
+        writeDto: (x, v) => x.Name = v
+    },
     parentId: {
         dtoKey: "ParentId",
         key: "parentId",
@@ -386,6 +417,21 @@ let builtArtist: ArtistType = {
         writeDto: (u, v) => u.Parent = v,
         read: x => x.parent,
         write: (x, v) => x.parent = v,
+    },
+    systemId: {
+        dtoKey: "SystemId",
+        key: "systemId",
+        local: true,
+        modifiers: {
+            n: true
+        },
+        primitiveType: Number,
+        fromDto: v => v,
+        toDto: v => v,
+        read: x => x.systemId,
+        readDto: x => x.SystemId,
+        write: (x, v) => x.systemId = v,
+        writeDto: (x, v) => x.SystemId = v
     }
 };
 
@@ -419,7 +465,7 @@ let artistDtoInstances: Instance.Dto<ArtistType[]> = [
             },
             CreatedById: 1,
             id: "at",
-            name: "Austria"
+            Name: "Austria"
         },
         CountryId: "at",
         CreatedAt: 123,
@@ -442,7 +488,9 @@ let artistDtoInstances: Instance.Dto<ArtistType[]> = [
             ChangedBy: null
         },
         ChangedBy: null,
-        ChangedById: null
+        ChangedById: null,
+        Name: "susi",
+        SystemId: Math.random() > .5 ? null : 3
         // ReviewIds: []
     }
 ];
@@ -519,6 +567,8 @@ let builtMappedFooArtist = artistFooQuery.get();
 
 // let artistMapper = new TypeMapper<ArtistType>()
 let artistMapper = new Query<ArtistType>()
+    .select(x => x.globalId)
+    .select(x => x.systemId)
     .select(x => x.createdAt, [
         x => x.fromTo(["2018-01-01", "2019-01-01"], false),
         x => x.to("1970-04-06")
@@ -557,6 +607,8 @@ let artistMapper = new Query<ArtistType>()
 let builtMappedArtist = artistMapper.get();
 let builtMappedArtistInstances: Instance<typeof builtMappedArtist[]> = [
     {
+        globalId: "foo@2",
+        systemId: Math.random() > .5 ? null : 2,
         createdAt: "2016-02-05",
         changedAt: "2018-01-01",
         albums: [{
@@ -619,7 +671,8 @@ let builtMappedArtistDtoInstances: Instance.Dto<(typeof builtMappedArtist)[]> = 
                 id: "moo",
                 Name: "foo"
             }
-        }
+        },
+        SystemId: Math.random() > .5 ? null : 3
     }
 ];
 

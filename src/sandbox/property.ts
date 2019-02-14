@@ -53,6 +53,25 @@ export module Property {
 
     export module Primitive {
         export type Keys<T> = Exclude<{ [P in keyof T]: T[P] extends Primitive<any, any> | undefined ? P : never }[keyof T], undefined>;
+
+        export type Aggregate<
+            K extends string,
+            V extends Component.Primitive.ValueType,
+            T extends Type<string>,
+            I extends Keys<T>>
+            = {
+                aggregateValue(instance: {
+                    [P in I]: P extends string
+                    ? Component.Property.WithKey<T, P> extends Component.Property<any, infer X, infer M>
+                    ? "n" extends M ? X | null : X
+                    : never
+                    : never;
+                }): ReturnType<V>;
+            }
+            & Component.Local
+            & Component.Primitive<V>
+            & Component.Property<K, ReturnType<V>>;
+        ;
     }
 
     /***

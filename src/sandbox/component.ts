@@ -10,15 +10,6 @@ export module Component {
         complex: true;
     };
 
-    export type Composited<T, V> = {
-        composited: true;
-        compositeValue: (source: T) => V;
-    };
-
-    export type Computed = {
-        computed: true;
-    };
-
     // [todo] maybe merge back into Property (as Property.Dto)
     export type Dto<A extends string, D, M extends Dto.Modifiers = never> = {
         dtoKey: A;
@@ -127,6 +118,7 @@ export module Component {
         }
     }
 
+    // [todo] we could try and implement Unique as a Modifier instead ("u")
     export type Unique = {
         unique: true;
     };
