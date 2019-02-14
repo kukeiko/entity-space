@@ -100,7 +100,6 @@ export interface CountryType extends Type<"country"> {
     name: Property.Primitive<"name", typeof String, "Name">;
     population: Property.Primitive<"population", typeof Number, "Population">;
 
-
     createdById: Property.Reference.Id<"createdById", UserType, "id", "CreatedById">;
     createdBy: Property.Reference<"createdBy", UserType, CountryType["createdById"], "CreatedBy">;
 
@@ -110,7 +109,7 @@ export interface CountryType extends Type<"country"> {
 }
 
 export interface ArtistType extends Type<"artist"> {
-    id: Property.Id<"id", number, "Id", number, "n">;
+    id: Property.Id<"id", number, "Id", number>;
     name: Property.Primitive<"name", typeof String, "Name", string>;
 
     systemId: Property.Primitive<"systemId", typeof Number, "SystemId", number, "n">;

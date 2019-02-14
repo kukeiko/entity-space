@@ -16,13 +16,11 @@ export module Property {
         K extends string,
         V,
         A extends string = K,
-        D = V,
-        M extends Component.Property.Modifiers = never>
-        = Component.Dto<A, D, M>
+        D = V>
+        = Component.Dto<A, D, "u">
         & Component.Id
         & Component.Local
-        & Component.Property<K, V, M>
-        & Component.Unique;
+        & Component.Property<K, V, "u">;
 
     export module Id {
 
@@ -104,7 +102,8 @@ export module Property {
         export type Id<
             K extends string,
             T extends Type<string>,
-            P extends Component.Unique.Keys<T>,
+            P extends Component.Property.Modifiers.Unique.Keys<T>,
+            // P extends Component.Unique.Keys<T>,
             A extends string = K,
             M extends Component.Property.Modifiers = never>
             = {

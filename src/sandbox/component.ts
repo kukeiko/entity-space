@@ -19,7 +19,7 @@ export module Component {
     };
 
     export module Dto {
-        export type Modifiers = "p" | "c" | "n";
+        export type Modifiers = "p" | "c" | "n" | "u";
         export type Aliases<T> = Aliases.Optional<T> | Aliases.Required<T>;
 
         export module Aliases {
@@ -99,7 +99,14 @@ export module Component {
     };
 
     export module Property {
-        export type Modifiers = "p" | "c" | "n";
+        export type Modifiers = "p" | "c" | "n" | "u";
+
+        export module Modifiers {
+            export module Unique {
+                export type Keys<T> = Exclude<{ [P in keyof T]: T[P] extends Property<any, any, infer M> | undefined ? "u" extends M ? P : never : never }[keyof T], undefined>;
+            }
+        }
+
         export type Keys<T> = Keys.Optional<T> | Keys.Required<T>;
         // export type Keys<T> = (Keys.Optional<T> | Keys.Required<T>) & keyof T;
 
@@ -116,15 +123,6 @@ export module Component {
             export type Optional<T, K extends string> = Exclude<{ [P in keyof T]: T[P] extends Property<K, any> | undefined ? T[P] : never }[keyof T], undefined>;
             export type Required<T, K extends string> = Exclude<{ [P in keyof T]: T[P] extends Property<K, any> ? T[P] : never }[keyof T], undefined>;
         }
-    }
-
-    // [todo] we could try and implement Unique as a Modifier instead ("u")
-    export type Unique = {
-        unique: true;
-    };
-
-    export module Unique {
-        export type Keys<T> = Exclude<{ [P in keyof T]: T[P] extends Unique | undefined ? P : never }[keyof T], undefined>;
     }
 
     export type Virtual = {
