@@ -3,7 +3,6 @@
 - try if we can have the "changedBy", "createdBy" metadata separated out
 - query identities (All, ByIds, ByIndexes) are just filters (all => empty filter) - handle them internally as such?
 - properly structure all variants of Locals (e.g. Id is not a Simple, how to to Computed/Composited/Etheral/Unique etc)
-- instance type is quite unreadable, break into parts if possible
 
 # feature ideas
 ## enable type-safe mapping
