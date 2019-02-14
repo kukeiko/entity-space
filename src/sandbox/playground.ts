@@ -85,19 +85,18 @@ module ConstructionOptions {
 
 export interface UserType extends Type<"user"> {
     id: Property.Id<"id", number, "Id">;
-    name: Property.Simple<"name", typeof String, "Name", string, "n">;
+    name: Property.Primitive<"name", typeof String, "Name", string, "n">;
 
     createdById: Property.Reference.Id<"createdById", UserType, "id", "CreatedById", "n">;
     createdBy: Property.Reference<"createdBy", UserType, UserType["createdById"], "CreatedBy", "n">;
 
-    changedAt: Property.Simple<"changedAt", typeof Date, "ChangedAt">;
+    changedAt: Property.Primitive<"changedAt", typeof String, "ChangedAt">;
     changedById: Property.Reference.Id<"changedById", UserType, "id", "ChangedById", "n">;
     changedBy: Property.Reference<"changedBy", UserType, UserType["changedById"], "ChangedBy", "n">;
 }
 
 export interface CountryType extends Type<"country"> {
     id: Property.Id<"id", string>;
-    // name: Property.Simple<"name", typeof String>;
     name: Property.Primitive<"name", typeof String, "Name">;
     population: Property.Primitive<"population", typeof Number, "Population">;
 
@@ -105,7 +104,7 @@ export interface CountryType extends Type<"country"> {
     createdById: Property.Reference.Id<"createdById", UserType, "id", "CreatedById">;
     createdBy: Property.Reference<"createdBy", UserType, CountryType["createdById"], "CreatedBy">;
 
-    changedAt: Property.Simple<"changedAt", typeof Date, "ChangedAt">;
+    changedAt: Property.Primitive<"changedAt", typeof String, "ChangedAt">;
     changedById: Property.Reference.Id<"changedById", UserType, "id", "ChangedById", "n">;
     changedBy: Property.Reference<"changedBy", UserType, CountryType["changedById"], "ChangedBy", "n">;
 }
@@ -117,7 +116,7 @@ export interface ArtistType extends Type<"artist"> {
     createdById: Property.Reference.Id<"createdById", UserType, "id", "CreatedById">;
     createdBy: Property.Reference<"createdBy", UserType, ArtistType["createdById"], "CreatedBy">;
 
-    changedAt: Property.Simple<"changedAt", typeof Date, "ChangedAt">;
+    changedAt: Property.Primitive<"changedAt", typeof String, "ChangedAt">;
     changedById: Property.Reference.Id<"changedById", UserType, "id", "ChangedById", "n" | "p">;
     changedBy: Property.Reference<"changedBy", UserType, ArtistType["changedById"], "ChangedBy", "n">;
 
@@ -241,7 +240,7 @@ let builtArtist: ArtistType = {
         key: "albums",
         navigable: true,
         navigated: null as any as AlbumType,
-        options: {},
+        modifiers: {},
         ordered: false,
         parentIdKey: "artistId",
         read: x => x.albums,
@@ -256,11 +255,13 @@ let builtArtist: ArtistType = {
     //     navigated: null as any as AlbumType
     // },
     changedAt: {
-        clone: Date,
         dtoKey: "ChangedAt",
         key: "changedAt",
         local: true,
-        options: {},
+        modifiers: {},
+        primitiveType: String,
+        fromDto: v => v,
+        toDto: v => v,
         read: x => x.changedAt,
         readDto: x => x.ChangedAt,
         write: (x, v) => x.changedAt = v,
@@ -273,7 +274,7 @@ let builtArtist: ArtistType = {
         localKey: null as any as ArtistType["changedById"],
         navigable: true,
         navigated: null as any as UserType,
-        options: {
+        modifiers: {
             n: true
         },
         read: x => x.changedBy,
@@ -285,7 +286,7 @@ let builtArtist: ArtistType = {
         dtoKey: "ChangedById",
         key: "changedById",
         local: true,
-        options: {
+        modifiers: {
             n: true,
             p: true
         },
@@ -308,7 +309,7 @@ let builtArtist: ArtistType = {
         localKey: null as any as ArtistType["countryId"],
         navigable: true,
         navigated: null as any as CountryType,
-        options: {
+        modifiers: {
             n: true,
         },
         read: x => x.country,
@@ -320,7 +321,7 @@ let builtArtist: ArtistType = {
         dtoKey: "CountryId",
         key: "countryId",
         local: true,
-        options: {
+        modifiers: {
             n: true
         },
         // otherIdKey: null as any as CountryType["id"],
@@ -334,7 +335,7 @@ let builtArtist: ArtistType = {
         dtoKey: "CreatedAt",
         key: "createdAt",
         local: true,
-        options: {},
+        modifiers: {},
         primitiveType: String,
         fromDto: v => v.toString(),
         toDto: v => +v,
@@ -350,7 +351,7 @@ let builtArtist: ArtistType = {
         localKey: null as any as ArtistType["createdById"],
         navigable: true,
         navigated: null as any as UserType,
-        options: {},
+        modifiers: {},
         read: x => x.createdBy,
         readDto: x => x.CreatedBy,
         write: (x, v) => x.createdBy = v,
@@ -361,7 +362,7 @@ let builtArtist: ArtistType = {
         dtoKey: "ParentId",
         key: "parentId",
         local: true,
-        options: {
+        modifiers: {
             n: true
         },
         // otherIdKey: null as any as ArtistType["id"],
@@ -378,7 +379,7 @@ let builtArtist: ArtistType = {
         external: true,
         navigable: true,
         navigated: null as any as ArtistType,
-        options: {
+        modifiers: {
             n: true
         },
         readDto: x => x.Parent,
@@ -529,7 +530,7 @@ let artistMapper = new Query<ArtistType>()
     .select(x => x.changedById)
     .selectIf(x => x.albums, q => q.selectIf(x => x.artistId).select(x => x.artist, q => q.select(x => x.parentId)))
     .select(x => x.country, q => q
-        .select(x => x.createdBy, q => q.select(x => x.name))
+        .select(x => x.createdBy, q => q.select(x => x.name, [f => f.equals("susi")]))
         .select(x => x.name, [x => x.in(["austria", "germany", "hungary"])])
         .select(x => x.population)
     )

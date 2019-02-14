@@ -29,31 +29,6 @@ export module Property {
     }
 
     /***
-     *    ███████╗██╗███╗   ███╗██████╗ ██╗     ███████╗
-     *    ██╔════╝██║████╗ ████║██╔══██╗██║     ██╔════╝
-     *    ███████╗██║██╔████╔██║██████╔╝██║     █████╗
-     *    ╚════██║██║██║╚██╔╝██║██╔═══╝ ██║     ██╔══╝
-     *    ███████║██║██║ ╚═╝ ██║██║     ███████╗███████╗
-     *    ╚══════╝╚═╝╚═╝     ╚═╝╚═╝     ╚══════╝╚══════╝
-     */
-    export type Simple<
-        K extends string,
-        C extends Simple.Cloner,
-        A extends string = K,
-        D = ReturnType<C>,
-        M extends Component.Property.Modifiers = never>
-        = {
-            clone: Exclude<C, null>;
-        }
-        & Component.Dto<A, D, M>
-        & Component.Local
-        & Component.Property<K, ReturnType<C>, M>;
-
-    export module Simple {
-        export type Cloner = ((...args: any[]) => any);
-    }
-
-    /***
      *    ██████╗ ██████╗ ██╗███╗   ███╗██╗████████╗██╗██╗   ██╗███████╗
      *    ██╔══██╗██╔══██╗██║████╗ ████║██║╚══██╔══╝██║██║   ██║██╔════╝
      *    ██████╔╝██████╔╝██║██╔████╔██║██║   ██║   ██║██║   ██║█████╗
@@ -190,11 +165,8 @@ export module Property {
             parentIdKey: P;
         }
         & Component.Array
-        // & Component.Dto<A, Partial<Instance.Dto<T[]>>, M>
         & Component.Dto<A, Instance.Dto<Partial<T>[]>, M>
         & Component.External
         & Component.Navigable<T>
-        // & Component.Property<K, Partial<Instance<T[]>>, M>;
         & Component.Property<K, Instance<Partial<T>[]>, M>;
-
 }

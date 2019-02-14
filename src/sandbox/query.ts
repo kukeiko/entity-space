@@ -86,6 +86,7 @@ export class Query<T extends Type<string>, M = { $: T["$"] }> {
         _: (foo: Required<T>) => P,
     ): Query<T, Record<P["key"], undefined | (P & Component.Local.Selected<ReturnType<P["read"]>>)> & M>;
 
+    // [note] multiple criteria are combined w/ "or"
     selectIf<
         P extends Component.Primitive<any> & Component.Local & Component.Property<any, any>
     >(

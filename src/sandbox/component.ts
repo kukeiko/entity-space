@@ -22,7 +22,7 @@ export module Component {
     // [todo] maybe merge back into Property (as Property.Dto)
     export type Dto<A extends string, D, M extends Dto.Modifiers = never> = {
         dtoKey: A;
-        options: Record<M, true>;
+        modifiers: Record<M, true>;
         readDto<U extends Record<A, D>>(dtoInstance: U): D;
         writeDto<U extends Record<A, D>>(dtoInstance: U, value: D): void;
     };
@@ -55,6 +55,7 @@ export module Component {
     // "Pertaining to the hypothetical upper, purer air, or to the higher regions beyond the earth or beyond the atmosphere; celestial; otherworldly."
     // => system A is otherworldly to system B and vice versa; they are out of each others' reach.
     // since it therefore can't be inferred from a dto, it has to be supplied to the thing that creates instances from dtos
+    // *or* use Virtual instead (to make it easier) (but then again its not technically the same, even if perceived purpose feels similar)
     export type Ethereal = {
         ethereal: true;
     };
@@ -101,7 +102,7 @@ export module Component {
 
     export type Property<K extends string, V, M extends Property.Modifiers = never> = {
         key: K;
-        options: Record<M, true>;
+        modifiers: Record<M, true>;
         read<U extends Record<K, V>>(instance: U): V;
         write<U extends Record<K, V>>(instance: U, value: V): void;
     };
