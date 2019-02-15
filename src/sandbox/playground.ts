@@ -109,15 +109,17 @@ export interface CountryType extends Type<"country"> {
 }
 
 export interface ArtistType extends Type<"artist"> {
-    globalId: Property.Id.Aggregate<"globalId", typeof String, ArtistType, "id" | "systemId">;
+    globalId: Property.Id.Computed<"globalId", typeof String, ArtistType, "id" | "systemId">;
     id: Property.Primitive<"id", typeof Number, "Id", number>;
     name: Property.Primitive<"name", typeof String, "Name", string>;
 
     // systemId: Property.Primitive<"systemId", typeof Number, "SystemId", number, "n">;
-    systemId: Property.Primitive.Aggregate<"systemId", typeof String, ArtistType, "systemName" | "systemZone">;
+    systemId: Property.Primitive.Computed<"systemId", typeof String, ArtistType, "systemName" | "systemZone">;
 
     systemName: Property.Primitive<"systemName", typeof String, "SystemName", string>;
     systemZone: Property.Primitive<"systemZone", typeof Number, "SystemZone", number>;
+
+    numDigitsOfSystemId: Property.Primitive.Computed<"numDigitsOfSystemId", typeof Number, ArtistType, "systemId">;
 
     createdAt: Property.Primitive<"createdAt", typeof String, "CreatedAt", number>;
     createdById: Property.Reference.Id<"createdById", UserType, "id", "CreatedById">;
@@ -231,6 +233,7 @@ let artistCtorOptions: ConstructionOptions<ArtistType> = {
     systemId: {
 
     },
+    numDigitsOfSystemId: {},
     systemName: {},
     systemZone: {}
 };
@@ -373,12 +376,12 @@ let builtArtist: ArtistType = {
     },
     createdById: null as any,
     globalId: {
-        aggregate: true,
-        aggregatedFrom: {
+        computed: true,
+        computedFrom: {
             id: true,
             systemId: true
         },
-        aggregateValue: x => `${x.id}@${x.systemId}`,
+        compute: x => `${x.id}@${x.systemId}`,
         id: true,
         key: "globalId",
         local: true,
@@ -432,9 +435,9 @@ let builtArtist: ArtistType = {
         write: (x, v) => x.parent = v,
     },
     systemId: {
-        aggregate: true,
-        aggregateValue: x => `${x.systemName}@${x.systemZone}`,
-        aggregatedFrom: {
+        computed: true,
+        compute: x => `${x.systemName}@${x.systemZone}`,
+        computedFrom: {
             systemName: true,
             systemZone: true
         },
@@ -444,6 +447,19 @@ let builtArtist: ArtistType = {
         primitiveType: String,
         read: x => x.systemId,
         write: (x, v) => x.systemId = v
+    },
+    numDigitsOfSystemId: {
+        compute: x => x.systemId.length,
+        computed: true,
+        computedFrom: {
+            systemId: true
+        },
+        key: "numDigitsOfSystemId",
+        local: true,
+        modifiers: {},
+        primitiveType: Number,
+        read: x => x.numDigitsOfSystemId,
+        write: (x, v) => x.numDigitsOfSystemId = v
     },
     systemName: {
         dtoKey: "SystemName",
@@ -605,6 +621,7 @@ let builtMappedFooArtist = artistFooQuery.get();
 
 // let artistMapper = new TypeMapper<ArtistType>()
 let artistMapper = new Query<ArtistType>()
+    .select(x => x.numDigitsOfSystemId)
     .select(x => x.globalId)
     .select(x => x.systemId)
     .select(x => x.createdAt, [
@@ -645,6 +662,7 @@ let artistMapper = new Query<ArtistType>()
 let builtMappedArtist = artistMapper.get();
 let builtMappedArtistInstances: Instance<typeof builtMappedArtist[]> = [
     {
+        numDigitsOfSystemId: 1,
         globalId: "foo@2",
         systemId: "2",
         // systemId: Math.random() > .5 ? null : "2",

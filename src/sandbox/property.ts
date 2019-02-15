@@ -30,12 +30,12 @@ export module Property {
     export module Id {
         export type Keys<T> = Exclude<{ [P in keyof T]: T[P] extends Id<any, any> | undefined ? P : never }[keyof T], undefined>;
 
-        export type Aggregate<
+        export type Computed<
             K extends string,
             V extends Component.Primitive.ValueType,
             T extends Type<string>,
             I extends Component.Local.Keys<T> & string>
-            = Component.Aggregate<T, I, V>
+            = Component.Computed<T, I, V>
             & Component.Id
             & Component.Local
             & Component.Primitive<V>
@@ -68,12 +68,12 @@ export module Property {
     export module Primitive {
         export type Keys<T> = Exclude<{ [P in keyof T]: T[P] extends Primitive<any, any> | undefined ? P : never }[keyof T], undefined>;
 
-        export type Aggregate<
+        export type Computed<
             K extends string,
             V extends Component.Primitive.ValueType,
             T extends Type<string>,
             I extends Component.Local.Keys<T> & string>
-            = Component.Aggregate<T, I, V>
+            = Component.Computed<T, I, V>
             & Component.Local
             & Component.Primitive<V>
             & Component.Property<K, ReturnType<V>>;

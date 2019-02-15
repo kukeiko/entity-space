@@ -1,14 +1,6 @@
 import { Type } from "./type";
 
 export module Component {
-    export type Aggregate<T extends Type<string>, S extends string, V extends Primitive.ValueType> = {
-        aggregate: true;
-        aggregatedFrom: { [k in S]: true; };
-        aggregateValue(instance: {
-            [P in S]: Property.WithKey<T, P> extends Property<any, infer X, infer M> ? "n" extends M ? X | null : X : never;
-        }): ReturnType<V>;
-    };
-
     export type Array = {
         array: true;
         ordered: boolean;
@@ -16,6 +8,14 @@ export module Component {
 
     export type Complex = {
         complex: true;
+    };
+
+    export type Computed<T extends Type<string>, S extends string, V extends Primitive.ValueType> = {
+        computed: true;
+        computedFrom: { [k in S]: true; };
+        compute(instance: {
+            [P in S]: Property.WithKey<T, P> extends Property<any, infer X, infer M> ? "n" extends M ? X | null : X : never;
+        }): ReturnType<V>;
     };
 
     // [todo] maybe merge back into Property (as Property.Dto)
