@@ -1,29 +1,7 @@
 import { Type, Property } from "../sandbox";
-
-export interface UserType extends Type<"user"> {
-    id: Property.Id<"id", typeof Number, "Id">;
-    name: Property.Primitive<"name", typeof String, "Name", string, "n">;
-
-    createdById: Property.Reference.Id<"createdById", UserType, "id", "CreatedById", "n">;
-    createdBy: Property.Reference<"createdBy", UserType, UserType["createdById"], "CreatedBy", "n">;
-
-    changedAt: Property.Primitive<"changedAt", typeof String, "ChangedAt">;
-    changedById: Property.Reference.Id<"changedById", UserType, "id", "ChangedById", "n">;
-    changedBy: Property.Reference<"changedBy", UserType, UserType["changedById"], "ChangedBy", "n">;
-}
-
-export interface CountryType extends Type<"country"> {
-    id: Property.Id<"id", typeof String>;
-    name: Property.Primitive<"name", typeof String, "Name">;
-    population: Property.Primitive<"population", typeof Number, "Population">;
-
-    createdById: Property.Reference.Id<"createdById", UserType, "id", "CreatedById">;
-    createdBy: Property.Reference<"createdBy", UserType, CountryType["createdById"], "CreatedBy">;
-
-    changedAt: Property.Primitive<"changedAt", typeof String, "ChangedAt">;
-    changedById: Property.Reference.Id<"changedById", UserType, "id", "ChangedById", "n">;
-    changedBy: Property.Reference<"changedBy", UserType, CountryType["changedById"], "ChangedBy", "n">;
-}
+import { UserType } from "./user.type";
+import { AlbumType } from "./album.type";
+import { CountryType } from "./country.type";
 
 export interface ArtistType extends Type<"artist"> {
     globalId: Property.Id.Computed<"globalId", typeof String, ArtistType, "id" | "systemId">;
@@ -61,14 +39,4 @@ export interface ArtistType extends Type<"artist"> {
     lalala: 3;
     // reviewIds: Reference.Id<"reviewIds", ReviewType[] | null, "id", "ReviewIds">;
     // reviews: Reference<"reviews", (ReviewType | null)[] | null>;
-}
-
-export interface AlbumType extends Type<"album"> {
-    id: Property.Id<"id", typeof Number, "Id">;
-    artistId: Property.Reference.Id<"artistId", ArtistType, "globalId", "ArtistId", "n" | "p" | "c">;
-    artist: Property.Reference<"artist", ArtistType, AlbumType["artistId"], "Artist", "n" | "p" | "c">;
-}
-
-export interface ReviewType extends Type<"review"> {
-    id: Property.Id<"id", typeof Number>;
 }
