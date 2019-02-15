@@ -14,16 +14,32 @@ export module Property {
      */
     export type Id<
         K extends string,
-        V,
+        V extends Component.Primitive.ValueType,
         A extends string = K,
-        D = V>
-        = Component.Dto<A, D, "u">
+        D = ReturnType<V>>
+        = {
+            fromDto(v: D): ReturnType<V>;
+            toDto(v: ReturnType<V>): D;
+        }
+        & Component.Dto<A, D, "u">
         & Component.Id
         & Component.Local
-        & Component.Property<K, V, "u">;
+        & Component.Primitive<V>
+        & Component.Property<K, ReturnType<V>, "u">;
 
     export module Id {
+        export type Keys<T> = Exclude<{ [P in keyof T]: T[P] extends Id<any, any> | undefined ? P : never }[keyof T], undefined>;
 
+        export type Aggregate<
+            K extends string,
+            V extends Component.Primitive.ValueType,
+            T extends Type<string>,
+            I extends Component.Local.Keys<T> & string>
+            = Component.Aggregate<T, I, V>
+            & Component.Id
+            & Component.Local
+            & Component.Primitive<V>
+            & Component.Property<K, ReturnType<V>, "u">;
     }
 
     /***
@@ -36,18 +52,18 @@ export module Property {
      */
     export type Primitive<
         K extends string,
-        T extends Component.Primitive.ValueType,
+        V extends Component.Primitive.ValueType,
         A extends string = K,
-        D = ReturnType<T>,
+        D = ReturnType<V>,
         M extends Component.Modifier = never>
         = {
-            fromDto(v: D): ReturnType<T>;
-            toDto(v: ReturnType<T>): D;
+            fromDto(v: D): ReturnType<V>;
+            toDto(v: ReturnType<V>): D;
         }
         & Component.Dto<A, D, M>
         & Component.Local
-        & Component.Primitive<T>
-        & Component.Property<K, ReturnType<T>, M>;
+        & Component.Primitive<V>
+        & Component.Property<K, ReturnType<V>, M>;
 
     export module Primitive {
         export type Keys<T> = Exclude<{ [P in keyof T]: T[P] extends Primitive<any, any> | undefined ? P : never }[keyof T], undefined>;
@@ -56,20 +72,14 @@ export module Property {
             K extends string,
             V extends Component.Primitive.ValueType,
             T extends Type<string>,
-            I extends Keys<T>>
-            = {
-                aggregateValue(instance: {
-                    [P in I]: P extends string
-                    ? Component.Property.WithKey<T, P> extends Component.Property<any, infer X, infer M>
-                    ? "n" extends M ? X | null : X
-                    : never
-                    : never;
-                }): ReturnType<V>;
-            }
+            I extends Component.Local.Keys<T> & string>
+            = Component.Aggregate<T, I, V>
             & Component.Local
             & Component.Primitive<V>
             & Component.Property<K, ReturnType<V>>;
-        ;
+
+        export type Virtual
+            = {};
     }
 
     /***

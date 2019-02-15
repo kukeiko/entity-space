@@ -84,7 +84,7 @@ module ConstructionOptions {
 }
 
 export interface UserType extends Type<"user"> {
-    id: Property.Id<"id", number, "Id">;
+    id: Property.Id<"id", typeof Number, "Id">;
     name: Property.Primitive<"name", typeof String, "Name", string, "n">;
 
     createdById: Property.Reference.Id<"createdById", UserType, "id", "CreatedById", "n">;
@@ -96,7 +96,7 @@ export interface UserType extends Type<"user"> {
 }
 
 export interface CountryType extends Type<"country"> {
-    id: Property.Id<"id", string>;
+    id: Property.Id<"id", typeof String>;
     name: Property.Primitive<"name", typeof String, "Name">;
     population: Property.Primitive<"population", typeof Number, "Population">;
 
@@ -109,11 +109,15 @@ export interface CountryType extends Type<"country"> {
 }
 
 export interface ArtistType extends Type<"artist"> {
-    id: Property.Id<"id", number, "Id", number>;
+    globalId: Property.Id.Aggregate<"globalId", typeof String, ArtistType, "id" | "systemId">;
+    id: Property.Primitive<"id", typeof Number, "Id", number>;
     name: Property.Primitive<"name", typeof String, "Name", string>;
 
-    systemId: Property.Primitive<"systemId", typeof Number, "SystemId", number, "n">;
-    globalId: Property.Primitive.Aggregate<"globalId", typeof String, ArtistType, "systemId" | "name">;
+    // systemId: Property.Primitive<"systemId", typeof Number, "SystemId", number, "n">;
+    systemId: Property.Primitive.Aggregate<"systemId", typeof String, ArtistType, "systemName" | "systemZone">;
+
+    systemName: Property.Primitive<"systemName", typeof String, "SystemName", string>;
+    systemZone: Property.Primitive<"systemZone", typeof Number, "SystemZone", number>;
 
     createdAt: Property.Primitive<"createdAt", typeof String, "CreatedAt", number>;
     createdById: Property.Reference.Id<"createdById", UserType, "id", "CreatedById">;
@@ -123,7 +127,7 @@ export interface ArtistType extends Type<"artist"> {
     changedById: Property.Reference.Id<"changedById", UserType, "id", "ChangedById", "n" | "p">;
     changedBy: Property.Reference<"changedBy", UserType, ArtistType["changedById"], "ChangedBy", "n">;
 
-    parentId: Property.Reference.Id<"parentId", ArtistType, "id", "ParentId", "n">;
+    parentId: Property.Reference.Id<"parentId", ArtistType, "globalId", "ParentId", "n">;
     parent: Property.Reference<"parent", ArtistType, ArtistType["parentId"], "Parent", "n">;
 
     albums: Property.Children<"albums", AlbumType, "artistId", "Albums">;
@@ -151,13 +155,13 @@ type ArtistDtoInstance = Instance.Dto<ArtistType>;
 type ArtistCountryValue = Component.Property.ValueOf<Component.Property.WithKey<ArtistType, "country">>;
 
 export interface AlbumType extends Type<"album"> {
-    id: Property.Id<"id", number, "Id">;
-    artistId: Property.Reference.Id<"artistId", ArtistType, "id", "ArtistId", "n" | "p" | "c">;
+    id: Property.Id<"id", typeof Number, "Id">;
+    artistId: Property.Reference.Id<"artistId", ArtistType, "globalId", "ArtistId", "n" | "p" | "c">;
     artist: Property.Reference<"artist", ArtistType, AlbumType["artistId"], "Artist", "n" | "p" | "c">;
 }
 
 export interface ReviewType extends Type<"review"> {
-    id: Property.Id<"id", number>;
+    id: Property.Id<"id", typeof Number>;
 }
 
 
@@ -221,12 +225,14 @@ let artistCtorOptions: ConstructionOptions<ArtistType> = {
         options: {
             n: true
         },
-        otherIdKey: "id",
+        otherIdKey: "globalId",
         otherKey: "artist"
     },
     systemId: {
 
-    }
+    },
+    systemName: {},
+    systemZone: {}
 };
 
 let countryCtorOptions: ConstructionOptions.ReferenceOptions<ArtistType["country"]> = {
@@ -367,10 +373,18 @@ let builtArtist: ArtistType = {
     },
     createdById: null as any,
     globalId: {
-        aggregateValue: x => `${x.name}@${x.systemId}`,
+        aggregate: true,
+        aggregatedFrom: {
+            id: true,
+            systemId: true
+        },
+        aggregateValue: x => `${x.id}@${x.systemId}`,
+        id: true,
         key: "globalId",
         local: true,
-        modifiers: {},
+        modifiers: {
+            u: true
+        },
         primitiveType: String,
         read: x => x.globalId,
         write: (x, v) => x.globalId = v
@@ -396,7 +410,7 @@ let builtArtist: ArtistType = {
             n: true
         },
         // otherIdKey: null as any as ArtistType["id"],
-        otherIdKey: "id",
+        otherIdKey: "globalId",
         readDto: x => x.ParentId,
         writeDto: (u, v) => u.ParentId = v,
         read: x => x.parentId,
@@ -418,19 +432,44 @@ let builtArtist: ArtistType = {
         write: (x, v) => x.parent = v,
     },
     systemId: {
-        dtoKey: "SystemId",
+        aggregate: true,
+        aggregateValue: x => `${x.systemName}@${x.systemZone}`,
+        aggregatedFrom: {
+            systemName: true,
+            systemZone: true
+        },
         key: "systemId",
         local: true,
-        modifiers: {
-            n: true
-        },
-        primitiveType: Number,
-        fromDto: v => v,
-        toDto: v => v,
+        modifiers: {},
+        primitiveType: String,
         read: x => x.systemId,
-        readDto: x => x.SystemId,
-        write: (x, v) => x.systemId = v,
-        writeDto: (x, v) => x.SystemId = v
+        write: (x, v) => x.systemId = v
+    },
+    systemName: {
+        dtoKey: "SystemName",
+        fromDto: x => x,
+        key: "systemName",
+        local: true,
+        modifiers: {},
+        primitiveType: String,
+        read: x => x.systemName,
+        readDto: x => x.SystemName,
+        toDto: x => x,
+        write: (x, v) => x.systemName = v,
+        writeDto: (x, v) => x.SystemName = v,
+    },
+    systemZone: {
+        dtoKey: "SystemZone",
+        fromDto: x => x,
+        key: "systemZone",
+        local: true,
+        modifiers: {},
+        primitiveType: Number,
+        read: x => x.systemZone,
+        readDto: x => x.SystemZone,
+        toDto: x => x,
+        write: (x, v) => x.systemZone = v,
+        writeDto: (x, v) => x.SystemZone = v,
     }
 };
 
@@ -489,8 +528,8 @@ let artistDtoInstances: Instance.Dto<ArtistType[]> = [
         ChangedBy: null,
         ChangedById: null,
         Name: "susi",
-        SystemId: Math.random() > .5 ? null : 3
-        // ReviewIds: []
+        SystemName: "foo",
+        SystemZone: 64
     }
 ];
 
@@ -527,7 +566,7 @@ let mappedArtist: Instance<typeof typeMapper> = {
                     name: "austria"
                 }
             },
-            artistId: Math.random() > .5 ? 1 : null
+            artistId: Math.random() > .5 ? "foo" : null
         }
     ]
 };
@@ -547,7 +586,7 @@ let mappedArtists: Instance<typeof typeMapper[]> = [
                         name: "austria"
                     }
                 },
-                artistId: Math.random() > .5 ? 1 : null
+                artistId: Math.random() > .5 ? "foo" : null
             }
         ]
     }
@@ -607,7 +646,8 @@ let builtMappedArtist = artistMapper.get();
 let builtMappedArtistInstances: Instance<typeof builtMappedArtist[]> = [
     {
         globalId: "foo@2",
-        systemId: Math.random() > .5 ? null : 2,
+        systemId: "2",
+        // systemId: Math.random() > .5 ? null : "2",
         createdAt: "2016-02-05",
         changedAt: "2018-01-01",
         albums: [{
@@ -646,7 +686,7 @@ let builtMappedArtistDtoInstances: Instance.Dto<(typeof builtMappedArtist)[]> = 
         CreatedAt: 123,
         ChangedAt: "2018-01-01",
         Albums: [{
-            ArtistId: Math.random() > .5 ? 3 : undefined,
+            // ArtistId: Math.random() > .5 ? "foo" : undefined,
             Artist: {
                 ParentId: null
             }
@@ -671,7 +711,7 @@ let builtMappedArtistDtoInstances: Instance.Dto<(typeof builtMappedArtist)[]> = 
                 Name: "foo"
             }
         },
-        SystemId: Math.random() > .5 ? null : 3
+        // SystemId: Math.random() > .5 ? null : 3
     }
 ];
 
