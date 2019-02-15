@@ -2,6 +2,7 @@ import { Query, Instance } from "../sandbox";
 import { ArtistType } from "../user";
 
 let artistMapper = new Query<ArtistType>()
+    .selectIf(x => x.id)
     .select(x => x.numDigitsOfSystemId)
     .select(x => x.globalId)
     .select(x => x.systemId)
@@ -10,8 +11,6 @@ let artistMapper = new Query<ArtistType>()
         x => x.to("1970-04-06")
     ])
     .selectIf(x => x.changedAt)
-    .filter("createdAt", f => f.equals("foo").fromTo(["abc", "xyz"], [true, true]))
-    .selectIf(x => x.id)
     .select(x => x.countryId)
     .select(x => x.changedById)
     .selectIf(x => x.albums, q => q.selectIf(x => x.artistId).select(x => x.artist, q => q.select(x => x.parentId)))
@@ -37,9 +36,12 @@ let artistMapper = new Query<ArtistType>()
     .select(x => x.country, q => q.select(x => x.createdBy, q => q.select(x => x.id)))
     .select(x => x.country, q => q.select(x => x.createdBy, q => q.select(x => x.name)))
     .selectIf(x => x.changedBy, q => q.selectIf(x => x.createdBy, q => q.select(x => x.name)))
-    .filter("createdAt", f => f.to("123"))
     // .select(x => x.systemZone)
     ;
+
+let x: { foo: 3 } = {
+    foo: 3
+};
 
 let builtMappedArtist = artistMapper.get();
 let builtMappedArtistInstances: Instance<typeof builtMappedArtist[]> = [
@@ -132,9 +134,7 @@ function takesArtistInstance(artist: Instance<typeof builtMappedArtist>): void {
     }
 
     if (artist.id !== undefined) {
-        if (artist.id !== null) {
-            artist.id.toFixed();
-        }
+        artist.id.toFixed();
     }
 
     if (artist.changedBy != null) {
@@ -185,9 +185,7 @@ function takesArtistDtoInstance(artist: Instance.Dto<typeof builtMappedArtist>):
     }
 
     if (artist.Id !== undefined) {
-        if (artist.Id !== null) {
-            artist.Id.toFixed();
-        }
+        artist.Id.toFixed();
     }
 
     // artist.ChangedBy = null;
