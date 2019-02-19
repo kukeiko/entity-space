@@ -16,12 +16,13 @@ export module Component {
         complex: true;
     };
 
-    export type Computed<T extends Type<string>, S extends string, V extends Primitive.ValueType> = {
+    // export type Computed<T extends Type<string>, S extends string, V extends Primitive.ValueType, M extends Modifier = never> = {
+    export type Computed<T, S extends string, V extends Primitive.ValueType, M extends Modifier = never> = {
         computed: true;
         computedFrom: { [k in S]: true; };
         compute(instance: {
             [P in S]: Property.WithKey<T, P> extends Property<any, infer X, infer M> ? "n" extends M ? X | null : X : never;
-        }): ReturnType<V>;
+        }): "n" extends M ? ReturnType<V> | null : ReturnType<V>;
     };
 
     // [todo] maybe merge back into Property (as Property.Dto)
@@ -40,8 +41,8 @@ export module Component {
             export type Required<T> = Exclude<{ [P in keyof T]: T[P] extends Dto<infer A, any> ? A : never }[keyof T], undefined>;
         }
 
-        export type ValueOf<T> = T extends Dto<any, infer D> ? D : never;
-
+        export type ModifierOf<T> = T extends Dto<any, any, infer M> ? M : never;
+        export type ValueOf<T> = T extends Dto<any, infer D, any> ? D : never;
         export type WithAlias<T, A extends string> = WithAlias.Optional<T, A> | WithAlias.Required<T, A>;
 
         export module WithAlias {
@@ -148,8 +149,8 @@ export module Component {
             export type Required<T> = Exclude<{ [P in keyof T]: T[P] extends Property<infer K, any> ? K : never }[keyof T], undefined> & keyof T;
         }
 
+        export type ModifierOf<T> = T extends Property<any, any, infer M> ? M : never;
         export type ValueOf<T> = T extends Property<any, infer V> ? V : never;
-
         export type WithKey<T, K extends string> = WithKey.Optional<T, K> | WithKey.Required<T, K>;
 
         export module WithKey {

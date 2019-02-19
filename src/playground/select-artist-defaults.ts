@@ -15,5 +15,5 @@ export function selectArtistDefaults(q: Query<ArtistType>) {
         .select(x => x.parentId)
         .select(x => x.systemId)
         .select(x => x.systemName)
-        .select(x => x.systemZone)
+        .select(x => x.systemZone);
 }

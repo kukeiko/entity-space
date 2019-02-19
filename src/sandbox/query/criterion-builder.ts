@@ -7,6 +7,8 @@ import { Filter } from "../filter";
  * => "or" happens via using multiple criterion builders (array @ Query.select())
  *
  * - as soon as you export this via "Query.CriterionBuilder" the language server just kinda dies. so we don't do it.
+ *
+ * [todo] support null if primitive is nullable
  */
 export class CriterionBuilder<T extends Component.Primitive.ValueType> {
     // [note] is null if criteria have been combined that won't ever be reachable

@@ -13,7 +13,7 @@ let artistQuery = new Query<ArtistType>()
     .selectIf(x => x.changedAt)
     .select(x => x.countryId)
     .select(x => x.changedById)
-    .selectIf(x => x.albums, q => q.selectIf(x => x.artistId).select(x => x.artist, q => q.select(x => x.parentId)))
+    .select(x => x.albums, q => q.select(x => x.artistId).select(x => x.artist, q => q.select(x => x.parentId).select(x => x.changedById)))
     .select(x => x.country, q => q
         .select(x => x.createdBy, q => q.select(x => x.name, [f => f.equals("susi")]))
         .select(x => x.name, [x => x.in(["austria", "germany", "hungary"])])
@@ -39,6 +39,7 @@ let artistQuery = new Query<ArtistType>()
     // .select(x => x.countryId, f =>)
     // .select(x => x.systemZone)
     .select(x => x.reviewIds)
+    .select(x => x.parentId)
     ;
 
 let x: { foo: 3 } = {
@@ -56,10 +57,13 @@ let builtMappedArtistInstances: Instance<typeof builtMappedArtist[]> = [
         // systemId: Math.random() > .5 ? null : "2",
         createdAt: "2016-02-05",
         changedAt: "2018-01-01",
+        parentId: "bar@2",
+        // parentId: Math.random() > .5 ? "foo" : null,
         albums: [{
             artistId: null,
             artist: {
-                parentId: null
+                parentId: "foo",
+                changedById: Math.random() > .5 ? 3 : null
             }
         }],
         changedById: null,
@@ -70,18 +74,30 @@ let builtMappedArtistInstances: Instance<typeof builtMappedArtist[]> = [
             name: "foo"
         },
         country: {
-            population: 64,
             changedBy: {
-                id: 3,
-                name: "foo"
+                id: "foo",
+                name: ""
             },
             createdBy: {
-                id: 8,
-                name: null
+                id: "foo",
+                name: ""
             },
-            createdById: 8,
-            id: "quak",
-            name: "khaz"
+            createdById: "foo",
+            id: "foo",
+            name: "foo",
+            population: 3
+            // population: 64,
+            // changedBy: {
+            //     id: 3,
+            //     name: "foo"
+            // },
+            // createdBy: {
+            //     id: 8,
+            //     name: null
+            // },
+            // createdById: 8,
+            // id: "quak",
+            // name: "khaz"
         },
         parent: null
     }
@@ -94,8 +110,14 @@ let builtMappedArtistDtoInstances: Instance.Dto<(typeof builtMappedArtist)[]> = 
         ChangedAt: "2018-01-01",
         Albums: [{
             // ArtistId: Math.random() > .5 ? "foo" : undefined,
+            // Artist: {
+            //     ParentId: null
+            // }
+            ArtistId: null,
             Artist: {
+                ChangedById: Math.random() > .5 ? 3 : null,
                 ParentId: null
+                // ParentId: "foo",
             }
         }],
         ChangedBy: null,
@@ -107,6 +129,7 @@ let builtMappedArtistDtoInstances: Instance.Dto<(typeof builtMappedArtist)[]> = 
             Name: null
         },
         Id: undefined,
+
         Parent: {
             Country: {
                 CreatedBy: {
@@ -152,20 +175,20 @@ function takesArtistInstance(artist: Instance<typeof builtMappedArtist>): void {
 
     if (artist.parent !== null) {
         if (artist.parent.country !== null) {
-            artist.parent.country.createdById.toFixed();
+            artist.parent.country.createdById.charAt(0);
         }
     }
 
     if (artist.country !== null) {
-        artist.country.createdById.toFixed();
-        artist.country.createdBy.id.toFixed();
+        artist.country.createdById.charAt(0);
+        artist.country.createdBy.id.charAt(0);
 
         if (artist.country.createdBy.name !== null) {
             artist.country.createdBy.name.charAt(1);
         }
 
         if (artist.country.changedBy !== null) {
-            artist.country.changedBy.id.toFixed();
+            artist.country.changedBy.id.charAt(0);
 
             if (artist.country.changedBy.name !== null) {
                 artist.country.changedBy.name.charAt(1);
@@ -178,7 +201,7 @@ function takesArtistDtoInstance(artist: Instance.Dto<typeof builtMappedArtist>):
     if (artist.Albums !== undefined) {
         artist.Albums.forEach(album => {
             if (album.Artist !== null) {
-                album.Artist.ParentId;
+                album.Artist.ChangedById;
             }
         });
     }
@@ -207,24 +230,24 @@ function takesArtistDtoInstance(artist: Instance.Dto<typeof builtMappedArtist>):
 
     if (artist.Parent !== null) {
         if (artist.Parent.Country !== null) {
-            artist.Parent.Country.CreatedById.toFixed();
+            // artist.Parent.Country.CreatedById.toFixed();
         }
     }
 
     if (artist.Country !== null) {
-        artist.Country.CreatedById.toFixed();
-        artist.Country.CreatedBy.Id.toFixed();
+        // artist.Country.CreatedById.toFixed();
+        // artist.Country.CreatedBy.Id.toFixed();
 
-        if (artist.Country.CreatedBy.Name !== null) {
-            artist.Country.CreatedBy.Name.charAt(1);
-        }
+        // if (artist.Country.CreatedBy.Name !== null) {
+        //     artist.Country.CreatedBy.Name.charAt(1);
+        // }
 
-        if (artist.Country.ChangedBy !== null) {
-            artist.Country.ChangedBy.Id.toFixed();
+        // if (artist.Country.ChangedBy !== null) {
+        //     artist.Country.ChangedBy.Id.toFixed();
 
-            if (artist.Country.ChangedBy.Name !== null) {
-                artist.Country.ChangedBy.Name.charAt(1);
-            }
-        }
+        //     if (artist.Country.ChangedBy.Name !== null) {
+        //         artist.Country.ChangedBy.Name.charAt(1);
+        //     }
+        // }
     }
 }

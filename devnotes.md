@@ -1,8 +1,11 @@
-# rewrite "don't forget me" notes
+# current rewrite "don't forget me" notes
 - should metadata of a property point to other properties directly or just contain the key?
 - try if we can have the "changedBy", "createdBy" metadata separated out
 - query identities (All, ByIds, ByIndexes) are just filters (all => empty filter) - handle them internally as such?
 - properly structure all variants of Locals (e.g. Id is not a Simple, how to to Computed/Composited/Etheral/Unique etc)
+- we need Property.Reference.Id.Computed
+- try out Mixins (e.g. System, Metadata)
+- Computed properties need to support Nullable
 
 # feature ideas
 ## enable type-safe mapping

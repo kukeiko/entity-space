@@ -43,7 +43,7 @@ let builtArtist: ArtistType = {
         dtoKey: "ChangedBy",
         external: true,
         key: "changedBy",
-        localKey: null as any as ArtistType["changedById"],
+        localKey: "changedById",
         navigable: true,
         navigated: null as any as UserType,
         modifiers: {
@@ -79,7 +79,7 @@ let builtArtist: ArtistType = {
         dtoKey: "Country",
         external: true,
         key: "country",
-        localKey: null as any as ArtistType["countryId"],
+        localKey: "countryId",
         navigable: true,
         navigated: null as any as CountryType,
         modifiers: {
@@ -122,7 +122,7 @@ let builtArtist: ArtistType = {
         dtoKey: "CreatedBy",
         external: true,
         key: "createdBy",
-        localKey: null as any as ArtistType["createdById"],
+        localKey: "createdById",
         navigable: true,
         navigated: null as any as UserType,
         modifiers: {},
@@ -163,24 +163,26 @@ let builtArtist: ArtistType = {
         writeDto: (x, v) => x.Name = v
     },
     parentId: {
-        dtoKey: "ParentId",
+        compute: x => `${x.systemArtistId}@${x.systemId}`,
+        computed: true,
+        computedFrom: {
+            systemArtistId: true,
+            systemId: true
+        },
         key: "parentId",
         local: true,
         modifiers: {
             n: true
         },
-        // otherIdKey: null as any as ArtistType["id"],
         otherIdKey: "id",
         primitiveType: String,
-        readDto: x => x.ParentId,
-        writeDto: (u, v) => u.ParentId = v,
         read: x => x.parentId,
-        write: (x, v) => x.parentId = v,
+        write: (x, v) => x.parentId = v
     },
     parent: {
         dtoKey: "Parent",
         key: "parent",
-        localKey: null as any as ArtistType["parentId"],
+        localKey: "parentId",
         external: true,
         navigable: true,
         navigated: null as any as ArtistType,
@@ -216,20 +218,24 @@ let builtArtist: ArtistType = {
         },
         key: "systemId",
         local: true,
-        modifiers: {},
+        modifiers: {
+            n: true
+        },
         primitiveType: String,
         read: x => x.systemId,
         write: (x, v) => x.systemId = v
     },
     numDigitsOfSystemId: {
-        compute: x => x.systemId.length,
+        compute: x => x.systemId !== null ? x.systemId.length : null,
         computed: true,
         computedFrom: {
             systemId: true
         },
         key: "numDigitsOfSystemId",
         local: true,
-        modifiers: {},
+        modifiers: {
+            n: true
+        },
         primitiveType: Number,
         read: x => x.numDigitsOfSystemId,
         write: (x, v) => x.numDigitsOfSystemId = v
