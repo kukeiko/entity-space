@@ -20,7 +20,7 @@ let builtArtist: ArtistType = {
         write: (x, v) => x.albums = v,
         writeDto: (x, v) => x.Albums = v
     },
-    id: null as any,
+    systemArtistId: null as any,
     // albums: {
     //     parentReference: null as any as AlbumType["artist"],
     //     navigable: true,
@@ -63,6 +63,7 @@ let builtArtist: ArtistType = {
             p: true
         },
         otherIdKey: "id",
+        primitiveType: Number,
         // otherIdKey: null as any as UserType["id"],
         read: x => x.changedById,
         readDto: x => x.ChangedById,
@@ -98,6 +99,7 @@ let builtArtist: ArtistType = {
         },
         // otherIdKey: null as any as CountryType["id"],
         otherIdKey: "id",
+        primitiveType: String,
         read: x => x.countryId,
         readDto: x => x.CountryId,
         write: (x, v) => x.countryId = v,
@@ -130,22 +132,22 @@ let builtArtist: ArtistType = {
         writeDto: (x, v) => x.CreatedBy = v
     },
     createdById: null as any,
-    globalId: {
+    id: {
         computed: true,
         computedFrom: {
-            id: true,
+            systemArtistId: true,
             systemId: true
         },
-        compute: x => `${x.id}@${x.systemId}`,
+        compute: x => `${x.systemArtistId}@${x.systemId}`,
         id: true,
-        key: "globalId",
+        key: "id",
         local: true,
         modifiers: {
             u: true
         },
         primitiveType: String,
-        read: x => x.globalId,
-        write: (x, v) => x.globalId = v
+        read: x => x.id,
+        write: (x, v) => x.id = v
     },
     name: {
         dtoKey: "Name",
@@ -168,7 +170,8 @@ let builtArtist: ArtistType = {
             n: true
         },
         // otherIdKey: null as any as ArtistType["id"],
-        otherIdKey: "globalId",
+        otherIdKey: "id",
+        primitiveType: String,
         readDto: x => x.ParentId,
         writeDto: (u, v) => u.ParentId = v,
         read: x => x.parentId,
@@ -188,6 +191,21 @@ let builtArtist: ArtistType = {
         writeDto: (u, v) => u.Parent = v,
         read: x => x.parent,
         write: (x, v) => x.parent = v,
+    },
+    reviewIds: {
+        array: true,
+        dtoKey: "ReviewIds",
+        fromDto: x => x,
+        key: "reviewIds",
+        local: true,
+        modifiers: {},
+        ordered: false,
+        primitiveType: Number,
+        read: x => x.reviewIds,
+        readDto: x => x.ReviewIds,
+        toDto: x => x,
+        write: (x, v) => x.reviewIds = v,
+        writeDto: (x, v) => x.ReviewIds = v
     },
     systemId: {
         computed: true,
@@ -217,29 +235,23 @@ let builtArtist: ArtistType = {
         write: (x, v) => x.numDigitsOfSystemId = v
     },
     systemName: {
-        dtoKey: "SystemName",
-        fromDto: x => x,
+        ethereal: true,
         key: "systemName",
         local: true,
-        modifiers: {},
+        modifiers: {
+            n: true
+        },
         primitiveType: String,
         read: x => x.systemName,
-        readDto: x => x.SystemName,
-        toDto: x => x,
-        write: (x, v) => x.systemName = v,
-        writeDto: (x, v) => x.SystemName = v,
+        write: (x, v) => x.systemName = v
     },
     systemZone: {
-        dtoKey: "SystemZone",
-        fromDto: x => x,
+        ethereal: true,
         key: "systemZone",
         local: true,
         modifiers: {},
         primitiveType: Number,
         read: x => x.systemZone,
-        readDto: x => x.SystemZone,
-        toDto: x => x,
-        write: (x, v) => x.systemZone = v,
-        writeDto: (x, v) => x.SystemZone = v,
+        write: (x, v) => x.systemZone = v
     }
 };

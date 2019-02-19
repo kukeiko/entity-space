@@ -21,32 +21,35 @@ export module Filter {
     }
 
     export function combineCriteria(a: Criteria, b: Criteria): Criteria | null {
-        let combined: Criteria = {};
+        return null;
+        // let combined: Criteria = {};
 
-        for (let k in a) {
-            let c: Criterion | null = a[k];
+        // for (let k in a) {
+        //     let c: Criterion | null = a[k];
 
-            if (b[k]) {
-                c = combineCriterion(a[k], b[k]);
-            }
+        //     if (b[k]) {
+        //         c = combineCriterion(a[k], b[k]);
+        //     }
 
-            if (c === null) return null;
+        //     if (c === null) return null;
 
-            combined[k] = c;
-        }
+        //     combined[k] = c;
+        // }
 
-        for (let k in b) {
-            if (combined[k]) continue;
-            combined[k] = b[k];
-        }
+        // for (let k in b) {
+        //     if (combined[k]) continue;
+        //     combined[k] = b[k];
+        // }
 
-        return combined;
+        // return combined;
     }
 
     /**
      * Combines two criteria to create a new criterion that satisfies both.
      *
      * Returns null if combined criteria would be unreachable (e.g. <0 && >0)
+     *
+     * [todo] unfinished
      */
     export function combineCriterion(a: Criterion, b: Criterion): Criterion | null {
         switch (a.op) {
@@ -62,13 +65,16 @@ export module Filter {
         return null;
     }
 
+    /**
+     * [todo] unfinished
+     */
     export function reduceCriterion(a: Criterion, b: Criterion): Criterion | null {
         switch (a.op) {
             case "custom": return a.reduce(b);
 
             case "==":
                 switch (b.op) {
-                    case "custom": return b.reduceSelf(a);
+                    case "custom": return b.reduceBy(a);
                     case "==": return a.value === b.value ? null : b;
                     case "!=": return a.value === b.value ? b : { op: "not-in", values: new Set([a.value, b.value]) };
                     case "<=": return a.value === b.value ? { op: "<", value: a.value } : b;
@@ -143,10 +149,6 @@ export module Filter {
         values: Set<EqualityCriterion["value"]>;
     }
 
-    // export interface NeverCriterion {
-    //     op: "never";
-    // }
-
     export interface FromToCriterion {
         op: "from-to";
         from: FromCriterion;
@@ -157,19 +159,18 @@ export module Filter {
         op: "custom";
         combine(other: Criterion): Criterion | null;
         reduce(other: Criterion): Criterion | null;
-        reduceSelf(by: Criterion): Criterion | null;
+        reduceBy(by: Criterion): Criterion | null;
     }
 
     export type Criterion = CustomCriterion | EqualityCriterion | FromCriterion | MemberCriterion | FromToCriterion | ToCriterion;
 
-    export module Criterion {
-        export type ForConstructor<T>
-            = T extends StringConstructor ? EqualityCriterion | FromCriterion | ToCriterion | FromToCriterion | MemberCriterion
-            : never;
+    export interface SetCriterion {
+        op: "intersect" | "subset" | "superset";
+        values: Set<EqualityCriterion["value"]>;
     }
 
     export interface Criteria {
-        [k: string]: Criterion;
+        [k: string]: Criterion | SetCriterion;
     }
 
     export function equals<T extends EqualityCriterion["value"]>(value: T, invert = false): EqualityCriterion {
@@ -204,25 +205,3 @@ export module Filter {
         return { op: invert ? "in" : "not-in", values: new Set(values) };
     }
 }
-
-interface FooCriterion extends Filter.CustomCriterion {
-    foo: "bar";
-}
-
-export module FooCriterion {
-    export function is(x: any): x is FooCriterion {
-        return x.foo === "bar";
-    }
-}
-
-let foo: FooCriterion = {
-    foo: "bar",
-    op: "custom",
-    reduce(other) { return other; },
-    combine() { return null; },
-    reduceSelf(other) {
-        return FooCriterion.is(other) ? null : this;
-    }
-};
-
-

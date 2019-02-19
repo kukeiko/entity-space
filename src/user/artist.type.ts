@@ -4,15 +4,15 @@ import { AlbumType } from "./album.type";
 import { CountryType } from "./country.type";
 
 export interface ArtistType extends Type<"artist"> {
-    globalId: Property.Id.Computed<"globalId", typeof String, ArtistType, "id" | "systemId">;
-    id: Property.Primitive<"id", typeof Number, "Id", number>;
+    id: Property.Id.Computed<"id", typeof String, ArtistType, "systemArtistId" | "systemId">;
+    systemArtistId: Property.Primitive<"systemArtistId", typeof Number, "Id", number>;
     name: Property.Primitive<"name", typeof String, "Name", string>;
 
     // systemId: Property.Primitive<"systemId", typeof Number, "SystemId", number, "n">;
     systemId: Property.Primitive.Computed<"systemId", typeof String, ArtistType, "systemName" | "systemZone">;
 
-    systemName: Property.Primitive<"systemName", typeof String, "SystemName", string>;
-    systemZone: Property.Primitive<"systemZone", typeof Number, "SystemZone", number>;
+    systemName: Property.Primitive.Ethereal<"systemName", typeof String, "n">;
+    systemZone: Property.Primitive.Ethereal<"systemZone", typeof Number>;
 
     numDigitsOfSystemId: Property.Primitive.Computed<"numDigitsOfSystemId", typeof Number, ArtistType, "systemId">;
 
@@ -24,7 +24,7 @@ export interface ArtistType extends Type<"artist"> {
     changedById: Property.Reference.Id<"changedById", UserType, "id", "ChangedById", "n" | "p">;
     changedBy: Property.Reference<"changedBy", UserType, ArtistType["changedById"], "ChangedBy", "n">;
 
-    parentId: Property.Reference.Id<"parentId", ArtistType, "globalId", "ParentId", "n">;
+    parentId: Property.Reference.Id<"parentId", ArtistType, "id", "ParentId", "n">;
     parent: Property.Reference<"parent", ArtistType, ArtistType["parentId"], "Parent", "n">;
 
     albums: Property.Children<"albums", AlbumType, "artistId", "Albums">;
@@ -37,6 +37,7 @@ export interface ArtistType extends Type<"artist"> {
     // country: Reference<"country", CountryType , ArtistType["countryId"], "Country">;
 
     lalala: 3;
+    reviewIds: Property.Primitive.Array<"reviewIds", typeof Number, "ReviewIds">;
     // reviewIds: Reference.Id<"reviewIds", ReviewType[] | null, "id", "ReviewIds">;
     // reviews: Reference<"reviews", (ReviewType | null)[] | null>;
 }

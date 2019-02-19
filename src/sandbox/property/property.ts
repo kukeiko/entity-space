@@ -1,9 +1,8 @@
-import { Type } from "./type";
-import { Component } from "./component";
-import { Instance } from "./instance";
+import { Type } from "../type";
+import { Component } from "../component";
+import { Instance } from "../instance";
 
 export module Property {
-
     /***
      *    ██╗██████╗
      *    ██║██╔══██╗
@@ -78,8 +77,30 @@ export module Property {
             & Component.Primitive<V>
             & Component.Property<K, ReturnType<V>>;
 
-        export type Virtual
-            = {};
+        export type Ethereal<
+            K extends string,
+            V extends Component.Primitive.ValueType,
+            M extends "n" = never>
+            = Component.Ethereal
+            & Component.Local
+            & Component.Primitive<V>
+            & Component.Property<K, ReturnType<V>, M>;
+
+        export type Array<
+            K extends string,
+            V extends Component.Primitive.ValueType,
+            A extends string = K,
+            D = ReturnType<V>,
+            M extends Component.Modifier = never>
+            = {
+                fromDto(v: D[]): ReturnType<V>[];
+                toDto(v: ReturnType<V>[]): D[];
+            }
+            & Component.Array
+            & Component.Dto<A, D[], M>
+            & Component.Local
+            & Component.Primitive<V>
+            & Component.Property<K, ReturnType<V>[]>;
     }
 
     /***
@@ -102,8 +123,7 @@ export module Property {
         // [todo] for some reason, ", M" only needs to be put @ either Component.Dto or Component.Property
         // (at least for nullability)
         & Component.Dto<A, Partial<Instance.Dto<T>>, M>
-        & Component.External
-        & Component.Navigable<T>
+        & Component.Navigable.External<T>
         & Component.Property<K, Partial<Instance<T>>, M>;
 
     export module Reference {
@@ -121,6 +141,7 @@ export module Property {
                 otherIdKey: P;
             }
             & Component.Local
+            & Component.Primitive<Component.Primitive.ValueTypeOf<T[P]>>
             & Component.Property<K, Component.Property.ValueOf<T[P]>, M>
             & Component.Dto<A, Component.Dto.ValueOf<T[P]>, M>
             ;
@@ -130,6 +151,12 @@ export module Property {
         }
 
         export type Virtual = {};
+
+        export type Array = {};
+
+        export module Array {
+            export type Virtual = {};
+        }
     }
 
     /***
@@ -194,7 +221,6 @@ export module Property {
         }
         & Component.Array
         & Component.Dto<A, Instance.Dto<Partial<T>[]>, M>
-        & Component.External
-        & Component.Navigable<T>
+        & Component.Navigable.External<T>
         & Component.Property<K, Instance<Partial<T>[]>, M>;
 }

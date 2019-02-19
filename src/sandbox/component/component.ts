@@ -1,8 +1,14 @@
-import { Type } from "./type";
+import { Type } from "../type";
 
 export module Component {
+    /**
+     * A property where the value is an array.
+     */
     export type Array = {
         array: true;
+        /**
+         * Defines whether or not the order of values in the array matter when checking for differences.
+         */
         ordered: boolean;
     };
 
@@ -48,20 +54,16 @@ export module Component {
         id: true;
     };
 
-    // [note] i imagine this to be used for the system-id use case; "Ethereal" as name was chosen because i love it,
-    // and there is a somewhat technically plausible reason for it (as per definition from wiktionary.com):
-    // "Pertaining to the hypothetical upper, purer air, or to the higher regions beyond the earth or beyond the atmosphere; celestial; otherworldly."
-    // => system A is otherworldly to system B and vice versa; they are out of each others' reach.
-    // since it therefore can't be inferred from a dto, it has to be supplied to the thing that creates instances from dtos
-    // *or* use Virtual instead (to make it easier) (but then again its not technically the same, even if perceived purpose feels similar)
+    /**
+     * A property where its value can not be derived from the data transfer object and therefore needs to be supplied on the fly.
+     */
     export type Ethereal = {
         ethereal: true;
     };
 
-    export type External = {
-        external: true;
-    };
-
+    /**
+     * A property where the value is only accessable via the entity that owns the property.
+     */
     export type Local = {
         local: true;
     };
@@ -87,6 +89,9 @@ export module Component {
         }
     }
 
+    /**
+     * A property where the value has properties we can select.
+     */
     export type Navigable<T extends Type<string>> = {
         navigable: true;
         navigated: T;
@@ -94,20 +99,36 @@ export module Component {
 
     export module Navigable {
         export type Keys<T> = Exclude<{ [P in keyof T]: T[P] extends Navigable<any> | undefined ? P : never }[keyof T], undefined>;
+
+        /**
+         * Returns the type the given navigable property navigates towards.
+         */
         export type OtherType<N> = N extends Navigable<infer T> ? T : never;
-        export type In<T> = { [K in Keys<T>]: T[K]; };
 
         export type Selected<T extends Type<string>> = {
             selected: T;
         } & Navigable<T>;
+
+        /**
+         * A navigable property where the value can be accessed separately
+         */
+        export type External<T extends Type<string>>
+            = {
+                external: true;
+            }
+            & Navigable<T>;
     }
 
+    /**
+     * A property that contains a primitive type.
+     */
     export type Primitive<T extends Primitive.ValueType> = {
         primitiveType: T;
     };
 
     export module Primitive {
         export type ValueType = BooleanConstructor | NumberConstructor | StringConstructor;
+        export type ValueTypeOf<T> = T extends Primitive<infer V> ? V : never;
         export type Keys<T> = Exclude<{ [P in keyof T]: T[P] extends Primitive<any> | undefined ? P : never }[keyof T], undefined>;
     }
 

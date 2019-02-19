@@ -1,10 +1,10 @@
 import { Query, Instance } from "../sandbox";
 import { ArtistType } from "../user";
 
-let artistMapper = new Query<ArtistType>()
-    .selectIf(x => x.id)
+let artistQuery = new Query<ArtistType>()
+    .selectIf(x => x.systemArtistId)
     .select(x => x.numDigitsOfSystemId)
-    .select(x => x.globalId)
+    .select(x => x.id)
     .select(x => x.systemId)
     .select(x => x.createdAt, [
         x => x.fromTo(["2018-01-01", "2019-01-01"], false),
@@ -36,18 +36,22 @@ let artistMapper = new Query<ArtistType>()
     .select(x => x.country, q => q.select(x => x.createdBy, q => q.select(x => x.id)))
     .select(x => x.country, q => q.select(x => x.createdBy, q => q.select(x => x.name)))
     .selectIf(x => x.changedBy, q => q.selectIf(x => x.createdBy, q => q.select(x => x.name)))
+    // .select(x => x.countryId, f =>)
     // .select(x => x.systemZone)
+    .select(x => x.reviewIds)
     ;
 
 let x: { foo: 3 } = {
     foo: 3
 };
 
-let builtMappedArtist = artistMapper.get();
+let builtMappedArtist = artistQuery.get();
 let builtMappedArtistInstances: Instance<typeof builtMappedArtist[]> = [
     {
+        systemArtistId: Math.random() > .5 ? undefined : 64,
+        reviewIds: [1, 2, 3],
         numDigitsOfSystemId: 1,
-        globalId: "foo@2",
+        id: "foo@2",
         systemId: "2",
         // systemId: Math.random() > .5 ? null : "2",
         createdAt: "2016-02-05",
@@ -85,6 +89,7 @@ let builtMappedArtistInstances: Instance<typeof builtMappedArtist[]> = [
 
 let builtMappedArtistDtoInstances: Instance.Dto<(typeof builtMappedArtist)[]> = [
     {
+        ReviewIds: [1, 2, 3],
         CreatedAt: 123,
         ChangedAt: "2018-01-01",
         Albums: [{
@@ -133,8 +138,8 @@ function takesArtistInstance(artist: Instance<typeof builtMappedArtist>): void {
         artist.createdBy.name.charAt(1);
     }
 
-    if (artist.id !== undefined) {
-        artist.id.toFixed();
+    if (artist.systemArtistId !== undefined) {
+        artist.systemArtistId.toFixed();
     }
 
     if (artist.changedBy != null) {

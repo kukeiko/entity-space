@@ -48,7 +48,6 @@ let artistCtorOptions: ConstructionOptions<ArtistType> = {
         otherKey: "user",
         otherIdKey: "id"
     },
-    globalId: {},
     id: {},
     name: {},
     parent: {
@@ -61,13 +60,15 @@ let artistCtorOptions: ConstructionOptions<ArtistType> = {
         options: {
             n: true
         },
-        otherIdKey: "globalId",
+        otherIdKey: "id",
         otherKey: "artist"
     },
+    systemArtistId: {},
     systemId: {
 
     },
     numDigitsOfSystemId: {},
+    reviewIds: {},
     systemName: {},
     systemZone: {}
 };
