@@ -57,6 +57,22 @@ export module Primitive {
         & Component.Property<K, ReturnType<V>[]>;
 
     export module Array {
+        export type Serialized<
+            K extends string,
+            V extends Component.Primitive.ValueType,
+            M extends Component.Modifier = never,
+            A extends string = K,
+            D = ReturnType<V>>
+            = {
+                fromDto(v: D): ReturnType<V>[];
+                toDto(v: ReturnType<V>[]): D;
+            }
+            & Component.Array
+            & Component.Dto<A, D, M>
+            & Component.Local
+            & Component.Primitive<V>
+            & Component.Property<K, ReturnType<V>[]>;
+
         export type Computed = {};
         export type Ethereal = {};
     }

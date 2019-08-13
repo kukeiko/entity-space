@@ -1,7 +1,7 @@
 import { Component } from "../component";
 
 export class SetCriterionBuilder<T extends Component.Primitive.ValueType> {
-    intersectsWith(values: Iterable<ReturnType<T>>): this {
+    intersects(values: Iterable<ReturnType<T>>): this {
         return this;
     }
 

@@ -1,14 +1,22 @@
-// import { Query, Instance } from "../sandbox";
-// import { CountryType } from "../user";
+import { Query, Instance } from "../sandbox";
+import { CountryType } from "./types";
 
-// let query = new Query<CountryType>()
-//     .select(x => x.changedById)
-//     .select(x => x.createdById)
-//     ;
+let countryType: CountryType = {} as any;
 
-// let type = query.get();
+let query = new Query(countryType)
+    .select(x => x.changedById)
+    .select(x => x.createdById)
+    .select(x => x.languages, [[f => f.intersects("en")]])
+    ;
 
-// let instance: Instance<typeof type> = {
-//     createdById: "foo",
-//     changedById: null
-// };
+let type = query.get();
+
+let instance: Instance<typeof type> = {
+    createdById: "foo",
+    changedById: null,
+    languages: ["en", "de"]
+};
+
+let dto: Instance.Dto<typeof type> = {
+    Languages: "en,de"
+};
