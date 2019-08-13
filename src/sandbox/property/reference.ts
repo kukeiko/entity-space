@@ -26,12 +26,18 @@ export module Reference {
         T extends Type<string>,
         P extends Component.ExternalId<T, any> & Component.Property<any, any, any>,
         // P extends Reference.Id<any, T, any> | Reference.Id.Computed<any, T, any, any, any, any> | Reference.Id.Ethereal<any, T, any, any>,
-        M extends Component.Modifier = never>
+        /**
+         * [note]
+         * modifier defaults to nullable since a virtual is loaded in a separate query, which might fail.
+         * if a user wants to know if the reference is null because it really doesn't have one, they'll
+         * just have to check the corresponding reference id for null.
+         */
+        M extends Component.Modifier = "n">
         = {
             localKey: P["key"];
         }
         & Component.Navigable.External<T>
-        & Component.Property<K, Partial<Instance<T>>, M>
+        & Component.Property<K, Partial<Instance<T>>, M & "n">
         & Component.Virtual;
 
     // export type Array<
