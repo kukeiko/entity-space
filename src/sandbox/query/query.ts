@@ -1,12 +1,15 @@
 import { Type } from "../type";
 import { Component } from "../component";
-
 import { CriterionBuilder } from "./criterion-builder";
 import { SetCriterionBuilder } from "./set-criterion-builder";
 
-// type DetermineCriterionBuilder<T extends Component.Primitive.ValueType>
-//  = 
 
+/**
+ * T(ype) = the type we are querying and selecting properties from
+ * M(apped) = the type that has been built by selecting properties from T
+ * P(roperty) = a property of T being selected
+ * O(ut) = the type that has been built via a sub query while selecting a navigable P
+ */
 export class Query<T extends Type<string>, M = { $: T["$"] }> {
     private _type: T;
     private _built: Type<string> & { [key: string]: Component.Property<string, any, any>; };
@@ -16,16 +19,17 @@ export class Query<T extends Type<string>, M = { $: T["$"] }> {
         this._built = { $: type.$ } as any;
     }
 
-    select<
-        P extends Component.Primitive<any> & Component.Local & Component.Property<any, any>
-    >(
+    /**
+     * [todo] we could simplify "Component.Primitive<any> & Component.Local" into just "Component.Primitive<any>"
+     * if we make "Component.Primitive" extend from "Component.Local", which I think makes sense since
+     * any primitive is always local (and not loaded separately from an external source, i.e. Component.External)
+     */
+    select<P extends Component.Primitive<any> & Component.Local & Component.Property<any, any>>(
         // _: (foo: Required<T>) => P,
         _: (foo: T) => P,
     ): Query<T, Record<P["key"], P & Component.Local.Selected<ReturnType<P["read"]>>> & M>;
 
-    select<
-        P extends Component.Primitive<any> & Component.Local & Component.Property<any, any>
-    >(
+    select<P extends Component.Primitive<any> & Component.Local & Component.Property<any, any>>(
         // _0: (foo: Required<T>) => P,
         _0: (foo: T) => P,
         _1: ((filter: CriterionBuilder<P["primitiveType"]>) => any)[]
@@ -37,18 +41,13 @@ export class Query<T extends Type<string>, M = { $: T["$"] }> {
      * maintaining the ability to select a property by writing "x => x.name"
      * (and also having just "select" as the method name with all its overloads)
      */
-    select<
-        P extends Component.Primitive<any> & Component.Local & Component.Property<any, any>
-    >(
+    select<P extends Component.Primitive<any> & Component.Local & Component.Property<any, any>>(
         // _0: (foo: Required<T>) => P,
         _0: (foo: T) => P,
         _1: ((filter: SetCriterionBuilder<P["primitiveType"]>) => any)[][]
     ): Query<T, Record<P["key"], P & Component.Local.Selected<ReturnType<P["read"]>>> & M>;
 
-    select<
-        P extends Component.Navigable<any> & Component.Property<any, any>,
-        O extends Type<string>
-    >(
+    select<P extends Component.Navigable<any> & Component.Property<any, any>, O extends Type<string>>(
         // _0: (foo: Required<T>) => P,
         _0: (foo: T) => P,
         _1: (eq: Query<P["navigated"]>) => Query<any, O>
@@ -87,26 +86,19 @@ export class Query<T extends Type<string>, M = { $: T["$"] }> {
         return this as any;
     }
 
-    selectIf<
-        P extends Component.Local & Component.Property<any, any>
-    >(
+    selectIf<P extends Component.Local & Component.Property<any, any>>(
         // _: (foo: Required<T>) => P,
         _: (foo: T) => P,
     ): Query<T, Record<P["key"], undefined | (P & Component.Local.Selected<ReturnType<P["read"]>>)> & M>;
 
     // [note] multiple criteria are combined w/ "or"
-    selectIf<
-        P extends Component.Primitive<any> & Component.Local & Component.Property<any, any>
-    >(
+    selectIf<P extends Component.Primitive<any> & Component.Local & Component.Property<any, any>>(
         // _0: (foo: Required<T>) => P,
         _0: (foo: T) => P,
         _1: ((f: CriterionBuilder<P["primitiveType"]>) => any)[]
     ): Query<T, Record<P["key"], undefined | (P & Component.Local.Selected<ReturnType<P["read"]>>)> & M>;
 
-    selectIf<
-        P extends Component.Navigable<any> & Component.Property<any, any>,
-        O extends Type<string>
-    >(
+    selectIf<P extends Component.Navigable<any> & Component.Property<any, any>, O extends Type<string>>(
         // _0: (foo: Required<T>) => P,
         _0: (foo: T) => P,
         _1: (eq: Query<P["navigated"]>) => Query<any, O>

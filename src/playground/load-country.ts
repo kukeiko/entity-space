@@ -1,4 +1,4 @@
-import { Query, Instance } from "../sandbox";
+import { Query, Instance } from "@sandbox";
 import { CountryType } from "./types";
 
 let countryType: CountryType = {} as any;

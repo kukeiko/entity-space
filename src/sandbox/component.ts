@@ -85,7 +85,7 @@ export module Component {
     };
 
     export module Local {
-        export function is(x: any) : x is Local {
+        export function is(x: any): x is Local {
             return x != null && (x as any as Local).local === true;
         }
 
@@ -126,7 +126,7 @@ export module Component {
     };
 
     export module Navigable {
-        export function is(x: any) : x is Navigable<any> {
+        export function is(x: any): x is Navigable<any> {
             return x != null && (x as any as Navigable<any>).navigable === true;
         }
 
