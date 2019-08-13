@@ -19,6 +19,15 @@ let instanceA: Instance<typeof type> = {
     languages: ["en", "de"]
 };
 
+let instanceB : Instance<typeof type> = {
+    createdById: "foo",
+    changedById: null,
+    createdBy: {
+        name: "susi"
+    },
+    languages: ["en", "de"]
+};
+
 let dto: Instance.Dto<typeof type> = {
     Languages: "en,de"
 };
