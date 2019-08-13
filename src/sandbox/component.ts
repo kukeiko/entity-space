@@ -1,8 +1,11 @@
-import { Type } from "../type";
+import { Type } from "./type";
 
+/**
+ * Building blocks of properties.
+ */
 export module Component {
     /**
-     * A property where the value is an array.
+     * A property where its value is an array.
      */
     export type Array = {
         array: true;
@@ -12,12 +15,19 @@ export module Component {
         ordered: boolean;
     };
 
+    export type NotArray = {
+        array: false;
+    };
+
+    /**
+     * A property where the value is of type object.
+     */
     export type Complex = {
         complex: true;
     };
 
     // export type Computed<T extends Type<string>, S extends string, V extends Primitive.ValueType, M extends Modifier = never> = {
-    export type Computed<T, S extends string, V extends Primitive.ValueType, M extends Modifier = never> = {
+    export type Computed<T, S extends string, V extends Primitive.ValueType, M extends "n" = never> = {
         computed: true;
         computedFrom: { [k in S]: true; };
         compute(instance: {
@@ -55,6 +65,11 @@ export module Component {
         id: true;
     };
 
+    export type ExternalId<T extends Type<string>, P extends Modifier.Unique.Keys<T>> = {
+        otherTypeKey: T["$"]["key"];
+        otherIdKey: P;
+    };
+
     /**
      * A property where its value can not be derived from the data transfer object and therefore needs to be supplied on the fly.
      */
@@ -70,13 +85,22 @@ export module Component {
     };
 
     export module Local {
+        export function is(x: any) : x is Local {
+            return x != null && (x as any as Local).local === true;
+        }
+
         export type Keys<T> = Exclude<{ [P in keyof T]: T[P] extends Local | undefined ? P : never }[keyof T], undefined>;
 
+        // [todo] this can't be right, we don't already have a value while creating a query
+        // and selecting properties
         export type Selected<V> = {
             selected: V;
         } & Local;
     }
 
+    /**
+     * Flags for making a property creatable, nullable, patchable and unique.
+     */
     export type Modifier = Modifier.Creatable | Modifier.Nullable | Modifier.Patchable | Modifier.Unique;
 
     export module Modifier {
@@ -91,18 +115,25 @@ export module Component {
     }
 
     /**
-     * A property where the value has properties we can select.
+     * A property where the value has further properties we can select (e.g. for loading, patching, ...)
      */
     export type Navigable<T extends Type<string>> = {
         navigable: true;
+        /**
+         * The type that is navigated towards.
+         */
         navigated: T;
     };
 
     export module Navigable {
+        export function is(x: any) : x is Navigable<any> {
+            return x != null && (x as any as Navigable<any>).navigable === true;
+        }
+
         export type Keys<T> = Exclude<{ [P in keyof T]: T[P] extends Navigable<any> | undefined ? P : never }[keyof T], undefined>;
 
         /**
-         * Returns the type the given navigable property navigates towards.
+         * Returns the type the given navigable property navigates towards
          */
         export type OtherType<N> = N extends Navigable<infer T> ? T : never;
 
@@ -121,7 +152,7 @@ export module Component {
     }
 
     /**
-     * A property that contains a primitive type.
+     * A property that contains a primitive type (boolean, number, string).
      */
     export type Primitive<T extends Primitive.ValueType> = {
         primitiveType: T;

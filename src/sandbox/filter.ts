@@ -14,6 +14,10 @@
  * => should actually be able to do it via trying to .combine() each pair of criterions, if there is a non-null result
  * we can express it as a single criterion (result from example would be [1-4])
  */
+export class Filter {
+    criteria: Filter.Criteria = {};
+}
+
 export module Filter {
     // [note] purpose: "and" two filters together per property
     export function combineFilter(a: any, b: any): any {

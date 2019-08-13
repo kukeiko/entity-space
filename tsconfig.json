@@ -22,7 +22,8 @@
         "baseUrl": "./",
         "paths": {
             "@elements": ["src/elements"],
-            "@metadata": ["src/metadata"]
+            "@metadata": ["src/metadata"],
+            "@sandbox": ["src/sandbox"]
         }
     },
     "include": [

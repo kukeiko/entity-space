@@ -35,15 +35,34 @@ export class CriterionBuilder<T extends Component.Primitive.ValueType> {
     }
 
     from(value: ReturnType<T>, inclusive = false): this {
+        if (typeof (value) !== "string" && typeof (value) !== "number") {
+            throw "";
+        }
+
         return this._combine(Filter.from(value, inclusive));
     }
 
     to(value: ReturnType<T>, inclusive = false): this {
+        if (typeof (value) !== "string" && typeof (value) !== "number") {
+            throw "";
+        }
+
         return this._combine(Filter.to(value, inclusive));
     }
 
     fromTo(values: [ReturnType<T>, ReturnType<T>], inclusive: boolean | [boolean, boolean] = true): this {
-        return this._combine(Filter.fromTo(values, inclusive));
+        let from = values[0];
+        let to = values[1];
+
+        if (typeof (from) !== "string" && typeof (from) !== "number") {
+            throw "";
+        }
+
+        if (typeof (to) !== "string" && typeof (to) !== "number") {
+            throw "";
+        }
+
+        return this._combine(Filter.fromTo([from, to], inclusive));
     }
 
     in(values: Iterable<ReturnType<T>>, invert = false): this {
@@ -54,3 +73,5 @@ export class CriterionBuilder<T extends Component.Primitive.ValueType> {
         return this._combine(Filter.notMemberOf(values, invert));
     }
 }
+
+type Foo = ReturnType<NumberConstructor>;

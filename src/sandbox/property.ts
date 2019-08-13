@@ -1,8 +1,11 @@
-import { Type } from "../type";
-import { Component } from "../component";
-import { Instance } from "../instance";
+import { Type } from "./type";
+import { Component as _Component } from "./component";
+import { Instance } from "./instance";
 
 export module Property {
+    // [note] without this export, type hints while declaring properties on a type show the absolute path of the project
+    export import Component = _Component;
+
     /***
      *    ██╗██████╗
      *    ██║██╔══██╗
@@ -13,33 +16,37 @@ export module Property {
      */
     export type Id<
         K extends string,
-        V extends Component.Primitive.ValueType,
+        V extends _Component.Primitive.ValueType,
         A extends string = K,
         D = ReturnType<V>>
         = {
             fromDto(v: D): ReturnType<V>;
             toDto(v: ReturnType<V>): D;
         }
-        & Component.Dto<A, D, "u">
-        & Component.Id
-        & Component.Local
-        & Component.Primitive<V>
-        & Component.Property<K, ReturnType<V>, "u">;
+        & _Component.Dto<A, D, "u">
+        & _Component.NotArray
+        & _Component.Id
+        & _Component.Local
+        & _Component.Primitive<V>
+        & _Component.Property<K, ReturnType<V>, "u">;
 
     export module Id {
         export type Keys<T> = Exclude<{ [P in keyof T]: T[P] extends Id<any, any> | undefined ? P : never }[keyof T], undefined>;
 
         export type Computed<
             K extends string,
-            V extends Component.Primitive.ValueType,
+            V extends _Component.Primitive.ValueType,
             T extends Type<string>,
-            I extends Component.Local.Keys<T> & string>
-            = Component.Computed<T, I, V>
-            & Component.Id
-            & Component.Local
-            & Component.Primitive<V>
-            & Component.Property<K, ReturnType<V>, "u">;
+            I extends _Component.Local.Keys<T> & string>
+            = _Component.Computed<T, I, V>
+            & _Component.Id
+            & _Component.Local
+            & _Component.Primitive<V>
+            & _Component.Property<K, ReturnType<V>, "u">;
     }
+
+
+    // export import Id = _Id;
 
     /***
      *    ██████╗ ██████╗ ██╗███╗   ███╗██╗████████╗██╗██╗   ██╗███████╗
@@ -51,59 +58,58 @@ export module Property {
      */
     export type Primitive<
         K extends string,
-        V extends Component.Primitive.ValueType,
+        V extends _Component.Primitive.ValueType,
+        M extends _Component.Modifier = never,
         A extends string = K,
-        D = ReturnType<V>,
-        // [todo] "any" instead of "never" is required for user-metadata.mixin, check if we can use it everywhere
-        // M extends Component.Modifier = any>
-        M extends Component.Modifier = never>
+        D = ReturnType<V>>
         = {
             fromDto(v: D): ReturnType<V>;
             toDto(v: ReturnType<V>): D;
         }
-        & Component.Dto<A, D, M>
-        & Component.Local
-        & Component.Primitive<V>
-        & Component.Property<K, ReturnType<V>, M>;
+        & _Component.Dto<A, D, M>
+        & _Component.NotArray
+        & _Component.Local
+        & _Component.Primitive<V>
+        & _Component.Property<K, ReturnType<V>, M>;
 
     export module Primitive {
         export type Keys<T> = Exclude<{ [P in keyof T]: T[P] extends Primitive<any, any> | undefined ? P : never }[keyof T], undefined>;
 
         export type Computed<
             K extends string,
-            V extends Component.Primitive.ValueType,
+            V extends _Component.Primitive.ValueType,
             T extends Type<string>,
-            I extends Component.Local.Keys<T> & string,
+            I extends _Component.Local.Keys<T> & string,
             M extends "n" = never>
-            = Component.Computed<T, I, V, M>
-            & Component.Local
-            & Component.Primitive<V>
-            & Component.Property<K, ReturnType<V>, M>;
+            = _Component.Computed<T, I, V, M>
+            & _Component.Local
+            & _Component.Primitive<V>
+            & _Component.Property<K, ReturnType<V>, M>;
 
         export type Ethereal<
             K extends string,
-            V extends Component.Primitive.ValueType,
+            V extends _Component.Primitive.ValueType,
             M extends "n" = never>
-            = Component.Ethereal
-            & Component.Local
-            & Component.Primitive<V>
-            & Component.Property<K, ReturnType<V>, M>;
+            = _Component.Ethereal
+            & _Component.Local
+            & _Component.Primitive<V>
+            & _Component.Property<K, ReturnType<V>, M>;
 
         export type Array<
             K extends string,
-            V extends Component.Primitive.ValueType,
+            V extends _Component.Primitive.ValueType,
+            M extends _Component.Modifier = never,
             A extends string = K,
-            D = ReturnType<V>,
-            M extends Component.Modifier = never>
+            D = ReturnType<V>>
             = {
                 fromDto(v: D[]): ReturnType<V>[];
                 toDto(v: ReturnType<V>[]): D[];
             }
-            & Component.Array
-            & Component.Dto<A, D[], M>
-            & Component.Local
-            & Component.Primitive<V>
-            & Component.Property<K, ReturnType<V>[]>;
+            & _Component.Array
+            & _Component.Dto<A, D[], M>
+            & _Component.Local
+            & _Component.Primitive<V>
+            & _Component.Property<K, ReturnType<V>[]>;
 
         export module Array {
             export type Computed = {};
@@ -119,8 +125,16 @@ export module Property {
      *    ╚██████╗╚██████╔╝██║ ╚═╝ ██║██║     ███████╗███████╗██╔╝ ██╗
      *     ╚═════╝ ╚═════╝ ╚═╝     ╚═╝╚═╝     ╚══════╝╚══════╝╚═╝  ╚═╝
      */
-    export type Complex
-        = {};
+    export type Complex<
+        K extends string,
+        T extends Type<string>,
+        M extends "n" | "p" | "c" = never,
+        A extends string = K>
+        = _Component.Complex
+        & _Component.Dto<A, Partial<Instance.Dto<T>>, M>
+        & _Component.Local
+        & _Component.Navigable<T>
+        & _Component.Property<K, Partial<Instance<T>>, M>;
 
     export module Complex {
         export type Computed
@@ -130,24 +144,23 @@ export module Property {
             K extends string,
             T extends Type<string>,
             M extends "n" = never>
-            = {}
-            & Component.Complex
-            & Component.Ethereal
-            & Component.Local
-            & Component.Navigable<T>
-            & Component.Property<K, Partial<Instance<T>>, M>;
+            = _Component.Complex
+            & _Component.Ethereal
+            & _Component.Local
+            & _Component.Navigable<T>
+            & _Component.Property<K, Partial<Instance<T>>, M>;
 
-        // export type Ethereal<
-        // K extends string,
-        // V extends Component.Primitive.ValueType,
-        // M extends "n" = never>
-        // = Component.Ethereal
-        // & Component.Local
-        // & Component.Primitive<V>
-        // & Component.Property<K, ReturnType<V>, M>;
-
-        export type Array
-            = {};
+        export type Array<
+            K extends string,
+            T extends Type<string>,
+            M extends "n" | "p" | "c" = never,
+            A extends string = K>
+            = _Component.Array
+            & _Component.Dto<A, Instance.Dto<Partial<T>[]>, M>
+            & _Component.Complex
+            & _Component.Local
+            & _Component.Navigable<T>
+            & _Component.Property<K, Instance<Partial<T>[]>, M>;
 
         export module Array {
             export type Computed = {};
@@ -166,17 +179,18 @@ export module Property {
     export type Reference<
         K extends string,
         T extends Type<string>,
-        P extends Reference.Id<any, T, any> | Reference.Id.Computed<any, T, any, any, any, any> | Reference.Id.Ethereal<any, T, any, any>,
-        A extends string = K,
-        M extends Component.Modifier = never>
+        // P extends Reference.Id<any, T, any> | Reference.Id.Computed<any, T, any, any, any, any> | Reference.Id.Ethereal<any, T, any, any>,
+        P extends _Component.ExternalId<T, any> & _Component.Property<any, any, any>,
+        M extends _Component.Modifier = never,
+        A extends string = K>
         = {
             localKey: P["key"];
         }
         // [todo] for some reason, ", M" only needs to be put @ either Component.Dto or Component.Property
         // (at least for nullability)
-        & Component.Dto<A, Partial<Instance.Dto<T>>, M>
-        & Component.Navigable.External<T>
-        & Component.Property<K, Partial<Instance<T>>, M>;
+        & _Component.Dto<A, Partial<Instance.Dto<T>>, M>
+        & _Component.Navigable.External<T>
+        & _Component.Property<K, Partial<Instance<T>>, M>;
 
     export module Reference {
         export type Keys<T> = Exclude<{ [P in keyof T]: T[P] extends Reference<any, any, any> | undefined ? P : never }[keyof T], undefined>;
@@ -184,16 +198,29 @@ export module Property {
         export type Virtual<
             K extends string,
             T extends Type<string>,
-            P extends Reference.Id<any, T, any> | Reference.Id.Computed<any, T, any, any, any, any> | Reference.Id.Ethereal<any, T, any, any>,
-            M extends Component.Modifier = never>
+            P extends _Component.ExternalId<T, any> & _Component.Property<any, any, any>,
+            // P extends Reference.Id<any, T, any> | Reference.Id.Computed<any, T, any, any, any, any> | Reference.Id.Ethereal<any, T, any, any>,
+            M extends _Component.Modifier = never>
             = {
                 localKey: P["key"];
             }
-            & Component.Navigable.External<T>
-            & Component.Property<K, Partial<Instance<T>>, M>
-            & Component.Virtual;
+            & _Component.Navigable.External<T>
+            & _Component.Property<K, Partial<Instance<T>>, M>
+            & _Component.Virtual;
 
-        export type Array = {};
+        // export type Array<
+        //     K extends string,
+        //     T extends Type<string>,
+        //     P extends Reference.Id.Keys<T>,
+        //     M extends _Component.Modifier = never,
+        //     A extends string = K>
+        //     = {
+        //         parentIdKey: P;
+        //     }
+        //     & _Component.Array
+        //     & _Component.Dto<A, Instance.Dto<Partial<T>[]>, M>
+        //     & _Component.Navigable.External<T>
+        //     & _Component.Property<K, Instance<Partial<T>[]>, M>;
 
         export module Array {
             export type Virtual = {};
@@ -202,16 +229,14 @@ export module Property {
         export type Id<
             K extends string,
             T extends Type<string>,
-            P extends Component.Modifier.Unique.Keys<T>,
-            A extends string = K,
-            M extends Component.Modifier = never>
-            = {
-                otherIdKey: P;
-            }
-            & Component.Dto<A, Component.Dto.ValueOf<T[P]>, M>
-            & Component.Local
-            & Component.Primitive<Component.Primitive.ValueTypeOf<T[P]>>
-            & Component.Property<K, Component.Property.ValueOf<T[P]>, M>;
+            P extends _Component.Modifier.Unique.Keys<T>,
+            M extends _Component.Modifier = never,
+            A extends string = K>
+            = _Component.Dto<A, _Component.Dto.ValueOf<T[P]>, M>
+            & _Component.ExternalId<T, P>
+            & _Component.Local
+            & _Component.Primitive<_Component.Primitive.ValueTypeOf<T[P]>>
+            & _Component.Property<K, _Component.Property.ValueOf<T[P]>, M>;
 
         export module Id {
             export type Keys<T> = Exclude<{ [P in keyof T]: T[P] extends Id<any, any, any> | undefined ? P : never }[keyof T], undefined>;
@@ -219,33 +244,27 @@ export module Property {
             export type Computed<
                 K extends string,
                 T extends Type<string>,
-                P extends Component.Modifier.Unique.Keys<T>,
-                // U extends Type<string>,
+                P extends _Component.Modifier.Unique.Keys<T>,
                 U,
-                I extends Component.Local.Keys<U> & string,
+                I extends _Component.Local.Keys<U> & string,
                 M extends "n" = never>
-                = {
-                    otherIdKey: P;
-                }
-                // & Component.Computed<T, I, Component.Primitive.ValueTypeOf<T[P]>, M>
-                & Component.Computed<U, I, Component.Primitive.ValueTypeOf<T[P]>, M>
-                & Component.Local
-                & Component.Primitive<Component.Primitive.ValueTypeOf<T[P]>>
-                & Component.Property<K, Component.Property.ValueOf<T[P]>, M>;
+                = _Component.Computed<U, I, _Component.Primitive.ValueTypeOf<T[P]>, M>
+                & _Component.ExternalId<T, P>
+                & _Component.Local
+                & _Component.Primitive<_Component.Primitive.ValueTypeOf<T[P]>>
+                & _Component.Property<K, _Component.Property.ValueOf<T[P]>, M>;
             // & Component.Property<K, ReturnType<Component.Primitive.ValueTypeOf<T[P]>>, M>;
 
             export type Ethereal<
                 K extends string,
                 T extends Type<string>,
-                P extends Component.Modifier.Unique.Keys<T>,
-                M extends "n" = never
-                > = {
-                    otherIdKey: P;
-                }
-                & Component.Ethereal
-                & Component.Local
-                & Component.Primitive<Component.Primitive.ValueTypeOf<T[P]>>
-                & Component.Property<K, Component.Property.ValueOf<T[P]>, M>;
+                P extends _Component.Modifier.Unique.Keys<T>,
+                M extends "n" = never>
+                = _Component.Ethereal
+                & _Component.ExternalId<T, P>
+                & _Component.Local
+                & _Component.Primitive<_Component.Primitive.ValueTypeOf<T[P]>>
+                & _Component.Property<K, _Component.Property.ValueOf<T[P]>, M>;
         }
     }
 
@@ -304,13 +323,13 @@ export module Property {
         K extends string,
         T extends Type<string>,
         P extends Reference.Id.Keys<T>,
-        A extends string = K,
-        M extends Component.Modifier = never>
+        M extends _Component.Modifier = never,
+        A extends string = K>
         = {
             parentIdKey: P;
         }
-        & Component.Array
-        & Component.Dto<A, Instance.Dto<Partial<T>[]>, M>
-        & Component.Navigable.External<T>
-        & Component.Property<K, Instance<Partial<T>[]>, M>;
+        & _Component.Array
+        & _Component.Dto<A, Instance.Dto<Partial<T>[]>, M>
+        & _Component.Navigable.External<T>
+        & _Component.Property<K, Instance<Partial<T>[]>, M>;
 }
