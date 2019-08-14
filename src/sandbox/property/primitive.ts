@@ -6,10 +6,10 @@ export type Primitive<
     V extends Component.Primitive.ValueType,
     M extends Component.Modifier = never,
     A extends string = K,
-    D = ReturnType<V>>
+    D extends Component.Primitive.ValueType = V>
     = {
-        fromDto(v: D): ReturnType<V>;
-        toDto(v: ReturnType<V>): D;
+        fromDto(v: ReturnType<D>): ReturnType<V>;
+        toDto(v: ReturnType<V>): ReturnType<D>;
     }
     & Component.Dto<A, D, M>
     & Component.NotArray
@@ -43,15 +43,15 @@ export module Primitive {
     export type Array<
         K extends string,
         V extends Component.Primitive.ValueType,
-        M extends Component.Modifier = never,
+        M extends Exclude<Component.Modifier, "u"> = never,
         A extends string = K,
-        D = ReturnType<V>>
+        D extends Component.Primitive.ValueType = V>
         = {
-            fromDto(v: D[]): ReturnType<V>[];
-            toDto(v: ReturnType<V>[]): D[];
+            fromDto(v: ReturnType<D>[]): ReturnType<V>[];
+            toDto(v: ReturnType<V>[]): ReturnType<D>[];
         }
         & Component.Array
-        & Component.Dto<A, D[], M>
+        & Component.Dto<A, ReturnType<D>[], M>
         & Component.Local
         & Component.Primitive<V>
         & Component.Property<K, ReturnType<V>[]>;
@@ -60,15 +60,15 @@ export module Primitive {
         export type Serialized<
             K extends string,
             V extends Component.Primitive.ValueType,
-            M extends Component.Modifier = never,
+            M extends Exclude<Component.Modifier, "u"> = never,
             A extends string = K,
-            D = ReturnType<V>>
+            D extends Component.Primitive.ValueType = V>
             = {
-                fromDto(v: D): ReturnType<V>[];
-                toDto(v: ReturnType<V>[]): D;
+                fromDto(v: ReturnType<D>): ReturnType<V>[];
+                toDto(v: ReturnType<V>[]): ReturnType<D>;
             }
             & Component.Array
-            & Component.Dto<A, D, M>
+            & Component.Dto<A, ReturnType<D>, M>
             & Component.Local
             & Component.Primitive<V>
             & Component.Property<K, ReturnType<V>[]>;

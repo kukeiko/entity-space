@@ -1,107 +1,91 @@
-// import { Query, Instance } from "../sandbox";
-// import { ArtistType } from "../user";
+import { Query, Instance } from "@sandbox";
+import { ArtistType } from "./types";
 
-// let artistQuery = new Query<ArtistType>()
-//     .selectIf(x => x.systemArtistId)
-//     .select(x => x.numDigitsOfSystemId)
-//     .select(x => x.id)
-//     .select(x => x.systemId)
-//     .select(x => x.createdAt, [
-//         x => x.fromTo(["2018-01-01", "2019-01-01"], false),
-//         x => x.to("1970-04-06")
-//     ])
-//     .selectIf(x => x.changedAt)
-//     .select(x => x.countryId)
-//     .select(x => x.changedById)
-//     .select(x => x.albums, q => q.select(x => x.artistId).select(x => x.artist, q => q.select(x => x.parentId).select(x => x.changedById)))
-//     .select(x => x.country, q => q
-//         .select(x => x.createdBy, q => q.select(x => x.name, [f => f.equals("susi")]))
-//         .select(x => x.name, [x => x.in(["austria", "germany", "hungary"])])
-//         .select(x => x.population)
-//     )
-//     .select(x => x.country, q => q
-//         .select(x => x.changedBy, q => q.select(x => x.id))
-//         .select(x => x.createdBy, q => q.select(x => x.id))
-//     )
-//     .select(x => x.country, q => q
-//         .select(x => x.changedBy, q => q.select(x => x.name))
-//     )
-//     .select(x => x.createdBy, q => q.select(x => x.id))
-//     .select(x => x.createdBy, q => q.select(x => x.id).select(x => x.name))
-//     .select(x => x.parent, q => q.select(x => x.country, q => q.select(x => x.createdById).select(x => x.id).select(x => x.name).select(x => x.createdBy, q => q.select(x => x.id).select(x => x.name))))
-//     .select(x => x.country, q => q.select(x => x.createdById).select(x => x.id).select(x => x.name))
-//     .select(x => x.country, q => q.select(x => x.name))
-//     .select(x => x.country, q => q.select(x => x.id).select(x => x.createdById))
-//     .select(x => x.country, q => q.select(x => x.createdBy, q => q))
-//     .select(x => x.country, q => q.select(x => x.createdBy, q => q.select(x => x.id)))
-//     .select(x => x.country, q => q.select(x => x.createdBy, q => q.select(x => x.name)))
-//     .selectIf(x => x.changedBy, q => q.selectIf(x => x.createdBy, q => q.select(x => x.name)))
-//     // .select(x => x.countryId, f =>)
-//     // .select(x => x.systemZone)
-//     .select(x => x.reviewIds)
-//     .select(x => x.parentId)
-//     ;
+let artistType: ArtistType = {} as any;
+
+let artistQuery = new Query<ArtistType>(artistType)
+    // .selectIf(x => x.systemArtistId)
+    // .select(x => x.numDigitsOfSystemId)
+    .select(x => x.id)
+    // .select(x => x.systemId)
+    .select(x => x.createdAt, [
+        x => x.fromTo(["2018-01-01", "2019-01-01"], false),
+        x => x.to("1970-04-06")
+    ])
+    .selectIf(x => x.changedAt)
+    .select(x => x.countryId)
+    .select(x => x.changedById)
+    .select(x => x.albums, q => q.select(x => x.artistId).select(x => x.artist, q => q.select(x => x.name)))
+    .select(x => x.country, q => q
+        .select(x => x.createdBy, q => q.select(x => x.name, [f => f.equals("susi")]))
+        .select(x => x.name, [x => x.in(["austria", "germany", "hungary"])])
+        .select(x => x.population)
+    )
+    .select(x => x.country, q => q
+        .select(x => x.changedBy, q => q.select(x => x.id))
+        .select(x => x.createdBy, q => q.select(x => x.id))
+    )
+    .select(x => x.country, q => q
+        .select(x => x.changedBy, q => q.select(x => x.name))
+    )
+    .select(x => x.createdBy, q => q.select(x => x.id))
+    .select(x => x.createdBy, q => q.select(x => x.id).select(x => x.name))
+    // .select(x => x.parent, q => q.select(x => x.country, q => q.select(x => x.createdById).select(x => x.id).select(x => x.name).select(x => x.createdBy, q => q.select(x => x.id).select(x => x.name))))
+    .select(x => x.country, q => q.select(x => x.createdById).select(x => x.id).select(x => x.name))
+    .select(x => x.country, q => q.select(x => x.name))
+    .select(x => x.country, q => q.select(x => x.id).select(x => x.createdById))
+    .select(x => x.country, q => q.select(x => x.createdBy, q => q))
+    .select(x => x.country, q => q.select(x => x.createdBy, q => q.select(x => x.id)))
+    .select(x => x.country, q => q.select(x => x.createdBy, q => q.select(x => x.name)))
+    .selectIf(x => x.changedBy, q => q.selectIf(x => x.createdBy, q => q.select(x => x.name)))
+    // .select(x => x.countryId, f =>)
+    // .select(x => x.systemZone)
+    .select(x => x.reviewIds)
+    // .select(x => x.parentId)
+    ;
 
 // let x: { foo: 3 } = {
 //     foo: 3
 // };
 
-// let builtMappedArtist = artistQuery.get();
-// let builtMappedArtistInstances: Instance<typeof builtMappedArtist[]> = [
-//     {
-//         systemArtistId: Math.random() > .5 ? undefined : 64,
-//         reviewIds: [1, 2, 3],
-//         numDigitsOfSystemId: 1,
-//         id: "foo@2",
-//         systemId: "2",
-//         // systemId: Math.random() > .5 ? null : "2",
-//         createdAt: "2016-02-05",
-//         changedAt: "2018-01-01",
-//         parentId: "bar@2",
-//         // parentId: Math.random() > .5 ? "foo" : null,
-//         albums: [{
-//             artistId: null,
-//             artist: {
-//                 parentId: "foo",
-//                 changedById: Math.random() > .5 ? 3 : null
-//             }
-//         }],
-//         changedById: null,
-//         changedBy: Math.random() > .5 ? null : undefined,
-//         countryId: null,
-//         createdBy: {
-//             id: 1,
-//             name: "foo"
-//         },
-//         country: {
-//             changedBy: {
-//                 id: "foo",
-//                 name: ""
-//             },
-//             createdBy: {
-//                 id: "foo",
-//                 name: ""
-//             },
-//             createdById: "foo",
-//             id: "foo",
-//             name: "foo",
-//             population: 3
-//             // population: 64,
-//             // changedBy: {
-//             //     id: 3,
-//             //     name: "foo"
-//             // },
-//             // createdBy: {
-//             //     id: 8,
-//             //     name: null
-//             // },
-//             // createdById: 8,
-//             // id: "quak",
-//             // name: "khaz"
-//         },
-//         parent: null
-//     }
-// ];
+let builtMappedArtist = artistQuery.get();
+let builtMappedArtistInstances: Instance<typeof builtMappedArtist[]> = [
+    {
+        reviewIds: [1, 2, 3],
+        id: "foo@2",
+        // systemId: Math.random() > .5 ? null : "2",
+        createdAt: "2016-02-05",
+        changedAt: "2018-01-01",
+        // parentId: Math.random() > .5 ? "foo" : null,
+        albums: [{
+            artistId: null,
+            artist: {
+                name: "bingobongo"
+            }
+        }],
+        changedById: null,
+        changedBy: Math.random() > .5 ? null : undefined,
+        countryId: null,
+        createdBy: {
+            id: "1",
+            name: "lala"
+        },
+        country: {
+            changedBy: {
+                id: "foo",
+                name: ""
+            },
+            createdBy: {
+                id: "foo",
+                name: ""
+            },
+            createdById: "foo",
+            id: "foo",
+            name: "foo",
+            population: 3
+        }
+    }
+];
 
 // let builtMappedArtistDtoInstances: Instance.Dto<(typeof builtMappedArtist)[]> = [
 //     {
@@ -145,57 +129,56 @@
 //     }
 // ];
 
-// function takesArtistInstance(artist: Instance<typeof builtMappedArtist>): void {
-//     if (artist.albums !== undefined) {
-//         artist.albums.forEach(album => {
-//             if (album.artist !== null) {
-//                 album.artist.parentId;
-//             }
-//         });
-//     }
+function takesArtistInstance(artist: Instance<typeof builtMappedArtist>): void {
+    if (artist.albums !== undefined) {
+        artist.albums.forEach(album => {
+            if (album.artist !== null) {
+                album.artist.name;
+            }
+        });
+    }
 
-//     artist.createdBy.id.toFixed();
-//     artist.changedById = null;
+    if (artist.createdBy !== null) {
+        artist.createdBy.id.toLocaleLowerCase();
+    }
 
-//     if (artist.createdBy.name !== null) {
-//         artist.createdBy.name.charAt(1);
-//     }
+    artist.changedById = null;
 
-//     if (artist.systemArtistId !== undefined) {
-//         artist.systemArtistId.toFixed();
-//     }
+    if (artist.createdBy !== null) {
+        if (artist.createdBy.name !== null) {
+            artist.createdBy.name.charAt(1);
+        }
+    }
 
-//     if (artist.changedBy != null) {
-//         if (artist.changedBy.createdBy != null) {
-//             if (artist.changedBy.createdBy.name !== null) {
-//                 artist.changedBy.createdBy.name.charAt(1);
-//             }
-//         }
-//     }
 
-//     if (artist.parent !== null) {
-//         if (artist.parent.country !== null) {
-//             artist.parent.country.createdById.charAt(0);
-//         }
-//     }
+    if (artist.changedBy != null) {
+        if (artist.changedBy.createdBy != null) {
+            if (artist.changedBy.createdBy.name !== null) {
+                artist.changedBy.createdBy.name.charAt(1);
+            }
+        }
+    }
 
-//     if (artist.country !== null) {
-//         artist.country.createdById.charAt(0);
-//         artist.country.createdBy.id.charAt(0);
+    if (artist.country !== null) {
+        artist.country.createdById.charAt(0);
 
-//         if (artist.country.createdBy.name !== null) {
-//             artist.country.createdBy.name.charAt(1);
-//         }
+        if (artist.country.createdBy !== null) {
+            artist.country.createdBy.id.charAt(0);
 
-//         if (artist.country.changedBy !== null) {
-//             artist.country.changedBy.id.charAt(0);
+            if (artist.country.createdBy.name !== null) {
+                artist.country.createdBy.name.charAt(1);
+            }
+        }
 
-//             if (artist.country.changedBy.name !== null) {
-//                 artist.country.changedBy.name.charAt(1);
-//             }
-//         }
-//     }
-// }
+        if (artist.country.changedBy !== null) {
+            artist.country.changedBy.id.charAt(0);
+
+            if (artist.country.changedBy.name !== null) {
+                artist.country.changedBy.name.charAt(1);
+            }
+        }
+    }
+}
 
 // function takesArtistDtoInstance(artist: Instance.Dto<typeof builtMappedArtist>): void {
 //     if (artist.Albums !== undefined) {

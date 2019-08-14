@@ -1,6 +1,6 @@
 import { Type, Property } from "@sandbox";
 
 export interface SystemType extends Type<"system"> {
-    id: Property.Id<"id", typeof Number>;
+    id: Property.Id<"id", typeof Number, "Id", typeof String>;
     name: Property.Primitive<"name", typeof String>;
 }

@@ -1,8 +1,9 @@
 {
     "compilerOptions": {
-        "target": "es5",
+        "downlevelIteration": true,
         "experimentalDecorators": true,
         "emitDecoratorMetadata": true,
+        "target": "es5",
         "module": "commonjs",
         "sourceMap": true,
         "declaration": true,

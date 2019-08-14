@@ -63,7 +63,7 @@ export module Component {
 
     export type Id = {
         id: true;
-    };
+    } & Local;
 
     export type ExternalId<T extends Type<string>, P extends Modifier.Unique.Keys<T>> = {
         otherTypeKey: T["$"]["key"];
@@ -85,7 +85,7 @@ export module Component {
     };
 
     export module Local {
-        export function is(x: any): x is Local {
+        export function is(x?: any): x is Local {
             return x != null && (x as any as Local).local === true;
         }
 
@@ -146,9 +146,15 @@ export module Component {
          */
         export type External<T extends Type<string>>
             = {
-                external: true;
+                local: false;
             }
             & Navigable<T>;
+
+        export module External {
+            export function is<T extends Type<string>>(x?: any): x is External<T> {
+                return x != null && (x as any as External<T>).local === false;
+            }
+        }
     }
 
     /**

@@ -1,16 +1,20 @@
 import { Component } from "../component";
 import { Type } from "../type";
 
+/**
+ * [todo]
+ * should support (c)reatable modifier
+ */
 export type Id<
     K extends string,
     V extends Component.Primitive.ValueType,
     A extends string = K,
-    D = ReturnType<V>>
+    D extends Component.Primitive.ValueType = V>
     = {
-        fromDto(v: D): ReturnType<V>;
-        toDto(v: ReturnType<V>): D;
+        fromDto(v: ReturnType<D>): ReturnType<V>;
+        toDto(v: ReturnType<V>): ReturnType<D>;
     }
-    & Component.Dto<A, D, "u">
+    & Component.Dto<A, ReturnType<D>, "u">
     & Component.NotArray
     & Component.Id
     & Component.Local

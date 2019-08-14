@@ -8,7 +8,7 @@ export interface MetadataMixin {
     createdBySystemId: Property.Primitive.Ethereal<"createdBySystemId", typeof Number>;
     createdBy: Property.Reference.Virtual<"createdBy", UserType, MetadataMixin["createdById"]>;
 
-    changedAt: Property.Primitive<"changedAt", typeof String, "n", "ChangedAt", string>;
+    changedAt: Property.Primitive<"changedAt", typeof String, "n", "ChangedAt">;
     changedById: Property.Reference.Id.Computed<"changedById", UserType, "id", MetadataMixin, "changedBySystemId" | "changedByUserId", "n">;
     changedBySystemId: Property.Primitive.Ethereal<"changedBySystemId", typeof Number, "n">;
     changedByUserId: Property.Primitive<"changedByUserId", typeof Number, "n", "ChangedById">;
