@@ -8,6 +8,7 @@ export type Primitive<
     A extends string = K,
     D extends Component.Primitive.ValueType = V>
     = {
+        type: Primitive.TypeId;
         fromDto(v: ReturnType<D>): ReturnType<V>;
         toDto(v: ReturnType<V>): ReturnType<D>;
     }
@@ -17,6 +18,8 @@ export type Primitive<
     & Component.Property<K, ReturnType<V>, M>;
 
 export module Primitive {
+    export type TypeId = "primitive";
+
     export type Keys<T> = Exclude<{ [P in keyof T]: T[P] extends Primitive<any, any> | undefined ? P : never }[keyof T], undefined>;
 
     export type Computed<
@@ -25,17 +28,29 @@ export module Primitive {
         T extends Type<string>,
         I extends Component.Local.Keys<T> & string,
         M extends "n" = never>
-        = Component.Computed<T, I, V, M>
+        = {
+            type: Computed.TypeId;
+        } & Component.Computed<T, I, V, M>
         & Component.Primitive<V>
         & Component.Property<K, ReturnType<V>, M>;
+
+    export module Computed {
+        export type TypeId = "primitive:computed";
+    }
 
     export type Ethereal<
         K extends string,
         V extends Component.Primitive.ValueType,
         M extends "n" = never>
-        = Component.Ethereal
+        = {
+            type: Ethereal.TypeId;
+        } & Component.Ethereal
         & Component.Primitive<V>
         & Component.Property<K, ReturnType<V>, M>;
+
+    export module Ethereal {
+        export type TypeId = "primitive:ethereal";
+    }
 
     export type Array<
         K extends string,
@@ -44,6 +59,7 @@ export module Primitive {
         A extends string = K,
         D extends Component.Primitive.ValueType = V>
         = {
+            type: Array.TypeId;
             fromDto(v: ReturnType<D>[]): ReturnType<V>[];
             toDto(v: ReturnType<V>[]): ReturnType<D>[];
         }
@@ -53,6 +69,8 @@ export module Primitive {
         & Component.Property<K, ReturnType<V>[]>;
 
     export module Array {
+        export type TypeId = "primitive:array";
+
         export type Serialized<
             K extends string,
             V extends Component.Primitive.ValueType,
@@ -60,6 +78,7 @@ export module Primitive {
             A extends string = K,
             D extends Component.Primitive.ValueType = V>
             = {
+                type: Serialized.TypeId;
                 fromDto(v: ReturnType<D>): ReturnType<V>[];
                 toDto(v: ReturnType<V>[]): ReturnType<D>;
             }
@@ -67,6 +86,10 @@ export module Primitive {
             & Component.Dto<A, ReturnType<D>, M>
             & Component.Primitive<V>
             & Component.Property<K, ReturnType<V>[]>;
+
+        export module Serialized {
+            export type TypeId = "primitive:array:serialized";
+        }
 
         export type Computed = {};
         export type Ethereal = {};
