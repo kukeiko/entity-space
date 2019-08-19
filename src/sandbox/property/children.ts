@@ -14,7 +14,7 @@ export type Children<
     }
     & Component.Array
     & Component.Dto<A, Instance.Dto<Partial<T>[]>, M>
-    & Component.Navigable.External<T>
+    & Component.External<T>
     & Component.Property<K, Instance<Partial<T>[]>, M>;
 
 export module Children { }

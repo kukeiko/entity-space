@@ -9,7 +9,6 @@ export type Complex<
     A extends string = K>
     = Component.Complex
     & Component.Dto<A, Partial<Instance.Dto<T>>, M>
-    & Component.Local
     & Component.Navigable<T>
     & Component.Property<K, Partial<Instance<T>>, M>;
 
@@ -23,7 +22,6 @@ export module Complex {
         M extends "n" = never>
         = Component.Complex
         & Component.Ethereal
-        & Component.Local
         & Component.Navigable<T>
         & Component.Property<K, Partial<Instance<T>>, M>;
 
@@ -35,7 +33,6 @@ export module Complex {
         = Component.Array
         & Component.Dto<A, Instance.Dto<Partial<T>[]>, M>
         & Component.Complex
-        & Component.Local
         & Component.Navigable<T>
         & Component.Property<K, Instance<Partial<T>[]>, M>;
 

@@ -13,7 +13,6 @@ export type Primitive<
     }
     & Component.Dto<A, D, M>
     & Component.NotArray
-    & Component.Local
     & Component.Primitive<V>
     & Component.Property<K, ReturnType<V>, M>;
 
@@ -27,7 +26,6 @@ export module Primitive {
         I extends Component.Local.Keys<T> & string,
         M extends "n" = never>
         = Component.Computed<T, I, V, M>
-        & Component.Local
         & Component.Primitive<V>
         & Component.Property<K, ReturnType<V>, M>;
 
@@ -36,7 +34,6 @@ export module Primitive {
         V extends Component.Primitive.ValueType,
         M extends "n" = never>
         = Component.Ethereal
-        & Component.Local
         & Component.Primitive<V>
         & Component.Property<K, ReturnType<V>, M>;
 
@@ -52,7 +49,6 @@ export module Primitive {
         }
         & Component.Array
         & Component.Dto<A, ReturnType<D>[], M>
-        & Component.Local
         & Component.Primitive<V>
         & Component.Property<K, ReturnType<V>[]>;
 
@@ -69,7 +65,6 @@ export module Primitive {
             }
             & Component.Array
             & Component.Dto<A, ReturnType<D>, M>
-            & Component.Local
             & Component.Primitive<V>
             & Component.Property<K, ReturnType<V>[]>;
 

@@ -15,7 +15,7 @@ export type Reference<
     // [todo] for some reason, ", M" only needs to be put @ either Component.Dto or Component.Property
     // (at least for nullability)
     & Component.Dto<A, Partial<Instance.Dto<T>>, M>
-    & Component.Navigable.External<T>
+    & Component.External<T>
     & Component.Property<K, Partial<Instance<T>>, M>;
 
 export module Reference {
@@ -36,7 +36,7 @@ export module Reference {
         = {
             localKey: P["key"];
         }
-        & Component.Navigable.External<T>
+        & Component.External<T>
         & Component.Property<K, Partial<Instance<T>>, M & "n">
         & Component.Virtual;
 
@@ -66,7 +66,6 @@ export module Reference {
         A extends string = K>
         = Component.Dto<A, Component.Dto.ValueOf<T[P]>, M>
         & Component.ExternalId<T, P>
-        & Component.Local
         & Component.Primitive<Component.Primitive.ValueTypeOf<T[P]>>
         & Component.Property<K, Component.Property.ValueOf<T[P]>, M>;
 
@@ -82,7 +81,6 @@ export module Reference {
             M extends "n" = never>
             = Component.Computed<U, I, Component.Primitive.ValueTypeOf<T[P]>, M>
             & Component.ExternalId<T, P>
-            & Component.Local
             & Component.Primitive<Component.Primitive.ValueTypeOf<T[P]>>
             & Component.Property<K, Component.Property.ValueOf<T[P]>, M>;
         // & Component.Property<K, ReturnType<Component.Primitive.ValueTypeOf<T[P]>>, M>;
@@ -94,7 +92,6 @@ export module Reference {
             M extends "n" = never>
             = Component.Ethereal
             & Component.ExternalId<T, P>
-            & Component.Local
             & Component.Primitive<Component.Primitive.ValueTypeOf<T[P]>>
             & Component.Property<K, Component.Property.ValueOf<T[P]>, M>;
     }

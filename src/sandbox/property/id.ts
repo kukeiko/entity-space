@@ -17,7 +17,6 @@ export type Id<
     & Component.Dto<A, ReturnType<D>, "u">
     & Component.NotArray
     & Component.Id
-    & Component.Local
     & Component.Primitive<V>
     & Component.Property<K, ReturnType<V>, "u">;
 
@@ -31,7 +30,6 @@ export module Id {
         I extends Component.Local.Keys<T> & string>
         = Component.Computed<T, I, V>
         & Component.Id
-        & Component.Local
         & Component.Primitive<V>
         & Component.Property<K, ReturnType<V>, "u">;
 }

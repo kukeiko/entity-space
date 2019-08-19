@@ -24,7 +24,7 @@ export module Component {
      */
     export type Complex = {
         complex: true;
-    };
+    } & Local;
 
     // export type Computed<T extends Type<string>, S extends string, V extends Primitive.ValueType, M extends Modifier = never> = {
     export type Computed<T, S extends string, V extends Primitive.ValueType, M extends "n" = never> = {
@@ -77,6 +77,18 @@ export module Component {
         ethereal: true;
     };
 
+    export type External<T extends Type<string>>
+        = {
+            local: false;
+        }
+        & Navigable<T>;
+
+    export module External {
+        export function is<T extends Type<string>>(x?: any): x is External<T> {
+            return x != null && (x as any as External<T>).local === false;
+        }
+    }
+
     /**
      * A property where the value is only accessable via the entity that owns the property.
      */
@@ -91,8 +103,12 @@ export module Component {
 
         export type Keys<T> = Exclude<{ [P in keyof T]: T[P] extends Local | undefined ? P : never }[keyof T], undefined>;
 
-        // [todo] this can't be right, we don't already have a value while creating a query
-        // and selecting properties
+        /**
+         * [todo]
+         * what do we assign to "selected" when selecting a string property?
+         * for complex and navigable types we set an object that contains further properties,
+         * but for primitives? no idea right now
+         */
         export type Selected<V> = {
             selected: V;
         } & Local;
@@ -140,21 +156,6 @@ export module Component {
         export type Selected<T extends Type<string>> = {
             selected: T;
         } & Navigable<T>;
-
-        /**
-         * A navigable property where the value can be accessed separately
-         */
-        export type External<T extends Type<string>>
-            = {
-                local: false;
-            }
-            & Navigable<T>;
-
-        export module External {
-            export function is<T extends Type<string>>(x?: any): x is External<T> {
-                return x != null && (x as any as External<T>).local === false;
-            }
-        }
     }
 
     /**
@@ -162,7 +163,7 @@ export module Component {
      */
     export type Primitive<T extends Primitive.ValueType> = {
         primitiveType: T;
-    };
+    } & Local;
 
     export module Primitive {
         export type ValueType = BooleanConstructor | NumberConstructor | StringConstructor;
