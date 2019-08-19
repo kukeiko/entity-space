@@ -2,16 +2,17 @@ import { Property } from "../../property";
 import { ModifiersDefinition } from "./modifiers.definition";
 
 export type PrimitiveDefinition<X>
-    = PrimitiveDefinition.TypeId<X>
+    = PrimitiveDefinition.Common<X>
     & PrimitiveDefinition.DtoKey<X>
     & PrimitiveDefinition.DtoConverters<X>
     & ModifiersDefinition<X>;
 
 export module PrimitiveDefinition {
-    export type TypeId<X>
+    export type Common<X>
         = X extends Property.Primitive<infer K, infer V, infer M, infer A, infer D>
         ? {
             type: Property.Primitive.TypeId;
+            primitive: Property.Primitive<K, V, M, A, D>["primitive"];
         }
         : {};
 
@@ -28,6 +29,22 @@ export module PrimitiveDefinition {
         : {
             fromDto: Property.Primitive<K, V, M, A, D>["fromDto"];
             toDto: Property.Primitive<K, V, M, A, D>["toDto"];
+        }
+        : {};
+
+    export type Computed<X>
+        = X extends Property.Primitive.Computed<infer K, infer V, infer T, infer I, infer M>
+        ? {
+            type: Property.Primitive.Computed.TypeId;
+            computedFrom: Property.Primitive.Computed<K, V, T, I, M>["computedFrom"];
+            compute: Property.Primitive.Computed<K, V, T, I, M>["compute"];
+        }
+        : {};
+
+    export type Ethereal<X>
+        = X extends Property.Primitive.Ethereal<infer K, infer V, infer M>
+        ? {
+            type: Property.Primitive.Ethereal.TypeId;
         }
         : {};
 

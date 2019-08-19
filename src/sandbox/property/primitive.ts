@@ -19,7 +19,6 @@ export type Primitive<
 
 export module Primitive {
     export type TypeId = "primitive";
-
     export type Keys<T> = Exclude<{ [P in keyof T]: T[P] extends Primitive<any, any> | undefined ? P : never }[keyof T], undefined>;
 
     export type Computed<
@@ -30,7 +29,8 @@ export module Primitive {
         M extends "n" = never>
         = {
             type: Computed.TypeId;
-        } & Component.Computed<T, I, V, M>
+        }
+        & Component.Computed<T, I, V, M>
         & Component.Primitive<V>
         & Component.Property<K, ReturnType<V>, M>;
 
@@ -44,7 +44,8 @@ export module Primitive {
         M extends "n" = never>
         = {
             type: Ethereal.TypeId;
-        } & Component.Ethereal
+        }
+        & Component.Ethereal
         & Component.Primitive<V>
         & Component.Property<K, ReturnType<V>, M>;
 

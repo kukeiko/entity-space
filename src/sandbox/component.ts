@@ -162,7 +162,7 @@ export module Component {
      * A property that contains a primitive type (boolean, number, string).
      */
     export type Primitive<T extends Primitive.ValueType> = {
-        primitiveType: T;
+        primitive: T;
     } & Local;
 
     export module Primitive {

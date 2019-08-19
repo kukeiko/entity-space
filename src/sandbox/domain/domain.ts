@@ -40,6 +40,8 @@ export module Domain {
         : Definition.Id<T[K]>
         & Definition.Id.Computed<T[K]>
         & Definition.Primitive<T[K]>
+        & Definition.Primitive.Computed<T[K]>
+        & Definition.Primitive.Ethereal<T[K]>
         & Definition.Primitive.Array<T[K]>
         & Definition.Primitive.Array.Deserialized<T[K]>
         & DefineArguments.Children<T[K]>

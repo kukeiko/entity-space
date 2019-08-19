@@ -11,10 +11,10 @@ domain.define<SystemType>("system", {
         toDto: x => x.toString()
     },
     name: {
-        type: "primitive"
+        type: "primitive",
+        primitive: String
     }
 });
-
 
 domain.define<UserType>("user", {
     achievements: {
@@ -23,6 +23,7 @@ domain.define<UserType>("user", {
     },
     changedAt: {
         type: "primitive",
+        primitive: String,
         dtoKey: "ChangedAt",
         flags: {
             n: true
@@ -39,12 +40,14 @@ domain.define<UserType>("user", {
         }
     },
     changedBySystemId: {
+        type: "primitive:ethereal",
         flags: {
             n: true
         }
     },
     changedByUserId: {
         type: "primitive",
+        primitive: Number,
         dtoKey: "ChangedById",
         flags: {
             n: true
@@ -52,6 +55,7 @@ domain.define<UserType>("user", {
     },
     createdAt: {
         type: "primitive",
+        primitive: String,
         dtoKey: "CreatedAt"
     },
     createdBy: {
@@ -65,12 +69,11 @@ domain.define<UserType>("user", {
         }
     },
     createdBySystemId: {
-        flags: {
-            n: true
-        }
+        type: "primitive:ethereal"
     },
     createdByUserId: {
         type: "primitive",
+        primitive: Number,
         dtoKey: "CreatedById"
     },
     id: {
@@ -92,13 +95,22 @@ domain.define<UserType>("user", {
     },
     level: {
         type: "primitive",
+        primitive: Number,
         dtoKey: "Level",
         fromDto: x => parseInt(x),
         toDto: x => x.toString()
     },
     name: {
         type: "primitive",
+        primitive: String,
         dtoKey: "Name"
+    },
+    numAchievements: {
+        type: "primitive:computed",
+        computedFrom: {
+            achievements: true
+        },
+        compute: x => x.achievements.length
     },
     parent: {
         flags: {
@@ -112,6 +124,7 @@ domain.define<UserType>("user", {
     },
     parentUserId: {
         type: "primitive",
+        primitive: Number,
         dtoKey: "ParentId",
         flags: {
             n: true
@@ -151,6 +164,7 @@ domain.define<UserType>("user", {
     },
     userId: {
         type: "primitive",
+        primitive: Number,
         dtoKey: "UserId",
         flags: {
             u: true

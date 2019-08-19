@@ -34,8 +34,8 @@ export module IdDefinition {
         = X extends Property.Id.Computed<infer K, infer V, infer T, infer I>
         ? {
             type: Property.Id.Computed.TypeId;
-            computedFrom: Component.Computed<T, I, V>["computedFrom"];
-            compute: Component.Computed<T, I, V>["compute"];
+            computedFrom: Property.Id.Computed<K, V, T, I>["computedFrom"];
+            compute: Property.Id.Computed<K, V, T, I>["compute"];
         }
         : {};
 }
