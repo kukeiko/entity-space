@@ -61,31 +61,31 @@ export module PrimitiveDefinition {
             }
             : {};
 
-        export type Serialized<X>
-            = Serialized.TypeId<X>
-            & Serialized.DtoKey<X>
-            & Serialized.DtoConverters<X>
+        export type Deserialized<X>
+            = Deserialized.TypeId<X>
+            & Deserialized.DtoKey<X>
+            & Deserialized.DtoConverters<X>
             & ModifiersDefinition<X>;
 
-        export module Serialized {
+        export module Deserialized {
             export type TypeId<X>
-                = X extends Property.Primitive.Array.Serialized<infer K, infer V, infer M, infer A, infer D>
+                = X extends Property.Primitive.Array.Deserialized<infer K, infer V, infer M, infer A, infer D>
                 ? {
-                    type: Property.Primitive.Array.Serialized.TypeId;
+                    type: Property.Primitive.Array.Deserialized.TypeId;
                 }
                 : {};
 
             export type DtoKey<X>
-                = X extends Property.Primitive.Array.Serialized<infer K, infer V, infer M, infer A, infer D>
+                = X extends Property.Primitive.Array.Deserialized<infer K, infer V, infer M, infer A, infer D>
                 ? A extends K ? {} : {
                     dtoKey: A;
                 } : {};
 
             export type DtoConverters<X>
-                = X extends Property.Primitive.Array.Serialized<infer K, infer V, infer M, infer A, infer D>
+                = X extends Property.Primitive.Array.Deserialized<infer K, infer V, infer M, infer A, infer D>
                 ? {
-                    fromDto: Property.Primitive.Array.Serialized<K, V, M, A, D>["fromDto"];
-                    toDto: Property.Primitive.Array.Serialized<K, V, M, A, D>["toDto"];
+                    fromDto: Property.Primitive.Array.Deserialized<K, V, M, A, D>["fromDto"];
+                    toDto: Property.Primitive.Array.Deserialized<K, V, M, A, D>["toDto"];
                 }
                 : {};
         }

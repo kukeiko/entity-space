@@ -18,5 +18,5 @@ export interface UserType extends Type<"user">, SystemMixin, MetadataMixin {
     level: Property.Primitive<"level", typeof Number, never, "Level", typeof String>;
     achievements: Property.Primitive.Array<"achievements", typeof Number, never, "Achievements">;
     randomInts: Property.Primitive.Array<"randomInts", typeof Number, never, "RandomInts", typeof String>;
-    languages: Property.Primitive.Array.Serialized<"languages", typeof String, "n", "Languages", typeof String>;
+    languages: Property.Primitive.Array.Deserialized<"languages", typeof String, "n", "Languages", typeof String>;
 }

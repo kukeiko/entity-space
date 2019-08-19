@@ -71,14 +71,14 @@ export module Primitive {
     export module Array {
         export type TypeId = "primitive:array";
 
-        export type Serialized<
+        export type Deserialized<
             K extends string,
             V extends Component.Primitive.ValueType,
             M extends Exclude<Component.Modifier, "u"> = never,
             A extends string = K,
             D extends Component.Primitive.ValueType = V>
             = {
-                type: Serialized.TypeId;
+                type: Deserialized.TypeId;
                 fromDto(v: ReturnType<D>): ReturnType<V>[];
                 toDto(v: ReturnType<V>[]): ReturnType<D>;
             }
@@ -87,8 +87,8 @@ export module Primitive {
             & Component.Primitive<V>
             & Component.Property<K, ReturnType<V>[]>;
 
-        export module Serialized {
-            export type TypeId = "primitive:array:serialized";
+        export module Deserialized {
+            export type TypeId = "primitive:array:deserialized";
         }
 
         export type Computed = {};

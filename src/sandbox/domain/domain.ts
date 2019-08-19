@@ -41,7 +41,7 @@ export module Domain {
         & Definition.Id.Computed<T[K]>
         & Definition.Primitive<T[K]>
         & Definition.Primitive.Array<T[K]>
-        & Definition.Primitive.Array.Serialized<T[K]>
+        & Definition.Primitive.Array.Deserialized<T[K]>
         & DefineArguments.Children<T[K]>
         & DefineArguments.Reference<T[K]>
         & DefineArguments.ReferenceId<T[K]>

@@ -82,7 +82,7 @@ domain.define<UserType>("user", {
         compute: x => `${x.userId}:${x.systemId}`
     },
     languages: {
-        type: "primitive:array:serialized",
+        type: "primitive:array:deserialized",
         dtoKey: "Languages",
         flags: {
             n: true
