@@ -11,6 +11,7 @@ export module IdDefinition {
         = X extends Property.Id<infer K, infer V, infer A, infer D>
         ? {
             type: Property.Id.TypeId;
+            primitive: Property.Primitive<K, V, "u", A, D>["primitive"];
         }
         : {};
 
@@ -29,6 +30,14 @@ export module IdDefinition {
             toDto: Property.Id<K, V, A, D>["toDto"];
         }
         : {};
+
+    export interface AllArgs {
+        type: Property.Id.TypeId;
+        dtoKey?: string;
+        primitive: Component.Primitive.ValueType;
+        fromDto?: (dto: unknown) => unknown;
+        toDto?: (dto: unknown) => unknown;
+    }
 
     export type Computed<X>
         = X extends Property.Id.Computed<infer K, infer V, infer T, infer I>

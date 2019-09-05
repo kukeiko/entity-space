@@ -1,5 +1,6 @@
 import { Property } from "../../property";
 import { ModifiersDefinition } from "./modifiers.definition";
+import { Component } from "src/sandbox/component";
 
 export type PrimitiveDefinition<X>
     = PrimitiveDefinition.Common<X>
@@ -31,6 +32,15 @@ export module PrimitiveDefinition {
             toDto: Property.Primitive<K, V, M, A, D>["toDto"];
         }
         : {};
+
+    export interface AllArgs {
+        type: Property.Primitive.TypeId;
+        dtoKey?: string;
+        primitive: Component.Primitive.ValueType;
+        fromDto?: (dto: unknown) => unknown;
+        toDto?: (dto: unknown) => unknown;
+        flags?: Record<Component.Modifier, true>;
+    }
 
     export type Computed<X>
         = X extends Property.Primitive.Computed<infer K, infer V, infer T, infer I, infer M>
