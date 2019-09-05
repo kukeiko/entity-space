@@ -12,7 +12,7 @@ export type Primitive<
         fromDto(v: ReturnType<D>): ReturnType<V>;
         toDto(v: ReturnType<V>): ReturnType<D>;
     }
-    & Component.Dto<A, D, M>
+    & Component.Dto<A, ReturnType<D>, M>
     & Component.NotArray
     & Component.Primitive<V>
     & Component.Property<K, ReturnType<V>, M>;
