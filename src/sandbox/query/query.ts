@@ -32,7 +32,7 @@ export class Query<T extends Type<string>, M = { $: T["$"] }> {
     select<P extends Component.Primitive<any> & Component.Local & Component.Property<any, any>>(
         // _0: (foo: Required<T>) => P,
         _0: (foo: T) => P,
-        _1: ((filter: CriterionBuilder<P["primitiveType"]>) => any)[]
+        _1: ((filter: CriterionBuilder<P["primitive"]>) => any)[]
     ): Query<T, Record<P["key"], P & Component.Local.Selected<ReturnType<P["read"]>>> & M>;
 
     /**
@@ -44,7 +44,7 @@ export class Query<T extends Type<string>, M = { $: T["$"] }> {
     select<P extends Component.Primitive<any> & Component.Local & Component.Property<any, any>>(
         // _0: (foo: Required<T>) => P,
         _0: (foo: T) => P,
-        _1: ((filter: SetCriterionBuilder<P["primitiveType"]>) => any)[][]
+        _1: ((filter: SetCriterionBuilder<P["primitive"]>) => any)[][]
     ): Query<T, Record<P["key"], P & Component.Local.Selected<ReturnType<P["read"]>>> & M>;
 
     select<P extends Component.Navigable<any> & Component.Property<any, any>, O extends Type<string>>(
@@ -83,7 +83,7 @@ export class Query<T extends Type<string>, M = { $: T["$"] }> {
         // cloned.s
 
 
-        return this as any;
+        return this;
     }
 
     selectIf<P extends Component.Local & Component.Property<any, any>>(
@@ -95,7 +95,7 @@ export class Query<T extends Type<string>, M = { $: T["$"] }> {
     selectIf<P extends Component.Primitive<any> & Component.Local & Component.Property<any, any>>(
         // _0: (foo: Required<T>) => P,
         _0: (foo: T) => P,
-        _1: ((f: CriterionBuilder<P["primitiveType"]>) => any)[]
+        _1: ((f: CriterionBuilder<P["primitive"]>) => any)[]
     ): Query<T, Record<P["key"], undefined | (P & Component.Local.Selected<ReturnType<P["read"]>>)> & M>;
 
     selectIf<P extends Component.Navigable<any> & Component.Property<any, any>, O extends Type<string>>(
