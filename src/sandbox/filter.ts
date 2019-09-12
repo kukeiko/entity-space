@@ -51,7 +51,7 @@ export module Filter {
     /**
      * Combines two criteria to create a new criterion that satisfies both.
      *
-     * Returns null if combined criteria would be unreachable (e.g. <0 && >0)
+     * Returns null if combined criteria would be unreachable (e.g. < 0 && > 0)
      *
      * [todo] unfinished
      */

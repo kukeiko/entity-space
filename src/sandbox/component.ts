@@ -162,6 +162,9 @@ export module Component {
      * A property that contains a primitive type (boolean, number, string).
      */
     export type Primitive<T extends Primitive.ValueType> = {
+        /**
+         * [todo] i'm not really sure that we need this, except for maybe in the future to support Component.Local.Selected @ instance.ts
+         */
         primitive: T;
     } & Local;
 

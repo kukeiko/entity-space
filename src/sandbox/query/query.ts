@@ -10,6 +10,12 @@ import { SetCriterionBuilder } from "./set-criterion-builder";
  * P(roperty) = a property of T being selected
  * O(ut) = the type that has been built via a sub query while selecting a navigable P
  */
+/**
+ * [todo]
+ * i'm thinking that maybe filtering would be more user friendly if instead of specifying them
+ * when selecting primities, we instead have a "filter()" method on the query. would probably
+ * remove the need of named filter groups, which seems a bit janky.
+ */
 export class Query<T extends Type<string>, M = { $: T["$"] }> {
     private _type: T;
     private _built: Type<string> & { [key: string]: Component.Property<string, any, any>; };
@@ -57,13 +63,11 @@ export class Query<T extends Type<string>, M = { $: T["$"] }> {
         let getProperty: (x: T) => Component.Property<string, any, any> = args[0];
         let property = getProperty(this._type);
 
-
-
         if (Component.Local.is(property)) {
             let cloned: Component.Property<string, any, any> & Component.Local.Selected<any> = {
                 ...property,
-                // [note] null because it doesn't matter (at least for now).
-                // this property only exists to supply type hinting during development
+                // [note] null because it doesn't matter (at least for now),
+                // since this property only exists to supply type hinting during development
                 selected: null as any
             };
 
@@ -78,10 +82,6 @@ export class Query<T extends Type<string>, M = { $: T["$"] }> {
 
             this._built[property.key] = cloned;
         }
-
-
-        // cloned.s
-
 
         return this;
     }

@@ -10,7 +10,7 @@ export interface MetadataMixin extends SystemMixin {
 
     changedAt: Property.Primitive<"changedAt", typeof String, "n", "ChangedAt">;
     changedById: Property.Reference.Id.Computed<"changedById", UserType, "id", MetadataMixin, "systemId" | "changedByUserId", "n">;
-    changedByUserId: Property.Primitive<"changedByUserId", typeof Number, "n", "ChangedById">;
+    changedByUserId: Property.Primitive<"changedByUserId", typeof Number, "n", "ChangedByUserId">;
     changedBy: Property.Reference.Virtual<"changedBy", UserType, MetadataMixin["changedById"], "n">;
 }
 
@@ -39,7 +39,7 @@ export module MetadataMixin {
             changedByUserId: {
                 type: "primitive",
                 primitive: Number,
-                dtoKey: "ChangedById",
+                dtoKey: "ChangedByUserId",
                 flags: {
                     n: true
                 }

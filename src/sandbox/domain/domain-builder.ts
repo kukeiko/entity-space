@@ -5,6 +5,9 @@ import { Type } from "../type";
 import { Domain } from "./domain";
 
 export class DomainBuilder<B = {}> {
+    /**
+     * [type] => [property] => [property-definition-args]
+     */
     private _typesArgs: Record<string, Record<string, Definition.AllArgs>> = {};
 
     define<T extends Type<any>>(definition: DomainBuilder.DefineArguments<T>): DomainBuilder<B & Record<T["$"]["key"], T>> {

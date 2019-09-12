@@ -6,7 +6,7 @@ import { MetadataMixin } from "./metadata.mixin";
 
 export interface ArtistType extends Type<"artist">, MetadataMixin {
     id: Property.Id<"id", typeof String, "Id">;
-    name: Property.Primitive<"name", typeof String, never, "Name", string>;
+    name: Property.Primitive<"name", typeof String, never, "Name">;
     albums: Property.Children<"albums", AlbumType, "artistId", never, "Albums">;
     countryId: Property.Reference.Id<"countryId", CountryType, "id", "n", "CountryId">;
     country: Property.Reference<"country", CountryType, ArtistType["countryId"], "n", "Country">;

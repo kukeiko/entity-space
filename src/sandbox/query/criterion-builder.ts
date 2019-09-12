@@ -3,9 +3,11 @@ import { Filter } from "../filter";
 
 /**
  * [notes]
- * - criteria chained via functions on same builder should be combined
- * => "or" happens via using multiple criterion builders (array @ Query.select())
- *
+ * - criteria chained via functions on same builder are combined with "and"
+ * - "or" happens via using multiple criterion builders (array @ Query.select())
+ * - "and" across multiple properties (e.g. "('level' < 7 and 'type' in (6, 38)) or ('level' < 13 and 'type' in (6))")
+ *   is done by using filter group names.
+ * 
  * - as soon as you export this via "Query.CriterionBuilder" the language server just kinda dies. so we don't do it.
  *
  * [todo] support null if primitive is nullable
@@ -13,6 +15,8 @@ import { Filter } from "../filter";
 export class CriterionBuilder<T extends Component.Primitive.ValueType> {
     // [note] is null if criteria have been combined that won't ever be reachable
     private _criterion?: Filter.Criterion | null = null;
+
+    private _group: string = "default";
 
     private _combine(criterion: Filter.Criterion): this {
         if (this._criterion === null) return this;
@@ -22,6 +26,12 @@ export class CriterionBuilder<T extends Component.Primitive.ValueType> {
         } else {
             this._criterion = Filter.combineCriterion(this._criterion, criterion);
         }
+
+        return this;
+    }
+
+    group(name: string = "default"): this {
+        this._group = name;
 
         return this;
     }
