@@ -3,7 +3,6 @@ import { Component } from "../component";
 import { CriterionBuilder } from "./criterion-builder";
 import { SetCriterionBuilder } from "./set-criterion-builder";
 
-
 /**
  * T(ype) = the type we are querying and selecting properties from
  * M(apped) = the type that has been built by selecting properties from T
