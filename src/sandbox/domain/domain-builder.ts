@@ -27,7 +27,7 @@ export class DomainBuilder<B = {}> {
             this._buildType(types, k, this._typesArgs[k]);
         }
 
-        return null as any;
+        return new Domain(types as any);
     }
 
     private _constructTypes(typesArgs: Record<string, Record<string, Definition.AllArgs>>): Record<string, Type<string>> {
@@ -46,6 +46,7 @@ export class DomainBuilder<B = {}> {
         let type = types[typeKey] as Record<string, any>;
 
         for (let key in typeArgs) {
+            if (key === "$") continue;
             let propArgs = typeArgs[key];
 
             switch (propArgs.type) {
@@ -122,7 +123,7 @@ export class DomainBuilder<B = {}> {
             primitive: args.primitive,
             read: x => x[key],
             readDto: x => x[dtoKey],
-            toDto: args.fromDto || (x => x),
+            toDto: args.toDto || (x => x),
             type: "primitive",
             write: (x, v) => (x[key] as string | number | boolean) = v,
             writeDto: (x, v) => (x[dtoKey] as string | number | boolean) = v
