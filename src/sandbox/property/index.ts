@@ -6,12 +6,17 @@ import { Reference as _Reference } from "./reference";
 import { Children as _Children } from "./children";
 import { Type } from "../type";
 
-export type Property<K extends string = string, V = any, M extends _Component.Modifier = any>
-    = _Id<K, any, string, any>
-    | _Id.Computed<K, any, any, any>
-    // | _Complex<K, any, any, string>
-    | _Primitive<K, any, any, string, any>
-    ;
+// export type Property<K extends string = string, V = any, M extends _Component.Modifier = any>
+//     = _Id<K, any, string, any>
+//     | _Id.Computed<K, any, any, any>
+//     // | _Complex<K, any, any, string>
+//     | _Primitive<K, any, any, string, any>
+//     | _Primitive.Array<K, any, any, any, any>
+//     | _Primitive.Array.Deserialized<K, any, any, any, any>
+//     | _Primitive.Computed<K, any, any, any, any>
+//     | _Primitive.Ethereal<K, any, any>
+    
+//     ;
 
 export module Property {
     /**

@@ -1,5 +1,5 @@
 import { Query, Instance } from "@sandbox";
-import { CountryType } from "./types";
+import { CountryType } from "../types";
 
 let countryType: CountryType = {} as any;
 
@@ -19,7 +19,7 @@ let instanceA: Instance<typeof type> = {
     languages: ["en", "de"]
 };
 
-let instanceB : Instance<typeof type> = {
+let instanceB: Instance<typeof type> = {
     createdById: "foo",
     changedById: null,
     createdBy: {

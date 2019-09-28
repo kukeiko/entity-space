@@ -1,5 +1,5 @@
 import { Query, Instance } from "@sandbox";
-import { ArtistType } from "./types";
+import { ArtistType } from "../types";
 
 let artistType: ArtistType = {} as any;
 
