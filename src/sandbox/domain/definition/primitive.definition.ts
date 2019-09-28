@@ -1,6 +1,6 @@
 import { Property } from "../../property";
 import { FlagsDefinition } from "./modifiers.definition";
-import { Component } from "src/sandbox/component";
+import { Component } from "../../component";
 
 export type PrimitiveDefinition<X>
     = X extends Property.Primitive<infer K, infer V, infer F, infer A, infer D>

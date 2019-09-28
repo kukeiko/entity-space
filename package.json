@@ -30,10 +30,11 @@
         "karma-jasmine": "1.1.0",
         "karma-mocha-reporter": "2.2.3",
         "karma-sourcemap-loader": "0.3.7",
-        "karma-webpack": "2.0.3",
+        "karma-webpack": "4.0.2",
         "rimraf": "2.6.1",
+        "ts-loader": "6.1.2",
         "tslint": "5.18.0",
         "typescript": "3.6.3",
-        "webpack": "2.3.2"
+        "webpack": "4.41.0"
     }
 }

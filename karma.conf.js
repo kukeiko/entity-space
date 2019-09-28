@@ -19,13 +19,24 @@ module.exports = function (config) {
         },
         webpack: {
             devtool: "inline-source-map",
+            mode: "development",
             resolve: {
-                extensions: [".ts", ".tsx", ".js"]
+                extensions: [".ts", ".tsx", ".js"],
+                alias: {
+                    "@elements": path.resolve("./src/elements"),
+                    "@metadata": path.resolve("./src/metadata"),
+                    "@sandbox": path.resolve("./src/sandbox"),
+                    "@sample-types": path.resolve("./src/playground/types")
+                }
             },
             module: {
-                rules: [{
+                rules: [
+                    {
                         test: /\.ts$/,
-                        loader: "awesome-typescript-loader"
+                        loader: "ts-loader",
+                        options: {
+                            configFile: "tsconfig-test.json"
+                        }
                     },
                     {
                         enforce: "post",
