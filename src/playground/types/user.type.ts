@@ -19,7 +19,7 @@ export interface UserType extends Type<"user">, MetadataMixin, LoadBalancedMixin
     parent: Property.Reference<"parent", UserType, UserType["parentId"], "n", "Parent">;
     // parent: Property.Reference.Virtual<"parent", UserType, UserType["parentId"]>;
 
-    typeId: Property.Reference.Id<"typeId", UserTypeType, "id">;
+    typeId: Property.Reference.Id<"typeId", UserTypeType, "id", "c", "TypeId">;
     type: Property.Reference<"type", UserTypeType, UserType["typeId"]>;
 
     level: Property.Primitive<"level", typeof Number, never, "Level", typeof String>;
@@ -144,11 +144,12 @@ export module UserType {
                 type: "reference"
             },
             typeId: {
+                dtoKey: "TypeId",
+                flags: { c: true },
                 otherIdKey: "id",
-                otherKey: "user-type",
-                // flags: {
-                //     n: true
-                // }
+                otherTypeKey: "user-type",
+                primitive: Number,
+                type: "reference:id"
             },
             userId: {
                 type: "primitive",

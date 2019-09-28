@@ -60,6 +60,7 @@ export class DomainBuilder<B = {}> {
                 case "complex:ethereal": type[key] = this._createComplexEthereal(key, types, propArgs); break;
                 case "complex:array": type[key] = this._createComplexArray(key, types, propArgs); break;
                 case "reference": type[key] = this._createReference(key, types, propArgs); break;
+                case "reference:id": type[key] = this._createReferenceId(key, propArgs); break;
 
                 default:
                     // [todo] use "if(assertNever(propArgs))" to ensure exhaustion @ compile time
@@ -276,6 +277,28 @@ export class DomainBuilder<B = {}> {
             writeDto: (x, v) => ((x[key] as any) = v)
         };
     }
+
+    private _createReferenceId(key: string, args: Definition.Reference.Id.AllArgs)
+        : Property.Reference.Id<string, Type<string> & any, any, any> {
+        let dtoKey = args.dtoKey || key;
+
+        return {
+            dtoKey,
+            fromDto: args.fromDto || (x => x),
+            key,
+            local: true,
+            modifiers: args.flags || {},
+            otherIdKey: args.otherIdKey,
+            otherTypeKey: args.otherTypeKey,
+            primitive: args.primitive,
+            read: x => x[key],
+            readDto: x => x[dtoKey],
+            toDto: args.toDto || (x => x),
+            type: "reference:id",
+            write: (x, v) => (x[key] as any) = v,
+            writeDto: (x, v) => (x[dtoKey] as any) = v
+        };
+    }
 }
 
 export module DomainBuilder {
@@ -298,6 +321,7 @@ export module DomainBuilder {
             & Definition.Complex.Ethereal<T[K]>
             & Definition.Complex.Array<T[K]>
             & Definition.Reference<T[K]>
+            & Definition.Reference.Id<T[K]>
             /**
              * [todo] missing:
              *  - children

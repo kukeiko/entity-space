@@ -21,5 +21,6 @@ export module Definition {
         | Complex.Ethereal.AllArgs
         | Complex.Array.AllArgs
         | Reference.AllArgs
+        | Reference.Id.AllArgs
         ;
 }

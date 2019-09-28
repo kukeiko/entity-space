@@ -29,16 +29,29 @@ export module ReferenceDefinition {
         ? (
             {
                 type: Property.Reference.Id.TypeId;
+                primitive: Property.Reference.Id<K, T, P, F, A>["primitive"];
+                otherTypeKey: T["$"]["key"];
+                otherIdKey: P;
             }
             & (A extends K ? {} : { dtoKey: A; })
-            & (Component.Dto.ValueOf<T[P]> extends Component.Primitive.ValueTypeOf<T[P]> ? {} : {
-                /**
-                 * [stopped-here]
-                 * Reference.Id doesn't have fromDto & toDto, i guess i forgot to add it?
-                 */
-                // fromDto: Property.Reference.Id<K, T, P, F, A>["f"];
-                // toDto: Property.Primitive<K, V, F, A, D>["toDto"];
+            & (Component.Dto.ValueOf<T[P]> extends Component.Property.ValueOf<T[P]> ? {} : {
+                fromDto: Property.Reference.Id<K, T, P, F, A>["fromDto"];
+                toDto: Property.Reference.Id<K, T, P, F, A>["toDto"];
             })
+            & FlagsDefinition<F>
         )
         : {};
+
+    export module Id {
+        export interface AllArgs {
+            dtoKey?: string;
+            type: Property.Reference.Id.TypeId;
+            fromDto?: (dto: any) => any;
+            toDto?: (dto: any) => any;
+            flags?: Record<Component.Modifier, true>;
+            otherIdKey: string;
+            otherTypeKey: string;
+            primitive: Component.Primitive.ValueType;
+        }
+    }
 }

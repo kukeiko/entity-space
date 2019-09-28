@@ -80,7 +80,7 @@ let dto: Instance.Dto<typeof type> = {
     Achievements: [67, 34],
     ChangedByUserId: 3,
     Level: "3",
-    typeId: 8,
+    TypeId: 8,
     Parent: null,
     Property: {
         Key: "foo",

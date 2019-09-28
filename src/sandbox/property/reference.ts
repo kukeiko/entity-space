@@ -68,8 +68,8 @@ export module Reference {
         A extends string = K>
         = {
             type: Id.TypeId;
-            // fromDto(v: ReturnType<D>): ReturnType<V>;
-            // toDto(v: ReturnType<V>): ReturnType<D>;
+            fromDto(v: Component.Dto.ValueOf<T[P]>): Component.Property.ValueOf<T[P]>;
+            toDto(v: Component.Property.ValueOf<T[P]>): Component.Dto.ValueOf<T[P]>;
         }
         & Component.Dto<A, Component.Dto.ValueOf<T[P]>, M>
         & Component.ExternalId<T, P>
