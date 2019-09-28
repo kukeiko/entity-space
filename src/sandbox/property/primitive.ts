@@ -21,6 +21,9 @@ export module Primitive {
     export type TypeId = "primitive";
     export type Keys<T> = Exclude<{ [P in keyof T]: T[P] extends Primitive<any, any> | undefined ? P : never }[keyof T], undefined>;
 
+    /**
+     * [computed]
+     */
     export type Computed<
         K extends string,
         V extends Component.Primitive.ValueType,
@@ -38,6 +41,9 @@ export module Primitive {
         export type TypeId = "primitive:computed";
     }
 
+    /**
+     * [ethereal]
+     */
     export type Ethereal<
         K extends string,
         V extends Component.Primitive.ValueType,
@@ -53,9 +59,18 @@ export module Primitive {
         export type TypeId = "primitive:ethereal";
     }
 
+    /**
+     * [array]
+     */
     export type Array<
         K extends string,
         V extends Component.Primitive.ValueType,
+        /**
+         * [todo]
+         * maybe rename "Component.Modifier" to "Component.Flags",
+         * and also add "Component.Array.Flags" which is the type
+         * Exclude<Component.Modifier, "u">
+         */
         M extends Exclude<Component.Modifier, "u"> = never,
         A extends string = K,
         D extends Component.Primitive.ValueType = V>
@@ -72,6 +87,9 @@ export module Primitive {
     export module Array {
         export type TypeId = "primitive:array";
 
+        /**
+         * [array-deserialized]
+         */
         export type Deserialized<
             K extends string,
             V extends Component.Primitive.ValueType,

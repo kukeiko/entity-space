@@ -10,6 +10,7 @@ export type Reference<
     M extends Component.Modifier = never,
     A extends string = K>
     = {
+        type: Reference.TypeId;
         localKey: P["key"];
     }
     // [todo] for some reason, ", M" only needs to be put @ either Component.Dto or Component.Property
@@ -19,6 +20,7 @@ export type Reference<
     & Component.Property<K, Partial<Instance<T>>, M>;
 
 export module Reference {
+    export type TypeId = "reference";
     export type Keys<T> = Exclude<{ [P in keyof T]: T[P] extends Reference<any, any, any> | undefined ? P : never }[keyof T], undefined>;
 
     export type Virtual<
@@ -64,12 +66,18 @@ export module Reference {
         P extends Component.Modifier.Unique.Keys<T>,
         M extends Component.Modifier = never,
         A extends string = K>
-        = Component.Dto<A, Component.Dto.ValueOf<T[P]>, M>
+        = {
+            type: Id.TypeId;
+            // fromDto(v: ReturnType<D>): ReturnType<V>;
+            // toDto(v: ReturnType<V>): ReturnType<D>;
+        }
+        & Component.Dto<A, Component.Dto.ValueOf<T[P]>, M>
         & Component.ExternalId<T, P>
         & Component.Primitive<Component.Primitive.ValueTypeOf<T[P]>>
         & Component.Property<K, Component.Property.ValueOf<T[P]>, M>;
 
     export module Id {
+        export type TypeId = "reference:id";
         export type Keys<T> = Exclude<{ [P in keyof T]: T[P] extends Id<any, any, any> | undefined ? P : never }[keyof T], undefined>;
 
         export type Computed<
@@ -79,20 +87,34 @@ export module Reference {
             U,
             I extends Component.Local.Keys<U> & string,
             M extends "n" = never>
-            = Component.Computed<U, I, Component.Primitive.ValueTypeOf<T[P]>, M>
+            = {
+                type: Computed.TypeId;
+            }
+            & Component.Computed<U, I, Component.Primitive.ValueTypeOf<T[P]>, M>
             & Component.ExternalId<T, P>
             & Component.Primitive<Component.Primitive.ValueTypeOf<T[P]>>
             & Component.Property<K, Component.Property.ValueOf<T[P]>, M>;
         // & Component.Property<K, ReturnType<Component.Primitive.ValueTypeOf<T[P]>>, M>;
+
+        export module Computed {
+            export type TypeId = "reference:id:computed";
+        }
 
         export type Ethereal<
             K extends string,
             T extends Type<string>,
             P extends Component.Modifier.Unique.Keys<T>,
             M extends "n" = never>
-            = Component.Ethereal
+            = {
+                type: Ethereal.TypeId;
+            }
+            & Component.Ethereal
             & Component.ExternalId<T, P>
             & Component.Primitive<Component.Primitive.ValueTypeOf<T[P]>>
             & Component.Property<K, Component.Property.ValueOf<T[P]>, M>;
+
+        export module Ethereal {
+            export type TypeId = "reference:id:ethereal";
+        }
     }
 }

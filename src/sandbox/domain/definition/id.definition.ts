@@ -2,35 +2,21 @@ import { Component } from "../../component";
 import { Property } from "../../property";
 
 export type IdDefinition<X>
-    = IdDefinition.TypeId<X>
-    & IdDefinition.DtoKey<X>
-    & IdDefinition.DtoConverters<X>;
-
-export module IdDefinition {
-    export type TypeId<X>
-        = X extends Property.Id<infer K, infer V, infer A, infer D>
-        ? {
+    = X extends Property.Id<infer K, infer V, infer A, infer D>
+    ? (
+        {
             type: Property.Id.TypeId;
-            primitive: Property.Primitive<K, V, "u", A, D>["primitive"];
+            primitive: V;
         }
-        : {};
-
-    export type DtoKey<X>
-        = X extends Property.Id<infer K, infer V, infer A, infer D>
-        ? A extends K ? {} : {
-            dtoKey: A;
-        } : {};
-
-    export type DtoConverters<X>
-        = X extends Property.Id<infer K, infer V, infer A, infer D>
-        ? D extends V
-        ? {}
-        : {
+        & (A extends K ? {} : { dtoKey: A; })
+        & (D extends V ? {} : {
             fromDto: Property.Id<K, V, A, D>["fromDto"];
             toDto: Property.Id<K, V, A, D>["toDto"];
-        }
-        : {};
+        })
+    )
+    : {};
 
+export module IdDefinition {
     export interface AllArgs {
         type: Property.Id.TypeId;
         dtoKey?: string;
@@ -45,6 +31,16 @@ export module IdDefinition {
             type: Property.Id.Computed.TypeId;
             computedFrom: Property.Id.Computed<K, V, T, I>["computedFrom"];
             compute: Property.Id.Computed<K, V, T, I>["compute"];
+            primitive: V;
         }
         : {};
+
+    export module Computed {
+        export interface AllArgs {
+            type: Property.Id.Computed.TypeId;
+            computedFrom: { [key: string]: true; };
+            compute: (...args: any[]) => any;
+            primitive: Component.Primitive.ValueType;
+        }
+    }
 }

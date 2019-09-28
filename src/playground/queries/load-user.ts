@@ -18,6 +18,8 @@ let query = new Query(userType)
         f => f.group("under lvl 7 and type in (1, 3)").in([1, 3]),
         f => f.group("under lvl 13 and type in (1)").in([1])
     ])
+    .select(x => x.property, q => q.select(x => x.key).select(x => x.value))
+    .select(x => x.properties, q => q.select(x => x.key).select(x => x.value))
     ;
 
 let type = query.get();
@@ -33,7 +35,17 @@ let instanceA: Instance<typeof type> = {
     achievements: [1, 2, 3],
     changedByUserId: 1337,
     level: 3,
-    typeId: 3
+    typeId: 3,
+    property: {
+        key: "foo",
+        value: "bar"
+    },
+    properties: [
+        {
+            key: "susi",
+            value: "sonne"
+        }
+    ]
 };
 
 let instanceB: Instance<typeof type> = {
@@ -51,12 +63,33 @@ let instanceB: Instance<typeof type> = {
     achievements: [1, 2, 4],
     changedByUserId: 8,
     level: 12,
-    typeId: 1
+    typeId: 1,
+    property: {
+        key: "khaz",
+        value: "modan"
+    },
+    properties: [
+        {
+            key: "susi",
+            value: "sonne"
+        }
+    ]
 };
 
 let dto: Instance.Dto<typeof type> = {
     Achievements: [67, 34],
     ChangedByUserId: 3,
     Level: "3",
-    typeId: 8
+    typeId: 8,
+    Parent: null,
+    Property: {
+        Key: "foo",
+        Value: "bar"
+    },
+    Properties: [
+        {
+            Key: "susi",
+            Value: "sonne"
+        }
+    ]
 };

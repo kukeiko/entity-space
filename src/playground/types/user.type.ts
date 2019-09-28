@@ -1,15 +1,23 @@
 import { Type, Property, DomainBuilder } from "@sandbox";
 import { MetadataMixin } from "./metadata.mixin";
 import { UserTypeType } from "./user-type.type";
+import { LoadBalancedMixin } from "./load-balanced.mixin";
+import { KeyValuePairType } from "./key-value-pair.type";
 
-export interface UserType extends Type<"user">, MetadataMixin {
+export interface UserType extends Type<"user">, MetadataMixin, LoadBalancedMixin {
     id: Property.Id.Computed<"id", typeof String, UserType, "userId" | "systemId">;
     userId: Property.Primitive<"userId", typeof Number, "u", "UserId">;
     name: Property.Primitive<"name", typeof String, never, "Name">;
 
     parentId: Property.Reference.Id.Computed<"parentId", UserType, "id", UserType, "parentUserId" | "systemId">;
     parentUserId: Property.Primitive<"parentUserId", typeof Number, "n", "ParentId">;
-    parent: Property.Reference.Virtual<"parent", UserType, UserType["parentId"]>;
+    /**
+     * [todo]
+     * parent isn't really virtual, since the actual http request will support it.
+     * so even if the id is computed out of parentId & systemId, it *should* be fine.
+     */
+    parent: Property.Reference<"parent", UserType, UserType["parentId"], "n", "Parent">;
+    // parent: Property.Reference.Virtual<"parent", UserType, UserType["parentId"]>;
 
     typeId: Property.Reference.Id<"typeId", UserTypeType, "id">;
     type: Property.Reference<"type", UserTypeType, UserType["typeId"]>;
@@ -19,7 +27,12 @@ export interface UserType extends Type<"user">, MetadataMixin {
     numAchievements: Property.Primitive.Computed<"numAchievements", typeof Number, UserType, "achievements">;
     randomInts: Property.Primitive.Array<"randomInts", typeof Number, never, "RandomInts", typeof String>;
     languages: Property.Primitive.Array.Deserialized<"languages", typeof String, "n", "Languages", typeof String>;
+
+    property: Property.Complex<"property", KeyValuePairType, "n" | "c" | "p", "Property">;
+    properties: Property.Complex.Array<"properties", KeyValuePairType, "n" | "c" | "p", "Properties">;
 }
+
+let foo: UserType = null as any;
 
 export module UserType {
     export function getDefinition(): DomainBuilder.DefineArguments<UserType> {
@@ -28,9 +41,11 @@ export module UserType {
                 key: "user"
             },
             ...MetadataMixin.getDefinition(),
+            ...LoadBalancedMixin.getDefinition(),
             achievements: {
                 dtoKey: "Achievements",
-                type: "primitive:array"
+                type: "primitive:array",
+                primitive: Number
             },
             id: {
                 type: "id:computed",
@@ -38,7 +53,28 @@ export module UserType {
                     systemId: true,
                     userId: true
                 },
-                compute: x => `${x.userId}:${x.systemId}`
+                compute: x => `${x.userId}:${x.systemId}`,
+                primitive: String
+            },
+            property: {
+                type: "complex",
+                otherTypeKey: "key-value-pair",
+                dtoKey: "Property",
+                flags: {
+                    c: true,
+                    n: true,
+                    p: true
+                }
+            },
+            properties: {
+                dtoKey: "Properties",
+                flags: {
+                    c: true,
+                    n: true,
+                    p: true
+                },
+                otherTypeKey: "key-value-pair",
+                type: "complex:array"
             },
             languages: {
                 type: "primitive:array:deserialized",
@@ -47,7 +83,8 @@ export module UserType {
                     n: true
                 },
                 fromDto: x => x.split(","),
-                toDto: x => x.join(",")
+                toDto: x => x.join(","),
+                primitive: String
             },
             level: {
                 type: "primitive",
@@ -66,12 +103,17 @@ export module UserType {
                 computedFrom: {
                     achievements: true
                 },
-                compute: x => x.achievements.length
+                compute: x => x.achievements.length,
+                primitive: Number
             },
             parent: {
+                dtoKey: "Parent",
                 flags: {
                     n: true
-                }
+                },
+                localKey: "parentId",
+                otherTypeKey: "user",
+                type: "reference"
             },
             parentId: {
                 flags: {
@@ -93,13 +135,13 @@ export module UserType {
                 //     n: true
                 // },
                 fromDto: x => x.map(str => parseInt(str)),
-                toDto: x => x.map(int => int.toString())
+                toDto: x => x.map(int => int.toString()),
+                primitive: Number
             },
             type: {
-                localIdKey: "typeId",
-                // flags: {
-                //     n: true
-                // }
+                localKey: "typeId",
+                otherTypeKey: "user-type",
+                type: "reference"
             },
             typeId: {
                 otherIdKey: "id",

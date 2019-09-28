@@ -50,15 +50,26 @@ export class DomainBuilder<B = {}> {
 
             switch (propArgs.type) {
                 case "id": type[key] = this._createIdProperty(key, propArgs); break;
-                case "primitive": type[key] = this._createPrimitiveProperty(key, propArgs); break;
+                case "id:computed": type[key] = this._createIdComputed(key, propArgs); break;
+                case "primitive": type[key] = this._createPrimitive(key, propArgs); break;
+                case "primitive:computed": type[key] = this._createPrimitiveComputed(key, propArgs); break;
+                case "primitive:ethereal": type[key] = this._createPrimitiveEthereal(key, propArgs); break;
+                case "primitive:array": type[key] = this._createPrimitiveArray(key, propArgs); break;
+                case "primitive:array:deserialized": type[key] = this._createPrimitiveArrayDeserialized(key, propArgs); break;
+                case "complex": type[key] = this._createComplex(key, types, propArgs); break;
+                case "complex:ethereal": type[key] = this._createComplexEthereal(key, types, propArgs); break;
+                case "complex:array": type[key] = this._createComplexArray(key, types, propArgs); break;
+                case "reference": type[key] = this._createReference(key, types, propArgs); break;
 
                 default:
+                    // [todo] use "if(assertNever(propArgs))" to ensure exhaustion @ compile time
                     throw new Error(`unknown property definition type '${(propArgs as any).type}'`);
             }
         }
     }
 
-    private _createIdProperty(key: string, args: Definition.Id.AllArgs): Property.Id<string, Component.Primitive.ValueType, string, Component.Primitive.ValueType> {
+    private _createIdProperty(key: string, args: Definition.Id.AllArgs)
+        : Property.Id<string, Component.Primitive.ValueType, string, Component.Primitive.ValueType> {
         let dtoKey = args.dtoKey || key;
 
         return {
@@ -74,28 +85,195 @@ export class DomainBuilder<B = {}> {
             readDto: x => x[dtoKey],
             toDto: args.fromDto || (x => x as any),
             type: "id",
-            write: (x, v) => ((x[key] as any) = v),
-            writeDto: (x, v) => ((x[dtoKey] as any) = v)
+            write: (x, v) => (x[key] as any) = v,
+            writeDto: (x, v) => (x[dtoKey] as any) = v
         };
     }
 
-    private _createPrimitiveProperty(key: string, args: Definition.Primitive.AllArgs): Property.Primitive<string, Component.Primitive.ValueType, any, string, Component.Primitive.ValueType> {
+    private _createIdComputed(key: string, args: Definition.Id.Computed.AllArgs)
+        : Property.Id.Computed<string, Component.Primitive.ValueType, Type<string> & any, any> {
+        return {
+            compute: args.compute,
+            computed: true,
+            computedFrom: args.computedFrom,
+            id: true,
+            key: key,
+            local: true,
+            modifiers: { u: true },
+            primitive: args.primitive,
+            read: x => x[key],
+            type: "id:computed",
+            write: (x, v) => (x[key] as any) = v
+        };
+    }
+
+    private _createPrimitive(key: string, args: Definition.Primitive.AllArgs)
+        : Property.Primitive<string, Component.Primitive.ValueType, any, string, Component.Primitive.ValueType> {
         let dtoKey = args.dtoKey || key;
 
         return {
             key,
             dtoKey,
             array: false,
-            fromDto: args.fromDto || (x => x as any),
+            fromDto: args.fromDto || (x => x),
             local: true,
             modifiers: args.flags || {},
             primitive: args.primitive,
             read: x => x[key],
             readDto: x => x[dtoKey],
-            toDto: args.fromDto || (x => x as any),
+            toDto: args.fromDto || (x => x),
             type: "primitive",
+            write: (x, v) => (x[key] as string | number | boolean) = v,
+            writeDto: (x, v) => (x[dtoKey] as string | number | boolean) = v
+        };
+    }
+
+    private _createPrimitiveComputed(key: string, args: Definition.Primitive.Computed.AllArgs)
+        : Property.Primitive.Computed<string, Component.Primitive.ValueType, Type<string> & any, any> {
+        return {
+            compute: args.compute,
+            computed: true,
+            computedFrom: args.computedFrom,
+            key: key,
+            local: true,
+            modifiers: args.flags || {},
+            primitive: args.primitive,
+            read: x => x[key],
+            type: "primitive:computed",
+            write: (x, v) => ((x[key] as any) = v)
+        };
+    }
+
+    private _createPrimitiveEthereal(key: string, args: Definition.Primitive.Ethereal.AllArgs)
+        : Property.Primitive.Ethereal<string, Component.Primitive.ValueType, any> {
+        return {
+            ethereal: true,
+            key: key,
+            local: true,
+            modifiers: args.flags || {},
+            primitive: args.primitive,
+            read: x => x[key],
+            type: "primitive:ethereal",
+            write: (x, v) => ((x[key] as any) = v)
+        };
+    }
+
+    private _createPrimitiveArray(key: string, args: Definition.Primitive.Array.AllArgs)
+        : Property.Primitive.Array<string, Component.Primitive.ValueType, any> {
+        let dtoKey = args.dtoKey || key;
+
+        return {
+            array: true,
+            dtoKey: dtoKey,
+            fromDto: args.fromDto || (x => x),
+            key: key,
+            local: true,
+            modifiers: args.flags || {},
+            primitive: args.primitive,
+            read: x => x[key],
+            readDto: x => x[dtoKey],
+            toDto: args.fromDto || (x => x),
+            type: "primitive:array",
+            write: (x, v) => (x[key] as (string | number | boolean)[]) = v,
+            writeDto: (x, v) => (x[key] as (string | number | boolean)[]) = v
+        };
+    }
+
+    private _createPrimitiveArrayDeserialized(key: string, args: Definition.Primitive.Array.Deserialized.AllArgs)
+        : Property.Primitive.Array.Deserialized<string, Component.Primitive.ValueType> {
+        let dtoKey = args.dtoKey || key;
+
+        return {
+            array: true,
+            dtoKey: dtoKey,
+            fromDto: args.fromDto,
+            key: key,
+            local: true,
+            modifiers: args.flags || {},
+            primitive: args.primitive,
+            read: x => x[key],
+            readDto: x => x[dtoKey],
+            toDto: args.toDto,
+            type: "primitive:array:deserialized",
+            write: (x, v) => ((x[key] as (string | number | boolean)[]) = v),
+            writeDto: (x, v) => ((x[key] as string | number | boolean) = v),
+        };
+    }
+
+    private _createComplex(key: string, types: Record<string, Type<string>>, args: Definition.Complex.AllArgs)
+        : Property.Complex<string, Type<string>, any> {
+        let dtoKey = args.dtoKey || key;
+
+        return {
+            complex: true,
+            dtoKey: dtoKey,
+            key: key,
+            local: true,
+            modifiers: args.flags || {},
+            navigable: true,
+            navigated: types[args.otherTypeKey],
+            read: x => x[key],
+            readDto: x => x[dtoKey],
+            type: "complex",
             write: (x, v) => ((x[key] as any) = v),
-            writeDto: (x, v) => ((x[dtoKey] as any) = v)
+            writeDto: (x, v) => ((x[key] as any) = v)
+        };
+    }
+
+    private _createComplexEthereal(key: string, types: Record<string, Type<string>>, args: Definition.Complex.Ethereal.AllArgs)
+        : Property.Complex.Ethereal<string, Type<string>, any> {
+        return {
+            complex: true,
+            ethereal: true,
+            key: key,
+            local: true,
+            modifiers: args.flags || {},
+            navigable: true,
+            navigated: types[args.otherTypeKey],
+            read: x => x[key],
+            type: "complex:ethereal",
+            write: (x, v) => ((x[key] as any) = v),
+        };
+    }
+
+    private _createComplexArray(key: string, types: Record<string, Type<string>>, args: Definition.Complex.Array.AllArgs)
+        : Property.Complex.Array<string, Type<string>, any> {
+        let dtoKey = args.dtoKey || key;
+
+        return {
+            array: true,
+            complex: true,
+            dtoKey,
+            key,
+            local: true,
+            modifiers: args.flags || {},
+            navigable: true,
+            navigated: types[args.otherTypeKey],
+            read: x => x[key],
+            readDto: x => x[dtoKey],
+            type: "complex:array",
+            write: (x, v) => ((x[key] as any) = v),
+            writeDto: (x, v) => ((x[key] as any) = v)
+        };
+    }
+
+    private _createReference(key: string, types: Record<string, Type<string>>, args: Definition.Reference.AllArgs)
+        : Property.Reference<string, Type<string>, any, any> {
+        let dtoKey = args.dtoKey || key;
+
+        return {
+            dtoKey,
+            key,
+            local: false,
+            localKey: args.localKey,
+            modifiers: args.flags || {},
+            navigable: true,
+            navigated: types[args.otherTypeKey],
+            read: x => x[key],
+            readDto: x => x[dtoKey],
+            type: "reference",
+            write: (x, v) => ((x[key] as any) = v),
+            writeDto: (x, v) => ((x[key] as any) = v)
         };
     }
 }
@@ -116,6 +294,15 @@ export module DomainBuilder {
             & Definition.Primitive.Ethereal<T[K]>
             & Definition.Primitive.Array<T[K]>
             & Definition.Primitive.Array.Deserialized<T[K]>
+            & Definition.Complex<T[K]>
+            & Definition.Complex.Ethereal<T[K]>
+            & Definition.Complex.Array<T[K]>
+            & Definition.Reference<T[K]>
+            /**
+             * [todo] missing:
+             *  - children
+             *  - reference
+             */
             ;
         };
     }

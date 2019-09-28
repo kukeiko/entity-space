@@ -12,7 +12,7 @@ export module Component {
         /**
          * Defines whether or not the order of values in the array matter when checking for differences.
          */
-        ordered: boolean;
+        // ordered: boolean;
     };
 
     export type NotArray = {

@@ -4,6 +4,14 @@ import { Primitive as _Primitive } from "./primitive";
 import { Complex as _Complex } from "./complex";
 import { Reference as _Reference } from "./reference";
 import { Children as _Children } from "./children";
+import { Type } from "../type";
+
+export type Property<K extends string = string, V = any, M extends _Component.Modifier = any>
+    = _Id<K, any, string, any>
+    | _Id.Computed<K, any, any, any>
+    // | _Complex<K, any, any, string>
+    | _Primitive<K, any, any, string, any>
+    ;
 
 export module Property {
     /**
@@ -18,3 +26,8 @@ export module Property {
     export import Reference = _Reference;
     export import Children = _Children;
 }
+
+// let foo: Property = {} as any;
+// let fooType = foo.type;
+
+// let bar : Property.Id = {} as any;
