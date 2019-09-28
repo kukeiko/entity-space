@@ -46,14 +46,7 @@ module.exports = function (config) {
                         exclude: /\.spec\.ts$/
                     }
                 ]
-            },
-            plugins: [
-                // allows source inspection @ browser
-                new webpack.SourceMapDevToolPlugin({
-                    filename: null,
-                    test: /\.(ts|js)($|\?)/i
-                })
-            ]
+            }
         },
         reporters: ["mocha", "coverage-istanbul"],
         mochaReporter: {
