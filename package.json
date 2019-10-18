@@ -17,8 +17,7 @@
         "test:watch": "karma start",
         "prepublish": "npm run build && npm run test"
     },
-    "peerDependencies": {
-    },
+    "peerDependencies": {},
     "devDependencies": {
         "@types/jasmine": "2.5.46",
         "awesome-typescript-loader": "3.1.2",
@@ -34,7 +33,7 @@
         "rimraf": "2.6.1",
         "ts-loader": "6.1.2",
         "tslint": "5.18.0",
-        "typescript": "3.6.3",
+        "typescript": "^3.7.0-beta",
         "webpack": "4.41.0"
     }
 }
