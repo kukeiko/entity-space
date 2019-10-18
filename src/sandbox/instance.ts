@@ -3,6 +3,12 @@ import { Component } from "./component";
 
 export type Instance<T> = Box<Instance.Optional<Unbox<T>> & Instance.Required<Unbox<T>>, T>;
 
+/**
+ * [todo]
+ * this is tightly coupled to Query, so maybe we should move it there,
+ * and create another "Instance" type that can take the full definition of a type,
+ * where every external is always voidable.
+ */
 export module Instance {
     type ToArray<T, P> = P extends Component.Array ? T[] : T;
 
