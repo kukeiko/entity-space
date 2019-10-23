@@ -92,126 +92,126 @@ export class TypeSelector<T extends Type, S = {} & DynamicType> {
     }
 }
 
-class FooType {
-    [TypeMetadataSymbol] = StaticType.Metadata.create(FooType);
+// class FooType {
+//     [TypeMetadataSymbol] = StaticType.Metadata.create(FooType);
 
-    notProperty: string = "foo";
+//     notProperty: string = "foo";
 
-    level: Property<"level", typeof String> & Defaulted & Creatable = {
-        key: "level",
-        value: String,
-        defaulted: true,
-        creatable: true
-    };
+//     level: Property<"level", typeof String> & Defaulted & Creatable = {
+//         key: "level",
+//         value: String,
+//         defaulted: true,
+//         creatable: true
+//     };
 
-    bar: Property<"bar", typeof BarType> & Creatable & Expandable & Defaulted = {
-        key: "bar",
-        value: BarType,
-        creatable: true,
-        expandable: true,
-        defaulted: true
-    };
-}
-
-type FooTypeProperties = PropertiesOf<typeof FooType, Defaulted>;
-
-let foo: FooTypeProperties = {
-    // bar: new FooType().bar,
-    level: new FooType().level
-};
-
-class BarType {
-    name: Property<"name", typeof String> & Defaulted = {
-        key: "name",
-        value: String,
-        defaulted: true
-    };
-
-    level: Property<"level", typeof String> & Defaulted & Nullable = {
-        key: "level",
-        value: String,
-        defaulted: true,
-        nullable: true
-    };
-
-    achievements: Property<"achievements", typeof Number> & Iterable = {
-        key: "achievements",
-        value: Number,
-        iterable: true
-    };
-
-    foos: Property<"foos", typeof FooType> & Iterable & Expandable = {
-        key: "foos",
-        value: FooType,
-        expandable: true,
-        iterable: true
-    };
-}
-
-type FooProperties = PropertiesOf<typeof FooType>;
-
-let fooProps: FooProperties = new FooType();
-
-let fooQuery = new TypeSelector(new FooType())
-    .select({ defaulted: true, creatable: true })
-    .select(x => x.level)
-    .select(x => x.bar, q => q.select(x => x.foos, q => q.select(x => x.level)))
-    .select(x => x.bar, q => q.select({ defaulted: true }).select(x => x.achievements))
-    ;
-
-let fooQueried = fooQuery.build();
-let source = fooQueried[TypeMetadataSymbol].source[TypeMetadataSymbol];
-switch (source.static) {
-    case true: break;
-}
-if (fooQueried[TypeMetadataSymbol].source[TypeMetadataSymbol].static === false) {
-
-}
-let fooQueriedBarQuery = new TypeSelector(fooQueried.bar.value)
-    .select(x => x.achievements)
-    ;
-
-fooQueried.level.defaulted;
-// fooQueried.bar.value.
-fooQueried.bar.value.level;
-// fooQueried.bar.value.
-// fooQueried.
-
-let fooQueriedInstance: InstanceOf<typeof fooQueried> = {
-    bar: {
-        foos: [
-            {
-                level: "foo"
-            }
-        ],
-        level: null,
-        name: "bar",
-        achievements: [1, 2, 3]
-    },
-    level: "foo"
-};
-
-// fooQueried.bar?.value.name?.value = String;
-
-
-interface AlbumType {
-    level: Property<"level", typeof String> & Defaulted & Creatable;
-}
-
-type PartialAlbumType = PickProperties<AlbumType>;
-
-let x: PartialAlbumType = {
-    level: {
-        creatable: true,
-        defaulted: true,
-        key: "level",
-        value: String
-    }
-};
-
-type Foo = PickProperties<FooType>;
-
-// if (partialFooType.bar !== void 0) {
-//     partialFooType.bar.value.foo?.value.bar?.value.foo?.value.bar?.value.level?.defaulted;
-//     // partialFooType.bar.
+//     bar: Property<"bar", typeof BarType> & Creatable & Expandable & Defaulted = {
+//         key: "bar",
+//         value: BarType,
+//         creatable: true,
+//         expandable: true,
+//         defaulted: true
+//     };
 // }
+
+// type FooTypeProperties = PropertiesOf<typeof FooType, Defaulted>;
+
+// let foo: FooTypeProperties = {
+//     // bar: new FooType().bar,
+//     level: new FooType().level
+// };
+
+// class BarType {
+//     name: Property<"name", typeof String> & Defaulted = {
+//         key: "name",
+//         value: String,
+//         defaulted: true
+//     };
+
+//     level: Property<"level", typeof String> & Defaulted & Nullable = {
+//         key: "level",
+//         value: String,
+//         defaulted: true,
+//         nullable: true
+//     };
+
+//     achievements: Property<"achievements", typeof Number> & Iterable = {
+//         key: "achievements",
+//         value: Number,
+//         iterable: true
+//     };
+
+//     foos: Property<"foos", typeof FooType> & Iterable & Expandable = {
+//         key: "foos",
+//         value: FooType,
+//         expandable: true,
+//         iterable: true
+//     };
+// }
+
+// type FooProperties = PropertiesOf<typeof FooType>;
+
+// let fooProps: FooProperties = new FooType();
+
+// let fooQuery = new TypeSelector(new FooType())
+//     .select({ defaulted: true, creatable: true })
+//     .select(x => x.level)
+//     .select(x => x.bar, q => q.select(x => x.foos, q => q.select(x => x.level)))
+//     .select(x => x.bar, q => q.select({ defaulted: true }).select(x => x.achievements))
+//     ;
+
+// let fooQueried = fooQuery.build();
+// let source = fooQueried[TypeMetadataSymbol].source[TypeMetadataSymbol];
+// switch (source.static) {
+//     case true: break;
+// }
+// if (fooQueried[TypeMetadataSymbol].source[TypeMetadataSymbol].static === false) {
+
+// }
+// let fooQueriedBarQuery = new TypeSelector(fooQueried.bar.value)
+//     .select(x => x.achievements)
+//     ;
+
+// fooQueried.level.defaulted;
+// // fooQueried.bar.value.
+// fooQueried.bar.value.level;
+// // fooQueried.bar.value.
+// // fooQueried.
+
+// let fooQueriedInstance: InstanceOf<typeof fooQueried> = {
+//     bar: {
+//         foos: [
+//             {
+//                 level: "foo"
+//             }
+//         ],
+//         level: null,
+//         name: "bar",
+//         achievements: [1, 2, 3]
+//     },
+//     level: "foo"
+// };
+
+// // fooQueried.bar?.value.name?.value = String;
+
+
+// interface AlbumType {
+//     level: Property<"level", typeof String> & Defaulted & Creatable;
+// }
+
+// type PartialAlbumType = PickProperties<AlbumType>;
+
+// let x: PartialAlbumType = {
+//     level: {
+//         creatable: true,
+//         defaulted: true,
+//         key: "level",
+//         value: String
+//     }
+// };
+
+// type Foo = PickProperties<FooType>;
+
+// // if (partialFooType.bar !== void 0) {
+// //     partialFooType.bar.value.foo?.value.bar?.value.foo?.value.bar?.value.level?.defaulted;
+// //     // partialFooType.bar.
+// // }

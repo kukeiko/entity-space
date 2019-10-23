@@ -26,6 +26,7 @@ module.exports = function (config) {
                     "@elements": path.resolve("./src/elements"),
                     "@metadata": path.resolve("./src/metadata"),
                     "@sandbox": path.resolve("./src/sandbox"),
+                    "@sandbox-8": path.resolve("./src/sandbox-8"),
                     "@sample-types": path.resolve("./src/playground/types")
                 }
             },

@@ -25,6 +25,7 @@
             "@elements": ["src/elements"],
             "@metadata": ["src/metadata"],
             "@sandbox": ["src/sandbox"],
+            "@sandbox-8": ["src/sandbox-8"],
             "@sample-types": ["src/playground/types"]
         }
     },
