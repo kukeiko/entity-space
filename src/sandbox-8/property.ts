@@ -1,3 +1,5 @@
+import { Primitive } from "./lang";
+
 export interface Property<K extends string = string, V = any> {
     key: K;
     value: V;
@@ -26,3 +28,10 @@ export type RequiredPropertiesOf<T, P = Property> = {
 export type PropertiesOf<T, P = Property>
     = PartialPropertiesOf<T, P>
     & RequiredPropertiesOf<T, P>;
+
+export type PropertyWithMappedValue<P extends Property, V> = Omit<P, "value"> & { value: V };
+export type MixinPropertyWithMappedValue<P extends Property, V> = Record<P["key"], PropertyWithMappedValue<P, V>>;
+
+export type DefaultValueOfProperty<P extends Property>
+    = P["value"] extends Primitive ? P["value"]
+    : {};

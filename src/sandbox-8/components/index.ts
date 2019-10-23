@@ -1,5 +1,6 @@
 export * from "./creatable";
 export * from "./expandable";
+export * from "./filterable";
 export * from "./nullable";
 export * from "./patchable";
 export * from "./unique";
@@ -7,7 +8,6 @@ export * from "./unique";
 export interface Iterable {
     iterable: true;
 }
-
 
 export interface Defaulted {
     defaulted: true;

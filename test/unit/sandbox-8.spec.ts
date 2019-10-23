@@ -1,8 +1,7 @@
-import { TypeMetadataSymbol, StaticType, Property, TypeSelector, Expandable, Iterable, InstanceOf } from "@sandbox-8";
+import { TypeMetadataSymbol, StaticType, Property, TypeSelector, Expandable, Iterable, InstanceOf, InstanceLoader, TypeQuery, Filterable, CriteraBuilder, SelectedType, PropertiesOf } from "@sandbox-8";
 
-describe("type-selector", () => {
-    it("should create a selected type", () => {
-        // arrange
+describe("instance-loader", () => {
+    it("should do stuff", () => {
         class AlbumType {
             [TypeMetadataSymbol] = StaticType.Metadata.create(AlbumType);
             name: Property<"name", typeof String> = { key: "name", value: String };
@@ -17,61 +16,72 @@ describe("type-selector", () => {
             name: Property<"name", typeof String> = { key: "name", value: String };
         }
 
-        let sourceType = new AlbumType();
-        let songType = new SongType();
-        let typeSelector = new TypeSelector(sourceType);
+        let albumTypeInstanceLoader: InstanceLoader<AlbumType> = {
+            load(selected) {
+                new selected[TypeMetadataSymbol].source[TypeMetadataSymbol].class();
+                let metadata = selected[TypeMetadataSymbol].source[TypeMetadataSymbol].class;
+                selected[TypeMetadataSymbol].source[TypeMetadataSymbol].class;
+                selected.songs?.value[TypeMetadataSymbol].source;
 
-        // act
-        let selectedType = typeSelector
-            .select(x => x.name)
-            .select(x => x.songs, q => q
-                .select(x => x.name)
-                .select(x => x.duration)
-                .select(x => x.album, q => q
-                    .select(x => x.releasedAt)
-                )
-            )
-            .build();
+                return new Map([
+                    [1, {}]
+                ]);
+            }
+        };
 
-        // assert
-        let sourceMetadata = selectedType[TypeMetadataSymbol].source[TypeMetadataSymbol];
+        let anyTypeInstanceLoader: InstanceLoader<AlbumType | SongType> = {
+            load(selected) {
+                let metadata = selected[TypeMetadataSymbol].source[TypeMetadataSymbol];
 
-        if (sourceMetadata.static !== true) {
-            fail("source metadata was expected to be static");
-        } else {
-            expect(sourceMetadata.class).toBe(AlbumType, "source metadata class was expected to be AlbumType");
+                if (metadata.class === AlbumType) {
+                    new metadata.class().releasedAt.key;
+                }
+                // if (metadata.class === AlbumType) {
+
+                // }
+                // if (type[TypeMetadataSymbol].class === AlbumType) {
+                //     // new type[TypeMetadataSymbol].class().
+                // }
+
+                return new Map([
+                    [1, {}]
+                ]);
+            }
+        };
+    });
+});
+
+describe("type-query", () => {
+    it("should do stuff", () => {
+        // arrange
+        class AlbumType {
+            [TypeMetadataSymbol] = StaticType.Metadata.create(AlbumType);
+            name: Property<"name", typeof String> & Filterable = { key: "name", value: String, filterable: true };
+            releasedAt: Property<"releasedAt", typeof String> = { key: "releasedAt", value: String };
+            songs: Property<"songs", typeof SongType> & Expandable & Iterable = { key: "songs", value: SongType, expandable: true, iterable: true };
         }
 
-        expect(selectedType.name).not.toBe(sourceType.name, "expected property to be cloned: name");
-        expect(selectedType.name).toEqual(sourceType.name, "expected property to equal the one from source: name");
+        class SongType {
+            [TypeMetadataSymbol] = StaticType.Metadata.create(SongType);
+            album: Property<"album", typeof AlbumType> & Expandable = { key: "album", value: AlbumType, expandable: true };
+            duration: Property<"duration", typeof Number> = { key: "duration", value: Number };
+            name: Property<"name", typeof String> = { key: "name", value: String };
+        }
 
-        expect(selectedType.songs).not.toBe(sourceType.songs as any, "expected property to be cloned: songs");
-        expect(selectedType.songs.value instanceof Function).toBe(false, "expanded type was still a class: songs");
+        let typeQuery = new TypeQuery(new AlbumType());
 
-        expect(selectedType.songs.value.duration).not.toBe(songType.duration, "expected property to be cloned: songs.duration");
-        expect(selectedType.songs.value.duration).toEqual(songType.duration, "expected property to equal the one from source:  songs.duration");
+        typeQuery
+            .select(s => s
+                .select(x => x.name)
 
-        expect(selectedType.songs.value.album).not.toBe(selectedType as any, "type recursion: songs.album");
-        expect(selectedType.songs.value.album).not.toEqual(selectedType as any, "type recursion: songs.album");
+            )
+            .where(c => c
 
-        // let foo: InstanceOf<typeof selectedType> = {
-        //     name: "trash smash",
-        //     songs: [
-        //         {
-        //             album: {
-        //                 releasedAt: "2019-03-12"
-        //             },
-        //             duration: 493,
-        //             name: "awkward goblin"
-        //         },
-        //         {
-        //             album: {
-        //                 releasedAt: "2019-03-12"
-        //             },
-        //             duration: 120,
-        //             name: "turkey in the box"
-        //         }
-        //     ]
-        // };
+            )
+            ;
+
+        let filtersName = (cb: CriteraBuilder<SelectedType<AlbumType>>) => {
+            cb.equals("foo", x => x.name);
+        };
     });
 });
