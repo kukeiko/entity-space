@@ -281,13 +281,13 @@ let foo2 : null|number = 3;
 
 foo2?.toFixed(2);
 
-let foo = declare({
-    references: {
-        "bar": {
-            // type: () => bar
-        }
-    }
-});
+// let foo = declare({
+//     references: {
+//         "bar": {
+//             // type: () => bar
+//         }
+//     }
+// });
 
 // let bar = declare({
 //     references: {
