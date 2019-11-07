@@ -1,20 +1,16 @@
-import { Property, MixinPropertyWithMappedValue, DefaultValueOfProperty, PropertyKeysOf, PropertyWithMappedValue } from "./property";
-import { Unbox, Primitive } from "./lang";
-import { Type, DynamicType, TypeMetadataSymbol, StaticType } from "./type";
-import { Expandable } from "./components";
+import { Property, MixinPropertyWithMappedValue, DefaultValueOfProperty, PropertyKeysOf, PropertyWithMappedValue, propertiesOf } from "./property";
+import { Unbox } from "./lang";
+import { DynamicType, TypeMetadataSymbol, StaticType } from "./type";
+import { Flag, Flagged, isFlagged } from "./flag";
 
-export type PickProperties<T, P = Property> = {
+/**
+ * This type is kind of a replica of "PropertiesOf" @ property.ts, but instead with properties where the value is mapped to a new type of value.
+ * I'd like just use "PropertiesOf" instead where I can somehow specify the mapping, but I don't know how to do that right now.
+ */
+export type PickPropertiesWithDefaultValue<T, P = Property> = {
     [K in PropertyKeysOf<T, P>]:
     T[K] extends Property ? PropertyWithMappedValue<T[K], DefaultValueOfProperty<T[K]>>
     : never;
-};
-
-export type SelectedValueOfProperty<P extends Property>
-    = P["value"] extends Primitive ? P["value"]
-    : SelectedType<Unbox<P["value"]>>;
-
-export type SelectedType<T extends StaticType> = DynamicType<T> & {
-    [K in PropertyKeysOf<T>]?: PropertyWithMappedValue<T[K], SelectedValueOfProperty<T[K]>>;
 };
 
 /**
@@ -35,27 +31,36 @@ export class TypeSelector<T extends StaticType, S = {} & DynamicType<T>> {
     private readonly _type: T;
     private readonly _selected: S;
 
+    select<F extends Flag[]>(flags: F)
+        : TypeSelector<T, S & PickPropertiesWithDefaultValue<T, Flagged<F[number]>>
+        >;
+
     select<P extends Property>(
         /**
          * [note]
-         * by not using "PropertiesOf<T>" we can support "find references" @ IDE,
+         * by not using "PropertiesOf<T>" we can support "find references" @ IDE
          */
         // select: (properties: PropertiesOf<T>) => P
         select: (properties: T) => P
     ): TypeSelector<T, S & MixinPropertyWithMappedValue<P, DefaultValueOfProperty<P>>>;
 
-    select<P extends Property & Expandable, E>(
+    select<P extends Property & Flagged<"expandable">, E>(
         // select: (properties: PropertiesOf<T, Expandable>) => P,
         select: (properties: T) => P,
         expand: (selector: TypeSelector<Unbox<P["value"]>>) => TypeSelector<Unbox<P["value"]>, E>
         // ): Query<T, Q & WithPropertyWithMappedValue<P, QueriedValueOfProperty<P> & E>>;
     ): TypeSelector<T, S & MixinPropertyWithMappedValue<P, E>>;
 
-    // select<P extends Defaulted | Creatable>(flags: P): TypeSelector<T, S & PickProperties<T, P>>;
 
     select(...args: any[]): any {
         if (args.length === 1 && args[0] instanceof Function) {
             this._selectProperty(this._fetchProperty(args[0]));
+        } else if (args.length === 1 && args[0] instanceof Array) {
+            let properties = propertiesOf(this._type);
+
+            for (let k in properties) {
+                this._selectProperty(properties[k]);
+            }
         } else if (args.length === 2 && args[0] instanceof Function && args[1] instanceof Object) {
             let property = this._fetchProperty(args[0]);
             let type = this._getExpandableType(property);
@@ -74,18 +79,18 @@ export class TypeSelector<T extends StaticType, S = {} & DynamicType<T>> {
     }
 
     private _getExpandableType(property: Property): StaticType {
-        if (!Expandable.is(property)) {
+        if (!isFlagged(property, "expandable")) {
             throw new Error(`property '${property.key}' is not expandable`);
         }
 
         return property.value instanceof Function ? new property.value() : property.value;
     }
 
-    private _selectProperty(property: Property, value?: any): void {
+    private _selectProperty(property: Property, newValue?: any): void {
         let copy = { ...property };
 
-        if (value !== void 0) {
-            copy.value = value;
+        if (newValue !== void 0) {
+            copy.value = newValue;
         }
 
         (this._selected as any)[property.key] = copy;

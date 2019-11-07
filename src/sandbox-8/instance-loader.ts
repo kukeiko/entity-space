@@ -1,8 +1,8 @@
 import { StaticType } from "./type";
-import { SelectedType } from "./type-selector";
-import { InstanceOf } from "./instance";
-import { Criteria } from "./criteria";
+import { LoadableType } from "./misc-types";
+import { TypeInstance } from "./instance";
+import { CriteriaForType } from "./criteria";
 
 export interface InstanceLoader<T extends StaticType> {
-    load(selected: SelectedType<T>, criteria: Criteria[]): Map<string | number, InstanceOf<SelectedType<T>>>;
+    load(loadable: LoadableType<T>, criteria: CriteriaForType<T>[]): Map<string | number, TypeInstance<LoadableType<T>>>;
 }

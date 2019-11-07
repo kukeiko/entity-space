@@ -1,4 +1,4 @@
-import { TypeMetadataSymbol, StaticType, Property, Expandable, Iterable, TypeSelector } from "@sandbox-8";
+import { TypeMetadataSymbol, StaticType, Property, Flagged, TypeSelector } from "@sandbox-8";
 
 describe("type-selector", () => {
     it("should create a selected type", () => {
@@ -7,12 +7,12 @@ describe("type-selector", () => {
             [TypeMetadataSymbol] = StaticType.Metadata.create(AlbumType);
             name: Property<"name", typeof String> = { key: "name", value: String };
             releasedAt: Property<"releasedAt", typeof String> = { key: "releasedAt", value: String };
-            songs: Property<"songs", typeof SongType> & Expandable & Iterable = { key: "songs", value: SongType, expandable: true, iterable: true };
+            songs: Property<"songs", typeof SongType> & Flagged<"expandable"> & Flagged<"iterable"> = { key: "songs", value: SongType, expandable: true, iterable: true };
         }
 
         class SongType {
             [TypeMetadataSymbol] = StaticType.Metadata.create(SongType);
-            album: Property<"album", typeof AlbumType> & Expandable = { key: "album", value: AlbumType, expandable: true };
+            album: Property<"album", typeof AlbumType> & Flagged<"expandable"> = { key: "album", value: AlbumType, expandable: true };
             duration: Property<"duration", typeof Number> = { key: "duration", value: Number };
             name: Property<"name", typeof String> = { key: "name", value: String };
         }
@@ -39,7 +39,7 @@ describe("type-selector", () => {
         if (sourceMetadata.static !== true) {
             fail("source metadata was expected to be static");
         } else {
-            expect(sourceMetadata.class).toBe(AlbumType, "source metadata class was expected to be AlbumType");
+            expect(sourceMetadata.class).toBe(AlbumType, "source metadata class was expected to be 'AlbumType'");
         }
 
         expect(selectedType.name).not.toBe(sourceType.name, "expected property to be cloned: name");
@@ -51,8 +51,8 @@ describe("type-selector", () => {
         expect(selectedType.songs.value.duration).not.toBe(songType.duration, "expected property to be cloned: songs.duration");
         expect(selectedType.songs.value.duration).toEqual(songType.duration, "expected property to equal the one from source:  songs.duration");
 
-        expect(selectedType.songs.value.album).not.toBe(selectedType as any, "type recursion: songs.album");
-        expect(selectedType.songs.value.album).not.toEqual(selectedType as any, "type recursion: songs.album");
+        expect(selectedType.songs.value.album).not.toBe(selectedType as any, "unexpected type recursion: songs.album");
+        expect(selectedType.songs.value.album).not.toEqual(selectedType as any, "unexpected type recursion: songs.album");
 
         // let foo: InstanceOf<typeof selectedType> = {
         //     name: "trash smash",

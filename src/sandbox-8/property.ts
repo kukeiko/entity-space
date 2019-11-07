@@ -1,8 +1,17 @@
 import { Primitive } from "./lang";
+import { Type } from "./type";
 
 export interface Property<K extends string = string, V = any> {
     key: K;
     value: V;
+}
+
+export module Property {
+    export function is(x?: any): x is Property {
+        x = x || {};
+
+        return typeof ((x as Property).key) === "string" && (x as Property).value != null;
+    }
 }
 
 export type PartialPropertyKeysOf<T, P = Property> = ({
@@ -17,17 +26,17 @@ export type PropertyKeysOf<T, P = Property>
     = PartialPropertyKeysOf<T, P>
     | RequiredPropertyKeysOf<T, P>;
 
-export type PartialPropertiesOf<T, P = Property> = {
+export type PickPartialProperties<T, P = Property> = {
     [K in PartialPropertyKeysOf<T, P>]?: T[K];
 };
 
-export type RequiredPropertiesOf<T, P = Property> = {
+export type PickRequiredProperties<T, P = Property> = {
     [K in RequiredPropertyKeysOf<T, P>]: T[K];
 };
 
-export type PropertiesOf<T, P = Property>
-    = PartialPropertiesOf<T, P>
-    & RequiredPropertiesOf<T, P>;
+export type PickProperties<T, P = Property>
+    = PickPartialProperties<T, P>
+    & PickRequiredProperties<T, P>;
 
 export type PropertyWithMappedValue<P extends Property, V> = Omit<P, "value"> & { value: V };
 export type MixinPropertyWithMappedValue<P extends Property, V> = Record<P["key"], PropertyWithMappedValue<P, V>>;
@@ -35,3 +44,17 @@ export type MixinPropertyWithMappedValue<P extends Property, V> = Record<P["key"
 export type DefaultValueOfProperty<P extends Property>
     = P["value"] extends Primitive ? P["value"]
     : {};
+
+export function propertiesOf<T extends Type>(type: T): Record<string, Property> {
+    let properties: Record<string, Property> = {};
+
+    for (let k in type) {
+        let candidate = type[k];
+
+        if (Property.is(candidate)) {
+            properties[k] = candidate;
+        }
+    }
+
+    return properties;
+}

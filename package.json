@@ -33,7 +33,7 @@
         "rimraf": "2.6.1",
         "ts-loader": "6.1.2",
         "tslint": "5.18.0",
-        "typescript": "^3.7.0-beta",
+        "typescript": "3.7.2",
         "webpack": "4.41.0"
     }
 }
