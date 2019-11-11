@@ -1,4 +1,4 @@
-import { Primitive } from "./lang";
+import { Primitive, Unbox } from "./lang";
 import { Type } from "./type";
 
 export interface Property<K extends string = string, V = any> {
@@ -30,8 +30,16 @@ export type PickPartialProperties<T, P = Property> = {
     [K in PartialPropertyKeysOf<T, P>]?: T[K];
 };
 
+export type PropertyValue<T> = T extends Property<string, infer V> ? V : never;
+
+/**
+ * [todo] figuring out how the "Type" plays into this
+ */
 export type PickRequiredProperties<T, P = Property> = {
-    [K in RequiredPropertyKeysOf<T, P>]: T[K];
+    [K in RequiredPropertyKeysOf<T, P>]:
+    PropertyValue<T[K]> extends Primitive ? T[K]
+    : Property extends P ? T[K]
+    : PropertyWithMappedValue<T[K], Type & PickRequiredProperties<Unbox<PropertyValue<T[K]>>, P>>;
 };
 
 export type PickProperties<T, P = Property>

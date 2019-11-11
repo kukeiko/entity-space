@@ -26,7 +26,7 @@ export module StaticType {
     }
 }
 
-export interface DynamicType<T extends StaticType = StaticType> {
+export interface DynamicType<T extends Type = Type> {
     [TypeMetadataSymbol]: DynamicType.Metadata<T>;
 }
 
@@ -34,14 +34,14 @@ export module DynamicType {
     export function is(x?: any): x is DynamicType {
         return ((x || {}) as any as DynamicType)[TypeMetadataSymbol]?.static === false;
     }
-    
-    export interface Metadata<T extends StaticType = StaticType> {
+
+    export interface Metadata<T extends Type = Type> {
         static: false;
         source: T;
     }
 
     export module Metadata {
-        export function create<T extends StaticType = StaticType>(source: T): Metadata<T> {
+        export function create<T extends Type = Type>(source: T): Metadata<T> {
             return {
                 static: false,
                 source

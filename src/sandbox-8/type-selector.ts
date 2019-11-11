@@ -1,7 +1,8 @@
-import { Property, MixinPropertyWithMappedValue, DefaultValueOfProperty, PropertyKeysOf, PropertyWithMappedValue, propertiesOf } from "./property";
+import { Property, MixinPropertyWithMappedValue, DefaultValueOfProperty, PropertyKeysOf, PropertyWithMappedValue, propertiesOf, PickProperties } from "./property";
 import { Unbox } from "./lang";
 import { DynamicType, TypeMetadataSymbol, StaticType } from "./type";
 import { Flag, Flagged, isFlagged } from "./flag";
+import { State, WithState } from "./state";
 
 /**
  * This type is kind of a replica of "PropertiesOf" @ property.ts, but instead with properties where the value is mapped to a new type of value.
@@ -31,9 +32,12 @@ export class TypeSelector<T extends StaticType, S = {} & DynamicType<T>> {
     private readonly _type: T;
     private readonly _selected: S;
 
-    select<F extends Flag[]>(flags: F)
-        : TypeSelector<T, S & PickPropertiesWithDefaultValue<T, Flagged<F[number]>>
-        >;
+    // select<F extends Flag[]>(flags: F): TypeSelector<T, S & PickPropertiesWithDefaultValue<T, Flagged<F[number]>>>;
+    selectWithState<ST extends State[]>(state: ST): TypeSelector<T, S & PickProperties<T, WithState<ST[number], any, any>>> {
+        return this as any;
+    }
+
+    select<F extends Flag[]>(flags: F): TypeSelector<T, S & PickProperties<T, Flagged<F[number]>>>;
 
     select<P extends Property>(
         /**

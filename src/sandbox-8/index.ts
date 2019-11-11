@@ -5,6 +5,7 @@ export * from "./instance-loader";
 export * from "./flag";
 export * from "./lang";
 export * from "./property";
+export * from "./state";
 export * from "./type";
 export * from "./type-selector";
 export * from "./type-query";

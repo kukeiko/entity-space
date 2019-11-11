@@ -10,15 +10,17 @@ export type Flag
     | "voidable";
 
 const flagMap: Record<Flag, true> = {
+    loadable: true,
     creatable: true,
+    patchable: true,
+
+    nullable: true,
+    voidable: true,
+
     expandable: true,
     filterable: true,
     iterable: true,
-    loadable: true,
-    nullable: true,
-    patchable: true,
     unique: true,
-    voidable: true
 };
 
 export function allFlags(): Flag[] {

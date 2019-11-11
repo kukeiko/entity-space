@@ -1,4 +1,4 @@
-import { TypeMetadataSymbol, StaticType, Property, InstanceLoader, TypeQuery, TypeInstance, isFlagged, allFlags, Flag, Flagged } from "@sandbox-8";
+import { TypeMetadataSymbol, StaticType, Property, InstanceLoader, TypeQuery, TypeInstance, isFlagged, allFlags, Flag, Flagged, PickRequiredProperties, WithState, WidenValueForState } from "@sandbox-8";
 
 describe("flag.ts", () => {
     it("allFlags() should contain all the flags shipped with entity-space", () => {
@@ -45,6 +45,10 @@ describe("instance-loader", () => {
                 loadable[TypeMetadataSymbol].source[TypeMetadataSymbol].class;
                 loadable.songs?.value[TypeMetadataSymbol].source;
 
+                for (let k in loadable) {
+
+                }
+
                 return new Map([
                     [1, {}]
                 ]);
@@ -82,14 +86,43 @@ describe("type-query", () => {
             // name: Property<"name", typeof String> & Flagged<"filterable"> & Flagged<"creatable"> = { key: "name", value: String, filterable: true, creatable: true };
             releasedAt: Property<"releasedAt", typeof String> = { key: "releasedAt", value: String };
             songs: Property<"songs", typeof SongType> & Flagged<"creatable"> & Flagged<"expandable"> & Flagged<"iterable"> = { key: "songs", value: SongType, expandable: true, iterable: true, creatable: true };
+
+            // foo: Property<"foo", typeof SongType> & Flagged<"iterable"> & WithState<"creatable", true, true> = { key: "foo", value: SongType, iterable: true, creatable: { nullable: true, voidable: true } };
+            foo: Property<"foo", typeof SongType> & WithState<"creatable", true, true> = { key: "foo", value: SongType, creatable: { nullable: true, voidable: true } };
         }
 
         class SongType {
             [TypeMetadataSymbol] = StaticType.Metadata.create(SongType);
-            album: Property<"album", typeof AlbumType> & Flagged<"expandable"> = { key: "album", value: AlbumType, expandable: true };
-            duration: Property<"duration", typeof Number> & Flagged<"filterable"> = { key: "duration", value: Number, filterable: true };
+            album: Property<"album", typeof AlbumType> & Flagged<"expandable"> & WithState<"creatable"> = { key: "album", value: AlbumType, expandable: true, creatable: { nullable: false, voidable: false } };
+            duration: Property<"duration", typeof Number> & Flagged<"filterable"> & Flagged<"creatable"> = { key: "duration", value: Number, filterable: true, creatable: true };
             name: Property<"name", typeof String> & Flagged<"creatable"> = { key: "name", value: String, creatable: true };
+
+            bar: Property<"bar", typeof String> & WithState<"creatable", true> = { key: "bar", value: String, creatable: { nullable: true, voidable: false } };
         }
+
+        let albumProps: PickRequiredProperties<AlbumType, Flagged<"creatable">> = {
+            name: new AlbumType().name,
+            // releasedAt: new AlbumType().releasedAt,
+            songs: {
+                creatable: true,
+                expandable: true,
+                iterable: true,
+                key: "songs",
+                // value: SongType
+                value: {
+                    [TypeMetadataSymbol]: null as any,
+                    duration: new SongType().duration,
+                    name: new SongType().name
+                }
+            }
+        };
+
+        interface Foo {
+            bar?: number;
+        }
+
+        type X = Pick<Foo, "bar">;
+
 
         let albumType = new AlbumType();
 
@@ -98,17 +131,24 @@ describe("type-query", () => {
         // };
 
         // let foo = new TypeSelector(new AlbumType()).select(["creatable", "patchable"]).
-        let testQuery = new TypeQuery(new AlbumType()).select(ts => ts.select(["creatable", "patchable", "unique"])).build();
+        // let testQuery = new TypeQuery(new AlbumType()).select(ts => ts.select(["creatable", "patchable", "unique"])).build();
+        let testQuery = new TypeQuery(new AlbumType()).select(ts => ts.select(["creatable"])).build();
 
         let x: TypeInstance<typeof testQuery["selected"]> = {
-
-            name: "foo"
+            name: "foo",
+            songs: [
+                {
+                    duration: 3,
+                    name: "bar"
+                }
+            ]
         };
 
         let typeQuery = new TypeQuery(new AlbumType());
 
         let selectedType = typeQuery
             .select(s => s
+                .selectWithState(["creatable"])
                 // .select(x => x.name)
                 .select(x => x.songs, q => q.select(x => x.duration).select(x => x.name))
                 .select(["creatable"])
@@ -125,7 +165,18 @@ describe("type-query", () => {
             .build()
             ;
 
+        type H = typeof selectedType["selected"]["foo"];
+        type Widened = WidenValueForState<typeof selectedType["selected"]["foo"], "creatable", string>;
+
         let instance: TypeInstance<typeof selectedType["selected"]> = {
+            foo: {
+                bar: "bar",
+                album: {
+                    foo: {
+
+                    } as any
+                }
+            },
             name: null,
             songs: [
                 {
