@@ -1,29 +1,19 @@
-import { Property, MixinPropertyWithMappedValue, DefaultValueOfProperty, PropertyKeysOf, PropertyWithMappedValue, propertiesOf, PickProperties } from "./property";
+import { Property, WithReplacedValueProperty, DefaultValueOfProperty, propertiesOf, PickProperties } from "./property";
 import { Unbox } from "./lang";
-import { DynamicType, TypeMetadataSymbol, StaticType } from "./type";
-import { Flag, Flagged, isFlagged } from "./flag";
-import { State, WithState } from "./state";
-
-/**
- * This type is kind of a replica of "PropertiesOf" @ property.ts, but instead with properties where the value is mapped to a new type of value.
- * I'd like just use "PropertiesOf" instead where I can somehow specify the mapping, but I don't know how to do that right now.
- */
-export type PickPropertiesWithDefaultValue<T, P = Property> = {
-    [K in PropertyKeysOf<T, P>]:
-    T[K] extends Property ? PropertyWithMappedValue<T[K], DefaultValueOfProperty<T[K]>>
-    : never;
-};
+import { Type } from "./type";
+import { Context, WithContext } from "./context";
+import { SelectionSymbol, Selection } from "./selection";
 
 /**
  * [todo]
  * i added "T extends StaticType", but runtime checks are missing
  */
-export class TypeSelector<T extends StaticType, S = {} & DynamicType<T>> {
+export class TypeSelector<T extends Type, S = {} & Selection<T>> {
     constructor(type: T) {
         this._type = type;
 
-        let selectedType: DynamicType = {
-            [TypeMetadataSymbol]: DynamicType.Metadata.create(type)
+        let selectedType: Selection = {
+            [SelectionSymbol]: Selection.Metadata.create(type)
         };
 
         this._selected = selectedType as any as S;
@@ -32,40 +22,40 @@ export class TypeSelector<T extends StaticType, S = {} & DynamicType<T>> {
     private readonly _type: T;
     private readonly _selected: S;
 
-    // select<F extends Flag[]>(flags: F): TypeSelector<T, S & PickPropertiesWithDefaultValue<T, Flagged<F[number]>>>;
-    selectWithState<ST extends State[]>(state: ST): TypeSelector<T, S & PickProperties<T, WithState<ST[number], any, any>>> {
-        return this as any;
-    }
+    select<C extends Context>(context: C): TypeSelector<T, S & PickProperties<T, WithContext<C, false, any, any>>>;
 
-    select<F extends Flag[]>(flags: F): TypeSelector<T, S & PickProperties<T, Flagged<F[number]>>>;
-
-    select<P extends Property>(
+    /**
+     * [todo] force primitives so we can remove DefaultValueOfProperty type
+     */
+    select<P extends Property<any, any, true>>(
         /**
          * [note]
          * by not using "PropertiesOf<T>" we can support "find references" @ IDE
          */
         // select: (properties: PropertiesOf<T>) => P
         select: (properties: T) => P
-    ): TypeSelector<T, S & MixinPropertyWithMappedValue<P, DefaultValueOfProperty<P>>>;
+    ): TypeSelector<T, S & WithReplacedValueProperty<P, DefaultValueOfProperty<P>>>;
 
-    select<P extends Property & Flagged<"expandable">, E>(
-        // select: (properties: PropertiesOf<T, Expandable>) => P,
+    // select<P extends Property & WithAttribute<"expandable">, E>(
+    select<P extends Property<any, any, false>, E>(
         select: (properties: T) => P,
         expand: (selector: TypeSelector<Unbox<P["value"]>>) => TypeSelector<Unbox<P["value"]>, E>
-        // ): Query<T, Q & WithPropertyWithMappedValue<P, QueriedValueOfProperty<P> & E>>;
-    ): TypeSelector<T, S & MixinPropertyWithMappedValue<P, E>>;
-
+    ): TypeSelector<T, S & WithReplacedValueProperty<P, E>>;
 
     select(...args: any[]): any {
-        if (args.length === 1 && args[0] instanceof Function) {
-            this._selectProperty(this._fetchProperty(args[0]));
-        } else if (args.length === 1 && args[0] instanceof Array) {
+        if (args.length === 1 && typeof args[0] === "string") {
             let properties = propertiesOf(this._type);
 
             for (let k in properties) {
+                /**
+                 * [todo] only select the ones which have context C (args[0]) and are not omittable,
+                 * also crawl properties with context C of expanded types
+                 */
                 this._selectProperty(properties[k]);
             }
-        } else if (args.length === 2 && args[0] instanceof Function && args[1] instanceof Object) {
+        } else if (args.length === 1 && args[0] instanceof Function) {
+            this._selectProperty(this._fetchProperty(args[0]));
+        } else if (args.length === 2 && args[0] instanceof Function && args[1] instanceof Function) {
             let property = this._fetchProperty(args[0]);
             let type = this._getExpandableType(property);
             let expand: (selector: TypeSelector<any>) => TypeSelector<any> = args[1];
@@ -82,9 +72,9 @@ export class TypeSelector<T extends StaticType, S = {} & DynamicType<T>> {
         return selectFromType(this._type);
     }
 
-    private _getExpandableType(property: Property): StaticType {
-        if (!isFlagged(property, "expandable")) {
-            throw new Error(`property '${property.key}' is not expandable`);
+    private _getExpandableType(property: Property): Type {
+        if (property.primitive) {
+            throw new Error(`did not expect property '${property.key}' to be a primitive`);
         }
 
         return property.value instanceof Function ? new property.value() : property.value;

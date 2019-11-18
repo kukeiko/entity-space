@@ -1,20 +1,20 @@
-import { TypeMetadataSymbol, StaticType, Property, Flagged, TypeSelector } from "@sandbox-8";
+import { Type, Property, WithAttribute, TypeSelector, TypeSymbol, SelectionSymbol } from "@sandbox-8";
 
 describe("type-selector", () => {
-    it("should create a selected type", () => {
+    it("should create a selection as expected", () => {
         // arrange
         class AlbumType {
-            [TypeMetadataSymbol] = StaticType.Metadata.create(AlbumType);
-            name: Property<"name", typeof String> = { key: "name", value: String };
-            releasedAt: Property<"releasedAt", typeof String> = { key: "releasedAt", value: String };
-            songs: Property<"songs", typeof SongType> & Flagged<"expandable"> & Flagged<"iterable"> = { key: "songs", value: SongType, expandable: true, iterable: true };
+            [TypeSymbol] = Type.Metadata.create(AlbumType);
+            name: Property<"name", typeof String> = { key: "name", value: String, primitive: true };
+            releasedAt: Property<"releasedAt", typeof String> = { key: "releasedAt", value: String, primitive: true };
+            songs: Property<"songs", typeof SongType> & WithAttribute<"iterable"> = { key: "songs", value: SongType, iterable: true, primitive: false };
         }
 
         class SongType {
-            [TypeMetadataSymbol] = StaticType.Metadata.create(SongType);
-            album: Property<"album", typeof AlbumType> & Flagged<"expandable"> = { key: "album", value: AlbumType, expandable: true };
-            duration: Property<"duration", typeof Number> = { key: "duration", value: Number };
-            name: Property<"name", typeof String> = { key: "name", value: String };
+            [TypeSymbol] = Type.Metadata.create(SongType);
+            album: Property<"album", typeof AlbumType> = { key: "album", value: AlbumType, primitive: false };
+            duration: Property<"duration", typeof Number> = { key: "duration", value: Number, primitive: true };
+            name: Property<"name", typeof String> = { key: "name", value: String, primitive: true };
         }
 
         let sourceType = new AlbumType();
@@ -34,14 +34,9 @@ describe("type-selector", () => {
             .build();
 
         // assert
-        let sourceMetadata = selectedType[TypeMetadataSymbol].source[TypeMetadataSymbol];
+        let sourceMetadata = selectedType[SelectionSymbol].type[TypeSymbol];
 
-        if (sourceMetadata.static !== true) {
-            fail("source metadata was expected to be static");
-        } else {
-            expect(sourceMetadata.class).toBe(AlbumType, "source metadata class was expected to be 'AlbumType'");
-        }
-
+        expect(sourceMetadata.class).toBe(AlbumType, "source metadata class was expected to be 'AlbumType'");
         expect(selectedType.name).not.toBe(sourceType.name, "expected property to be cloned: name");
         expect(selectedType.name).toEqual(sourceType.name, "expected property to equal the one from source: name");
 
@@ -53,25 +48,5 @@ describe("type-selector", () => {
 
         expect(selectedType.songs.value.album).not.toBe(selectedType as any, "unexpected type recursion: songs.album");
         expect(selectedType.songs.value.album).not.toEqual(selectedType as any, "unexpected type recursion: songs.album");
-
-        // let foo: InstanceOf<typeof selectedType> = {
-        //     name: "trash smash",
-        //     songs: [
-        //         {
-        //             album: {
-        //                 releasedAt: "2019-03-12"
-        //             },
-        //             duration: 493,
-        //             name: "awkward goblin"
-        //         },
-        //         {
-        //             album: {
-        //                 releasedAt: "2019-03-12"
-        //             },
-        //             duration: 120,
-        //             name: "turkey in the box"
-        //         }
-        //     ]
-        // };
     });
 });

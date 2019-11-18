@@ -1,14 +1,17 @@
-import { StaticType, DynamicType } from "./type";
+import { Type } from "./type";
 import { TypeSelector } from "./type-selector";
 import { CriteraBuilder } from "./criteria-builder";
+import { PickProperties } from "./property";
+import { WithContext } from "./context";
+import { Selection } from "./selection";
 
-export type QueriedType<T extends StaticType, S extends DynamicType<T>, C extends CriteraBuilder<S>>
+export type QueriedType<T extends Type, S extends Selection<T>, C extends CriteraBuilder<S>>
     = {
         selected: S;
         criteria: C;
     };
 
-export class TypeQuery<T extends StaticType, S extends DynamicType<T> = {} & DynamicType<T>> {
+export class TypeQuery<T extends Type, S extends Selection<T> = {} & Selection<T>> {
     constructor(type: T) {
         this._type = type;
         this._selector = new TypeSelector<T, S>(type);
@@ -17,8 +20,8 @@ export class TypeQuery<T extends StaticType, S extends DynamicType<T> = {} & Dyn
     private readonly _type: T;
     private readonly _selector: TypeSelector<T, S>;
 
-    select<O>(select: (selector: TypeSelector<T, S>) => TypeSelector<T, O>): TypeQuery<T, S & O> {
-        select(this._selector);
+    select<O>(select: (selector: TypeSelector<T, S & PickProperties<T, WithContext<"loadable", false, any, any>>>) => TypeSelector<T, O>): TypeQuery<T, S & O> {
+        select(this._selector.select("loadable"));
         return this as any;
     }
 
@@ -28,7 +31,7 @@ export class TypeQuery<T extends StaticType, S extends DynamicType<T> = {} & Dyn
     where(...args: any[]): this {
         return this;
     }
-    
+
     build(): QueriedType<T, S, CriteraBuilder<S>> {
         return {
             selected: this._selector.build(),

@@ -1,53 +1,31 @@
 import { Class } from "./lang";
 
-export const TypeMetadataSymbol: unique symbol = Symbol();
+export const TypeSymbol: unique symbol = Symbol();
 
-export interface StaticType<T extends Class = Class> {
-    [TypeMetadataSymbol]: StaticType.Metadata<T>;
+/**
+ * [todo] could also name it "SourceType", and rename "DynamicType" to "PickedType", would be consistent with naming of "PickProperties"
+ * *or* "Schema" and "Selection"
+ * *or* "Blueprint" and "Selection" (so they start with different letters for nicer generic types)
+ * but "S" from "Selection" conflicts with "S" from "State", so maybe change that as well.
+ */
+export interface Type<T extends Class = Class> {
+    [TypeSymbol]: Type.Metadata<T>;
 }
 
-export module StaticType {
-    export function is(x?: any): x is StaticType {
-        return ((x || {}) as any as StaticType)[TypeMetadataSymbol]?.static === true;
+export module Type {
+    export function is(x?: any): x is Type {
+        return ((x || {}) as any as Type)[TypeSymbol]?.class instanceof Function;
     }
 
     export interface Metadata<T extends Class = Class> {
-        static: true;
         class: T;
     }
 
     export module Metadata {
         export function create<T extends Class = Class>(type: T): Metadata<T> {
             return {
-                class: type,
-                static: true
+                class: type
             };
         }
     }
 }
-
-export interface DynamicType<T extends Type = Type> {
-    [TypeMetadataSymbol]: DynamicType.Metadata<T>;
-}
-
-export module DynamicType {
-    export function is(x?: any): x is DynamicType {
-        return ((x || {}) as any as DynamicType)[TypeMetadataSymbol]?.static === false;
-    }
-
-    export interface Metadata<T extends Type = Type> {
-        static: false;
-        source: T;
-    }
-
-    export module Metadata {
-        export function create<T extends Type = Type>(source: T): Metadata<T> {
-            return {
-                static: false,
-                source
-            };
-        }
-    }
-}
-
-export type Type = DynamicType | StaticType;
