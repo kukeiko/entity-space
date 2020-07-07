@@ -1,80 +1,53 @@
 # entity-space
-entity-space is an attempt to create an abstraction layer between business and API logic,
-simplyfing CRUD operations and providing a cache to reduce the number of HTTP requests made to consumed APIs.
+Strictly typed data framework for consuming HTTP services.
 
-# documentation
-proper API documentation will follow as soon as version reaches stable v1.0.0
+Serves a similar purpose as GraphQL, but is actually inspired by the LightSwitch OData implementation which has been discontinued in 2015. 
 
-# features / goals
-* unify data loading/saving logic
-* cache data fetched from APIs
-* abstract multiple APIs into a single interface
+Types are defined by specifying their properties and what you can do with them (loadable, creatable, patchable, nullable, optional, ...). With queries you define the tree of entities you want to load (Selection) and how to filter them (Criteria). The actual loading logic has to be implemented by the developer.
 
-# requirements
-* describe properties and relations of domain entities
-* implement classes to handle CRUD HTTP requests
-* use the in-built query system to execute CRUD operations
+# Contributing
 
-# goals
+Submit a pull request. One can pick one of the issues labeled with the "good first issue" label.  
+The repository is commitizen friendly, so commits should follow [this](https://github.com/angular/angular.js/blob/master/DEVELOPERS.md#-git-commit-guidelines) commit guidelines.  
+We are using the [cz-customize](https://github.com/leonardoanalista/cz-customizable) plugin. The configuration can be found in the [**.cz-config.js**](./.cz-config.js) file.
 
-## immediate
- * rewrite entity type definition & query system to provide more type safety (for strict mode)
- * more genericity in how and what stuff can be loaded
+**TL;DR:** Once you feel you are ready to submit your changes just execute this command in your console:  
 
-## future
-### result, payload
-intermediate object to improve loading/saving capabilities @ service-cluster.
+```bash
+npm run commit
+```
 
-- helps dealing with partial success / errors
-- possibly a "live" result object that populates it with entities as they are loaded
+It will give you a nice prompt and will ask is it a feature/bug/refactoring see below:  
+![prompt](https://raw.githubusercontent.com/commitizen/cz-cli/master/meta/screenshots/add-commit.png)
 
-### OData utils
-required feature to make entity-space user-friendly.
+Then you specify what is a subject of the changes you provide and it generates  
+the commit message that is consistent with the commit messages in this repository.
 
-- generate entity classes from metadata
-    - ideally puts properties & decorators "in-place", so that users can keep their custom getters/setters etc.
-    - a small app would be fantastic, since there might be a ton of options
-- OData entity-service implementations
-    - should be rich in features but thin in abstraction, so users are not forced to write workarounds
-    - provides common loading/saving logic
-    - query/filter/expansion toString() implementations
+# Status
+Very much work in progress. Immediate goal is to query some data with basic filtering, loaded from an http service.
 
-### debug utils
-give users a way to see what is happening during the execution of a query.
+# FAQ
 
-### cache invalidation
-more granularity in removing entities from the cache (instead of just by entity class).
+**Q:** I have the following error when I try to 
+```bash
+$ npm run test
+```
+No binary for ChromeHeadless browser on your platform.
+Please, set "CHROME_BIN" env variable.
 
-### contexts
-contexts are attached to a query and represent a filter on the entities & navigations that
-can only be evaluated @ server.
+**A:** You have to set the CHROME_BIN variable, in linux you can execute this in terminal:
+```bash
+$ export CHROME_BIN=/usr/local/bin/my-chrome-build
+```
+More details for running karma with different browsers can be found [here](http://karma-runner.github.io/4.0/config/browsers.html) .
+**Note:** puppeteer should fix this issue consistently on all the OSes, so feel free to create an issue in case it didnt work for you out of the box.
+##
 
-the use case this feature stems from is an entity (which has a child collection of its own type, i.e. a tree)
-that can be filtered by a boolan & date range value which we have no knowledge of or access to @ client.
+**Q:** Why is prepublish called npm prepublish?  
+**A:** Npm doesnt distinguish between npm install and prepublish. See more details [here](https://github.com/npm/npm/issues/3059)
+##
 
-### entity validation
-would be nice to be able to validate an entity before trying to save it.
+Template:
 
-### query statistics
-just because it would be interesting, but it also might help identify issues in the code.
-
-### indexedDB support
-wouldn't it be awesome to be able to replace the object-caches with an indexedDB?
-
-the way i see it it can be done already, without having to shove around existing code too much.
-
-### abstract entities
-ability to transform/map entities into an abstraction of them.
-
-### top & skip
-ability to do offset load results - was high priority, but not soo much anymore due to filter critera.
-
-### query merging
-as of now, queries just reduce each other, but none are ever merged. would increase performance since
-less query reductions would be made (especially if filters are used in order to page results).
-
-### domains
-the support to have multiple entity-space instances at a time
-
-### aggregate keys
-aggregate keys for references that are not virtual (=> [indexes] identity)
+**Q:**  
+**A:**

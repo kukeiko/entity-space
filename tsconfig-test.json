@@ -10,26 +10,17 @@
         "outDir": "dist",
         "noImplicitAny": true,
         "noImplicitThis": true,
+        "resolveJsonModule": true,
         "strict": true,
-        "typeRoots": [
-            "node_modules/@types"
-        ],
         "types": [
             "jasmine"
         ],
         "lib": [
-            "dom",
+            "DOM",
             "scripthost",
             "es2015",
             "es2016.array.include"
-        ],
-        "baseUrl": "./",
-        "paths": {
-            "@elements": ["src/elements"],
-            "@metadata": ["src/metadata"],
-            "@sandbox": ["src/sandbox"],
-            "@sample-types": ["src/playground/types"]
-        }
+        ]
     },
     "include": [
         "./src/**/*.ts",

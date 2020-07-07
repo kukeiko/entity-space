@@ -1,6 +1,5 @@
 /coverage
 /dist/test
-/reports
 /src
 /test
 /.npmignore

@@ -6,7 +6,11 @@
         "no-var-keyword": true,
         "eofline": true,
         "no-use-before-declare": false,
-        "no-unused-variable": true,
         "semicolon": true
+    },
+    "linterOptions": {
+        "exclude": [
+            "**/_*.*"
+        ]
     }
 }

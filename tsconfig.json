@@ -10,28 +10,17 @@
         "outDir": "dist",
         "noImplicitAny": true,
         "noImplicitThis": true,
+        "resolveJsonModule": true,
         "strict": true,
-        "typeRoots": [
-            "node_modules/@types"
-        ],
         "lib": [
-            "dom",
+            "DOM",
             "scripthost",
             "es2015",
             "es2016.array.include"
-        ],
-        "baseUrl": "./",
-        "paths": {
-            "@elements": ["src/elements"],
-            "@metadata": ["src/metadata"],
-            "@sandbox": ["src/sandbox"],
-            "@sandbox-8": ["src/sandbox-8"],
-            "@sample-types": ["src/playground/types"]
-        }
+        ]
     },
     "include": [
         "./src/**/*.ts",
-        "./test/**/*.ts",
-        "./old/**/*.ts" // [note] for checking out old src code only
+        "./test/**/*.ts"
     ]
 }
