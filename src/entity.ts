@@ -10,10 +10,6 @@ export abstract class Entity<T = any, U extends EntityClass<T> = any> {
     constructor(args?: Entity.CtorArgs<T>) {
         Object.assign(this, args || {});
     }
-
-    _foo(): U {
-        return {} as any;
-    }
 }
 
 export module Entity {

@@ -1,4 +1,3 @@
-import { Class } from "../lang";
 import { Property } from "./property";
 import { ObjectTypeMetadata } from "./object-type-metadata";
 

@@ -47,20 +47,35 @@ export module ValueType {
         type: "uuid";
     }
 
-    /**
-     * An object.
-     */
-    export interface Object {
-        type: "object";
-        class: () => Class;
+    export type Scalar = Boolean | Date | Number | String | Uuid;
+
+    export interface Array<T extends ValueType> {
+        type: "array";
+        valueType: T;
+    }
+
+    export interface Map<K extends Scalar, T extends ValueType> {
+        type: "map";
+        keyValueType: K;
+        valueType: T;
     }
 
     /**
+     * An object.
+     */
+    export interface Object<T = any> {
+        type: "object";
+        // [todo] re-evaluate if its really necessary to have lazy binding
+        class: () => Class<T>;
+    }
+    
+    /**
      * An object with an id.
      */
-    export interface Entity {
+    export interface Entity<T = any> {
         idName: string;
         type: "entity";
-        class: () => Class;
+        // [todo] re-evaluate if its really necessary to have lazy binding
+        class: () => Class<T>;
     }
 }
