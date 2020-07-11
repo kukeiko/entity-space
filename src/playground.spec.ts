@@ -16,6 +16,19 @@ describe("prototyping-playground", () => {
         children?: TreeNode[];
         parent?: TreeNode | null;
         parents?: TreeNode[];
+        metadata?: Metadata;
+    }
+
+    class Metadata {
+        createdAt: string = "";
+        createdBy?: User;
+        updated: string | null = null;
+        updatedBy?: User | null;
+    }
+
+    class User {
+        id: number = 0;
+        name?: string = "";
     }
 
     it("model to actual value playground", () => {
@@ -102,10 +115,12 @@ describe("prototyping-playground", () => {
             build(): Q & Record<"selection", this[typeof Selected]>;
         }
 
+        type MetadataQuery = Query<Model.Object<Metadata>>;
         type TreeNodeQuery = Query<Model.Object<TreeNode>>;
         type TreeNodeQueryInOtherScope = Query<Model.Object<TreeNode>, "other-scope">;
         type TreeNodeLevelQuery = Query<Model.Number, "tree-node-level">;
-        type AllOurTreeNodeQueries = TreeNodeQuery | TreeNodeQueryInOtherScope | TreeNodeLevelQuery;
+
+        type AllOurQueries = MetadataQuery | TreeNodeQuery | TreeNodeQueryInOtherScope | TreeNodeLevelQuery;
 
         /**
          * Idea of this is to have a class that you can ask to easily create queries which you can then customize a bit.
@@ -116,6 +131,11 @@ describe("prototyping-playground", () => {
             addQuery<Q extends Query<any, any, any>>(): Queries<M | Q>;
             query<T>(model: T): ScopedQueries<Extract<M, { model: T }>>;
             queryDefaultScope<T>(model: T): QueryBuilder<Extract<M, { model: T; scope: "default" }>>;
+        }
+
+        function isQuery<Q extends Query<any, any, any>>(query: any, model: Q["model"], scope: Q["scope"]): query is Q {
+            // [todo] check model & scope equality
+            return {} as any;
         }
 
         /**
@@ -142,19 +162,43 @@ describe("prototyping-playground", () => {
             type: "object",
         };
 
+        const metadataModel: Model.Object<Metadata> = {
+            class: () => Metadata,
+            type: "object",
+        };
+
         /**
          * Creating a factory that is typed to know about our queries.
          */
-        const factory = (({} as any) as Queries).addQuery<AllOurTreeNodeQueries>();
+        const factory = (({} as any) as Queries).addQuery<AllOurQueries>();
 
         /**
          * Some testing lines to ensure the factory typing works.
          */
         factory.query(treeNodeLevelModel).inScope("tree-node-level");
-        // factory.query(treeNodeModel).inScope("other-scope").scope;
-        // factory.query(treeNodeModel).defaultScope().scope;
-        factory.queryDefaultScope(treeNodeModel);
-        // factory.queryClass(TreeNode).inScope("other-scope").model.class;
+        const fooQuery: Query<any, any, any> = factory.queryDefaultScope(treeNodeModel).build();
+
+        /**
+         * This could be a way to duck type any type of query to figure out which one of our queries it is.
+         */
+        if (isQuery<TreeNodeQuery>(fooQuery, treeNodeModel, "default")) {
+            const instance: TreeNode = new (fooQuery.model.class())();
+            fooQuery.scope = "default";
+        } else if (isQuery<TreeNodeQueryInOtherScope>(fooQuery, treeNodeModel, "other-scope")) {
+            const instance: TreeNode = new (fooQuery.model.class())();
+            fooQuery.scope = "other-scope";
+        } else if (isQuery<TreeNodeLevelQuery>(fooQuery, treeNodeLevelModel, "tree-node-level")) {
+            fooQuery.model.format = "double";
+        } else if (isQuery<MetadataQuery>(fooQuery, metadataModel, "default")) {
+            const instance: Metadata = new (fooQuery.model.class())();
+
+            if (fooQuery.selection?.createdBy !== void 0) {
+                if (fooQuery.selection?.createdBy === true) {
+                } else {
+                    fooQuery.selection.createdBy.name;
+                }
+            }
+        }
 
         /**
          * Actual example of creating a query and selecting properties, then having it be strictly typed based on the selection we made.
@@ -191,30 +235,5 @@ describe("prototyping-playground", () => {
                 },
             },
         ];
-
-        const q: AllOurTreeNodeQueries = {} as any;
-
-        /**
-         * Trying out if its feasible to narrow down to a specific query
-         */
-        switch (q.scope) {
-            case "tree-node-level": {
-                const numberFormat = q.model.format;
-            }
-
-            case "default": {
-                if (q.model.type === "object") {
-                    // [todo] not nailed down to our "TreeNodeQuery" yet
-                }
-            }
-        }
-
-        interface Thingies {
-            // takes a full query and tries to load as much selected data as it can
-            loadFromSource(): void;
-            // takes some data and tells us which queries we have to execute to hydrate missing selections
-            createHydrations(): void;
-            readFromCache(): void;
-        }
     });
 });
