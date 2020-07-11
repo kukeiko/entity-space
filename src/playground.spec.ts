@@ -1,7 +1,6 @@
-import { ValueType as Model, EntityTypeMetadata } from "./metadata";
+import { ValueType as Model } from "./metadata";
 import { Class, Unbox } from "./lang";
 import { ObjectCriteria } from "./criteria";
-import { Entity } from "./entity";
 import { Selection } from "./selection";
 
 /**
@@ -11,11 +10,7 @@ describe("prototyping-playground", () => {
     /**
      * Our custom user data type.
      */
-    class TreeNode extends Entity<TreeNode, typeof TreeNode> {
-        static getMetadata(): EntityTypeMetadata<TreeNode> {
-            return {} as any;
-        }
-
+    class TreeNode {
         id: number = 0;
         name?: string;
         children?: TreeNode[];
@@ -79,6 +74,9 @@ describe("prototyping-playground", () => {
             reduce(other: this): this | null;
         }
 
+        type ModelCriteria<T> = T extends Model.Object<infer U> ? ObjectCriteria<U> : never;
+        type ModelSelection<T> = T extends Model.Object<infer U> ? Selection<U> : never;
+
         /**
          * Something that can be executed to load data, where the data is in the form of T.
          * The scope allows us to have different API calls for the same type of data.
@@ -90,30 +88,22 @@ describe("prototyping-playground", () => {
             model: T;
             arguments: A;
             scope: S;
+            criteria?: ModelCriteria<T>;
+            selection?: ModelSelection<T>;
         }
 
-        /**
-         * A query that returns scalar values, such as int and int[].
-         * If we canna go crazy we could also try and support things like string[][] and Map<string, int[[int],[int]][][]>.
-         */
-        type ScalarQuery<T extends Model.Scalar = Model.Scalar, S extends string = "default", A extends Reducible = Reducible> = Query<T, S, A>;
+        type ModelInstanceFromQuery<Q> = Q extends Query<infer T, any, any> ? (T extends Model.Object<infer U> ? U : never) : never;
 
-        /**
-         * A query that returns object values.
-         *
-         * It can have criteria for the objects (basic property value based filtering) and a selection of optionally loadable properties.
-         *
-         * [todo] move the select() & where() methods onto a query builder if possible
-         */
-        interface ObjectQuery<T = Object, S extends string = "default", A extends Reducible = Reducible> extends Query<Model.Object<T>, S, A> {
-            criteria?: ObjectCriteria<T>;
-            selection?: Selection<T>;
-            select<O>(select: (selector: Selector<T>) => Selector<T, O>): this & { selection: O };
-            where(criteria: ObjectCriteria<T>): this;
+        interface QueryBuilder<Q extends Query<any, any, any>> {
+            [Selected]: Selection<ModelInstanceFromQuery<Q>>;
+            arguments(): this;
+            select<O>(select: (selector: Selector<ModelInstanceFromQuery<Q>>) => Selector<ModelInstanceFromQuery<Q>, O>): this & { [Selected]: O };
+            where(criteria: ObjectCriteria<ModelInstanceFromQuery<Q>>): this;
+            build(): Q & Record<"selection", this[typeof Selected]>;
         }
 
-        type TreeNodeQuery = ObjectQuery<TreeNode>;
-        type TreeNodeQueryInOtherScope = ObjectQuery<TreeNode, "other-scope">;
+        type TreeNodeQuery = Query<Model.Object<TreeNode>>;
+        type TreeNodeQueryInOtherScope = Query<Model.Object<TreeNode>, "other-scope">;
         type TreeNodeLevelQuery = Query<Model.Number, "tree-node-level">;
         type AllOurTreeNodeQueries = TreeNodeQuery | TreeNodeQueryInOtherScope | TreeNodeLevelQuery;
 
@@ -124,19 +114,16 @@ describe("prototyping-playground", () => {
          */
         interface Queries<M extends Query = Query> {
             addQuery<Q extends Query<any, any, any>>(): Queries<M | Q>;
-            getScopes(): M["scope"];
             query<T>(model: T): ScopedQueries<Extract<M, { model: T }>>;
-            queryDefaultScope<T>(model: T): Extract<M, { model: T; scope: "default" }>;
-            queryClass<T>(model: Class<T>): ScopedQueries<Extract<M, { model: Model.Object<T> }>>;
-            queryClassDefaultScope<T>(model: Class<T>): Extract<M, { model: Model.Object<T>; scope: "default" }>;
+            queryDefaultScope<T>(model: T): QueryBuilder<Extract<M, { model: T; scope: "default" }>>;
         }
 
         /**
          * Intermediate class to retrieve a query by defining the scope S.
          */
         interface ScopedQueries<T extends Query> {
-            inScope<S extends T["scope"]>(scope: S): Extract<T, { scope: S }>;
-            defaultScope(): Extract<T, { scope: "default" }>;
+            inScope<S extends T["scope"]>(scope: S): QueryBuilder<Extract<T, { scope: S }>>;
+            defaultScope(): QueryBuilder<Extract<T, { scope: "default" }>>;
         }
 
         /**
@@ -163,12 +150,11 @@ describe("prototyping-playground", () => {
         /**
          * Some testing lines to ensure the factory typing works.
          */
-        factory.query(treeNodeLevelModel).inScope("tree-node-level").scope;
-        factory.query(treeNodeModel).inScope("other-scope").scope;
-        factory.query(treeNodeModel).defaultScope().scope;
+        factory.query(treeNodeLevelModel).inScope("tree-node-level");
+        // factory.query(treeNodeModel).inScope("other-scope").scope;
+        // factory.query(treeNodeModel).defaultScope().scope;
         factory.queryDefaultScope(treeNodeModel);
-        factory.queryClass(TreeNode).inScope("other-scope").model.class;
-        factory.queryClassDefaultScope(TreeNode);
+        // factory.queryClass(TreeNode).inScope("other-scope").model.class;
 
         /**
          * Actual example of creating a query and selecting properties, then having it be strictly typed based on the selection we made.
@@ -178,7 +164,8 @@ describe("prototyping-playground", () => {
             .defaultScope()
             .select((x) => x.name().children((x) => x.name()))
             .select((x) => x.parent())
-            .where([{ id: [{ op: "in", values: new Set([1, 2]) }] }]);
+            .where([{ id: [{ op: "in", values: new Set([1, 2]) }], name: [{ op: "!=", value: "baz" }] }])
+            .build();
 
         /**
          * Taking the type of selection on the query and using Selection.Appy<T, S> (where S is of type Selection)
@@ -229,17 +216,5 @@ describe("prototyping-playground", () => {
             createHydrations(): void;
             readFromCache(): void;
         }
-
-        /**
-         * QueryBuilder prototyping
-         */
-        type Foo<Q extends ObjectQuery> = InstanceType<ReturnType<Q["model"]["class"]>>;
-
-        interface QueryBuilder<Q extends ObjectQuery<any, any, any>> {
-            arguments(): this;
-            select<O>(select: (selector: Selector<Foo<Q>>) => Selector<Foo<Q>, O>): this & { selection: O };
-        }
-
-        const foo: QueryBuilder<TreeNodeQuery> = {} as any;
     });
 });
