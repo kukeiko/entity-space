@@ -23,6 +23,21 @@ describe("prototyping-playground", () => {
         parents?: TreeNode[];
     }
 
+    it("model to actual value playground", () => {
+        // type ToValue<T> = T extends Model.Boolean ? boolean : T extends Model.Array<infer U> ? ToValue<U>[] : T extends Model.Object<infer U> ? U : never;
+
+        type BooleanModelValue = Model.ToValue<Model.Boolean>;
+        type ArrayModelValue = Model.ToValue<Model.Array<Model.Boolean>>;
+        type ArrayOfArrayModelValue = Model.ToValue<Model.Array<Model.Array<Model.Boolean>>>;
+        type TreeNodeModelValue = Model.ToValue<Model.Object<TreeNode>>;
+        type TreeNodeInNestedMapsModelValue = Model.ToValue<Model.Map2<Model.Number, Model.Map2<Model.String, Model.Object<TreeNode>>>>;
+
+        const foo: TreeNodeModelValue = new TreeNode();
+
+        const boolModel: Model.Boolean = {} as any;
+        const arrayModel: Model.Array<Model.Boolean> = {} as any;
+    });
+
     it("query playground", () => {
         /**
          * Our dynamic selection object needs to store the already selected shape somehow,
@@ -33,6 +48,8 @@ describe("prototyping-playground", () => {
         /**
          * Type required to generate a dynamic type where each selectable property on a type T is expressed
          * as a function that can be called & chained. See a bit below, there is an actual example using TreeNode.
+         *
+         * [todo] figure out if we could use ES6 proxy so that we don't need metadata to know for which selectable properties we have to create functions for.
          */
         type Selector<T, M = {}> = {
             [K in keyof PickableSelection<T>]: <O extends Selector<T[K]>>(
@@ -45,7 +62,7 @@ describe("prototyping-playground", () => {
 
         /**
          * Intermediate helper type required for the Selector type above.
-         * 
+         *
          * [todo] this can probably removed and the Selector type be simplified.
          */
         type PickableSelection<T> = { [K in keyof Selection<T>]-?: K };
@@ -84,25 +101,32 @@ describe("prototyping-playground", () => {
         /**
          * A query that returns object values.
          *
-         * It can have criteria for the objects (basic propert value based filtering)
+         * It can have criteria for the objects (basic property value based filtering) and a selection of optionally loadable properties.
+         *
+         * [todo] move the select() & where() methods onto a query builder if possible
          */
         interface ObjectQuery<T = Object, S extends string = "default", A extends Reducible = Reducible> extends Query<Model.Object<T>, S, A> {
             criteria?: ObjectCriteria<T>;
             selection?: Selection<T>;
             select<O>(select: (selector: Selector<T>) => Selector<T, O>): this & { selection: O };
+            where(criteria: ObjectCriteria<T>): this;
         }
 
         type TreeNodeQuery = ObjectQuery<TreeNode>;
         type TreeNodeQueryInOtherScope = ObjectQuery<TreeNode, "other-scope">;
         type TreeNodeLevelQuery = Query<Model.Number, "tree-node-level">;
+        type AllOurTreeNodeQueries = TreeNodeQuery | TreeNodeQueryInOtherScope | TreeNodeLevelQuery;
 
         /**
          * Idea of this is to have a class that you can ask to easily create queries which you can then customize a bit.
+         *
+         * [todo] return query builders instead if possible
          */
         interface Queries<M extends Query = Query> {
             addQuery<Q extends Query<any, any, any>>(): Queries<M | Q>;
             getScopes(): M["scope"];
             query<T>(model: T): ScopedQueries<Extract<M, { model: T }>>;
+            queryDefaultScope<T>(model: T): Extract<M, { model: T; scope: "default" }>;
             queryClass<T>(model: Class<T>): ScopedQueries<Extract<M, { model: Model.Object<T> }>>;
             queryClassDefaultScope<T>(model: Class<T>): Extract<M, { model: Model.Object<T>; scope: "default" }>;
         }
@@ -134,7 +158,7 @@ describe("prototyping-playground", () => {
         /**
          * Creating a factory that is typed to know about our queries.
          */
-        const factory = (({} as any) as Queries).addQuery<TreeNodeQuery>().addQuery<TreeNodeQueryInOtherScope>().addQuery<TreeNodeLevelQuery>();
+        const factory = (({} as any) as Queries).addQuery<AllOurTreeNodeQueries>();
 
         /**
          * Some testing lines to ensure the factory typing works.
@@ -142,17 +166,19 @@ describe("prototyping-playground", () => {
         factory.query(treeNodeLevelModel).inScope("tree-node-level").scope;
         factory.query(treeNodeModel).inScope("other-scope").scope;
         factory.query(treeNodeModel).defaultScope().scope;
+        factory.queryDefaultScope(treeNodeModel);
         factory.queryClass(TreeNode).inScope("other-scope").model.class;
         factory.queryClassDefaultScope(TreeNode);
 
         /**
-         * Actual example of creating a query and selecting properties, then having it strictly typed.
+         * Actual example of creating a query and selecting properties, then having it be strictly typed based on the selection we made.
          */
         const loadSomeTreeNodesQuery = factory
             .query(treeNodeModel)
             .defaultScope()
             .select((x) => x.name().children((x) => x.name()))
-            .select((x) => x.parent());
+            .select((x) => x.parent())
+            .where([{ id: [{ op: "in", values: new Set([1, 2]) }] }]);
 
         /**
          * Taking the type of selection on the query and using Selection.Appy<T, S> (where S is of type Selection)
@@ -178,5 +204,42 @@ describe("prototyping-playground", () => {
                 },
             },
         ];
+
+        const q: AllOurTreeNodeQueries = {} as any;
+
+        /**
+         * Trying out if its feasible to narrow down to a specific query
+         */
+        switch (q.scope) {
+            case "tree-node-level": {
+                const numberFormat = q.model.format;
+            }
+
+            case "default": {
+                if (q.model.type === "object") {
+                    // [todo] not nailed down to our "TreeNodeQuery" yet
+                }
+            }
+        }
+
+        interface Thingies {
+            // takes a full query and tries to load as much selected data as it can
+            loadFromSource(): void;
+            // takes some data and tells us which queries we have to execute to hydrate missing selections
+            createHydrations(): void;
+            readFromCache(): void;
+        }
+
+        /**
+         * QueryBuilder prototyping
+         */
+        type Foo<Q extends ObjectQuery> = InstanceType<ReturnType<Q["model"]["class"]>>;
+
+        interface QueryBuilder<Q extends ObjectQuery<any, any, any>> {
+            arguments(): this;
+            select<O>(select: (selector: Selector<Foo<Q>>) => Selector<Foo<Q>, O>): this & { selection: O };
+        }
+
+        const foo: QueryBuilder<TreeNodeQuery> = {} as any;
     });
 });
