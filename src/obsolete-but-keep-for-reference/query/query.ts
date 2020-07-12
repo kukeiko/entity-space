@@ -1,6 +1,6 @@
-import { ObjectCriteria } from "../criteria";
-import { Selection } from "../selection";
-import { Class, Json } from "../lang";
+import { ObjectCriteria } from "../../criteria";
+import { Selection } from "../../selection";
+import { Class, Json } from "../../lang";
 
 // export interface Query<T = any> {
 export interface Query<T = any, S = Selection<T>> {

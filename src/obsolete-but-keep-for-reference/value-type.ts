@@ -1,8 +1,37 @@
 import { Class } from "../lang";
 
-export type ValueType = ValueType.Boolean | ValueType.Date | ValueType.Number | ValueType.Set | ValueType.String | ValueType.Uuid | ValueType.Object;
+export type ValueType =
+    | ValueType.Array<any>
+    | ValueType.Boolean
+    | ValueType.Date
+    | ValueType.Map2<any, any>
+    | ValueType.Number
+    | ValueType.Set
+    | ValueType.String
+    | ValueType.Uuid
+    | ValueType.Object;
 
 export module ValueType {
+    export type ToValue<T> = T extends Boolean
+        ? boolean
+        : T extends Array<infer U>
+        ? ToValue<U>[]
+        : T extends Date
+        ? string
+        : T extends Map2<infer K, infer V>
+        ? Map<ToValue<K>, ToValue<V>>
+        : T extends Number
+        ? number
+        : T extends Set
+        ? (boolean | number | string)[]
+        : T extends String
+        ? string
+        : T extends Uuid
+        ? string
+        : T extends Object<infer U>
+        ? U
+        : never;
+
     export interface Boolean {
         type: "boolean";
     }
@@ -54,7 +83,7 @@ export module ValueType {
         valueType: T;
     }
 
-    export interface Map<K extends Scalar, T extends ValueType> {
+    export interface Map2<K extends Scalar, T extends ValueType> {
         type: "map";
         keyValueType: K;
         valueType: T;
@@ -68,7 +97,7 @@ export module ValueType {
         // [todo] re-evaluate if its really necessary to have lazy binding
         class: () => Class<T>;
     }
-    
+
     /**
      * An object with an id.
      */

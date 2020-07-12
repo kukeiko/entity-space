@@ -1,8 +1,8 @@
 import { Observable, merge, of } from "rxjs";
 import { mergeMap, scan, takeLast, map } from "rxjs/operators";
 import { EntityLoader, Query, QueriedEntitySet, EntityHydrator } from "./query";
-import { Class } from "./lang";
-import { Selection } from "./selection";
+import { Class } from "../lang";
+import { Selection } from "../selection";
 
 export class Workspace {
     private _loaders = new Map<Class, EntityLoader>();
