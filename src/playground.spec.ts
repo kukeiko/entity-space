@@ -1,4 +1,5 @@
-import { ValueType as Model } from "./metadata";
+import { Observable } from "rxjs";
+import { Model } from "./model";
 import { Class, Unbox } from "./lang";
 import { ObjectCriteria } from "./criteria";
 import { Selection } from "./selection";
@@ -31,7 +32,9 @@ describe("prototyping-playground", () => {
         name?: string = "";
     }
 
-    it("model to actual value playground", () => {
+    it("components", () => {});
+
+    xit("model to actual value playground", () => {
         // type ToValue<T> = T extends Model.Boolean ? boolean : T extends Model.Array<infer U> ? ToValue<U>[] : T extends Model.Object<infer U> ? U : never;
 
         type BooleanModelValue = Model.ToValue<Model.Boolean>;
@@ -46,7 +49,7 @@ describe("prototyping-playground", () => {
         const arrayModel: Model.Array<Model.Boolean> = {} as any;
     });
 
-    it("query playground", () => {
+    xit("query playground", () => {
         /**
          * Our dynamic selection object needs to store the already selected shape somehow,
          * and we're using a symbol to prevent naming collision (so that users are not restricted in the naming of their data properties).
@@ -56,8 +59,6 @@ describe("prototyping-playground", () => {
         /**
          * Type required to generate a dynamic type where each selectable property on a type T is expressed
          * as a function that can be called & chained. See a bit below, there is an actual example using TreeNode.
-         *
-         * [todo] figure out if we could use ES6 proxy so that we don't need metadata to know for which selectable properties we have to create functions for.
          */
         type Selector<T, M = {}> = {
             [K in keyof PickableSelection<T>]: <O extends Selector<T[K]>>(
@@ -96,14 +97,25 @@ describe("prototyping-playground", () => {
          * Each of those API calls can have custom arguments A.
          *
          * The custom arguments A need to be reducible to allow this library to identify if that call is already being made and/or cached.
+         *
+         * [todo] try to set S to default "string", so that we can write "Query" instead of "Query<any, any, any>"
+         * in other places in the code, but still have the convenience of the "default" scope behaviour.
          */
         interface Query<T extends Model = Model, S extends string = "default", A extends Reducible = Reducible> {
             model: T;
             arguments: A;
             scope: S;
+            // [todo] i am not yet sure about putting those two (criteria & selection) into the base Query interface.
+            // advantage is reduction in complexity as there is no longer a ScalarQuery and an ObjectQuery, but just a Query
+            // disadvantage: not sure yet, im probably just paranoid
             criteria?: ModelCriteria<T>;
             selection?: ModelSelection<T>;
         }
+
+        // interface Hydration<T, Q extends Query<any, any, any>> {
+        //     query: Q;
+        //     assign(items: T[], result: QueryResult<Q>): void;
+        // }
 
         type ModelInstanceFromQuery<Q> = Q extends Query<infer T, any, any> ? (T extends Model.Object<infer U> ? U : never) : never;
 
@@ -124,8 +136,6 @@ describe("prototyping-playground", () => {
 
         /**
          * Idea of this is to have a class that you can ask to easily create queries which you can then customize a bit.
-         *
-         * [todo] return query builders instead if possible
          */
         interface Queries<M extends Query = Query> {
             addQuery<Q extends Query<any, any, any>>(): Queries<M | Q>;
@@ -211,6 +221,30 @@ describe("prototyping-playground", () => {
             .where([{ id: [{ op: "in", values: new Set([1, 2]) }], name: [{ op: "!=", value: "baz" }] }])
             .build();
 
+        const result: QueryResult<typeof loadSomeTreeNodesQuery> = {
+            loadedQuery: loadSomeTreeNodesQuery,
+            payload: [
+                {
+                    id: 1,
+                    children: [
+                        {
+                            id: 12,
+                            name: "bar",
+                        },
+                    ],
+                    name: "foo",
+                    parent: {
+                        id: 3,
+                    },
+                },
+            ],
+        };
+
+        const treeNodeLevelQueryResult: QueryResult<TreeNodeLevelQuery> = {
+            payload: [2],
+            loadedQuery: {} as any,
+        };
+
         /**
          * Taking the type of selection on the query and using Selection.Appy<T, S> (where S is of type Selection)
          * to get back a type of TreeNode where the selected properties are no longer optional.
@@ -235,5 +269,69 @@ describe("prototyping-playground", () => {
                 },
             },
         ];
+
+        /**
+         * [todo] it probably feels more natural if we had to type "QueryResult<M, S, A>" instead of "QueryResult<Query<M, S, A>>"
+         */
+        interface QueryResult<Q extends Query<any, any, any>> {
+            // the query that represents the payload
+            loadedQuery: Q;
+            payload: Q["model"] extends Model.Object ? Selection.Apply<Model.ToValue<Q["model"]>, Exclude<Q["selection"], undefined>>[] : Model.ToValue<Q["model"]>[];
+        }
+
+        interface QueryResultPacket<Q extends Query<any, any, any>> extends QueryResult<Q> {
+            // queries that define the data that the stream will deliver at a later point
+            openQueries: Q[];
+            // the data we will load
+            // plannedQuery: Q;
+            // // the query that was initially issued
+            // initialQuery: Q;
+        }
+
+        interface ExecutionPlan<Q extends Query<any, any, any>> {
+            plannedQuery: Q;
+            fetch(): Promise<QueryResultPacket<Q>>;
+        }
+
+        interface LoadFromSourcePlanner<T> {
+            plan(query: any): { execute(fn: () => any): void };
+            discover(fn: (query: any) => Promise<(instructions: LoadFromSourcePlanner<T>) => void>): void;
+        }
+
+        function load(): void {
+            /**
+             * the important part is that entity-space knows when it should try to activate its known hydrators after receiving data
+             * that is not fully hydrated. maybe the server will deliver more hydrations, or maybe entity-space needs to to it itself.
+             *
+             * - i can return data in chunks per identity
+             * - i can further chunkify based on hydration - so i might deliver same identity more often, but with increasingly more hydrated data
+             *
+             * a) i know how to directly load from source, therefore i will supply the query and the data loader
+             * b) i am a proxy to a server running entity-space, i have to contact the source to know more. therefore i will have to contact the source,
+             * which will tell me what it can load and how to do the data loading
+             */
+            /**
+             * - i took your query and know how to load part or all of it - here is the query that describes the complete data you'll get if you execute this function
+             * - i took your query and don't know jack - i'll have to ask a server on how to do it
+             */
+        }
+
+        interface HydrationPlanner<T> {
+            load<Q extends Query<any, any, any>>(query: Q): { andAssign(assign: (items: Model.ToValue<T>[], payload: QueryResult<Q>["payload"]) => void): void };
+        }
+
+        function hydrate(planner: HydrationPlanner<Model.Object<TreeNode>>): void {
+            planner
+                .load(
+                    factory
+                        .query(treeNodeModel)
+                        .defaultScope()
+                        .select((x) => x.name())
+                        .build()
+                )
+                .andAssign((needsHydration, loaded) => {
+                    loaded[0].name;
+                });
+        }
     });
 });
