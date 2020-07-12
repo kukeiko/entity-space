@@ -1,7 +1,7 @@
 import { Selection } from "src";
 
 class Foo {
-    id: number;
+    id = 0;
     name?: string;
     children?: Foo[];
     parent?: Foo;
