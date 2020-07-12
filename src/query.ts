@@ -24,6 +24,10 @@ export interface Query<T extends Model = Model, S extends string = string, A ext
 export module Query {
     export type ModelObjectInstance<Q> = Q extends Query<infer T> ? (T extends Model.Object<infer U> ? U : never) : never;
 
+    export type Payload<Q extends Query> = Q["model"] extends Model.Object
+        ? Selection.Apply<Model.ToValue<Q["model"]>, Exclude<Q["selection"], undefined>>[]
+        : Model.ToValue<Q["model"]>[];
+
     export function is<Q extends Query = Query>(query: any, model?: Q["model"], scope?: Q["scope"]): query is Q {
         // [todo] check model & scope equality
         return {} as any;
