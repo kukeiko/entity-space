@@ -9,16 +9,6 @@ import { QueryBuilder } from "./query-builder";
  */
 describe("prototyping-playground", () => {
     /**
-     * [todo] it probably feels more natural if we had to type "QueryResult<M, S, A>" instead of "QueryResult<Query<M, S, A>>"
-     */
-    interface QueryResult<Q extends Query> {
-        // the query that represents the data
-        loaded: Q;
-        // the loaded data
-        data: Query.Payload<Q>;
-    }
-
-    /**
      * Our custom user data type.
      */
     class TreeNode {
@@ -52,8 +42,9 @@ describe("prototyping-playground", () => {
     /**
      * Idea of this is to have a class that you can ask to easily create queries which you can then customize a bit.
      */
-    interface Queries<M extends Query = Query> {
-        addQuery<Q extends Query>(): Queries<M | Q>;
+    interface QueryFactory<M extends Query = Query> {
+        addQuery<Q extends Query>(): QueryFactory<M | Q>;
+        assume<X extends Query>(): QueryFactory<X>;
         query<T>(model: T): ScopedQueries<Extract<M, { model: T }>>;
         queryDefaultScope<T>(model: T): QueryBuilder<Extract<M, { model: T; scope: "default" }>>;
     }
@@ -90,41 +81,54 @@ describe("prototyping-playground", () => {
     /**
      * Creating a factory that is typed to know about our queries.
      */
-    const factory = (({} as any) as Queries).addQuery<AllOurQueries>();
+    const factory = (({} as any) as QueryFactory).addQuery<AllOurQueries>();
+
+    /**
+     * [todo] it probably feels more natural if we had to type "QueryResult<M, S, A>" instead of "QueryResult<Query<M, S, A>>"
+     */
+    interface QueryResult<Q extends Query = Query> {
+        // the query that represents the data
+        loaded: Q;
+        // the loaded data
+        data: Query.Payload<Q>;
+    }
 
     xit("core loading mechanism playground", () => {
-        interface QueryResultPacket<Q extends Query> extends QueryResult<Q> {
+        interface QueryResultPacket<Q extends Query> extends QueryResult<Query<Q["model"]>> {
             // [todo] i added this so the server could tell the client "you requested data with id in [1,2,3], but i couldn't find [3]"
             // figure out if instead of "what is still left to load" we should instead say "what did we fail to load"
-            open?: Q[];
+            open?: Query<Q["model"]>[];
         }
+
+        type FetchPacketResult<Q extends Query> = Promise<QueryResultPacket<Q>> | Observable<QueryResultPacket<Q>>;
 
         interface LoadPlan<Q extends Query> {
             planned: Q;
-            fetch(): Promise<QueryResultPacket<Q>> | Observable<QueryResultPacket<Q>>;
+            fetch(): FetchPacketResult<Q>;
         }
 
-        interface LoadFromSourcePlanner<T> {
-            plan(query: any): { execute(fn: () => any): void };
-            discover(fn: (query: any) => Promise<(instructions: LoadFromSourcePlanner<T>) => void>): void;
+        interface LoadFromSourcePlanner {
+            toLoad<Q extends Query>(pick: (factory: QueryFactory) => Q): { execute(fetch: (query: Q) => FetchPacketResult<Q>): void };
+            discover(discover: () => Promise<(instructions: LoadFromSourcePlanner) => void>): void;
         }
 
-        function load(): void {
-            /**
-             * the important part is that entity-space knows when it should try to activate its known hydrators after receiving data
-             * that is not fully hydrated. maybe the server will deliver more hydrations, or maybe entity-space needs to to it itself.
-             *
-             * - i can return data in chunks per identity
-             * - i can further chunkify based on hydration - so i might deliver same identity more often, but with increasingly more hydrated data
-             *
-             * a) i know how to directly load from source, therefore i will supply the query and the data loader
-             * b) i am a proxy to a server running entity-space, i have to contact the source to know more. therefore i will have to contact the source,
-             * which will tell me what it can load and how to do the data loading
-             */
-            /**
-             * - i took your query and know how to load part or all of it - here is the query that describes the complete data you'll get if you execute this function
-             * - i took your query and don't know jack - i'll have to ask a server on how to do it
-             */
+        function load(query: Query, planner: LoadFromSourcePlanner): void {
+            planner
+                .toLoad((factory) =>
+                    factory
+                        .assume<AllOurQueries>()
+                        .query(treeNodeModel)
+                        .defaultScope()
+                        .select((x) => x.name())
+                        .build()
+                )
+                .execute((query) => {
+                    return Promise.resolve({
+                        data: [],
+                        loaded: query,
+                    });
+                });
+            // planner.query()
         }
 
         // [todo] make sure we can also have "endless" hydrations, i.e. server continues pushing updated hydration data to the client
@@ -134,13 +138,20 @@ describe("prototyping-playground", () => {
         }
 
         interface HydrationPlanner<T> {
-            load<Q extends Query<any, any, any>>(query: Q): { andAssign(assign: (items: Model.ToValue<T>[], payload: QueryResult<Q>["data"]) => void): HydrationPlan<Q> };
+            load<Q extends Query>(
+                pick: (factory: QueryFactory) => Q
+            ): { andAssign(assign: (items: Model.ToValue<T>[], payload: QueryResult<Q>["data"]) => void): HydrationPlan<Q> };
         }
 
-        function hydrate(planner: HydrationPlanner<Model.Object<TreeNode>>): void {
+        function hydrate(result: QueryResult, planner: HydrationPlanner<Model.Object<TreeNode>>): void {
+            if (Query.is<TreeNodeQuery>(result.loaded, treeNodeModel, "default")) {
+                result.data;
+            }
+
             const planA = planner
-                .load(
+                .load((factory) =>
                     factory
+                        .assume<AllOurQueries>()
                         .query(treeNodeModel)
                         .defaultScope()
                         .select((x) => x.name().children((x) => x.metadata()))
