@@ -1,4 +1,5 @@
-var testContext = require.context("../src", true, /\.spec\.ts/);
+const testsInSourceFolder = require.context("../src", true, /\.spec\.ts/);
+const unitTests = require.context("./unit", true, /\.spec\.ts/);
 
 /*
  * get all the files, for each file, call the context function
@@ -10,4 +11,5 @@ function requireAll(requireContext) {
 }
 
 // requires and returns all modules that match
-var modules = requireAll(testContext);
+requireAll(testsInSourceFolder);
+requireAll(unitTests);

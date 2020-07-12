@@ -1,12 +1,16 @@
 {
     "rules": {
         "class-name": true,
-        "no-trailing-whitespace": true,
+        "no-trailing-whitespace": false,
         "no-string-literal": true,
         "no-var-keyword": true,
         "eofline": true,
-        "no-use-before-declare": true,
-        "no-unused-variable": true,
+        "no-use-before-declare": false,
         "semicolon": true
+    },
+    "linterOptions": {
+        "exclude": [
+            "**/_*.*"
+        ]
     }
 }
