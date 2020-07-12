@@ -1,8 +1,8 @@
 import { Observable } from "rxjs";
 import { Model } from "./model";
-import { Class, Unbox } from "./lang";
-import { ObjectCriteria } from "./criteria";
 import { Selection } from "./selection";
+import { Query } from "./query";
+import { QueryBuilder } from "./query-builder";
 
 /**
  * this is my little playground i use for prototyping.
@@ -32,103 +32,9 @@ describe("prototyping-playground", () => {
         name?: string = "";
     }
 
-    it("components", () => {});
-
-    xit("model to actual value playground", () => {
-        // type ToValue<T> = T extends Model.Boolean ? boolean : T extends Model.Array<infer U> ? ToValue<U>[] : T extends Model.Object<infer U> ? U : never;
-
-        type BooleanModelValue = Model.ToValue<Model.Boolean>;
-        type ArrayModelValue = Model.ToValue<Model.Array<Model.Boolean>>;
-        type ArrayOfArrayModelValue = Model.ToValue<Model.Array<Model.Array<Model.Boolean>>>;
-        type TreeNodeModelValue = Model.ToValue<Model.Object<TreeNode>>;
-        type TreeNodeInNestedMapsModelValue = Model.ToValue<Model.Map2<Model.Number, Model.Map2<Model.String, Model.Object<TreeNode>>>>;
-
-        const foo: TreeNodeModelValue = new TreeNode();
-
-        const boolModel: Model.Boolean = {} as any;
-        const arrayModel: Model.Array<Model.Boolean> = {} as any;
-    });
-
     xit("query playground", () => {
-        /**
-         * Our dynamic selection object needs to store the already selected shape somehow,
-         * and we're using a symbol to prevent naming collision (so that users are not restricted in the naming of their data properties).
-         */
-        const Selected = Symbol();
-
-        /**
-         * Type required to generate a dynamic type where each selectable property on a type T is expressed
-         * as a function that can be called & chained. See a bit below, there is an actual example using TreeNode.
-         */
-        type Selector<T, M = {}> = {
-            [K in keyof PickableSelection<T>]: <O extends Selector<T[K]>>(
-                /**
-                 * With expand we can select properties of a nested type like references & children.
-                 */
-                expand?: (selector: Selector<Exclude<Unbox<T[K]>, null | undefined>>) => O
-            ) => Selector<T, M & Record<K, O extends undefined ? true : {} extends O[typeof Selected] ? true : O[typeof Selected]>>;
-        } & { [Selected]: M };
-
-        /**
-         * Intermediate helper type required for the Selector type above.
-         *
-         * [todo] this can probably removed and the Selector type be simplified.
-         */
-        type PickableSelection<T> = { [K in keyof Selection<T>]-?: K };
-
-        /**
-         * Something that knows how to reduce something else of the same shape.
-         *
-         * Examples:
-         * - { id: equals 1 } could reduce { id: equals 1 } to null
-         * - { id: equals 1 } could reduce { id: in [1,2,3] } to { id: in [2,3] }
-         * - { foo: { bar, baz } } could reduce { foo: { bar, baz, zoo } } to { foo: { zoo } }
-         */
-        interface Reducible {
-            reduce(other: this): this | null;
-        }
-
-        type ModelCriteria<T> = T extends Model.Object<infer U> ? ObjectCriteria<U> : never;
-        type ModelSelection<T> = T extends Model.Object<infer U> ? Selection<U> : never;
-
-        /**
-         * Something that can be executed to load data, where the data is in the form of T.
-         * The scope allows us to have different API calls for the same type of data.
-         * Each of those API calls can have custom arguments A.
-         *
-         * The custom arguments A need to be reducible to allow this library to identify if that call is already being made and/or cached.
-         *
-         * [todo] try to set S to default "string", so that we can write "Query" instead of "Query<any, any, any>"
-         * in other places in the code, but still have the convenience of the "default" scope behaviour.
-         */
-        interface Query<T extends Model = Model, S extends string = "default", A extends Reducible = Reducible> {
-            model: T;
-            arguments: A;
-            scope: S;
-            // [todo] i am not yet sure about putting those two (criteria & selection) into the base Query interface.
-            // advantage is reduction in complexity as there is no longer a ScalarQuery and an ObjectQuery, but just a Query
-            // disadvantage: not sure yet, im probably just paranoid
-            criteria?: ModelCriteria<T>;
-            selection?: ModelSelection<T>;
-        }
-
-        // interface Hydration<T, Q extends Query<any, any, any>> {
-        //     query: Q;
-        //     assign(items: T[], result: QueryResult<Q>): void;
-        // }
-
-        type ModelInstanceFromQuery<Q> = Q extends Query<infer T, any, any> ? (T extends Model.Object<infer U> ? U : never) : never;
-
-        interface QueryBuilder<Q extends Query<any, any, any>> {
-            [Selected]: Selection<ModelInstanceFromQuery<Q>>;
-            arguments(): this;
-            select<O>(select: (selector: Selector<ModelInstanceFromQuery<Q>>) => Selector<ModelInstanceFromQuery<Q>, O>): this & { [Selected]: O };
-            where(criteria: ObjectCriteria<ModelInstanceFromQuery<Q>>): this;
-            build(): Q & Record<"selection", this[typeof Selected]>;
-        }
-
-        type MetadataQuery = Query<Model.Object<Metadata>>;
-        type TreeNodeQuery = Query<Model.Object<TreeNode>>;
+        type MetadataQuery = Query<Model.Object<Metadata>, "default">;
+        type TreeNodeQuery = Query<Model.Object<TreeNode>, "default">;
         type TreeNodeQueryInOtherScope = Query<Model.Object<TreeNode>, "other-scope">;
         type TreeNodeLevelQuery = Query<Model.Number, "tree-node-level">;
 
@@ -138,14 +44,9 @@ describe("prototyping-playground", () => {
          * Idea of this is to have a class that you can ask to easily create queries which you can then customize a bit.
          */
         interface Queries<M extends Query = Query> {
-            addQuery<Q extends Query<any, any, any>>(): Queries<M | Q>;
+            addQuery<Q extends Query>(): Queries<M | Q>;
             query<T>(model: T): ScopedQueries<Extract<M, { model: T }>>;
             queryDefaultScope<T>(model: T): QueryBuilder<Extract<M, { model: T; scope: "default" }>>;
-        }
-
-        function isQuery<Q extends Query<any, any, any>>(query: any, model: Q["model"], scope: Q["scope"]): query is Q {
-            // [todo] check model & scope equality
-            return {} as any;
         }
 
         /**
@@ -186,20 +87,21 @@ describe("prototyping-playground", () => {
          * Some testing lines to ensure the factory typing works.
          */
         factory.query(treeNodeLevelModel).inScope("tree-node-level");
-        const fooQuery: Query<any, any, any> = factory.queryDefaultScope(treeNodeModel).build();
+        const fooQuery: Query = factory.queryDefaultScope(treeNodeModel).build();
 
         /**
          * This could be a way to duck type any type of query to figure out which one of our queries it is.
          */
-        if (isQuery<TreeNodeQuery>(fooQuery, treeNodeModel, "default")) {
+        // if (isQuery<TreeNodeQuery>(fooQuery, treeNodeModel, "default")) {
+        if (Query.is<TreeNodeQuery>(fooQuery, treeNodeModel, "default")) {
             const instance: TreeNode = new (fooQuery.model.class())();
             fooQuery.scope = "default";
-        } else if (isQuery<TreeNodeQueryInOtherScope>(fooQuery, treeNodeModel, "other-scope")) {
+        } else if (Query.is<TreeNodeQueryInOtherScope>(fooQuery, treeNodeModel, "other-scope")) {
             const instance: TreeNode = new (fooQuery.model.class())();
             fooQuery.scope = "other-scope";
-        } else if (isQuery<TreeNodeLevelQuery>(fooQuery, treeNodeLevelModel, "tree-node-level")) {
+        } else if (Query.is<TreeNodeLevelQuery>(fooQuery, treeNodeLevelModel, "tree-node-level")) {
             fooQuery.model.format = "double";
-        } else if (isQuery<MetadataQuery>(fooQuery, metadataModel, "default")) {
+        } else if (Query.is<MetadataQuery>(fooQuery, metadataModel, "default")) {
             const instance: Metadata = new (fooQuery.model.class())();
 
             if (fooQuery.selection?.createdBy !== void 0) {
@@ -222,7 +124,7 @@ describe("prototyping-playground", () => {
             .build();
 
         const result: QueryResult<typeof loadSomeTreeNodesQuery> = {
-            loadedQuery: loadSomeTreeNodesQuery,
+            loaded: loadSomeTreeNodesQuery,
             payload: [
                 {
                     id: 1,
@@ -242,7 +144,7 @@ describe("prototyping-playground", () => {
 
         const treeNodeLevelQueryResult: QueryResult<TreeNodeLevelQuery> = {
             payload: [2],
-            loadedQuery: {} as any,
+            loaded: {} as any,
         };
 
         /**
@@ -270,27 +172,29 @@ describe("prototyping-playground", () => {
             },
         ];
 
+        type QueryPayload<Q extends Query> = Q["model"] extends Model.Object
+            ? Selection.Apply<Model.ToValue<Q["model"]>, Exclude<Q["selection"], undefined>>[]
+            : Model.ToValue<Q["model"]>[];
+
         /**
          * [todo] it probably feels more natural if we had to type "QueryResult<M, S, A>" instead of "QueryResult<Query<M, S, A>>"
          */
-        interface QueryResult<Q extends Query<any, any, any>> {
+        interface QueryResult<Q extends Query> {
             // the query that represents the payload
-            loadedQuery: Q;
-            payload: Q["model"] extends Model.Object ? Selection.Apply<Model.ToValue<Q["model"]>, Exclude<Q["selection"], undefined>>[] : Model.ToValue<Q["model"]>[];
+            loaded: Q;
+            // payload: Q["model"] extends Model.Object ? Selection.Apply<Model.ToValue<Q["model"]>, Exclude<Q["selection"], undefined>>[] : Model.ToValue<Q["model"]>[];
+            payload: QueryPayload<Q>;
         }
 
-        interface QueryResultPacket<Q extends Query<any, any, any>> extends QueryResult<Q> {
-            // queries that define the data that the stream will deliver at a later point
-            openQueries: Q[];
-            // the data we will load
-            // plannedQuery: Q;
-            // // the query that was initially issued
-            // initialQuery: Q;
+        interface QueryResultPacket<Q extends Query> extends QueryResult<Q> {
+            // [todo] i added this so the server could tell the client "you requested data with id in [1,2,3], but i couldn't find [3]"
+            // figure out if instead of "what is still left to load" we should instead say "what did we fail to load"
+            open?: Q[];
         }
 
-        interface ExecutionPlan<Q extends Query<any, any, any>> {
-            plannedQuery: Q;
-            fetch(): Promise<QueryResultPacket<Q>>;
+        interface LoadPlan<Q extends Query> {
+            planned: Q;
+            fetch(): Promise<QueryResultPacket<Q>> | Observable<QueryResultPacket<Q>>;
         }
 
         interface LoadFromSourcePlanner<T> {
@@ -316,22 +220,44 @@ describe("prototyping-playground", () => {
              */
         }
 
+        // [todo] make sure we can also have "endless" hydrations, i.e. server continues pushing updated hydration data to the client
+        interface HydrationPlan<Q extends Query<any, any, any>> {
+            load: Q;
+            assign(items: any[], payload: any[]): void;
+        }
+
         interface HydrationPlanner<T> {
-            load<Q extends Query<any, any, any>>(query: Q): { andAssign(assign: (items: Model.ToValue<T>[], payload: QueryResult<Q>["payload"]) => void): void };
+            load<Q extends Query<any, any, any>>(query: Q): { andAssign(assign: (items: Model.ToValue<T>[], payload: QueryResult<Q>["payload"]) => void): HydrationPlan<Q> };
         }
 
         function hydrate(planner: HydrationPlanner<Model.Object<TreeNode>>): void {
-            planner
+            const planA = planner
                 .load(
                     factory
                         .query(treeNodeModel)
                         .defaultScope()
-                        .select((x) => x.name())
+                        .select((x) => x.name().children((x) => x.metadata()))
                         .build()
                 )
                 .andAssign((needsHydration, loaded) => {
                     loaded[0].name;
+                    loaded[0].children[0].metadata;
                 });
         }
+    });
+
+    xit("model to actual value playground", () => {
+        // type ToValue<T> = T extends Model.Boolean ? boolean : T extends Model.Array<infer U> ? ToValue<U>[] : T extends Model.Object<infer U> ? U : never;
+
+        type BooleanModelValue = Model.ToValue<Model.Boolean>;
+        type ArrayModelValue = Model.ToValue<Model.Array<Model.Boolean>>;
+        type ArrayOfArrayModelValue = Model.ToValue<Model.Array<Model.Array<Model.Boolean>>>;
+        type TreeNodeModelValue = Model.ToValue<Model.Object<TreeNode>>;
+        type TreeNodeInNestedMapsModelValue = Model.ToValue<Model.Map2<Model.Number, Model.Map2<Model.String, Model.Object<TreeNode>>>>;
+
+        const foo: TreeNodeModelValue = new TreeNode();
+
+        const boolModel: Model.Boolean = {} as any;
+        const arrayModel: Model.Array<Model.Boolean> = {} as any;
     });
 });
