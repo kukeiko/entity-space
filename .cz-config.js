@@ -2,39 +2,43 @@ module.exports = {
     types: [
         {
             value: "feat",
-            name: "feat: A new feature",
+            name: "feat: a new feature",
         },
         {
             value: "fix",
-            name: "fix: A bug fix",
+            name: "fix: a bug fix",
+        },
+        {
+            value: "health",
+            name: "health: improvements to codebase health & maintainability",
         },
         {
             value: "docs",
-            name: "docs: Documentation only changes",
+            name: "docs: comments, documentation",
         },
         {
             value: "style",
-            name: "style: Changes that do not affect the meaning of the code\n (white-space, formatting, missing semi-colons, etc)",
+            name: "style: formatting, linter rule applications",
         },
         {
             value: "refactor",
-            name: "refactor: A code change that neither fixes a bug nor adds a feature",
+            name: "refactor: neither a bugfix nor a feature",
         },
         {
             value: "perf",
-            name: "perf: A code change that improves performance",
+            name: "perf: performance improvements",
         },
         {
             value: "test",
-            name: "test: Adding missing tests",
+            name: "test: anything to do with tests",
         },
         {
             value: "chore",
-            name: "chore: Changes to the build process or auxiliary tools\n and libraries such as documentation generation",
+            name: "chore: changes to the build process or auxiliary tools and libraries",
         },
         {
-            value: "WIP",
-            name: "WIP: Work in progress",
+            value: "wip",
+            name: "wip: work in progress",
         },
     ],
 
