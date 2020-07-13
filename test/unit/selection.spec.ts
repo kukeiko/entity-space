@@ -25,6 +25,18 @@ describe("selection", () => {
             // assert
             expect(merged).toEqual({ foo: { bar: true, baz: true } });
         });
+
+        it("should merge { foo: true } and { foo: { bar: true } } to create { foo: { bar: true } }", () => {
+            // arrange
+            const a: Selection = { foo: true };
+            const b: Selection = { foo: { bar: true } };
+
+            // act
+            const merged = Selection.merge(a, b);
+
+            // assert
+            expect(merged).toEqual({ foo: { bar: true } });
+        });
     });
 
     describe("reduce()", () => {
@@ -34,7 +46,7 @@ describe("selection", () => {
             const b: Selection = { foo: true };
 
             // act
-            const reduced = Selection.minus(a, b);
+            const reduced = Selection.reduce(a, b);
 
             // assert
             expect(reduced).toEqual({ bar: true });
@@ -46,7 +58,7 @@ describe("selection", () => {
             const b: Selection = { foo: true, bar: true };
 
             // act
-            const reduced = Selection.minus(a, b);
+            const reduced = Selection.reduce(a, b);
 
             // assert
             expect(reduced).toBeNull();
@@ -58,7 +70,7 @@ describe("selection", () => {
             const b: Selection = { baz: true };
 
             // act
-            const reduced = Selection.minus(a, b);
+            const reduced = Selection.reduce(a, b);
 
             // assert
             expect(reduced).toBe(a);
@@ -70,7 +82,7 @@ describe("selection", () => {
             const b: Selection = { foo: { bar: true }, khaz: { mo: true, dan: true } };
 
             // act
-            const reduced = Selection.minus(a, b);
+            const reduced = Selection.reduce(a, b);
 
             // assert
             expect(reduced).toEqual({ foo: { baz: true } });
@@ -82,7 +94,7 @@ describe("selection", () => {
             const b: Selection = { foo: {} };
 
             // act
-            const reduced = Selection.minus(a, b);
+            const reduced = Selection.reduce(a, b);
 
             // assert
             expect(reduced).toBeNull();

@@ -23,7 +23,7 @@ export class Workspace {
 
         return loader.load$(query, this).pipe(
             mergeMap((entities) => {
-                const missingSelection = Selection.minus(query.selection, entities.query.selection);
+                const missingSelection = Selection.reduce(query.selection, entities.query.selection);
 
                 if (missingSelection !== null) {
                     const hydrations = this._getHydrator(query.entityType).createInstrumentedHydrations(entities, missingSelection);

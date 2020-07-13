@@ -90,7 +90,7 @@ export module Selection {
         return merge(selection, {});
     }
 
-    export function minus(a: Selection, b: Selection): Selection | null {
+    export function reduce(a: Selection, b: Selection): Selection | null {
         if (Object.keys(a).length === 0) {
             return null;
         }
@@ -105,7 +105,7 @@ export module Selection {
                 delete reduced[key];
                 didReduce = true;
             } else if (a[key] instanceof Object && b[key] instanceof Object) {
-                const subReduced = minus(reduced[key] as Selection, b[key] as Selection);
+                const subReduced = reduce(reduced[key] as Selection, b[key] as Selection);
 
                 if (subReduced === null) {
                     delete reduced[key];
@@ -137,6 +137,6 @@ export module Selection {
          * exits early instead of making a full reduction, otherwise we'll have unnecessary cpu cycles,
          * and this method is on the critical path.
          */
-        return minus(b, a) === null;
+        return reduce(b, a) === null;
     }
 }
