@@ -60,6 +60,49 @@ To reach those, we need to provide an interface with which the user describes th
 To enable strictly typed hydrations and still support IE11, we'll have to rely on the user providing some minimal metadata.
 Shouldn't be too big of a deal since in the future we'll probably expect some metadata anyway to provide some default implementations for commonly used API interfaces.
 
+# Current concept of the core loading mechanism
+
+## step 1: take an incoming query and translate it into an array of concurrent streams
+
+why an array and why concurrent? easy: imagine a query that tries to load some cat gifs, for which it will ask various cat gif apis. for each api, have a stream that runs concurrently to the others.
+
+each stream might be:
+
+-   a single http request
+-   a series of sequential http requests
+-   a temporary websocket stream that closes once the data is loaded
+-   an endless websocket stream that runs until closed by client/server
+
+each stream emits packets:
+
+-   a stream that is a single http request will emit exactly 1 packet
+-   a stream that is a series of sequential http requests will emit _n_ or an unknown number of packets (possibly endless as well, i.e. polling)
+-   a temporary stream emits _n_ packets
+-   an endless stream emits unknown number of packets
+
+next to the loaded data, each packet includes:
+
+-   a query describing the data contained within that packet
+-   an array of queries whose payload will arrive in a future packet from the same stream (the "open" queries)
+-   an array of queries the server failed to load
+
+the queries inside the packets are required for entity-space to understand what's going on:
+
+-   what data was actually loaded?
+-   will a single stream continue to deliver more?
+-   what data failed to load and should be errored to the user?
+-   what data will never be included and has to be hydrated by entity-space (i.e. virtual relations)?
+
+## step 2: observe the streams and emit hydrated data
+
+1. listen to each stream returned by the component that translated the incoming query
+
+2. for each packet emitted by a stream, figure out if client-side hydration is needed (i.e. requested data is not contained within the "open queries" array of the packet)
+
+    if yes, use yet another user supplied implementation to translate loaded data & required query into hydration instructions which in turn are queries themselves that will apply mapping logic once those queries are loaded. this will run recursively until all data is hydrated.
+
+3. emit hydrated data and data load failures to the user
+
 # Contributing
 
 Submit a pull request. One can pick one of the issues labeled with the "good first issue" label.  
@@ -77,10 +120,6 @@ It will give you a nice prompt and will ask is it a feature/bug/refactoring see 
 
 Then you specify what is a subject of the changes you provide and it generates  
 the commit message that is consistent with the commit messages in this repository.
-
-# Status
-
-Very much work in progress. Immediate goal is to query some data with basic filtering, loaded from an http service.
 
 # FAQ
 
