@@ -1,10 +1,64 @@
 # entity-space
+
 Strictly typed data framework for consuming HTTP services.
 
-Serves a similar purpose as GraphQL, but is actually inspired by the LightSwitch OData implementation which has been discontinued in 2015. 
+Serves a similar purpose as GraphQL, but is actually inspired by the LightSwitch OData implementation which has been discontinued in 2015.
 
 Types are defined by specifying their properties and what they represent. With queries you define the tree of entities you want to load (Selection) and how to filter them (Criteria).
 The actual loading logic has to be implemented by the developer.
+
+# Introduction
+
+The whole point of entity-space is to have a common structure for all types of queries.
+
+A query consists of:
+
+-   the **model**, describing the shape of the data and optionally loadable parts it might have
+-   the **criteria**, describing the filter the loaded data has to fulfill, e.g. "id in (1,2)"
+-   the **selection**, describing what optional parts of data should be included that are not loaded by default
+-   the **scope**, describing which api interface to use (e.g. when api has multiple ways to load same type of data)
+-   the **arguments**, a custom user object specific to the scope (e.g. server side filter)
+
+Based on the **scope**, **arguments** and **criteria**, entity-space can understand the identity of the data that will be loaded. Based on the **selection**, entity-space can understand what optional parts are included.
+
+---
+
+_The exact mechanics of how this will be done are not relevant now, but it's worth mentioning that it basically boils down to applying set theory 🧡._
+
+---
+
+Using that information, together with implementation work by the user, we can start doing interesting things:
+
+-   multiplexing (make multiple queries behave as one)
+-   strictly typed hydration of optional data (hydrated properties will no longer be "undefined")
+-   deferred hydrations, as in: show some initial data as quickly as possible, and load remainder in the background
+-   define "virtual" relations between data, i.e. relations that don't exist according to the backend
+-   diffing of data to understand changes between them
+-   caching:
+    -   cache data long/short term
+    -   cache data as long as current UI view exists (hierarchical caching)
+    -   load cached data immediately to quickly render UI, but reload fresh data from server in the background and rerender with updates
+    -   cache data and refresh every x seconds
+    -   any other cache invalidation/sync technique you can think of
+-   throttling:
+    -   prevent unnecessary API calls if a currently pending query contains all of the expected data
+    -   reduce API calls in their expected response size if a currently pending query already contains part of the expected data
+    -   prevent excessively huge queries altogether or cut them down / slice them into smaller pieces
+
+# Status
+
+Very much work in progress, but we're getting there.
+
+The immediate goals are:
+
+-   multiplexing
+-   strictly typed hydrations
+-   virtual relations
+
+To reach those, we need to provide an interface with which the user describes their queries and how they are to be executed.
+
+To enable strictly typed hydrations and still support IE11, we'll have to rely on the user providing some minimal metadata.
+Shouldn't be too big of a deal since in the future we'll probably expect some metadata anyway to provide some default implementations for commonly used API interfaces.
 
 # Contributing
 
@@ -12,7 +66,7 @@ Submit a pull request. One can pick one of the issues labeled with the "good fir
 The repository is commitizen friendly, so commits should follow [this](https://github.com/angular/angular.js/blob/master/DEVELOPERS.md#-git-commit-guidelines) commit guidelines.  
 We are using the [cz-customize](https://github.com/leonardoanalista/cz-customizable) plugin. The configuration can be found in the [**.cz-config.js**](./.cz-config.js) file.
 
-**TL;DR:** Once you feel you are ready to submit your changes just execute this command in your console:  
+**TL;DR:** Once you feel you are ready to submit your changes just execute this command in your console:
 
 ```bash
 npm run commit
@@ -25,27 +79,34 @@ Then you specify what is a subject of the changes you provide and it generates
 the commit message that is consistent with the commit messages in this repository.
 
 # Status
+
 Very much work in progress. Immediate goal is to query some data with basic filtering, loaded from an http service.
 
 # FAQ
 
-**Q:** I have the following error when I try to 
+**Q:** I have the following error when I try to
+
 ```bash
 $ npm run test
 ```
+
 No binary for ChromeHeadless browser on your platform.
 Please, set "CHROME_BIN" env variable.
 
 **A:** You have to set the CHROME_BIN variable, in linux you can execute this in terminal:
+
 ```bash
 $ export CHROME_BIN=/usr/local/bin/my-chrome-build
 ```
+
 More details for running karma with different browsers can be found [here](http://karma-runner.github.io/4.0/config/browsers.html) .
 **Note:** puppeteer should fix this issue consistently on all the OSes, so feel free to create an issue in case it didnt work for you out of the box.
+
 ##
 
 **Q:** Why is prepublish called npm prepublish?  
 **A:** Npm doesnt distinguish between npm install and prepublish. See more details [here](https://github.com/npm/npm/issues/3059)
+
 ##
 
 Template:
