@@ -3,7 +3,8 @@ Strictly typed data framework for consuming HTTP services.
 
 Serves a similar purpose as GraphQL, but is actually inspired by the LightSwitch OData implementation which has been discontinued in 2015. 
 
-Types are defined by specifying their properties and what you can do with them (loadable, creatable, patchable, nullable, optional, ...). With queries you define the tree of entities you want to load (Selection) and how to filter them (Criteria). The actual loading logic has to be implemented by the developer.
+Types are defined by specifying their properties and what they represent. With queries you define the tree of entities you want to load (Selection) and how to filter them (Criteria).
+The actual loading logic has to be implemented by the developer.
 
 # Contributing
 
