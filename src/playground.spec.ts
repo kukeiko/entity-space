@@ -83,7 +83,7 @@ describe("prototyping-playground", () => {
     /**
      * Creating a factory that is typed to know about our queries.
      */
-    const factory = (({} as any) as QueryFactory).addQuery<AllOurQueries>();
+    const factory = ({} as any) as QueryFactory<AllOurQueries>;
 
     /**
      * [todo] it probably feels more natural if we had to type "QueryResult<M, S, A>" instead of "QueryResult<Query<M, S, A>>"
@@ -102,15 +102,17 @@ describe("prototyping-playground", () => {
             open?: Query<Q["model"]>[];
         }
 
-        type FetchPacketResult<Q extends Query> = Promise<QueryResultPacket<Q>> | Observable<QueryResultPacket<Q>>;
+        type FetchedQueryResultPacket<Q extends Query> = Promise<QueryResultPacket<Q>> | Observable<QueryResultPacket<Q>>;
 
         interface LoadPlan<Q extends Query> {
             planned: Q;
-            fetch(): FetchPacketResult<Q>;
+            fetch(): FetchedQueryResultPacket<Q>;
         }
 
         interface LoadFromSourcePlanner {
-            toLoad<Q extends Query>(pick: (factory: QueryFactory) => Q): { execute(fetch: (query: Q) => FetchPacketResult<Q>): void };
+            toLoad<Q extends Query>(pick: (factory: QueryFactory) => Q): { execute(fetch: (query: Q) => FetchedQueryResultPacket<Q>): void };
+            // [todo] if we have data packets telling us what we can still expect to have returned,
+            // we should no longer need this i think. would be amazing!
             discover(discover: () => Promise<(instructions: LoadFromSourcePlanner) => void>): void;
         }
 

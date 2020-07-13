@@ -1,5 +1,5 @@
 import { Class, Fields } from "../lang";
-import { EntityTypeMetadata } from "../metadata";
+import { EntityTypeMetadata } from "./entity-type-metadata";
 
 export interface EntityClass<T> {
     getMetadata(): EntityTypeMetadata<T>;
