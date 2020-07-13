@@ -2,16 +2,13 @@ import { IntersectValuesCriterion } from "./intersect-values-criterion";
 import { SubsetValuesCriterion } from "./subset-values-criterion";
 import { SupersetValuesCriterion } from "./superset-values-criterion";
 
-export type ValuesCriterion
-    = IntersectValuesCriterion
-    | SubsetValuesCriterion
-    | SupersetValuesCriterion;
+export type ValuesCriterion = IntersectValuesCriterion | SubsetValuesCriterion | SupersetValuesCriterion;
 
 export module ValuesCriterion {
     const operations: Record<ValuesCriterion["op"], true> = {
-        "intersect": true,
-        "subset": true,
-        "superset": true
+        intersect: true,
+        subset: true,
+        superset: true,
     };
 
     const operationsSet = new Set(Object.keys(operations));
@@ -29,7 +26,8 @@ export module ValuesCriterion {
             case "intersect":
             case "subset":
             case "superset":
-            default: throw new Error(`no reducer known for operation '${op}'`);
+            default:
+                throw new Error(`no reducer known for operation '${op}'`);
         }
     }
 }

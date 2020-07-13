@@ -56,9 +56,14 @@ export module ValueCriteria {
             let matches: (instance: T) => boolean = () => false;
 
             switch (criterion.op) {
-                case "==": matches = instance => instance[key] === criterion.value; break;
-                case "in": matches = instance => criterion.values.has(instance[key]); break;
-                default: throw new Error(`criterion op '${criterion.op}' not yet supported`);
+                case "==":
+                    matches = instance => instance[key] === criterion.value;
+                    break;
+                case "in":
+                    matches = instance => criterion.values.has(instance[key]);
+                    break;
+                default:
+                    throw new Error(`criterion op '${criterion.op}' not yet supported`);
             }
 
             for (const instance of instances) {

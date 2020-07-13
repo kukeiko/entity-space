@@ -16,9 +16,12 @@ export module NotEqualsValueCriterion {
      */
     export function reduce(a: NotEqualsValueCriterion, b: ValueCriterion): ValueCriterion | null {
         switch (b.op) {
-            case "!=": return a.value === b.value ? null : b;
-            case "==": return a.value === b.value ? b : null;
-            default: return b;
+            case "!=":
+                return a.value === b.value ? null : b;
+            case "==":
+                return a.value === b.value ? b : null;
+            default:
+                return b;
         }
     }
 }

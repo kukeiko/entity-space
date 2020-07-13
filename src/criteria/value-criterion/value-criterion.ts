@@ -9,8 +9,8 @@ import { InValueCriterion } from "./in-value-criterion";
 import { FromToValueCriterion } from "./from-to-value-criterion";
 
 // [todo] rename to "SingleValueCriterion" cause just "ValueCriterion" is confusing, sounds like its a Union of "(SingleValue)ValueCriterion" and "SetCriterion" and "ObjectCriterion"
-export type ValueCriterion
-    = EqualsValueCriterion
+export type ValueCriterion =
+    | EqualsValueCriterion
     | FromToValueCriterion
     | GreaterEqualsValueCriterion
     | GreaterValueCriterion
@@ -32,7 +32,15 @@ export module ValueCriterion {
     export import NotIn = NotInValueCriterion;
 
     const operations: Record<ValueCriterion["op"], true> = {
-        "!=": true, "<": true, "<=": true, "==": true, ">": true, ">=": true, "from-to": true, "not-in": true, in: true
+        "!=": true,
+        "<": true,
+        "<=": true,
+        "==": true,
+        ">": true,
+        ">=": true,
+        "from-to": true,
+        "not-in": true,
+        in: true,
     };
 
     const operationsSet = new Set(Object.keys(operations));
@@ -47,16 +55,20 @@ export module ValueCriterion {
 
     export function reducer<OP extends ValueCriterion["op"]>(op: OP): (a: Extract<ValueCriterion, { op: OP }>, b: ValueCriterion) => ValueCriterion | null {
         switch (op) {
-            case "==": return Equals.reduce as any;
-            case "!=": return NotEquals.reduce as any;
+            case "==":
+                return Equals.reduce as any;
+            case "!=":
+                return NotEquals.reduce as any;
             case "<=":
             case "<":
             case ">=":
             case ">":
-            case "in": return In.reduce as any;
+            case "in":
+                return In.reduce as any;
             case "not-in":
             case "from-to":
-            default: throw new Error(`no reducer available for operation '${op}'`);
+            default:
+                throw new Error(`no reducer available for operation '${op}'`);
         }
     }
 }

@@ -35,9 +35,11 @@ describe("prototyping-playground", () => {
     type MetadataQuery = Query<Model.Object<Metadata>, "default">;
     type TreeNodeQuery = Query<Model.Object<TreeNode>, "default">;
     type TreeNodeQueryInOtherScope = Query<Model.Object<TreeNode>, "other-scope">;
+    // [todo] i want this to return a Map but still allow selections & criteria
+    type TreeNodeParentsQuery = Query<Model.Object<TreeNode>, "parents">;
     type TreeNodeLevelQuery = Query<Model.Number, "tree-node-level">;
 
-    type AllOurQueries = MetadataQuery | TreeNodeQuery | TreeNodeQueryInOtherScope | TreeNodeLevelQuery;
+    type AllOurQueries = MetadataQuery | TreeNodeQuery | TreeNodeQueryInOtherScope | TreeNodeParentsQuery | TreeNodeLevelQuery;
 
     /**
      * Idea of this is to have a class that you can ask to easily create queries which you can then customize a bit.
@@ -114,15 +116,15 @@ describe("prototyping-playground", () => {
 
         function load(query: Query, planner: LoadFromSourcePlanner): void {
             planner
-                .toLoad((factory) =>
+                .toLoad(factory =>
                     factory
                         .assume<AllOurQueries>()
                         .query(treeNodeModel)
                         .defaultScope()
-                        .select((x) => x.name())
+                        .select(x => x.name())
                         .build()
                 )
-                .execute((query) => {
+                .execute(query => {
                     return Promise.resolve({
                         data: [],
                         loaded: query,
@@ -149,12 +151,12 @@ describe("prototyping-playground", () => {
             }
 
             const planA = planner
-                .load((factory) =>
+                .load(factory =>
                     factory
                         .assume<AllOurQueries>()
                         .query(treeNodeModel)
                         .defaultScope()
-                        .select((x) => x.name().children((x) => x.metadata()))
+                        .select(x => x.name().children(x => x.metadata()))
                         .build()
                 )
                 .andAssign((needsHydration, loaded) => {
@@ -200,8 +202,8 @@ describe("prototyping-playground", () => {
         const loadSomeTreeNodesQuery = factory
             .query(treeNodeModel)
             .defaultScope()
-            .select((x) => x.name().children((x) => x.name()))
-            .select((x) => x.parent())
+            .select(x => x.name().children(x => x.name()))
+            .select(x => x.parent())
             .where([{ id: [{ op: "in", values: new Set([1, 2]) }], name: [{ op: "!=", value: "baz" }] }])
             .build();
 

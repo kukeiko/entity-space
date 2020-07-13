@@ -15,7 +15,8 @@ export module InValueCriterion {
      */
     export function reduce(a: InValueCriterion, b: ValueCriterion): ValueCriterion | null {
         switch (b.op) {
-            case "==": return a.values.has(b.value) ? null : b;
+            case "==":
+                return a.values.has(b.value) ? null : b;
 
             case "!=": {
                 if (a.values.has(b.value) && a.values.size === 1) {
@@ -25,8 +26,10 @@ export module InValueCriterion {
                 return { op: "not-in", values: new Set(a.values).add(b.value) };
             }
 
-            case "<=": return a.values.has(b.value) ? { op: "<", value: b.value } : b;
-            case ">=": return a.values.has(b.value) ? { op: ">", value: b.value } : b;
+            case "<=":
+                return a.values.has(b.value) ? { op: "<", value: b.value } : b;
+            case ">=":
+                return a.values.has(b.value) ? { op: ">", value: b.value } : b;
 
             case "in": {
                 let copy = new Set(b.values);
@@ -68,10 +71,11 @@ export module InValueCriterion {
                     to = { op: "<", value: to.value };
                 }
 
-                return (from == b.from && to == b.to) ? b : { op: "from-to", from: from, to: to };
+                return from == b.from && to == b.to ? b : { op: "from-to", from: from, to: to };
             }
 
-            default: return b;
+            default:
+                return b;
         }
     }
 }

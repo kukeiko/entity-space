@@ -13,8 +13,11 @@ export interface FromToValueCriterion {
 }
 
 export module FromToValueCriterion {
-    export function create<T extends FromCriterion["value"], U extends ToCriterion["value"]>(values: [T, U], inclusive: boolean | [boolean] | [boolean, boolean] = true): FromToValueCriterion {
-        if (typeof (inclusive) === "boolean") {
+    export function create<T extends FromCriterion["value"], U extends ToCriterion["value"]>(
+        values: [T, U],
+        inclusive: boolean | [boolean] | [boolean, boolean] = true
+    ): FromToValueCriterion {
+        if (typeof inclusive === "boolean") {
             inclusive = [inclusive, inclusive];
         } else if (inclusive.length === 1) {
             inclusive = [inclusive[0], true];
@@ -24,12 +27,12 @@ export module FromToValueCriterion {
             op: "from-to",
             from: {
                 op: inclusive[0] ? ">=" : ">",
-                value: values[0]
+                value: values[0],
             },
             to: {
                 op: inclusive[1] ? "<=" : "<",
-                value: values[1]
-            }
+                value: values[1],
+            },
         };
     }
 }

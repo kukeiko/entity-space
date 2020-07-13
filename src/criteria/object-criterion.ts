@@ -8,23 +8,24 @@ export type PropertyCriteria = ValueCriteria | ValuesCriteria | ObjectCriteria;
 
 export module PropertyCriterion {
     export function areSameType<A extends PropertyCriterion>(a: A, b: any): b is A {
-        if (typeof (a.op) === "string") {
-            if (typeof (b.op) === "string") {
+        if (typeof a.op === "string") {
+            if (typeof b.op === "string") {
                 return a.op === b.op;
             } else {
                 return false;
             }
         } else {
-            return typeof (b.op) !== "string";
+            return typeof b.op !== "string";
         }
     }
 }
 
 export type ObjectCriterion<T = any> = {
-    [K in keyof T]?
-    : Exclude<T[K], undefined> extends boolean | number | string | null ? ValueCriteria
-    : Exclude<T[K], undefined> extends (boolean | number | string | null)[] ? ValuesCriteria
-    : ObjectCriteria<Exclude<T[K], undefined>>;
+    [K in keyof T]?: Exclude<T[K], undefined> extends boolean | number | string | null
+        ? ValueCriteria
+        : Exclude<T[K], undefined> extends (boolean | number | string | null)[]
+        ? ValuesCriteria
+        : ObjectCriteria<Exclude<T[K], undefined>>;
 };
 
 export module ObjectCriterion {
@@ -35,7 +36,7 @@ export module ObjectCriterion {
     // [todo]: change each used occurence of this method to "minus" (note: argument order should then also change)
     // reduces b by a
     export function reduce(a: ObjectCriterion, b: ObjectCriterion): ObjectCriterion | null {
-        let reducedPropertyCriteria: { key: string; reduced: PropertyCriteria; } | undefined;
+        let reducedPropertyCriteria: { key: string; reduced: PropertyCriteria } | undefined;
 
         for (let key in a) {
             let criteriaB = b[key];
@@ -87,7 +88,7 @@ export module ObjectCriterion {
         } else {
             return {
                 ...b,
-                [reducedPropertyCriteria.key]: reducedPropertyCriteria.reduced
+                [reducedPropertyCriteria.key]: reducedPropertyCriteria.reduced,
             };
         }
     }

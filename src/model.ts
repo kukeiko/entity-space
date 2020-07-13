@@ -1,15 +1,6 @@
 import { Class } from "./lang";
 
-export type Model =
-    | Model.Array<any>
-    | Model.Boolean
-    | Model.Date
-    | Model.Map2<any, any>
-    | Model.Number
-    | Model.Set
-    | Model.String
-    | Model.Uuid
-    | Model.Object;
+export type Model = Model.Array<any> | Model.Boolean | Model.Date | Model.Map2<any, any> | Model.Number | Model.Set | Model.String | Model.Uuid | Model.Object;
 
 export module Model {
     export type ToValue<T> = T extends Boolean
@@ -18,8 +9,8 @@ export module Model {
         ? ToValue<U>[]
         : T extends Date
         ? string
-        // [todo] fix name collision with native Map
-        : T extends Map2<infer K, infer V>
+        : // [todo] fix name collision with native Map
+        T extends Map2<infer K, infer V>
         ? Map<ToValue<K>, ToValue<V>>
         : T extends Number
         ? number
