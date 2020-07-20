@@ -8,17 +8,11 @@ export class Workspace {
     private readonly _translators = new Map<Class<Query>, QueryTranslator>();
     private readonly _hydrators = new Map<Class, PayloadHydrator>();
 
-    foo<Q extends Query>(query: Q): void {}
-
-    // [todo] "Q extends Query" leads to massive performance problems
-    // load$<Q extends Query>(query: Q): Observable<Query.Payload<Q>> {
     load$<Q extends Query>(query: Q): Observable<Query.Payload<Q>> {
-        // Observable<Query.Payload<Q>> {
         const translator = this._getTranslator(query);
         const streams = translator.translate(query);
         const observables = streams.map(s => s.open$());
 
-        // return of([] as any);
         return merge(...observables).pipe(
             mergeMap(x => this._hydrate$(query, x)),
             scan((acc, value) => [...acc, ...value], [] as Query.Payload<Q>)

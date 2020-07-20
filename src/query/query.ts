@@ -14,14 +14,10 @@ export abstract class Query<T = any, S extends ObjectSelection<T> = {}> {
 
     abstract getModel(): Class<T>;
 
-    // [todo] this causes massive performance problems for type inference when we do "Q extends Query", like "load$()" @ workspace.ts
     // select<O>(select: (selector: ObjectSelector<T>) => ObjectSelector<T, O>): this & { selection: O } {
-    // select<O>(select2: (selector: ObjectSelector<T>) => ObjectSelector<T, O>): Query & { selection: O } {
     //     return this as any;
     // }
 
-    // [todo] a criteria builder would be nice
-    // [todo] move out of this class
     // where(criteria: ObjectCriteria<T>): this {
     //     return this;
     // }
