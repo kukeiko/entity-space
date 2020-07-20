@@ -1,7 +1,7 @@
-import { Selection } from "./selection";
+import { Selection } from "../selection";
 import { Query } from "./query";
-import { Selector } from "./selector";
-import { ObjectCriteria } from "./criteria";
+import { Selector } from "../selector";
+import { ObjectCriteria } from "../../criteria";
 
 const Selected = Symbol();
 

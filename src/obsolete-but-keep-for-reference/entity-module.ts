@@ -1,4 +1,4 @@
-import { Class } from "../lang";
+import { Class } from "../utils";
 
 export function EntityModule(args: { declarations: Class[]; imports?: Class[] }) {
     return <T extends Class>(type: T) => {

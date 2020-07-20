@@ -1,6 +1,6 @@
 import { ObjectCriteria } from "../../criteria";
-import { Class } from "../../lang";
-import { Selection } from "../../selection";
+import { Class } from "../../utils";
+import { Selection } from "../selection";
 
 export class EntitySet<T = any> {
     constructor(entityType: Class<T>, entities: T[] = []) {

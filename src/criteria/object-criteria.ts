@@ -1,5 +1,5 @@
 import { ObjectCriterion } from "./object-criterion";
-import { StringIndexable } from "../lang";
+import { StringIndexable } from "../utils";
 
 export type ObjectCriteria<T = any> = ObjectCriterion<T>[];
 

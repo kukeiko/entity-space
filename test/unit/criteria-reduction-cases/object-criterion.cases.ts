@@ -1,5 +1,5 @@
 import { expectObjectCriterionReduction } from "./utils";
-import { ValueCriterion } from "../../../src";
+import { ValueCriterion } from "src";
 
 export function runObjectCriterionCases(): void {
     /**

@@ -1,4 +1,4 @@
-import { ValueCriterion } from "../../../src";
+import { ValueCriterion } from "src";
 import { expectValueCriteriaReduction } from "./utils";
 
 export function runValueCriteriaCases(): void {

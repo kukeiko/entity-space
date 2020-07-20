@@ -1,5 +1,5 @@
 let npmCommand = process.env.npm_lifecycle_event;
-process.env.CHROME_BIN = require('puppeteer').executablePath();
+process.env.CHROME_BIN = require("puppeteer").executablePath();
 
 let browsers = ["ChromeHeadless"];
 let reporters = ["mocha"];
@@ -49,6 +49,9 @@ module.exports = function (config) {
             mode: "development",
             resolve: {
                 extensions: [".ts", ".tsx", ".js"],
+                alias: {
+                    src: `${__dirname}/src`,
+                },
             },
             module: {
                 rules: webpackModuleRules,

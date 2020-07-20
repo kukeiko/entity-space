@@ -15,7 +15,7 @@
         "types": ["jasmine"],
         "lib": ["DOM", "scripthost", "es2015", "es2016.array.include"],
         "baseUrl": ".",
-        "paths": { "src": ["./src"] }
+        "paths": { "src": ["src"] }
     },
     "include": ["./src/**/*.ts", "./test/**/*.ts"]
 }

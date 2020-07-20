@@ -1,13 +1,74 @@
-import { Observable } from "rxjs";
-import { Model } from "./model";
-import { Selection } from "./selection";
+import { Observable, of } from "rxjs";
+import { Model } from "../model";
+import { Selection } from "../selection";
 import { Query } from "./query";
 import { QueryBuilder } from "./query-builder";
+import { QueryResult } from "./query-result";
+import { ObjectHydration } from "./object-hydration";
+import { QueryResultPacket } from "./query-result-packet";
+import { Workspace } from "./workspace";
+import { Reducible } from "./reducible";
+import { ObjectCriteria } from "../../criteria";
+import { Selector } from "../selector";
+import { Class } from "../../utils";
 
 /**
  * this is my little playground i use for prototyping.
  */
-describe("prototyping-playground", () => {
+describe("(obsolete) prototyping-playground", () => {
+    it("query classes (again)", () => {
+        class Query2<M extends Model = Model, B extends Model.Box<M> = Model.Array<M>, A extends Reducible = Reducible> {
+            constructor(model: M, box: B, args?: A) {
+                this.model = model;
+                this.box = box;
+                this.arguments = args;
+            }
+
+            readonly model: M;
+            readonly box: B;
+            arguments?: A;
+        }
+
+        type QueryData<Q extends Query2> = Model.ToValue<Q["box"]>;
+
+        class ObjectQuery<M extends Model.Object, B extends Model.Box<M> = Model.Array<M>, A extends Reducible = Reducible> extends Query2<M, B, A> {
+            constructor(model: M, box: B, args?: A, criteria?: ObjectCriteria<Model.ToValue<M>>, selection: Selection<Model.ToValue<M>> = {}) {
+                super(model, box, args);
+
+                this.criteria = criteria ?? [];
+                this.selection = selection;
+            }
+
+            criteria: ObjectCriteria<Model.ToValue<M>>;
+            selection: Selection<Model.ToValue<M>>;
+
+            select<O>(select: (selector: Selector<Model.ToValue<M>>) => Selector<Model.ToValue<M>, O>): this & { selection: O } {
+                return this as any;
+            }
+
+            where(criteria: ObjectCriteria<Model.ToValue<M>>): this {
+                return this;
+            }
+        }
+
+        // class Entity
+
+        class TreeNodeQuery extends ObjectQuery<Model.Object<TreeNode>> {
+            constructor() {
+                super({ class: () => TreeNode, type: "object" }, { type: "array", model: { class: () => TreeNode, type: "object" } });
+            }
+        }
+
+        const foo = new TreeNodeQuery()
+            .select(x =>
+                x
+                    .children(x => x.children(x => x.children(x => x.children(x => x.parent().name()))))
+                    .name()
+                    .parent()
+            )
+            .where([{ id: [{ op: "==", value: 1 }] }]);
+    });
+
     /**
      * Our custom user data type.
      */
@@ -85,32 +146,13 @@ describe("prototyping-playground", () => {
      */
     const factory = ({} as any) as QueryFactory<AllOurQueries>;
 
-    /**
-     * [todo] it probably feels more natural if we had to type "QueryResult<M, S, A>" instead of "QueryResult<Query<M, S, A>>"
-     */
-    interface QueryResult<Q extends Query = Query> {
-        // the query that represents the data
-        loaded: Q;
-        // the loaded data
-        data: Query.Payload<Q>;
-    }
+    xit("workspace playground", () => {
+        const workspace = new Workspace();
+    });
 
     xit("core loading mechanism playground", () => {
-        interface QueryResultPacket<Q extends Query> extends QueryResult<Query<Q["model"]>> {
-            // [todo] i added this so the server could tell the client "you requested data with id in [1,2,3], but i couldn't find [3]"
-            // figure out if instead of "what is still left to load" we should instead say "what did we fail to load"
-            open?: Query<Q["model"]>[];
-        }
-
-        type FetchedQueryResultPacket<Q extends Query> = Promise<QueryResultPacket<Q>> | Observable<QueryResultPacket<Q>>;
-
-        interface LoadPlan<Q extends Query> {
-            planned: Q;
-            fetch(): FetchedQueryResultPacket<Q>;
-        }
-
         interface LoadFromSourcePlanner {
-            toLoad<Q extends Query>(pick: (factory: QueryFactory) => Q): { execute(fetch: (query: Q) => FetchedQueryResultPacket<Q>): void };
+            toLoad<Q extends Query>(pick: (factory: QueryFactory) => Q): { execute(open: (query: Q) => Observable<QueryResultPacket<Q>>): void };
             // [todo] if we have data packets telling us what we can still expect to have returned,
             // we should no longer need this i think. would be amazing!
             discover(discover: () => Promise<(instructions: LoadFromSourcePlanner) => void>): void;
@@ -127,30 +169,37 @@ describe("prototyping-playground", () => {
                         .build()
                 )
                 .execute(query => {
-                    return Promise.resolve({
-                        data: [],
+                    return of({
+                        payload: [],
+                        failed: [],
+                        open: [],
                         loaded: query,
                     });
                 });
             // planner.query()
         }
 
-        // [todo] make sure we can also have "endless" hydrations, i.e. server continues pushing updated hydration data to the client
-        interface HydrationPlan<Q extends Query<any, any, any>> {
-            load: Q;
-            assign(items: any[], payload: any[]): void;
-        }
-
         interface HydrationPlanner<T> {
             load<Q extends Query>(
                 pick: (factory: QueryFactory) => Q
-            ): { andAssign(assign: (items: Model.ToValue<T>[], payload: QueryResult<Q>["data"]) => void): HydrationPlan<Q> };
+            ): { andAssign(assign: (items: Model.ToValue<T>[], payload: QueryResult<Q>["payload"]) => void): ObjectHydration<Q> };
         }
 
         function hydrate(result: QueryResult, planner: HydrationPlanner<Model.Object<TreeNode>>): void {
             if (Query.is<TreeNodeQuery>(result.loaded, treeNodeModel, "default")) {
-                result.data;
+                result.payload;
             }
+
+            const infiniteErrorQuery = factory
+                .assume<AllOurQueries>()
+                .query(treeNodeModel)
+                .defaultScope()
+                .select(x => x.name().children(x => x.metadata()))
+                .build();
+
+            const foo: Selection.Apply<TreeNode, typeof infiniteErrorQuery["selection"]>[] = [];
+            // const foo: Selection.Apply<TreeNode, {}>[] = [];
+            const bar = [...foo].map(x => x);
 
             const planA = planner
                 .load(factory =>
@@ -158,10 +207,13 @@ describe("prototyping-playground", () => {
                         .assume<AllOurQueries>()
                         .query(treeNodeModel)
                         .defaultScope()
-                        .select(x => x.name().children(x => x.metadata()))
+                        .select(x => x.name().children(x => x.metadata(x => x.createdBy())))
                         .build()
                 )
                 .andAssign((needsHydration, loaded) => {
+                    const bar = [...loaded.map(x => x)];
+
+                    loaded[0].children[1].metadata.createdBy.id;
                     loaded[0].name;
                     loaded[0].children[0].metadata;
                 });
@@ -211,7 +263,7 @@ describe("prototyping-playground", () => {
 
         const result: QueryResult<typeof loadSomeTreeNodesQuery> = {
             loaded: loadSomeTreeNodesQuery,
-            data: [
+            payload: [
                 {
                     id: 1,
                     children: [
@@ -229,7 +281,7 @@ describe("prototyping-playground", () => {
         };
 
         const treeNodeLevelQueryResult: QueryResult<TreeNodeLevelQuery> = {
-            data: [2],
+            payload: [2],
             loaded: {} as any,
         };
 
@@ -266,7 +318,7 @@ describe("prototyping-playground", () => {
         type ArrayModelValue = Model.ToValue<Model.Array<Model.Boolean>>;
         type ArrayOfArrayModelValue = Model.ToValue<Model.Array<Model.Array<Model.Boolean>>>;
         type TreeNodeModelValue = Model.ToValue<Model.Object<TreeNode>>;
-        type TreeNodeInNestedMapsModelValue = Model.ToValue<Model.Map2<Model.Number, Model.Map2<Model.String, Model.Object<TreeNode>>>>;
+        type TreeNodeInNestedMapsModelValue = Model.ToValue<Model.Dictionary<Model.Number, Model.Dictionary<Model.String, Model.Object<TreeNode>>>>;
 
         const foo: TreeNodeModelValue = new TreeNode();
 

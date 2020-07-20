@@ -1,4 +1,4 @@
-import { Class, Fields } from "../lang";
+import { Class, Fields } from "../utils";
 import { EntityTypeMetadata } from "./entity-type-metadata";
 
 export interface EntityClass<T> {

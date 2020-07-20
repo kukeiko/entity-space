@@ -1,4 +1,4 @@
-import { Primitive } from "../lang";
+import { Primitive } from "../utils";
 
 export type CacheableEntity<T> = Pick<T, CacheableEntity.Fields<T>>;
 

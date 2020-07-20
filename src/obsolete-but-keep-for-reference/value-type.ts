@@ -1,4 +1,4 @@
-import { Class } from "../lang";
+import { Class } from "../utils";
 
 export type ValueType =
     | ValueType.Array<any>

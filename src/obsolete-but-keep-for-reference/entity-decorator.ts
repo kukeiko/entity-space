@@ -1,4 +1,4 @@
-import { Class, Fields } from "../lang";
+import { Class, Fields } from "../utils";
 
 export const EntityMetadataSymbol: unique symbol = Symbol();
 

@@ -1,4 +1,4 @@
-import { Unbox, Box } from "./lang";
+import { Unbox, Box } from "../utils";
 
 type SelectablePropertyKeys<T> = Exclude<
     {
@@ -16,7 +16,7 @@ type SelectablePropertyKeys<T> = Exclude<
  *
  * [todo] copied from stackoverflow, but forgot to add the link. finding it again shouldn't be too hard :) (keyword: "distributed unions" as far as i remember)
  */
-type UnionSelection<T> = T extends any ? Selection<T> : never;
+type UnionSelection<T> = T extends any ? ObjectSelection<T> : never;
 
 /**
  * Evaluates to true if given type T has (?)
@@ -38,29 +38,29 @@ type HasDeepOptionalProperty<T> =
 /**
  * A selection describes which properties should be included for an operation (like loading entities).
  */
-export type Selection<T = any> = {
+export type ObjectSelection<T = any> = {
     [K in SelectablePropertyKeys<T>]?: Exclude<T[K], undefined | null> extends boolean | number | string ? true : UnionSelection<Exclude<Unbox<T[K]>, undefined | null>> | true;
 };
 
-export module Selection {
+export module ObjectSelection {
     type SelectedPropertyKeys<T, S> = Exclude<
-        { [K in keyof S]: K extends keyof T ? (S[K] extends true ? K : S[K] extends Selection<T[K]> ? K : never) : never }[keyof S],
+        { [K in keyof S]: K extends keyof T ? (S[K] extends true ? K : S[K] extends ObjectSelection<T[K]> ? K : never) : never }[keyof S],
         undefined
     >;
 
-    type SelectedProperty<T, S extends Selection<T>, K extends keyof T & keyof S> = S[K] extends true
+    type SelectedProperty<T, S extends ObjectSelection<T>, K extends keyof T & keyof S> = S[K] extends true
         ? Exclude<T[K], undefined>
-        : S[K] extends Selection<Exclude<Unbox<T[K]>, undefined | null>>
+        : S[K] extends ObjectSelection<Exclude<Unbox<T[K]>, undefined | null>>
         ? Box<Apply<Exclude<Unbox<T[K]>, undefined | null>, S[K]>, Exclude<T[K], undefined | null>>
         : never;
 
-    export type Apply<T, S extends Selection<T>> = T &
+    export type Apply<T, S extends ObjectSelection<T>> = T &
         {
             [K in SelectedPropertyKeys<T, S>]: SelectedProperty<T, S, K>;
         };
 
-    export function merge(...selections: Selection[]): Selection {
-        const merged: Selection = {};
+    export function merge(...selections: ObjectSelection[]): ObjectSelection {
+        const merged: ObjectSelection = {};
 
         for (const selection of selections) {
             for (const key in selection) {
@@ -86,11 +86,11 @@ export module Selection {
         return merged;
     }
 
-    export function copy(selection: Selection): Selection {
+    export function copy(selection: ObjectSelection): ObjectSelection {
         return merge(selection, {});
     }
 
-    export function reduce(a: Selection, b: Selection): Selection | null {
+    export function reduce(a: ObjectSelection, b: ObjectSelection): ObjectSelection | null {
         if (Object.keys(a).length === 0) {
             return null;
         }
@@ -105,7 +105,7 @@ export module Selection {
                 delete reduced[key];
                 didReduce = true;
             } else if (a[key] instanceof Object && b[key] instanceof Object) {
-                const subReduced = reduce(reduced[key] as Selection, b[key] as Selection);
+                const subReduced = reduce(reduced[key] as ObjectSelection, b[key] as ObjectSelection);
 
                 if (subReduced === null) {
                     delete reduced[key];
@@ -131,7 +131,7 @@ export module Selection {
     /**
      * Determines if a is a superset of b.
      */
-    export function isSuperset(a: Selection, b: Selection): boolean {
+    export function isSuperset(a: ObjectSelection, b: ObjectSelection): boolean {
         /**
          * [todo] lazy implementation - it works, but we should have an algorithm that
          * exits early instead of making a full reduction, otherwise we'll have unnecessary cpu cycles,

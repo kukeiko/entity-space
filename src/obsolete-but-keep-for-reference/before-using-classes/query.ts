@@ -1,7 +1,9 @@
-import { Model } from "./model";
-import { ObjectCriteria } from "./criteria";
-import { Selection } from "./selection";
+import { Model } from "../model";
+import { ObjectCriteria } from "../../criteria";
+import { Selection } from "../selection";
 import { Reducible } from "./reducible";
+
+type Foo<T> = T extends Model.Object<infer U> ? Selection<U> : never;
 
 /**
  * Something that can be executed to load data, where the data is in the form of T.
@@ -42,7 +44,7 @@ export module Query {
     /**
      * The type of value the query Q returns when executed.
      */
-    export type Payload<Q extends Query> = Q["model"] extends Model.Object
+    export type Payload<Q extends Query> = Q["model"] extends Model.Object // [todo] this commented out line causes Type instantiation is excessively deep and possibly infinite.ts(2589) @ workspace
         ? Selection.Apply<Model.ToValue<Q["model"]>, Exclude<Q["selection"], undefined>>[]
         : Model.ToValue<Q["model"]>[];
 

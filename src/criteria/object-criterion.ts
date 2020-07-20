@@ -1,6 +1,6 @@
 import { ValueCriterion, ValueCriteria } from "./value-criterion";
 import { ValuesCriterion, ValuesCriteria } from "./values-criterion";
-import { StringIndexable } from "../lang";
+import { StringIndexable } from "../utils";
 import { ObjectCriteria } from "./object-criteria";
 
 export type PropertyCriterion = ValueCriterion | ValuesCriterion | ObjectCriterion;

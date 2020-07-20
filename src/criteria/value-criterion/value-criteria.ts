@@ -1,5 +1,5 @@
 import { ValueCriterion } from "./value-criterion";
-import { StringIndexable } from "../../lang";
+import { StringIndexable } from "../../utils";
 
 export type ValueCriteria = ValueCriterion[];
 

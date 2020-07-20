@@ -1,4 +1,4 @@
-import { Class } from "../lang";
+import { Class } from "../utils";
 import { Property } from "./property";
 
 export interface ObjectTypeMetadata<T = any> {

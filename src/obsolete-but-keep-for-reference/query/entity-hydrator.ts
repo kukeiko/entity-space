@@ -1,4 +1,4 @@
-import { Selection } from "../../selection";
+import { Selection } from "../selection";
 import { EntitySet } from "./entity-set";
 import { InstrumentedHydration } from "./instrumented-hydration";
 
