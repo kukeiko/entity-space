@@ -1,19 +1,20 @@
 import { TreeNode } from "../model";
 import { generateTreeNodes } from "../data";
+import { Instance } from "../../../src/advanced/instance";
 
 export class TreeNodeRepository {
     private _data = new Map(generateTreeNodes().map(x => [x.id, x]));
 
-    all(): TreeNode[] {
+    all(): Instance<TreeNode>[] {
         return Array.from(this._data.values());
     }
 
-    get(id: number): TreeNode | undefined {
+    get(id: number): Instance<TreeNode> | undefined {
         return this._data.get(id);
     }
 
-    getMany(ids: number[]): TreeNode[] {
-        const found: TreeNode[] = [];
+    getMany(ids: number[]): Instance<TreeNode>[] {
+        const found: Instance<TreeNode>[] = [];
 
         for (let i = 0; i < ids.length; ++i) {
             const treeNode = this._data.get(ids[i]);
@@ -38,16 +39,16 @@ export class TreeNodeRepository {
         return level;
     }
 
-    getTreeNodeParents(childId: number): TreeNode[] {
+    getTreeNodeParents(childId: number): Instance<TreeNode>[] {
         const child = this.get(childId);
 
         if (child === void 0) {
             return [];
         }
 
-        const parents: TreeNode[] = [];
+        const parents: Instance<TreeNode>[] = [];
 
-        let node: TreeNode | undefined = child;
+        let node: Instance<TreeNode> | undefined = child;
 
         while (node.parentId !== null && (node = this.get(node.parentId)) !== void 0) {
             parents.push(node);

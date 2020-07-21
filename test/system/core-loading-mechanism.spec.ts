@@ -1,5 +1,5 @@
 import { finalize } from "rxjs/operators";
-import { Workspace, ObjectCriteria } from "src";
+import { Workspace } from "src";
 import {
     TreeNodeQueryTranslator,
     TreeNodeQuery,
@@ -11,11 +11,14 @@ import {
     TreeNodeParentsQuery,
     TreeNodeParentsQueryTranslator,
 } from "../facade";
+import { EntityCriteria } from "../../src/advanced/entity-criteria";
+import { ObjectSelector, Selected, select } from "../../src/advanced/selector";
 
 fdescribe("core-loading-mechanism", () => {
-    it("translator", done => {
+    it("loading some data", done => {
         const workspace = new Workspace();
         const repository = new TreeNodeRepository();
+
         workspace.setTranslator(TreeNodeQuery, new TreeNodeQueryTranslator(repository));
         workspace.setTranslator(TreeNodeLevelQuery, new TreeNodeLevelQueryTranslator(repository));
         workspace.setTranslator(TreeNodeParentsQuery, new TreeNodeParentsQueryTranslator(repository));
@@ -26,7 +29,7 @@ fdescribe("core-loading-mechanism", () => {
             .slice(10, 13)
             .map(x => x.id);
 
-        const criteria: ObjectCriteria<TreeNode> = [
+        const criteria: EntityCriteria<TreeNode> = [
             {
                 // [todo] not using someIds.map(x => ...) here because no autocomplete yet
                 id: [
@@ -37,8 +40,9 @@ fdescribe("core-loading-mechanism", () => {
             },
         ];
 
-        const selection = { level: true as true, parents: true as true };
-
+        const selector: ObjectSelector<TreeNode> = {} as any;
+        // const selection = selector.parents(x => x.parents(x => x.createdBy().level())).createdBy()[Selected];
+        const selection = select(new TreeNode(), x => x.parents());
         const query = new TreeNodeQuery({ criteria, selection });
 
         workspace
@@ -46,9 +50,7 @@ fdescribe("core-loading-mechanism", () => {
             .pipe(finalize(done))
             .subscribe(
                 treeNodes => {
-                    console.log("result:", treeNodes);
-                    // line to test that level is not undefined
-                    const level: number = treeNodes[0].level;
+                    console.log(treeNodes);
                 },
                 error => fail(error)
             );

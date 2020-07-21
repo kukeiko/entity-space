@@ -1,8 +1,9 @@
 import { of } from "rxjs";
-import { QueryTranslator, QueryStream, Query, QueryStreamPacket, ObjectCriteria } from "src";
+import { QueryTranslator, QueryStream, Query, QueryStreamPacket } from "src";
 import { TreeNodeQuery } from "../queries";
 import { TreeNodeRepository } from "../repositories";
 import { TreeNode } from "../model";
+import { EntityCriteria } from "../../../src/advanced/entity-criteria";
 
 export class TreeNodeQueryTranslator implements QueryTranslator<TreeNodeQuery> {
     constructor(private readonly _repository: TreeNodeRepository) {}
@@ -27,7 +28,7 @@ export class TreeNodeQueryTranslator implements QueryTranslator<TreeNodeQuery> {
 
     private _byIdStream(id: number): QueryStream<TreeNodeQuery> {
         const loadItem = () => this._repository.get(id);
-        const criteria: ObjectCriteria<TreeNode> = [{ id: [{ op: "==", value: id }] }];
+        const criteria: EntityCriteria<TreeNode> = [{ id: [{ op: "==", value: id }] }];
         const target = new TreeNodeQuery({ criteria, selection: {} });
 
         return {

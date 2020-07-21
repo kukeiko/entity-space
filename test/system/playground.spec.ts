@@ -1,34 +1,94 @@
-import { Query } from "src/query";
+import { Instance } from "src/advanced/instance";
+import { TreeNode } from "../facade";
+import { ObjectSelector, Selected } from "../../src/advanced/selector";
+import { Property } from "../../src/advanced/property";
+import { Query } from "../../src";
 
 describe("prototyping-playground", () => {
-    /**
-     * Our custom user data type.
-     */
-    class TreeNode {
-        id: number = 0;
-        name: string = "";
-        children: TreeNode[] = [];
-        parent: TreeNode | null = null;
-        parents: TreeNode[] = [];
-        metadata?: Metadata;
-    }
+    const treeNodeCreatable: Instance<TreeNode, "creatable"> = {
+        name: "foo",
+        parentId: 3,
+    };
 
-    class TreeNodeParents {
-        childId: number = 0;
-        parents: TreeNode[] = [];
-    }
+    const treeNodePatch: Instance<TreeNode, "patchable"> = {
+        name: "foo",
+    };
 
-    class Metadata {
-        createdAt: string = "";
-        createdBy?: User;
-        updated: string | null = null;
-        updatedBy?: User | null;
-    }
+    it("playing around", () => {
+        class AuthorModel {
+            id = Property.create("id", Number, b => b.loadable());
+            name = Property.create("name", String, b => b.loadable(["optional"]));
+        }
 
-    class User {
-        id: number = 0;
-        name?: string = "";
-    }
+        class CircleModel {
+            area = Property.create("area", Number, b => b.loadable(["optional"]));
+            radius = Property.create("radius", Number, b => b.loadable(["optional"]));
+            type = Property.create("type", "circle" as "circle", b => b.loadable());
+        }
 
-    it("playing around", () => {});
+        class SquareModel {
+            area = Property.create("area", Number, b => b.loadable(["optional"]));
+            length = Property.create("length", Number, b => b.loadable(["optional"]));
+            type = Property.create("type", "square" as "square", b => b.loadable());
+        }
+
+        class CanvasModel {
+            author = Property.create("author", AuthorModel, b => b.loadable(["optional"]));
+            name = Property.create("name", String, b => b.loadable());
+            shapes = Property.create("shapes", [CircleModel, SquareModel], b => b.loadable(["optional"]).iterable());
+        }
+
+        class CanvasQuery extends Query<CanvasModel> {
+            getModel() {
+                return CanvasModel;
+            }
+        }
+
+        type CanvasQueryDefaultPayload = Query.Payload<CanvasQuery>;
+
+        const x: CanvasQueryDefaultPayload = [
+            {
+                name: "foo",
+            },
+        ];
+
+        /**
+         * - need selection
+         */
+
+        const foo = {
+            author: {
+                name: true,
+            },
+            shapes: true,
+        };
+
+        // const canvasInstance: Instance.Selected<CanvasModel, ModelSelection<CanvasModel>> = {
+        const canvasInstance: Instance.Selected<CanvasModel, typeof foo> = {
+            name: "foo",
+            author: {
+                id: 3,
+                name: "foo",
+            },
+            shapes: [
+                { type: "square", area: 3, length: 2 },
+                { type: "circle", area: 9, radius: 123 },
+            ],
+        };
+
+        const canvasSelector: ObjectSelector<CanvasModel> = {} as any;
+        const selection = canvasSelector.author(x => x.name()).shapes(x => x.area())[Selected];
+
+        const selectedInstance: Instance.Selected<CanvasModel, typeof selection> = {
+            author: {
+                id: 3,
+                name: "susi",
+            },
+            name: "malwand",
+            shapes: [
+                { type: "square", area: 3, length: 2 },
+                { type: "circle", area: 9, radius: 123 },
+            ],
+        };
+    });
 });

@@ -1,4 +1,5 @@
 import { TreeNode } from "../model";
+import { Instance } from "../../../src/advanced/instance";
 
 interface GenerateTreeNodesOptions {
     numMaxChildren: number;
@@ -16,7 +17,7 @@ const defaultOptions: GenerateTreeNodesOptions = {
     numMaxNodes: 860,
 };
 
-export function generateTreeNodes(options: GenerateTreeNodesOptions = defaultOptions): TreeNode[] {
+export function generateTreeNodes(options: GenerateTreeNodesOptions = defaultOptions): Instance<TreeNode>[] {
     const { chanceToHaveChildren, hasChildrenDiminish, numMaxChildren, numMaxNodes, numRootNodes } = options;
     let id = 1;
 
@@ -24,7 +25,7 @@ export function generateTreeNodes(options: GenerateTreeNodesOptions = defaultOpt
         return id++;
     }
 
-    function generateChildren(allNodes: TreeNode[], parent: TreeNode, childGenMalus = 1): void {
+    function generateChildren(allNodes: Instance<TreeNode>[], parent: Instance<TreeNode>, childGenMalus = 1): void {
         const numChildren = Math.floor(Math.random() * numMaxChildren);
 
         for (let i = 0; i < numChildren; i++) {
@@ -32,11 +33,11 @@ export function generateTreeNodes(options: GenerateTreeNodesOptions = defaultOpt
                 return;
             }
 
-            const childNode = new TreeNode({
+            const childNode: Instance<TreeNode> = {
                 id: nextId(),
                 name: `${parent.name}-${i}`,
                 parentId: parent.id,
-            });
+            };
 
             allNodes.push(childNode);
 
@@ -46,13 +47,14 @@ export function generateTreeNodes(options: GenerateTreeNodesOptions = defaultOpt
         }
     }
 
-    const allNodes: TreeNode[] = [];
+    const allNodes: Instance<TreeNode>[] = [];
 
     for (let i = 0; i < numRootNodes; i++) {
-        const rootNode = new TreeNode({
+        const rootNode: Instance<TreeNode> = {
             id: nextId(),
             name: String.fromCharCode(i + 65),
-        });
+            parentId: null
+        };
 
         allNodes.push(rootNode);
         generateChildren(allNodes, rootNode);

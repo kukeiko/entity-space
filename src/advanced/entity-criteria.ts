@@ -1,0 +1,17 @@
+import { ValuesCriterion, ValueCriterion } from "../criteria";
+import { Property } from "./property";
+import { Primitive, Unbox } from "../utils";
+import { Attribute } from "./attribute";
+
+export type EntityCriterion<T> = {
+    // [K in Property.Keys<T, Attribute.IsFilterable>]?: T[K] extends Property & { value: Primitive } & Attribute.IsIterable
+    [K in Property.Keys<T>]?: T[K] extends Property & { value: Primitive } & Attribute.IsIterable
+        ? ValuesCriterion[]
+        : T[K] extends Property & { value: Primitive }
+        ? ValueCriterion[]
+        : T[K] extends Property
+        ? EntityCriterion<Unbox<T[K]["value"]>>[]
+        : never;
+};
+
+export type EntityCriteria<T> = EntityCriterion<T>[];

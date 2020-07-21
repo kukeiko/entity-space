@@ -19,7 +19,7 @@ export class Workspace {
         );
     }
 
-    private _hydrate$<Q extends Query>(target: Q, packet: QueryStreamPacket): Observable<Query.Payload<Q>> {
+    private _hydrate$<Q extends Query>(target: Q, packet: QueryStreamPacket<Q>): Observable<Query.Payload<Q>> {
         // [todo] actually check "open" against "loaded" to see which hydrations will never be loaded from stream
         if (packet.open.length > 0) {
             return of(packet.payload);
