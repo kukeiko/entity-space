@@ -1,5 +1,5 @@
+import { Instance } from "src";
 import { TreeNode } from "../model";
-import { Instance } from "../../../src/advanced/instance";
 
 interface GenerateTreeNodesOptions {
     numMaxChildren: number;

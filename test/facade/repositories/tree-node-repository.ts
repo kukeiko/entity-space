@@ -1,6 +1,6 @@
+import { Instance } from "src";
 import { TreeNode } from "../model";
 import { generateTreeNodes } from "../data";
-import { Instance } from "../../../src/advanced/instance";
 
 export class TreeNodeRepository {
     private _data = new Map(generateTreeNodes().map(x => [x.id, x]));

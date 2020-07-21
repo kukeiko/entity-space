@@ -1,10 +1,10 @@
 import { Class } from "../utils";
-import { EntityCriteria } from "../advanced/entity-criteria";
-import { ModelSelection } from "../advanced/selection";
-import { Instance } from "../advanced/instance";
+import { EntityCriteria } from "../entity-criteria";
+import { Selection } from "../selection";
+import { Instance } from "../instance";
 
 // [todo] move select() & where() out of here: select() causes extreme peformance issues & we should make Queries immutable anyway
-export abstract class Query<T = any, S extends ModelSelection<T> = {}> {
+export abstract class Query<T = any, S extends Selection<T> = {}> {
     constructor(args: Query.Construct<T, S>) {
         this.criteria = args.criteria ?? [];
         this.selection = args.selection;
@@ -35,6 +35,9 @@ export module Query {
     export type Model<Q extends Query> = InstanceType<ReturnType<Q["getModel"]>>;
     // [todo] need a way to test performance since we could also do "Q extends Query<infer U> ? ...Apply<U>" which sounds like it's
     // export type Payload<Q> = Q extends Query<infer U> ? ObjectSelection.Apply<U, Exclude<Q["selection"], undefined>>[] : never;
+
+    /**
+     * The data a specific query would return (always an array).
+     */
     export type Payload<Q extends Query> = Instance.Selected<Model<Q>, Q["selection"]>[];
-    export type Selection<T> = ModelSelection<T>; // ObjectSelection<T>;
 }

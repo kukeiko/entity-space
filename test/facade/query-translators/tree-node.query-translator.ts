@@ -1,9 +1,8 @@
 import { of } from "rxjs";
-import { QueryTranslator, QueryStream, Query, QueryStreamPacket } from "src";
+import { QueryTranslator, QueryStream, Query, QueryStreamPacket, EntityCriteria } from "src";
 import { TreeNodeQuery } from "../queries";
 import { TreeNodeRepository } from "../repositories";
 import { TreeNode } from "../model";
-import { EntityCriteria } from "../../../src/advanced/entity-criteria";
 
 export class TreeNodeQueryTranslator implements QueryTranslator<TreeNodeQuery> {
     constructor(private readonly _repository: TreeNodeRepository) {}

@@ -1,7 +1,7 @@
 import { MergeUnion } from "../utils";
-import { ModelSelection } from "./selection";
-import { Property } from "../property/property";
-import { pickProperties } from "../property/pick-properties";
+import { Property, pickProperties } from "../property";
+import { Selection } from "./selection";
+import { mergeSelections } from "./merge-selections";
 
 /**
  * Our dynamic selection object needs to store the already selected shape somehow,
@@ -14,7 +14,7 @@ export const Selected = Symbol();
  *
  * [todo] this can probably removed and the ObjectSelector type be simplified.
  */
-type PickableSelection<T> = { [K in keyof ModelSelection<T>]-?: K };
+type PickableSelection<T> = { [K in keyof Selection<T>]-?: K };
 
 /**
  * Type required to generate a dynamic type where each selectable property on a type T is expressed
@@ -22,16 +22,16 @@ type PickableSelection<T> = { [K in keyof ModelSelection<T>]-?: K };
  *
  * [todo] no support for unions yet
  */
-export type ObjectSelector<T, M = {}> = {
-    [K in keyof PickableSelection<T>]: <O extends ObjectSelector<MergeUnion<T>[K]>>(
+type Selector<T, M = {}> = {
+    [K in keyof PickableSelection<T>]: <O extends Selector<MergeUnion<T>[K]>>(
         /**
          * With expand we can select properties of a nested type like references & children.
          */
-        expand?: (selector: ObjectSelector<Property.UnboxedValue<MergeUnion<T>[K]>>) => O
-    ) => ObjectSelector<T, M & Record<K, O extends undefined ? true : {} extends O[typeof Selected] ? true : O[typeof Selected]>>;
+        expand?: (selector: Selector<Property.UnboxedValue<MergeUnion<T>[K]>>) => O
+    ) => Selector<T, M & Record<K, O extends undefined ? true : {} extends O[typeof Selected] ? true : O[typeof Selected]>>;
 } & { [Selected]: M };
 
-export function select<T, O>(model: T, pick: (selector: ObjectSelector<T>) => ObjectSelector<T, O>): O {
+export function select<T, O>(model: T, pick: (selector: Selector<T>) => Selector<T, O>): O {
     const properties = pickProperties(model);
     const selector: Record<string, Function> = {};
     const selected: Record<string, any> = {};
@@ -50,7 +50,7 @@ export function select<T, O>(model: T, pick: (selector: ObjectSelector<T>) => Ob
                     selected[key] = {};
                 }
 
-                selected[key] = ModelSelection.merge(selected[key], select(expandedModel, expand));
+                selected[key] = mergeSelections(selected[key], select(expandedModel, expand));
             }
         };
     }

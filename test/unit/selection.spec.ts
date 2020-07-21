@@ -1,14 +1,14 @@
-import { ModelSelection, UntypedModelSelection } from "src/advanced/selection";
+import { isSelectionSupersetOf, Selection, mergeSelections, reduceSelection } from "src";
 
 describe("ModelSelection", () => {
     describe("merge()", () => {
         it("should merge { foo: true } and { bar: true } to create { foo: true, bar: true }", () => {
             // arrange
-            const a: UntypedModelSelection = { foo: true };
-            const b: UntypedModelSelection = { bar: true };
+            const a: Selection.Untyped = { foo: true };
+            const b: Selection.Untyped = { bar: true };
 
             // act
-            const merged = ModelSelection.merge(a, b);
+            const merged = mergeSelections(a, b);
 
             // assert
             expect(merged).toEqual({ foo: true, bar: true });
@@ -16,11 +16,11 @@ describe("ModelSelection", () => {
 
         it("should merge { foo: { bar: true } } and { foo: { baz: true } } to create { foo: { bar: true, baz: true } }", () => {
             // arrange
-            const a: UntypedModelSelection = { foo: { bar: true } };
-            const b: UntypedModelSelection = { foo: { baz: true } };
+            const a: Selection.Untyped = { foo: { bar: true } };
+            const b: Selection.Untyped = { foo: { baz: true } };
 
             // act
-            const merged = ModelSelection.merge(a, b);
+            const merged = mergeSelections(a, b);
 
             // assert
             expect(merged).toEqual({ foo: { bar: true, baz: true } });
@@ -28,11 +28,11 @@ describe("ModelSelection", () => {
 
         it("should merge { foo: true } and { foo: { bar: true } } to create { foo: { bar: true } }", () => {
             // arrange
-            const a: UntypedModelSelection = { foo: true };
-            const b: UntypedModelSelection = { foo: { bar: true } };
+            const a: Selection.Untyped = { foo: true };
+            const b: Selection.Untyped = { foo: { bar: true } };
 
             // act
-            const merged = ModelSelection.merge(a, b);
+            const merged = mergeSelections(a, b);
 
             // assert
             expect(merged).toEqual({ foo: { bar: true } });
@@ -42,11 +42,11 @@ describe("ModelSelection", () => {
     describe("reduce()", () => {
         it("should reduce { foo: true, bar: true } by { foo: true } to create { bar: true }", () => {
             // arrange
-            const a: UntypedModelSelection = { foo: true, bar: true };
-            const b: UntypedModelSelection = { foo: true };
+            const a: Selection.Untyped = { foo: true, bar: true };
+            const b: Selection.Untyped = { foo: true };
 
             // act
-            const reduced = ModelSelection.reduce(a, b);
+            const reduced = reduceSelection(a, b);
 
             // assert
             expect(reduced).toEqual({ bar: true });
@@ -54,11 +54,11 @@ describe("ModelSelection", () => {
 
         it("should reduce { foo: true, bar: true } by { foo: true, bar: true } to create null", () => {
             // arrange
-            const a: UntypedModelSelection = { foo: true, bar: true };
-            const b: UntypedModelSelection = { foo: true, bar: true };
+            const a: Selection.Untyped = { foo: true, bar: true };
+            const b: Selection.Untyped = { foo: true, bar: true };
 
             // act
-            const reduced = ModelSelection.reduce(a, b);
+            const reduced = reduceSelection(a, b);
 
             // assert
             expect(reduced).toBeNull();
@@ -66,11 +66,11 @@ describe("ModelSelection", () => {
 
         it("should not reduce { foo: true, bar: true } by { baz: true } and return same reference", () => {
             // arrange
-            const a: UntypedModelSelection = { foo: true, bar: true };
-            const b: UntypedModelSelection = { baz: true };
+            const a: Selection.Untyped = { foo: true, bar: true };
+            const b: Selection.Untyped = { baz: true };
 
             // act
-            const reduced = ModelSelection.reduce(a, b);
+            const reduced = reduceSelection(a, b);
 
             // assert
             expect(reduced).toBe(a);
@@ -78,11 +78,11 @@ describe("ModelSelection", () => {
 
         it("should reduce { foo: { bar: true, baz: true }, khaz: { mo: true } } by { foo: { bar: true }, khaz: { mo: true, dan: true } } to create { foo: { baz: true } }", () => {
             // arrange
-            const a: UntypedModelSelection = { foo: { bar: true, baz: true }, khaz: { mo: true } };
-            const b: UntypedModelSelection = { foo: { bar: true }, khaz: { mo: true, dan: true } };
+            const a: Selection.Untyped = { foo: { bar: true, baz: true }, khaz: { mo: true } };
+            const b: Selection.Untyped = { foo: { bar: true }, khaz: { mo: true, dan: true } };
 
             // act
-            const reduced = ModelSelection.reduce(a, b);
+            const reduced = reduceSelection(a, b);
 
             // assert
             expect(reduced).toEqual({ foo: { baz: true } });
@@ -90,11 +90,11 @@ describe("ModelSelection", () => {
 
         it("{ foo: {} } reduced by { foo: {} } should be null", () => {
             // arrange
-            const a: UntypedModelSelection = { foo: {} };
-            const b: UntypedModelSelection = { foo: {} };
+            const a: Selection.Untyped = { foo: {} };
+            const b: Selection.Untyped = { foo: {} };
 
             // act
-            const reduced = ModelSelection.reduce(a, b);
+            const reduced = reduceSelection(a, b);
 
             // assert
             expect(reduced).toBeNull();
@@ -104,11 +104,11 @@ describe("ModelSelection", () => {
     describe("isSuperset()", () => {
         it("{ foo: true, bar: true } should be a superset of { foo: true }", () => {
             // arrange
-            const a: UntypedModelSelection = { foo: true, bar: true };
-            const b: UntypedModelSelection = { foo: true };
+            const a: Selection.Untyped = { foo: true, bar: true };
+            const b: Selection.Untyped = { foo: true };
 
             // act
-            const isSuperset = ModelSelection.isSuperset(a, b);
+            const isSuperset = isSelectionSupersetOf(a, b);
 
             // assert
             expect(isSuperset).toBeTrue();

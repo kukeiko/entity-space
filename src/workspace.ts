@@ -2,7 +2,7 @@ import { Observable, merge, of, combineLatest } from "rxjs";
 import { scan, map, mergeMap } from "rxjs/operators";
 import { Class, getInstanceClass } from "./utils";
 import { Query, QueryTranslator, PayloadHydrator, QueryStreamPacket } from "./query";
-import { ModelSelection } from "./advanced/selection";
+import { reduceSelection } from "./selection";
 
 export class Workspace {
     private readonly _translators = new Map<Class<Query>, QueryTranslator>();
@@ -25,7 +25,7 @@ export class Workspace {
             return of(packet.payload);
         }
 
-        const missing = ModelSelection.reduce(target.selection, packet.loaded.selection);
+        const missing = reduceSelection(target.selection, packet.loaded.selection);
 
         if (missing === null) {
             return of(packet.payload);

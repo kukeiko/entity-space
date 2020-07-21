@@ -1,5 +1,5 @@
 import { finalize } from "rxjs/operators";
-import { Workspace } from "src";
+import { Workspace, EntityCriteria, select } from "src";
 import {
     TreeNodeQueryTranslator,
     TreeNodeQuery,
@@ -11,10 +11,8 @@ import {
     TreeNodeParentsQuery,
     TreeNodeParentsQueryTranslator,
 } from "../facade";
-import { EntityCriteria } from "../../src/advanced/entity-criteria";
-import { ObjectSelector, Selected, select } from "../../src/advanced/selector";
 
-fdescribe("core-loading-mechanism", () => {
+xdescribe("core-loading-mechanism", () => {
     it("loading some data", done => {
         const workspace = new Workspace();
         const repository = new TreeNodeRepository();
@@ -41,9 +39,7 @@ fdescribe("core-loading-mechanism", () => {
             },
         ];
 
-        const selector: ObjectSelector<TreeNode> = {} as any;
-        // const selection = selector.parents(x => x.parents(x => x.createdBy().level())).createdBy()[Selected];
-        const selection = select(new TreeNode(), x => x.parents(x => x.parents()));
+        const selection = select(new TreeNode(), x => x.parents().createdBy(x => x.createdBy()));
         const query = new TreeNodeQuery({ criteria, selection });
 
         workspace

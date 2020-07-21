@@ -1,9 +1,5 @@
-import { Query, createProperty } from "src";
-import { Instance } from "src/advanced/instance";
+import { Query, createProperty, Instance, select, Selection, EntityCriteria } from "src";
 import { TreeNode } from "../facade";
-import { ObjectSelector, Selected } from "../../src/advanced/selector";
-import { ModelSelection } from "../../src/advanced/selection";
-import { EntityCriteria } from "../../src/advanced/entity-criteria";
 
 xdescribe("prototyping-playground", () => {
     const treeNodeCreatable: Instance<TreeNode, "creatable"> = {
@@ -67,7 +63,7 @@ xdescribe("prototyping-playground", () => {
             },
         ];
 
-        const canvasSelection: ModelSelection<CanvasModel> = {
+        const canvasSelection: Selection<CanvasModel> = {
             author: true,
             shapes: {
                 canvas: true,
@@ -78,8 +74,7 @@ xdescribe("prototyping-playground", () => {
             },
         };
 
-        const canvasSelector: ObjectSelector<CanvasModel> = {} as any;
-        const selection = canvasSelector.author(x => x.name()).shapes(x => x.area().radius().length().canvas().angleA().angleB().angleC())[Selected];
+        const selection = select(new CanvasModel(), x => x.author(x => x.name()).shapes(x => x.area().radius().length().canvas().angleA().angleB().angleC()));
 
         const selectedInstance: Instance.Selected<CanvasModel, typeof selection> = {
             id: 7,
