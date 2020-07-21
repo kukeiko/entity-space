@@ -1,5 +1,5 @@
 import { Class } from "../utils";
-import { EntityCriteria } from "../entity-criteria";
+import { Criteria } from "../entity-criteria";
 import { Selection } from "../selection";
 import { Instance } from "../instance";
 
@@ -10,7 +10,7 @@ export abstract class Query<T = any, S extends Selection<T> = {}> {
         this.selection = args.selection;
     }
 
-    criteria: EntityCriteria<T>;
+    criteria: Criteria<T>;
     selection: S;
 
     abstract getModel(): Class<T>;
@@ -30,7 +30,7 @@ export abstract class Query<T = any, S extends Selection<T> = {}> {
 }
 
 export module Query {
-    export type Construct<T, S> = { criteria?: EntityCriteria<T>; selection: S };
+    export type Construct<T, S> = { criteria?: Criteria<T>; selection: S };
     export type Reduction<T> = Query<T> | Query<T>[] | null;
     export type Model<Q extends Query> = InstanceType<ReturnType<Q["getModel"]>>;
     // [todo] need a way to test performance since we could also do "Q extends Query<infer U> ? ...Apply<U>" which sounds like it's
