@@ -1,3 +1,4 @@
+import { MergeUnion } from "../utils";
 import { ModelSelection } from "./selection";
 import { Property } from "./property";
 
@@ -21,11 +22,11 @@ type PickableSelection<T> = { [K in keyof ModelSelection<T>]-?: K };
  * [todo] no support for unions yet
  */
 export type ObjectSelector<T, M = {}> = {
-    [K in keyof PickableSelection<T>]: <O extends ObjectSelector<T[K]>>(
+    [K in keyof PickableSelection<T>]: <O extends ObjectSelector<MergeUnion<T>[K]>>(
         /**
          * With expand we can select properties of a nested type like references & children.
          */
-        expand?: (ObjectSelector: ObjectSelector<Property.UnboxedValue<T[K]>>) => O
+        expand?: (selector: ObjectSelector<Property.UnboxedValue<MergeUnion<T>[K]>>) => O
     ) => ObjectSelector<T, M & Record<K, O extends undefined ? true : {} extends O[typeof Selected] ? true : O[typeof Selected]>>;
 } & { [Selected]: M };
 

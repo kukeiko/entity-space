@@ -1,6 +1,6 @@
 import { Property } from "./property";
 import { Context } from "./context";
-import { Primitive } from "../utils";
+import { Primitive, MergeUnion } from "../utils";
 
 type SelectedValue<P extends Property, CTX extends Context> = P["value"] extends Primitive
     ? true
@@ -10,8 +10,8 @@ type SelectedValue<P extends Property, CTX extends Context> = P["value"] extends
 
 type UnionSelection<T, CTX extends Context> = T extends any ? ModelSelection<T, CTX> : never;
 
-export type ModelSelection<ST, CTX extends Context = "loadable"> = {
-    [K in Property.Keys<ST, Context.Has<CTX, boolean, true>>]?: SelectedValue<ST[K], CTX>;
+export type ModelSelection<T, CTX extends Context = "loadable"> = {
+    [K in Property.Keys<MergeUnion<T>, Context.Has<CTX, boolean, true>>]?: SelectedValue<MergeUnion<T>[K], CTX>;
 };
 
 export type UntypedModelSelection = { [key: string]: true | UntypedModelSelection };
