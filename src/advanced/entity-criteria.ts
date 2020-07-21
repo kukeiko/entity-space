@@ -1,6 +1,6 @@
 import { ValuesCriterion, ValueCriterion } from "../criteria";
 import { Property } from "./property";
-import { Primitive, Unbox } from "../utils";
+import { Primitive, Unbox, MergeUnion } from "../utils";
 import { Attribute } from "./attribute";
 
 export type EntityCriterion<T> = {
@@ -10,8 +10,8 @@ export type EntityCriterion<T> = {
         : T[K] extends Property & { value: Primitive }
         ? ValueCriterion[]
         : T[K] extends Property
-        ? EntityCriterion<Unbox<T[K]["value"]>>[]
+        ? EntityCriterion<MergeUnion<Unbox<Unbox<T[K]["value"]>>>>[]
         : never;
 };
 
-export type EntityCriteria<T> = EntityCriterion<T>[];
+export type EntityCriteria<T> = EntityCriterion<MergeUnion<T>>[];
