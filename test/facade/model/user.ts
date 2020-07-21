@@ -1,7 +1,7 @@
-import { Property } from "../../../src/advanced/property";
+import { createProperty } from "src";
 
 export class User {
-    id = Property.create("id", Number, b => b.loadable());
-    name = Property.create("name", String, b => b.loadable().creatable());
-    createdBy = Property.create("createdBy", User, b => b.loadable(["nullable", "optional"]));
+    id = createProperty("id", Number, b => b.loadable());
+    name = createProperty("name", String, b => b.loadable().creatable());
+    createdBy = createProperty("createdBy", User, b => b.loadable(["nullable", "optional"]));
 }

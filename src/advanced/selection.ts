@@ -1,5 +1,5 @@
-import { Property } from "./property";
-import { Context } from "./context";
+import { Property } from "../property/property";
+import { Context } from "../property/context";
 import { Primitive, MergeUnion } from "../utils";
 
 type SelectedValue<P extends Property, CTX extends Context> = P["value"] extends Primitive

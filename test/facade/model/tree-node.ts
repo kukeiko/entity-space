@@ -1,16 +1,16 @@
-import { Property } from "src/advanced/property";
+import { createProperty } from "src";
 import { User } from "./user";
 
 export class TreeNode {
-    id = Property.create("id", Number, b => b.loadable());
-    children = Property.create("children", TreeNode, b => b.loadable(["optional"]).iterable());
-    createdBy = Property.create("createdBy", User, b => b.loadable(["optional"]));
-    name = Property.create("name", String, b => b.loadable().creatable().patchable());
-    parentId = Property.create("parentId", Number, b => b.loadable(["nullable"]).creatable());
-    parent = Property.create("parent", TreeNode, b => b.loadable(["nullable", "optional"]).identifiedBy(this.parentId));
+    id = createProperty("id", Number, b => b.loadable());
+    children = createProperty("children", TreeNode, b => b.loadable(["optional"]).iterable());
+    createdBy = createProperty("createdBy", User, b => b.loadable(["optional"]));
+    name = createProperty("name", String, b => b.loadable().creatable().patchable());
+    parentId = createProperty("parentId", Number, b => b.loadable(["nullable"]).creatable());
+    parent = createProperty("parent", TreeNode, b => b.loadable(["nullable", "optional"]).identifiedBy(this.parentId));
     // parentIds?: number[];
-    parents = Property.create("parents", TreeNode, b => b.loadable(["optional"]).iterable());
+    parents = createProperty("parents", TreeNode, b => b.loadable(["optional"]).iterable());
     // metadata?: Metadata;
-    level = Property.create("level", Number, b => b.loadable(["optional"]));
-    updatedBy = Property.create("createdBy", User, b => b.loadable(["optional", "nullable"]));
+    level = createProperty("level", Number, b => b.loadable(["optional"]));
+    updatedBy = createProperty("updatedBy", User, b => b.loadable(["optional", "nullable"]));
 }

@@ -1,7 +1,7 @@
 import { Primitive, Unbox } from "../utils";
-import { Property } from "./property";
-import { Attribute } from "./attribute";
-import { Context } from "./context";
+import { Property } from "../property/property";
+import { Attribute } from "../property/attribute";
+import { Context } from "../property/context";
 
 type BoxPropertyValue<P, V> = P extends Attribute.IsIterable ? V[] : V;
 

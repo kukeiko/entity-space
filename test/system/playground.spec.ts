@@ -1,12 +1,11 @@
+import { Query, createProperty } from "src";
 import { Instance } from "src/advanced/instance";
 import { TreeNode } from "../facade";
 import { ObjectSelector, Selected } from "../../src/advanced/selector";
-import { Property } from "../../src/advanced/property";
-import { Query, MergeUnion } from "../../src";
 import { ModelSelection } from "../../src/advanced/selection";
 import { EntityCriteria } from "../../src/advanced/entity-criteria";
 
-describe("prototyping-playground", () => {
+xdescribe("prototyping-playground", () => {
     const treeNodeCreatable: Instance<TreeNode, "creatable"> = {
         name: "foo",
         parentId: 3,
@@ -17,38 +16,38 @@ describe("prototyping-playground", () => {
     };
 
     class AuthorModel {
-        id = Property.create("id", Number, b => b.loadable());
-        name = Property.create("name", String, b => b.loadable(["optional"]));
+        id = createProperty("id", Number, b => b.loadable());
+        name = createProperty("name", String, b => b.loadable(["optional"]));
     }
 
     abstract class ShapeModel {
-        id = Property.create("id", Number, b => b.loadable());
-        area = Property.create("area", Number, b => b.loadable(["optional"]));
-        canvas = Property.create("canvas", CanvasModel, b => b.loadable(["optional"]));
+        id = createProperty("id", Number, b => b.loadable());
+        area = createProperty("area", Number, b => b.loadable(["optional"]));
+        canvas = createProperty("canvas", CanvasModel, b => b.loadable(["optional"]));
     }
 
     class CircleModel extends ShapeModel {
-        radius = Property.create("radius", Number, b => b.loadable(["optional"]));
-        type = Property.create("type", "circle" as "circle", b => b.loadable());
+        radius = createProperty("radius", Number, b => b.loadable(["optional"]));
+        type = createProperty("type", "circle" as "circle", b => b.loadable());
     }
 
     class SquareModel extends ShapeModel {
-        length = Property.create("length", Number, b => b.loadable(["optional"]));
-        type = Property.create("type", "square" as "square", b => b.loadable());
+        length = createProperty("length", Number, b => b.loadable(["optional"]));
+        type = createProperty("type", "square" as "square", b => b.loadable());
     }
 
     class TriangleModel extends ShapeModel {
-        type = Property.create("type", "triangle" as "triangle", b => b.loadable());
-        angleA = Property.create("angleA", Number, b => b.loadable(["optional"]));
-        angleB = Property.create("angleB", Number, b => b.loadable(["optional"]));
-        angleC = Property.create("angleC", Number, b => b.loadable(["optional"]));
+        type = createProperty("type", "triangle" as "triangle", b => b.loadable());
+        angleA = createProperty("angleA", Number, b => b.loadable(["optional"]));
+        angleB = createProperty("angleB", Number, b => b.loadable(["optional"]));
+        angleC = createProperty("angleC", Number, b => b.loadable(["optional"]));
     }
 
     class CanvasModel {
-        id = Property.create("id", Number, b => b.loadable());
-        author = Property.create("author", AuthorModel, b => b.loadable(["optional"]));
-        name = Property.create("name", String, b => b.loadable());
-        shapes = Property.create("shapes", [CircleModel, SquareModel, TriangleModel], b => b.loadable(["optional"]).iterable());
+        id = createProperty("id", Number, b => b.loadable());
+        author = createProperty("author", AuthorModel, b => b.loadable(["optional"]));
+        name = createProperty("name", String, b => b.loadable());
+        shapes = createProperty("shapes", [CircleModel, SquareModel, TriangleModel], b => b.loadable(["optional"]).iterable());
     }
 
     it("playing w/ unions", () => {
@@ -64,6 +63,7 @@ describe("prototyping-playground", () => {
             {
                 id: 1,
                 name: "foo",
+                shapes: [{ type: "triangle", id: 1 }],
             },
         ];
 

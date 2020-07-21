@@ -1,6 +1,7 @@
 import { MergeUnion } from "../utils";
 import { ModelSelection } from "./selection";
-import { Property } from "./property";
+import { Property } from "../property/property";
+import { pickProperties } from "../property/pick-properties";
 
 /**
  * Our dynamic selection object needs to store the already selected shape somehow,
@@ -31,7 +32,7 @@ export type ObjectSelector<T, M = {}> = {
 } & { [Selected]: M };
 
 export function select<T, O>(model: T, pick: (selector: ObjectSelector<T>) => ObjectSelector<T, O>): O {
-    const properties = Property.pick(model);
+    const properties = pickProperties(model);
     const selector: Record<string, Function> = {};
     const selected: Record<string, any> = {};
 

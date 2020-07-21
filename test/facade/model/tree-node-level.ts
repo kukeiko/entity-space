@@ -1,11 +1,6 @@
-import { PartialFields } from "src";
-import { Property } from "../../../src/advanced/property";
+import { createProperty } from "src";
 
 export class TreeNodeLevel {
-    // constructor(args?: PartialFields<TreeNodeLevel>) {
-    //     Object.assign(this, args || {});
-    // }
-
-    nodeId = Property.create("nodeId", Number, b => b.loadable());
-    level = Property.create("level", Number, b => b.loadable());
+    nodeId = createProperty("nodeId", Number, b => b.loadable());
+    level = createProperty("level", Number, b => b.loadable());
 }
