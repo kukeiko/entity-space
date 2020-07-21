@@ -13,4 +13,9 @@ type Criterion<T> = {
         : never;
 };
 
+/**
+ * [todo] file name doesn't reflect name of type - can't fix it yet, as we have a "criteria" folder with the generic criteria stuff
+ * current idea is to have the generic criteria stuff as a separate package, so we'd import from "@entity-space/criteria",
+ * or even move it to a completely unrelated repository
+ */
 export type Criteria<T> = Criterion<MergeUnion<T>>[];

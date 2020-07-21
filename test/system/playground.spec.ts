@@ -1,4 +1,4 @@
-import { Query, createProperty, Instance, select, Selection, EntityCriteria } from "src";
+import { Query, createProperty, Instance, select, Selection, Criteria } from "src";
 import { TreeNode } from "../facade";
 
 xdescribe("prototyping-playground", () => {
@@ -92,7 +92,7 @@ xdescribe("prototyping-playground", () => {
     });
 
     it("union criteria", () => {
-        const canvasCriteria: EntityCriteria<CanvasModel> = [
+        const canvasCriteria: Criteria<CanvasModel> = [
             {
                 shapes: [
                     {

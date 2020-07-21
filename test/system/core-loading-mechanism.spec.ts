@@ -1,5 +1,5 @@
 import { finalize } from "rxjs/operators";
-import { Workspace, EntityCriteria, select } from "src";
+import { Workspace, Criteria, select } from "src";
 import {
     TreeNodeQueryTranslator,
     TreeNodeQuery,
@@ -28,7 +28,7 @@ xdescribe("core-loading-mechanism", () => {
             .slice(0, 7)
             .map(x => x.id);
 
-        const criteria: EntityCriteria<TreeNode> = [
+        const criteria: Criteria<TreeNode> = [
             {
                 // [todo] not using someIds.map(x => ...) here because no autocomplete yet
                 id: [
