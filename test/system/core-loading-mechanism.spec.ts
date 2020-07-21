@@ -39,7 +39,7 @@ xdescribe("core-loading-mechanism", () => {
             },
         ];
 
-        const selection = select(new TreeNode(), x => x.parents().createdBy(x => x.createdBy()));
+        const selection = select(TreeNode, x => x.parents().createdBy(x => x.createdBy()));
         const query = new TreeNodeQuery({ criteria, selection });
 
         workspace

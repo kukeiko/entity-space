@@ -1,4 +1,4 @@
-import { MergeUnion } from "../utils";
+import { MergeUnion, Class } from "../utils";
 import { Property, pickProperties } from "../property";
 import { Selection } from "./selection";
 import { mergeSelections } from "./merge-selections";
@@ -31,8 +31,8 @@ type Selector<T, M = {}> = {
     ) => Selector<T, M & Record<K, O extends undefined ? true : {} extends O[typeof Selected] ? true : O[typeof Selected]>>;
 } & { [Selected]: M };
 
-export function select<T, O>(model: T, pick: (selector: Selector<T>) => Selector<T, O>): O {
-    const properties = pickProperties(model);
+export function select<T, O>(model: Class<T>, pick: (selector: Selector<T>) => Selector<T, O>): O {
+    const properties = pickProperties(new model());
     const selector: Record<string, Function> = {};
     const selected: Record<string, any> = {};
 

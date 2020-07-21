@@ -74,7 +74,7 @@ xdescribe("prototyping-playground", () => {
             },
         };
 
-        const selection = select(new CanvasModel(), x => x.author(x => x.name()).shapes(x => x.area().radius().length().canvas().angleA().angleB().angleC()));
+        const selection = select(CanvasModel, x => x.author(x => x.name()).shapes(x => x.area().radius().length().canvas().angleA().angleB().angleC()));
 
         const selectedInstance: Instance.Selected<CanvasModel, typeof selection> = {
             id: 7,
