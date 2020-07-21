@@ -1,7 +1,7 @@
 import { createProperty } from "src";
-import { User } from "./user";
+import { User } from "./user.model";
 
-export class Metadata {
+export class MetadataModel {
     createdAt: string = "";
     createdById: number = 0;
     createdBy = createProperty("createdBy", User, b => b.loadable(["optional"]));

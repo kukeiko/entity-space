@@ -1,13 +1,13 @@
 import { Query, createProperty, Instance, select, Selection, Criteria } from "src";
-import { TreeNode } from "../facade";
+import { TreeNodeModel } from "../facade/model";
 
 xdescribe("prototyping-playground", () => {
-    const treeNodeCreatable: Instance<TreeNode, "creatable"> = {
+    const treeNodeCreatable: Instance<TreeNodeModel, "creatable"> = {
         name: "foo",
         parentId: 3,
     };
 
-    const treeNodePatch: Instance<TreeNode, "patchable"> = {
+    const treeNodePatch: Instance<TreeNodeModel, "patchable"> = {
         name: "foo",
     };
 

@@ -1,16 +1,8 @@
 import { finalize } from "rxjs/operators";
 import { Workspace, Criteria, select } from "src";
-import {
-    TreeNodeQueryTranslator,
-    TreeNodeQuery,
-    TreeNodeRepository,
-    TreeNode,
-    TreeNodeLevelQuery,
-    TreeNodeLevelQueryTranslator,
-    TreeNodePayloadHydrator,
-    TreeNodeParentsQuery,
-    TreeNodeParentsQueryTranslator,
-} from "../facade";
+import { TreeNodeQuery, TreeNodeLevelQuery, TreeNodeParentsQuery, TreeNodeModel } from "../facade/model";
+import { TreeNodePayloadHydrator, TreeNodeQueryTranslator, TreeNodeLevelQueryTranslator, TreeNodeParentsQueryTranslator } from "../facade/components";
+import { TreeNodeRepository } from "../facade/data";
 
 xdescribe("core-loading-mechanism", () => {
     it("loading some data", done => {
@@ -20,7 +12,7 @@ xdescribe("core-loading-mechanism", () => {
         workspace.setTranslator(TreeNodeQuery, new TreeNodeQueryTranslator(repository));
         workspace.setTranslator(TreeNodeLevelQuery, new TreeNodeLevelQueryTranslator(repository));
         workspace.setTranslator(TreeNodeParentsQuery, new TreeNodeParentsQueryTranslator(repository));
-        workspace.setHydrator(TreeNode, new TreeNodePayloadHydrator());
+        workspace.setHydrator(TreeNodeModel, new TreeNodePayloadHydrator());
 
         const someIds = repository
             .all()
@@ -28,7 +20,7 @@ xdescribe("core-loading-mechanism", () => {
             .slice(0, 7)
             .map(x => x.id);
 
-        const criteria: Criteria<TreeNode> = [
+        const criteria: Criteria<TreeNodeModel> = [
             {
                 // [todo] not using someIds.map(x => ...) here because no autocomplete yet
                 id: [
@@ -39,7 +31,7 @@ xdescribe("core-loading-mechanism", () => {
             },
         ];
 
-        const selection = select(TreeNode, x => x.parents().createdBy(x => x.createdBy()));
+        const selection = select(TreeNodeModel, x => x.parents().createdBy(x => x.createdBy()));
         const query = new TreeNodeQuery({ criteria, selection });
 
         workspace

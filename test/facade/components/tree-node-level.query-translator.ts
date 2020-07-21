@@ -1,8 +1,7 @@
 import { of } from "rxjs";
 import { QueryTranslator, QueryStream, Query, QueryStreamPacket, Criteria } from "src";
-import { TreeNodeLevelQuery } from "../queries";
-import { TreeNodeRepository } from "../repositories";
-import { TreeNodeLevel } from "../model";
+import { TreeNodeLevelModel, TreeNodeLevelQuery } from "../model";
+import { TreeNodeRepository } from "../data";
 
 export class TreeNodeLevelQueryTranslator implements QueryTranslator<TreeNodeLevelQuery> {
     constructor(private readonly _repository: TreeNodeRepository) {}
@@ -27,7 +26,7 @@ export class TreeNodeLevelQueryTranslator implements QueryTranslator<TreeNodeLev
 
     private _byIdStream(id: number): QueryStream<TreeNodeLevelQuery> {
         const loadItem = () => this._repository.getLevel(id);
-        const criteria: Criteria<TreeNodeLevel> = [{ nodeId: [{ op: "==", value: id }] }];
+        const criteria: Criteria<TreeNodeLevelModel> = [{ nodeId: [{ op: "==", value: id }] }];
         const target = new TreeNodeLevelQuery({ criteria, selection: {} });
 
         return {

@@ -1,5 +1,5 @@
 import { Instance } from "src";
-import { TreeNode } from "../model";
+import { TreeNodeModel } from "../model";
 
 interface GenerateTreeNodesOptions {
     numMaxChildren: number;
@@ -17,7 +17,7 @@ const defaultOptions: GenerateTreeNodesOptions = {
     numMaxNodes: 860,
 };
 
-export function generateTreeNodes(options: GenerateTreeNodesOptions = defaultOptions): Instance<TreeNode>[] {
+export function generateTreeNodes(options: GenerateTreeNodesOptions = defaultOptions): Instance<TreeNodeModel>[] {
     const { chanceToHaveChildren, hasChildrenDiminish, numMaxChildren, numMaxNodes, numRootNodes } = options;
     let id = 1;
 
@@ -25,7 +25,7 @@ export function generateTreeNodes(options: GenerateTreeNodesOptions = defaultOpt
         return id++;
     }
 
-    function generateChildren(allNodes: Instance<TreeNode>[], parent: Instance<TreeNode>, childGenMalus = 1): void {
+    function generateChildren(allNodes: Instance<TreeNodeModel>[], parent: Instance<TreeNodeModel>, childGenMalus = 1): void {
         const numChildren = Math.floor(Math.random() * numMaxChildren);
 
         for (let i = 0; i < numChildren; i++) {
@@ -33,7 +33,7 @@ export function generateTreeNodes(options: GenerateTreeNodesOptions = defaultOpt
                 return;
             }
 
-            const childNode: Instance<TreeNode> = {
+            const childNode: Instance<TreeNodeModel> = {
                 id: nextId(),
                 name: `${parent.name}-${i}`,
                 parentId: parent.id,
@@ -47,10 +47,10 @@ export function generateTreeNodes(options: GenerateTreeNodesOptions = defaultOpt
         }
     }
 
-    const allNodes: Instance<TreeNode>[] = [];
+    const allNodes: Instance<TreeNodeModel>[] = [];
 
     for (let i = 0; i < numRootNodes; i++) {
-        const rootNode: Instance<TreeNode> = {
+        const rootNode: Instance<TreeNodeModel> = {
             id: nextId(),
             name: String.fromCharCode(i + 65),
             parentId: null
