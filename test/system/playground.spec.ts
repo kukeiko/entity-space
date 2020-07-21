@@ -1,5 +1,5 @@
 import { Query, createProperty, Instance, select, Selection, Criteria } from "src";
-import { TreeNodeModel } from "../facade/model";
+import { TreeNodeModel, CanvasModel } from "../facade/model";
 
 xdescribe("prototyping-playground", () => {
     const treeNodeCreatable: Instance<TreeNodeModel, "creatable"> = {
@@ -10,41 +10,6 @@ xdescribe("prototyping-playground", () => {
     const treeNodePatch: Instance<TreeNodeModel, "patchable"> = {
         name: "foo",
     };
-
-    class AuthorModel {
-        id = createProperty("id", Number, b => b.loadable());
-        name = createProperty("name", String, b => b.loadable(["optional"]));
-    }
-
-    abstract class ShapeModel {
-        id = createProperty("id", Number, b => b.loadable());
-        area = createProperty("area", Number, b => b.loadable(["optional"]));
-        canvas = createProperty("canvas", CanvasModel, b => b.loadable(["optional"]));
-    }
-
-    class CircleModel extends ShapeModel {
-        radius = createProperty("radius", Number, b => b.loadable(["optional"]));
-        type = createProperty("type", "circle" as "circle", b => b.loadable());
-    }
-
-    class SquareModel extends ShapeModel {
-        length = createProperty("length", Number, b => b.loadable(["optional"]));
-        type = createProperty("type", "square" as "square", b => b.loadable());
-    }
-
-    class TriangleModel extends ShapeModel {
-        type = createProperty("type", "triangle" as "triangle", b => b.loadable());
-        angleA = createProperty("angleA", Number, b => b.loadable(["optional"]));
-        angleB = createProperty("angleB", Number, b => b.loadable(["optional"]));
-        angleC = createProperty("angleC", Number, b => b.loadable(["optional"]));
-    }
-
-    class CanvasModel {
-        id = createProperty("id", Number, b => b.loadable());
-        author = createProperty("author", AuthorModel, b => b.loadable(["optional"]));
-        name = createProperty("name", String, b => b.loadable());
-        shapes = createProperty("shapes", [CircleModel, SquareModel, TriangleModel], b => b.loadable(["optional"]).iterable());
-    }
 
     it("playing w/ unions", () => {
         class CanvasQuery extends Query<CanvasModel> {
