@@ -1,5 +1,4 @@
 import { ValueCriterion } from "./value-criterion";
-import { NotEqualsValueCriterion } from "./not-equals-value-criterion";
 
 export interface EqualsValueCriterion {
     op: "==";
