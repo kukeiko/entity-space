@@ -26,7 +26,8 @@ fdescribe("core-loading-mechanism", () => {
 
         const someIds = repository
             .all()
-            .slice(10, 13)
+            .sort(() => (Math.random() > 0.5 ? -1 : 1))
+            .slice(0, 7)
             .map(x => x.id);
 
         const criteria: EntityCriteria<TreeNode> = [
@@ -42,7 +43,7 @@ fdescribe("core-loading-mechanism", () => {
 
         const selector: ObjectSelector<TreeNode> = {} as any;
         // const selection = selector.parents(x => x.parents(x => x.createdBy().level())).createdBy()[Selected];
-        const selection = select(new TreeNode(), x => x.parents());
+        const selection = select(new TreeNode(), x => x.parents(x => x.parents()));
         const query = new TreeNodeQuery({ criteria, selection });
 
         workspace

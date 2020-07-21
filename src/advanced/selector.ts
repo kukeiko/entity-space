@@ -35,8 +35,23 @@ export function select<T, O>(model: T, pick: (selector: ObjectSelector<T>) => Ob
     const selector: Record<string, Function> = {};
     const selected: Record<string, any> = {};
 
+    // [todo] code is dirty
     for (const key in properties) {
-        selector[key] = () => (selected[key] = true);
+        selector[key] = (expand?: (x: any) => any) => {
+            if (selected[key] === void 0) {
+                selected[key] = true;
+            }
+
+            if (expand !== void 0) {
+                const expandedModel = new properties[key].value();
+
+                if (selected[key] === true) {
+                    selected[key] = {};
+                }
+
+                selected[key] = ModelSelection.merge(selected[key], select(expandedModel, expand));
+            }
+        };
     }
 
     pick(selector as any);
