@@ -3,8 +3,6 @@ import { ObjectCriteria } from "../../criteria";
 import { Selection } from "../selection";
 import { Reducible } from "./reducible";
 
-type Foo<T> = T extends Model.Object<infer U> ? Selection<U> : never;
-
 /**
  * Something that can be executed to load data, where the data is in the form of T.
  * The scope allows us to have different API calls for the same type of data.

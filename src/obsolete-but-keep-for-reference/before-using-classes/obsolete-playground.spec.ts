@@ -6,11 +6,9 @@ import { QueryBuilder } from "./query-builder";
 import { QueryResult } from "./query-result";
 import { ObjectHydration } from "./object-hydration";
 import { QueryResultPacket } from "./query-result-packet";
-import { Workspace } from "./workspace";
 import { Reducible } from "./reducible";
 import { ObjectCriteria } from "../../criteria";
 import { Selector } from "../selector";
-import { Class } from "../../utils";
 
 /**
  * this is my little playground i use for prototyping.
@@ -145,10 +143,6 @@ describe("(obsolete) prototyping-playground", () => {
      * Creating a factory that is typed to know about our queries.
      */
     const factory = ({} as any) as QueryFactory<AllOurQueries>;
-
-    xit("workspace playground", () => {
-        const workspace = new Workspace();
-    });
 
     xit("core loading mechanism playground", () => {
         interface LoadFromSourcePlanner {
