@@ -42,7 +42,7 @@ module.exports = {
         },
     ],
 
-    scopes: ["core", "query", "criteria", "selection"],
+    scopes: ["core", "query", "criteria", "selection", "instance"],
 
     allowTicketNumber: false,
     isTicketNumberRequired: false,
