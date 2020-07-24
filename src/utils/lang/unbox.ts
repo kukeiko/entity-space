@@ -10,4 +10,6 @@
 import { Class } from "./class";
 
 // even if there are no errors, maybe it increases type performance?
-export type Unbox<T> = T extends any[] ? T[number] : T extends Class ? InstanceType<T> : T extends (...args: any[]) => any ? ReturnType<T> : T;
+// [todo] commented out because, again, excessively deep type instantiation
+// export type Unbox<T> = T extends any[] ? T[number] : T extends Class ? InstanceType<T> : T extends (...args: any[]) => any ? ReturnType<T> : T;
+export type Unbox<T> = T extends Array<infer U> ? U : T extends Class ? InstanceType<T> : T extends (...args: any[]) => any ? ReturnType<T> : T;

@@ -13,10 +13,9 @@ A query consists of:
 -   the **model**, describing the shape of the data and optionally loadable parts it might have
 -   the **criteria**, describing the filter the loaded data has to fulfill, e.g. "id in (1,2)"
 -   the **selection**, describing what optional parts of data should be included that are not loaded by default
--   the **scope**, describing which api interface to use (e.g. when api has multiple ways to load same type of data)
--   the **arguments**, a custom user object specific to the scope (e.g. server side filter)
+-   the **options**, a custom user object to represent what the criteria can't (e.g. server side filter)
 
-Based on the **scope**, **arguments** and **criteria**, entity-space can understand the identity of the data that will be loaded. Based on the **selection**, entity-space can understand what optional parts are included.
+Based on the **options** and **criteria**, entity-space can understand the identity of the data that will be loaded. Based on the **selection**, entity-space can understand what optional parts are included.
 
 ---
 

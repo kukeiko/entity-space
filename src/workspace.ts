@@ -1,8 +1,8 @@
 import { Observable, merge, of, combineLatest } from "rxjs";
 import { scan, map, mergeMap } from "rxjs/operators";
 import { Class, getInstanceClass } from "./utils";
-import { Query, QueryTranslator, PayloadHydrator, QueryStreamPacket } from "./query";
-import { ObjectSelection } from "./selection";
+import { Query, QueryTranslator, PayloadHydrator, QueryStreamPacket, PayloadHydration } from "./query";
+import { reduceSelection } from "./selection";
 
 export class Workspace {
     private readonly _translators = new Map<Class<Query>, QueryTranslator>();
@@ -19,25 +19,32 @@ export class Workspace {
         );
     }
 
-    private _hydrate$<Q extends Query>(target: Q, packet: QueryStreamPacket): Observable<Query.Payload<Q>> {
+    private _hydrate$<Q extends Query>(target: Q, packet: QueryStreamPacket<Q>): Observable<Query.Payload<Q>> {
         // [todo] actually check "open" against "loaded" to see which hydrations will never be loaded from stream
         if (packet.open.length > 0) {
             return of(packet.payload);
         }
 
-        const missing = ObjectSelection.reduce(target.selection, packet.loaded.selection);
+        const missing = reduceSelection(target.selection, packet.loaded.selection);
 
         if (missing === null) {
             return of(packet.payload);
         }
 
-        const hydrator = this._getHydrator(packet.loaded.getModel());
+        let hydrations: PayloadHydration[] = [];
 
-        const hydrations = hydrator.hydrate({
-            loaded: packet.loaded,
-            payload: packet.payload,
-            selection: missing,
-        });
+        for (const model of packet.loaded.getModel()) {
+            const hydrator = this._getHydrator(model);
+
+            hydrations = [
+                ...hydrations,
+                ...hydrator.hydrate({
+                    loaded: packet.loaded,
+                    payload: packet.payload,
+                    selection: missing,
+                }),
+            ];
+        }
 
         if (hydrations.length === 0) {
             return of(packet.payload);
