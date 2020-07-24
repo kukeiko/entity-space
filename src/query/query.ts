@@ -13,7 +13,7 @@ export abstract class Query<T = any, S extends Selection<T> = Selection<T>> {
     }
 
     criteria: Criteria<T>;
-    selection: S;
+    selection: S & Selection<T>;
 
     // abstract getModel(): Class<T>;
     abstract getModel(): UnpackUnionClass<T>[];
