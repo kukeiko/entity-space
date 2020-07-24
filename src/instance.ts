@@ -41,10 +41,18 @@ type InstancedExpandedProperties<T, CTX extends Context, IS, ISNOT, EXP> = {
     >;
 };
 
-export type Instance<T, CTX extends Context = "loadable", IS = Property, ISNOT = never, EXP = {}> = InstancedRequiredProperties<T, CTX, IS, ISNOT, EXP> &
+type InstanceCore<T, CTX extends Context = "loadable", IS = Property, ISNOT = never, EXP = {}> = InstancedRequiredProperties<T, CTX, IS, ISNOT, EXP> &
     InstancedOptionalProperties<T, CTX, IS, ISNOT, EXP> &
     InstancedExpandedProperties<T, CTX, IS, ISNOT, EXP>;
 
+export type Instance<T, CTX extends Context = "loadable", IS = Property, ISNOT = never, EXP = {}> = T extends any ? InstanceCore<T, CTX, IS, ISNOT, EXP> : never;
+//  InstancedRequiredProperties<T, CTX, IS, ISNOT, EXP> &
+//     InstancedOptionalProperties<T, CTX, IS, ISNOT, EXP> &
+    // InstancedExpandedProperties<T, CTX, IS, ISNOT, EXP>;
+
+type UnpackUnionInstance<T, CTX extends Context, IS, ISNOT, S> = T extends any ? Instance<T, CTX, IS, ISNOT, S> : never;
+
 export module Instance {
-    export type Selected<T, S, CTX extends Context = "loadable", IS = Property, ISNOT = never> = Instance<T, CTX, IS, ISNOT, S>;
+    // export type Selected<T, S, CTX extends Context = "loadable", IS = Property, ISNOT = never> = Instance<T, CTX, IS, ISNOT, S>;
+    export type Selected<T, S, CTX extends Context = "loadable", IS = Property, ISNOT = never> = UnpackUnionInstance<T, CTX, IS, ISNOT, S>;
 }

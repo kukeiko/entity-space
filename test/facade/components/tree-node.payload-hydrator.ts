@@ -32,7 +32,7 @@ export class TreeNodePayloadHydrator implements PayloadHydrator<TreeNodeModel> {
 
             for (const nodeId of nodeIds) {
                 const query = new TreeNodeParentsQuery({
-                    selection: { ...(hydratable.selection.parents === true ? {} : hydratable.selection.parents) },
+                    selection: { ...(hydratable.selection.parents === true ? {} : { parents: hydratable.selection.parents }) },
                     criteria: [{ childId: [{ op: "==", value: nodeId }] }],
                 });
 

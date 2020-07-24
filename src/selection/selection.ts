@@ -15,9 +15,9 @@ type SelectedValue<P extends Property, CTX extends Context> = P["value"] extends
 type UnionSelection<T, CTX extends Context> = T extends any ? Selection<T, CTX> : never;
 
 export type Selection<T, CTX extends Context = "loadable"> = {
-    [K in Property.Keys<MergeUnion<T>, Context.Has<CTX, boolean, true>>]?: SelectedValue<MergeUnion<T>[K], CTX>;
+    [K in Property.Keys<MergeUnion<T>, Context.Has<CTX>>]?: SelectedValue<MergeUnion<T>[K], CTX>;
 };
 
 export module Selection {
-    export type Untyped = { [key: string]: true | Untyped };
+    export type Untyped = { [key: string]: true | Untyped | undefined };
 }

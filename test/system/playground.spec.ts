@@ -1,5 +1,5 @@
 import { Query, createProperty, Instance, select, Selection, Criteria } from "src";
-import { TreeNodeModel, CanvasModel } from "../facade/model";
+import { TreeNodeModel, CanvasModel, CircleModel, SquareModel, TriangleModel } from "../facade/model";
 
 xdescribe("prototyping-playground", () => {
     const treeNodeCreatable: Instance<TreeNodeModel, "creatable"> = {
@@ -14,7 +14,7 @@ xdescribe("prototyping-playground", () => {
     it("playing w/ unions", () => {
         class CanvasQuery extends Query<CanvasModel> {
             getModel() {
-                return CanvasModel;
+                return [CanvasModel];
             }
         }
 
@@ -39,7 +39,7 @@ xdescribe("prototyping-playground", () => {
             },
         };
 
-        const selection = select(CanvasModel, x => x.author(x => x.name()).shapes(x => x.area().radius().length().canvas().angleA().angleB().angleC()));
+        const selection = select([CanvasModel], x => x.author(x => x.name()).shapes(x => x.area().radius().length().canvas().angleA().angleB().angleC()));
 
         const selectedInstance: Instance.Selected<CanvasModel, typeof selection> = {
             id: 7,
@@ -87,5 +87,53 @@ xdescribe("prototyping-playground", () => {
                 ],
             },
         ];
+    });
+
+    it("union as entry type", () => {
+        type ShapeModels = CircleModel | SquareModel | TriangleModel;
+        type UnionQuery = Query<ShapeModels>;
+        type UnionQueryPayload = Query.Payload<UnionQuery>;
+
+        const payload: UnionQueryPayload = [
+            {
+                type: "triangle",
+                id: 1,
+                angleA: 3,
+            },
+        ];
+
+        class ShapeQuery extends Query<ShapeModels> {
+            getModel() {
+                return [CircleModel, SquareModel, TriangleModel];
+            }
+        }
+
+        type ShapeQueryPayload = Query.Payload<ShapeQuery>;
+
+        const shapeQueryPayload: ShapeQueryPayload = [
+            {
+                type: "triangle",
+                id: 1,
+                angleA: 3,
+            },
+            {
+                type: "square",
+                id: 3,
+                length: 8,
+            },
+        ];
+
+        const selection = select([CircleModel, SquareModel, TriangleModel], x => x.canvas(x => x.shapes(x => x.canvas())));
+
+        // const selectedInstances : Instance.Selected<ShapeModels, typeof selection>[] = [
+        //     {
+        //         canvas: {
+        //             shapes: [{
+        //                 type: "circle",
+
+        //             }]
+        //         }
+        //     }
+        // ];
     });
 });

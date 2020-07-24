@@ -1,4 +1,4 @@
-import { MergeUnion, Class } from "../utils";
+import { MergeUnion, Class, Unbox } from "../utils";
 import { Property, pickProperties } from "../property";
 import { Selection } from "./selection";
 import { mergeSelections } from "./merge-selections";
@@ -31,8 +31,16 @@ type Selector<T, M = {}> = {
     ) => Selector<T, M & Record<K, O extends undefined ? true : {} extends O[typeof Selected] ? true : O[typeof Selected]>>;
 } & { [Selected]: M };
 
-export function select<T, O>(model: Class<T>, pick: (selector: Selector<T>) => Selector<T, O>): O {
-    const properties = pickProperties(new model());
+export function select<T extends Class[], O>(models: T, pick: (selector: Selector<Unbox<Unbox<T>>>) => Selector<Unbox<Unbox<T>>, O>): O {
+    let properties: Record<string, Property> = {};
+
+    for (const model of models) {
+        properties = {
+            ...properties,
+            ...pickProperties(new model()),
+        };
+    }
+
     const selector: Record<string, Function> = {};
     const selected: Record<string, any> = {};
 
@@ -44,7 +52,11 @@ export function select<T, O>(model: Class<T>, pick: (selector: Selector<T>) => S
             }
 
             if (expand !== void 0) {
-                const expandedModel = new properties[key].value();
+                let expandedModel = properties[key].value;
+
+                if (!(expandedModel instanceof Array)) {
+                    expandedModel = [expandedModel];
+                }
 
                 if (selected[key] === true) {
                     selected[key] = {};
@@ -52,6 +64,8 @@ export function select<T, O>(model: Class<T>, pick: (selector: Selector<T>) => S
 
                 selected[key] = mergeSelections(selected[key], select(expandedModel, expand));
             }
+
+            return selector;
         };
     }
 

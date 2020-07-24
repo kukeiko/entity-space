@@ -68,8 +68,12 @@ export class PropertyBuilder<K extends string, V, P extends Property<K, V> = Pro
         return this as any;
     }
 
-    // [todo] wip
-    identifiedBy(property: Property) : PropertyBuilder<K, V, P & { id: Property }> {
+    /**
+     * [todo] wip
+     * [todo] we could instead have an "identifies" method that is used on the id property,
+     * so basically switch 'em around.
+     */
+    identifiedBy(property: Property): PropertyBuilder<K, V, P & { id: Property }> {
         return this as any;
     }
 

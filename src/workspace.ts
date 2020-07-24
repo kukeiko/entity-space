@@ -1,7 +1,7 @@
 import { Observable, merge, of, combineLatest } from "rxjs";
 import { scan, map, mergeMap } from "rxjs/operators";
 import { Class, getInstanceClass } from "./utils";
-import { Query, QueryTranslator, PayloadHydrator, QueryStreamPacket } from "./query";
+import { Query, QueryTranslator, PayloadHydrator, QueryStreamPacket, PayloadHydration } from "./query";
 import { reduceSelection } from "./selection";
 
 export class Workspace {
@@ -31,13 +31,20 @@ export class Workspace {
             return of(packet.payload);
         }
 
-        const hydrator = this._getHydrator(packet.loaded.getModel());
+        let hydrations: PayloadHydration[] = [];
 
-        const hydrations = hydrator.hydrate({
-            loaded: packet.loaded,
-            payload: packet.payload,
-            selection: missing,
-        });
+        for (const model of packet.loaded.getModel()) {
+            const hydrator = this._getHydrator(model);
+
+            hydrations = [
+                ...hydrations,
+                ...hydrator.hydrate({
+                    loaded: packet.loaded,
+                    payload: packet.payload,
+                    selection: missing,
+                }),
+            ];
+        }
 
         if (hydrations.length === 0) {
             return of(packet.payload);

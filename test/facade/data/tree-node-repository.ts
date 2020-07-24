@@ -6,11 +6,15 @@ export class TreeNodeRepository {
     private _data = new Map(generateTreeNodes().map(x => [x.id, x]));
 
     all(): Instance<TreeNodeModel>[] {
-        return Array.from(this._data.values());
+        return this._clone(Array.from(this._data.values()));
     }
 
     get(id: number): Instance<TreeNodeModel> | undefined {
-        return this._data.get(id);
+        const item = this._data.get(id);
+
+        if (item !== void 0) {
+            return this._clone([item])[0];
+        }
     }
 
     getMany(ids: number[]): Instance<TreeNodeModel>[] {
@@ -24,7 +28,7 @@ export class TreeNodeRepository {
             }
         }
 
-        return found;
+        return this._clone(found);
     }
 
     getLevel(id: number): number {
@@ -55,5 +59,9 @@ export class TreeNodeRepository {
         }
 
         return parents;
+    }
+
+    private _clone(items: Instance<TreeNodeModel>[]): Instance<TreeNodeModel>[] {
+        return JSON.parse(JSON.stringify(items));
     }
 }

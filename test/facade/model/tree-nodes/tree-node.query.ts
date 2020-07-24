@@ -1,9 +1,9 @@
 import { Query, Selection } from "src";
 import { TreeNodeModel } from "./tree-node.model";
 
-export class TreeNodeQuery<S extends Selection<TreeNodeModel> = {}> extends Query<TreeNodeModel, S> {
+export class TreeNodeQuery<S extends Selection<TreeNodeModel> = Selection<TreeNodeModel>> extends Query<TreeNodeModel, S> {
     getModel() {
-        return TreeNodeModel;
+        return [TreeNodeModel];
     }
 
     reduce(other: Query<TreeNodeModel>): Query.Reduction<TreeNodeModel> {

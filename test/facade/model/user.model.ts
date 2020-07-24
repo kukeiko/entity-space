@@ -1,7 +1,6 @@
 import { createProperty } from "src";
 
-export class User {
+export class UserModel {
     id = createProperty("id", Number, b => b.loadable());
     name = createProperty("name", String, b => b.loadable().creatable());
-    createdBy = createProperty("createdBy", User, b => b.loadable(["nullable", "optional"]));
 }
