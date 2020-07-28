@@ -1,4 +1,4 @@
-import { ValueCriteria, ValueCriterion, ObjectCriterion } from "../../../src";
+import { ValueCriteria, ValueCriterion, Criterion, reduceCriterion } from "src";
 
 export function expectValueCriteriaReduction(description: string, a: ValueCriteria, b: ValueCriteria, expected: ReturnType<typeof ValueCriteria.reduce> | "no-change"): void {
     try {
@@ -28,9 +28,9 @@ export function expectValueCriterionReduction(description: string, a: ValueCrite
     }
 }
 
-export function expectObjectCriterionReduction(description: string, a: ObjectCriterion, b: ObjectCriterion, expected: ReturnType<typeof ObjectCriterion.reduce> | "no-change"): void {
+export function expectObjectCriterionReduction(description: string, a: Criterion, b: Criterion, expected: ReturnType<typeof reduceCriterion> | "no-change"): void {
     try {
-        let expectation = expect(ObjectCriterion.reduce(a, b)).withContext(description);
+        let expectation = expect(reduceCriterion(a, b)).withContext(description);
 
         if (expected === "no-change") {
             expectation.toBe(b);
