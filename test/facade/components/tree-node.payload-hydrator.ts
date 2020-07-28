@@ -1,4 +1,4 @@
-import { PayloadHydrator, HydratableQueryResult, PayloadHydration, isTypedHydratableQueryResult, TypedInstance, TypedQuery } from "src";
+import { PayloadHydrator, HydratableQueryResult, PayloadHydration, isTypedHydratableQueryResult, TypedInstance, TypedQuery, createAlwaysReducible } from "src";
 import { TreeNodeLevelQuery, TreeNodeParentsQuery, TreeNodeQuery, TreeNodeModel, TreeNodeParentsModel } from "../model";
 
 // [todo] no type safety
@@ -14,7 +14,7 @@ export class TreeNodePayloadHydrator implements PayloadHydrator {
             const nodeIds = hydratable.payload.map(x => x.id);
 
             for (const nodeId of nodeIds) {
-                const query = new TreeNodeLevelQuery({ selection: {}, criteria: [{ nodeId: [{ op: "==", value: nodeId }] }] });
+                const query = new TreeNodeLevelQuery({ selection: {}, criteria: [{ nodeId: [{ op: "==", value: nodeId }] }], options: createAlwaysReducible() });
                 const hydration: PayloadHydration = {
                     load: query,
                     assign: (nodes: TypedInstance<TreeNodeModel>[], levels: TypedInstance<TypedQuery.Model<typeof query>>[]) => {
@@ -39,6 +39,7 @@ export class TreeNodePayloadHydrator implements PayloadHydrator {
                 const query = new TreeNodeParentsQuery({
                     selection: { ...(hydratable.selection.parents === true ? {} : { parents: hydratable.selection.parents }) },
                     criteria: [{ childId: [{ op: "==", value: nodeId }] }],
+                    options: createAlwaysReducible(),
                 });
 
                 const hydration: PayloadHydration = {

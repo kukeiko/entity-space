@@ -1,4 +1,5 @@
 export * from "./component-provider";
+export * from "./create-always-reducible";
 export * from "./hydratable-query-result";
 export * from "./instance";
 export * from "./payload-hydration";

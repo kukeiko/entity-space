@@ -1,5 +1,5 @@
 import { of } from "rxjs";
-import { QueryTranslator, QueryStream, QueryStreamPacket } from "src";
+import { QueryTranslator, QueryStream, QueryStreamPacket, createAlwaysReducible } from "src";
 import { ShapeQuery } from "../model";
 import { ShapeRepository } from "../data";
 
@@ -20,7 +20,7 @@ export class ShapeQueryTranslator implements QueryTranslator {
     }
 
     private _loadAllStream(): QueryStream {
-        const target = new ShapeQuery({ selection: {} });
+        const target = new ShapeQuery({ selection: {}, options: createAlwaysReducible() });
         const loadItems = () => this._repository.all();
 
         return {

@@ -1,5 +1,5 @@
 import { of } from "rxjs";
-import { QueryTranslator, QueryStream, TypedQuery, QueryStreamPacket, TypedCriteria, isTypedQuery } from "src";
+import { QueryTranslator, QueryStream, TypedQuery, QueryStreamPacket, TypedCriteria, isTypedQuery, createAlwaysReducible } from "src";
 import { TreeNodeParentsModel, TreeNodeParentsQuery } from "../model";
 import { TreeNodeRepository } from "../data";
 
@@ -31,7 +31,7 @@ export class TreeNodeParentsQueryTranslator implements QueryTranslator {
     private _byChildIdStream(childId: number): QueryStream {
         const loadItem = () => this._repository.getTreeNodeParents(childId);
         const criteria: TypedCriteria<TreeNodeParentsModel> = [{ childId: [{ op: "==", value: childId }] }];
-        const target = new TreeNodeParentsQuery({ criteria, selection: {} });
+        const target = new TreeNodeParentsQuery({ criteria, selection: {}, options: createAlwaysReducible() });
 
         return {
             target,

@@ -1,5 +1,5 @@
 import { of } from "rxjs";
-import { QueryTranslator, QueryStream, TypedQuery, QueryStreamPacket, TypedCriteria, Query, isTypedQuery } from "src";
+import { QueryTranslator, QueryStream, TypedQuery, QueryStreamPacket, TypedCriteria, Query, isTypedQuery, createAlwaysReducible } from "src";
 import { TreeNodeLevelModel, TreeNodeLevelQuery } from "../model";
 import { TreeNodeRepository } from "../data";
 
@@ -31,7 +31,7 @@ export class TreeNodeLevelQueryTranslator implements QueryTranslator {
     private _byIdStream(id: number): QueryStream {
         const loadItem = () => this._repository.getLevel(id);
         const criteria: TypedCriteria<TreeNodeLevelModel> = [{ nodeId: [{ op: "==", value: id }] }];
-        const target = new TreeNodeLevelQuery({ criteria, selection: {} });
+        const target = new TreeNodeLevelQuery({ criteria, selection: {}, options: createAlwaysReducible() });
 
         return {
             target,

@@ -1,30 +1,27 @@
 import { Class, Unbox } from "../utils";
+import { Reducible, Query } from "../query";
 import { TypedCriteria } from "./typed-criteria";
 import { TypedInstance } from "./typed-instance";
 import { TypedSelection } from "./typed-selection";
 
 type UnpackUnionClass<T> = T extends any ? Class<T> : never;
 
-export abstract class TypedQuery<T = any, S extends TypedSelection<T> = TypedSelection<T>> {
-    constructor(args: TypedQuery.Construct<T, S>) {
+export abstract class TypedQuery<T = any, S extends TypedSelection<T> = TypedSelection<T>, O extends Reducible = Reducible> implements Query {
+    constructor(args: TypedQuery.Construct<T, S, O>) {
         this.criteria = args.criteria ?? [];
         this.selection = args.selection;
+        this.options = args.options;
     }
 
     criteria: TypedCriteria<T>;
     selection: S & TypedSelection<T>;
-
-    options = {
-        reduce() {
-            return null;
-        },
-    };
+    options: O;
 
     abstract model: UnpackUnionClass<T>[];
 }
 
 export module TypedQuery {
-    export type Construct<T, S> = { criteria?: TypedCriteria<T>; selection: S };
+    export type Construct<T, S, O> = { criteria?: TypedCriteria<T>; selection: S; options: O };
     export type Reduction<T> = TypedQuery<T> | TypedQuery<T>[] | null;
     export type Model<Q extends TypedQuery> = InstanceType<Unbox<Q["model"]>>;
 

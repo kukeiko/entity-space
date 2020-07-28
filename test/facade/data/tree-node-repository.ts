@@ -9,8 +9,28 @@ export class TreeNodeRepository {
         return this._clone(Array.from(this._data.values()));
     }
 
-    get(id: number): TypedInstance<TreeNodeModel> | undefined {
+    get(id: number, numMinParents = 0): TypedInstance<TreeNodeModel> | undefined {
         const item = this._data.get(id);
+
+        if (numMinParents > 0) {
+            let parentId = item?.parentId;
+            let numParents = 0;
+
+            while (parentId) {
+                let parent = this.get(parentId);
+
+                if (parent !== void 0) {
+                    numParents++;
+                    parentId = parent.parentId;
+                } else {
+                    break;
+                }
+            }
+
+            if (numParents < numMinParents) {
+                return void 0;
+            }
+        }
 
         if (item !== void 0) {
             return this._clone([item])[0];

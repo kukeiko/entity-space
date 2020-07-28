@@ -1,4 +1,4 @@
-import { PayloadHydrator, HydratableQueryResult, PayloadHydration, TypedInstance, isTypedHydratableQueryResult, Instance } from "src";
+import { PayloadHydrator, HydratableQueryResult, PayloadHydration, TypedInstance, isTypedHydratableQueryResult, Instance, createAlwaysReducible } from "src";
 import { TreeNodeModel, TreeNodeQuery, TreeNodeParentsQuery } from "../model";
 import { TreeNodePayloadHydrator } from "./tree-node.payload-hydrator";
 
@@ -18,7 +18,7 @@ export class TreeNodeParentsHydrator implements PayloadHydrator {
             const forwardedHydratable: HydratableQueryResult = {
                 payload: allParents,
                 selection: hydratable.selection.parents === true ? {} : hydratable.selection.parents,
-                loaded: new TreeNodeQuery({ selection: hydratable.loaded.selection }),
+                loaded: new TreeNodeQuery({ selection: hydratable.loaded.selection, options: new TreeNodeQuery.Options() }),
             };
 
             const treeNodeHydrations = this._treeNodeHydrator.hydrate(forwardedHydratable);
