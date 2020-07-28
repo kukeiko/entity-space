@@ -1,4 +1,4 @@
-import { Instance } from "../instance";
+import { Instance } from "./instance";
 import { Query } from "./query";
 
 export interface PayloadHydration<T = any, U extends Query = Query> {

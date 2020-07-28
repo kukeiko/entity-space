@@ -1,7 +1,7 @@
 import { Class, Unbox } from "../utils";
-import { Criteria } from "../entity-criteria";
+import { Criteria } from "./entity-criteria";
 import { Selection } from "../selection";
-import { Instance } from "../instance";
+import { Instance } from "./instance";
 
 type UnpackUnionClass<T> = T extends any ? Class<T> : never;
 
@@ -15,6 +15,13 @@ export abstract class Query<T = any, S extends Selection<T> = Selection<T>> {
     criteria: Criteria<T>;
     selection: S & Selection<T>;
 
+    options = {
+        reduce() {
+            return null;
+        },
+    };
+
+    abstract model : UnpackUnionClass<T>[];
     // abstract getModel(): Class<T>;
     abstract getModel(): UnpackUnionClass<T>[];
 

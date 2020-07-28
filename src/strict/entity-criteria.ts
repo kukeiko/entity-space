@@ -1,6 +1,6 @@
-import { Primitive, Unbox, MergeUnion } from "./utils";
-import { Property, Attribute } from "./property";
-import { ValuesCriterion, ValueCriterion } from "./criteria";
+import { Primitive, Unbox, MergeUnion } from "../utils";
+import { Property, Attribute } from "../property";
+import { ValuesCriterion, ValueCriterion } from "../criteria";
 
 type Criterion<T> = {
     // [K in Property.Keys<T, Attribute.IsFilterable>]?: T[K] extends Property & { value: Primitive } & Attribute.IsIterable

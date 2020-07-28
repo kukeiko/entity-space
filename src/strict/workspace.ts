@@ -1,8 +1,8 @@
 import { Observable, merge, of, combineLatest } from "rxjs";
 import { scan, map, mergeMap } from "rxjs/operators";
-import { Class, getInstanceClass } from "./utils";
-import { Query, QueryTranslator, PayloadHydrator, QueryStreamPacket, PayloadHydration } from "./query";
-import { reduceSelection } from "./selection";
+import { Class, getInstanceClass } from "../utils";
+import { Query, QueryTranslator, PayloadHydrator, QueryStreamPacket, PayloadHydration } from ".";
+import { reduceSelection } from "../selection";
 
 export class Workspace {
     private readonly _translators = new Map<Class<Query>, QueryTranslator>();
