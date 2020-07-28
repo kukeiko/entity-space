@@ -1,5 +1,5 @@
 import { of } from "rxjs";
-import { QueryTranslator, QueryStream, TypedQuery, QueryStreamPacket, TypedCriteria, Query } from "src";
+import { QueryTranslator, QueryStream, TypedQuery, QueryStreamPacket, TypedCriteria, Query, isTypedQuery } from "src";
 import { TreeNodeLevelModel, TreeNodeLevelQuery } from "../model";
 import { TreeNodeRepository } from "../data";
 
@@ -7,7 +7,7 @@ export class TreeNodeLevelQueryTranslator implements QueryTranslator {
     constructor(private readonly _repository: TreeNodeRepository) {}
 
     translate(query: Query): QueryStream[] {
-        if (!TypedQuery.is(query, TreeNodeLevelQuery)) {
+        if (!isTypedQuery(query, TreeNodeLevelQuery)) {
             throw new Error(`query to translate not of expected type`);
         }
 

@@ -29,7 +29,7 @@ export abstract class TypedQuery<T = any, S extends TypedSelection<T> = TypedSel
     //     return this as any;
     // }
 
-    // where(criteria: ObjectCriteria<T>): this {
+    // where(criteria: Criteria<T>): this {
     //     return this;
     // }
 
@@ -40,10 +40,6 @@ export abstract class TypedQuery<T = any, S extends TypedSelection<T> = TypedSel
 }
 
 export module TypedQuery {
-    export function is<T>(query: any, type: Class<T>): query is T {
-        return true;
-    }
-
     export type Construct<T, S> = { criteria?: TypedCriteria<T>; selection: S };
     export type Reduction<T> = TypedQuery<T> | TypedQuery<T>[] | null;
     export type Model<Q extends TypedQuery> = InstanceType<Unbox<ReturnType<Q["getModel"]>>>;

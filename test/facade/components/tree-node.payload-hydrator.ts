@@ -1,9 +1,13 @@
-import { PayloadHydrator, HydratableQueryResult, TypedQuery, PayloadHydration } from "src";
-import { TreeNodeModel, TreeNodeLevelQuery, TreeNodeParentsQuery } from "../model";
+import { PayloadHydrator, HydratableQueryResult, PayloadHydration, isTypedHydratableQueryResult, TypedInstance, TypedQuery } from "src";
+import { TreeNodeLevelQuery, TreeNodeParentsQuery, TreeNodeQuery, TreeNodeModel, TreeNodeParentsModel } from "../model";
 
 // [todo] no type safety
 export class TreeNodePayloadHydrator implements PayloadHydrator {
     hydrate(hydratable: HydratableQueryResult): PayloadHydration[] {
+        if (!isTypedHydratableQueryResult(hydratable, TreeNodeQuery)) {
+            throw new Error(`hydratable not of expected type`);
+        }
+
         const hydrations: PayloadHydration[] = [];
 
         if (hydratable.selection.level) {
@@ -13,7 +17,7 @@ export class TreeNodePayloadHydrator implements PayloadHydrator {
                 const query = new TreeNodeLevelQuery({ selection: {}, criteria: [{ nodeId: [{ op: "==", value: nodeId }] }] });
                 const hydration: PayloadHydration = {
                     load: query,
-                    assign: (nodes, levels) => {
+                    assign: (nodes: TypedInstance<TreeNodeModel>[], levels: TypedInstance<TypedQuery.Model<typeof query>>[]) => {
                         for (const level of levels) {
                             const node = nodes.find(x => x.id === level.nodeId);
 
@@ -39,7 +43,7 @@ export class TreeNodePayloadHydrator implements PayloadHydrator {
 
                 const hydration: PayloadHydration = {
                     load: query,
-                    assign: (nodes, allParents) => {
+                    assign: (nodes: TypedInstance<TreeNodeModel>[], allParents: TypedInstance<TypedQuery.Model<typeof query>>[]) => {
                         for (const parents of allParents) {
                             const node = nodes.find(x => x.id === parents.childId);
 

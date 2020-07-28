@@ -1,16 +1,19 @@
-import { PayloadHydrator, HydratableQueryResult, TypedQuery, PayloadHydration, TypedInstance } from "src";
-import { TreeNodeParentsModel, TreeNodeModel, TreeNodeQuery } from "../model";
+import { PayloadHydrator, HydratableQueryResult, PayloadHydration, TypedInstance, isTypedHydratableQueryResult, Instance } from "src";
+import { TreeNodeModel, TreeNodeQuery, TreeNodeParentsQuery } from "../model";
 import { TreeNodePayloadHydrator } from "./tree-node.payload-hydrator";
 
 export class TreeNodeParentsHydrator implements PayloadHydrator {
     constructor(private readonly _treeNodeHydrator: TreeNodePayloadHydrator) {}
 
     hydrate(hydratable: HydratableQueryResult): PayloadHydration[] {
+        if (!isTypedHydratableQueryResult(hydratable, TreeNodeParentsQuery)) {
+            throw new Error(`hydratable not of expected type`);
+        }
+
         const hydrations: PayloadHydration[] = [];
 
-        // [todo] no type safety and we're using cumbersome casts
         if (hydratable.selection.parents !== void 0) {
-            const allParents = hydratable.payload.reduce((acc: TypedInstance<TreeNodeModel>[], value) => [...acc, ...value.parents], [] as TypedInstance<TreeNodeModel>[]);
+            const allParents = hydratable.payload.reduce((acc, value) => [...acc, ...value.parents], [] as TypedInstance<TreeNodeModel>[]);
 
             const forwardedHydratable: HydratableQueryResult = {
                 payload: allParents,
@@ -23,7 +26,7 @@ export class TreeNodeParentsHydrator implements PayloadHydrator {
             const forwardedHydrations = treeNodeHydrations.map(x => {
                 return {
                     load: x.load,
-                    assign: (items: TypedInstance<TreeNodeModel>[], loaded: any[]) => x.assign(this._flattenParents(items), loaded),
+                    assign: (items: TypedInstance<TreeNodeModel>[], loaded: Instance[]) => x.assign(this._flattenParents(items), loaded),
                 };
             });
 

@@ -1,6 +1,6 @@
 import { finalize } from "rxjs/operators";
-import { TypedCriteria, Workspace, ComponentProvider, Class, Query } from "src";
-import { TreeNodeQuery, TreeNodeLevelQuery, TreeNodeParentsQuery, TreeNodeModel, ShapeQuery, TreeNodeParentsModel, TreeNodeLevelModel } from "../facade/model";
+import { TypedCriteria, Workspace, ComponentProvider, Class, Query, TypedInstance } from "src";
+import { TreeNodeQuery, TreeNodeLevelQuery, TreeNodeParentsQuery, TreeNodeModel, ShapeQuery, TreeNodeParentsModel } from "../facade/model";
 import {
     TreeNodePayloadHydrator,
     TreeNodeQueryTranslator,
@@ -17,9 +17,9 @@ describe("core-loading-mechanism", () => {
 
         const provider: ComponentProvider = {
             getHydrator(model: Class) {
-                if (model instanceof TreeNodeModel) {
+                if (model === TreeNodeModel) {
                     return new TreeNodePayloadHydrator();
-                } else if (model instanceof TreeNodeParentsModel) {
+                } else if (model === TreeNodeParentsModel) {
                     return new TreeNodeParentsHydrator(new TreeNodePayloadHydrator());
                 }
 
@@ -34,7 +34,7 @@ describe("core-loading-mechanism", () => {
                     return new TreeNodeLevelQueryTranslator(repository);
                 }
 
-                throw new Error(`no hydrator for query models ${query.model.map(m => m.name).join(", ")} found`);
+                throw new Error(`no translator for query models ${query.model.map(m => m.name).join(", ")} found`);
             },
         };
 
@@ -53,16 +53,17 @@ describe("core-loading-mechanism", () => {
         ];
 
         // const selection = select([TreeNodeModel], x => x.parents(x => x.level().parents(x => x.metadata())));
-        const selection = {};
+        const selection = { parents: true as true };
         const query = new TreeNodeQuery({ criteria, selection });
 
         workspace
-            .load$(query)
+            .load$<TypedInstance.Selected<TreeNodeModel, typeof query["selection"]>>(query)
             .pipe(finalize(done))
             .subscribe(
                 treeNodes => {
                     // [todo] instances are untyped
                     console.log(treeNodes);
+                    const parents = treeNodes[0].parents;
                 },
                 error => fail(error)
             );
