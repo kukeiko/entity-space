@@ -3,7 +3,7 @@ import { Property, Attribute, Context } from "../property";
 
 type BoxPropertyValue<P, V> = P extends Attribute.IsIterable ? V[] : V;
 
-type UnionInstance<U, CTX extends Context = "loadable", IS = Property, ISNOT = never, EXP = {}> = U extends any ? Instance<U, CTX, IS, ISNOT, EXP> : never;
+type UnionInstance<U, CTX extends Context = "loadable", IS = Property, ISNOT = never, EXP = {}> = U extends any ? TypedInstance<U, CTX, IS, ISNOT, EXP> : never;
 
 type InstancedValueOfProperty<P, CTX extends Context, IS, ISNOT, EXP = {}> = P extends Property
     ? P["value"] extends Primitive
@@ -14,7 +14,7 @@ type InstancedValueOfProperty<P, CTX extends Context, IS, ISNOT, EXP = {}> = P e
         ? P["value"]
         : any[] extends P["value"] // unions of other entities
         ? BoxPropertyValue<P, UnionInstance<Unbox<Unbox<P["value"]>>, CTX, IS, ISNOT, EXP>>
-        : BoxPropertyValue<P, Instance<Unbox<P["value"]>, CTX, IS, ISNOT, EXP>> // entity
+        : BoxPropertyValue<P, TypedInstance<Unbox<P["value"]>, CTX, IS, ISNOT, EXP>> // entity
     : never;
 
 // type WidenedInstancedValueOfProperty<P, CTX extends Context, EXP = {}> = Context.WidenValue<P, CTX, InstancedValueOfProperty<P, CTX, Property, never, EXP>>;
@@ -45,14 +45,14 @@ type InstanceCore<T, CTX extends Context = "loadable", IS = Property, ISNOT = ne
     InstancedOptionalProperties<T, CTX, IS, ISNOT, EXP> &
     InstancedExpandedProperties<T, CTX, IS, ISNOT, EXP>;
 
-export type Instance<T, CTX extends Context = "loadable", IS = Property, ISNOT = never, EXP = {}> = T extends any ? InstanceCore<T, CTX, IS, ISNOT, EXP> : never;
+export type TypedInstance<T, CTX extends Context = "loadable", IS = Property, ISNOT = never, EXP = {}> = T extends any ? InstanceCore<T, CTX, IS, ISNOT, EXP> : never;
 //  InstancedRequiredProperties<T, CTX, IS, ISNOT, EXP> &
 //     InstancedOptionalProperties<T, CTX, IS, ISNOT, EXP> &
-    // InstancedExpandedProperties<T, CTX, IS, ISNOT, EXP>;
+// InstancedExpandedProperties<T, CTX, IS, ISNOT, EXP>;
 
-type UnpackUnionInstance<T, CTX extends Context, IS, ISNOT, S> = T extends any ? Instance<T, CTX, IS, ISNOT, S> : never;
+type UnpackUnionInstance<T, CTX extends Context, IS, ISNOT, S> = T extends any ? TypedInstance<T, CTX, IS, ISNOT, S> : never;
 
-export module Instance {
+export module TypedInstance {
     // export type Selected<T, S, CTX extends Context = "loadable", IS = Property, ISNOT = never> = Instance<T, CTX, IS, ISNOT, S>;
     export type Selected<T, S, CTX extends Context = "loadable", IS = Property, ISNOT = never> = UnpackUnionInstance<T, CTX, IS, ISNOT, S>;
 }

@@ -1,13 +1,13 @@
 import { of } from "rxjs";
-import { QueryTranslator, QueryStream, Query, QueryStreamPacket, Criteria } from "src";
+import { QueryTranslator, QueryStream, TypedQuery, QueryStreamPacket, TypedCriteria } from "src";
 import { TreeNodeModel, TreeNodeQuery } from "../model";
 import { TreeNodeRepository } from "../data";
 
-export class TreeNodeQueryTranslator implements QueryTranslator<TreeNodeQuery> {
+export class TreeNodeQueryTranslator implements QueryTranslator {
     constructor(private readonly _repository: TreeNodeRepository) {}
 
-    translate(query: TreeNodeQuery): QueryStream<TreeNodeQuery>[] {
-        const streams: QueryStream<TreeNodeQuery>[] = [];
+    translate(query: TreeNodeQuery): QueryStream[] {
+        const streams: QueryStream[] = [];
 
         if (query.criteria !== void 0) {
             for (const criteria of query.criteria) {
@@ -24,18 +24,18 @@ export class TreeNodeQueryTranslator implements QueryTranslator<TreeNodeQuery> {
         return streams;
     }
 
-    private _byIdStream(id: number): QueryStream<TreeNodeQuery> {
+    private _byIdStream(id: number): QueryStream {
         const loadItem = () => this._repository.get(id);
-        const criteria: Criteria<TreeNodeModel> = [{ id: [{ op: "==", value: id }] }];
+        const criteria: TypedCriteria<TreeNodeModel> = [{ id: [{ op: "==", value: id }] }];
         const target = new TreeNodeQuery({ criteria, selection: {} });
 
         return {
             target,
             open$() {
                 const item = loadItem();
-                const payload: Query.Payload<TreeNodeQuery> = [];
+                const payload: TypedQuery.Payload<TreeNodeQuery> = [];
 
-                const packet: QueryStreamPacket<TreeNodeQuery> = {
+                const packet: QueryStreamPacket = {
                     loaded: target,
                     payload,
                     failed: [],

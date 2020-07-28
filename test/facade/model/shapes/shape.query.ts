@@ -1,8 +1,10 @@
-import { Selection, Query } from "src";
+import { TypedQuery, TypedSelection } from "src";
 import { Shape, allShapeModels } from "./shape.model";
 
-export class ShapeQuery<S extends Selection<Shape> = Selection<Shape>> extends Query<Shape, S> {
+export class ShapeQuery<S extends TypedSelection<Shape> = TypedSelection<Shape>> extends TypedQuery<Shape, S> {
     getModel() {
         return allShapeModels;
     }
+
+    model = allShapeModels;
 }

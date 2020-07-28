@@ -18,4 +18,4 @@ type Criterion<T> = {
  * current idea is to have the generic criteria stuff as a separate package, so we'd import from "@entity-space/criteria",
  * or even move it to a completely unrelated repository
  */
-export type Criteria<T> = Criterion<MergeUnion<T>>[];
+export type TypedCriteria<T> = Criterion<MergeUnion<T>>[];

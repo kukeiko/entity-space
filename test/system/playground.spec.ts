@@ -1,24 +1,48 @@
-import { Query, createProperty, Instance, select, Selection, Criteria } from "src";
+import { TypedQuery, TypedInstance, TypedSelection, TypedCriteria, Property, Instance } from "src";
 import { TreeNodeModel, CanvasModel, CircleModel, SquareModel, TriangleModel } from "../facade/model";
 
 xdescribe("prototyping-playground", () => {
-    const treeNodeCreatable: Instance<TreeNodeModel, "creatable"> = {
+    const treeNodeCreatable: TypedInstance<TreeNodeModel, "creatable"> = {
         name: "foo",
         parentId: 3,
     };
 
-    const treeNodePatch: Instance<TreeNodeModel, "patchable"> = {
+    const treeNodePatch: TypedInstance<TreeNodeModel, "patchable"> = {
         name: "foo",
     };
 
-    it("playing w/ unions", () => {
-        class CanvasQuery extends Query<CanvasModel> {
-            getModel() {
-                return [CanvasModel];
+    it("redo select() for moar performance", () => {
+        class Selector<T, M = {}> {
+            select<O extends Property>(pick: (model: T) => O): Selector<T, M & Record<O["key"], true>>;
+            select<O extends Property, E>(pick: (model: T) => O, expand: (selector: Selector<Property.UnboxedValue<O>>) => E): Selector<T, M & Record<O["key"], true>>;
+            select(...args: any[]): any {
+                return this;
+            }
+
+            get(): M {
+                return {} as any;
             }
         }
 
-        type CanvasQueryDefaultPayload = Query.Payload<CanvasQuery>;
+        const selector = new Selector<TreeNodeModel>();
+
+        selector.select(x => x.children);
+        selector.select(
+            x => x.metadata,
+            x => x.select(x => x.createdAt)
+        );
+    });
+
+    it("playing w/ unions", () => {
+        class CanvasQuery extends TypedQuery<CanvasModel> {
+            getModel() {
+                return [CanvasModel];
+            }
+
+            model = [CanvasModel];
+        }
+
+        type CanvasQueryDefaultPayload = TypedQuery.Payload<CanvasQuery>;
 
         const defaultPayload: CanvasQueryDefaultPayload = [
             {
@@ -28,7 +52,7 @@ xdescribe("prototyping-playground", () => {
             },
         ];
 
-        const canvasSelection: Selection<CanvasModel> = {
+        const canvasSelection: TypedSelection<CanvasModel> = {
             author: true,
             shapes: {
                 canvas: true,
@@ -39,25 +63,25 @@ xdescribe("prototyping-playground", () => {
             },
         };
 
-        const selection = select([CanvasModel], x => x.author(x => x.name()).shapes(x => x.area().radius().length().canvas().angleA().angleB().angleC()));
+        // const selection = select([CanvasModel], x => x.author(x => x.name()).shapes(x => x.area().radius().length().canvas().angleA().angleB().angleC()));
 
-        const selectedInstance: Instance.Selected<CanvasModel, typeof selection> = {
-            id: 7,
-            author: {
-                id: 3,
-                name: "susi",
-            },
-            name: "malwand",
-            shapes: [
-                { id: 8, type: "square", area: 3, length: 2, canvas: { id: 7, name: "malwand" } },
-                { id: 19, type: "circle", area: 9, radius: 123, canvas: { id: 7, name: "malwand" } },
-                { id: 21, type: "triangle", area: 13, angleA: 1, angleB: 2, angleC: 3, canvas: { id: 7, name: "malwand" } },
-            ],
-        };
+        // const selectedInstance: Instance.Selected<CanvasModel, typeof selection> = {
+        //     id: 7,
+        //     author: {
+        //         id: 3,
+        //         name: "susi",
+        //     },
+        //     name: "malwand",
+        //     shapes: [
+        //         { id: 8, type: "square", area: 3, length: 2, canvas: { id: 7, name: "malwand" } },
+        //         { id: 19, type: "circle", area: 9, radius: 123, canvas: { id: 7, name: "malwand" } },
+        //         { id: 21, type: "triangle", area: 13, angleA: 1, angleB: 2, angleC: 3, canvas: { id: 7, name: "malwand" } }
+        //     ],
+        // };
     });
 
     it("union criteria", () => {
-        const canvasCriteria: Criteria<CanvasModel> = [
+        const canvasCriteria: TypedCriteria<CanvasModel> = [
             {
                 shapes: [
                     {
@@ -91,8 +115,8 @@ xdescribe("prototyping-playground", () => {
 
     it("union as entry type", () => {
         type ShapeModels = CircleModel | SquareModel | TriangleModel;
-        type UnionQuery = Query<ShapeModels>;
-        type UnionQueryPayload = Query.Payload<UnionQuery>;
+        type UnionQuery = TypedQuery<ShapeModels>;
+        type UnionQueryPayload = TypedQuery.Payload<UnionQuery>;
 
         const payload: UnionQueryPayload = [
             {
@@ -102,13 +126,15 @@ xdescribe("prototyping-playground", () => {
             },
         ];
 
-        class ShapeQuery extends Query<ShapeModels> {
+        class ShapeQuery extends TypedQuery<ShapeModels> {
             getModel() {
                 return [CircleModel, SquareModel, TriangleModel];
             }
+
+            model = [CircleModel, SquareModel, TriangleModel];
         }
 
-        type ShapeQueryPayload = Query.Payload<ShapeQuery>;
+        type ShapeQueryPayload = TypedQuery.Payload<ShapeQuery>;
 
         const shapeQueryPayload: ShapeQueryPayload = [
             {
@@ -123,7 +149,7 @@ xdescribe("prototyping-playground", () => {
             },
         ];
 
-        const selection = select([CircleModel, SquareModel, TriangleModel], x => x.canvas(x => x.shapes(x => x.canvas())));
+        // const selection = select([CircleModel, SquareModel, TriangleModel], x => x.canvas(x => x.shapes(x => x.canvas())));
 
         // const selectedInstances : Instance.Selected<ShapeModels, typeof selection>[] = [
         //     {

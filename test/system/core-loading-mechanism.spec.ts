@@ -1,6 +1,6 @@
 import { finalize } from "rxjs/operators";
-import { Workspace, Criteria, select } from "src";
-import { TreeNodeQuery, TreeNodeLevelQuery, TreeNodeParentsQuery, TreeNodeModel, ShapeQuery, TreeNodeParentsModel } from "../facade/model";
+import { TypedCriteria, Workspace, ComponentProvider, Class, Query } from "src";
+import { TreeNodeQuery, TreeNodeLevelQuery, TreeNodeParentsQuery, TreeNodeModel, ShapeQuery, TreeNodeParentsModel, TreeNodeLevelModel } from "../facade/model";
 import {
     TreeNodePayloadHydrator,
     TreeNodeQueryTranslator,
@@ -13,15 +13,32 @@ import { TreeNodeRepository, ShapeRepository } from "../facade/data";
 
 describe("core-loading-mechanism", () => {
     it("loading some data", done => {
-        const workspace = new Workspace();
         const repository = new TreeNodeRepository();
-        const treeNodeHydrator = new TreeNodePayloadHydrator();
 
-        workspace.setTranslator(TreeNodeQuery, new TreeNodeQueryTranslator(repository));
-        workspace.setTranslator(TreeNodeLevelQuery, new TreeNodeLevelQueryTranslator(repository));
-        workspace.setTranslator(TreeNodeParentsQuery, new TreeNodeParentsQueryTranslator(repository));
-        workspace.setHydrator(TreeNodeModel, treeNodeHydrator);
-        workspace.setHydrator(TreeNodeParentsModel, new TreeNodeParentsHydrator(treeNodeHydrator));
+        const provider: ComponentProvider = {
+            getHydrator(model: Class) {
+                if (model instanceof TreeNodeModel) {
+                    return new TreeNodePayloadHydrator();
+                } else if (model instanceof TreeNodeParentsModel) {
+                    return new TreeNodeParentsHydrator(new TreeNodePayloadHydrator());
+                }
+
+                throw new Error(`no hydrator for class ${model.name} found`);
+            },
+            getTranslator(query: Query) {
+                if (query instanceof TreeNodeQuery) {
+                    return new TreeNodeQueryTranslator(repository);
+                } else if (query instanceof TreeNodeParentsQuery) {
+                    return new TreeNodeParentsQueryTranslator(repository);
+                } else if (query instanceof TreeNodeLevelQuery) {
+                    return new TreeNodeLevelQueryTranslator(repository);
+                }
+
+                throw new Error(`no hydrator for query models ${query.model.map(m => m.name).join(", ")} found`);
+            },
+        };
+
+        const workspace = new Workspace(provider);
 
         const someIds = repository
             .all()
@@ -29,13 +46,14 @@ describe("core-loading-mechanism", () => {
             .slice(0, 7)
             .map(x => x.id);
 
-        const criteria: Criteria<TreeNodeModel> = [
+        const criteria: TypedCriteria<TreeNodeModel> = [
             {
                 id: someIds.map(id => ({ op: "==", value: id })),
             },
         ];
 
-        const selection = select([TreeNodeModel], x => x.parents(x => x.level().parents(x => x.level())));
+        // const selection = select([TreeNodeModel], x => x.parents(x => x.level().parents(x => x.metadata())));
+        const selection = {};
         const query = new TreeNodeQuery({ criteria, selection });
 
         workspace
@@ -43,6 +61,7 @@ describe("core-loading-mechanism", () => {
             .pipe(finalize(done))
             .subscribe(
                 treeNodes => {
+                    // [todo] instances are untyped
                     console.log(treeNodes);
                 },
                 error => fail(error)
@@ -50,10 +69,22 @@ describe("core-loading-mechanism", () => {
     });
 
     it("loading some union data", done => {
-        const workspace = new Workspace();
         const repository = new ShapeRepository();
 
-        workspace.setTranslator(ShapeQuery, new ShapeQueryTranslator(repository));
+        const provider: ComponentProvider = {
+            getHydrator(model: Class) {
+                throw new Error(`no hydrator for class ${model.name} found`);
+            },
+            getTranslator(query: Query) {
+                if (query instanceof ShapeQuery) {
+                    return new ShapeQueryTranslator(repository);
+                }
+
+                throw new Error(`no hydrator for query models ${query.model.map(m => m.name).join(", ")} found`);
+            },
+        };
+
+        const workspace = new Workspace(provider);
         const query = new ShapeQuery({ selection: {} });
 
         workspace
@@ -61,6 +92,7 @@ describe("core-loading-mechanism", () => {
             .pipe(finalize(done))
             .subscribe(
                 shapes => {
+                    // [todo] instances are untyped
                     console.log("shapes:", shapes);
 
                     for (const shape of shapes) {

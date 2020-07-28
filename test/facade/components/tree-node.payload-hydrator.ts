@@ -1,16 +1,17 @@
-import { PayloadHydrator, HydratableQueryResult, Query, PayloadHydration } from "src";
+import { PayloadHydrator, HydratableQueryResult, TypedQuery, PayloadHydration } from "src";
 import { TreeNodeModel, TreeNodeLevelQuery, TreeNodeParentsQuery } from "../model";
 
-export class TreeNodePayloadHydrator implements PayloadHydrator<TreeNodeModel> {
-    hydrate(hydratable: HydratableQueryResult<TreeNodeModel>): PayloadHydration<TreeNodeModel, Query>[] {
-        const hydrations: PayloadHydration<TreeNodeModel, Query>[] = [];
+// [todo] no type safety
+export class TreeNodePayloadHydrator implements PayloadHydrator {
+    hydrate(hydratable: HydratableQueryResult): PayloadHydration[] {
+        const hydrations: PayloadHydration[] = [];
 
         if (hydratable.selection.level) {
             const nodeIds = hydratable.payload.map(x => x.id);
 
             for (const nodeId of nodeIds) {
                 const query = new TreeNodeLevelQuery({ selection: {}, criteria: [{ nodeId: [{ op: "==", value: nodeId }] }] });
-                const hydration: PayloadHydration<TreeNodeModel, typeof query> = {
+                const hydration: PayloadHydration = {
                     load: query,
                     assign: (nodes, levels) => {
                         for (const level of levels) {
@@ -36,7 +37,7 @@ export class TreeNodePayloadHydrator implements PayloadHydrator<TreeNodeModel> {
                     criteria: [{ childId: [{ op: "==", value: nodeId }] }],
                 });
 
-                const hydration: PayloadHydration<TreeNodeModel, typeof query> = {
+                const hydration: PayloadHydration = {
                     load: query,
                     assign: (nodes, allParents) => {
                         for (const parents of allParents) {

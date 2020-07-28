@@ -3,11 +3,11 @@ import { QueryTranslator, QueryStream, QueryStreamPacket } from "src";
 import { ShapeQuery } from "../model";
 import { ShapeRepository } from "../data";
 
-export class ShapeQueryTranslator implements QueryTranslator<ShapeQuery> {
+export class ShapeQueryTranslator implements QueryTranslator {
     constructor(private readonly _repository: ShapeRepository) {}
 
-    translate(query: ShapeQuery): QueryStream<ShapeQuery>[] {
-        const streams: QueryStream<ShapeQuery>[] = [];
+    translate(query: ShapeQuery): QueryStream[] {
+        const streams: QueryStream[] = [];
 
         if (query.criteria.length === 0) {
             return [this._loadAllStream()];
@@ -19,7 +19,7 @@ export class ShapeQueryTranslator implements QueryTranslator<ShapeQuery> {
         return streams;
     }
 
-    private _loadAllStream(): QueryStream<ShapeQuery> {
+    private _loadAllStream(): QueryStream {
         const target = new ShapeQuery({ selection: {} });
         const loadItems = () => this._repository.all();
 
@@ -28,7 +28,7 @@ export class ShapeQueryTranslator implements QueryTranslator<ShapeQuery> {
             open$() {
                 const items = loadItems();
 
-                const packet: QueryStreamPacket<ShapeQuery> = {
+                const packet: QueryStreamPacket = {
                     loaded: target,
                     payload: items,
                     failed: [],

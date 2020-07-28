@@ -1,15 +1,15 @@
-import { Instance } from "src";
+import { TypedInstance } from "src";
 import { TreeNodeModel } from "../model";
 import { generateTreeNodes } from "./generate-tree-nodes";
 
 export class TreeNodeRepository {
     private _data = new Map(generateTreeNodes().map(x => [x.id, x]));
 
-    all(): Instance<TreeNodeModel>[] {
+    all(): TypedInstance<TreeNodeModel>[] {
         return this._clone(Array.from(this._data.values()));
     }
 
-    get(id: number): Instance<TreeNodeModel> | undefined {
+    get(id: number): TypedInstance<TreeNodeModel> | undefined {
         const item = this._data.get(id);
 
         if (item !== void 0) {
@@ -17,8 +17,8 @@ export class TreeNodeRepository {
         }
     }
 
-    getMany(ids: number[]): Instance<TreeNodeModel>[] {
-        const found: Instance<TreeNodeModel>[] = [];
+    getMany(ids: number[]): TypedInstance<TreeNodeModel>[] {
+        const found: TypedInstance<TreeNodeModel>[] = [];
 
         for (let i = 0; i < ids.length; ++i) {
             const treeNode = this._data.get(ids[i]);
@@ -43,16 +43,16 @@ export class TreeNodeRepository {
         return level;
     }
 
-    getTreeNodeParents(childId: number): Instance<TreeNodeModel>[] {
+    getTreeNodeParents(childId: number): TypedInstance<TreeNodeModel>[] {
         const child = this.get(childId);
 
         if (child === void 0) {
             return [];
         }
 
-        const parents: Instance<TreeNodeModel>[] = [];
+        const parents: TypedInstance<TreeNodeModel>[] = [];
 
-        let node: Instance<TreeNodeModel> | undefined = child;
+        let node: TypedInstance<TreeNodeModel> | undefined = child;
 
         while (node.parentId !== null && (node = this.get(node.parentId)) !== void 0) {
             parents.push(node);
@@ -61,7 +61,7 @@ export class TreeNodeRepository {
         return parents;
     }
 
-    private _clone(items: Instance<TreeNodeModel>[]): Instance<TreeNodeModel>[] {
+    private _clone(items: TypedInstance<TreeNodeModel>[]): TypedInstance<TreeNodeModel>[] {
         return JSON.parse(JSON.stringify(items));
     }
 }

@@ -1,13 +1,17 @@
 import { of } from "rxjs";
-import { QueryTranslator, QueryStream, Query, QueryStreamPacket, Criteria } from "src";
+import { QueryTranslator, QueryStream, TypedQuery, QueryStreamPacket, TypedCriteria, Query } from "src";
 import { TreeNodeLevelModel, TreeNodeLevelQuery } from "../model";
 import { TreeNodeRepository } from "../data";
 
-export class TreeNodeLevelQueryTranslator implements QueryTranslator<TreeNodeLevelQuery> {
+export class TreeNodeLevelQueryTranslator implements QueryTranslator {
     constructor(private readonly _repository: TreeNodeRepository) {}
 
-    translate(query: TreeNodeLevelQuery): QueryStream<TreeNodeLevelQuery>[] {
-        const streams: QueryStream<TreeNodeLevelQuery>[] = [];
+    translate(query: Query): QueryStream[] {
+        if (!TypedQuery.is(query, TreeNodeLevelQuery)) {
+            throw new Error(`query to translate not of expected type`);
+        }
+
+        const streams: QueryStream[] = [];
 
         if (query.criteria !== void 0) {
             for (const criteria of query.criteria) {
@@ -24,18 +28,18 @@ export class TreeNodeLevelQueryTranslator implements QueryTranslator<TreeNodeLev
         return streams;
     }
 
-    private _byIdStream(id: number): QueryStream<TreeNodeLevelQuery> {
+    private _byIdStream(id: number): QueryStream {
         const loadItem = () => this._repository.getLevel(id);
-        const criteria: Criteria<TreeNodeLevelModel> = [{ nodeId: [{ op: "==", value: id }] }];
+        const criteria: TypedCriteria<TreeNodeLevelModel> = [{ nodeId: [{ op: "==", value: id }] }];
         const target = new TreeNodeLevelQuery({ criteria, selection: {} });
 
         return {
             target,
             open$() {
                 const item = loadItem();
-                const payload: Query.Payload<TreeNodeLevelQuery> = [];
+                const payload: TypedQuery.Payload<TreeNodeLevelQuery> = [];
 
-                const packet: QueryStreamPacket<TreeNodeLevelQuery> = {
+                const packet: QueryStreamPacket = {
                     loaded: target,
                     payload,
                     failed: [],

@@ -1,13 +1,17 @@
 import { of } from "rxjs";
-import { QueryTranslator, QueryStream, Query, QueryStreamPacket, Criteria } from "src";
+import { QueryTranslator, QueryStream, TypedQuery, QueryStreamPacket, TypedCriteria } from "src";
 import { TreeNodeParentsModel, TreeNodeParentsQuery } from "../model";
 import { TreeNodeRepository } from "../data";
 
-export class TreeNodeParentsQueryTranslator implements QueryTranslator<TreeNodeParentsQuery> {
+export class TreeNodeParentsQueryTranslator implements QueryTranslator {
     constructor(private readonly _repository: TreeNodeRepository) {}
 
-    translate(query: TreeNodeParentsQuery): QueryStream<TreeNodeParentsQuery>[] {
-        const streams: QueryStream<TreeNodeParentsQuery>[] = [];
+    translate(query: TreeNodeParentsQuery): QueryStream[] {
+        if (!TypedQuery.is(query, TreeNodeParentsQuery)) {
+            throw new Error(`query to translate not of expected type`);
+        }
+
+        const streams: QueryStream[] = [];
 
         if (query.criteria !== void 0) {
             for (const criteria of query.criteria) {
@@ -24,18 +28,18 @@ export class TreeNodeParentsQueryTranslator implements QueryTranslator<TreeNodeP
         return streams;
     }
 
-    private _byChildIdStream(childId: number): QueryStream<TreeNodeParentsQuery> {
+    private _byChildIdStream(childId: number): QueryStream {
         const loadItem = () => this._repository.getTreeNodeParents(childId);
-        const criteria: Criteria<TreeNodeParentsModel> = [{ childId: [{ op: "==", value: childId }] }];
+        const criteria: TypedCriteria<TreeNodeParentsModel> = [{ childId: [{ op: "==", value: childId }] }];
         const target = new TreeNodeParentsQuery({ criteria, selection: {} });
 
         return {
             target,
             open$() {
                 const parents = loadItem();
-                const payload: Query.Payload<TreeNodeParentsQuery> = [];
+                const payload: TypedQuery.Payload<TreeNodeParentsQuery> = [];
 
-                const packet: QueryStreamPacket<TreeNodeParentsQuery> = {
+                const packet: QueryStreamPacket = {
                     loaded: target,
                     payload,
                     failed: [],

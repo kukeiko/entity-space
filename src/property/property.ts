@@ -1,6 +1,6 @@
 import { Unbox } from "../utils";
 
-// [todo] we don't use 'key' yet afaik - maybe we should remove it?
+// [todo] we don't use 'key' yet afaik - maybe we should remove it? => actually, we would need it for oldschool style selector
 export interface Property<K extends string = string, V = any> {
     key: K;
     value: V;
