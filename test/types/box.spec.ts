@@ -1,5 +1,5 @@
 import { IsExact } from "conditional-type-checks";
-import { Box } from "../../src/utils";
+import { Box } from "src";
 
 // $ExpectType true
 type BoxedDefault = IsExact<number[], Box<number>>;

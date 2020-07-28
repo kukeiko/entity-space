@@ -4,8 +4,8 @@ describe("ModelSelection", () => {
     describe("merge()", () => {
         it("should merge { foo: true } and { bar: true } to create { foo: true, bar: true }", () => {
             // arrange
-            const a: Selection.Untyped = { foo: true };
-            const b: Selection.Untyped = { bar: true };
+            const a: Selection = { foo: true };
+            const b: Selection = { bar: true };
 
             // act
             const merged = mergeSelections(a, b);
@@ -16,8 +16,8 @@ describe("ModelSelection", () => {
 
         it("should merge { foo: { bar: true } } and { foo: { baz: true } } to create { foo: { bar: true, baz: true } }", () => {
             // arrange
-            const a: Selection.Untyped = { foo: { bar: true } };
-            const b: Selection.Untyped = { foo: { baz: true } };
+            const a: Selection = { foo: { bar: true } };
+            const b: Selection = { foo: { baz: true } };
 
             // act
             const merged = mergeSelections(a, b);
@@ -28,8 +28,8 @@ describe("ModelSelection", () => {
 
         it("should merge { foo: true } and { foo: { bar: true } } to create { foo: { bar: true } }", () => {
             // arrange
-            const a: Selection.Untyped = { foo: true };
-            const b: Selection.Untyped = { foo: { bar: true } };
+            const a: Selection = { foo: true };
+            const b: Selection = { foo: { bar: true } };
 
             // act
             const merged = mergeSelections(a, b);
@@ -42,8 +42,8 @@ describe("ModelSelection", () => {
     describe("reduce()", () => {
         it("should reduce { foo: true, bar: true } by { foo: true } to create { bar: true }", () => {
             // arrange
-            const a: Selection.Untyped = { foo: true, bar: true };
-            const b: Selection.Untyped = { foo: true };
+            const a: Selection = { foo: true, bar: true };
+            const b: Selection = { foo: true };
 
             // act
             const reduced = reduceSelection(a, b);
@@ -54,8 +54,8 @@ describe("ModelSelection", () => {
 
         it("should reduce { foo: true, bar: true } by { foo: true, bar: true } to create null", () => {
             // arrange
-            const a: Selection.Untyped = { foo: true, bar: true };
-            const b: Selection.Untyped = { foo: true, bar: true };
+            const a: Selection = { foo: true, bar: true };
+            const b: Selection = { foo: true, bar: true };
 
             // act
             const reduced = reduceSelection(a, b);
@@ -66,8 +66,8 @@ describe("ModelSelection", () => {
 
         it("should not reduce { foo: true, bar: true } by { baz: true } and return same reference", () => {
             // arrange
-            const a: Selection.Untyped = { foo: true, bar: true };
-            const b: Selection.Untyped = { baz: true };
+            const a: Selection = { foo: true, bar: true };
+            const b: Selection = { baz: true };
 
             // act
             const reduced = reduceSelection(a, b);
@@ -78,8 +78,8 @@ describe("ModelSelection", () => {
 
         it("should reduce { foo: { bar: true, baz: true }, khaz: { mo: true } } by { foo: { bar: true }, khaz: { mo: true, dan: true } } to create { foo: { baz: true } }", () => {
             // arrange
-            const a: Selection.Untyped = { foo: { bar: true, baz: true }, khaz: { mo: true } };
-            const b: Selection.Untyped = { foo: { bar: true }, khaz: { mo: true, dan: true } };
+            const a: Selection = { foo: { bar: true, baz: true }, khaz: { mo: true } };
+            const b: Selection = { foo: { bar: true }, khaz: { mo: true, dan: true } };
 
             // act
             const reduced = reduceSelection(a, b);
@@ -90,8 +90,8 @@ describe("ModelSelection", () => {
 
         it("{ foo: {} } reduced by { foo: {} } should be null", () => {
             // arrange
-            const a: Selection.Untyped = { foo: {} };
-            const b: Selection.Untyped = { foo: {} };
+            const a: Selection = { foo: {} };
+            const b: Selection = { foo: {} };
 
             // act
             const reduced = reduceSelection(a, b);
@@ -104,8 +104,8 @@ describe("ModelSelection", () => {
     describe("isSuperset()", () => {
         it("{ foo: true, bar: true } should be a superset of { foo: true }", () => {
             // arrange
-            const a: Selection.Untyped = { foo: true, bar: true };
-            const b: Selection.Untyped = { foo: true };
+            const a: Selection = { foo: true, bar: true };
+            const b: Selection = { foo: true };
 
             // act
             const isSuperset = isSelectionSupersetOf(a, b);

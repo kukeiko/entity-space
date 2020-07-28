@@ -1,7 +1,7 @@
 import { Selection } from "./selection";
 import { copySelection } from "./copy-selection";
 
-export function reduceSelection(a: Selection.Untyped, b: Selection.Untyped): Selection.Untyped | null {
+export function reduceSelection(a: Selection, b: Selection): Selection | null {
     if (Object.keys(a).length === 0) {
         return null;
     }
@@ -16,7 +16,7 @@ export function reduceSelection(a: Selection.Untyped, b: Selection.Untyped): Sel
             delete reduced[key];
             didReduce = true;
         } else if (b[key] instanceof Object) {
-            const subReduced = reduceSelection(reduced[key] as Selection.Untyped, b[key] as Selection.Untyped);
+            const subReduced = reduceSelection(reduced[key] as Selection, b[key] as Selection);
 
             if (subReduced === null) {
                 delete reduced[key];

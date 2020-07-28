@@ -1,8 +1,8 @@
 import { Selection } from "./selection";
 import { copySelection } from "./copy-selection";
 
-export function mergeSelections(...selections: Selection.Untyped[]): Selection.Untyped {
-    const merged: Selection.Untyped = {};
+export function mergeSelections(...selections: Selection[]): Selection {
+    const merged: Selection = {};
 
     for (const selection of selections) {
         for (const key in selection) {

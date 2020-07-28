@@ -1,12 +1,14 @@
-import { Query, Selection } from "src";
+import { TypedQuery, TypedSelection } from "src";
 import { TreeNodeModel } from "./tree-node.model";
 
-export class TreeNodeQuery<S extends Selection<TreeNodeModel> = Selection<TreeNodeModel>> extends Query<TreeNodeModel, S> {
+export class TreeNodeQuery<S extends TypedSelection<TreeNodeModel> = TypedSelection<TreeNodeModel>> extends TypedQuery<TreeNodeModel, S> {
     getModel() {
         return [TreeNodeModel];
     }
 
-    reduce(other: Query<TreeNodeModel>): Query.Reduction<TreeNodeModel> {
+    reduce(other: TypedQuery<TreeNodeModel>): TypedQuery.Reduction<TreeNodeModel> {
         return [new TreeNodeQuery({ selection: {} })];
     }
+
+    model = [TreeNodeModel];
 }
