@@ -1,5 +1,5 @@
 import { MergeUnion, Class, Unbox } from "../utils";
-import { Property, pickProperties } from "../property";
+import { Property, pickProperties, Context } from "../property";
 import { Selection } from "./selection";
 import { mergeSelections } from "./merge-selections";
 
@@ -23,12 +23,14 @@ type PickableSelection<T> = { [K in keyof Selection<T>]-?: K };
  * [todo] no support for unions yet
  */
 type Selector<T, M = {}> = {
-    [K in keyof PickableSelection<T>]: <O extends Selector<MergeUnion<T>[K]>>(
+    // [todo] i removed "<O extends Selector<MergeUnion<T>[K]>>" constraint and performance seems better. is that really the case or am i dreaming?
+    // also, performance does get worse again if "Selection" includes all properties.
+    [K in Property.Keys<MergeUnion<T>, Context.Has<"loadable", boolean, true>>]: <O>(
         /**
          * With expand we can select properties of a nested type like references & children.
          */
         expand?: (selector: Selector<Property.UnboxedValue<MergeUnion<T>[K]>>) => O
-    ) => Selector<T, M & Record<K, O extends undefined ? true : {} extends O[typeof Selected] ? true : O[typeof Selected]>>;
+    ) => Selector<T, M & Record<K, O extends undefined ? true : O extends Selector<any> ? ({} extends O[typeof Selected] ? true : O[typeof Selected]) : true>>;
 } & { [Selected]: M };
 
 export function select<T extends Class[], O>(models: T, pick: (selector: Selector<Unbox<Unbox<T>>>) => Selector<Unbox<Unbox<T>>, O>): O {
