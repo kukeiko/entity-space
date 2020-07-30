@@ -90,6 +90,7 @@ describe("core-loading-mechanism", () => {
                 x => x.parents,
                 x => x.select(x => x.level)
             )
+            .select(x => x.level)
             .get();
 
         /**
@@ -99,7 +100,7 @@ describe("core-loading-mechanism", () => {
 
         /**
          * Executing the query and expecting the returned data to have some data hydrated.
-         * 
+         *
          * [todo] returned data is not guaranteed to be hydrated, as the workspace eagerly emits unhydrated data the first few times.
          */
         workspace
