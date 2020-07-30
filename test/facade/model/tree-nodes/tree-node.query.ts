@@ -11,6 +11,7 @@ export module TreeNodeQuery {
             Object.assign(this, args || {});
         }
 
+        // [todo] change this to e.g. "startNodeId", as we already have a "level" property that tells us how many parents a node has.
         numMinParents?: number;
 
         reduce(other: this): this | null {
