@@ -1,6 +1,12 @@
 import { createProperty } from "src";
 import { DataEntryModel } from "../data-entry.model";
 
+/**
+ * Example of a model that is a tree, i.e. it has its own type as a parent and as children.
+ *
+ * We support loading all the parents by having a single property that contains them all, which in our
+ * case is loaded separately using a TreeNodeParentsQuery.
+ */
 export class TreeNodeModel extends DataEntryModel {
     id = createProperty("id", [Number], b => b.loadable());
     children = createProperty("children", [TreeNodeModel], b => b.loadable(["optional"]).iterable());

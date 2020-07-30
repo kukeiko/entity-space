@@ -1,6 +1,6 @@
 import { finalize } from "rxjs/operators";
 import { TypedCriteria, Workspace, ComponentProvider, Class, Query, TypedInstance, createAlwaysReducible, TypedSelector } from "src";
-import { TreeNodeQuery, TreeNodeLevelQuery, TreeNodeParentsQuery, TreeNodeModel, ShapeQuery, TreeNodeParentsModel, Shape, allShapeModels, ShapeModel } from "../facade/model";
+import { TreeNodeQuery, TreeNodeLevelQuery, TreeNodeParentsQuery, TreeNodeModel, ShapeQuery, TreeNodeParentsModel, Shape, allShapeModels } from "../facade/model";
 import {
     TreeNodePayloadHydrator,
     TreeNodeQueryTranslator,
@@ -58,12 +58,10 @@ describe("core-loading-mechanism", () => {
             )
             .get();
 
-        const foo: TypedInstance<TreeNodeModel> = {} as any;
-
-        // const selection = { parents: true as true };
         const query = new TreeNodeQuery({ criteria, selection, options: new TreeNodeQuery.Options({ numMinParents: 1 }) });
 
         workspace
+            // .load$<TypedInstance.Selected<TreeNodeModel, typeof query["selection"]>>(query)
             .load$<TypedInstance.Selected<TreeNodeModel, typeof query["selection"]>>(query)
             .pipe(finalize(done))
             .subscribe(
@@ -72,7 +70,7 @@ describe("core-loading-mechanism", () => {
 
                     if (treeNodes.length > 0) {
                         const treeNode = treeNodes[0];
-
+                        
                         // parents are not undefined since we selected them
                         const parents = treeNodes[0].parents;
 
