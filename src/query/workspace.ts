@@ -1,5 +1,5 @@
 import { Observable, merge, of, combineLatest } from "rxjs";
-import { scan, map, mergeMap } from "rxjs/operators";
+import { map, mergeMap, startWith } from "rxjs/operators";
 import { reduceSelection } from "../selection";
 import { Query } from "./query";
 import { Instance } from "./instance";
@@ -17,12 +17,14 @@ export class Workspace {
     load$<T = Instance>(query: Query): Observable<T[]> {
         const translator = this._provider.getTranslator(query);
         const streams = translator.translate(query);
-        const observables = streams.map(s => s.open$());
-
-        return merge(...observables).pipe(
-            mergeMap(x => this._hydrate$(query, x)),
-            scan((acc, value) => [...acc, ...value] as T[], [] as T[])
+        const observables = streams.map(s =>
+            s.open$().pipe(
+                mergeMap(packet => this._hydrate$(query, packet)),
+                startWith([] as Instance[])
+            )
         );
+
+        return combineLatest(observables).pipe(map(nested => nested.reduce<T[]>((acc, value) => [...acc, ...value] as T[], [])));
     }
 
     private _hydrate$(target: Query, packet: QueryStreamPacket): Observable<Instance[]> {
