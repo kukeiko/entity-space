@@ -1,6 +1,6 @@
 import { finalize } from "rxjs/operators";
-import { TypedCriteria, Workspace, ComponentProvider, Class, Query, TypedInstance, createAlwaysReducible } from "src";
-import { TreeNodeQuery, TreeNodeLevelQuery, TreeNodeParentsQuery, TreeNodeModel, ShapeQuery, TreeNodeParentsModel, Shape } from "../facade/model";
+import { TypedCriteria, Workspace, ComponentProvider, Class, Query, TypedInstance, createAlwaysReducible, TypedSelector } from "src";
+import { TreeNodeQuery, TreeNodeLevelQuery, TreeNodeParentsQuery, TreeNodeModel, ShapeQuery, TreeNodeParentsModel, Shape, allShapeModels, ShapeModel } from "../facade/model";
 import {
     TreeNodePayloadHydrator,
     TreeNodeQueryTranslator,
@@ -51,7 +51,16 @@ describe("core-loading-mechanism", () => {
             },
         ];
 
-        const selection = { parents: true as true };
+        const selection = new TypedSelector([TreeNodeModel])
+            .select(
+                x => x.parents,
+                x => x.select(x => x.level)
+            )
+            .get();
+
+        const foo: TypedInstance<TreeNodeModel> = {} as any;
+
+        // const selection = { parents: true as true };
         const query = new TreeNodeQuery({ criteria, selection, options: new TreeNodeQuery.Options({ numMinParents: 1 }) });
 
         workspace
@@ -62,7 +71,15 @@ describe("core-loading-mechanism", () => {
                     console.log(treeNodes);
 
                     if (treeNodes.length > 0) {
+                        const treeNode = treeNodes[0];
+
+                        // parents are not undefined since we selected them
                         const parents = treeNodes[0].parents;
+
+                        if (parents.length > 0) {
+                            // level is not undefined since we selected it
+                            const level = parents[0].level;
+                        }
                     }
                 },
                 error => fail(error)
@@ -74,7 +91,12 @@ describe("core-loading-mechanism", () => {
 
         const provider: ComponentProvider = {
             getHydrator(model: Class) {
-                throw new Error(`no hydrator for class ${model.name} found`);
+                return {
+                    hydrate(foo: any) {
+                        return [];
+                    },
+                };
+                // throw new Error(`no hydrator for class ${model.name} found`);
             },
             getTranslator(query: Query) {
                 if (query instanceof ShapeQuery) {
@@ -86,14 +108,21 @@ describe("core-loading-mechanism", () => {
         };
 
         const workspace = new Workspace(provider);
-        const query = new ShapeQuery({ selection: {}, options: createAlwaysReducible() });
+        const selection = new TypedSelector(allShapeModels)
+            .select(x => x.radius)
+            .select(
+                x => x.shapes,
+                x => x.select(x => x.radius)
+            )
+            .get();
+
+        const query = new ShapeQuery({ selection, options: createAlwaysReducible() });
 
         workspace
             .load$<TypedInstance.Selected<Shape, typeof query["selection"]>>(query)
             .pipe(finalize(done))
             .subscribe(
                 shapes => {
-                    // [todo] instances are untyped
                     console.log("shapes:", shapes);
 
                     for (const shape of shapes) {
@@ -108,6 +137,16 @@ describe("core-loading-mechanism", () => {
 
                             case "triangle":
                                 console.log("triangle angles", [shape.angleA, shape.angleB, shape.angleC]);
+                                break;
+
+                            case "group":
+                                for (const groupedShape of shape.shapes) {
+                                    switch (groupedShape.type) {
+                                        case "circle":
+                                            console.log("grouped shape circle radius", groupedShape.radius);
+                                            break;
+                                    }
+                                }
                                 break;
                         }
                     }

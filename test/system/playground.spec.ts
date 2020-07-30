@@ -1,4 +1,4 @@
-import { TypedQuery, TypedInstance, TypedSelection, TypedCriteria, Property, Instance } from "src";
+import { TypedQuery, TypedInstance, TypedSelection, TypedCriteria, Property, Instance, TypedSelector } from "src";
 import { TreeNodeModel, CanvasModel, CircleModel, SquareModel, TriangleModel } from "../facade/model";
 
 xdescribe("prototyping-playground", () => {
@@ -12,25 +12,22 @@ xdescribe("prototyping-playground", () => {
     };
 
     it("redo select() for moar performance", () => {
-        class Selector<T, M = {}> {
-            select<O extends Property>(pick: (model: T) => O): Selector<T, M & Record<O["key"], true>>;
-            select<O extends Property, E>(pick: (model: T) => O, expand: (selector: Selector<Property.UnboxedValue<O>>) => E): Selector<T, M & Record<O["key"], true>>;
-            select(...args: any[]): any {
-                return this;
-            }
-
-            get(): M {
-                return {} as any;
-            }
-        }
-
-        const selector = new Selector<TreeNodeModel>();
-
-        selector.select(x => x.children);
-        selector.select(
-            x => x.metadata,
-            x => x.select(x => x.createdAt)
-        );
+        const selector = new TypedSelector([TreeNodeModel]);
+        const selection = selector
+            .select(
+                x => x.children,
+                x =>
+                    x.select(
+                        x => x.parents,
+                        x => x.select(x => x.level)
+                    )
+            )
+            .select(x => x.metadata)
+            .select(
+                x => x.children,
+                x => x.select(x => x.name)
+            )
+            .get();
     });
 
     it("playing w/ unions", () => {
