@@ -10,7 +10,7 @@ type SelectedValue<P extends Property, CTX extends Context> = P["value"] extends
 /**
  * language workaround needed in case T is a union, e.g. Square | Circle.
  *
- * [todo] copied from stackoverflow, but forgot to add the link. finding it again shouldn't be too hard :) (keyword: "distributed unions" as far as i remember)
+ * https://www.typescriptlang.org/docs/handbook/release-notes/typescript-2-8.html#distributive-conditional-types
  */
 type UnionSelection<T, CTX extends Context> = T extends any ? TypedSelection<T, CTX> : never;
 

@@ -2,7 +2,7 @@ import { Property } from "./property";
 import { Context } from "./context";
 import { Attribute } from "./attribute";
 
-export class PropertyBuilder<K extends string, V, P extends Property<K, V> = Property<K, V>> {
+export class PropertyBuilder<K extends string, V extends Property.Value, P extends Property<K, V> = Property<K, V>> {
     constructor(key: K, value: V) {
         const property: Property<K, V> = {
             key,

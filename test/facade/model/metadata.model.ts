@@ -14,10 +14,10 @@ import { UserModel } from "./user.model";
  * as all we need to load those two properties is the ids of the users, which we have.
  */
 export class MetadataModel {
-    createdAt = createProperty("createdAt", String, b => b.loadable());
-    createdById = createProperty("createdById", Number, b => b.loadable());
-    createdBy = createProperty("createdBy", UserModel, b => b.loadable(["optional"]).identifiedBy(this.createdById));
-    updatedAt = createProperty("updatedAt", String, b => b.loadable(["nullable"]));
-    updatedById = createProperty("updatedById", Number, b => b.loadable(["nullable"]));
-    updatedBy = createProperty("updatedBy", UserModel, b => b.loadable(["optional", "nullable"]).identifiedBy(this.updatedById));
+    createdAt = createProperty("createdAt", [String], b => b.loadable());
+    createdById = createProperty("createdById", [Number], b => b.loadable());
+    createdBy = createProperty("createdBy", [UserModel], b => b.loadable(["optional"]).identifiedBy(this.createdById));
+    updatedAt = createProperty("updatedAt", [String], b => b.loadable(["nullable"]));
+    updatedById = createProperty("updatedById", [Number], b => b.loadable(["nullable"]));
+    updatedBy = createProperty("updatedBy", [UserModel], b => b.loadable(["optional", "nullable"]).identifiedBy(this.updatedById));
 }

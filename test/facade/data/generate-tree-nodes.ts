@@ -53,7 +53,7 @@ export function generateTreeNodes(options: GenerateTreeNodesOptions = defaultOpt
         const rootNode: TypedInstance<TreeNodeModel> = {
             id: nextId(),
             name: String.fromCharCode(i + 65),
-            parentId: null
+            parentId: null,
         };
 
         allNodes.push(rootNode);

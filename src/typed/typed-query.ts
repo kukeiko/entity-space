@@ -17,7 +17,9 @@ export abstract class TypedQuery<T = any, S extends TypedSelection<T> = TypedSel
     selection: S & TypedSelection<T>;
     options: O;
 
-    abstract model: UnpackUnionClass<T>[];
+    // [todo] uncommenting causes error @ ShapeQuery. make sure that using Class<T> instead of UnpackUnionClass<T> is fine.
+    // abstract model: UnpackUnionClass<T>[];
+    abstract model: Class<T>[];
 }
 
 export module TypedQuery {

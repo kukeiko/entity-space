@@ -1,7 +1,7 @@
-import { Unbox } from "../utils";
+import { Unbox, Primitive, Class } from "../utils";
 
 // [todo] we don't use 'key' yet afaik - maybe we should remove it? => actually, we would need it for oldschool style selector
-export interface Property<K extends string = string, V = any> {
+export interface Property<K extends string = string, V extends Property.Value = Property.Value> {
     key: K;
     value: V;
 }
@@ -18,6 +18,8 @@ export module Property {
     >;
 
     export type UnboxedValue<P> = P extends Property ? Unbox<Unbox<P["value"]>> : never;
+
+    export type Value = Primitive[] | Class[] | (string | number)[];
 
     /**
      * [note] commented it out for now due to premature user experience optimisation.
