@@ -1,5 +1,5 @@
 import { Observable, merge, of, combineLatest } from "rxjs";
-import { map, mergeMap, startWith } from "rxjs/operators";
+import { map, mergeMap, startWith, tap } from "rxjs/operators";
 import { reduceSelection } from "../selection";
 import { Query } from "./query";
 import { Instance } from "./instance";
@@ -39,19 +39,18 @@ export class Workspace {
             return of(packet.payload);
         }
 
-        let hydrations: PayloadHydration[] = [];
+        const hydrations: PayloadHydration[] = [];
 
         for (const model of packet.loaded.model) {
             const hydrator = this._provider.getHydrator(model);
 
-            hydrations = [
-                ...hydrations,
+            hydrations.push(
                 ...hydrator.hydrate({
                     loaded: packet.loaded,
                     payload: packet.payload,
                     selection: missing,
-                }),
-            ];
+                })
+            );
         }
 
         if (hydrations.length === 0) {
@@ -59,9 +58,7 @@ export class Workspace {
         }
 
         return merge(...hydrations.map(hydration => combineLatest(of(hydration), this.load$(hydration.load)))).pipe(
-            map(([hydration, payload]) => {
-                hydration.assign(packet.payload, payload);
-            }),
+            tap(([hydration, payload]) => hydration.assign(packet.payload, payload)),
             map(() => packet.payload)
         );
     }
