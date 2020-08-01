@@ -1,6 +1,6 @@
 import { Selection, reduceSelection } from "src";
 
-fdescribe("reduceSelection()", () => {
+describe("reduceSelection()", () => {
     describe("full reduction", () => {
         it("{ foo, bar } should be completely reduced by { foo, bar }", () => {
             // arrange
