@@ -13,6 +13,7 @@ export class TreeNodeLevelQueryTranslator implements QueryTranslator {
 
         const streams: QueryStream[] = [];
 
+        // [todo] this is atrocious. we need a simpler way for users to inspect filtering criteria
         if (query.criteria !== void 0) {
             for (const criteria of query.criteria) {
                 if (criteria.nodeId !== void 0) {
