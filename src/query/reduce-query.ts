@@ -2,6 +2,7 @@ import { Query } from "./query";
 import { reduceCriteria } from "../criteria";
 import { reduceSelection } from "../selection";
 
+// [todo] options reduction missing
 export function reduceQuery(a: Query, b: Query): Query | null {
     const reducedCriteria = reduceCriteria(a.criteria, b.criteria);
 
