@@ -1,63 +1,57 @@
 import { Selection, reduceSelection } from "src";
 
-describe("reduceSelection()", () => {
-    it("should reduce { foo: true, bar: true } by { foo: true } to create { bar: true }", () => {
-        // arrange
-        const a: Selection = { foo: true, bar: true };
-        const b: Selection = { foo: true };
+fdescribe("reduceSelection()", () => {
+    describe("full reduction", () => {
+        it("{ foo, bar } should be completely reduced by { foo, bar }", () => {
+            // arrange
+            const a: Selection = { foo: {}, bar: true };
+            const b: Selection = { foo: true, bar: {} };
 
-        // act
-        const reduced = reduceSelection(a, b);
+            // act
+            const reduced = reduceSelection(a, b);
 
-        // assert
-        expect(reduced).toEqual({ bar: true });
+            // assert
+            expect(reduced).toBeNull();
+        });
     });
 
-    it("should reduce { foo: true, bar: true } by { foo: true, bar: true } to create null", () => {
-        // arrange
-        const a: Selection = { foo: true, bar: true };
-        const b: Selection = { foo: true, bar: true };
+    describe("partial reduction", () => {
+        it("{ foo, bar } reduced by { foo } should be { bar }", () => {
+            // arrange
+            const a: Selection = { foo: true, bar: true };
+            const b: Selection = { foo: true };
 
-        // act
-        const reduced = reduceSelection(a, b);
+            // act
+            const reduced = reduceSelection(a, b);
 
-        // assert
-        expect(reduced).toBeNull();
+            // assert
+            expect(reduced).toEqual({ bar: true });
+        });
+
+        it("{ foo: { bar, baz }, khaz: { mo } } reduced by { foo: { bar }, khaz: { mo, dan } } should be { foo: { baz } }", () => {
+            // arrange
+            const a: Selection = { foo: { bar: true, baz: true }, khaz: { mo: true } };
+            const b: Selection = { foo: { bar: true }, khaz: { mo: true, dan: true } };
+
+            // act
+            const reduced = reduceSelection(a, b);
+
+            // assert
+            expect(reduced).toEqual({ foo: { baz: true } });
+        });
     });
 
-    it("should not reduce { foo: true, bar: true } by { baz: true } and return same reference", () => {
-        // arrange
-        const a: Selection = { foo: true, bar: true };
-        const b: Selection = { baz: true };
+    describe("no reduction", () => {
+        it("{ foo, bar } should not be reduced by { baz }", () => {
+            // arrange
+            const a: Selection = { foo: true, bar: true };
+            const b: Selection = { baz: true };
 
-        // act
-        const reduced = reduceSelection(a, b);
+            // act
+            const reduced = reduceSelection(a, b);
 
-        // assert
-        expect(reduced).toBe(a);
-    });
-
-    it("should reduce { foo: { bar: true, baz: true }, khaz: { mo: true } } by { foo: { bar: true }, khaz: { mo: true, dan: true } } to create { foo: { baz: true } }", () => {
-        // arrange
-        const a: Selection = { foo: { bar: true, baz: true }, khaz: { mo: true } };
-        const b: Selection = { foo: { bar: true }, khaz: { mo: true, dan: true } };
-
-        // act
-        const reduced = reduceSelection(a, b);
-
-        // assert
-        expect(reduced).toEqual({ foo: { baz: true } });
-    });
-
-    it("{ foo: {} } reduced by { foo: {} } should be null", () => {
-        // arrange
-        const a: Selection = { foo: {} };
-        const b: Selection = { foo: {} };
-
-        // act
-        const reduced = reduceSelection(a, b);
-
-        // assert
-        expect(reduced).toBeNull();
+            // assert
+            expect(reduced).toBe(a);
+        });
     });
 });
