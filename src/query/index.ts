@@ -9,5 +9,6 @@ export * from "./query-result";
 export * from "./query-stream";
 export * from "./query-stream-packet";
 export * from "./query-translator";
+export * from "./reduce-query";
 export * from "./reducible";
 export * from "./workspace";
