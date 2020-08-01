@@ -14,7 +14,7 @@ export class TreeNodePayloadHydrator implements PayloadHydrator {
             const nodeIds = hydratable.payload.map(x => x.id);
 
             for (const nodeId of nodeIds) {
-                const query = new TreeNodeLevelQuery({ selection: {}, criteria: [{ nodeId: [{ op: "==", value: nodeId }] }], options: createAlwaysReducible() });
+                const query = new TreeNodeLevelQuery({ selection: {}, criteria: [{ nodeId: [{ op: "in", values: new Set([nodeId]) }] }], options: createAlwaysReducible() });
                 const hydration: PayloadHydration = {
                     load: query,
                     assign: (nodes: TypedInstance<TreeNodeModel>[], levels: TypedInstance<TypedQuery.Model<typeof query>>[]) => {
@@ -38,7 +38,7 @@ export class TreeNodePayloadHydrator implements PayloadHydrator {
             for (const nodeId of nodeIds) {
                 const query = new TreeNodeParentsQuery({
                     selection: { ...(hydratable.selection.parents === true ? {} : { parents: hydratable.selection.parents }) },
-                    criteria: [{ childId: [{ op: "==", value: nodeId }] }],
+                    criteria: [{ childId: [{ op: "in", values: new Set([nodeId]) }] }],
                     options: createAlwaysReducible(),
                 });
 
@@ -50,6 +50,7 @@ export class TreeNodePayloadHydrator implements PayloadHydrator {
 
                             if (node !== void 0) {
                                 node.parents = parents.parents;
+                                node.parentIds = parents.parents.map(x => x.id);
                             }
                         }
                     },

@@ -1,12 +1,6 @@
 import { Query, createAlwaysReducible, reduceQuery, Criteria, Selection } from "src";
 
-/**
- * template
- */
-// it("should reduce {} by {} to create {}", () => {
-
-// });
-fdescribe("reduceQuery()", () => {
+describe("reduceQuery()", () => {
     function createQuery(criteria: Criteria = [], selection: Selection = {}): Query {
         return { criteria, model: [], options: createAlwaysReducible(), selection };
     }
@@ -30,13 +24,13 @@ fdescribe("reduceQuery()", () => {
         {
             // arrange
             const a = createQuery([{ id: [{ op: "in", values: new Set([1, 2]) }] }]);
-            const b = createQuery([{ id: [{ op: "==", value: 1 }] }]);
+            const b = createQuery([{ id: [{ op: "in", values: new Set([1]) }] }]);
 
             // act
             const reduced = reduceQuery(a, b);
 
             // assert
-            expect(reduced?.criteria).toEqual([{ id: [{ op: "==", value: 2 }] }]);
+            expect(reduced?.criteria).toEqual([{ id: [{ op: "in", values: new Set([2]) }] }]);
         }
     });
 });

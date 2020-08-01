@@ -78,36 +78,36 @@ xdescribe("prototyping-playground", () => {
     });
 
     it("union criteria", () => {
-        const canvasCriteria: TypedCriteria<CanvasModel> = [
-            {
-                shapes: [
-                    {
-                        angleA: [{ op: ">", value: 3 }],
-                        angleB: [{ op: ">", value: 3 }],
-                        angleC: [{ op: ">", value: 3 }],
-                        area: [{ op: ">", value: 3 }],
-                        id: [{ op: ">", value: 3 }],
-                        length: [{ op: ">", value: 3 }],
-                        radius: [{ op: ">", value: 3 }],
-                        canvas: [
-                            {
-                                shapes: [
-                                    {
-                                        angleA: [{ op: ">", value: 3 }],
-                                        angleB: [{ op: ">", value: 3 }],
-                                        angleC: [{ op: ">", value: 3 }],
-                                        area: [{ op: ">", value: 3 }],
-                                        id: [{ op: ">", value: 3 }],
-                                        length: [{ op: ">", value: 3 }],
-                                        radius: [{ op: ">", value: 3 }],
-                                    },
-                                ],
-                            },
-                        ],
-                    },
-                ],
-            },
-        ];
+        // const canvasCriteria: TypedCriteria<CanvasModel> = [
+        //     {
+        //         shapes: [
+        //             {
+        //                 angleA: [{ op: ">", value: 3 }],
+        //                 angleB: [{ op: ">", value: 3 }],
+        //                 angleC: [{ op: ">", value: 3 }],
+        //                 area: [{ op: ">", value: 3 }],
+        //                 id: [{ op: ">", value: 3 }],
+        //                 length: [{ op: ">", value: 3 }],
+        //                 radius: [{ op: ">", value: 3 }],
+        //                 canvas: [
+        //                     {
+        //                         shapes: [
+        //                             {
+        //                                 angleA: [{ op: ">", value: 3 }],
+        //                                 angleB: [{ op: ">", value: 3 }],
+        //                                 angleC: [{ op: ">", value: 3 }],
+        //                                 area: [{ op: ">", value: 3 }],
+        //                                 id: [{ op: ">", value: 3 }],
+        //                                 length: [{ op: ">", value: 3 }],
+        //                                 radius: [{ op: ">", value: 3 }],
+        //                             },
+        //                         ],
+        //                     },
+        //                 ],
+        //             },
+        //         ],
+        //     },
+        // ];
     });
 
     it("union as entry type", () => {

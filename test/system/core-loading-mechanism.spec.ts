@@ -78,7 +78,7 @@ describe("core-loading-mechanism", () => {
          */
         const criteria: TypedCriteria<TreeNodeModel> = [
             {
-                id: someIds.map(id => ({ op: "==", value: id })),
+                id: [{ op: "in", values: new Set(someIds) }],
             },
         ];
 

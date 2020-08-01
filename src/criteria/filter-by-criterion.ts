@@ -1,6 +1,6 @@
 import { StringIndexable } from "../utils";
 import { Criterion } from "./criterion";
-import { ValueCriteria } from "./value-criterion";
+import { isValueCriteria, filterByValueCriteria } from "./value-criterion";
 
 export function filterByCriterion<T extends StringIndexable>(instances: T[], criterion: Criterion): T[] {
     let filtered: T[] = [];
@@ -8,8 +8,8 @@ export function filterByCriterion<T extends StringIndexable>(instances: T[], cri
     for (const propertyCriteriaKey in criterion) {
         const propertyCriteria = criterion[propertyCriteriaKey];
 
-        if (ValueCriteria.is(propertyCriteria)) {
-            filtered = ValueCriteria.filter(instances, propertyCriteriaKey, propertyCriteria);
+        if (isValueCriteria(propertyCriteria)) {
+            filtered = filterByValueCriteria(instances, propertyCriteriaKey, propertyCriteria);
         } else {
             throw new Error(`as of yet only simple value criteria filtering is supported`);
         }

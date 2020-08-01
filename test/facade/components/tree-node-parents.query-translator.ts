@@ -17,8 +17,12 @@ export class TreeNodeParentsQueryTranslator implements QueryTranslator {
             for (const criteria of query.criteria) {
                 if (criteria.childId !== void 0) {
                     for (const idCriterion of criteria.childId) {
-                        if (idCriterion.op == "==" && typeof idCriterion.value === "number") {
-                            streams.push(this._byChildIdStream(idCriterion.value));
+                        if (idCriterion.op == "in") {
+                            for (const id of idCriterion.values) {
+                                if (typeof id === "number") {
+                                    streams.push(this._byChildIdStream(id));
+                                }
+                            }
                         }
                     }
                 }
@@ -30,7 +34,7 @@ export class TreeNodeParentsQueryTranslator implements QueryTranslator {
 
     private _byChildIdStream(childId: number): QueryStream {
         const loadItem = () => this._repository.getTreeNodeParents(childId);
-        const criteria: TypedCriteria<TreeNodeParentsModel> = [{ childId: [{ op: "==", value: childId }] }];
+        const criteria: TypedCriteria<TreeNodeParentsModel> = [{ childId: [{ op: "in", values: new Set([childId]) }] }];
         const target = new TreeNodeParentsQuery({ criteria, selection: {}, options: createAlwaysReducible() });
 
         return {

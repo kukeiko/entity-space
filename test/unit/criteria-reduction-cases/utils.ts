@@ -1,11 +1,11 @@
-import { ValueCriteria, ValueCriterion, Criterion, reduceCriterion } from "src";
+import { ValueCriteria, ValueCriterion, Criterion, reduceCriterion, reduceValueCriteria, reduceValueCriterion } from "src";
 
-export function expectValueCriteriaReduction(description: string, a: ValueCriteria, b: ValueCriteria, expected: ReturnType<typeof ValueCriteria.reduce> | "no-change"): void {
+export function expectValueCriteriaReduction(description: string, a: ValueCriteria, b: ValueCriteria, expected: ReturnType<typeof reduceValueCriteria> | "no-change"): void {
     try {
-        let expectation = expect(ValueCriteria.reduce(a, b)).withContext(description);
+        const expectation = expect(reduceValueCriteria(a, b)).withContext(description);
 
         if (expected === "no-change") {
-            expectation.toBe(b);
+            expectation.toBe(a);
         } else {
             expectation.toEqual(expected);
         }
@@ -14,12 +14,12 @@ export function expectValueCriteriaReduction(description: string, a: ValueCriter
     }
 }
 
-export function expectValueCriterionReduction(description: string, a: ValueCriterion, b: ValueCriterion, expected: ReturnType<typeof ValueCriterion.reduce> | "no-change"): void {
+export function expectValueCriterionReduction(description: string, a: ValueCriterion, b: ValueCriterion, expected: ReturnType<typeof reduceValueCriterion> | "no-change"): void {
     try {
-        let expectation = expect(ValueCriterion.reduce(a, b)).withContext(description);
+        const expectation = expect(reduceValueCriterion(a, b)).withContext(description);
 
         if (expected === "no-change") {
-            expectation.toBe(b);
+            expectation.toBe(a);
         } else {
             expectation.toEqual(expected);
         }
@@ -28,12 +28,12 @@ export function expectValueCriterionReduction(description: string, a: ValueCrite
     }
 }
 
-export function expectObjectCriterionReduction(description: string, a: Criterion, b: Criterion, expected: ReturnType<typeof reduceCriterion> | "no-change"): void {
+export function expectCriterionReduction(description: string, a: Criterion, b: Criterion, expected: ReturnType<typeof reduceCriterion> | "no-change"): void {
     try {
-        let expectation = expect(reduceCriterion(a, b)).withContext(description);
+        const expectation = expect(reduceCriterion(a, b)).withContext(description);
 
         if (expected === "no-change") {
-            expectation.toBe(b);
+            expectation.toBe(a);
         } else {
             expectation.toEqual(expected);
         }

@@ -17,8 +17,12 @@ export class TreeNodeLevelQueryTranslator implements QueryTranslator {
             for (const criteria of query.criteria) {
                 if (criteria.nodeId !== void 0) {
                     for (const idCriterion of criteria.nodeId) {
-                        if (idCriterion.op == "==" && typeof idCriterion.value === "number") {
-                            streams.push(this._byIdStream(idCriterion.value));
+                        if (idCriterion.op == "in") {
+                            for (const id of idCriterion.values) {
+                                if (typeof id === "number") {
+                                    streams.push(this._byIdStream(id));
+                                }
+                            }
                         }
                     }
                 }
@@ -30,7 +34,7 @@ export class TreeNodeLevelQueryTranslator implements QueryTranslator {
 
     private _byIdStream(id: number): QueryStream {
         const loadItem = () => this._repository.getLevel(id);
-        const criteria: TypedCriteria<TreeNodeLevelModel> = [{ nodeId: [{ op: "==", value: id }] }];
+        const criteria: TypedCriteria<TreeNodeLevelModel> = [{ nodeId: [{ op: "in", values: new Set([id]) }] }];
         const target = new TreeNodeLevelQuery({ criteria, selection: {}, options: createAlwaysReducible() });
 
         return {

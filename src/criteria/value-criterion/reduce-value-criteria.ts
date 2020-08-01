@@ -1,19 +1,15 @@
-import { Criteria } from "./criteria";
-import { reduceCriterion } from "./reduce-criterion";
+import { ValueCriteria } from "./value-criteria";
+import { reduceValueCriterion } from "./reduce-value-criterion";
 
-export function reduceCriteria(a: Criteria, b: Criteria): Criteria | null {
-    if (a.length === 0 && b.length === 0) {
-        return null;
-    }
-
+export function reduceValueCriteria(a: ValueCriteria, b: ValueCriteria): ValueCriteria | null {
     let reduced = a.slice();
     let didReduce = false;
 
     for (let criterionB of b) {
-        let nextReduced: Criteria = [];
+        let nextReduced: ValueCriteria = [];
 
         for (let criterionA of reduced) {
-            let reducedCriterion = reduceCriterion(criterionA, criterionB);
+            let reducedCriterion = reduceValueCriterion(criterionA, criterionB);
 
             if (reducedCriterion !== null) {
                 nextReduced.push(reducedCriterion);

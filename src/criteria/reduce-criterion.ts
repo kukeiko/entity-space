@@ -1,27 +1,27 @@
 import { Criterion } from "./criterion";
-import { ValueCriteria } from "./value-criterion";
+import { isValueCriteria, reduceValueCriteria } from "./value-criterion";
 import { PropertyCriteria } from "./property-criteria";
 
 export function reduceCriterion(a: Criterion, b: Criterion): Criterion | null {
     let reducedPropertyCriteria: { key: string; reduced: PropertyCriteria } | undefined;
 
-    for (const key in a) {
-        const criteriaB = b[key];
+    for (const key in b) {
+        const criteriaA = a[key];
 
         /**
-         * [A] has a criteria that [B] doesn't, it therefore can't be a superset
-         * => return [B] as is
+         * [B] has a criteria that [A] doesn't, it therefore can't be a superset
+         * => return [A] as is
          */
-        if (criteriaB === void 0) {
-            return b;
+        if (criteriaA === void 0) {
+            return a;
         }
 
-        const criteriaA = a[key];
+        const criteriaB = b[key];
         let reduced: PropertyCriteria | null;
 
-        if (ValueCriteria.is(criteriaA)) {
-            if (ValueCriteria.is(criteriaB)) {
-                reduced = ValueCriteria.reduce(criteriaA, criteriaB);
+        if (isValueCriteria(criteriaB)) {
+            if (isValueCriteria(criteriaA)) {
+                reduced = reduceValueCriteria(criteriaA, criteriaB);
             } else {
                 throw new Error("trying to reduce two criteria of different types");
             }
@@ -29,17 +29,17 @@ export function reduceCriterion(a: Criterion, b: Criterion): Criterion | null {
             throw new Error("currently only ValueCriteria are supported @ ObjectCriterion.reduce()");
         }
 
-        if (reduced === criteriaB) {
+        if (reduced === criteriaA) {
             /**
              * failed to reduce a property of [B] => return [B] as is.
              */
-            return b;
+            return a;
         } else if (reduced !== null && reducedPropertyCriteria !== void 0) {
             /**
              * reduced a property of [B] but we already reduced another, therefore [A] is no longer a superset of [B]
              * => return [B] as is
              */
-            return b;
+            return a;
         } else if (reduced !== null && reducedPropertyCriteria === void 0) {
             /**
              * the first property of [B] that we could reduce => store and continue.
@@ -54,7 +54,7 @@ export function reduceCriterion(a: Criterion, b: Criterion): Criterion | null {
         return null;
     } else {
         return {
-            ...b,
+            ...a,
             [reducedPropertyCriteria.key]: reducedPropertyCriteria.reduced,
         };
     }
