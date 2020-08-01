@@ -1,5 +1,6 @@
 import { createInValueCriterion, reduceCriterion } from "src";
 
+// [todo] we're only testing "in" criteria here, but not "not-in" & "from-to"
 describe("reduceCriterion()", () => {
     describe("full reduction", () => {
         it("{ foo in [2], bar in [3, 4, 7] } should be completely reduced by { foo in [2], bar in [3, 4, 7] }", () => {
@@ -31,6 +32,22 @@ describe("reduceCriterion()", () => {
             const b = {
                 foo: [createInValueCriterion([2])],
             };
+
+            // act
+            const reduced = reduceCriterion(a, b);
+
+            // assert
+            expect(reduced).toBeNull();
+        });
+
+        it("{ foo in [2], bar in [3] } should be completely reduced by {  }", () => {
+            // arrange
+            const a = {
+                foo: [createInValueCriterion([2])],
+                bar: [createInValueCriterion([3])],
+            };
+
+            const b = {};
 
             // act
             const reduced = reduceCriterion(a, b);
@@ -144,6 +161,39 @@ describe("reduceCriterion()", () => {
                 foo: [createInValueCriterion([2])],
                 bar: [createInValueCriterion([3])],
             };
+
+            const b = {
+                foo: [createInValueCriterion([2])],
+                bar: [createInValueCriterion([4])],
+            };
+
+            // act
+            const reduced = reduceCriterion(a, b);
+
+            // assert
+            expect(reduced).toBe(a);
+        });
+
+        it("{ foo in [2] } should not be reduced by { bar in [2] }", () => {
+            // arrange
+            const a = {
+                foo: [createInValueCriterion([2])],
+            };
+
+            const b = {
+                bar: [createInValueCriterion([2])],
+            };
+
+            // act
+            const reduced = reduceCriterion(a, b);
+
+            // assert
+            expect(reduced).toBe(a);
+        });
+
+        it("{ } should not be reduced by { foo in [2], bar in [4] }", () => {
+            // arrange
+            const a = {};
 
             const b = {
                 foo: [createInValueCriterion([2])],
