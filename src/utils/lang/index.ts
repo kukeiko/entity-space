@@ -1,6 +1,7 @@
 export * from "./box";
 export * from "./class";
 export * from "./fields";
+export * from "./is-primitive";
 export * from "./json";
 export * from "./merge-union";
 export * from "./partial-fields";
