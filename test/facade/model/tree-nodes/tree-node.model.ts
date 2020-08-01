@@ -8,7 +8,7 @@ import { DataEntryModel } from "../data-entry.model";
  * case is loaded separately using a TreeNodeParentsQuery.
  */
 export class TreeNodeModel extends DataEntryModel {
-    id = createProperty("id", [Number], b => b.loadable());
+    id = createProperty("id", [Number], b => b.loadable().identifier());
     children = createProperty("children", [TreeNodeModel], b => b.loadable(["optional"]).iterable());
     name = createProperty("name", [String], b => b.loadable().creatable().patchable());
     parentId = createProperty("parentId", [Number], b => b.loadable(["nullable"]).creatable());

@@ -14,6 +14,17 @@ export class PropertyBuilder<K extends string, V extends Property.Value, P exten
 
     readonly _property: P;
 
+    identifier(): PropertyBuilder<K, V, P & Attribute.IsId & Attribute.IsUnique> {
+        Attribute.set(this._property, "identifier", true);
+        Attribute.set(this._property, "unique", true);
+        return this as any;
+    }
+
+    discriminant(): PropertyBuilder<K, V, P & Attribute.IsDiscriminant> {
+        Attribute.set(this._property, "discriminant", true);
+        return this as any;
+    }
+
     filterable(): PropertyBuilder<K, V, P & Attribute.IsFilterable> {
         Attribute.set(this._property, "filterable", true);
         return this as any;
