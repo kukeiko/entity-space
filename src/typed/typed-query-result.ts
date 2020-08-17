@@ -1,11 +1,8 @@
 import { QueryResult } from "../query";
 import { TypedQuery } from "./typed-query";
+import { TypedInstance } from "./typed-instance";
 
-export interface TypedQueryResult<Q extends TypedQuery> extends QueryResult {
-    loaded: Q;
-
-    /**
-     * An array of entities loaded.
-     */
-    payload: TypedQuery.Payload<Q>;
+export interface TypedQueryResult<T> extends QueryResult {
+    loaded: TypedQuery<T>;
+    payload: TypedInstance<T>[];
 }

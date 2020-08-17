@@ -1,12 +1,16 @@
 import { of } from "rxjs";
-import { QueryTranslator, QueryStream, QueryStreamPacket, createAlwaysReducible } from "src";
-import { ShapeQuery } from "../model";
+import { QueryTranslator, QueryStream, QueryStreamPacket, createAlwaysReducible, Query, isTypedQuery } from "src";
+import { ShapeQuery, allShapeModels } from "../model";
 import { ShapeRepository } from "../data";
 
 export class ShapeQueryTranslator implements QueryTranslator {
     constructor(private readonly _repository: ShapeRepository) {}
 
-    translate(query: ShapeQuery): QueryStream[] {
+    translate(query: Query): QueryStream[] {
+        if (!isTypedQuery(query, allShapeModels)) {
+            throw new Error(`query to translate not of expected type`);
+        }
+
         const streams: QueryStream[] = [];
 
         if (query.criteria.length === 0) {

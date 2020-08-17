@@ -4,7 +4,7 @@ import { TreeNodeLevelQuery, TreeNodeParentsQuery, TreeNodeQuery, TreeNodeModel,
 // [todo] no type safety
 export class TreeNodePayloadHydrator implements PayloadHydrator {
     hydrate(hydratable: HydratableQueryResult): PayloadHydration[] {
-        if (!isTypedHydratableQueryResult(hydratable, TreeNodeQuery)) {
+        if (!isTypedHydratableQueryResult(hydratable, [TreeNodeModel])) {
             throw new Error(`hydratable not of expected type`);
         }
 

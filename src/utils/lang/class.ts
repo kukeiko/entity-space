@@ -1,4 +1,3 @@
-
 /**
  * A type that has a constructor.
  */

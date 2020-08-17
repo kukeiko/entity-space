@@ -1,6 +1,16 @@
 import { finalize } from "rxjs/operators";
-import { TypedCriteria, Workspace, ComponentProvider, Class, Query, TypedInstance, createAlwaysReducible, TypedSelector } from "src";
-import { TreeNodeQuery, TreeNodeLevelQuery, TreeNodeParentsQuery, TreeNodeModel, ShapeQuery, TreeNodeParentsModel, Shape, allShapeModels } from "../facade/model";
+import { TypedCriteria, Workspace, ComponentProvider, Class, Query, TypedInstance, createAlwaysReducible, TypedSelector, isTypedQuery } from "src";
+import {
+    TreeNodeQuery,
+    TreeNodeLevelQuery,
+    TreeNodeParentsQuery,
+    TreeNodeModel,
+    ShapeQuery,
+    TreeNodeParentsModel,
+    Shape,
+    allShapeModels,
+    TreeNodeLevelModel,
+} from "../facade/model";
 import {
     TreeNodePayloadHydrator,
     TreeNodeQueryTranslator,
@@ -21,7 +31,7 @@ import { TreeNodeRepository, ShapeRepository } from "../facade/data";
  * We have tree nodes to demonstrate how to deal with data that is self referential.
  * We also have canvases & shapes to demonstrate how to deal with data that is based on inheritance.
  */
-describe("core-loading-mechanism", () => {
+fdescribe("core-loading-mechanism", () => {
     it("loading some data", done => {
         /**
          * Our repository for tree nodes that resembles the actual API contacted.
@@ -34,13 +44,15 @@ describe("core-loading-mechanism", () => {
         const provider: ComponentProvider = {
             /**
              * Returns the component responsible for loading the initial data set.
+             *
+             * [todo] we're checking via "instanceof", but we should probably decide based on the type of data loaded instead.
              */
             getTranslator(query: Query) {
-                if (query instanceof TreeNodeQuery) {
+                if (isTypedQuery(query, [TreeNodeModel])) {
                     return new TreeNodeQueryTranslator(repository);
-                } else if (query instanceof TreeNodeParentsQuery) {
+                } else if (isTypedQuery(query, [TreeNodeParentsModel])) {
                     return new TreeNodeParentsQueryTranslator(repository);
-                } else if (query instanceof TreeNodeLevelQuery) {
+                } else if (isTypedQuery(query, [TreeNodeLevelModel])) {
                     return new TreeNodeLevelQueryTranslator(repository);
                 }
 

@@ -7,7 +7,7 @@ export class TreeNodeParentsQueryTranslator implements QueryTranslator {
     constructor(private readonly _repository: TreeNodeRepository) {}
 
     translate(query: TreeNodeParentsQuery): QueryStream[] {
-        if (!isTypedQuery(query, TreeNodeParentsQuery)) {
+        if (!isTypedQuery(query, [TreeNodeParentsModel])) {
             throw new Error(`query to translate not of expected type`);
         }
 

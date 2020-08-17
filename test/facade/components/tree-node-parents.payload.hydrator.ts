@@ -1,12 +1,12 @@
 import { PayloadHydrator, HydratableQueryResult, PayloadHydration, TypedInstance, isTypedHydratableQueryResult, Instance, createAlwaysReducible } from "src";
-import { TreeNodeModel, TreeNodeQuery, TreeNodeParentsQuery } from "../model";
+import { TreeNodeModel, TreeNodeQuery, TreeNodeParentsModel } from "../model";
 import { TreeNodePayloadHydrator } from "./tree-node.payload-hydrator";
 
 export class TreeNodeParentsHydrator implements PayloadHydrator {
     constructor(private readonly _treeNodeHydrator: TreeNodePayloadHydrator) {}
 
     hydrate(hydratable: HydratableQueryResult): PayloadHydration[] {
-        if (!isTypedHydratableQueryResult(hydratable, TreeNodeParentsQuery)) {
+        if (!isTypedHydratableQueryResult(hydratable, [TreeNodeParentsModel])) {
             throw new Error(`hydratable not of expected type`);
         }
 
