@@ -29,6 +29,18 @@ describe("reduceQuery()", () => {
             // assert
             expect(reduced).toBeNull();
         });
+
+        it("{ id in [1, 2] / { foo: { bar: { baz, mo: { dan } } } } } should be completely reduced by { id in [1, 2, 3] / { foo: { bar: { baz, khaz, mo: { dan, zoo } } } } }", () => {
+            // arrange
+            const a = createQuery([{ id: [{ op: "in", values: new Set([1, 2]) }] }], { foo: { bar: { baz: true, mo: { dan: true } } } });
+            const b = createQuery([{ id: [{ op: "in", values: new Set([1, 2, 3]) }] }], { foo: { bar: { baz: true, khaz: true, mo: { dan: true, zoo: true } } } });
+
+            // act
+            const reduced = reduceQuery(a, b);
+
+            // assert
+            expect(reduced).toBeNull();
+        });
     });
 
     describe("partial reduction", () => {
