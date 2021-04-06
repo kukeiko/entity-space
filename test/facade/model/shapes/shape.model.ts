@@ -39,7 +39,7 @@ export abstract class ShapeModel extends DataEntryModel {
  */
 export class CircleModel extends ShapeModel {
     radius = createProperty("radius", [Number], b => b.loadable(["optional"]));
-    type = createProperty("type", ["circle" as "circle"], b => b.loadable().discriminant());
+    type = createProperty("type", ["circle" as const], b => b.loadable().discriminant());
 }
 
 /**
@@ -47,14 +47,14 @@ export class CircleModel extends ShapeModel {
  */
 export class SquareModel extends ShapeModel {
     length = createProperty("length", [Number], b => b.loadable(["optional"]));
-    type = createProperty("type", ["square" as "square"], b => b.loadable().discriminant());
+    type = createProperty("type", ["square" as const], b => b.loadable().discriminant());
 }
 
 /**
  * A triangle, based on a shape, with a "type" property as a discriminator to identify it correctly as a triangle.
  */
 export class TriangleModel extends ShapeModel {
-    type = createProperty("type", ["triangle" as "triangle"], b => b.loadable().discriminant());
+    type = createProperty("type", ["triangle" as const], b => b.loadable().discriminant());
     angleA = createProperty("angleA", [Number], b => b.loadable(["optional"]));
     angleB = createProperty("angleB", [Number], b => b.loadable(["optional"]));
     angleC = createProperty("angleC", [Number], b => b.loadable(["optional"]));
@@ -64,7 +64,7 @@ export class TriangleModel extends ShapeModel {
  * A group of shapes, with a "type" property as a discriminator to identify it correctly as a group of shapes.
  */
 export class ShapeGroupModel extends ShapeModel {
-    type = createProperty("type", ["group" as "group"], b => b.loadable().discriminant());
+    type = createProperty("type", ["group" as const], b => b.loadable().discriminant());
     shapes = createProperty("shapes", allShapeModels, b => b.loadable(["optional"]).iterable());
 }
 
