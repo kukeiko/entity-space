@@ -1,3 +1,5 @@
+export * from "./cache-reader";
+export * from "./cache-writer";
 export * from "./component-provider";
 export * from "./create-always-reducible";
 export * from "./hydratable-query-result";
@@ -8,6 +10,7 @@ export * from "./query";
 export * from "./query-result";
 export * from "./query-stream";
 export * from "./query-stream-packet";
+export * from "./query-to-string";
 export * from "./query-translator";
 export * from "./reduce-query";
 export * from "./reducible";
