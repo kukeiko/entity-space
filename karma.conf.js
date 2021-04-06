@@ -1,5 +1,4 @@
 let npmCommand = process.env.npm_lifecycle_event;
-process.env.CHROME_BIN = require("puppeteer").executablePath();
 
 let browsers = ["ChromeHeadless"];
 let reporters = ["mocha"];
@@ -8,11 +7,11 @@ let withCoverage = true;
 if (npmCommand.includes(":watch")) {
     browsers = ["Chrome"];
     reporters.push("coverage-istanbul");
-}
-
-if (npmCommand.includes(":debug")) {
+} else if (npmCommand.includes(":debug")) {
     browsers = ["Chrome"];
     withCoverage = false;
+} else {
+    process.env.CHROME_BIN = require("puppeteer").executablePath();
 }
 
 module.exports = function (config) {
