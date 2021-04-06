@@ -37,6 +37,6 @@ export class TreeNodeParentsHydrator implements PayloadHydrator {
     }
 
     private _flattenParents(items: TypedInstance<TreeNodeModel>[]): TypedInstance<TreeNodeModel>[] {
-        return items.reduce((acc, value) => [...acc, ...value.parents], [] as TypedInstance<TreeNodeModel>[]);
+        return items.reduce((acc, value) => [...acc, ...(value.parents || [])], [] as TypedInstance<TreeNodeModel>[]);
     }
 }
