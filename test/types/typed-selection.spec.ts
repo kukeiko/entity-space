@@ -9,6 +9,12 @@ import { TreeNodeModel, Shape } from "../facade/model";
 type DefaultIsEmpty = IsExact<TypedSelection<TreeNodeModel>, {}>;
 
 /**
+ * Only "true" is a valid value when selecting primitives.
+ */
+// $ExpectType true
+type OnlyTrueIsValidForPrimitives = IsExact<TypedSelection<TreeNodeModel>["id"], true | undefined>;
+
+/**
  * A default selection has some properties we expect for a given model.
  * "id" can only be "true", whereas "children" (which is an array of TreeNode) can either be "true" or another selection.
  */
