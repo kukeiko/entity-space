@@ -11,17 +11,11 @@ The whole point of entity-space is to have a common structure for all types of q
 A query consists of:
 
 -   the **model**, describing the shape of the data and optionally loadable parts it might have
--   the **criteria**, describing the filter the loaded data has to fulfill, e.g. "id in (1,2)"
+-   the **criteria**, describing the filter the loaded data has to fulfill, e.g. "id in (1, 2)"
 -   the **selection**, describing what optional parts of data should be included that are not loaded by default
 -   the **options**, a custom user object to represent what the criteria can't (e.g. server side filter)
 
 Based on the **options** and **criteria**, entity-space can understand the identity of the data that will be loaded. Based on the **selection**, entity-space can understand what optional parts are included.
-
----
-
-_The exact mechanics of how this will be done are not relevant now, but it's worth mentioning that it basically boils down to applying set theory 🧡._
-
----
 
 Using that information, together with implementation work by the user, we can start doing interesting things:
 
