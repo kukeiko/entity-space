@@ -42,7 +42,7 @@ module.exports = {
         },
     ],
 
-    scopes: ["core", "query", "criteria", "selection", "instance", "workspace", "metadata", "typed"],
+    scopes: ["core", "query", "criteria", "caching", "selection", "instance", "workspace", "metadata", "typed"],
 
     allowTicketNumber: false,
     isTicketNumberRequired: false,

@@ -10,6 +10,10 @@ import { Class } from "../utils";
 import { reduceQuery } from "./reduce-query";
 import { queryToString } from "./query-to-string";
 
+/**
+ * [note] caching is very incomplete and a bit broken. i still decided to commit it since i managed to get some progress,
+ * and it is a good wip starting ground for future use.
+ */
 export class Workspace {
     constructor(provider: ComponentProvider) {
         this._provider = provider;
