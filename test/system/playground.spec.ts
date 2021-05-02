@@ -45,6 +45,7 @@ xdescribe("prototyping-playground", () => {
             {
                 id: 1,
                 name: "foo",
+
                 shapes: [{ type: "triangle", id: 1 }],
             },
         ];
@@ -62,19 +63,31 @@ xdescribe("prototyping-playground", () => {
 
         // const selection = select([CanvasModel], x => x.author(x => x.name()).shapes(x => x.area().radius().length().canvas().angleA().angleB().angleC()));
 
-        // const selectedInstance: Instance.Selected<CanvasModel, typeof selection> = {
-        //     id: 7,
-        //     author: {
-        //         id: 3,
-        //         name: "susi",
-        //     },
-        //     name: "malwand",
-        //     shapes: [
-        //         { id: 8, type: "square", area: 3, length: 2, canvas: { id: 7, name: "malwand" } },
-        //         { id: 19, type: "circle", area: 9, radius: 123, canvas: { id: 7, name: "malwand" } },
-        //         { id: 21, type: "triangle", area: 13, angleA: 1, angleB: 2, angleC: 3, canvas: { id: 7, name: "malwand" } }
-        //     ],
-        // };
+        const selection = new TypedSelector([CanvasModel])
+            // .select(x => x.id)
+            .select(x => x.author)
+            .select(
+                x => x.shapes
+                // [todo] selecting the type bricked the models below (property "type" is missing)
+                // x => x.select(x => x.type).select(x => x.length),
+            )
+            .get();
+
+        const selectedInstance: TypedInstance.Selected<CanvasModel, typeof selection> = {
+            id: 7,
+            author: {
+                id: 3,
+                name: "susi",
+            },
+            name: "malwand",
+            shapes: [
+                // {
+                // }
+                // { id: 8, type: "square", area: 3, length: 2, canvas: { id: 7, name: "malwand" } },
+                // { id: 19, type: "circle", area: 9, radius: 123, canvas: { id: 7, name: "malwand" } },
+                // { id: 21, type: "triangle", area: 13, angleA: 1, angleB: 2, angleC: 3, canvas: { id: 7, name: "malwand" } },
+            ],
+        };
     });
 
     it("union criteria", () => {

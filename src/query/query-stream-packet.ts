@@ -3,7 +3,7 @@ import { Query } from "./query";
 
 export interface QueryStreamPacket extends QueryResult {
     /**
-     * Queries that are yet to be delivered by the stream.
+     * Queries that are yet to be resolved by the stream.
      */
     open: Query[];
 
