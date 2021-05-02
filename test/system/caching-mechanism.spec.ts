@@ -47,7 +47,7 @@ import { TreeNodeRepository, ShapeRepository } from "../facade/data";
  * We have tree nodes to demonstrate how to deal with data that is self referential.
  * We also have canvases & shapes to demonstrate how to deal with data that is based on inheritance.
  */
-describe("caching-mechanism", () => {
+xdescribe("caching-mechanism", () => {
     function toInstancesWithPrimitivesOnly(models: Class[], entities: Instance[]): Instance[] {
         let merged: Record<string, Property> = {};
 

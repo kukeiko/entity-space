@@ -6,6 +6,7 @@ export * from "./in-value-criterion";
 export * from "./is-value-criteria";
 export * from "./is-value-criterion";
 export * from "./not-in-value-criterion";
+export * from "./reduce-from-to-value-criterion";
 export * from "./reduce-in-value-criterion";
 export * from "./reduce-value-criteria";
 export * from "./reduce-value-criterion";

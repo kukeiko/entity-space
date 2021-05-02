@@ -1,9 +1,6 @@
 import { FromToValueCriterion } from "./from-to-value-criterion";
 
-export function createFromToValueCriterion<T extends FromToValueCriterion["from"]["value"], U extends FromToValueCriterion["to"]["value"]>(
-    values: [T, U],
-    inclusive: boolean | [boolean] | [boolean, boolean] = true
-): FromToValueCriterion {
+export function createFromToValueCriterion<T extends number | string>(values: [T, T], inclusive: boolean | [boolean] | [boolean, boolean] = true): FromToValueCriterion {
     if (typeof inclusive === "boolean") {
         inclusive = [inclusive, inclusive];
     } else if (inclusive.length === 1) {
