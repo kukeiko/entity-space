@@ -31,7 +31,7 @@ import { TreeNodeRepository, ShapeRepository } from "../facade/data";
  * We have tree nodes to demonstrate how to deal with data that is self referential.
  * We also have canvases & shapes to demonstrate how to deal with data that is based on inheritance.
  */
-describe("core-loading-mechanism", () => {
+xdescribe("core-loading-mechanism", () => {
     it("loading some data", done => {
         /**
          * Our repository for tree nodes that resembles the actual API contacted.
