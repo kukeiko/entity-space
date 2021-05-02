@@ -1,6 +1,6 @@
-import { subtractSets } from "../../utils";
+import { subtractSets } from "../../../utils";
 import { InValueCriterion } from "./in-value-criterion";
-import { ValueCriterion } from "./value-criterion";
+import { ValueCriterion } from "../value-criterion";
 
 export function reduceInValueCriterion(a: InValueCriterion, b: ValueCriterion): InValueCriterion | null {
     switch (b.op) {

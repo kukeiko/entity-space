@@ -1,17 +1,9 @@
 import { FromToValueCriterion } from "./from-to-value-criterion";
-import { ValueCriterion } from "./value-criterion";
+import { ValueCriterion } from "../value-criterion";
+import { FromCriterion } from "./from-criterion";
+import { ToCriterion } from "./to-criterion";
 
-type From = {
-    op: ">=" | ">";
-    value: number | string;
-};
-
-type To = {
-    op: "<=" | "<";
-    value: number | string;
-};
-
-function isFromBiggerThanFrom(a: From, b?: From): boolean {
+function isFromBiggerThanFrom(a: FromCriterion, b?: FromCriterion): boolean {
     if (b === void 0) {
         return true;
     } else if (a.op === ">=" && b.op === ">") {
@@ -21,7 +13,7 @@ function isFromBiggerThanFrom(a: From, b?: From): boolean {
     }
 }
 
-function isFromSmallerThanTo(a: From, b?: To): boolean {
+function isFromSmallerThanTo(a: FromCriterion, b?: ToCriterion): boolean {
     if (b === void 0) {
         return true;
     } else if (a.op === ">=" && b.op === "<=") {
@@ -31,11 +23,11 @@ function isFromSmallerThanTo(a: From, b?: To): boolean {
     }
 }
 
-export function isFromInsideFromTo(a: From, b: FromToValueCriterion): boolean {
+export function isFromInsideFromTo(a: FromCriterion, b: FromToValueCriterion): boolean {
     return isFromBiggerThanFrom(a, b.from) && isFromSmallerThanTo(a, b.to);
 }
 
-function isToBiggerThanFrom(a: To, b?: From): boolean {
+function isToBiggerThanFrom(a: ToCriterion, b?: FromCriterion): boolean {
     if (b === void 0) {
         return true;
     } else if (a.op === "<=" && b.op === ">=") {
@@ -45,7 +37,7 @@ function isToBiggerThanFrom(a: To, b?: From): boolean {
     }
 }
 
-function isToSmallerThanTo(a: To, b?: To): boolean {
+function isToSmallerThanTo(a: ToCriterion, b?: ToCriterion): boolean {
     if (b === void 0) {
         return true;
     } else if (a.op === "<=" && b.op === "<") {
@@ -55,7 +47,7 @@ function isToSmallerThanTo(a: To, b?: To): boolean {
     }
 }
 
-export function isToInsideFromTo(a: To, b: FromToValueCriterion): boolean {
+export function isToInsideFromTo(a: ToCriterion, b: FromToValueCriterion): boolean {
     return isToBiggerThanFrom(a, b.from) && isToSmallerThanTo(a, b.to);
 }
 
@@ -114,23 +106,8 @@ export function reduceFromToValueCriterion(a: FromToValueCriterion, b: ValueCrit
                     }
                 }
             } else {
-                // ???
+                // [todo] ???
             }
-            // [note] that's the code from old entity-space which only supported incluse from-to with non-optional start & end ranges
-            // const [fromInside, toInside]
-            // let [minB, maxB] = b.range;
-            // let minInside = minB <= maxA && minB >= minA;
-            // let maxInside = maxB <= maxA && maxB >= minA;
-
-            // if (minInside && maxInside) {
-            //     return null;
-            // } else if (minInside) {
-            //     return { op: "from-to", type: "number", range: [maxA + b.step, maxB], step: b.step };
-            // } else if (maxInside) {
-            //     return { op: "from-to", type: "number", range: [minB, minA - b.step], step: b.step };
-            // } else {
-            //     return b;
-            // }
             break;
 
         case "in":

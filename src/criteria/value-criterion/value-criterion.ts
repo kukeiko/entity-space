@@ -1,5 +1,5 @@
-import { NotInValueCriterion } from "./not-in-value-criterion";
-import { InValueCriterion } from "./in-value-criterion";
-import { FromToValueCriterion } from "./from-to-value-criterion";
+import { NotInValueCriterion } from "./not-in/not-in-value-criterion";
+import { InValueCriterion } from "./in/in-value-criterion";
+import { FromToValueCriterion } from "./from-to/from-to-value-criterion";
 
 export type ValueCriterion = FromToValueCriterion | InValueCriterion | NotInValueCriterion;

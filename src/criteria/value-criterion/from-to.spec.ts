@@ -1,4 +1,4 @@
-import { isFromInsideFromTo, isToInsideFromTo } from "./reduce-from-to-value-criterion";
+import { isFromInsideFromTo, isToInsideFromTo } from "./from-to/reduce-from-to-value-criterion";
 
 describe("[tmp] from-to", () => {
     it("isFromInsideFromTo()", () => {
