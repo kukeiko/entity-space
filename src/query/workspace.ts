@@ -22,6 +22,7 @@ export class Workspace {
     private readonly _provider: ComponentProvider;
     private readonly _cachedQueries = new Map<Class, Query[]>();
 
+    // [todo] can we exchange "Instance" w/ Record<string, any>?
     load$<T = Instance>(query: Query): Observable<T[]> {
         console.log(`[workspace] loading query: ${queryToString(query)}`);
         const reducedQuery = this._reduceQueryAgainstCache(query);
@@ -42,6 +43,9 @@ export class Workspace {
 
         const translator = this._provider.getTranslator(reducedQuery);
         const streams = translator.translate(reducedQuery);
+
+        console.log(`[workspace] translated into ${streams.length} streams: ${queryToString(reducedQuery)}`);
+
         const observables = streams.map(s =>
             s.open$().pipe(
                 tap(packet => this._writeToCache(packet)),
@@ -88,7 +92,7 @@ export class Workspace {
             return of(packet.payload);
         }
 
-        return merge(...hydrations.map(hydration => combineLatest(of(hydration), this.load$(hydration.load)))).pipe(
+        return merge(...hydrations.map(hydration => combineLatest([of(hydration), this.load$(hydration.load)]))).pipe(
             tap(([hydration, payload]) => hydration.assign(packet.payload, payload)),
             map(() => packet.payload)
         );
