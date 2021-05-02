@@ -28,9 +28,9 @@
     "peerDependencies": {},
     "devDependencies": {
         "@types/jasmine": "3.6.10",
-        "commitizen": "4.0.3",
+        "commitizen": "4.2.3",
         "conditional-type-checks": "1.0.5",
-        "cz-customizable": "6.2.0",
+        "cz-customizable": "6.3.0",
         "dtslint": "4.0.9",
         "istanbul-instrumenter-loader": "3.0.1",
         "jasmine-core": "3.7.1",
