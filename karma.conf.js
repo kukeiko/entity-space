@@ -36,7 +36,7 @@ module.exports = function (config) {
     }
 
     config.set({
-        frameworks: ["jasmine"],
+        frameworks: ["jasmine", "webpack"],
         browsers: browsers,
         port: 6400,
         files: ["./test/entry.ts"],
