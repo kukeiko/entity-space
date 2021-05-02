@@ -1,4 +1,4 @@
-import { createInValueCriterion, reduceCriterion } from "src";
+import { createInValueCriterion, reduceObjectCriterion } from "src";
 
 // [todo] we're only testing "in" criteria here, but not "not-in" & "from-to"
 describe("reduceCriterion()", () => {
@@ -16,7 +16,7 @@ describe("reduceCriterion()", () => {
             };
 
             // act
-            const reduced = reduceCriterion(a, b);
+            const reduced = reduceObjectCriterion(a, b);
 
             // assert
             expect(reduced).toBeNull();
@@ -34,7 +34,7 @@ describe("reduceCriterion()", () => {
             };
 
             // act
-            const reduced = reduceCriterion(a, b);
+            const reduced = reduceObjectCriterion(a, b);
 
             // assert
             expect(reduced).toBeNull();
@@ -50,7 +50,7 @@ describe("reduceCriterion()", () => {
             const b = {};
 
             // act
-            const reduced = reduceCriterion(a, b);
+            const reduced = reduceObjectCriterion(a, b);
 
             // assert
             expect(reduced).toBeNull();
@@ -65,7 +65,7 @@ describe("reduceCriterion()", () => {
             const expected = { foo: [createInValueCriterion([2])] };
 
             // act
-            const reduced = reduceCriterion(a, b);
+            const reduced = reduceObjectCriterion(a, b);
 
             // assert
             expect(reduced).toEqual(expected);
@@ -88,7 +88,7 @@ describe("reduceCriterion()", () => {
             };
 
             // act
-            const reduced = reduceCriterion(a, b);
+            const reduced = reduceObjectCriterion(a, b);
 
             // assert
             expect(reduced).toEqual(expected);
@@ -112,7 +112,7 @@ describe("reduceCriterion()", () => {
             };
 
             // act
-            const reduced = reduceCriterion(a, b);
+            const reduced = reduceObjectCriterion(a, b);
 
             // assert
             expect(reduced).toEqual(expected);
@@ -131,7 +131,7 @@ describe("reduceCriterion()", () => {
             };
 
             // act
-            const reduced = reduceCriterion(a, b);
+            const reduced = reduceObjectCriterion(a, b);
 
             // assert
             expect(reduced).toBe(a);
@@ -149,7 +149,7 @@ describe("reduceCriterion()", () => {
             };
 
             // act
-            const reduced = reduceCriterion(a, b);
+            const reduced = reduceObjectCriterion(a, b);
 
             // assert
             expect(reduced).toBe(a);
@@ -168,7 +168,7 @@ describe("reduceCriterion()", () => {
             };
 
             // act
-            const reduced = reduceCriterion(a, b);
+            const reduced = reduceObjectCriterion(a, b);
 
             // assert
             expect(reduced).toBe(a);
@@ -185,7 +185,7 @@ describe("reduceCriterion()", () => {
             };
 
             // act
-            const reduced = reduceCriterion(a, b);
+            const reduced = reduceObjectCriterion(a, b);
 
             // assert
             expect(reduced).toBe(a);
@@ -201,7 +201,7 @@ describe("reduceCriterion()", () => {
             };
 
             // act
-            const reduced = reduceCriterion(a, b);
+            const reduced = reduceObjectCriterion(a, b);
 
             // assert
             expect(reduced).toBe(a);

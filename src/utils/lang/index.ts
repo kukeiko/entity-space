@@ -6,5 +6,4 @@ export * from "./merge-union";
 export * from "./partial-fields";
 export * from "./primitive";
 export * from "./replace";
-export * from "./string-indexable";
 export * from "./unbox";

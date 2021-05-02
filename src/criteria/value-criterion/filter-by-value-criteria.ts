@@ -1,7 +1,6 @@
-import { StringIndexable } from "../../utils";
 import { ValueCriteria } from "./value-criteria";
 
-export function filterByValueCriteria<T extends StringIndexable>(instances: T[], key: string, criteria: ValueCriteria): T[] {
+export function filterByValueCriteria<T extends Record<string, any>>(instances: T[], key: string, criteria: ValueCriteria): T[] {
     const filtered = new Set<T>();
 
     for (const criterion of criteria) {

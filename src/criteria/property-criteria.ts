@@ -1,5 +1,5 @@
 import { ValueCriteria } from "./value-criterion";
 import { ValuesCriteria } from "./values-criterion";
-import { Criteria } from "./criteria";
+import { ObjectCriteria } from "./object-criteria";
 
-export type PropertyCriteria = ValueCriteria | ValuesCriteria | Criteria;
+export type PropertyCriteria = ValueCriteria | ValuesCriteria | ObjectCriteria;

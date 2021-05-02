@@ -1,8 +1,8 @@
-import { Criterion } from "./criterion";
+import { ObjectCriterion } from "./object-criterion";
 import { isValueCriteria, reduceValueCriteria } from "./value-criterion";
 import { PropertyCriteria } from "./property-criteria";
 
-export function reduceCriterion(a: Criterion, b: Criterion): Criterion | null {
+export function reduceObjectCriterion(a: ObjectCriterion, b: ObjectCriterion): ObjectCriterion | null {
     let reducedPropertyCriteria: { key: string; reduced: PropertyCriteria } | undefined;
 
     for (const key in b) {
