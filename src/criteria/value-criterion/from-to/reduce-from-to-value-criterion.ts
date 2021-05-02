@@ -112,9 +112,7 @@ export function reduceFromToValueCriterion(a: FromToValueCriterion, b: ValueCrit
 
         case "in":
             const reduced: FromToValueCriterion = {
-                op: "from-to",
-                from: a.from,
-                to: a.to,
+                ...a,
             };
 
             let didReduce = false;

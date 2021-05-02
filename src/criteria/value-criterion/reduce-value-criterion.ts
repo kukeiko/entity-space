@@ -14,6 +14,4 @@ export function reduceValueCriterion(a: ValueCriterion, b: ValueCriterion): Valu
         case "not-in":
             return reduceNotInValueCriterion(a, b);
     }
-
-    return a;
 }
