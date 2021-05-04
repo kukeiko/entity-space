@@ -1,4 +1,4 @@
-import { CacheWriter, CacheReader, QueryResult, Query, Instance, TypedInstance, isTypedQueryResult, Primitive, filterByCriteria, isTypedQuery } from "src";
+import { CacheWriter, CacheReader, QueryResult, Query, Instance, TypedInstance, isTypedQueryResult, Primitive, filterByObjectCriteria, isTypedQuery } from "src";
 import { TreeNodeModel, TreeNodeQuery } from "../model";
 
 type TreeNodePrimitivesOnly = TypedInstance<TreeNodeModel, "loadable", { value: Primitive[] }>;
@@ -13,7 +13,7 @@ export class TreeNodeCache implements CacheWriter, CacheReader {
 
         const items = Array.from(this._cache.values());
 
-        return filterByCriteria(items, query.criteria);
+        return filterByObjectCriteria(items, query.criteria);
     }
 
     // [todo] cache references

@@ -1,7 +1,7 @@
-import { Query, createAlwaysReducible, reduceQuery, Criteria, Selection } from "src";
+import { Query, createAlwaysReducible, reduceQuery, ObjectCriteria, Selection } from "src";
 
 describe("reduceQuery()", () => {
-    function createQuery(criteria: Criteria = [], selection: Selection = {}): Query {
+    function createQuery(criteria: ObjectCriteria = [], selection: Selection = {}): Query {
         return { criteria, model: [], options: createAlwaysReducible(), selection };
     }
 

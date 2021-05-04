@@ -1,8 +1,7 @@
-import { StringIndexable } from "../utils";
-import { Criterion } from "./criterion";
+import { ObjectCriterion } from "./object-criterion";
 import { isValueCriteria, filterByValueCriteria } from "./value-criterion";
 
-export function filterByCriterion<T extends StringIndexable>(instances: T[], criterion: Criterion): T[] {
+export function filterByObjectCriterion<T extends Record<string, any>>(instances: T[], criterion: ObjectCriterion): T[] {
     let filtered: T[] = [];
 
     for (const propertyCriteriaKey in criterion) {
