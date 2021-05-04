@@ -1,5 +1,5 @@
-import { FromToValueCriterion } from "./from-to-value-criterion";
 import { ValueCriterion } from "../value-criterion";
+import { FromToValueCriterion } from "./from-to-value-criterion";
 import { FromCriterion } from "./from-criterion";
 import { ToCriterion } from "./to-criterion";
 
@@ -53,6 +53,7 @@ export function isToInsideFromTo(a: ToCriterion, b: FromToValueCriterion): boole
 
 export function reduceFromToValueCriterion(a: FromToValueCriterion, b: ValueCriterion): FromToValueCriterion | null {
     switch (b.op) {
+        // [todo] revisit & try to simplify this from-to / from-to reduction.
         case "from-to":
             if (a.from !== void 0 && a.to !== void 0) {
                 const fromInside = isFromInsideFromTo(a.from, b);
@@ -133,6 +134,7 @@ export function reduceFromToValueCriterion(a: FromToValueCriterion, b: ValueCrit
             break;
 
         case "not-in":
+            // [todo] implement
             break;
     }
 

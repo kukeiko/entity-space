@@ -1,7 +1,7 @@
 import { ValueCriterion } from "./value-criterion";
-import { reduceInValueCriterion } from "./in/reduce-in-value-criterion";
-import { reduceFromToValueCriterion } from "./from-to/reduce-from-to-value-criterion";
-import { reduceNotInValueCriterion } from "./not-in/reduce-not-in-value-criterion";
+import { reduceInValueCriterion } from "./in";
+import { reduceFromToValueCriterion } from "./from-to";
+import { reduceNotInValueCriterion } from "./not-in";
 
 export function reduceValueCriterion(a: ValueCriterion, b: ValueCriterion): ValueCriterion | null {
     switch (a.op) {
