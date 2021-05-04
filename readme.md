@@ -17,7 +17,7 @@ A query consists of:
 
 Based on the **options** and **criteria**, entity-space can understand the identity of the data that will be loaded. Based on the **selection**, entity-space can understand what optional parts are included.
 
-Using that information, together with implementation work by the user, we can start doing interesting things:
+Using that information, together with implementation work by the user, we could think up some useful features:
 
 -   multiplexing (make multiple queries behave as one)
 -   strictly typed hydration of optional data (hydrated properties will no longer be "undefined")
