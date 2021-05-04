@@ -12,18 +12,9 @@
         "noImplicitThis": true,
         "resolveJsonModule": true,
         "strict": true,
-        "lib": [
-            "DOM",
-            "scripthost",
-            "es2015",
-            "es2016.array.include",
-            "ES2017.Object"
-        ],
+        "lib": ["DOM", "scripthost", "es2015", "es2016.array.include", "ES2017.Object"],
         "baseUrl": ".",
         "paths": { "src": ["src"] }
     },
-    "include": [
-        "./src/**/*.ts",
-        "./test/**/*.ts"
-    ]
+    "include": ["./src/**/*.ts", "./test/**/*.ts"]
 }

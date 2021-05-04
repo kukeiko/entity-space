@@ -10,6 +10,7 @@ export function filterByValueCriteria<T extends Record<string, any>>(instances: 
             case "in":
                 matches = instance => criterion.values.has(instance[key]);
                 break;
+
             default:
                 throw new Error(`criterion op '${criterion.op}' not yet supported`);
         }

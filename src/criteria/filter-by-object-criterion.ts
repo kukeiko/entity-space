@@ -10,7 +10,7 @@ export function filterByObjectCriterion<T extends Record<string, any>>(instances
         if (isValueCriteria(propertyCriteria)) {
             filtered = filterByValueCriteria(instances, propertyCriteriaKey, propertyCriteria);
         } else {
-            throw new Error(`as of yet only simple value criteria filtering is supported`);
+            throw new Error(`only single value criteria filtering is currently supported`);
         }
     }
 
