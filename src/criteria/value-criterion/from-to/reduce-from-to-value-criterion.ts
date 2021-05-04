@@ -51,6 +51,7 @@ export function isToInsideFromTo(a: ToCriterion, b: FromToValueCriterion): boole
     return isToBiggerThanFrom(a, b.from) && isToSmallerThanTo(a, b.to);
 }
 
+// [todo] since "reduceNotInValueCriterion()" returns generic "ValueCriterion" - consider doing the same here
 export function reduceFromToValueCriterion(a: FromToValueCriterion, b: ValueCriterion): FromToValueCriterion | null {
     switch (b.op) {
         // [todo] revisit & try to simplify this from-to / from-to reduction.

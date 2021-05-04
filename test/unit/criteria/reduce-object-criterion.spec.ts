@@ -1,7 +1,7 @@
 import { createInValueCriterion, reduceObjectCriterion } from "src";
 
 // [todo] we're only testing "in" criteria here, but not "not-in" & "from-to"
-describe("reduceCriterion()", () => {
+describe("reduceObjectCriterion()", () => {
     describe("full reduction", () => {
         it("{ foo in [2], bar in [3, 4, 7] } should be completely reduced by { foo in [2], bar in [3, 4, 7] }", () => {
             // arrange

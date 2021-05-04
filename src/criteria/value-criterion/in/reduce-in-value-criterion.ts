@@ -2,17 +2,18 @@ import { subtractSets } from "../../../utils";
 import { ValueCriterion } from "../value-criterion";
 import { InValueCriterion } from "./in-value-criterion";
 
+// [todo] since "reduceNotInValueCriterion()" returns generic "ValueCriterion" - consider doing the same here
 export function reduceInValueCriterion(a: InValueCriterion, b: ValueCriterion): InValueCriterion | null {
     switch (b.op) {
         case "in": {
-            const substracted = subtractSets(a.values, b.values);
+            const subtracted = subtractSets(a.values, b.values);
 
-            if (substracted.size === a.values.size) {
+            if (subtracted.size === a.values.size) {
                 return a;
-            } else if (substracted.size === 0) {
+            } else if (subtracted.size === 0) {
                 return null;
             } else {
-                return { op: "in", values: substracted };
+                return { op: "in", values: subtracted };
             }
         }
 
