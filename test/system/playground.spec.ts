@@ -1,4 +1,4 @@
-import { TypedQuery, TypedInstance, TypedSelection, TypedCriteria, Property, Instance, TypedSelector } from "src";
+import { TypedQuery, TypedInstance, TypedSelection, TypedSelector } from "src";
 import { TreeNodeModel, CanvasModel, CircleModel, SquareModel, TriangleModel } from "../facade/model";
 
 xdescribe("prototyping-playground", () => {
@@ -45,7 +45,7 @@ xdescribe("prototyping-playground", () => {
             {
                 id: 1,
                 name: "foo",
-
+                authorId: 8,
                 shapes: [{ type: "triangle", id: 1 }],
             },
         ];
@@ -75,6 +75,7 @@ xdescribe("prototyping-playground", () => {
 
         const selectedInstance: TypedInstance.Selected<CanvasModel, typeof selection> = {
             id: 7,
+            authorId: 3,
             author: {
                 id: 3,
                 name: "susi",

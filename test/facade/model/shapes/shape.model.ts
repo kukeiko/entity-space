@@ -20,7 +20,8 @@ import { AuthorModel } from "./author.model";
  */
 export class CanvasModel extends DataEntryModel {
     id = createProperty("id", [Number], b => b.loadable().identifier());
-    author = createProperty("author", [AuthorModel], b => b.loadable(["optional"]));
+    authorId = createProperty("authorId", [Number], b => b.loadable());
+    author = createProperty("author", [AuthorModel], b => b.loadable(["optional"]).identifiedBy(this.authorId));
     name = createProperty("name", [String], b => b.loadable());
     shapes = createProperty("shapes", allShapeModels, b => b.loadable(["optional"]).iterable());
 }
