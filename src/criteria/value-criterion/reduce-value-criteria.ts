@@ -6,16 +6,14 @@ export function reduceValueCriteria(a: ValueCriteria, b: ValueCriteria): ValueCr
     let didReduce = false;
 
     for (let criterionB of b) {
-        let nextReduced: ValueCriteria = [];
+        const nextReduced: ValueCriteria = [];
 
         for (let criterionA of reduced) {
             let reducedCriterion = reduceValueCriterion(criterionA, criterionB);
+            nextReduced.push(...reducedCriterion);
 
-            if (reducedCriterion !== null) {
-                nextReduced.push(reducedCriterion);
-            }
-
-            if (reducedCriterion !== criterionA && !didReduce) {
+            // [todo] consider not using an extra check-flag, instead, check at and of function
+            if (reducedCriterion[0] !== criterionA && !didReduce) {
                 didReduce = true;
             }
         }

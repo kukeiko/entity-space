@@ -82,7 +82,7 @@ describe("reduceQuery()", () => {
             expect(reduced?.selection).toEqual({ bar: true });
         });
 
-        it("{ id in [1, 2] / { foo, bar } } reduced by { id in [1] / { foo } } should be [{ id in [1] / { bar } }, { id in [2] / { foo, bar } }]", () => {
+        xit("{ id in [1, 2] / { foo, bar } } reduced by { id in [1] / { foo } } should be [{ id in [1] / { bar } }, { id in [2] / { foo, bar } }]", () => {
             // arrange
             const a = createQuery([{ id: [{ op: "in", values: new Set([1, 2]) }] }], { foo: true, bar: true });
             const b = createQuery([{ id: [{ op: "in", values: new Set([1]) }] }], { foo: true });

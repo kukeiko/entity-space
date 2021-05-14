@@ -51,8 +51,7 @@ export function isToInsideFromTo(a: ToCriterion, b: FromToValueCriterion): boole
     return isToBiggerThanFrom(a, b.from) && isToSmallerThanTo(a, b.to);
 }
 
-// [todo] since "reduceNotInValueCriterion()" returns generic "ValueCriterion" - consider doing the same here
-export function reduceFromToValueCriterion(a: FromToValueCriterion, b: ValueCriterion): FromToValueCriterion | null {
+export function reduceFromToValueCriterion(a: FromToValueCriterion, b: ValueCriterion): ValueCriterion[] {
     switch (b.op) {
         // [todo] revisit & try to simplify this from-to / from-to reduction.
         case "from-to":
@@ -61,15 +60,15 @@ export function reduceFromToValueCriterion(a: FromToValueCriterion, b: ValueCrit
                 const toInside = isToInsideFromTo(a.to, b);
 
                 if (fromInside && toInside) {
-                    return null;
+                    return [];
                 } else if (fromInside) {
                     if (b.to === void 0) {
                         // this code path should never be hit because if b.to === void 0, and fromInside is true, then toInside has to be true as well.
                     } else {
                         if (b.to.op === "<=") {
-                            return { op: "from-to", from: { op: ">", value: b.to.value }, to: { op: a.to.op, value: a.to.value } };
+                            return [{ op: "from-to", from: { op: ">", value: b.to.value }, to: { op: a.to.op, value: a.to.value } }];
                         } else {
-                            return { op: "from-to", from: { op: ">=", value: b.to.value }, to: { op: a.to.op, value: a.to.value } };
+                            return [{ op: "from-to", from: { op: ">=", value: b.to.value }, to: { op: a.to.op, value: a.to.value } }];
                         }
                     }
                 } else if (toInside) {
@@ -77,33 +76,33 @@ export function reduceFromToValueCriterion(a: FromToValueCriterion, b: ValueCrit
                         // this code path should never be hit because if b.from === void 0, and toInside is true, then fromInside has to be true as well.
                     } else {
                         if (b.from.op === ">=") {
-                            return { op: "from-to", from: { op: a.from.op, value: a.from.value }, to: { op: "<", value: b.from.value } };
+                            return [{ op: "from-to", from: { op: a.from.op, value: a.from.value }, to: { op: "<", value: b.from.value } }];
                         } else {
-                            return { op: "from-to", from: { op: a.from.op, value: a.from.value }, to: { op: "<=", value: b.from.value } };
+                            return [{ op: "from-to", from: { op: a.from.op, value: a.from.value }, to: { op: "<=", value: b.from.value } }];
                         }
                     }
                 }
             } else if (a.from !== void 0) {
                 if (isFromInsideFromTo(a.from, b)) {
                     if (b.to === void 0) {
-                        return null;
+                        return [];
                     } else {
                         if (b.to.op === "<=") {
-                            return { op: "from-to", from: { op: ">", value: b.to.value } };
+                            return [{ op: "from-to", from: { op: ">", value: b.to.value } }];
                         } else {
-                            return { op: "from-to", from: { op: ">=", value: b.to.value } };
+                            return [{ op: "from-to", from: { op: ">=", value: b.to.value } }];
                         }
                     }
                 }
             } else if (a.to !== void 0) {
                 if (isToInsideFromTo(a.to, b)) {
                     if (b.from === void 0) {
-                        return null;
+                        return [];
                     } else {
                         if (b.from.op === ">=") {
-                            return { op: "from-to", to: { op: "<", value: b.from.value } };
+                            return [{ op: "from-to", to: { op: "<", value: b.from.value } }];
                         } else {
-                            return { op: "from-to", to: { op: "<=", value: b.from.value } };
+                            return [{ op: "from-to", to: { op: "<=", value: b.from.value } }];
                         }
                     }
                 }
@@ -130,7 +129,7 @@ export function reduceFromToValueCriterion(a: FromToValueCriterion, b: ValueCrit
             }
 
             if (didReduce) {
-                return reduced;
+                return [reduced];
             }
             break;
 
@@ -139,5 +138,5 @@ export function reduceFromToValueCriterion(a: FromToValueCriterion, b: ValueCrit
             break;
     }
 
-    return a;
+    return [a];
 }
