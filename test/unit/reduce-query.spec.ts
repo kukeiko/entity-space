@@ -81,5 +81,22 @@ describe("reduceQuery()", () => {
             expect(reduced?.criteria).toEqual([{ id: [{ op: "in", values: new Set([1, 2]) }] }]);
             expect(reduced?.selection).toEqual({ bar: true });
         });
+
+        it("{ id in [1, 2] / { foo, bar } } reduced by { id in [1] / { foo } } should be [{ id in [1] / { bar } }, { id in [2] / { foo, bar } }]", () => {
+            // arrange
+            const a = createQuery([{ id: [{ op: "in", values: new Set([1, 2]) }] }], { foo: true, bar: true });
+            const b = createQuery([{ id: [{ op: "in", values: new Set([1]) }] }], { foo: true });
+
+            const expected = [
+                createQuery([{ id: [{ op: "in", values: new Set([1]) }] }], { bar: true }),
+                createQuery([{ id: [{ op: "in", values: new Set([2]) }] }], { foo: true, bar: true }),
+            ];
+
+            // act
+            const reduced = reduceQuery(a, b);
+
+            // assert
+            expect(reduced).toEqual(jasmine.arrayWithExactContents(expected));
+        });
     });
 });
