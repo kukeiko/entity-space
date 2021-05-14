@@ -44,9 +44,9 @@ module.exports = {
 
     scopes: ["core", "query", "criteria", "caching", "selection", "instance", "workspace", "metadata", "typed"],
 
-    allowTicketNumber: false,
+    allowTicketNumber: true,
     isTicketNumberRequired: false,
-    ticketNumberPrefix: "TICKET-",
+    ticketNumberPrefix: "#",
     ticketNumberRegExp: "\\d{1,5}",
 
     // it needs to match the value for field type. Eg.: 'fix'
@@ -77,7 +77,7 @@ module.exports = {
     allowCustomScopes: true,
     allowBreakingChanges: ["feat", "fix"],
     // skip any questions you want
-    skipQuestions: ["body"],
+    skipQuestions: ["footer"],
 
     // limit subject length
     subjectLimit: 255,
