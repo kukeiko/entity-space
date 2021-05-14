@@ -116,4 +116,18 @@ describe("reduceQuery()", () => {
             expect(reduced).toEqual(expected);
         });
     });
+
+    describe("no reduction", () => {
+        it("{ id in [1, 2] / { foo } } should not be reduced by { id in [1] }", () => {
+            // arrange
+            const a = createQuery([{ id: [{ op: "in", values: new Set([1, 2]) }] }], { foo: true });
+            const b = createQuery([{ id: [{ op: "in", values: new Set([1]) }] }]);
+
+            // act
+            const reduced = reduceQuery(a, b);
+
+            // assert
+            expect(reduced).toBe(a);
+        });
+    });
 });

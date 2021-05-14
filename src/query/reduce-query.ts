@@ -21,12 +21,14 @@ export function reduceQuery(a: Query, b: Query): Query | null {
             options: a.options,
             selection: reducedSelection,
         };
-    } else {
+    } else if (reduceSelection(a.selection, b.selection) === null) {
         return {
             criteria: reducedCriteria,
             model: a.model,
             options: a.options,
             selection: a.selection,
         };
+    } else {
+        return a;
     }
 }
