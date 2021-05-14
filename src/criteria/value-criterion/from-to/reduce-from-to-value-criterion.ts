@@ -81,6 +81,27 @@ export function reduceFromToValueCriterion(a: FromToValueCriterion, b: ValueCrit
                             return [{ op: "from-to", from: { op: a.from.op, value: a.from.value }, to: { op: "<=", value: b.from.value } }];
                         }
                     }
+                } else if (b.from !== void 0 && b.to !== void 0) {
+                    const fromInside = isFromInsideFromTo(b.from, a);
+                    const toInside = isToInsideFromTo(b.to, a);
+
+                    if (fromInside && toInside) {
+                        const result: ValueCriterion[] = [];
+
+                        if (b.from.op === ">") {
+                            result.push({ op: "from-to", from: { ...a.from }, to: { op: "<=", value: b.from.value } });
+                        } else {
+                            result.push({ op: "from-to", from: { ...a.from }, to: { op: "<", value: b.from.value } });
+                        }
+
+                        if (b.to.op === "<") {
+                            result.push({ op: "from-to", from: { op: ">=", value: b.to.value }, to: { ...a.to } });
+                        } else {
+                            result.push({ op: "from-to", from: { op: ">", value: b.to.value }, to: { ...a.to } });
+                        }
+
+                        return result;
+                    }
                 }
             } else if (a.from !== void 0) {
                 if (isFromInsideFromTo(a.from, b)) {
@@ -93,6 +114,27 @@ export function reduceFromToValueCriterion(a: FromToValueCriterion, b: ValueCrit
                             return [{ op: "from-to", from: { op: ">=", value: b.to.value } }];
                         }
                     }
+                } else if (b.from !== void 0 && b.to !== void 0) {
+                    const fromInside = isFromInsideFromTo(b.from, a);
+                    const toInside = isToInsideFromTo(b.to, a);
+
+                    if (fromInside && toInside) {
+                        const result: ValueCriterion[] = [];
+
+                        if (b.from.op === ">") {
+                            result.push({ op: "from-to", from: { ...a.from }, to: { op: "<=", value: b.from.value } });
+                        } else {
+                            result.push({ op: "from-to", from: { ...a.from }, to: { op: "<", value: b.from.value } });
+                        }
+
+                        if (b.to.op === "<") {
+                            result.push({ op: "from-to", from: { op: ">=", value: b.to.value } });
+                        } else {
+                            result.push({ op: "from-to", from: { op: ">", value: b.to.value } });
+                        }
+
+                        return result;
+                    }
                 }
             } else if (a.to !== void 0) {
                 if (isToInsideFromTo(a.to, b)) {
@@ -104,6 +146,27 @@ export function reduceFromToValueCriterion(a: FromToValueCriterion, b: ValueCrit
                         } else {
                             return [{ op: "from-to", to: { op: "<=", value: b.from.value } }];
                         }
+                    }
+                } else if (b.from !== void 0 && b.to !== void 0) {
+                    const fromInside = isFromInsideFromTo(b.from, a);
+                    const toInside = isToInsideFromTo(b.to, a);
+
+                    if (fromInside && toInside) {
+                        const result: ValueCriterion[] = [];
+
+                        if (b.from.op === ">") {
+                            result.push({ op: "from-to", to: { op: "<=", value: b.from.value } });
+                        } else {
+                            result.push({ op: "from-to", to: { op: "<", value: b.from.value } });
+                        }
+
+                        if (b.to.op === "<") {
+                            result.push({ op: "from-to", from: { op: ">=", value: b.to.value }, to: { ...a.to } });
+                        } else {
+                            result.push({ op: "from-to", from: { op: ">", value: b.to.value }, to: { ...a.to } });
+                        }
+
+                        return result;
                     }
                 }
             } else {

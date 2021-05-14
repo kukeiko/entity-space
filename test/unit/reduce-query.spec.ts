@@ -1,8 +1,11 @@
-import { Query, createAlwaysReducible, reduceQuery, ObjectCriteria, Selection } from "src";
+import { Query, createAlwaysReducible, reduceQuery, ObjectCriteria, Selection, createFromToValueCriterion } from "src";
 
 describe("reduceQuery()", () => {
+    // need this so toBeEqual() works
+    const defaultOptions = createAlwaysReducible();
+
     function createQuery(criteria: ObjectCriteria = [], selection: Selection = {}): Query {
-        return { criteria, model: [], options: createAlwaysReducible(), selection };
+        return { criteria, model: [], options: defaultOptions, selection };
     }
 
     describe("full reduction", () => {
@@ -73,6 +76,7 @@ describe("reduceQuery()", () => {
             // arrange
             const a = createQuery([{ id: [{ op: "in", values: new Set([1, 2]) }] }], { foo: true, bar: true });
             const b = createQuery([{ id: [{ op: "in", values: new Set([1, 2]) }] }], { foo: true });
+            const expected = createQuery([{ id: [{ op: "in", values: new Set([1, 2]) }] }], { bar: true });
 
             // act
             const reduced = reduceQuery(a, b);
@@ -97,6 +101,19 @@ describe("reduceQuery()", () => {
 
             // assert
             expect(reduced).toEqual(jasmine.arrayWithExactContents(expected));
+        });
+
+        it("{ index:[1, 7] } reduced by { index:[3, 4] } should be { index: ([1, 3), (4, 7]) }", () => {
+            // arrange
+            const a = createQuery([{ index: [createFromToValueCriterion([1, 7])] }]);
+            const b = createQuery([{ index: [createFromToValueCriterion([3, 4])] }]);
+            const expected = createQuery([{ index: [createFromToValueCriterion([1, 3], [true, false]), createFromToValueCriterion([4, 7], [false, true])] }]);
+
+            // act
+            const reduced = reduceQuery(a, b);
+
+            // assert
+            expect(reduced).toEqual(expected);
         });
     });
 });
