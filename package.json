@@ -28,7 +28,7 @@
     "peerDependencies": {},
     "devDependencies": {
         "@types/jasmine": "3.6.10",
-        "commitizen": "4.2.3",
+        "commitizen": "4.2.4",
         "conditional-type-checks": "1.0.5",
         "cz-customizable": "6.3.0",
         "dtslint": "4.0.9",
