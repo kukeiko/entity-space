@@ -1,8 +1,9 @@
 import { ObjectCriterion } from "./object-criterion";
 import { isValueCriteria, reduceValueCriteria } from "./value-criterion";
 import { PropertyCriteria } from "./property-criteria";
+import { ObjectCriteria } from "./object-criteria";
 
-export function reduceObjectCriterion(a: ObjectCriterion, b: ObjectCriterion): ObjectCriterion | null {
+export function reduceObjectCriterion(a: ObjectCriterion, b: ObjectCriterion): ObjectCriteria {
     let reducedPropertyCriteria: { key: string; reduced: PropertyCriteria } | undefined;
 
     for (const key in b) {
@@ -13,7 +14,7 @@ export function reduceObjectCriterion(a: ObjectCriterion, b: ObjectCriterion): O
          * => return [A] as is
          */
         if (criteriaA === void 0) {
-            return a;
+            return [a];
         }
 
         const criteriaB = b[key];
@@ -33,13 +34,13 @@ export function reduceObjectCriterion(a: ObjectCriterion, b: ObjectCriterion): O
             /**
              * failed to reduce a property of [A] => return [A] as is.
              */
-            return a;
+            return [a];
         } else if (reduced !== null && reducedPropertyCriteria !== void 0) {
             /**
              * reduced a property of [A] but we already reduced another, therefore [B] is no longer a superset of [A]
              * => return [B] as is
              */
-            return a;
+            return [a];
         } else if (reduced !== null && reducedPropertyCriteria === void 0) {
             /**
              * the first property of [A] that we could reduce => store and continue.
@@ -51,11 +52,13 @@ export function reduceObjectCriterion(a: ObjectCriterion, b: ObjectCriterion): O
     }
 
     if (reducedPropertyCriteria === void 0) {
-        return null;
+        return [];
     } else {
-        return {
-            ...a,
-            [reducedPropertyCriteria.key]: reducedPropertyCriteria.reduced,
-        };
+        return [
+            {
+                ...a,
+                [reducedPropertyCriteria.key]: reducedPropertyCriteria.reduced,
+            },
+        ];
     }
 }

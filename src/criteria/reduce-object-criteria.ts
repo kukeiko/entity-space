@@ -13,13 +13,10 @@ export function reduceObjectCriteria(a: ObjectCriteria, b: ObjectCriteria): Obje
         let nextReduced: ObjectCriteria = [];
 
         for (let criterionA of reduced) {
-            let reducedCriterion = reduceObjectCriterion(criterionA, criterionB);
+            let reducedCriteria = reduceObjectCriterion(criterionA, criterionB);
+            nextReduced.push(...reducedCriteria);
 
-            if (reducedCriterion !== null) {
-                nextReduced.push(reducedCriterion);
-            }
-
-            if (reducedCriterion !== criterionA && !didReduce) {
+            if (reducedCriteria[0] !== criterionA && !didReduce) {
                 didReduce = true;
             }
         }
