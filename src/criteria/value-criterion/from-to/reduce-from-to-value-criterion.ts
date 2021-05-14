@@ -2,6 +2,7 @@ import { ValueCriterion } from "../value-criterion";
 import { FromToValueCriterion } from "./from-to-value-criterion";
 import { FromCriterion } from "./from-criterion";
 import { ToCriterion } from "./to-criterion";
+import { ValueCriteria } from "../value-criteria";
 
 function isFromBiggerThanFrom(a: FromCriterion, b?: FromCriterion): boolean {
     if (b === void 0) {
@@ -51,7 +52,7 @@ export function isToInsideFromTo(a: ToCriterion, b: FromToValueCriterion): boole
     return isToBiggerThanFrom(a, b.from) && isToSmallerThanTo(a, b.to);
 }
 
-export function reduceFromToValueCriterion(a: FromToValueCriterion, b: ValueCriterion): ValueCriterion[] {
+export function reduceFromToValueCriterion(a: FromToValueCriterion, b: ValueCriterion): ValueCriteria {
     switch (b.op) {
         // [todo] revisit & try to simplify this from-to / from-to reduction.
         case "from-to":

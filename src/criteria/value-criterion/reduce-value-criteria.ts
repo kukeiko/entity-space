@@ -2,6 +2,10 @@ import { ValueCriteria } from "./value-criteria";
 import { reduceValueCriterion } from "./reduce-value-criterion";
 
 export function reduceValueCriteria(a: ValueCriteria, b: ValueCriteria): ValueCriteria | null {
+    if (a.length === 0 && b.length === 0) {
+        return null;
+    }
+
     let reduced = a.slice();
     let didReduce = false;
 
@@ -9,11 +13,11 @@ export function reduceValueCriteria(a: ValueCriteria, b: ValueCriteria): ValueCr
         const nextReduced: ValueCriteria = [];
 
         for (let criterionA of reduced) {
-            let reducedCriterion = reduceValueCriterion(criterionA, criterionB);
-            nextReduced.push(...reducedCriterion);
+            let reducedCriteria = reduceValueCriterion(criterionA, criterionB);
+            nextReduced.push(...reducedCriteria);
 
             // [todo] consider not using an extra check-flag, instead, check at and of function
-            if (reducedCriterion[0] !== criterionA && !didReduce) {
+            if (reducedCriteria[0] !== criterionA && !didReduce) {
                 didReduce = true;
             }
         }

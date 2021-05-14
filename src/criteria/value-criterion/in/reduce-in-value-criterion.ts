@@ -1,8 +1,9 @@
 import { subtractSets } from "../../../utils";
+import { ValueCriteria } from "../value-criteria";
 import { ValueCriterion } from "../value-criterion";
 import { InValueCriterion } from "./in-value-criterion";
 
-export function reduceInValueCriterion(a: InValueCriterion, b: ValueCriterion): ValueCriterion[] {
+export function reduceInValueCriterion(a: InValueCriterion, b: ValueCriterion): ValueCriteria {
     switch (b.op) {
         case "in": {
             const subtracted = subtractSets(a.values, b.values);
