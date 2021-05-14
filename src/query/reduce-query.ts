@@ -3,32 +3,50 @@ import { reduceObjectCriteria } from "../criteria";
 import { reduceSelection } from "../selection";
 
 // [todo] options reduction missing
-export function reduceQuery(a: Query, b: Query): Query | null {
+export function reduceQuery(a: Query, b: Query): Query[] {
     const reducedCriteria = reduceObjectCriteria(a.criteria, b.criteria);
+    const reducedSelection = reduceSelection(a.selection, b.selection);
 
     if (reducedCriteria === a.criteria) {
-        return a;
+        return [a];
     } else if (reducedCriteria === null) {
-        const reducedSelection = reduceSelection(a.selection, b.selection);
-
         if (reducedSelection === null) {
-            return null;
+            return [];
         }
 
-        return {
-            criteria: a.criteria,
-            model: a.model,
-            options: a.options,
-            selection: reducedSelection,
-        };
-    } else if (reduceSelection(a.selection, b.selection) === null) {
-        return {
-            criteria: reducedCriteria,
-            model: a.model,
-            options: a.options,
-            selection: a.selection,
-        };
+        return [
+            {
+                criteria: a.criteria,
+                model: a.model,
+                options: a.options,
+                selection: reducedSelection,
+            },
+        ];
+    } else if (reducedSelection === null) {
+        return [
+            {
+                criteria: reducedCriteria,
+                model: a.model,
+                options: a.options,
+                selection: a.selection,
+            },
+        ];
+    } else if (a.selection !== reducedSelection) {
+        return [
+            {
+                criteria: reducedCriteria,
+                model: a.model,
+                options: a.options,
+                selection: a.selection,
+            },
+            {
+                criteria: b.criteria,
+                model: b.model,
+                options: b.options,
+                selection: reducedSelection,
+            },
+        ];
     } else {
-        return a;
+        return [a];
     }
 }

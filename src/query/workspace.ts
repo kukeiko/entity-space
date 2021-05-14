@@ -7,7 +7,7 @@ import { ComponentProvider } from "./component-provider";
 import { QueryStreamPacket } from "./query-stream-packet";
 import { PayloadHydration } from "./payload-hydration";
 import { Class } from "../utils";
-import { reduceQuery } from "./reduce-query";
+// import { reduceQuery } from "./reduce-query";
 import { queryToString } from "./query-to-string";
 
 /**
@@ -109,28 +109,31 @@ export class Workspace {
     }
 
     private _reduceQueryAgainstCache(query: Query): Query | null {
+        // [todo] disabled due to reduction changes
+        // might not re-implement as we might completely discard & redo current caching implementation
+        return query;
         // [todo] we don't support caching queries with multiple models yet
-        if (query.model.length > 1) {
-            return query;
-        }
+        // if (query.model.length > 1) {
+        //     return query;
+        // }
 
-        const cachedQueries = this._cachedQueries.get(query.model[0]);
+        // const cachedQueries = this._cachedQueries.get(query.model[0]);
 
-        if (cachedQueries === void 0) {
-            return query;
-        }
+        // if (cachedQueries === void 0) {
+        //     return query;
+        // }
 
-        let reducedQuery: Query | null = query;
+        // let reducedQuery: Query | null = query;
 
-        for (const cachedQuery of cachedQueries) {
-            reducedQuery = reduceQuery(reducedQuery, cachedQuery);
+        // for (const cachedQuery of cachedQueries) {
+        //     reducedQuery = reduceQuery(reducedQuery, cachedQuery);
 
-            if (reducedQuery === null) {
-                return null;
-            }
-        }
+        //     if (reducedQuery === null) {
+        //         return null;
+        //     }
+        // }
 
-        return reducedQuery;
+        // return reducedQuery;
     }
 
     private _writeToCache(packet: QueryStreamPacket): void {
