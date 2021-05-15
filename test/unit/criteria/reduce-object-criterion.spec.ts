@@ -185,6 +185,45 @@ describe("reduceObjectCriterion()", () => {
             expect(reduced).toEqual(expected);
         });
 
+        fit("{ foo:[1, 7], bar:[100, 200], baz:[50, 70] } reduced by { foo:[3, 4], bar:[150, 175], baz:[55, 65] } should be { foo:([1, 3), (4, 7]), bar:[100, 200], baz:[50, 70] }, { foo:[3, 4], bar:([100, 150), (175, 200]), baz:[50, 70] }, { foo:[3, 4], bar:[150, 175], baz:([50, 55), (65, 70]) }", () => {
+            // arrange
+            const a = {
+                foo: [createFromToValueCriterion([1, 7])],
+                bar: [createFromToValueCriterion([100, 200])],
+                baz: [createFromToValueCriterion([50, 70])],
+            };
+
+            const b = {
+                foo: [createFromToValueCriterion([3, 4])],
+                bar: [createFromToValueCriterion([150, 175])],
+                baz: [createFromToValueCriterion([55, 65])],
+            };
+
+            const expected = [
+                {
+                    foo: [createFromToValueCriterion([1, 3], [true, false]), createFromToValueCriterion([4, 7], [false, true])],
+                    bar: [createFromToValueCriterion([100, 200])],
+                    baz: [createFromToValueCriterion([50, 70])],
+                },
+                {
+                    foo: [createFromToValueCriterion([3, 4])],
+                    bar: [createFromToValueCriterion([100, 150], [true, false]), createFromToValueCriterion([175, 200], [false, true])],
+                    baz: [createFromToValueCriterion([50, 70])],
+                },
+                {
+                    foo: [createFromToValueCriterion([3, 4])],
+                    bar: [createFromToValueCriterion([150, 175])],
+                    baz: [createFromToValueCriterion([50, 55], [true, false]), createFromToValueCriterion([65, 70], [false, true])],
+                },
+            ];
+
+            // act
+            const reduced = reduceObjectCriterion(a, b);
+
+            // assert
+            expect(reduced).toEqual(expected);
+        });
+
         /**
          * [todo] need "invertCriterion()" @ reduceObjectCriterion() for this case
          */
