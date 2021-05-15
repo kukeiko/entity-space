@@ -131,6 +131,31 @@ describe("reduceQuery()", () => {
             // assert
             expect(reduced).toEqual(expected);
         });
+
+        it("{ index:[1, 7], price: [900, 1300] } reduced by { index:[3, 4], price: [1000, 1200] } should be { (index: ([1, 3), (4, 7]), price: [900, 1300]), (index:[3, 4], price: ([900, 1000), (1200, 1300])) }", () => {
+            // arrange
+            const a = createQuery([{ index: [createFromToValueCriterion([1, 7])], price: [createFromToValueCriterion([900, 1300])] }]);
+            const b = createQuery([{ index: [createFromToValueCriterion([3, 4])], price: [createFromToValueCriterion([1000, 1200])] }]);
+
+            const expected = [
+                createQuery([
+                    {
+                        index: [createFromToValueCriterion([1, 3], [true, false]), createFromToValueCriterion([4, 7], [false, true])],
+                        price: [createFromToValueCriterion([900, 1300])],
+                    },
+                    {
+                        index: [createFromToValueCriterion([3, 4])],
+                        price: [createFromToValueCriterion([900, 1000], [true, false]), createFromToValueCriterion([1200, 1300], [false, true])],
+                    },
+                ]),
+            ];
+
+            // act
+            const reduced = reduceQuery(a, b);
+
+            // assert
+            expect(reduced).toEqual(jasmine.arrayWithExactContents(expected));
+        });
     });
 
     describe("no reduction", () => {
