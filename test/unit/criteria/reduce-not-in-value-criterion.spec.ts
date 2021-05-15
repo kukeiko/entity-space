@@ -11,7 +11,7 @@ describe("reduceNotInValueCriterion()", () => {
             const reduced = reduceNotInValueCriterion(a, b);
 
             // assert
-            expect(reduced).toBeNull();
+            expect(reduced).toEqual([]);
         });
 
         it("not-in:(1, 2) should be completely reduced by not-in:(1)", () => {
@@ -23,7 +23,7 @@ describe("reduceNotInValueCriterion()", () => {
             const reduced = reduceNotInValueCriterion(a, b);
 
             // assert
-            expect(reduced).toBeNull();
+            expect(reduced).toEqual([]);
         });
     });
 
@@ -32,7 +32,7 @@ describe("reduceNotInValueCriterion()", () => {
             // arrange
             const a = createNotInValueCriterion([1, 2]);
             const b = createNotInValueCriterion([1, 2, 3]);
-            const expected = createInValueCriterion([3]);
+            const expected = [createInValueCriterion([3])];
 
             // act
             const reduced = reduceNotInValueCriterion(a, b);
@@ -45,7 +45,7 @@ describe("reduceNotInValueCriterion()", () => {
             // arrange
             const a = createNotInValueCriterion([1]);
             const b = createNotInValueCriterion([2, 3]);
-            const expected = createInValueCriterion([2, 3]);
+            const expected = [createInValueCriterion([2, 3])];
 
             // act
             const reduced = reduceNotInValueCriterion(a, b);
@@ -58,7 +58,7 @@ describe("reduceNotInValueCriterion()", () => {
             // arrange
             const a = createNotInValueCriterion([1, 2]);
             const b = createInValueCriterion([2, 3]);
-            const expected = createNotInValueCriterion([1, 2, 3]);
+            const expected = [createNotInValueCriterion([1, 2, 3])];
 
             // act
             const reduced = reduceNotInValueCriterion(a, b);
@@ -78,7 +78,7 @@ describe("reduceNotInValueCriterion()", () => {
             const reduced = reduceNotInValueCriterion(a, b);
 
             // assert
-            expect(reduced).toBe(a);
+            expect(reduced[0]).toBe(a);
         });
     });
 });

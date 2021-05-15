@@ -1,19 +1,19 @@
 import { ObjectCriterion } from "./object-criterion";
 import { isValueCriteria, reduceValueCriteria } from "./value-criterion";
 import { PropertyCriteria } from "./property-criteria";
+import { ObjectCriteria } from "./object-criteria";
 
-export function reduceObjectCriterion(a: ObjectCriterion, b: ObjectCriterion): ObjectCriterion | null {
-    let reducedPropertyCriteria: { key: string; reduced: PropertyCriteria } | undefined;
+export function reduceObjectCriterion(a: ObjectCriterion, b: ObjectCriterion): ObjectCriteria {
+    const reducedPropertyCriteriaBag = new Map<string, PropertyCriteria>();
 
     for (const key in b) {
         const criteriaA = a[key];
 
         /**
-         * [B] has a criteria that [A] doesn't, it therefore can't be a superset
-         * => return [A] as is
+         * [todo] need "invertCriterion()" for this case
          */
         if (criteriaA === void 0) {
-            return a;
+            return [a];
         }
 
         const criteriaB = b[key];
@@ -31,31 +31,31 @@ export function reduceObjectCriterion(a: ObjectCriterion, b: ObjectCriterion): O
 
         if (reduced === criteriaA) {
             /**
-             * failed to reduce a property of [A] => return [A] as is.
+             * failed to reduce a property of [A] => no intersection => return [A] as is.
              */
-            return a;
-        } else if (reduced !== null && reducedPropertyCriteria !== void 0) {
-            /**
-             * reduced a property of [A] but we already reduced another, therefore [B] is no longer a superset of [A]
-             * => return [B] as is
-             */
-            return a;
-        } else if (reduced !== null && reducedPropertyCriteria === void 0) {
-            /**
-             * the first property of [A] that we could reduce => store and continue.
-             * from this point on we're expecting full reductions in order to to continue,
-             * otherwise [A] is returned as is.
-             */
-            reducedPropertyCriteria = { key, reduced };
+            return [a];
+        } else if (reduced !== null) {
+            reducedPropertyCriteriaBag.set(key, reduced);
         }
     }
 
-    if (reducedPropertyCriteria === void 0) {
-        return null;
-    } else {
-        return {
-            ...a,
-            [reducedPropertyCriteria.key]: reducedPropertyCriteria.reduced,
-        };
+    if (reducedPropertyCriteriaBag.size == 0) {
+        return [];
     }
+
+    const objectCriterion: ObjectCriterion = {};
+
+    // [todo] i think there is an Object.fromEntries() method that we could use, but we need to upgrade our ES target @ tsconfigs
+    for (const [key, reducedPropertyCriteria] of Object.entries(a)) {
+        objectCriterion[key] = reducedPropertyCriteria;
+    }
+
+    const objectCriteria: ObjectCriteria = [];
+
+    for (const [key, reducedPropertyCriteria] of reducedPropertyCriteriaBag) {
+        objectCriteria.push({ ...objectCriterion, [key]: reducedPropertyCriteria });
+        objectCriterion[key] = b[key];
+    }
+
+    return objectCriteria;
 }

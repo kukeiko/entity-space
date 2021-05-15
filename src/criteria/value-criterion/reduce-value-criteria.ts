@@ -2,20 +2,22 @@ import { ValueCriteria } from "./value-criteria";
 import { reduceValueCriterion } from "./reduce-value-criterion";
 
 export function reduceValueCriteria(a: ValueCriteria, b: ValueCriteria): ValueCriteria | null {
+    if (a.length === 0 && b.length === 0) {
+        return null;
+    }
+
     let reduced = a.slice();
     let didReduce = false;
 
     for (let criterionB of b) {
-        let nextReduced: ValueCriteria = [];
+        const nextReduced: ValueCriteria = [];
 
         for (let criterionA of reduced) {
-            let reducedCriterion = reduceValueCriterion(criterionA, criterionB);
+            let reducedCriteria = reduceValueCriterion(criterionA, criterionB);
+            nextReduced.push(...reducedCriteria);
 
-            if (reducedCriterion !== null) {
-                nextReduced.push(reducedCriterion);
-            }
-
-            if (reducedCriterion !== criterionA && !didReduce) {
+            // [todo] consider not using an extra check-flag, instead, check at and of function
+            if (reducedCriteria[0] !== criterionA && !didReduce) {
                 didReduce = true;
             }
         }

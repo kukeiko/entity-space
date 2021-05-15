@@ -3,7 +3,7 @@ import { reduceInValueCriterion } from "./in";
 import { reduceFromToValueCriterion } from "./from-to";
 import { reduceNotInValueCriterion } from "./not-in";
 
-export function reduceValueCriterion(a: ValueCriterion, b: ValueCriterion): ValueCriterion | null {
+export function reduceValueCriterion(a: ValueCriterion, b: ValueCriterion): ValueCriterion[] {
     switch (a.op) {
         case "in":
             return reduceInValueCriterion(a, b);
