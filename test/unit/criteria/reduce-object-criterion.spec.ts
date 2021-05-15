@@ -152,6 +152,37 @@ describe("reduceObjectCriterion()", () => {
             expect(reduced).toEqual(expected);
         });
 
+        // test case showcasing that order matters. we might need to fix the behaviour so that order doesn't matter.
+        it("{ bar:[100, 200], foo:[1, 7] } reduced by { bar:[150, 175], foo:[3, 4] } should be { bar:([100, 150), (175, 200]), foo:[1, 7] }, { bar:[150, 175], foo:( [1, 3), (4, 7]) }", () => {
+            // arrange
+            const a = {
+                bar: [createFromToValueCriterion([100, 200])],
+                foo: [createFromToValueCriterion([1, 7])],
+            };
+
+            const b = {
+                bar: [createFromToValueCriterion([150, 175])],
+                foo: [createFromToValueCriterion([3, 4])],
+            };
+
+            const expected = [
+                {
+                    bar: [createFromToValueCriterion([100, 150], [true, false]), createFromToValueCriterion([175, 200], [false, true])],
+                    foo: [createFromToValueCriterion([1, 7])],
+                },
+                {
+                    bar: [createFromToValueCriterion([150, 175])],
+                    foo: [createFromToValueCriterion([1, 3], [true, false]), createFromToValueCriterion([4, 7], [false, true])],
+                },
+            ];
+
+            // act
+            const reduced = reduceObjectCriterion(a, b);
+
+            // assert
+            expect(reduced).toEqual(expected);
+        });
+
         it("{ foo:[1, 7], bar:[100, 200], baz:[50, 70] } reduced by { foo:[3, 4], bar:[150, 175] } should be { foo:([1, 3), (4, 7]), bar:[100, 200], baz:[50, 70] }, { foo:[3, 4], bar:([100, 150), (175, 200]), baz:[50, 70] }", () => {
             // arrange
             const a = {
@@ -224,9 +255,6 @@ describe("reduceObjectCriterion()", () => {
             expect(reduced).toEqual(expected);
         });
 
-        /**
-         * [todo] need "invertCriterion()" @ reduceObjectCriterion() for this case
-         */
         it("{ foo:[1, 7], bar:[100, 200] } reduced by { foo:[3, 4], bar:[150, 175], baz:[50, 70] } should be { foo:([1, 3), (4, 7]), bar:[100, 200] }, { foo:[3, 4], bar:([100, 150), (175, 200]) }, { foo:[3, 4], bar:[150, 175], baz:([..., 50), (70, ...]) }", () => {
             // arrange
             const a = {
