@@ -1,25 +1,35 @@
 import { ObjectCriterion } from "./object-criterion";
-import { isValueCriteria, reduceValueCriteria } from "./value-criterion";
+import { invertValueCriterion, isValueCriteria, reduceValueCriteria } from "./value-criterion";
 import { PropertyCriteria } from "./property-criteria";
 import { ObjectCriteria } from "./object-criteria";
+import { invertValueCriteria } from "./value-criterion/invert-value-criteria";
 
 export function reduceObjectCriterion(a: ObjectCriterion, b: ObjectCriterion): ObjectCriteria {
     const reducedPropertyCriteriaBag = new Map<string, PropertyCriteria>();
 
     for (const key in b) {
         const criteriaA = a[key];
+        const criteriaB = b[key];
+        let reduced: PropertyCriteria | null;
 
         /**
          * [todo] need "invertCriterion()" for this case
          */
         if (criteriaA === void 0) {
-            return [a];
-        }
+            if (isValueCriteria(criteriaB)) {
+                reduced = invertValueCriteria(criteriaB);
 
-        const criteriaB = b[key];
-        let reduced: PropertyCriteria | null;
-
-        if (isValueCriteria(criteriaB)) {
+                // [B] has criteria [A] doesn't, and we weren't able to compute the inversion of them => return [A] as is
+                if (reduced === criteriaB) {
+                    return [a];
+                }
+            } else {
+                /**
+                 * [todo] implement inversion of all types of criteria
+                 */
+                return [a];
+            }
+        } else if (isValueCriteria(criteriaB)) {
             if (isValueCriteria(criteriaA)) {
                 reduced = reduceValueCriteria(criteriaA, criteriaB);
             } else {
@@ -31,7 +41,7 @@ export function reduceObjectCriterion(a: ObjectCriterion, b: ObjectCriterion): O
 
         if (reduced === criteriaA) {
             /**
-             * failed to reduce a property of [A] => no intersection => return [A] as is.
+             * failed to reduce a property of [A] => no intersection => return [A] as is
              */
             return [a];
         } else if (reduced !== null) {
