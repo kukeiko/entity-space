@@ -1,4 +1,4 @@
-import { createFromToValueCriterion, createInValueCriterion, reduceObjectCriterion } from "src";
+import { createFromToValueCriterion, createInValueCriterion, createNotInValueCriterion, reduceObjectCriterion } from "src";
 
 // [todo] we're only testing "in" criteria here, but not "not-in" & "from-to"
 describe("reduceObjectCriterion()", () => {
@@ -227,7 +227,7 @@ describe("reduceObjectCriterion()", () => {
         /**
          * [todo] need "invertCriterion()" @ reduceObjectCriterion() for this case
          */
-        xit("{ foo:[1, 7], bar:[100, 200] } reduced by { foo:[3, 4], bar:[150, 175], baz:[50, 70] } should be { foo:([1, 3), (4, 7]), bar:[100, 200] }, { foo:[3, 4], bar:([100, 150), (175, 200]), baz:([..., 50), (70, ...]) }", () => {
+        it("{ foo:[1, 7], bar:[100, 200] } reduced by { foo:[3, 4], bar:[150, 175], baz:[50, 70] } should be { foo:([1, 3), (4, 7]), bar:[100, 200] }, { foo:[3, 4], bar:([100, 150), (175, 200]) }, { foo:[3, 4], bar:[150, 175], baz:([..., 50), (70, ...]) }", () => {
             // arrange
             const a = {
                 foo: [createFromToValueCriterion([1, 7])],
@@ -248,7 +248,86 @@ describe("reduceObjectCriterion()", () => {
                 {
                     foo: [createFromToValueCriterion([3, 4])],
                     bar: [createFromToValueCriterion([100, 150], [true, false]), createFromToValueCriterion([175, 200], [false, true])],
+                },
+                {
+                    foo: [createFromToValueCriterion([3, 4])],
+                    bar: [createFromToValueCriterion([150, 175])],
                     baz: [createFromToValueCriterion([void 0, 50], false), createFromToValueCriterion([70, void 0], false)],
+                },
+            ];
+
+            // act
+            const reduced = reduceObjectCriterion(a, b);
+
+            // assert
+            expect(reduced).toEqual(expected);
+        });
+
+        it("{ foo in [2] } reduced by { foo in [2], bar in [3] } should be { foo in [2], bar not-in [3] }", () => {
+            // arrange
+            const a = {
+                foo: [createInValueCriterion([2])],
+            };
+
+            const b = {
+                foo: [createInValueCriterion([2])],
+                bar: [createInValueCriterion([3])],
+            };
+
+            const expected = [
+                {
+                    foo: [createInValueCriterion([2])],
+                    bar: [createNotInValueCriterion([3])],
+                },
+            ];
+
+            // act
+            const reduced = reduceObjectCriterion(a, b);
+
+            // assert
+            expect(reduced).toEqual(expected);
+        });
+
+        it("{ foo in [2] } reduced by { bar in [2] } should be { foo in [2], bar not-in [2] }", () => {
+            // arrange
+            const a = {
+                foo: [createInValueCriterion([2])],
+            };
+
+            const b = {
+                bar: [createInValueCriterion([2])],
+            };
+
+            const expected = [
+                {
+                    foo: [createInValueCriterion([2])],
+                    bar: [createNotInValueCriterion([2])],
+                },
+            ];
+
+            // act
+            const reduced = reduceObjectCriterion(a, b);
+
+            // assert
+            expect(reduced).toEqual(expected);
+        });
+
+        it("{ } reduced by { foo in [2], bar in [4] } should be { foo not-in [2] }, { foo in [2], bar not-in [4] }", () => {
+            // arrange
+            const a = {};
+
+            const b = {
+                foo: [createInValueCriterion([2])],
+                bar: [createInValueCriterion([4])],
+            };
+
+            const expected = [
+                {
+                    foo: [createNotInValueCriterion([2])],
+                },
+                {
+                    foo: [createInValueCriterion([2])],
+                    bar: [createNotInValueCriterion([4])],
                 },
             ];
 
@@ -278,63 +357,13 @@ describe("reduceObjectCriterion()", () => {
             expect(reduced[0]).toBe(a);
         });
 
-        it("{ foo in [2] } should not be reduced by { foo in [2], bar in [3] }", () => {
-            // arrange
-            const a = {
-                foo: [createInValueCriterion([2])],
-            };
-
-            const b = {
-                foo: [createInValueCriterion([2])],
-                bar: [createInValueCriterion([3])],
-            };
-
-            // act
-            const reduced = reduceObjectCriterion(a, b);
-
-            // assert
-            expect(reduced[0]).toBe(a);
-        });
-
+        // [todo] this doesn't seem right, should be able to reduce
         it("{ foo in [2], bar in [3] } should not be reduced by { foo in [2], bar in [4] }", () => {
             // arrange
             const a = {
                 foo: [createInValueCriterion([2])],
                 bar: [createInValueCriterion([3])],
             };
-
-            const b = {
-                foo: [createInValueCriterion([2])],
-                bar: [createInValueCriterion([4])],
-            };
-
-            // act
-            const reduced = reduceObjectCriterion(a, b);
-
-            // assert
-            expect(reduced[0]).toBe(a);
-        });
-
-        it("{ foo in [2] } should not be reduced by { bar in [2] }", () => {
-            // arrange
-            const a = {
-                foo: [createInValueCriterion([2])],
-            };
-
-            const b = {
-                bar: [createInValueCriterion([2])],
-            };
-
-            // act
-            const reduced = reduceObjectCriterion(a, b);
-
-            // assert
-            expect(reduced[0]).toBe(a);
-        });
-
-        it("{ } should not be reduced by { foo in [2], bar in [4] }", () => {
-            // arrange
-            const a = {};
 
             const b = {
                 foo: [createInValueCriterion([2])],
