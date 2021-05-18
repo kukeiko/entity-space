@@ -2,7 +2,7 @@ import { reduceNotInValueCriterion, createNotInValueCriterion, createInValueCrit
 
 describe("reduceNotInValueCriterion()", () => {
     describe("full reduction", () => {
-        it("not-in:(1, 2) should be completely reduced by not-in:(1, 2)", () => {
+        it("!{1, 2} should be completely reduced by itself", () => {
             // arrange
             const a = createNotInValueCriterion([1, 2]);
             const b = createNotInValueCriterion([1, 2]);
@@ -14,7 +14,7 @@ describe("reduceNotInValueCriterion()", () => {
             expect(reduced).toEqual([]);
         });
 
-        it("not-in:(1, 2) should be completely reduced by not-in:(1)", () => {
+        it("!{1, 2} should be completely reduced by !{1}", () => {
             // arrange
             const a = createNotInValueCriterion([1, 2]);
             const b = createNotInValueCriterion([1]);
@@ -28,7 +28,7 @@ describe("reduceNotInValueCriterion()", () => {
     });
 
     describe("partial reduction", () => {
-        it("not-in:(1, 2) reduced by not-in:(1, 2, 3) should be in:(3)", () => {
+        it("!{1, 2} reduced by !{1, 2, 3} should be {3}", () => {
             // arrange
             const a = createNotInValueCriterion([1, 2]);
             const b = createNotInValueCriterion([1, 2, 3]);
@@ -41,7 +41,7 @@ describe("reduceNotInValueCriterion()", () => {
             expect(reduced).toEqual(expected);
         });
 
-        it("not-in:(1) reduced by not-in:(2, 3) should be in:(2, 3)", () => {
+        it("!{1} reduced by !{2, 3} should be {2, 3}", () => {
             // arrange
             const a = createNotInValueCriterion([1]);
             const b = createNotInValueCriterion([2, 3]);
@@ -54,7 +54,7 @@ describe("reduceNotInValueCriterion()", () => {
             expect(reduced).toEqual(expected);
         });
 
-        it("not-in:(1, 2) reduced by in:(2, 3) should be not-in:(1, 2, 3)", () => {
+        it("!{1, 2} reduced by {2, 3} should be !{1, 2, 3}", () => {
             // arrange
             const a = createNotInValueCriterion([1, 2]);
             const b = createInValueCriterion([2, 3]);
@@ -69,7 +69,7 @@ describe("reduceNotInValueCriterion()", () => {
     });
 
     describe("no reduction", () => {
-        it("not-in:(1, 2, 3) should not be reduced by [4, 7]", () => {
+        it("!{1, 2, 3} should not be reduced by [4, 7]", () => {
             // arrange
             const a = createNotInValueCriterion([1, 2, 3]);
             const b = createFromToValueCriterion([4, 7]);

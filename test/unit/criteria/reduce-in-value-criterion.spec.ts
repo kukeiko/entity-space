@@ -5,7 +5,7 @@ describe("reduceInValueCriterion()", () => {
      * A criteria that is a subset of another should always be completely reduced.
      */
     describe("full reduction", () => {
-        it("in:(1, 2, 3) should be completely reduced by itself", () => {
+        it("{1, 2, 3} should be completely reduced by itself", () => {
             // arrange
             const a = createInValueCriterion([1, 2, 3]);
             const b = createInValueCriterion([1, 2, 3]);
@@ -17,7 +17,7 @@ describe("reduceInValueCriterion()", () => {
             expect(reduced).toEqual([]);
         });
 
-        it("in:(1, 2, 3) should be completely reduced by in:(1, 2, 3, 4)", () => {
+        it("{1, 2, 3} should be completely reduced by {1, 2, 3, 4}", () => {
             // arrange
             const a = createInValueCriterion([1, 2, 3]);
             const b = createInValueCriterion([1, 2, 3, 4]);
@@ -29,7 +29,7 @@ describe("reduceInValueCriterion()", () => {
             expect(reduced).toEqual([]);
         });
 
-        it("in:(1, 2, 3) should be completely reduced by not-in:(4)", () => {
+        it("{1, 2, 3} should be completely reduced by !{4}", () => {
             // arrange
             const a = createInValueCriterion([1, 2, 3]);
             const b = createNotInValueCriterion([4]);
@@ -46,7 +46,7 @@ describe("reduceInValueCriterion()", () => {
      * An intersection between two criteria should always be removed.
      */
     describe("partial reduction", () => {
-        it("in:(1, 2, 3) reduced by in:(1, 2, 4) should be in:(3)", () => {
+        it("{1, 2, 3} reduced by {1, 2, 4} should be {3}", () => {
             // arrange
             const a = createInValueCriterion([1, 2, 3]);
             const b = createInValueCriterion([1, 2, 4]);
@@ -59,7 +59,7 @@ describe("reduceInValueCriterion()", () => {
             expect(reduced).toEqual(expected);
         });
 
-        it("in:(1, 2, 3) reduced by not-in:(1) should be in:(1)", () => {
+        it("{1, 2, 3} reduced by !{1} should be {1}", () => {
             // arrange
             const a = createInValueCriterion([1, 2, 3]);
             const b = createNotInValueCriterion([1]);
@@ -77,7 +77,7 @@ describe("reduceInValueCriterion()", () => {
      * If there is no intersection, the criteria should be left untouched.
      */
     describe("no reduction", () => {
-        it("in:(1, 2, 3) should not be reduced by in:(4, 5, 6)", () => {
+        it("{1, 2, 3} should not be reduced by {4, 5, 6}", () => {
             // arrange
             const a = createInValueCriterion([1, 2, 3]);
             const b = createInValueCriterion([4, 5, 6]);
@@ -89,7 +89,7 @@ describe("reduceInValueCriterion()", () => {
             expect(reduced).toBeFalse();
         });
 
-        it("in:(1, 2, 3) should not be reduced by not-in:(1, 2, 3)", () => {
+        it("{1, 2, 3} should not be reduced by !{1, 2, 3}", () => {
             // arrange
             const a = createInValueCriterion([1, 2, 3]);
             const b = createNotInValueCriterion([1, 2, 3]);
@@ -101,7 +101,7 @@ describe("reduceInValueCriterion()", () => {
             expect(reduced).toBeFalse();
         });
 
-        it("in:(1, 2, 3) should not be reduced by [1, 3]", () => {
+        it("{1, 2, 3} should not be reduced by [1, 3]", () => {
             // arrange
             const a = createInValueCriterion([1, 2, 3]);
             const b = createFromToValueCriterion([4, 7]);

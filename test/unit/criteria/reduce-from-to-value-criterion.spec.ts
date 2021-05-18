@@ -2,7 +2,19 @@ import { reduceFromToValueCriterion, createFromToValueCriterion, createInValueCr
 
 describe("reduceFromToValueCriterion()", () => {
     describe("full reduction", () => {
-        it("{ [1, 7] } should be completely reduced by { [0, 8] }", () => {
+        it("[1, 7] should be completely reduced by itself", () => {
+            // arrange
+            const a = createFromToValueCriterion([1, 7]);
+            const b = createFromToValueCriterion([1, 7]);
+
+            // act
+            const reduced = reduceFromToValueCriterion(a, b);
+
+            // assert
+            expect(reduced).toEqual([]);
+        });
+
+        it("[1, 7] should be completely reduced by [0, 8]", () => {
             // arrange
             const a = createFromToValueCriterion([1, 7]);
             const b = createFromToValueCriterion([0, 8]);
@@ -14,7 +26,7 @@ describe("reduceFromToValueCriterion()", () => {
             expect(reduced).toEqual([]);
         });
 
-        it("{ [1, 7] } should be completely reduced by { (0, 8) }", () => {
+        it("[1, 7] should be completely reduced by (0, 8)", () => {
             // arrange
             const a = createFromToValueCriterion([1, 7]);
             const b = createFromToValueCriterion([0, 8], false);
@@ -26,7 +38,7 @@ describe("reduceFromToValueCriterion()", () => {
             expect(reduced).toEqual([]);
         });
 
-        it("{ [1, 7] } should be completely reduced by { [0, ...] }", () => {
+        it("[1, 7] should be completely reduced by [0, ...]", () => {
             // arrange
             const a = createFromToValueCriterion([1, 7]);
             const b = createFromToValueCriterion([0, void 0]);
@@ -62,7 +74,7 @@ describe("reduceFromToValueCriterion()", () => {
             expect(reduced).toEqual([]);
         });
 
-        it("{ [1, 7] } should be completely reduced by { [..., 9] }", () => {
+        it("[1, 7] should be completely reduced by [..., 9]", () => {
             // arrange
             const a = createFromToValueCriterion([1, 7]);
             const b = createFromToValueCriterion([void 0, 9]);
@@ -193,7 +205,7 @@ describe("reduceFromToValueCriterion()", () => {
             expect(reduced).toEqual(expected);
         });
 
-        it("{ [1, 2] } reduced by { in [2] } should be { [1, 2) }", () => {
+        it("[1, 2] reduced by {2} should be [1, 2)", () => {
             // arrange
             const a = createFromToValueCriterion([1, 2]);
             const b = createInValueCriterion([2]);
@@ -206,7 +218,7 @@ describe("reduceFromToValueCriterion()", () => {
             expect(reduced).toEqual(expected);
         });
 
-        it("{ [1, 2] } reduced by { in [1] } should be { (1, 2] }", () => {
+        it("[1, 2] reduced by {1} should be (1, 2]", () => {
             // arrange
             const a = createFromToValueCriterion([1, 2]);
             const b = createInValueCriterion([1]);
@@ -219,7 +231,7 @@ describe("reduceFromToValueCriterion()", () => {
             expect(reduced).toEqual(expected);
         });
 
-        it("[1, 2] reduced by { in [1, 2] } should be (1, 2)", () => {
+        it("[1, 2] reduced by {1, 2} should be (1, 2)", () => {
             // arrange
             const a = createFromToValueCriterion([1, 2]);
             const b = createInValueCriterion([1, 2]);
@@ -232,7 +244,7 @@ describe("reduceFromToValueCriterion()", () => {
             expect(reduced).toEqual(expected);
         });
 
-        it("[..., 2] reduced by { in [1, 2] } should be [..., 2)", () => {
+        it("[..., 2] reduced by {1, 2} should be [..., 2)", () => {
             // arrange
             const a = createFromToValueCriterion([void 0, 2]);
             const b = createInValueCriterion([1, 2]);
@@ -245,7 +257,7 @@ describe("reduceFromToValueCriterion()", () => {
             expect(reduced).toEqual(expected);
         });
 
-        it("[1, ...] reduced by { in [1, 2] } should be (1, ...]", () => {
+        it("[1, ...] reduced by {1, 2} should be (1, ...]", () => {
             // arrange
             const a = createFromToValueCriterion([1, void 0]);
             const b = createInValueCriterion([1, 2]);
@@ -258,7 +270,7 @@ describe("reduceFromToValueCriterion()", () => {
             expect(reduced).toEqual(expected);
         });
 
-        it("[1, 7] reduced by [3, 4] should be [1, 3), (4, 7]", () => {
+        it("[1, 7] reduced by [3, 4] should be [1, 3) | (4, 7]", () => {
             // arrange
             const a = createFromToValueCriterion([1, 7]);
             const b = createFromToValueCriterion([3, 4]);
@@ -271,7 +283,7 @@ describe("reduceFromToValueCriterion()", () => {
             expect(reduced).toEqual(expected);
         });
 
-        it("(1, 7) reduced by [3, 4] should be (1, 3), (4, 7)", () => {
+        it("(1, 7) reduced by [3, 4] should be (1, 3) | (4, 7)", () => {
             // arrange
             const a = createFromToValueCriterion([1, 7], false);
             const b = createFromToValueCriterion([3, 4]);
@@ -284,7 +296,7 @@ describe("reduceFromToValueCriterion()", () => {
             expect(reduced).toEqual(expected);
         });
 
-        it("(1, 7) reduced by (3, 4) should be (1, 3], [4, 7)", () => {
+        it("(1, 7) reduced by (3, 4) should be (1, 3] | [4, 7)", () => {
             // arrange
             const a = createFromToValueCriterion([1, 7], false);
             const b = createFromToValueCriterion([3, 4], false);
@@ -297,7 +309,7 @@ describe("reduceFromToValueCriterion()", () => {
             expect(reduced).toEqual(expected);
         });
 
-        it("[..., 7] reduced by [3, 4] should be [..., 3), (4, 7]", () => {
+        it("[..., 7] reduced by [3, 4] should be [..., 3) | (4, 7]", () => {
             // arrange
             const a = createFromToValueCriterion([void 0, 7]);
             const b = createFromToValueCriterion([3, 4]);
@@ -310,7 +322,7 @@ describe("reduceFromToValueCriterion()", () => {
             expect(reduced).toEqual(expected);
         });
 
-        it("[..., 7] reduced by (3, 4) should be [..., 3], [4, 7]", () => {
+        it("[..., 7] reduced by (3, 4) should be [..., 3] | [4, 7]", () => {
             // arrange
             const a = createFromToValueCriterion([void 0, 7]);
             const b = createFromToValueCriterion([3, 4], false);
@@ -323,7 +335,7 @@ describe("reduceFromToValueCriterion()", () => {
             expect(reduced).toEqual(expected);
         });
 
-        it("[1, ...] reduced by [3, 4] should be [1, 3), (4, ...]", () => {
+        it("[1, ...] reduced by [3, 4] should be [1, 3) | (4, ...]", () => {
             // arrange
             const a = createFromToValueCriterion([1, void 0]);
             const b = createFromToValueCriterion([3, 4]);
@@ -336,7 +348,7 @@ describe("reduceFromToValueCriterion()", () => {
             expect(reduced).toEqual(expected);
         });
 
-        it("[1, ...] reduced by (3, 4) should be [1, 3], [4, ...]", () => {
+        it("[1, ...] reduced by (3, 4) should be [1, 3] | [4, ...]", () => {
             // arrange
             const a = createFromToValueCriterion([1, void 0]);
             const b = createFromToValueCriterion([3, 4], false);
@@ -349,7 +361,9 @@ describe("reduceFromToValueCriterion()", () => {
             expect(reduced).toEqual(expected);
         });
 
-        it("[1, 7] reduced by (1, 7) should be [1, 1], [7, 7]", () => {
+        // [todo] [1, 1] | [7, 7] could also be repesented as {1, 7}
+        // something to think about :)
+        it("[1, 7] reduced by (1, 7) should be [1, 1] | [7, 7]", () => {
             // arrange
             const a = createFromToValueCriterion([1, 7]);
             const b = createFromToValueCriterion([1, 7], false);
@@ -367,10 +381,10 @@ describe("reduceFromToValueCriterion()", () => {
         // [todo] now that we allow for splitting a range into smaller parts we might want this reduction to actually do something
         // (instead of doing nothing). the problem is though that a "from-to" reduced by an "in" with lots of values will create
         // lots of queries and hinder performance. also, it would only work with from-to of type integer (which we don't distinguish yet)
-        it("[1, 2] should not be reduced by <3>", () => {
+        it("[1, 3] should not be reduced by {2}", () => {
             // arrange
-            const a = createFromToValueCriterion([1, 2]);
-            const b = createInValueCriterion([3]);
+            const a = createFromToValueCriterion([1, 3]);
+            const b = createInValueCriterion([2]);
 
             // act
             const reduced = reduceFromToValueCriterion(a, b);

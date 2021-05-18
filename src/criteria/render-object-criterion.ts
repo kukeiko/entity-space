@@ -22,7 +22,7 @@ export function renderObjectCriterion(criterion: ObjectCriterion): string {
         }
     }
 
-    return `{ ${shards.join("; ")} }`;
+    return `{ ${shards.join(" & ")} }`;
 }
 
 export function renderObjectCriteria(criteria: ObjectCriteria): string {
