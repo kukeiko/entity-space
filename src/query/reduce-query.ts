@@ -3,14 +3,14 @@ import { reduceObjectCriteria } from "../criteria";
 import { reduceSelection } from "../selection";
 
 // [todo] options reduction missing
-export function reduceQuery(a: Query, b: Query): Query[] {
+export function reduceQuery(a: Query, b: Query): Query[] | false {
     const reducedCriteria = reduceObjectCriteria(a.criteria, b.criteria);
     const reducedSelection = reduceSelection(a.selection, b.selection);
 
-    if (reducedCriteria === a.criteria) {
-        return [a];
-    } else if (reducedCriteria === null) {
-        if (reducedSelection === null) {
+    if (!reducedCriteria || !reducedSelection) {
+        return false;
+    } else if (reducedCriteria.length == 0) {
+        if (Object.keys(reducedSelection).length == 0) {
             return [];
         }
 
@@ -22,7 +22,7 @@ export function reduceQuery(a: Query, b: Query): Query[] {
                 selection: reducedSelection,
             },
         ];
-    } else if (reducedSelection === null) {
+    } else if (Object.keys(reducedSelection).length == 0) {
         return [
             {
                 criteria: reducedCriteria,
@@ -31,7 +31,7 @@ export function reduceQuery(a: Query, b: Query): Query[] {
                 selection: a.selection,
             },
         ];
-    } else if (a.selection !== reducedSelection) {
+    } else {
         return [
             {
                 criteria: reducedCriteria,
@@ -46,7 +46,5 @@ export function reduceQuery(a: Query, b: Query): Query[] {
                 selection: reducedSelection,
             },
         ];
-    } else {
-        return [a];
     }
 }

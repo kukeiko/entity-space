@@ -78,7 +78,7 @@ describe("reduceNotInValueCriterion()", () => {
             const reduced = reduceNotInValueCriterion(a, b);
 
             // assert
-            expect(reduced[0]).toBe(a);
+            expect(reduced).toBeFalse();
         });
     });
 });

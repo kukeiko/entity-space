@@ -52,7 +52,7 @@ export function isToInsideFromTo(a: ToCriterion, b: FromToValueCriterion): boole
     return isToBiggerThanFrom(a, b.from) && isToSmallerThanTo(a, b.to);
 }
 
-export function reduceFromToValueCriterion(a: FromToValueCriterion, b: ValueCriterion): ValueCriteria {
+export function reduceFromToValueCriterion(a: FromToValueCriterion, b: ValueCriterion): ValueCriteria | false {
     switch (b.op) {
         // [todo] revisit & try to simplify this from-to / from-to reduction.
         case "from-to":
@@ -202,5 +202,5 @@ export function reduceFromToValueCriterion(a: FromToValueCriterion, b: ValueCrit
             break;
     }
 
-    return [a];
+    return false;
 }

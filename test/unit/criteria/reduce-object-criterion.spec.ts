@@ -361,7 +361,7 @@ describe("reduceObjectCriterion()", () => {
             const reduced1 = reduceObjectCriterion(a1, b1);
             const reduced2 = reduceObjectCriterion(a2, b2);
 
-            if (reduced1 === null || reduced2 === null) {
+            if (!reduced1 || reduced1.length == 0 || !reduced2 || reduced2.length == 0) {
                 return fail("expected both reductions to not be null");
             }
 
@@ -369,8 +369,8 @@ describe("reduceObjectCriterion()", () => {
             const reduced_2_by_1 = reduceObjectCriteria(reduced2, reduced1);
 
             // assert
-            expect(reduced_1_by_2).toBeNull();
-            expect(reduced_2_by_1).toBeNull();
+            expect(reduced_1_by_2).toEqual([]);
+            expect(reduced_2_by_1).toEqual([]);
         });
     });
 
@@ -389,7 +389,7 @@ describe("reduceObjectCriterion()", () => {
             const reduced = reduceObjectCriterion(a, b);
 
             // assert
-            expect(reduced[0]).toBe(a);
+            expect(reduced).toBeFalse();
         });
 
         it("{ foo in [2], bar in [3] } should not be reduced by { foo in [2], bar in [4] }", () => {
@@ -408,7 +408,7 @@ describe("reduceObjectCriterion()", () => {
             const reduced = reduceObjectCriterion(a, b);
 
             // assert
-            expect(reduced[0]).toBe(a);
+            expect(reduced).toBeFalse();
         });
     });
 });

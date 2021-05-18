@@ -1,32 +1,32 @@
 import { ObjectCriteria } from "./object-criteria";
 import { reduceObjectCriterion } from "./reduce-object-criterion";
 
-export function reduceObjectCriteria(a: ObjectCriteria, b: ObjectCriteria): ObjectCriteria | null {
+export function reduceObjectCriteria(a: ObjectCriteria, b: ObjectCriteria): ObjectCriteria | false {
     if (a.length === 0 && b.length === 0) {
-        return null;
+        return [];
     }
 
     let reduced = a.slice();
-    let didReduce = false;
+    let didReduceAny = false;
 
-    for (let criterionB of b) {
-        let nextReduced: ObjectCriteria = [];
+    // for each criterion in B, pick each criterion in A and try to reduce it.
+    // criteria in A are updated with the reduced results as we go.
+    for (const criterionB of b) {
+        const nextReduced: ObjectCriteria = [];
 
-        for (let criterionA of reduced) {
-            let reducedCriteria = reduceObjectCriterion(criterionA, criterionB);
-            nextReduced.push(...reducedCriteria);
+        for (const criterionA of reduced) {
+            const reducedCriteria = reduceObjectCriterion(criterionA, criterionB);
 
-            if (reducedCriteria[0] !== criterionA && !didReduce) {
-                didReduce = true;
+            if (reducedCriteria) {
+                nextReduced.push(...reducedCriteria);
+                didReduceAny = true;
+            } else {
+                nextReduced.push(criterionA);
             }
         }
 
         reduced = nextReduced;
     }
 
-    if (didReduce) {
-        return reduced.length > 0 ? reduced : null;
-    } else {
-        return a;
-    }
+    return didReduceAny ? reduced : false;
 }

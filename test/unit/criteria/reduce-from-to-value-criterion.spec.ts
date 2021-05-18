@@ -376,7 +376,7 @@ describe("reduceFromToValueCriterion()", () => {
             const reduced = reduceFromToValueCriterion(a, b);
 
             // assert
-            expect(reduced[0]).toBe(a);
+            expect(reduced).toBeFalse();
         });
 
         it("[1, 7] should not be reduced by (7, 13]", () => {
@@ -388,7 +388,7 @@ describe("reduceFromToValueCriterion()", () => {
             const reduced = reduceFromToValueCriterion(a, b);
 
             // assert
-            expect(reduced[0]).toBe(a);
+            expect(reduced).toBeFalse();
         });
 
         it("[1, 7] should not be reduced by [8, 13]", () => {
@@ -400,7 +400,7 @@ describe("reduceFromToValueCriterion()", () => {
             const reduced = reduceFromToValueCriterion(a, b);
 
             // assert
-            expect(reduced[0]).toBe(a);
+            expect(reduced).toBeFalse();
         });
 
         it("[1, 7] should not be reduced by [..., 1)", () => {
@@ -412,7 +412,7 @@ describe("reduceFromToValueCriterion()", () => {
             const reduced = reduceFromToValueCriterion(a, b);
 
             // assert
-            expect(reduced[0]).toBe(a);
+            expect(reduced).toBeFalse();
         });
 
         it("[1, 7] should not be reduced by [..., 0]", () => {
@@ -424,7 +424,7 @@ describe("reduceFromToValueCriterion()", () => {
             const reduced = reduceFromToValueCriterion(a, b);
 
             // assert
-            expect(reduced[0]).toBe(a);
+            expect(reduced).toBeFalse();
         });
     });
 });

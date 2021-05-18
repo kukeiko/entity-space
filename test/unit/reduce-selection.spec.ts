@@ -11,7 +11,7 @@ describe("reduceSelection()", () => {
             const reduced = reduceSelection(a, b);
 
             // assert
-            expect(reduced).toBeNull();
+            expect(reduced).toEqual({});
         });
     });
 
@@ -51,7 +51,7 @@ describe("reduceSelection()", () => {
             const reduced = reduceSelection(a, b);
 
             // assert
-            expect(reduced).toBe(a);
+            expect(reduced).toBeFalse();
         });
     });
 });

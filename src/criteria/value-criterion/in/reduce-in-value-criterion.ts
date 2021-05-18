@@ -3,13 +3,13 @@ import { ValueCriteria } from "../value-criteria";
 import { ValueCriterion } from "../value-criterion";
 import { InValueCriterion } from "./in-value-criterion";
 
-export function reduceInValueCriterion(a: InValueCriterion, b: ValueCriterion): ValueCriteria {
+export function reduceInValueCriterion(a: InValueCriterion, b: ValueCriterion): ValueCriteria | false {
     switch (b.op) {
         case "in": {
             const subtracted = subtractSets(a.values, b.values);
 
             if (subtracted.size === a.values.size) {
-                return [a];
+                return false;
             } else if (subtracted.size === 0) {
                 return [];
             } else {
@@ -27,7 +27,7 @@ export function reduceInValueCriterion(a: InValueCriterion, b: ValueCriterion): 
             }
 
             if (values.size === a.values.size) {
-                return [a];
+                return false;
             } else if (values.size === 0) {
                 return [];
             } else {
@@ -36,5 +36,5 @@ export function reduceInValueCriterion(a: InValueCriterion, b: ValueCriterion): 
         }
     }
 
-    return [a];
+    return false;
 }

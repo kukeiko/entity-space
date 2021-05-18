@@ -3,7 +3,7 @@ import { ValueCriteria } from "../value-criteria";
 import { ValueCriterion } from "../value-criterion";
 import { NotInValueCriterion } from "./not-in-value-criterion";
 
-export function reduceNotInValueCriterion(a: NotInValueCriterion, b: ValueCriterion): ValueCriteria {
+export function reduceNotInValueCriterion(a: NotInValueCriterion, b: ValueCriterion): ValueCriteria | false {
     switch (b.op) {
         case "in":
             const merged = new Set([...a.values, ...b.values]);
@@ -20,5 +20,5 @@ export function reduceNotInValueCriterion(a: NotInValueCriterion, b: ValueCriter
             return [{ op: "in", values: remaining }];
     }
 
-    return [a];
+    return false;
 }

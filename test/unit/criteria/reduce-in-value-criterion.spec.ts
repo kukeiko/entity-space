@@ -86,7 +86,7 @@ describe("reduceInValueCriterion()", () => {
             const reduced = reduceInValueCriterion(a, b);
 
             // assert
-            expect(reduced[0]).toBe(a);
+            expect(reduced).toBeFalse();
         });
 
         it("in:(1, 2, 3) should not be reduced by not-in:(1, 2, 3)", () => {
@@ -98,7 +98,7 @@ describe("reduceInValueCriterion()", () => {
             const reduced = reduceInValueCriterion(a, b);
 
             // assert
-            expect(reduced[0]).toBe(a);
+            expect(reduced).toBeFalse();
         });
 
         it("in:(1, 2, 3) should not be reduced by [1, 3]", () => {
@@ -110,7 +110,7 @@ describe("reduceInValueCriterion()", () => {
             const reduced = reduceInValueCriterion(a, b);
 
             // assert
-            expect(reduced[0]).toBe(a);
+            expect(reduced).toBeFalse();
         });
     });
 });

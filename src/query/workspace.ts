@@ -70,7 +70,7 @@ export class Workspace {
 
         const missing = reduceSelection(target.selection, packet.loaded.selection);
 
-        if (missing === null) {
+        if (Object.keys(missing).length == 0) {
             return of(packet.payload);
         }
 
@@ -83,7 +83,7 @@ export class Workspace {
                 ...hydrator.hydrate({
                     loaded: packet.loaded,
                     payload: packet.payload,
-                    selection: missing,
+                    selection: missing || target.selection,
                 })
             );
         }
