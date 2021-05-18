@@ -1,4 +1,4 @@
-import { createFromToValueCriterion, createInValueCriterion, createNotInValueCriterion, reduceObjectCriterion } from "src";
+import { createFromToValueCriterion, createInValueCriterion, createNotInValueCriterion, reduceObjectCriteria, reduceObjectCriterion } from "src";
 
 // [todo] we're only testing "in" criteria here, but not "not-in" & "from-to"
 describe("reduceObjectCriterion()", () => {
@@ -142,37 +142,6 @@ describe("reduceObjectCriterion()", () => {
                 {
                     foo: [createFromToValueCriterion([3, 4])],
                     bar: [createFromToValueCriterion([100, 150], [true, false]), createFromToValueCriterion([175, 200], [false, true])],
-                },
-            ];
-
-            // act
-            const reduced = reduceObjectCriterion(a, b);
-
-            // assert
-            expect(reduced).toEqual(expected);
-        });
-
-        // test case showcasing that order matters. we might need to fix the behaviour so that order doesn't matter.
-        it("{ bar:[100, 200], foo:[1, 7] } reduced by { bar:[150, 175], foo:[3, 4] } should be { bar:([100, 150), (175, 200]), foo:[1, 7] }, { bar:[150, 175], foo:( [1, 3), (4, 7]) }", () => {
-            // arrange
-            const a = {
-                bar: [createFromToValueCriterion([100, 200])],
-                foo: [createFromToValueCriterion([1, 7])],
-            };
-
-            const b = {
-                bar: [createFromToValueCriterion([150, 175])],
-                foo: [createFromToValueCriterion([3, 4])],
-            };
-
-            const expected = [
-                {
-                    bar: [createFromToValueCriterion([100, 150], [true, false]), createFromToValueCriterion([175, 200], [false, true])],
-                    foo: [createFromToValueCriterion([1, 7])],
-                },
-                {
-                    bar: [createFromToValueCriterion([150, 175])],
-                    foo: [createFromToValueCriterion([1, 3], [true, false]), createFromToValueCriterion([4, 7], [false, true])],
                 },
             ];
 
@@ -365,6 +334,44 @@ describe("reduceObjectCriterion()", () => {
             // assert
             expect(reduced).toEqual(expected);
         });
+
+        it("changing order of criteria properties should still result in an equivalent outcome", () => {
+            // arrange
+            const a1 = {
+                bar: [createFromToValueCriterion([100, 200])],
+                foo: [createFromToValueCriterion([1, 7])],
+            };
+
+            const a2 = {
+                foo: [createFromToValueCriterion([1, 7])],
+                bar: [createFromToValueCriterion([100, 200])],
+            };
+
+            const b1 = {
+                bar: [createFromToValueCriterion([150, 175])],
+                foo: [createFromToValueCriterion([3, 4])],
+            };
+
+            const b2 = {
+                foo: [createFromToValueCriterion([3, 4])],
+                bar: [createFromToValueCriterion([150, 175])],
+            };
+
+            // act
+            const reduced1 = reduceObjectCriterion(a1, b1);
+            const reduced2 = reduceObjectCriterion(a2, b2);
+
+            if (reduced1 === null || reduced2 === null) {
+                return fail("expected both reductions to not be null");
+            }
+
+            const reduced_1_by_2 = reduceObjectCriteria(reduced1, reduced2);
+            const reduced_2_by_1 = reduceObjectCriteria(reduced2, reduced1);
+
+            // assert
+            expect(reduced_1_by_2).toBeNull();
+            expect(reduced_2_by_1).toBeNull();
+        });
     });
 
     describe("no reduction", () => {
@@ -385,7 +392,6 @@ describe("reduceObjectCriterion()", () => {
             expect(reduced[0]).toBe(a);
         });
 
-        // [todo] this doesn't seem right, should be able to reduce
         it("{ foo in [2], bar in [3] } should not be reduced by { foo in [2], bar in [4] }", () => {
             // arrange
             const a = {
