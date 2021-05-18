@@ -1,33 +1,33 @@
 import { ValueCriteria } from "./value-criteria";
 import { reduceValueCriterion } from "./reduce-value-criterion";
 
-export function reduceValueCriteria(a: ValueCriteria, b: ValueCriteria): ValueCriteria | null {
+// [todo] create specific test cases for this function
+export function reduceValueCriteria(a: ValueCriteria, b: ValueCriteria): ValueCriteria | false {
     if (a.length === 0 && b.length === 0) {
-        return null;
+        return [];
     }
 
     let reduced = a.slice();
-    let didReduce = false;
+    let didReduceAny = false;
 
-    for (let criterionB of b) {
+    // for each criterion in B, pick each criterion in A and try to reduce it.
+    // criteria in A are updated with the reduced results as we go.
+    for (const criterionB of b) {
         const nextReduced: ValueCriteria = [];
 
-        for (let criterionA of reduced) {
-            let reducedCriteria = reduceValueCriterion(criterionA, criterionB);
-            nextReduced.push(...reducedCriteria);
+        for (const criterionA of reduced) {
+            const reducedCriteria = reduceValueCriterion(criterionA, criterionB);
 
-            // [todo] consider not using an extra check-flag, instead, check at and of function
-            if (reducedCriteria[0] !== criterionA && !didReduce) {
-                didReduce = true;
+            if (reducedCriteria) {
+                nextReduced.push(...reducedCriteria);
+                didReduceAny = true;
+            } else {
+                nextReduced.push(criterionA);
             }
         }
 
         reduced = nextReduced;
     }
 
-    if (didReduce) {
-        return reduced.length > 0 ? reduced : null;
-    } else {
-        return a;
-    }
+    return didReduceAny ? reduced : false;
 }

@@ -1,16 +1,16 @@
 import { ObjectCriterion } from "./object-criterion";
-import { invertValueCriterion, isValueCriteria, reduceValueCriteria } from "./value-criterion";
+import { isValueCriteria, reduceValueCriteria } from "./value-criterion";
 import { PropertyCriteria } from "./property-criteria";
 import { ObjectCriteria } from "./object-criteria";
 import { invertValueCriteria } from "./value-criterion/invert-value-criteria";
 
-export function reduceObjectCriterion(a: ObjectCriterion, b: ObjectCriterion): ObjectCriteria {
+export function reduceObjectCriterion(a: ObjectCriterion, b: ObjectCriterion): ObjectCriteria | false {
     const reducedPropertyCriteriaBag = new Map<string, PropertyCriteria>();
 
     for (const key in b) {
         const criteriaA = a[key];
         const criteriaB = b[key];
-        let reduced: PropertyCriteria | null;
+        let reduced: PropertyCriteria | false;
 
         /**
          * [todo] need "invertCriterion()" for this case
@@ -20,14 +20,15 @@ export function reduceObjectCriterion(a: ObjectCriterion, b: ObjectCriterion): O
                 reduced = invertValueCriteria(criteriaB);
 
                 // [B] has criteria [A] doesn't, and we weren't able to compute the inversion of them => return [A] as is
+                // [todo] currently can't happen - for now we can invert all the value criteria we have. so maybe remove it?
                 if (reduced === criteriaB) {
-                    return [a];
+                    return false;
                 }
             } else {
                 /**
                  * [todo] implement inversion of all types of criteria
                  */
-                return [a];
+                return false;
             }
         } else if (isValueCriteria(criteriaB)) {
             if (isValueCriteria(criteriaA)) {
@@ -39,12 +40,12 @@ export function reduceObjectCriterion(a: ObjectCriterion, b: ObjectCriterion): O
             throw new Error("currently only ValueCriteria are supported @ ObjectCriterion.reduce()");
         }
 
-        if (reduced === criteriaA) {
+        if (!reduced) {
             /**
              * failed to reduce a property of [A] => no intersection => return [A] as is
              */
-            return [a];
-        } else if (reduced !== null) {
+            return false;
+        } else if (reduced.length > 0) {
             reducedPropertyCriteriaBag.set(key, reduced);
         }
     }

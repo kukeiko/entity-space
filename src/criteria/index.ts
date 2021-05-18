@@ -8,3 +8,4 @@ export * from "./object-criterion";
 export * from "./property-criteria";
 export * from "./reduce-object-criteria";
 export * from "./reduce-object-criterion";
+export * from "./render-object-criterion";

@@ -2,9 +2,9 @@ import { ValueCriterion } from "./value-criterion";
 import { reduceInValueCriterion } from "./in";
 import { reduceFromToValueCriterion } from "./from-to";
 import { reduceNotInValueCriterion } from "./not-in";
+import { ValueCriteria } from "./value-criteria";
 
-// [todo] could change "ValueCriterion[]" to "ValueCriteria" to be more consistent
-export function reduceValueCriterion(a: ValueCriterion, b: ValueCriterion): ValueCriterion[] {
+export function reduceValueCriterion(a: ValueCriterion, b: ValueCriterion): ValueCriteria | false {
     switch (a.op) {
         case "in":
             return reduceInValueCriterion(a, b);

@@ -9,3 +9,5 @@ export * from "./reduce-value-criterion";
 export * from "./value-criteria";
 export * from "./value-criterion";
 export * from "./invert-value-criterion";
+export * from "./render-value-criteria";
+export * from "./render-value-criterion";

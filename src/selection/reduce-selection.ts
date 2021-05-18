@@ -1,9 +1,9 @@
 import { Selection } from "./selection";
 import { copySelection } from "./copy-selection";
 
-export function reduceSelection(a: Selection, b: Selection): Selection | null {
+export function reduceSelection(a: Selection, b: Selection): Selection | false {
     if (Object.keys(a).length === 0) {
-        return null;
+        return {};
     }
 
     const reduced = copySelection(a);
@@ -18,11 +18,11 @@ export function reduceSelection(a: Selection, b: Selection): Selection | null {
         } else if (b[key] instanceof Object) {
             const subReduced = reduceSelection(reduced[key] as Selection, b[key] as Selection);
 
-            if (subReduced === null) {
+            if (!subReduced) {
+                continue;
+            } else if (Object.keys(subReduced).length === 0) {
                 delete reduced[key];
                 didReduce = true;
-            } else if (subReduced === reduced[key]) {
-                continue;
             } else {
                 reduced[key] = subReduced;
                 didReduce = true;
@@ -30,11 +30,5 @@ export function reduceSelection(a: Selection, b: Selection): Selection | null {
         }
     }
 
-    if (!didReduce) {
-        return a;
-    } else if (Object.keys(reduced).length === 0) {
-        return null;
-    } else {
-        return reduced;
-    }
+    return didReduce ? reduced : false;
 }
