@@ -1,6 +1,6 @@
 import { createFromToValueCriterion, createInValueCriterion, createNotInValueCriterion, reduceInValueCriterion } from "src";
 
-describe("reduceInValueCriterion()", () => {
+describe("reduce: in", () => {
     /**
      * A criteria that is a subset of another should always be completely reduced.
      */

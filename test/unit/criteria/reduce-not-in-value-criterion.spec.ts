@@ -1,6 +1,6 @@
 import { reduceNotInValueCriterion, createNotInValueCriterion, createInValueCriterion, createFromToValueCriterion } from "src";
 
-describe("reduceNotInValueCriterion()", () => {
+describe("reduce: not-in", () => {
     describe("full reduction", () => {
         it("!{1, 2} should be completely reduced by itself", () => {
             // arrange
