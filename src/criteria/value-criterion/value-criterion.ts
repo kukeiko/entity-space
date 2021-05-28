@@ -1,5 +1,5 @@
-import { NotInValueCriterion } from "./not-in";
-import { InValueCriterion } from "./in";
-import { FromToValueCriterion } from "./from-to";
+import { NotInSetCriterion } from "./not-in";
+import { InSetCriterion } from "./in";
+import { InRangeCriterion } from "./in-range";
 
-export type ValueCriterion = FromToValueCriterion | InValueCriterion | NotInValueCriterion;
+export type ValueCriterion = InRangeCriterion | InSetCriterion | NotInSetCriterion;

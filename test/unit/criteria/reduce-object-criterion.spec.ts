@@ -1,4 +1,4 @@
-import { createFromToValueCriterion, createInValueCriterion, createNotInValueCriterion, reduceObjectCriteria, reduceObjectCriterion } from "src";
+import { inRange, inSet, notInSet, reduceObjectCriteria, reduceObjectCriterion } from "src";
 
 describe("reduce: object", () => {
     describe("full reduction", () => {
@@ -6,13 +6,13 @@ describe("reduce: object", () => {
         it("{ foo:{2} & bar:{3, 4, 7} } should be completely reduced by itself", () => {
             // arrange
             const a = {
-                foo: [createInValueCriterion([2])],
-                bar: [createInValueCriterion([3, 4, 7])],
+                foo: [inSet([2])],
+                bar: [inSet([3, 4, 7])],
             };
 
             const b = {
-                foo: [createInValueCriterion([2])],
-                bar: [createInValueCriterion([3, 4, 7])],
+                foo: [inSet([2])],
+                bar: [inSet([3, 4, 7])],
             };
 
             // act
@@ -25,12 +25,12 @@ describe("reduce: object", () => {
         it("{ foo:{2} & bar:{3} } should be completely reduced by { foo:{2} }", () => {
             // arrange
             const a = {
-                foo: [createInValueCriterion([2])],
-                bar: [createInValueCriterion([3])],
+                foo: [inSet([2])],
+                bar: [inSet([3])],
             };
 
             const b = {
-                foo: [createInValueCriterion([2])],
+                foo: [inSet([2])],
             };
 
             // act
@@ -43,8 +43,8 @@ describe("reduce: object", () => {
         it("{ foo:{2} & bar:{3} } should be completely reduced by { }", () => {
             // arrange
             const a = {
-                foo: [createInValueCriterion([2])],
-                bar: [createInValueCriterion([3])],
+                foo: [inSet([2])],
+                bar: [inSet([3])],
             };
 
             const b = {};
@@ -66,9 +66,9 @@ describe("reduce: object", () => {
         describe("1:1", () => {
             it("{ foo:{2, 3} } reduced by { foo:{3, 4} } should be { foo:{2} }", () => {
                 // arrange
-                const a = { foo: [createInValueCriterion([2, 3])] };
-                const b = { foo: [createInValueCriterion([3, 4])] };
-                const expected = [{ foo: [createInValueCriterion([2])] }];
+                const a = { foo: [inSet([2, 3])] };
+                const b = { foo: [inSet([3, 4])] };
+                const expected = [{ foo: [inSet([2])] }];
 
                 // act
                 const reduced = reduceObjectCriterion(a, b);
@@ -80,17 +80,17 @@ describe("reduce: object", () => {
             it("{ foo:{2} } reduced by { bar:{2} } should be { foo:{2} & bar:!{2} }", () => {
                 // arrange
                 const a = {
-                    foo: [createInValueCriterion([2])],
+                    foo: [inSet([2])],
                 };
 
                 const b = {
-                    bar: [createInValueCriterion([2])],
+                    bar: [inSet([2])],
                 };
 
                 const expected = [
                     {
-                        foo: [createInValueCriterion([2])],
-                        bar: [createNotInValueCriterion([2])],
+                        foo: [inSet([2])],
+                        bar: [notInSet([2])],
                     },
                 ];
 
@@ -106,18 +106,18 @@ describe("reduce: object", () => {
             it("{ foo:{2} } reduced by { foo:{2} & bar:{3} } should be { foo:{2} & bar:!{3} }", () => {
                 // arrange
                 const a = {
-                    foo: [createInValueCriterion([2])],
+                    foo: [inSet([2])],
                 };
 
                 const b = {
-                    foo: [createInValueCriterion([2])],
-                    bar: [createInValueCriterion([3])],
+                    foo: [inSet([2])],
+                    bar: [inSet([3])],
                 };
 
                 const expected = [
                     {
-                        foo: [createInValueCriterion([2])],
-                        bar: [createNotInValueCriterion([3])],
+                        foo: [inSet([2])],
+                        bar: [notInSet([3])],
                     },
                 ];
 
@@ -133,18 +133,18 @@ describe("reduce: object", () => {
             it("{ foo:{1, 2} & bar:{3} } reduced by { foo:{2} } should be { foo:{1} & bar:{3} }", () => {
                 // arrange
                 const a = {
-                    foo: [createInValueCriterion([1, 2])],
-                    bar: [createInValueCriterion([3])],
+                    foo: [inSet([1, 2])],
+                    bar: [inSet([3])],
                 };
 
                 const b = {
-                    foo: [createInValueCriterion([2])],
+                    foo: [inSet([2])],
                 };
 
                 const expected = [
                     {
-                        foo: [createInValueCriterion([1])],
-                        bar: [createInValueCriterion([3])],
+                        foo: [inSet([1])],
+                        bar: [inSet([3])],
                     },
                 ];
 
@@ -160,19 +160,19 @@ describe("reduce: object", () => {
             it("{ foo:{1, 2} & bar:{3} } reduced by { foo:{2} & bar:{3, 4} } should be { foo:{1} & bar:{3} }", () => {
                 // arrange
                 const a = {
-                    foo: [createInValueCriterion([1, 2])],
-                    bar: [createInValueCriterion([3])],
+                    foo: [inSet([1, 2])],
+                    bar: [inSet([3])],
                 };
 
                 const b = {
-                    foo: [createInValueCriterion([2])],
-                    bar: [createInValueCriterion([3, 4])],
+                    foo: [inSet([2])],
+                    bar: [inSet([3, 4])],
                 };
 
                 const expected = [
                     {
-                        foo: [createInValueCriterion([1])],
-                        bar: [createInValueCriterion([3])],
+                        foo: [inSet([1])],
+                        bar: [inSet([3])],
                     },
                 ];
 
@@ -186,23 +186,23 @@ describe("reduce: object", () => {
             it("{ foo:[1, 7] & bar:[100, 200] } reduced by { foo:[3, 4] & bar:[150, 175] } should be ({ foo:([1, 3) | (4, 7]) & bar:[100, 200] } | { foo:[3, 4] & bar:([100, 150) | (175, 200]) })", () => {
                 // arrange
                 const a = {
-                    foo: [createFromToValueCriterion([1, 7])],
-                    bar: [createFromToValueCriterion([100, 200])],
+                    foo: [inRange([1, 7])],
+                    bar: [inRange([100, 200])],
                 };
 
                 const b = {
-                    foo: [createFromToValueCriterion([3, 4])],
-                    bar: [createFromToValueCriterion([150, 175])],
+                    foo: [inRange([3, 4])],
+                    bar: [inRange([150, 175])],
                 };
 
                 const expected = [
                     {
-                        foo: [createFromToValueCriterion([1, 3], [true, false]), createFromToValueCriterion([4, 7], [false, true])],
-                        bar: [createFromToValueCriterion([100, 200])],
+                        foo: [inRange([1, 3], [true, false]), inRange([4, 7], [false, true])],
+                        bar: [inRange([100, 200])],
                     },
                     {
-                        foo: [createFromToValueCriterion([3, 4])],
-                        bar: [createFromToValueCriterion([100, 150], [true, false]), createFromToValueCriterion([175, 200], [false, true])],
+                        foo: [inRange([3, 4])],
+                        bar: [inRange([100, 150], [true, false]), inRange([175, 200], [false, true])],
                     },
                 ];
 
@@ -216,23 +216,23 @@ describe("reduce: object", () => {
             it("changing order of criteria properties should still result in an equivalent outcome", () => {
                 // arrange
                 const a1 = {
-                    bar: [createFromToValueCriterion([100, 200])],
-                    foo: [createFromToValueCriterion([1, 7])],
+                    bar: [inRange([100, 200])],
+                    foo: [inRange([1, 7])],
                 };
 
                 const a2 = {
-                    foo: [createFromToValueCriterion([1, 7])],
-                    bar: [createFromToValueCriterion([100, 200])],
+                    foo: [inRange([1, 7])],
+                    bar: [inRange([100, 200])],
                 };
 
                 const b1 = {
-                    bar: [createFromToValueCriterion([150, 175])],
-                    foo: [createFromToValueCriterion([3, 4])],
+                    bar: [inRange([150, 175])],
+                    foo: [inRange([3, 4])],
                 };
 
                 const b2 = {
-                    foo: [createFromToValueCriterion([3, 4])],
-                    bar: [createFromToValueCriterion([150, 175])],
+                    foo: [inRange([3, 4])],
+                    bar: [inRange([150, 175])],
                 };
 
                 // act
@@ -256,26 +256,26 @@ describe("reduce: object", () => {
             it("{ foo:[1, 7] & bar:[100, 200] & baz:[50, 70] } reduced by { foo:[3, 4] & bar:[150, 175] } should be ({ foo:([1, 3) | (4, 7]) & bar:[100, 200] & baz:[50, 70] } | { foo:[3, 4] & bar:([100, 150) | (175, 200]) & baz:[50, 70] })", () => {
                 // arrange
                 const a = {
-                    foo: [createFromToValueCriterion([1, 7])],
-                    bar: [createFromToValueCriterion([100, 200])],
-                    baz: [createFromToValueCriterion([50, 70])],
+                    foo: [inRange([1, 7])],
+                    bar: [inRange([100, 200])],
+                    baz: [inRange([50, 70])],
                 };
 
                 const b = {
-                    foo: [createFromToValueCriterion([3, 4])],
-                    bar: [createFromToValueCriterion([150, 175])],
+                    foo: [inRange([3, 4])],
+                    bar: [inRange([150, 175])],
                 };
 
                 const expected = [
                     {
-                        foo: [createFromToValueCriterion([1, 3], [true, false]), createFromToValueCriterion([4, 7], [false, true])],
-                        bar: [createFromToValueCriterion([100, 200])],
-                        baz: [createFromToValueCriterion([50, 70])],
+                        foo: [inRange([1, 3], [true, false]), inRange([4, 7], [false, true])],
+                        bar: [inRange([100, 200])],
+                        baz: [inRange([50, 70])],
                     },
                     {
-                        foo: [createFromToValueCriterion([3, 4])],
-                        bar: [createFromToValueCriterion([100, 150], [true, false]), createFromToValueCriterion([175, 200], [false, true])],
-                        baz: [createFromToValueCriterion([50, 70])],
+                        foo: [inRange([3, 4])],
+                        bar: [inRange([100, 150], [true, false]), inRange([175, 200], [false, true])],
+                        baz: [inRange([50, 70])],
                     },
                 ];
 
@@ -291,32 +291,32 @@ describe("reduce: object", () => {
             it("{ foo:[1, 7] & bar:[100, 200] & baz:[50, 70] } reduced by { foo:[3, 4] & bar:[150, 175] & baz:[55, 65] } should be ({ foo:([1, 3) | (4, 7]) & bar:[100, 200] & baz:[50, 70] } | { foo:[3, 4] & bar:([100, 150) | (175, 200]) & baz:[50, 70] } | { foo:[3, 4] & bar:[150, 175] & baz:([50, 55) | (65, 70]) })", () => {
                 // arrange
                 const a = {
-                    foo: [createFromToValueCriterion([1, 7])],
-                    bar: [createFromToValueCriterion([100, 200])],
-                    baz: [createFromToValueCriterion([50, 70])],
+                    foo: [inRange([1, 7])],
+                    bar: [inRange([100, 200])],
+                    baz: [inRange([50, 70])],
                 };
 
                 const b = {
-                    foo: [createFromToValueCriterion([3, 4])],
-                    bar: [createFromToValueCriterion([150, 175])],
-                    baz: [createFromToValueCriterion([55, 65])],
+                    foo: [inRange([3, 4])],
+                    bar: [inRange([150, 175])],
+                    baz: [inRange([55, 65])],
                 };
 
                 const expected = [
                     {
-                        foo: [createFromToValueCriterion([1, 3], [true, false]), createFromToValueCriterion([4, 7], [false, true])],
-                        bar: [createFromToValueCriterion([100, 200])],
-                        baz: [createFromToValueCriterion([50, 70])],
+                        foo: [inRange([1, 3], [true, false]), inRange([4, 7], [false, true])],
+                        bar: [inRange([100, 200])],
+                        baz: [inRange([50, 70])],
                     },
                     {
-                        foo: [createFromToValueCriterion([3, 4])],
-                        bar: [createFromToValueCriterion([100, 150], [true, false]), createFromToValueCriterion([175, 200], [false, true])],
-                        baz: [createFromToValueCriterion([50, 70])],
+                        foo: [inRange([3, 4])],
+                        bar: [inRange([100, 150], [true, false]), inRange([175, 200], [false, true])],
+                        baz: [inRange([50, 70])],
                     },
                     {
-                        foo: [createFromToValueCriterion([3, 4])],
-                        bar: [createFromToValueCriterion([150, 175])],
-                        baz: [createFromToValueCriterion([50, 55], [true, false]), createFromToValueCriterion([65, 70], [false, true])],
+                        foo: [inRange([3, 4])],
+                        bar: [inRange([150, 175])],
+                        baz: [inRange([50, 55], [true, false]), inRange([65, 70], [false, true])],
                     },
                 ];
 
@@ -332,29 +332,29 @@ describe("reduce: object", () => {
             it("{ foo:[1, 7] & bar:[100, 200] } reduced by { foo:[3, 4] & bar:[150, 175] & baz:[50, 70] } should be ({ foo:([1, 3) | (4, 7]) & bar:[100, 200] } | { foo:[3, 4] & bar:([100, 150) | (175, 200]) } | { foo:[3, 4] & bar:[150, 175] & baz:([..., 50) | (70, ...]) })", () => {
                 // arrange
                 const a = {
-                    foo: [createFromToValueCriterion([1, 7])],
-                    bar: [createFromToValueCriterion([100, 200])],
+                    foo: [inRange([1, 7])],
+                    bar: [inRange([100, 200])],
                 };
 
                 const b = {
-                    foo: [createFromToValueCriterion([3, 4])],
-                    bar: [createFromToValueCriterion([150, 175])],
-                    baz: [createFromToValueCriterion([50, 70])],
+                    foo: [inRange([3, 4])],
+                    bar: [inRange([150, 175])],
+                    baz: [inRange([50, 70])],
                 };
 
                 const expected = [
                     {
-                        foo: [createFromToValueCriterion([1, 3], [true, false]), createFromToValueCriterion([4, 7], [false, true])],
-                        bar: [createFromToValueCriterion([100, 200])],
+                        foo: [inRange([1, 3], [true, false]), inRange([4, 7], [false, true])],
+                        bar: [inRange([100, 200])],
                     },
                     {
-                        foo: [createFromToValueCriterion([3, 4])],
-                        bar: [createFromToValueCriterion([100, 150], [true, false]), createFromToValueCriterion([175, 200], [false, true])],
+                        foo: [inRange([3, 4])],
+                        bar: [inRange([100, 150], [true, false]), inRange([175, 200], [false, true])],
                     },
                     {
-                        foo: [createFromToValueCriterion([3, 4])],
-                        bar: [createFromToValueCriterion([150, 175])],
-                        baz: [createFromToValueCriterion([void 0, 50], false), createFromToValueCriterion([70, void 0], false)],
+                        foo: [inRange([3, 4])],
+                        bar: [inRange([150, 175])],
+                        baz: [inRange([void 0, 50], false), inRange([70, void 0], false)],
                     },
                 ];
 
@@ -372,17 +372,17 @@ describe("reduce: object", () => {
                 const a = {};
 
                 const b = {
-                    foo: [createInValueCriterion([2])],
-                    bar: [createInValueCriterion([4])],
+                    foo: [inSet([2])],
+                    bar: [inSet([4])],
                 };
 
                 const expected = [
                     {
-                        foo: [createNotInValueCriterion([2])],
+                        foo: [notInSet([2])],
                     },
                     {
-                        foo: [createInValueCriterion([2])],
-                        bar: [createNotInValueCriterion([4])],
+                        foo: [inSet([2])],
+                        bar: [notInSet([4])],
                     },
                 ];
 
@@ -396,9 +396,9 @@ describe("reduce: object", () => {
 
         it("{ foo:{ bar:[1, 7] } } reduced by { foo: { bar:[3, 4] } } should be { foo:{ bar:([1, 3) | (4, 7]) } }", () => {
             // arrange
-            const a = { foo: [{ bar: [createFromToValueCriterion([1, 7])] }] };
-            const b = { foo: [{ bar: [createFromToValueCriterion([3, 4])] }] };
-            const expected = [{ foo: [{ bar: [createFromToValueCriterion([1, 3], [true, false]), createFromToValueCriterion([4, 7], [false, true])] }] }];
+            const a = { foo: [{ bar: [inRange([1, 7])] }] };
+            const b = { foo: [{ bar: [inRange([3, 4])] }] };
+            const expected = [{ foo: [{ bar: [inRange([1, 3], [true, false]), inRange([4, 7], [false, true])] }] }];
 
             // act
             const reduced = reduceObjectCriterion(a, b);
@@ -412,11 +412,11 @@ describe("reduce: object", () => {
         it("{ foo:{3} } should not be reduced by { foo:{2} }", () => {
             // arrange
             const a = {
-                foo: [createInValueCriterion([3])],
+                foo: [inSet([3])],
             };
 
             const b = {
-                foo: [createInValueCriterion([2])],
+                foo: [inSet([2])],
             };
 
             // act
@@ -429,13 +429,13 @@ describe("reduce: object", () => {
         it("{ foo:{2} & bar:{3} } should not be reduced by { foo:{2} & bar:{4} }", () => {
             // arrange
             const a = {
-                foo: [createInValueCriterion([2])],
-                bar: [createInValueCriterion([3])],
+                foo: [inSet([2])],
+                bar: [inSet([3])],
             };
 
             const b = {
-                foo: [createInValueCriterion([2])],
-                bar: [createInValueCriterion([4])],
+                foo: [inSet([2])],
+                bar: [inSet([4])],
             };
 
             // act

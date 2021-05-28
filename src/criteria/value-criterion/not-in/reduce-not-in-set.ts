@@ -1,9 +1,9 @@
 import { subtractSets } from "../../../utils";
 import { ValueCriteria } from "../value-criteria";
 import { ValueCriterion } from "../value-criterion";
-import { NotInValueCriterion } from "./not-in-value-criterion";
+import { NotInSetCriterion } from "./not-in-set-criterion";
 
-export function reduceNotInValueCriterion(a: NotInValueCriterion, b: ValueCriterion): ValueCriteria | false {
+export function reduceNotInSet(a: NotInSetCriterion, b: ValueCriterion): ValueCriteria | false {
     switch (b.op) {
         case "in":
             const merged = new Set([...a.values, ...b.values]);

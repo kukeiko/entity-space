@@ -1,4 +1,4 @@
-import { Query, createAlwaysReducible, reduceQuery, ObjectCriteria, Selection, createFromToValueCriterion } from "src";
+import { Query, createAlwaysReducible, reduceQuery, ObjectCriteria, Selection, inRange } from "src";
 
 describe("reduceQuery()", () => {
     // need this so toBeEqual() works
@@ -104,12 +104,12 @@ describe("reduceQuery()", () => {
 
         it("{ index:[1, 7] / { foo, bar } } reduced by { index:[3, 4] / { foo } } should be { index:([1, 3), (4, 7]) / { foo, bar } }, { index:[3, 4] / { bar } }", () => {
             // arrange
-            const a = createQuery([{ index: [createFromToValueCriterion([1, 7])] }], { foo: true, bar: true });
-            const b = createQuery([{ index: [createFromToValueCriterion([3, 4])] }], { foo: true });
+            const a = createQuery([{ index: [inRange([1, 7])] }], { foo: true, bar: true });
+            const b = createQuery([{ index: [inRange([3, 4])] }], { foo: true });
 
             const expected = [
-                createQuery([{ index: [createFromToValueCriterion([1, 3], [true, false]), createFromToValueCriterion([4, 7], [false, true])] }], { foo: true, bar: true }),
-                createQuery([{ index: [createFromToValueCriterion([3, 4])] }], { bar: true }),
+                createQuery([{ index: [inRange([1, 3], [true, false]), inRange([4, 7], [false, true])] }], { foo: true, bar: true }),
+                createQuery([{ index: [inRange([3, 4])] }], { bar: true }),
             ];
 
             // act
@@ -121,9 +121,9 @@ describe("reduceQuery()", () => {
 
         it("{ index:[1, 7] } reduced by { index:[3, 4] } should be { index: ([1, 3), (4, 7]) }", () => {
             // arrange
-            const a = createQuery([{ index: [createFromToValueCriterion([1, 7])] }]);
-            const b = createQuery([{ index: [createFromToValueCriterion([3, 4])] }]);
-            const expected = [createQuery([{ index: [createFromToValueCriterion([1, 3], [true, false]), createFromToValueCriterion([4, 7], [false, true])] }])];
+            const a = createQuery([{ index: [inRange([1, 7])] }]);
+            const b = createQuery([{ index: [inRange([3, 4])] }]);
+            const expected = [createQuery([{ index: [inRange([1, 3], [true, false]), inRange([4, 7], [false, true])] }])];
 
             // act
             const reduced = reduceQuery(a, b);
@@ -134,18 +134,18 @@ describe("reduceQuery()", () => {
 
         it("{ index:[1, 7], price: [900, 1300] } reduced by { index:[3, 4], price: [1000, 1200] } should be { (index: ([1, 3), (4, 7]), price: [900, 1300]), (index:[3, 4], price: ([900, 1000), (1200, 1300])) }", () => {
             // arrange
-            const a = createQuery([{ index: [createFromToValueCriterion([1, 7])], price: [createFromToValueCriterion([900, 1300])] }]);
-            const b = createQuery([{ index: [createFromToValueCriterion([3, 4])], price: [createFromToValueCriterion([1000, 1200])] }]);
+            const a = createQuery([{ index: [inRange([1, 7])], price: [inRange([900, 1300])] }]);
+            const b = createQuery([{ index: [inRange([3, 4])], price: [inRange([1000, 1200])] }]);
 
             const expected = [
                 createQuery([
                     {
-                        index: [createFromToValueCriterion([1, 3], [true, false]), createFromToValueCriterion([4, 7], [false, true])],
-                        price: [createFromToValueCriterion([900, 1300])],
+                        index: [inRange([1, 3], [true, false]), inRange([4, 7], [false, true])],
+                        price: [inRange([900, 1300])],
                     },
                     {
-                        index: [createFromToValueCriterion([3, 4])],
-                        price: [createFromToValueCriterion([900, 1000], [true, false]), createFromToValueCriterion([1200, 1300], [false, true])],
+                        index: [inRange([3, 4])],
+                        price: [inRange([900, 1000], [true, false]), inRange([1200, 1300], [false, true])],
                     },
                 ]),
             ];
@@ -159,24 +159,24 @@ describe("reduceQuery()", () => {
 
         it("{ index:[1, 7], price: [900, 1300] / { foo, bar } } reduced by { index:[3, 4], price: [1000, 1200] / { foo } } should be { ((index: ([1, 3), (4, 7]), price: [900, 1300]), (index:[3, 4], price: ([900, 1000), (1200, 1300]))) / { foo, bar } }, { index:[3, 4], price: [1000, 1200] / { bar } }", () => {
             // arrange
-            const a = createQuery([{ index: [createFromToValueCriterion([1, 7])], price: [createFromToValueCriterion([900, 1300])] }], { foo: true, bar: true });
-            const b = createQuery([{ index: [createFromToValueCriterion([3, 4])], price: [createFromToValueCriterion([1000, 1200])] }], { foo: true });
+            const a = createQuery([{ index: [inRange([1, 7])], price: [inRange([900, 1300])] }], { foo: true, bar: true });
+            const b = createQuery([{ index: [inRange([3, 4])], price: [inRange([1000, 1200])] }], { foo: true });
 
             const expected = [
                 createQuery(
                     [
                         {
-                            index: [createFromToValueCriterion([1, 3], [true, false]), createFromToValueCriterion([4, 7], [false, true])],
-                            price: [createFromToValueCriterion([900, 1300])],
+                            index: [inRange([1, 3], [true, false]), inRange([4, 7], [false, true])],
+                            price: [inRange([900, 1300])],
                         },
                         {
-                            index: [createFromToValueCriterion([3, 4])],
-                            price: [createFromToValueCriterion([900, 1000], [true, false]), createFromToValueCriterion([1200, 1300], [false, true])],
+                            index: [inRange([3, 4])],
+                            price: [inRange([900, 1000], [true, false]), inRange([1200, 1300], [false, true])],
                         },
                     ],
                     { foo: true, bar: true }
                 ),
-                createQuery([{ index: [createFromToValueCriterion([3, 4])], price: [createFromToValueCriterion([1000, 1200])] }], { bar: true }),
+                createQuery([{ index: [inRange([3, 4])], price: [inRange([1000, 1200])] }], { bar: true }),
             ];
 
             // act

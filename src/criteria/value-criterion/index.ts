@@ -1,5 +1,5 @@
 export * from "./filter-by-value-criteria";
-export * from "./from-to";
+export * from "./in-range";
 export * from "./in";
 export * from "./is-value-criteria";
 export * from "./is-value-criterion";

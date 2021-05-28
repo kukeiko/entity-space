@@ -1,18 +1,18 @@
 import { ValueCriterion } from "./value-criterion";
-import { reduceInValueCriterion } from "./in";
-import { reduceFromToValueCriterion } from "./from-to";
-import { reduceNotInValueCriterion } from "./not-in";
+import { reduceInSet } from "./in";
+import { reduceInRange } from "./in-range";
+import { reduceNotInSet } from "./not-in";
 import { ValueCriteria } from "./value-criteria";
 
 export function reduceValueCriterion(a: ValueCriterion, b: ValueCriterion): ValueCriteria | false {
     switch (a.op) {
         case "in":
-            return reduceInValueCriterion(a, b);
+            return reduceInSet(a, b);
 
-        case "from-to":
-            return reduceFromToValueCriterion(a, b);
+        case "range":
+            return reduceInRange(a, b);
 
         case "not-in":
-            return reduceNotInValueCriterion(a, b);
+            return reduceNotInSet(a, b);
     }
 }
