@@ -8,7 +8,7 @@ import { inRange, InRangeCriterion, reduceInRange, reduceObjectCriterion, ValueC
 describe("what's reduction for?", () => {
     it("a quick example", () => {
         /**
-         * Let's just jump right into a simple reduction case: we have to ranges and want to figure out the difference between them.
+         * Let's just jump right into a simple reduction case: we have two ranges and want to figure out the difference between them.
          */
         const from_100_to_200: InRangeCriterion = { op: "range", from: { op: ">=", value: 100 }, to: { op: "<=", value: 200 } };
         const from_100_to_300: InRangeCriterion = { op: "range", from: { op: ">=", value: 100 }, to: { op: "<=", value: 300 } };
@@ -24,7 +24,7 @@ describe("what's reduction for?", () => {
          * Reduction serves multiple purposes - and the one we're looking at now is some simple caching.
          *
          * Let's imagine the following scenario: we have a UI rendering a list of products.
-         * The user can filter those down by price, and selected to only show products with a price between 100 and 200 euro.
+         * The user can filter those down by price, and they initially selected to only show products with a price between 100 and 200 euro.
          *
          * They then increase the price range to 100 to 300 - and we only want to load the data that is missing, i.e. the products with a price of 200 to 300 euro.
          *
@@ -59,7 +59,7 @@ describe("what's reduction for?", () => {
     it("creating range criteria", () => {
         /**
          * Typing out criteria like this: { op: "range", from: { op: ">=", value: 100 }, to: { op: "<=", value: 200 } }
-         * is a lot of typing to do. So lets explore all the ways we can create ranges:
+         * is a lot of typing to do. So lets explore all the ways we can create ranges in a shorter way:
          */
         const from_100_to_200 = inRange([100, 200]);
         expect(from_100_to_200).toEqual({ op: "range", from: { op: ">=", value: 100 }, to: { op: "<=", value: 200 } });
@@ -74,7 +74,7 @@ describe("what's reduction for?", () => {
         expect(from_bigger_100_to_less_200).toEqual({ op: "range", from: { op: ">", value: 100 }, to: { op: "<", value: 200 } });
 
         const from_bigger_100_to_less_200_shorter = inRange([100, 200], false);
-        expect(from_bigger_100_to_less_200_shorter).toEqual({ op: "range", from: { op: ">", value: 100 }, to: { op: "<", value: 200 } });
+        expect(from_bigger_100_to_less_200_shorter).toEqual(from_bigger_100_to_less_200);
 
         const to_200 = inRange([void 0, 200]);
         expect(to_200).toEqual({ op: "range", to: { op: "<=", value: 200 } });
@@ -112,25 +112,23 @@ describe("what's reduction for?", () => {
         };
 
         /**
-         * We can not just load products with price 200 to 300, because we also want products with a rating of >= 2 - and we previously loaded only those with rating of >= 3.
-         * We'll therefore have to load all the products with price of 200 to 300, and load some products with price of 100 to 200.
+         * So not only do we want products of a bigger price range, but we now also want products with a bigger rating range.
          *
-         * That means that the difference should result in two parts - one covering the products with the price of 100 to 200 & rating 2 - 3,
-         * and one covering the products 200 - 300 with rating 2-5.
+         * We'll therefore have to load all the products with price of 200 to 300 and rating 2 to 5, and load all products with price of 100 to 200 and rating 2 to 3.
          */
         const expected = [
-            {
-                price: [inRange([100, 200])],
-                rating: [inRange([2, 3], [true, false])],
-            },
             {
                 price: [inRange([200, 300], [false, true])],
                 rating: [inRange([2, 5])],
             },
+            {
+                price: [inRange([100, 200])],
+                rating: [inRange([2, 3], [true, false])],
+            },
         ];
 
         /**
-         * We're now using the "reduceObjectCriterion()" method as we want to reduce 2 criteria that span across multiple properties.
+         * We're now using the "reduceObjectCriterion()" method as we want to reduce criteria that span across multiple properties.
          */
         const difference = reduceObjectCriterion(price_100_to_300_rating_2_to_5, price_100_to_200_rating_3_to_5);
 

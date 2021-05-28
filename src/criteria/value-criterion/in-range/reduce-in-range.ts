@@ -54,7 +54,7 @@ export function isToInsideFromTo(a: ToCriterion, b: InRangeCriterion): boolean {
 
 export function reduceInRange(a: InRangeCriterion, b: ValueCriterion): ValueCriteria | false {
     switch (b.op) {
-        // [todo] revisit & try to simplify this from-to / from-to reduction.
+        // [todo] revisit & try to simplify this range / range reduction.
         case "range":
             if (a.from !== void 0 && a.to !== void 0) {
                 const fromInside = isFromInsideFromTo(a.from, b);
