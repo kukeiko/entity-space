@@ -7,5 +7,6 @@
  * - { foo: { bar, baz } } could reduce { foo: { bar, baz, zoo } } to { foo: { zoo } }
  */
 export interface Reducible {
+    // [todo] return values no longer up-to-date, should return "false" for no reduction, "array" for full/partial reduction
     reduce(other: this): this | null;
 }

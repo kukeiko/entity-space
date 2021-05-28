@@ -1,4 +1,4 @@
-import { inRange, InRangeCriterion, reduceInRange, reduceObjectCriterion, ValueCriteria } from "../../src";
+import { inRange, InRangeCriterion, Query, reduceInRange, reduceObjectCriterion, reduceQuery, reduceSelection, Selection, ValueCriteria } from "../../src";
 
 /**
  * This file serves as an introduction via code for anyone new and interested in this library.
@@ -8,7 +8,7 @@ import { inRange, InRangeCriterion, reduceInRange, reduceObjectCriterion, ValueC
 describe("what's reduction for?", () => {
     it("a quick example", () => {
         /**
-         * Let's just jump right into a simple reduction case: we have to ranges and want to figure out the difference between them.
+         * Let's just jump right into a simple reduction case: we have two ranges and want to figure out the difference between them.
          */
         const from_100_to_200: InRangeCriterion = { op: "range", from: { op: ">=", value: 100 }, to: { op: "<=", value: 200 } };
         const from_100_to_300: InRangeCriterion = { op: "range", from: { op: ">=", value: 100 }, to: { op: "<=", value: 300 } };
@@ -24,7 +24,7 @@ describe("what's reduction for?", () => {
          * Reduction serves multiple purposes - and the one we're looking at now is some simple caching.
          *
          * Let's imagine the following scenario: we have a UI rendering a list of products.
-         * The user can filter those down by price, and selected to only show products with a price between 100 and 200 euro.
+         * The user can filter those down by price, and they initially selected to only show products with a price between 100 and 200 euro.
          *
          * They then increase the price range to 100 to 300 - and we only want to load the data that is missing, i.e. the products with a price of 200 to 300 euro.
          *
@@ -59,7 +59,7 @@ describe("what's reduction for?", () => {
     it("creating range criteria", () => {
         /**
          * Typing out criteria like this: { op: "range", from: { op: ">=", value: 100 }, to: { op: "<=", value: 200 } }
-         * is a lot of typing to do. So lets explore all the ways we can create ranges:
+         * is a lot of typing to do. So lets explore all the ways we can create ranges in a shorter way:
          */
         const from_100_to_200 = inRange([100, 200]);
         expect(from_100_to_200).toEqual({ op: "range", from: { op: ">=", value: 100 }, to: { op: "<=", value: 200 } });
@@ -74,7 +74,7 @@ describe("what's reduction for?", () => {
         expect(from_bigger_100_to_less_200).toEqual({ op: "range", from: { op: ">", value: 100 }, to: { op: "<", value: 200 } });
 
         const from_bigger_100_to_less_200_shorter = inRange([100, 200], false);
-        expect(from_bigger_100_to_less_200_shorter).toEqual({ op: "range", from: { op: ">", value: 100 }, to: { op: "<", value: 200 } });
+        expect(from_bigger_100_to_less_200_shorter).toEqual(from_bigger_100_to_less_200);
 
         const to_200 = inRange([void 0, 200]);
         expect(to_200).toEqual({ op: "range", to: { op: "<=", value: 200 } });
@@ -93,7 +93,7 @@ describe("what's reduction for?", () => {
         /**
          * We previously only covered the case of reducing the price - but what if the user can also filter by rating?
          *
-         * So lets assume again that the user wanted all products with a price of 100 to 200 euro, and a rating of at least 3 (assuming 1 = worst, 5 = best).
+         * So lets assume again that the user wanted all products with a price of 100 to 200 euro, but now also with a rating of at least 3 (assuming 1 = worst, 5 = best).
          * After that they decide to show products with a price of 100 to 300, and a ranking of at least 2.
          *
          * The criteria for our first call would look like this:
@@ -112,25 +112,23 @@ describe("what's reduction for?", () => {
         };
 
         /**
-         * We can not just load products with price 200 to 300, because we also want products with a rating of >= 2 - and we previously loaded only those with rating of >= 3.
-         * We'll therefore have to load all the products with price of 200 to 300, and load some products with price of 100 to 200.
+         * So not only do we want products of a bigger price range, but we now also want products with a bigger rating range.
          *
-         * That means that the difference should result in two parts - one covering the products with the price of 100 to 200 & rating 2 - 3,
-         * and one covering the products 200 - 300 with rating 2-5.
+         * We'll therefore have to load all the products with price of 200 to 300 and rating 2 to 5, and load all products with price of 100 to 200 and rating 2 to 3.
          */
         const expected = [
-            {
-                price: [inRange([100, 200])],
-                rating: [inRange([2, 3], [true, false])],
-            },
             {
                 price: [inRange([200, 300], [false, true])],
                 rating: [inRange([2, 5])],
             },
+            {
+                price: [inRange([100, 200])],
+                rating: [inRange([2, 3], [true, false])],
+            },
         ];
 
         /**
-         * We're now using the "reduceObjectCriterion()" method as we want to reduce 2 criteria that span across multiple properties.
+         * We're now using the "reduceObjectCriterion()" method as we want to reduce criteria that span across multiple properties.
          */
         const difference = reduceObjectCriterion(price_100_to_300_rating_2_to_5, price_100_to_200_rating_3_to_5);
 
@@ -138,5 +136,137 @@ describe("what's reduction for?", () => {
          * Note: we have to do a "arrayWithExactContents" here to ignore the order of elements inside "expected".
          */
         expect(difference).toEqual(jasmine.arrayWithExactContents(expected));
+    });
+
+    it("selection reduction", () => {
+        /**
+         * So we have a mechanism to figure out the data we're missing on the criteria level - but what about the property level?
+         *
+         * We want our app to be able to only load what's needed, i.e. pick the properties we want. And sometimes we want to load
+         * additional properties later on - so we'll need the same reduction mechanism to figure out what we already have in cache.
+         *
+         * We call an object that tells us which properties to load a "Selection". Our initial selection of our products will contain
+         * the id, the name, the price and the rating.
+         */
+        const basic_properties: Selection = {
+            id: true,
+            name: true,
+            price: true,
+            rating: true,
+        };
+
+        /**
+         * Later on we also want to load the customer reviews of the product:
+         */
+        const basic_properties_with_reviews: Selection = {
+            ...basic_properties,
+            reviews: true,
+        };
+
+        /**
+         * Since we've loaded the basic_properties_only already, the difference should just be the reviews:
+         */
+        const expected: Selection = {
+            reviews: true,
+        };
+
+        const actual = reduceSelection(basic_properties_with_reviews, basic_properties);
+
+        expect(actual).toEqual(expected);
+    });
+
+    it("query reduction", () => {
+        /**
+         * Let's now combine both concepts: criteria + selection reduction.
+         *
+         * We're going to load products with a price range of 100 to 200, rating range of 3 to 5, without reviews.
+         * We then load products with price range of 100 to 300, rating range of 2 to 5, including the reviews.
+         */
+        const basic_properties: Selection = {
+            id: true,
+            name: true,
+            price: true,
+            rating: true,
+        };
+
+        const review_property: Selection = {
+            reviews: true,
+        };
+
+        const price_100_to_200_rating_3_to_5_no_reviews: Query = {
+            criteria: [
+                {
+                    price: [inRange([100, 200])],
+                    rating: [inRange([3, 5])],
+                },
+            ],
+            selection: {
+                ...basic_properties,
+            },
+            // [todo] please ignore those 2 lines for now
+            model: [],
+            options: {} as any,
+        };
+
+        const price_100_to_300_rating_2_to_5_with_reviews: Query = {
+            criteria: [
+                {
+                    price: [inRange([100, 300])],
+                    rating: [inRange([2, 5])],
+                },
+            ],
+            selection: {
+                ...basic_properties,
+                ...review_property,
+            },
+            // [todo] please ignore those 2 lines for now
+            model: [],
+            options: {} as any,
+        };
+
+        /**
+         * Our expected outcome is two queries:
+         */
+        const expected: Query[] = [
+            // one for loading the missing entities
+            {
+                criteria: [
+                    {
+                        price: [inRange([200, 300], [false, true])],
+                        rating: [inRange([2, 5])],
+                    },
+                    {
+                        price: [inRange([100, 200])],
+                        rating: [inRange([2, 3], [true, false])],
+                    },
+                ],
+                selection: {
+                    ...basic_properties,
+                    ...review_property,
+                },
+                // [todo] please ignore those 2 lines for now
+                model: [],
+                options: {} as any,
+            },
+            // and one for loading the missing properties (i.e. the reviews) of the entities we already have
+            {
+                criteria: [
+                    {
+                        price: [inRange([100, 200])],
+                        rating: [inRange([3, 5])],
+                    },
+                ],
+                selection: {
+                    ...review_property,
+                },
+                // [todo] please ignore those 2 lines for now
+                model: [],
+                options: {} as any,
+            },
+        ];
+
+        const actual = reduceQuery(price_100_to_300_rating_2_to_5_with_reviews, price_100_to_200_rating_3_to_5_no_reviews);
+
+        expect(actual).toEqual(jasmine.arrayWithExactContents(expected));
     });
 });
