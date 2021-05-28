@@ -55,7 +55,7 @@ export function isToInsideFromTo(a: ToCriterion, b: InRangeCriterion): boolean {
 export function reduceInRange(a: InRangeCriterion, b: ValueCriterion): ValueCriteria | false {
     switch (b.op) {
         // [todo] revisit & try to simplify this from-to / from-to reduction.
-        case "from-to":
+        case "range":
             if (a.from !== void 0 && a.to !== void 0) {
                 const fromInside = isFromInsideFromTo(a.from, b);
                 const toInside = isToInsideFromTo(a.to, b);
@@ -67,9 +67,9 @@ export function reduceInRange(a: InRangeCriterion, b: ValueCriterion): ValueCrit
                         // this code path should never be hit because if b.to === void 0, and fromInside is true, then toInside has to be true as well.
                     } else {
                         if (b.to.op === "<=") {
-                            return [{ op: "from-to", from: { op: ">", value: b.to.value }, to: { op: a.to.op, value: a.to.value } }];
+                            return [{ op: "range", from: { op: ">", value: b.to.value }, to: { op: a.to.op, value: a.to.value } }];
                         } else {
-                            return [{ op: "from-to", from: { op: ">=", value: b.to.value }, to: { op: a.to.op, value: a.to.value } }];
+                            return [{ op: "range", from: { op: ">=", value: b.to.value }, to: { op: a.to.op, value: a.to.value } }];
                         }
                     }
                 } else if (toInside) {
@@ -77,9 +77,9 @@ export function reduceInRange(a: InRangeCriterion, b: ValueCriterion): ValueCrit
                         // this code path should never be hit because if b.from === void 0, and toInside is true, then fromInside has to be true as well.
                     } else {
                         if (b.from.op === ">=") {
-                            return [{ op: "from-to", from: { op: a.from.op, value: a.from.value }, to: { op: "<", value: b.from.value } }];
+                            return [{ op: "range", from: { op: a.from.op, value: a.from.value }, to: { op: "<", value: b.from.value } }];
                         } else {
-                            return [{ op: "from-to", from: { op: a.from.op, value: a.from.value }, to: { op: "<=", value: b.from.value } }];
+                            return [{ op: "range", from: { op: a.from.op, value: a.from.value }, to: { op: "<=", value: b.from.value } }];
                         }
                     }
                 } else if (b.from !== void 0 && b.to !== void 0) {
@@ -90,15 +90,15 @@ export function reduceInRange(a: InRangeCriterion, b: ValueCriterion): ValueCrit
                         const result: ValueCriterion[] = [];
 
                         if (b.from.op === ">") {
-                            result.push({ op: "from-to", from: { ...a.from }, to: { op: "<=", value: b.from.value } });
+                            result.push({ op: "range", from: { ...a.from }, to: { op: "<=", value: b.from.value } });
                         } else {
-                            result.push({ op: "from-to", from: { ...a.from }, to: { op: "<", value: b.from.value } });
+                            result.push({ op: "range", from: { ...a.from }, to: { op: "<", value: b.from.value } });
                         }
 
                         if (b.to.op === "<") {
-                            result.push({ op: "from-to", from: { op: ">=", value: b.to.value }, to: { ...a.to } });
+                            result.push({ op: "range", from: { op: ">=", value: b.to.value }, to: { ...a.to } });
                         } else {
-                            result.push({ op: "from-to", from: { op: ">", value: b.to.value }, to: { ...a.to } });
+                            result.push({ op: "range", from: { op: ">", value: b.to.value }, to: { ...a.to } });
                         }
 
                         return result;
@@ -110,9 +110,9 @@ export function reduceInRange(a: InRangeCriterion, b: ValueCriterion): ValueCrit
                         return [];
                     } else {
                         if (b.to.op === "<=") {
-                            return [{ op: "from-to", from: { op: ">", value: b.to.value } }];
+                            return [{ op: "range", from: { op: ">", value: b.to.value } }];
                         } else {
-                            return [{ op: "from-to", from: { op: ">=", value: b.to.value } }];
+                            return [{ op: "range", from: { op: ">=", value: b.to.value } }];
                         }
                     }
                 } else if (b.from !== void 0 && b.to !== void 0) {
@@ -123,15 +123,15 @@ export function reduceInRange(a: InRangeCriterion, b: ValueCriterion): ValueCrit
                         const result: ValueCriterion[] = [];
 
                         if (b.from.op === ">") {
-                            result.push({ op: "from-to", from: { ...a.from }, to: { op: "<=", value: b.from.value } });
+                            result.push({ op: "range", from: { ...a.from }, to: { op: "<=", value: b.from.value } });
                         } else {
-                            result.push({ op: "from-to", from: { ...a.from }, to: { op: "<", value: b.from.value } });
+                            result.push({ op: "range", from: { ...a.from }, to: { op: "<", value: b.from.value } });
                         }
 
                         if (b.to.op === "<") {
-                            result.push({ op: "from-to", from: { op: ">=", value: b.to.value } });
+                            result.push({ op: "range", from: { op: ">=", value: b.to.value } });
                         } else {
-                            result.push({ op: "from-to", from: { op: ">", value: b.to.value } });
+                            result.push({ op: "range", from: { op: ">", value: b.to.value } });
                         }
 
                         return result;
@@ -143,9 +143,9 @@ export function reduceInRange(a: InRangeCriterion, b: ValueCriterion): ValueCrit
                         return [];
                     } else {
                         if (b.from.op === ">=") {
-                            return [{ op: "from-to", to: { op: "<", value: b.from.value } }];
+                            return [{ op: "range", to: { op: "<", value: b.from.value } }];
                         } else {
-                            return [{ op: "from-to", to: { op: "<=", value: b.from.value } }];
+                            return [{ op: "range", to: { op: "<=", value: b.from.value } }];
                         }
                     }
                 } else if (b.from !== void 0 && b.to !== void 0) {
@@ -156,15 +156,15 @@ export function reduceInRange(a: InRangeCriterion, b: ValueCriterion): ValueCrit
                         const result: ValueCriterion[] = [];
 
                         if (b.from.op === ">") {
-                            result.push({ op: "from-to", to: { op: "<=", value: b.from.value } });
+                            result.push({ op: "range", to: { op: "<=", value: b.from.value } });
                         } else {
-                            result.push({ op: "from-to", to: { op: "<", value: b.from.value } });
+                            result.push({ op: "range", to: { op: "<", value: b.from.value } });
                         }
 
                         if (b.to.op === "<") {
-                            result.push({ op: "from-to", from: { op: ">=", value: b.to.value }, to: { ...a.to } });
+                            result.push({ op: "range", from: { op: ">=", value: b.to.value }, to: { ...a.to } });
                         } else {
-                            result.push({ op: "from-to", from: { op: ">", value: b.to.value }, to: { ...a.to } });
+                            result.push({ op: "range", from: { op: ">", value: b.to.value }, to: { ...a.to } });
                         }
 
                         return result;

@@ -1,4 +1,4 @@
-import { renderInRange } from "./from-to";
+import { renderInRange } from "./in-range";
 import { renderInSet } from "./in";
 import { renderNotInSet } from "./not-in";
 import { ValueCriterion } from "./value-criterion";
@@ -8,7 +8,7 @@ export function renderValueCriterion(criterion: ValueCriterion): string {
         case "in":
             return renderInSet(criterion);
 
-        case "from-to":
+        case "range":
             return renderInRange(criterion);
 
         case "not-in":

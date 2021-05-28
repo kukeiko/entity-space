@@ -5,7 +5,7 @@ export function inRange<T extends number | string>(values: [T | undefined, T | u
         inclusive = [inclusive, inclusive];
     }
 
-    const criterion: InRangeCriterion = { op: "from-to" };
+    const criterion: InRangeCriterion = { op: "range" };
 
     if (values[0] !== void 0) {
         criterion.from = {

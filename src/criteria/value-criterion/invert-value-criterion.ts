@@ -1,4 +1,4 @@
-import { invertInRange } from "./from-to";
+import { invertInRange } from "./in-range";
 import { invertInSet } from "./in/invert-in-set";
 import { invertNotInSet } from "./not-in";
 import { ValueCriteria } from "./value-criteria";
@@ -6,7 +6,7 @@ import { ValueCriterion } from "./value-criterion";
 
 export function invertValueCriterion(criterion: ValueCriterion): ValueCriteria {
     switch (criterion.op) {
-        case "from-to":
+        case "range":
             return invertInRange(criterion);
 
         case "in":

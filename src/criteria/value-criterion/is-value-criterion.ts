@@ -1,7 +1,7 @@
 import { ValueCriterion } from "./value-criterion";
 
 const operations: Record<ValueCriterion["op"], true> = {
-    "from-to": true,
+    "range": true,
     "not-in": true,
     in: true,
 };
