@@ -13,5 +13,6 @@ export * from "./query-stream-packet";
 export * from "./query-to-string";
 export * from "./query-translator";
 export * from "./reduce-query";
+export * from "./reduce-queries";
 export * from "./reducible";
 export * from "./workspace";

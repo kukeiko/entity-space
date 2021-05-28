@@ -393,6 +393,19 @@ describe("reduce: object", () => {
                 expect(reduced).toEqual(expected);
             });
         });
+
+        it("{ foo:{ bar:[1, 7] } } reduced by { foo: { bar:[3, 4] } } should be { foo:{ bar:([1, 3) | (4, 7]) } }", () => {
+            // arrange
+            const a = { foo: [{ bar: [createFromToValueCriterion([1, 7])] }] };
+            const b = { foo: [{ bar: [createFromToValueCriterion([3, 4])] }] };
+            const expected = [{ foo: [{ bar: [createFromToValueCriterion([1, 3], [true, false]), createFromToValueCriterion([4, 7], [false, true])] }] }];
+
+            // act
+            const reduced = reduceObjectCriterion(a, b);
+
+            // assert
+            expect(reduced).toEqual(expected);
+        });
     });
 
     describe("no reduction", () => {

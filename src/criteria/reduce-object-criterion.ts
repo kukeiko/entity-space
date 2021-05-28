@@ -3,6 +3,8 @@ import { isValueCriteria, reduceValueCriteria } from "./value-criterion";
 import { PropertyCriteria } from "./property-criteria";
 import { ObjectCriteria } from "./object-criteria";
 import { invertValueCriteria } from "./value-criterion/invert-value-criteria";
+import { isValuesCriteria } from "./values-criterion";
+import { reduceObjectCriteria } from "./reduce-object-criteria";
 
 export function reduceObjectCriterion(a: ObjectCriterion, b: ObjectCriterion): ObjectCriteria | false {
     const reducedPropertyCriteriaBag = new Map<string, PropertyCriteria>();
@@ -10,7 +12,7 @@ export function reduceObjectCriterion(a: ObjectCriterion, b: ObjectCriterion): O
     for (const key in b) {
         const criteriaA = a[key];
         const criteriaB = b[key];
-        let reduced: PropertyCriteria | false;
+        let reduced: PropertyCriteria | false = false;
 
         /**
          * [todo] need "invertCriterion()" for this case
@@ -36,8 +38,15 @@ export function reduceObjectCriterion(a: ObjectCriterion, b: ObjectCriterion): O
             } else {
                 throw new Error("trying to reduce two criteria of different types");
             }
-        } else {
-            throw new Error("currently only ValueCriteria are supported @ ObjectCriterion.reduce()");
+        } else if (isValuesCriteria(criteriaB)) {
+        } else if (criteriaB !== void 0) {
+            if (isValueCriteria(criteriaA)) {
+                throw new Error("trying to reduce two criteria of different types");
+            } else if (isValuesCriteria(criteriaA)) {
+                throw new Error("trying to reduce two criteria of different types");
+            } else {
+                reduced = reduceObjectCriteria(criteriaA, criteriaB);
+            }
         }
 
         if (!reduced) {
