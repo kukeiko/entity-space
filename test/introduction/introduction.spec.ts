@@ -1,4 +1,4 @@
-import { createFromToValueCriterion, FromToValueCriterion, reduceFromToValueCriterion, reduceObjectCriterion, ValueCriteria } from "../../src";
+import { inRange, InRangeCriterion, reduceInRange, reduceObjectCriterion, ValueCriteria } from "../../src";
 
 /**
  * This file serves as an introduction via code for anyone new and interested in this library.
@@ -10,11 +10,11 @@ describe("what's reduction for?", () => {
         /**
          * Let's just jump right into a simple reduction case: we have to ranges and want to figure out the difference between them.
          */
-        const from_100_to_200: FromToValueCriterion = { op: "from-to", from: { op: ">=", value: 100 }, to: { op: "<=", value: 200 } };
-        const from_100_to_300: FromToValueCriterion = { op: "from-to", from: { op: ">=", value: 100 }, to: { op: "<=", value: 300 } };
+        const from_100_to_200: InRangeCriterion = { op: "from-to", from: { op: ">=", value: 100 }, to: { op: "<=", value: 200 } };
+        const from_100_to_300: InRangeCriterion = { op: "from-to", from: { op: ">=", value: 100 }, to: { op: "<=", value: 300 } };
         const expected: ValueCriteria = [{ op: "from-to", from: { op: ">", value: 200 }, to: { op: "<=", value: 300 } }];
 
-        const difference = reduceFromToValueCriterion(from_100_to_300, from_100_to_200);
+        const difference = reduceInRange(from_100_to_300, from_100_to_200);
 
         expect(difference).toEqual(expected);
     });
@@ -33,19 +33,19 @@ describe("what's reduction for?", () => {
          *
          * Our filter (from now on: criteria) for the first call (that is, load products with price 100 - 200) would look like this:
          */
-        const price_100_to_200: FromToValueCriterion = { op: "from-to", from: { op: ">=", value: 100 }, to: { op: "<=", value: 200 } };
+        const price_100_to_200: InRangeCriterion = { op: "from-to", from: { op: ">=", value: 100 }, to: { op: "<=", value: 200 } };
 
         /**
          * The criteria for the second call (100 to 300) would look like this:
          */
-        const price_100_to_300: FromToValueCriterion = { op: "from-to", from: { op: ">=", value: 100 }, to: { op: "<=", value: 300 } };
+        const price_100_to_300: InRangeCriterion = { op: "from-to", from: { op: ">=", value: 100 }, to: { op: "<=", value: 300 } };
 
         /**
          * We now want to know the difference between those two so we only load the difference from the server.
          * We can figure out the difference by reducing the secondCriteria by the initialCriteria, that is:
          * take away from the secondCriteria the intersection it has with the initialCriteria:
          */
-        const difference = reduceFromToValueCriterion(price_100_to_300, price_100_to_200);
+        const difference = reduceInRange(price_100_to_300, price_100_to_200);
 
         /**
          * The difference should now be the following criteria: a from-to starting at bigger 200 until less than equals 300,
@@ -61,31 +61,31 @@ describe("what's reduction for?", () => {
          * Typing out criteria like this: { op: "from-to", from: { op: ">=", value: 100 }, to: { op: "<=", value: 200 } }
          * is a lot of typing to do. So lets explore all the ways we can create ranges:
          */
-        const from_100_to_200 = createFromToValueCriterion([100, 200]);
+        const from_100_to_200 = inRange([100, 200]);
         expect(from_100_to_200).toEqual({ op: "from-to", from: { op: ">=", value: 100 }, to: { op: "<=", value: 200 } });
 
-        const from_bigger_100_to_200 = createFromToValueCriterion([100, 200], [false, true]);
+        const from_bigger_100_to_200 = inRange([100, 200], [false, true]);
         expect(from_bigger_100_to_200).toEqual({ op: "from-to", from: { op: ">", value: 100 }, to: { op: "<=", value: 200 } });
 
-        const from_100_to_less_200 = createFromToValueCriterion([100, 200], [true, false]);
+        const from_100_to_less_200 = inRange([100, 200], [true, false]);
         expect(from_100_to_less_200).toEqual({ op: "from-to", from: { op: ">=", value: 100 }, to: { op: "<", value: 200 } });
 
-        const from_bigger_100_to_less_200 = createFromToValueCriterion([100, 200], [false, false]);
+        const from_bigger_100_to_less_200 = inRange([100, 200], [false, false]);
         expect(from_bigger_100_to_less_200).toEqual({ op: "from-to", from: { op: ">", value: 100 }, to: { op: "<", value: 200 } });
 
-        const from_bigger_100_to_less_200_shorter = createFromToValueCriterion([100, 200], false);
+        const from_bigger_100_to_less_200_shorter = inRange([100, 200], false);
         expect(from_bigger_100_to_less_200_shorter).toEqual({ op: "from-to", from: { op: ">", value: 100 }, to: { op: "<", value: 200 } });
 
-        const to_200 = createFromToValueCriterion([void 0, 200]);
+        const to_200 = inRange([void 0, 200]);
         expect(to_200).toEqual({ op: "from-to", to: { op: "<=", value: 200 } });
 
-        const less_than_200 = createFromToValueCriterion([void 0, 200], false);
+        const less_than_200 = inRange([void 0, 200], false);
         expect(less_than_200).toEqual({ op: "from-to", to: { op: "<", value: 200 } });
 
-        const from_100 = createFromToValueCriterion([100, void 0]);
+        const from_100 = inRange([100, void 0]);
         expect(from_100).toEqual({ op: "from-to", from: { op: ">=", value: 100 } });
 
-        const bigger_than_100 = createFromToValueCriterion([100, void 0], false);
+        const bigger_than_100 = inRange([100, void 0], false);
         expect(bigger_than_100).toEqual({ op: "from-to", from: { op: ">", value: 100 } });
     });
 
@@ -99,16 +99,16 @@ describe("what's reduction for?", () => {
          * The criteria for our first call would look like this:
          */
         const price_100_to_200_rating_3_to_5 = {
-            price: [createFromToValueCriterion([100, 200])],
-            rating: [createFromToValueCriterion([3, 5])],
+            price: [inRange([100, 200])],
+            rating: [inRange([3, 5])],
         };
 
         /**
          * The criteria for the second call would look like this:
          */
         const price_100_to_300_rating_2_to_5 = {
-            price: [createFromToValueCriterion([100, 300])],
-            rating: [createFromToValueCriterion([2, 5])],
+            price: [inRange([100, 300])],
+            rating: [inRange([2, 5])],
         };
 
         /**
@@ -120,12 +120,12 @@ describe("what's reduction for?", () => {
          */
         const expected = [
             {
-                price: [createFromToValueCriterion([100, 200])],
-                rating: [createFromToValueCriterion([2, 3], [true, false])],
+                price: [inRange([100, 200])],
+                rating: [inRange([2, 3], [true, false])],
             },
             {
-                price: [createFromToValueCriterion([200, 300], [false, true])],
-                rating: [createFromToValueCriterion([2, 5])],
+                price: [inRange([200, 300], [false, true])],
+                rating: [inRange([2, 5])],
             },
         ];
 

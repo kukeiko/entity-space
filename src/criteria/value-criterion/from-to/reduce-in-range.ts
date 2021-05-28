@@ -1,5 +1,5 @@
 import { ValueCriterion } from "../value-criterion";
-import { FromToValueCriterion } from "./from-to-value-criterion";
+import { InRangeCriterion } from "./in-range-criterion";
 import { FromCriterion } from "./from-criterion";
 import { ToCriterion } from "./to-criterion";
 import { ValueCriteria } from "../value-criteria";
@@ -24,7 +24,7 @@ function isFromSmallerThanTo(a: FromCriterion, b?: ToCriterion): boolean {
     }
 }
 
-export function isFromInsideFromTo(a: FromCriterion, b: FromToValueCriterion): boolean {
+export function isFromInsideFromTo(a: FromCriterion, b: InRangeCriterion): boolean {
     return isFromBiggerThanFrom(a, b.from) && isFromSmallerThanTo(a, b.to);
 }
 
@@ -48,11 +48,11 @@ function isToSmallerThanTo(a: ToCriterion, b?: ToCriterion): boolean {
     }
 }
 
-export function isToInsideFromTo(a: ToCriterion, b: FromToValueCriterion): boolean {
+export function isToInsideFromTo(a: ToCriterion, b: InRangeCriterion): boolean {
     return isToBiggerThanFrom(a, b.from) && isToSmallerThanTo(a, b.to);
 }
 
-export function reduceFromToValueCriterion(a: FromToValueCriterion, b: ValueCriterion): ValueCriteria | false {
+export function reduceInRange(a: InRangeCriterion, b: ValueCriterion): ValueCriteria | false {
     switch (b.op) {
         // [todo] revisit & try to simplify this from-to / from-to reduction.
         case "from-to":
@@ -176,7 +176,7 @@ export function reduceFromToValueCriterion(a: FromToValueCriterion, b: ValueCrit
             break;
 
         case "in":
-            const reduced: FromToValueCriterion = {
+            const reduced: InRangeCriterion = {
                 ...a,
             };
 

@@ -1,7 +1,7 @@
 import { ValueCriteria } from "../value-criteria";
-import { FromToValueCriterion } from "./from-to-value-criterion";
+import { InRangeCriterion } from "./in-range-criterion";
 
-export function invertFromToValueCriterion(criterion: FromToValueCriterion): ValueCriteria {
+export function invertInRange(criterion: InRangeCriterion): ValueCriteria {
     const inverted: ValueCriteria = [];
 
     if (criterion.from?.op !== void 0) {

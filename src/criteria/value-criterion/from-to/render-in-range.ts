@@ -1,6 +1,6 @@
-import { FromToValueCriterion } from "./from-to-value-criterion";
+import { InRangeCriterion } from "./in-range-criterion";
 
-export function renderFromToValueCriterion(criterion: FromToValueCriterion): string {
+export function renderInRange(criterion: InRangeCriterion): string {
     const shards: string[] = [];
 
     if (criterion.from === void 0) {
