@@ -1,4 +1,4 @@
-import { inRange, InRangeCriterion, reduceInRange, reduceObjectCriterion, ValueCriteria } from "../../src";
+import { inRange, InRangeCriterion, Query, reduceInRange, reduceObjectCriterion, reduceQuery, reduceSelection, Selection, ValueCriteria } from "../../src";
 
 /**
  * This file serves as an introduction via code for anyone new and interested in this library.
@@ -93,7 +93,7 @@ describe("what's reduction for?", () => {
         /**
          * We previously only covered the case of reducing the price - but what if the user can also filter by rating?
          *
-         * So lets assume again that the user wanted all products with a price of 100 to 200 euro, and a rating of at least 3 (assuming 1 = worst, 5 = best).
+         * So lets assume again that the user wanted all products with a price of 100 to 200 euro, but now also with a rating of at least 3 (assuming 1 = worst, 5 = best).
          * After that they decide to show products with a price of 100 to 300, and a ranking of at least 2.
          *
          * The criteria for our first call would look like this:
@@ -136,5 +136,137 @@ describe("what's reduction for?", () => {
          * Note: we have to do a "arrayWithExactContents" here to ignore the order of elements inside "expected".
          */
         expect(difference).toEqual(jasmine.arrayWithExactContents(expected));
+    });
+
+    it("selection reduction", () => {
+        /**
+         * So we have a mechanism to figure out the data we're missing on the criteria level - but what about the property level?
+         *
+         * We want our app to be able to only load what's needed, i.e. pick the properties we want. And sometimes we want to load
+         * additional properties later on - so we'll need the same reduction mechanism to figure out what we already have in cache.
+         *
+         * We call an object that tells us which properties to load a "Selection". Our initial selection of our products will contain
+         * the id, the name, the price and the rating.
+         */
+        const basic_properties: Selection = {
+            id: true,
+            name: true,
+            price: true,
+            rating: true,
+        };
+
+        /**
+         * Later on we also want to load the customer reviews of the product:
+         */
+        const basic_properties_with_reviews: Selection = {
+            ...basic_properties,
+            reviews: true,
+        };
+
+        /**
+         * Since we've loaded the basic_properties_only already, the difference should just be the reviews:
+         */
+        const expected: Selection = {
+            reviews: true,
+        };
+
+        const actual = reduceSelection(basic_properties_with_reviews, basic_properties);
+
+        expect(actual).toEqual(expected);
+    });
+
+    it("query reduction", () => {
+        /**
+         * Let's now combine both concepts: criteria + selection reduction.
+         *
+         * We're going to load products with a price range of 100 to 200, rating range of 3 to 5, without reviews.
+         * We then load products with price range of 100 to 300, rating range of 2 to 5, including the reviews.
+         */
+        const basic_properties: Selection = {
+            id: true,
+            name: true,
+            price: true,
+            rating: true,
+        };
+
+        const review_property: Selection = {
+            reviews: true,
+        };
+
+        const price_100_to_200_rating_3_to_5_no_reviews: Query = {
+            criteria: [
+                {
+                    price: [inRange([100, 200])],
+                    rating: [inRange([3, 5])],
+                },
+            ],
+            selection: {
+                ...basic_properties,
+            },
+            // [todo] please ignore those 2 lines for now
+            model: [],
+            options: {} as any,
+        };
+
+        const price_100_to_300_rating_2_to_5_with_reviews: Query = {
+            criteria: [
+                {
+                    price: [inRange([100, 300])],
+                    rating: [inRange([2, 5])],
+                },
+            ],
+            selection: {
+                ...basic_properties,
+                ...review_property,
+            },
+            // [todo] please ignore those 2 lines for now
+            model: [],
+            options: {} as any,
+        };
+
+        /**
+         * Our expected outcome is two queries:
+         */
+        const expected: Query[] = [
+            // one for loading the missing entities
+            {
+                criteria: [
+                    {
+                        price: [inRange([200, 300], [false, true])],
+                        rating: [inRange([2, 5])],
+                    },
+                    {
+                        price: [inRange([100, 200])],
+                        rating: [inRange([2, 3], [true, false])],
+                    },
+                ],
+                selection: {
+                    ...basic_properties,
+                    ...review_property,
+                },
+                // [todo] please ignore those 2 lines for now
+                model: [],
+                options: {} as any,
+            },
+            // and one for loading the missing properties (i.e. the reviews) of the entities we already have
+            {
+                criteria: [
+                    {
+                        price: [inRange([100, 200])],
+                        rating: [inRange([3, 5])],
+                    },
+                ],
+                selection: {
+                    ...review_property,
+                },
+                // [todo] please ignore those 2 lines for now
+                model: [],
+                options: {} as any,
+            },
+        ];
+
+        const actual = reduceQuery(price_100_to_300_rating_2_to_5_with_reviews, price_100_to_200_rating_3_to_5_no_reviews);
+
+        expect(actual).toEqual(jasmine.arrayWithExactContents(expected));
     });
 });
