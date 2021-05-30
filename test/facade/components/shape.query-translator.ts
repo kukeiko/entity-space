@@ -17,8 +17,8 @@ export class ShapeQueryTranslator implements QueryTranslator {
             return [this._loadAllStream()];
         }
 
-        for (const criterion of query.criteria) {
-        }
+        // for (const criterion of query.criteria) {
+        // }
 
         return streams;
     }
