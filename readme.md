@@ -111,6 +111,17 @@ It will give you a nice prompt and will ask is it a feature/bug/refactoring see 
 Then you specify what is a subject of the changes you provide and it generates  
 the commit message that is consistent with the commit messages in this repository.
 
+# TSLint / ESLint
+
+We're still using TSLint for the files found in the test/types folder, as I was not happy with the alternatives for testing types that exist (i.e. tsd)
+
+-   with the tslint VS code extension, you get immediate feedback in the test file
+-   tsd wants us to first generate .d.ts files, which is a completely unnecessary step for us
+
+So we're using ESLint for everything, and TSLint just for the test/type files.
+
+We can drop TSLint once dtslint (which is the actual tool used for running our type tests, see package.json "test-types" script) migrates to ESLint.
+
 # FAQ
 
 **Q:** I have the following error when I try to
