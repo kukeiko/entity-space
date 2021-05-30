@@ -17,8 +17,9 @@
         "test:watch": "karma start",
         "test:debug": "karma start",
         "npmprepublish": "npm run build && npm run test",
-        "lint": "tslint --project . --format codeFrame",
-        "commit": "git-cz",
+        "lint": "eslint .",
+        "commitizen": "git-cz",
+        "commit": "npm run lint && npm run commitizen",
         "test-types": "dtslint ./test/types"
     },
     "dependencies": {
