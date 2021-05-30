@@ -39,6 +39,7 @@ export function reduceObjectCriterion(a: ObjectCriterion, b: ObjectCriterion): O
                 throw new Error("trying to reduce two criteria of different types");
             }
         } else if (isValuesCriteria(criteriaB)) {
+            throw new Error("ValuesCriteria reduction not yet implemented");
         } else if (criteriaB !== void 0) {
             if (isValueCriteria(criteriaA)) {
                 throw new Error("trying to reduce two criteria of different types");

@@ -9,8 +9,6 @@
         "semicolon": true
     },
     "linterOptions": {
-        "exclude": [
-            "**/_*.*"
-        ]
+        "exclude": ["**/*.*"]
     }
 }
