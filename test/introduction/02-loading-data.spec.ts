@@ -1,13 +1,14 @@
 import { inRange, InRangeCriterion, ObjectCriteria, Query, Selection } from "src";
 import { Product, ProductFilter } from "./model";
+import { ProductRepository } from "./repositories";
 
 // [todo] move to criteria folder
 function isInRangeCriterion(x: unknown): x is InRangeCriterion {
     return (x as InRangeCriterion).op === "range";
 }
 
-describe("how do we actually load data?", () => {
-    it("simple resolve of a query", () => {
+fdescribe("how do we actually load data?", () => {
+    it("simple resolve of a query", async () => {
         /**
          * [todo] implement loading some products with filter criteria
          */
@@ -33,28 +34,64 @@ describe("how do we actually load data?", () => {
             options: {} as any,
         };
 
-        async function resolveProductQuery(query: Query): Promise<Product[]> {
-            // [todo] query.criteria should probably already be properly typed so that this "cast" is not necessary
-            const productCriteria = query.criteria as ObjectCriteria<Product>;
+        function mapCriteriaToProductFilters(productCriteria: ObjectCriteria<Product>): ProductFilter[] {
+            const productFilters: ProductFilter[] = [];
 
             for (const criteria of productCriteria) {
                 const supportedPriceCriteria = (criteria.price || []).filter(isInRangeCriterion);
-                const supportedRatingCriteria = criteria.rating || [].filter(isInRangeCriterion);
+                const supportedRatingCriteria = (criteria.rating || []).filter(isInRangeCriterion);
 
                 for (const priceCriterion of supportedPriceCriteria) {
-                    for (const ratingCriterion of supportedRatingCriteria) {
-                        const productFilter: ProductFilter = {};
+                    const priceFilter: ProductFilter = {};
 
-                        if (priceCriterion.from !== void 0) {
-                            // [todo] stopped here because i noticed not having value type of criterion narrowed down is a bad thing
-                            // that i want to fix before i continue here
-                            // productFilter.minPrice = priceCriterion.from.value;
+                    // [todo] having to do a "typeof value == 'supported-type'" is annoying
+                    if (priceCriterion.from !== void 0 && typeof priceCriterion.from.value === "number") {
+                        priceFilter.minPrice = priceCriterion.from.value;
+                    }
+
+                    // [todo] having to do a "typeof value == 'supported-type'" is annoying
+                    if (priceCriterion.to !== void 0 && typeof priceCriterion.to.value === "number") {
+                        priceFilter.maxPrice = priceCriterion.to.value;
+                    }
+
+                    if (supportedRatingCriteria.length == 0) {
+                        productFilters.push(priceFilter);
+                    } else {
+                        for (const ratingCriterion of supportedRatingCriteria) {
+                            const priceAndRatingFilter = { ...priceFilter };
+
+                            // [todo] having to do a "typeof value == 'supported-type'" is annoying
+                            if (ratingCriterion.from !== void 0 && typeof ratingCriterion.from.value === "number") {
+                                priceAndRatingFilter.minRating = ratingCriterion.from.value;
+                            }
+
+                            // [todo] having to do a "typeof value == 'supported-type'" is annoying
+                            if (ratingCriterion.to !== void 0 && typeof ratingCriterion.to.value === "number") {
+                                priceAndRatingFilter.maxRating = ratingCriterion.to.value;
+                            }
+
+                            productFilters.push(priceAndRatingFilter);
                         }
                     }
                 }
             }
 
-            return [];
+            return productFilters;
         }
+
+        async function resolveProductQuery(query: Query): Promise<Product[]> {
+            // [todo] query.criteria should probably already be properly typed so that this "cast" is not necessary
+            const productCriteria = query.criteria as ObjectCriteria<Product>;
+            const productFilters = mapCriteriaToProductFilters(productCriteria);
+
+            const repository = new ProductRepository();
+            const allProducts = await Promise.all(productFilters.map(filter => repository.filter(filter)));
+
+            return allProducts.reduce((acc, value) => [...acc, ...value], []);
+        }
+
+        const products = await resolveProductQuery(price_100_to_200_rating_3_to_5_no_reviews);
+
+        console.log(JSON.stringify(products));
     });
 });

@@ -10,13 +10,13 @@ const products: Product[] = [
     {
         id: 3,
         name: "A decent Shirt",
-        price: 700,
+        price: 200,
         rating: 3,
     },
     {
         id: 3,
         name: "A really ugly Shirt",
-        price: 200,
+        price: 100,
         rating: 2,
     },
 ];
