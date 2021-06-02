@@ -2,12 +2,11 @@ import { inRange, InRangeCriterion, ObjectCriteria, Query, Selection } from "src
 import { Product, ProductFilter } from "./model";
 import { ProductRepository } from "./repositories";
 
-// [todo] move to criteria folder
-function isInRangeCriterion(x: unknown): x is InRangeCriterion {
-    return (x as InRangeCriterion).op === "range";
+function isInRangeNumberCriterion(x: unknown): x is InRangeCriterion<number> {
+    return ((x as InRangeCriterion).op === "range" && typeof (x as InRangeCriterion).from?.value === "number") || typeof (x as InRangeCriterion).to?.value === "number";
 }
 
-fdescribe("how do we actually load data?", () => {
+describe("how do we actually load data?", () => {
     it("simple resolve of a query", async () => {
         /**
          * [todo] implement loading some products with filter criteria
@@ -38,39 +37,20 @@ fdescribe("how do we actually load data?", () => {
             const productFilters: ProductFilter[] = [];
 
             for (const criteria of productCriteria) {
-                const supportedPriceCriteria = (criteria.price || []).filter(isInRangeCriterion);
-                const supportedRatingCriteria = (criteria.rating || []).filter(isInRangeCriterion);
+                const supportedPriceCriteria = (criteria.price || []).filter(isInRangeNumberCriterion);
+                const supportedRatingCriteria = (criteria.rating || []).filter(isInRangeNumberCriterion);
 
                 for (const priceCriterion of supportedPriceCriteria) {
-                    const priceFilter: ProductFilter = {};
-
-                    // [todo] having to do a "typeof value == 'supported-type'" is annoying
-                    if (priceCriterion.from !== void 0 && typeof priceCriterion.from.value === "number") {
-                        priceFilter.minPrice = priceCriterion.from.value;
-                    }
-
-                    // [todo] having to do a "typeof value == 'supported-type'" is annoying
-                    if (priceCriterion.to !== void 0 && typeof priceCriterion.to.value === "number") {
-                        priceFilter.maxPrice = priceCriterion.to.value;
-                    }
+                    const priceFilter: ProductFilter = {
+                        minPrice: priceCriterion.from?.value,
+                        maxPrice: priceCriterion.to?.value,
+                    };
 
                     if (supportedRatingCriteria.length == 0) {
                         productFilters.push(priceFilter);
                     } else {
                         for (const ratingCriterion of supportedRatingCriteria) {
-                            const priceAndRatingFilter = { ...priceFilter };
-
-                            // [todo] having to do a "typeof value == 'supported-type'" is annoying
-                            if (ratingCriterion.from !== void 0 && typeof ratingCriterion.from.value === "number") {
-                                priceAndRatingFilter.minRating = ratingCriterion.from.value;
-                            }
-
-                            // [todo] having to do a "typeof value == 'supported-type'" is annoying
-                            if (ratingCriterion.to !== void 0 && typeof ratingCriterion.to.value === "number") {
-                                priceAndRatingFilter.maxRating = ratingCriterion.to.value;
-                            }
-
-                            productFilters.push(priceAndRatingFilter);
+                            productFilters.push({ ...priceFilter, minRating: ratingCriterion.from?.value, maxRating: ratingCriterion.to?.value });
                         }
                     }
                 }
