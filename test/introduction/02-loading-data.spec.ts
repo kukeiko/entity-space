@@ -2,7 +2,7 @@ import { inRange, InRangeCriterion, ObjectCriteria, Query, Selection } from "src
 import { Product, ProductFilter } from "./model";
 import { ProductRepository } from "./repositories";
 
-function isInRangeNumberCriterion<T extends number | string>(x: unknown): x is InRangeCriterion<number> {
+function isInRangeNumberCriterion(x: unknown): x is InRangeCriterion<number> {
     return ((x as InRangeCriterion).op === "range" && typeof (x as InRangeCriterion).from?.value === "number") || typeof (x as InRangeCriterion).to?.value === "number";
 }
 
