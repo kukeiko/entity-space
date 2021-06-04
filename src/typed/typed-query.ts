@@ -13,7 +13,7 @@ export abstract class TypedQuery<T = any, S extends TypedSelection<T> = TypedSel
         this.options = args.options;
     }
 
-    criteria: TypedCriteria<T>;
+    criteria: any; //TypedCriteria<T>;
     selection: S & TypedSelection<T>;
     options: O;
 

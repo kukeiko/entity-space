@@ -1,4 +1,8 @@
-import { inRange, InRangeCriterion, Query, reduceInRange, reduceObjectCriterion, reduceQuery, reduceSelection, Selection, ValueCriteria } from "../../src";
+import { inRange, Query, reduceQuery, reduceSelection, Selection } from "../../src";
+import { InRangeCriterion } from "../../src/criteria/value-criterion/_new-stuff/in-range-criterion";
+import { ObjectCriteria } from "../../src/criteria/value-criterion/_new-stuff/object-criteria";
+import { ObjectCriterion } from "../../src/criteria/value-criterion/_new-stuff/object-criterion";
+import { ValueCriteria } from "../../src/criteria/value-criterion/_new-stuff/value-criteria";
 
 /**
  * This file serves as an introduction via code for anyone new and interested in this library.
@@ -10,11 +14,12 @@ describe("what's reduction for?", () => {
         /**
          * Let's just jump right into a simple reduction case: we have two ranges and want to figure out the difference between them.
          */
-        const from_100_to_200: InRangeCriterion = { op: "range", from: { op: ">=", value: 100 }, to: { op: "<=", value: 200 } };
-        const from_100_to_300: InRangeCriterion = { op: "range", from: { op: ">=", value: 100 }, to: { op: "<=", value: 300 } };
-        const expected: ValueCriteria = [{ op: "range", from: { op: ">", value: 200 }, to: { op: "<=", value: 300 } }];
+        const from_100_to_200 = new InRangeCriterion(Number, [100, 200]);
+        const from_100_to_300 = new InRangeCriterion(Number, [100, 300]);
+        // const expected = new ValueCriteria(Number, [new InRangeCriterion(Number, [200, 300], [false, true])]);
+        const expected = [new InRangeCriterion(Number, [200, 300], [false, true])];
 
-        const difference = reduceInRange(from_100_to_300, from_100_to_200);
+        const difference = from_100_to_200.reduce(from_100_to_300);
 
         expect(difference).toEqual(expected);
     });
@@ -33,25 +38,25 @@ describe("what's reduction for?", () => {
          *
          * Our filter (from now on: criteria) for the first call (that is, load products with price 100 - 200) would look like this:
          */
-        const price_100_to_200: InRangeCriterion = { op: "range", from: { op: ">=", value: 100 }, to: { op: "<=", value: 200 } };
+        const from_100_to_200 = new InRangeCriterion(Number, [100, 200]);
 
         /**
          * The criteria for the second call (100 to 300) would look like this:
          */
-        const price_100_to_300: InRangeCriterion = { op: "range", from: { op: ">=", value: 100 }, to: { op: "<=", value: 300 } };
+        const from_100_to_300 = new InRangeCriterion(Number, [100, 300]);
 
         /**
          * We now want to know the difference between those two so we only load the difference from the server.
          * We can figure out the difference by reducing the secondCriteria by the initialCriteria, that is:
          * take away from the secondCriteria the intersection it has with the initialCriteria:
          */
-        const difference = reduceInRange(price_100_to_300, price_100_to_200);
+        const difference = from_100_to_200.reduce(from_100_to_300);
 
         /**
          * The difference should now be the following criteria: a range starting at bigger 200 until less than equals 300,
          * which represents the data we still need to load.
          */
-        const expected: ValueCriteria = [{ op: "range", from: { op: ">", value: 200 }, to: { op: "<=", value: 300 } }];
+        const expected = [new InRangeCriterion(Number, [200, 300], [false, true])];
 
         expect(difference).toEqual(expected);
     });
@@ -98,44 +103,45 @@ describe("what's reduction for?", () => {
          *
          * The criteria for our first call would look like this:
          */
-        const price_100_to_200_rating_3_to_5 = {
-            price: [inRange([100, 200])],
-            rating: [inRange([3, 5])],
-        };
+        const price_100_to_200_rating_3_to_5 = new ObjectCriterion({
+            price: new ValueCriteria(Number, [new InRangeCriterion(Number, [100, 200])]),
+            rating: new ValueCriteria(Number, [new InRangeCriterion(Number, [3, 5])]),
+        });
 
         /**
          * The criteria for the second call would look like this:
          */
-        const price_100_to_300_rating_2_to_5 = {
-            price: [inRange([100, 300])],
-            rating: [inRange([2, 5])],
-        };
+        const price_100_to_300_rating_2_to_5 = new ObjectCriterion({
+            price: new ValueCriteria(Number, [new InRangeCriterion(Number, [100, 300])]),
+            rating: new ValueCriteria(Number, [new InRangeCriterion(Number, [2, 5])]),
+        });
 
         /**
          * So not only do we want products of a bigger price range, but we now also want products with a bigger rating range.
          *
          * We'll therefore have to load all the products with price of 200 to 300 and rating 2 to 5, and load all products with price of 100 to 200 and rating 2 to 3.
          */
-        const expected = [
-            {
-                price: [inRange([200, 300], [false, true])],
-                rating: [inRange([2, 5])],
-            },
-            {
-                price: [inRange([100, 200])],
-                rating: [inRange([2, 3], [true, false])],
-            },
-        ];
+        const expected = new ObjectCriteria([
+            new ObjectCriterion({
+                price: new ValueCriteria(Number, [new InRangeCriterion(Number, [200, 300], [false, true])]),
+                rating: new ValueCriteria(Number, [new InRangeCriterion(Number, [2, 5])]),
+            }),
+            new ObjectCriterion({
+                price: new ValueCriteria(Number, [new InRangeCriterion(Number, [100, 200])]),
+                rating: new ValueCriteria(Number, [new InRangeCriterion(Number, [2, 3], [true, false])]),
+            }),
+        ]);
 
         /**
          * We're now using the "reduceObjectCriterion()" method as we want to reduce criteria that span across multiple properties.
          */
-        const difference = reduceObjectCriterion(price_100_to_300_rating_2_to_5, price_100_to_200_rating_3_to_5);
+        const difference = price_100_to_200_rating_3_to_5.reduce(price_100_to_300_rating_2_to_5);
 
         /**
          * Note: we have to do a "arrayWithExactContents" here to ignore the order of elements inside "expected".
          */
-        expect(difference).toEqual(jasmine.arrayWithExactContents(expected));
+        // expect(difference).toEqual(jasmine.arrayWithExactContents(expected));
+        expect(difference).toEqual(expected);
     });
 
     it("selection reduction", () => {
@@ -194,12 +200,12 @@ describe("what's reduction for?", () => {
         };
 
         const price_100_to_200_rating_3_to_5_no_reviews: Query = {
-            criteria: [
-                {
-                    price: [inRange([100, 200])],
-                    rating: [inRange([3, 5])],
-                },
-            ],
+            criteria: new ObjectCriteria([
+                new ObjectCriterion({
+                    price: new ValueCriteria(Number, [new InRangeCriterion(Number, [100, 200])]),
+                    rating: new ValueCriteria(Number, [new InRangeCriterion(Number, [3, 5])]),
+                }),
+            ]),
             selection: {
                 ...basic_properties,
             },
@@ -209,12 +215,12 @@ describe("what's reduction for?", () => {
         };
 
         const price_100_to_300_rating_2_to_5_with_reviews: Query = {
-            criteria: [
-                {
-                    price: [inRange([100, 300])],
-                    rating: [inRange([2, 5])],
-                },
-            ],
+            criteria: new ObjectCriteria([
+                new ObjectCriterion({
+                    price: new ValueCriteria(Number, [new InRangeCriterion(Number, [100, 300])]),
+                    rating: new ValueCriteria(Number, [new InRangeCriterion(Number, [2, 5])]),
+                }),
+            ]),
             selection: {
                 ...basic_properties,
                 ...review_property,
@@ -230,16 +236,16 @@ describe("what's reduction for?", () => {
         const expected: Query[] = [
             // one for loading the missing entities
             {
-                criteria: [
-                    {
-                        price: [inRange([200, 300], [false, true])],
-                        rating: [inRange([2, 5])],
-                    },
-                    {
-                        price: [inRange([100, 200])],
-                        rating: [inRange([2, 3], [true, false])],
-                    },
-                ],
+                criteria: new ObjectCriteria([
+                    new ObjectCriterion({
+                        price: new ValueCriteria(Number, [new InRangeCriterion(Number, [200, 300], [false, true])]),
+                        rating: new ValueCriteria(Number, [new InRangeCriterion(Number, [2, 5])]),
+                    }),
+                    new ObjectCriterion({
+                        price: new ValueCriteria(Number, [new InRangeCriterion(Number, [100, 200])]),
+                        rating: new ValueCriteria(Number, [new InRangeCriterion(Number, [2, 3], [true, false])]),
+                    }),
+                ]),
                 selection: {
                     ...basic_properties,
                     ...review_property,
@@ -250,12 +256,12 @@ describe("what's reduction for?", () => {
             },
             // and one for loading the missing properties (i.e. the reviews) of the entities we already have
             {
-                criteria: [
-                    {
-                        price: [inRange([100, 200])],
-                        rating: [inRange([3, 5])],
-                    },
-                ],
+                criteria: new ObjectCriteria([
+                    new ObjectCriterion({
+                        price: new ValueCriteria(Number, [new InRangeCriterion(Number, [100, 200])]),
+                        rating: new ValueCriteria(Number, [new InRangeCriterion(Number, [3, 5])]),
+                    }),
+                ]),
                 selection: {
                     ...review_property,
                 },
