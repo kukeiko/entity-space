@@ -1,14 +1,16 @@
-import { reduceNotInSet, notInSet, inSet, inRange } from "src";
+import { InRangeCriterion } from "../../../src/criteria/value-criterion/_new-stuff/in-range-criterion";
+import { InSetCriterion } from "../../../src/criteria/value-criterion/_new-stuff/in-set-criterion";
+import { NotInSetCriterion } from "../../../src/criteria/value-criterion/_new-stuff/not-in-set-criterion";
 
 describe("reduce: not-in", () => {
     describe("full reduction", () => {
         it("!{1, 2} should be completely reduced by itself", () => {
             // arrange
-            const a = notInSet([1, 2]);
-            const b = notInSet([1, 2]);
+            const a = new NotInSetCriterion(Number, [1, 2]);
+            const b = new NotInSetCriterion(Number, [1, 2]);
 
             // act
-            const reduced = reduceNotInSet(a, b);
+            const reduced = b.reduce(a);
 
             // assert
             expect(reduced).toEqual([]);
@@ -16,11 +18,11 @@ describe("reduce: not-in", () => {
 
         it("!{1, 2} should be completely reduced by !{1}", () => {
             // arrange
-            const a = notInSet([1, 2]);
-            const b = notInSet([1]);
+            const a = new NotInSetCriterion(Number, [1, 2]);
+            const b = new NotInSetCriterion(Number, [1]);
 
             // act
-            const reduced = reduceNotInSet(a, b);
+            const reduced = b.reduce(a);
 
             // assert
             expect(reduced).toEqual([]);
@@ -30,12 +32,12 @@ describe("reduce: not-in", () => {
     describe("partial reduction", () => {
         it("!{1, 2} reduced by !{1, 2, 3} should be {3}", () => {
             // arrange
-            const a = notInSet([1, 2]);
-            const b = notInSet([1, 2, 3]);
-            const expected = [inSet([3])];
+            const a = new NotInSetCriterion(Number, [1, 2]);
+            const b = new NotInSetCriterion(Number, [1, 2, 3]);
+            const expected = [new InSetCriterion(Number, [3])];
 
             // act
-            const reduced = reduceNotInSet(a, b);
+            const reduced = b.reduce(a);
 
             // assert
             expect(reduced).toEqual(expected);
@@ -43,12 +45,12 @@ describe("reduce: not-in", () => {
 
         it("!{1} reduced by !{2, 3} should be {2, 3}", () => {
             // arrange
-            const a = notInSet([1]);
-            const b = notInSet([2, 3]);
-            const expected = [inSet([2, 3])];
+            const a = new NotInSetCriterion(Number, [1]);
+            const b = new NotInSetCriterion(Number, [2, 3]);
+            const expected = [new InSetCriterion(Number, [2, 3])];
 
             // act
-            const reduced = reduceNotInSet(a, b);
+            const reduced = b.reduce(a);
 
             // assert
             expect(reduced).toEqual(expected);
@@ -56,12 +58,12 @@ describe("reduce: not-in", () => {
 
         it("!{1, 2} reduced by {2, 3} should be !{1, 2, 3}", () => {
             // arrange
-            const a = notInSet([1, 2]);
-            const b = inSet([2, 3]);
-            const expected = [notInSet([1, 2, 3])];
+            const a = new NotInSetCriterion(Number, [1, 2]);
+            const b = new InSetCriterion(Number, [2, 3]);
+            const expected = [new NotInSetCriterion(Number, [1, 2, 3])];
 
             // act
-            const reduced = reduceNotInSet(a, b);
+            const reduced = b.reduce(a);
 
             // assert
             expect(reduced).toEqual(expected);
@@ -71,11 +73,11 @@ describe("reduce: not-in", () => {
     describe("no reduction", () => {
         it("!{1, 2, 3} should not be reduced by [4, 7]", () => {
             // arrange
-            const a = notInSet([1, 2, 3]);
-            const b = inRange([4, 7]);
+            const a = new NotInSetCriterion(Number, [1, 2, 3]);
+            const b = new InRangeCriterion(Number, [4, 7]);
 
             // act
-            const reduced = reduceNotInSet(a, b);
+            const reduced = b.reduce(a);
 
             // assert
             expect(reduced).toBeFalse();

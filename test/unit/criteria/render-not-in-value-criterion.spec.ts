@@ -1,13 +1,13 @@
-import { notInSet, renderNotInSet } from "../../../src";
+import { NotInSetCriterion } from "../../../src/criteria/value-criterion/_new-stuff/not-in-set-criterion";
 
 describe("renderNotInValueCriterion", () => {
     it("should render correctly", () => {
         // arrange
-        const criterion = notInSet([1, 2, 3]);
+        const criterion = new NotInSetCriterion(Number, [1, 2, 3]);
         const expected = "!{1, 2, 3}";
 
         // act
-        const actual = renderNotInSet(criterion);
+        const actual = criterion.toString();
 
         // assert
         expect(actual).toEqual(expected);
