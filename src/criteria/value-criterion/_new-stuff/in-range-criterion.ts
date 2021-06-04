@@ -77,8 +77,9 @@ export class InRangeCriterion<T extends number | string> implements ValueCriteri
 
     valueType: () => T;
 
-    reduce(other: ValueCriterion<unknown>): ValueCriterion<T>[] | false {
-        // [todo] chaning "this.valueType" to just "Number" causes errors, which is good - is there a way to verify it via a test?
+    reduce(other: ValueCriterion<T>): ValueCriterion<T>[] | false;
+    reduce(other: ValueCriterion<unknown>): ValueCriterion<ReturnType<typeof other["valueType"]>>[] | false {
+        // [todo] changing "this.valueType" to just "Number" causes errors, which is good - is there a way to verify it via a test?
         if (InRangeCriterion.is(other, this.valueType)) {
             const otherFrom = other.getFrom();
             const otherTo = other.getTo();
@@ -160,6 +161,20 @@ export class InRangeCriterion<T extends number | string> implements ValueCriteri
         }
 
         return false;
+    }
+
+    invert(): ValueCriterion<T>[] {
+        const inverted: ValueCriterion<T>[] = [];
+
+        if (this.from?.op !== void 0) {
+            inverted.push(new InRangeCriterion(this.valueType, [void 0, this.from.value], this.from.op === ">"));
+        }
+
+        if (this.to?.op !== void 0) {
+            inverted.push(new InRangeCriterion(this.valueType, [this.to.value, void 0], this.to.op === "<"));
+        }
+
+        return inverted;
     }
 
     toString(): string {

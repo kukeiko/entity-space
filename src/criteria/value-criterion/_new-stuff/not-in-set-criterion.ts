@@ -23,6 +23,7 @@ export class NotInSetCriterion<T extends boolean | string | number> implements V
         return this.values;
     }
 
+    reduce(other: ValueCriterion<T>): ValueCriterion<T>[] | false;
     reduce(other: ValueCriterion<unknown>): ValueCriterion<ReturnType<typeof other["valueType"]>>[] | false {
         if (InSetCriterion.is(other, this.valueType)) {
             const thisCast = this.castSupportedValueType(this, other.valueType);
@@ -56,5 +57,13 @@ export class NotInSetCriterion<T extends boolean | string | number> implements V
         }
 
         return false;
+    }
+
+    invert(): ValueCriterion<T>[] {
+        return [new InSetCriterion(this.valueType, this.values)];
+    }
+
+    toString(): string {
+        return `!{${Array.from(this.values).join(", ")}}`;
     }
 }
