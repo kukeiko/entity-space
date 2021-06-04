@@ -1,4 +1,4 @@
-import { subtractSets } from "../../../utils";
+import { subtractSets } from "../../utils";
 import { InSetCriterion } from "./in-set-criterion";
 import { ValueCriterion } from "./value-criterion";
 

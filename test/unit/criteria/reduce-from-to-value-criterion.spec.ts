@@ -1,5 +1,4 @@
-import { InRangeCriterion } from "../../../src/criteria/value-criterion/_new-stuff/in-range-criterion";
-import { InSetCriterion } from "../../../src/criteria/value-criterion/_new-stuff/in-set-criterion";
+import { InRangeCriterion, InSetCriterion } from "../../../src";
 
 describe("reduce: from-to", () => {
     describe("full reduction", () => {

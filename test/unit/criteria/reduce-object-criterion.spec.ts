@@ -1,21 +1,22 @@
-import { InRangeCriterion } from "../../../src/criteria/value-criterion/_new-stuff/in-range-criterion";
-import { InSetCriterion } from "../../../src/criteria/value-criterion/_new-stuff/in-set-criterion";
-import { NotInSetCriterion } from "../../../src/criteria/value-criterion/_new-stuff/not-in-set-criterion";
-import { ObjectCriteria } from "../../../src/criteria/value-criterion/_new-stuff/object-criteria";
-import { ObjectCriterion } from "../../../src/criteria/value-criterion/_new-stuff/object-criterion";
-import { ValueCriteria } from "../../../src/criteria/value-criterion/_new-stuff/value-criteria";
+import { InRangeCriterion, InSetCriterion, NotInSetCriterion, ObjectCriteria, ObjectCriterion, ValueCriteria } from "../../../src";
 
-fdescribe("reduce: object", () => {
+describe("reduce: object", () => {
+    interface FooBarBaz {
+        foo: number;
+        bar: number;
+        baz: number;
+    }
+
     describe("full reduction", () => {
         // [todo] use all types of criteria for this test case - maybe even have two cases: 1 simple one, one with all types
         it("{ foo:{2} & bar:{3, 4, 7} } should be completely reduced by itself", () => {
             // arrange
-            const a = new ObjectCriterion({
+            const a = new ObjectCriterion<FooBarBaz>({
                 foo: new ValueCriteria(Number, [new InSetCriterion(Number, [2])]),
                 bar: new ValueCriteria(Number, [new InSetCriterion(Number, [3, 4, 7])]),
             });
 
-            const b = new ObjectCriterion({
+            const b = new ObjectCriterion<FooBarBaz>({
                 foo: new ValueCriteria(Number, [new InSetCriterion(Number, [2])]),
                 bar: new ValueCriteria(Number, [new InSetCriterion(Number, [3, 4, 7])]),
             });
@@ -29,12 +30,12 @@ fdescribe("reduce: object", () => {
 
         it("{ foo:{2} & bar:{3} } should be completely reduced by { foo:{2} }", () => {
             // arrange
-            const a = new ObjectCriterion({
+            const a = new ObjectCriterion<FooBarBaz>({
                 foo: new ValueCriteria(Number, [new InSetCriterion(Number, [2])]),
                 bar: new ValueCriteria(Number, [new InSetCriterion(Number, [3])]),
             });
 
-            const b = new ObjectCriterion({
+            const b = new ObjectCriterion<FooBarBaz>({
                 foo: new ValueCriteria(Number, [new InSetCriterion(Number, [2])]),
             });
 
@@ -47,12 +48,12 @@ fdescribe("reduce: object", () => {
 
         it("{ foo:{2} & bar:{3} } should be completely reduced by { }", () => {
             // arrange
-            const a = new ObjectCriterion({
+            const a = new ObjectCriterion<FooBarBaz>({
                 foo: new ValueCriteria(Number, [new InSetCriterion(Number, [2])]),
                 bar: new ValueCriteria(Number, [new InSetCriterion(Number, [3])]),
             });
 
-            const b = new ObjectCriterion({});
+            const b = new ObjectCriterion<FooBarBaz>({});
 
             // act
             const reduced = b.reduce(a);
@@ -71,9 +72,9 @@ fdescribe("reduce: object", () => {
         describe("1:1", () => {
             it("{ foo:{2, 3} } reduced by { foo:{3, 4} } should be { foo:{2} }", () => {
                 // arrange
-                const a = new ObjectCriterion({ foo: new ValueCriteria(Number, [new InSetCriterion(Number, [2, 3])]) });
-                const b = new ObjectCriterion({ foo: new ValueCriteria(Number, [new InSetCriterion(Number, [3, 4])]) });
-                const expected = new ObjectCriteria([new ObjectCriterion({ foo: new ValueCriteria(Number, [new InSetCriterion(Number, [2])]) })]);
+                const a = new ObjectCriterion<FooBarBaz>({ foo: new ValueCriteria(Number, [new InSetCriterion(Number, [2, 3])]) });
+                const b = new ObjectCriterion<FooBarBaz>({ foo: new ValueCriteria(Number, [new InSetCriterion(Number, [3, 4])]) });
+                const expected = new ObjectCriteria([new ObjectCriterion<FooBarBaz>({ foo: new ValueCriteria(Number, [new InSetCriterion(Number, [2])]) })]);
 
                 // act
                 const reduced = b.reduce(a);
@@ -84,16 +85,16 @@ fdescribe("reduce: object", () => {
 
             it("{ foo:{2} } reduced by { bar:{2} } should be { foo:{2} & bar:!{2} }", () => {
                 // arrange
-                const a = new ObjectCriterion({
+                const a = new ObjectCriterion<FooBarBaz>({
                     foo: new ValueCriteria(Number, [new InSetCriterion(Number, [2])]),
                 });
 
-                const b = new ObjectCriterion({
+                const b = new ObjectCriterion<FooBarBaz>({
                     bar: new ValueCriteria(Number, [new InSetCriterion(Number, [2])]),
                 });
 
                 const expected = new ObjectCriteria([
-                    new ObjectCriterion({
+                    new ObjectCriterion<FooBarBaz>({
                         foo: new ValueCriteria(Number, [new InSetCriterion(Number, [2])]),
                         bar: new ValueCriteria(Number, [new NotInSetCriterion(Number, [2])]),
                     }),
@@ -110,17 +111,17 @@ fdescribe("reduce: object", () => {
         describe("1:2", () => {
             it("{ foo:{2} } reduced by { foo:{2} & bar:{3} } should be { foo:{2} & bar:!{3} }", () => {
                 // arrange
-                const a = new ObjectCriterion({
+                const a = new ObjectCriterion<FooBarBaz>({
                     foo: new ValueCriteria(Number, [new InSetCriterion(Number, [2])]),
                 });
 
-                const b = new ObjectCriterion({
+                const b = new ObjectCriterion<FooBarBaz>({
                     foo: new ValueCriteria(Number, [new InSetCriterion(Number, [2])]),
                     bar: new ValueCriteria(Number, [new InSetCriterion(Number, [3])]),
                 });
 
                 const expected = new ObjectCriteria([
-                    new ObjectCriterion({
+                    new ObjectCriterion<FooBarBaz>({
                         foo: new ValueCriteria(Number, [new InSetCriterion(Number, [2])]),
                         bar: new ValueCriteria(Number, [new NotInSetCriterion(Number, [3])]),
                     }),
@@ -137,17 +138,17 @@ fdescribe("reduce: object", () => {
         describe("2:1", () => {
             it("{ foo:{1, 2} & bar:{3} } reduced by { foo:{2} } should be { foo:{1} & bar:{3} }", () => {
                 // arrange
-                const a = new ObjectCriterion({
+                const a = new ObjectCriterion<FooBarBaz>({
                     foo: new ValueCriteria(Number, [new InSetCriterion(Number, [1, 2])]),
                     bar: new ValueCriteria(Number, [new InSetCriterion(Number, [3])]),
                 });
 
-                const b = new ObjectCriterion({
+                const b = new ObjectCriterion<FooBarBaz>({
                     foo: new ValueCriteria(Number, [new InSetCriterion(Number, [2])]),
                 });
 
                 const expected = new ObjectCriteria([
-                    new ObjectCriterion({
+                    new ObjectCriterion<FooBarBaz>({
                         foo: new ValueCriteria(Number, [new InSetCriterion(Number, [1])]),
                         bar: new ValueCriteria(Number, [new InSetCriterion(Number, [3])]),
                     }),
@@ -164,18 +165,18 @@ fdescribe("reduce: object", () => {
         describe("2:2", () => {
             it("{ foo:{1, 2} & bar:{3} } reduced by { foo:{2} & bar:{3, 4} } should be { foo:{1} & bar:{3} }", () => {
                 // arrange
-                const a = new ObjectCriterion({
+                const a = new ObjectCriterion<FooBarBaz>({
                     foo: new ValueCriteria(Number, [new InSetCriterion(Number, [1, 2])]),
                     bar: new ValueCriteria(Number, [new InSetCriterion(Number, [3])]),
                 });
 
-                const b = new ObjectCriterion({
+                const b = new ObjectCriterion<FooBarBaz>({
                     foo: new ValueCriteria(Number, [new InSetCriterion(Number, [2])]),
                     bar: new ValueCriteria(Number, [new InSetCriterion(Number, [3, 4])]),
                 });
 
                 const expected = new ObjectCriteria([
-                    new ObjectCriterion({
+                    new ObjectCriterion<FooBarBaz>({
                         foo: new ValueCriteria(Number, [new InSetCriterion(Number, [1])]),
                         bar: new ValueCriteria(Number, [new InSetCriterion(Number, [3])]),
                     }),
@@ -190,22 +191,22 @@ fdescribe("reduce: object", () => {
 
             it("{ foo:[1, 7] & bar:[100, 200] } reduced by { foo:[3, 4] & bar:[150, 175] } should be ({ foo:([1, 3) | (4, 7]) & bar:[100, 200] } | { foo:[3, 4] & bar:([100, 150) | (175, 200]) })", () => {
                 // arrange
-                const a = new ObjectCriterion({
+                const a = new ObjectCriterion<FooBarBaz>({
                     foo: new ValueCriteria(Number, [new InRangeCriterion(Number, [1, 7])]),
                     bar: new ValueCriteria(Number, [new InRangeCriterion(Number, [100, 200])]),
                 });
 
-                const b = new ObjectCriterion({
+                const b = new ObjectCriterion<FooBarBaz>({
                     foo: new ValueCriteria(Number, [new InRangeCriterion(Number, [3, 4])]),
                     bar: new ValueCriteria(Number, [new InRangeCriterion(Number, [150, 175])]),
                 });
 
                 const expected = new ObjectCriteria([
-                    new ObjectCriterion({
+                    new ObjectCriterion<FooBarBaz>({
                         foo: new ValueCriteria(Number, [new InRangeCriterion(Number, [1, 3], [true, false]), new InRangeCriterion(Number, [4, 7], [false, true])]),
                         bar: new ValueCriteria(Number, [new InRangeCriterion(Number, [100, 200])]),
                     }),
-                    new ObjectCriterion({
+                    new ObjectCriterion<FooBarBaz>({
                         foo: new ValueCriteria(Number, [new InRangeCriterion(Number, [3, 4])]),
                         bar: new ValueCriteria(Number, [new InRangeCriterion(Number, [100, 150], [true, false]), new InRangeCriterion(Number, [175, 200], [false, true])]),
                     }),
@@ -220,22 +221,22 @@ fdescribe("reduce: object", () => {
 
             it("changing order of criteria properties should still result in an equivalent outcome", () => {
                 // arrange
-                const a1 = new ObjectCriterion({
+                const a1 = new ObjectCriterion<FooBarBaz>({
                     bar: new ValueCriteria(Number, [new InRangeCriterion(Number, [100, 200])]),
                     foo: new ValueCriteria(Number, [new InRangeCriterion(Number, [1, 7])]),
                 });
 
-                const a2 = new ObjectCriterion({
+                const a2 = new ObjectCriterion<FooBarBaz>({
                     foo: new ValueCriteria(Number, [new InRangeCriterion(Number, [1, 7])]),
                     bar: new ValueCriteria(Number, [new InRangeCriterion(Number, [100, 200])]),
                 });
 
-                const b1 = new ObjectCriterion({
+                const b1 = new ObjectCriterion<FooBarBaz>({
                     bar: new ValueCriteria(Number, [new InRangeCriterion(Number, [150, 175])]),
                     foo: new ValueCriteria(Number, [new InRangeCriterion(Number, [3, 4])]),
                 });
 
-                const b2 = new ObjectCriterion({
+                const b2 = new ObjectCriterion<FooBarBaz>({
                     foo: new ValueCriteria(Number, [new InRangeCriterion(Number, [3, 4])]),
                     bar: new ValueCriteria(Number, [new InRangeCriterion(Number, [150, 175])]),
                 });
@@ -260,24 +261,24 @@ fdescribe("reduce: object", () => {
         describe("3:2", () => {
             it("{ foo:[1, 7] & bar:[100, 200] & baz:[50, 70] } reduced by { foo:[3, 4] & bar:[150, 175] } should be ({ foo:([1, 3) | (4, 7]) & bar:[100, 200] & baz:[50, 70] } | { foo:[3, 4] & bar:([100, 150) | (175, 200]) & baz:[50, 70] })", () => {
                 // arrange
-                const a = new ObjectCriterion({
+                const a = new ObjectCriterion<FooBarBaz>({
                     foo: new ValueCriteria(Number, [new InRangeCriterion(Number, [1, 7])]),
                     bar: new ValueCriteria(Number, [new InRangeCriterion(Number, [100, 200])]),
                     baz: new ValueCriteria(Number, [new InRangeCriterion(Number, [50, 70])]),
                 });
 
-                const b = new ObjectCriterion({
+                const b = new ObjectCriterion<FooBarBaz>({
                     foo: new ValueCriteria(Number, [new InRangeCriterion(Number, [3, 4])]),
                     bar: new ValueCriteria(Number, [new InRangeCriterion(Number, [150, 175])]),
                 });
 
                 const expected = new ObjectCriteria([
-                    new ObjectCriterion({
+                    new ObjectCriterion<FooBarBaz>({
                         foo: new ValueCriteria(Number, [new InRangeCriterion(Number, [1, 3], [true, false]), new InRangeCriterion(Number, [4, 7], [false, true])]),
                         bar: new ValueCriteria(Number, [new InRangeCriterion(Number, [100, 200])]),
                         baz: new ValueCriteria(Number, [new InRangeCriterion(Number, [50, 70])]),
                     }),
-                    new ObjectCriterion({
+                    new ObjectCriterion<FooBarBaz>({
                         foo: new ValueCriteria(Number, [new InRangeCriterion(Number, [3, 4])]),
                         bar: new ValueCriteria(Number, [new InRangeCriterion(Number, [100, 150], [true, false]), new InRangeCriterion(Number, [175, 200], [false, true])]),
                         baz: new ValueCriteria(Number, [new InRangeCriterion(Number, [50, 70])]),
@@ -295,30 +296,30 @@ fdescribe("reduce: object", () => {
         describe("3:3", () => {
             it("{ foo:[1, 7] & bar:[100, 200] & baz:[50, 70] } reduced by { foo:[3, 4] & bar:[150, 175] & baz:[55, 65] } should be ({ foo:([1, 3) | (4, 7]) & bar:[100, 200] & baz:[50, 70] } | { foo:[3, 4] & bar:([100, 150) | (175, 200]) & baz:[50, 70] } | { foo:[3, 4] & bar:[150, 175] & baz:([50, 55) | (65, 70]) })", () => {
                 // arrange
-                const a = new ObjectCriterion({
+                const a = new ObjectCriterion<FooBarBaz>({
                     foo: new ValueCriteria(Number, [new InRangeCriterion(Number, [1, 7])]),
                     bar: new ValueCriteria(Number, [new InRangeCriterion(Number, [100, 200])]),
                     baz: new ValueCriteria(Number, [new InRangeCriterion(Number, [50, 70])]),
                 });
 
-                const b = new ObjectCriterion({
+                const b = new ObjectCriterion<FooBarBaz>({
                     foo: new ValueCriteria(Number, [new InRangeCriterion(Number, [3, 4])]),
                     bar: new ValueCriteria(Number, [new InRangeCriterion(Number, [150, 175])]),
                     baz: new ValueCriteria(Number, [new InRangeCriterion(Number, [55, 65])]),
                 });
 
                 const expected = new ObjectCriteria([
-                    new ObjectCriterion({
+                    new ObjectCriterion<FooBarBaz>({
                         foo: new ValueCriteria(Number, [new InRangeCriterion(Number, [1, 3], [true, false]), new InRangeCriterion(Number, [4, 7], [false, true])]),
                         bar: new ValueCriteria(Number, [new InRangeCriterion(Number, [100, 200])]),
                         baz: new ValueCriteria(Number, [new InRangeCriterion(Number, [50, 70])]),
                     }),
-                    new ObjectCriterion({
+                    new ObjectCriterion<FooBarBaz>({
                         foo: new ValueCriteria(Number, [new InRangeCriterion(Number, [3, 4])]),
                         bar: new ValueCriteria(Number, [new InRangeCriterion(Number, [100, 150], [true, false]), new InRangeCriterion(Number, [175, 200], [false, true])]),
                         baz: new ValueCriteria(Number, [new InRangeCriterion(Number, [50, 70])]),
                     }),
-                    new ObjectCriterion({
+                    new ObjectCriterion<FooBarBaz>({
                         foo: new ValueCriteria(Number, [new InRangeCriterion(Number, [3, 4])]),
                         bar: new ValueCriteria(Number, [new InRangeCriterion(Number, [150, 175])]),
                         baz: new ValueCriteria(Number, [new InRangeCriterion(Number, [50, 55], [true, false]), new InRangeCriterion(Number, [65, 70], [false, true])]),
@@ -336,27 +337,27 @@ fdescribe("reduce: object", () => {
         describe("2:3", () => {
             it("{ foo:[1, 7] & bar:[100, 200] } reduced by { foo:[3, 4] & bar:[150, 175] & baz:[50, 70] } should be ({ foo:([1, 3) | (4, 7]) & bar:[100, 200] } | { foo:[3, 4] & bar:([100, 150) | (175, 200]) } | { foo:[3, 4] & bar:[150, 175] & baz:([..., 50) | (70, ...]) })", () => {
                 // arrange
-                const a = new ObjectCriterion({
+                const a = new ObjectCriterion<FooBarBaz>({
                     foo: new ValueCriteria(Number, [new InRangeCriterion(Number, [1, 7])]),
                     bar: new ValueCriteria(Number, [new InRangeCriterion(Number, [100, 200])]),
                 });
 
-                const b = new ObjectCriterion({
+                const b = new ObjectCriterion<FooBarBaz>({
                     foo: new ValueCriteria(Number, [new InRangeCriterion(Number, [3, 4])]),
                     bar: new ValueCriteria(Number, [new InRangeCriterion(Number, [150, 175])]),
                     baz: new ValueCriteria(Number, [new InRangeCriterion(Number, [50, 70])]),
                 });
 
                 const expected = new ObjectCriteria([
-                    new ObjectCriterion({
+                    new ObjectCriterion<FooBarBaz>({
                         foo: new ValueCriteria(Number, [new InRangeCriterion(Number, [1, 3], [true, false]), new InRangeCriterion(Number, [4, 7], [false, true])]),
                         bar: new ValueCriteria(Number, [new InRangeCriterion(Number, [100, 200])]),
                     }),
-                    new ObjectCriterion({
+                    new ObjectCriterion<FooBarBaz>({
                         foo: new ValueCriteria(Number, [new InRangeCriterion(Number, [3, 4])]),
                         bar: new ValueCriteria(Number, [new InRangeCriterion(Number, [100, 150], [true, false]), new InRangeCriterion(Number, [175, 200], [false, true])]),
                     }),
-                    new ObjectCriterion({
+                    new ObjectCriterion<FooBarBaz>({
                         foo: new ValueCriteria(Number, [new InRangeCriterion(Number, [3, 4])]),
                         bar: new ValueCriteria(Number, [new InRangeCriterion(Number, [150, 175])]),
                         baz: new ValueCriteria(Number, [new InRangeCriterion(Number, [void 0, 50], false), new InRangeCriterion(Number, [70, void 0], false)]),
@@ -374,18 +375,18 @@ fdescribe("reduce: object", () => {
         describe("0:2", () => {
             it("{ } reduced by { foo:{2} & bar:{4} } should be ({ foo:!{2} } | { foo:{2} & bar:!{4} })", () => {
                 // arrange
-                const a = new ObjectCriterion({});
+                const a = new ObjectCriterion<FooBarBaz>({});
 
-                const b = new ObjectCriterion({
+                const b = new ObjectCriterion<FooBarBaz>({
                     foo: new ValueCriteria(Number, [new InSetCriterion(Number, [2])]),
                     bar: new ValueCriteria(Number, [new InSetCriterion(Number, [4])]),
                 });
 
                 const expected = new ObjectCriteria([
-                    new ObjectCriterion({
+                    new ObjectCriterion<FooBarBaz>({
                         foo: new ValueCriteria(Number, [new NotInSetCriterion(Number, [2])]),
                     }),
-                    new ObjectCriterion({
+                    new ObjectCriterion<FooBarBaz>({
                         foo: new ValueCriteria(Number, [new InSetCriterion(Number, [2])]),
                         bar: new ValueCriteria(Number, [new NotInSetCriterion(Number, [4])]),
                     }),
@@ -400,13 +401,25 @@ fdescribe("reduce: object", () => {
         });
 
         it("{ foo:{ bar:[1, 7] } } reduced by { foo: { bar:[3, 4] } } should be { foo:{ bar:([1, 3) | (4, 7]) } }", () => {
+            interface NestedFooBar {
+                foo: {
+                    bar: number;
+                };
+            }
+
             // arrange
-            const a = new ObjectCriterion({ foo: new ObjectCriteria([new ObjectCriterion({ bar: new ValueCriteria(Number, [new InRangeCriterion(Number, [1, 7])]) })]) });
-            const b = new ObjectCriterion({ foo: new ObjectCriteria([new ObjectCriterion({ bar: new ValueCriteria(Number, [new InRangeCriterion(Number, [3, 4])]) })]) });
+            const a = new ObjectCriterion<NestedFooBar>({
+                foo: new ObjectCriteria([new ObjectCriterion<FooBarBaz>({ bar: new ValueCriteria(Number, [new InRangeCriterion(Number, [1, 7])]) })]),
+            });
+
+            const b = new ObjectCriterion<NestedFooBar>({
+                foo: new ObjectCriteria([new ObjectCriterion<FooBarBaz>({ bar: new ValueCriteria(Number, [new InRangeCriterion(Number, [3, 4])]) })]),
+            });
+
             const expected = new ObjectCriteria([
-                new ObjectCriterion({
+                new ObjectCriterion<NestedFooBar>({
                     foo: new ObjectCriteria([
-                        new ObjectCriterion({
+                        new ObjectCriterion<NestedFooBar["foo"]>({
                             bar: new ValueCriteria(Number, [new InRangeCriterion(Number, [1, 3], [true, false]), new InRangeCriterion(Number, [4, 7], [false, true])]),
                         }),
                     ]),
@@ -424,11 +437,11 @@ fdescribe("reduce: object", () => {
     describe("no reduction", () => {
         it("{ foo:{3} } should not be reduced by { foo:{2} }", () => {
             // arrange
-            const a = new ObjectCriterion({
+            const a = new ObjectCriterion<FooBarBaz>({
                 foo: new ValueCriteria(Number, [new InSetCriterion(Number, [3])]),
             });
 
-            const b = new ObjectCriterion({
+            const b = new ObjectCriterion<FooBarBaz>({
                 foo: new ValueCriteria(Number, [new InSetCriterion(Number, [2])]),
             });
 
@@ -441,12 +454,12 @@ fdescribe("reduce: object", () => {
 
         it("{ foo:{2} & bar:{3} } should not be reduced by { foo:{2} & bar:{4} }", () => {
             // arrange
-            const a = new ObjectCriterion({
+            const a = new ObjectCriterion<FooBarBaz>({
                 foo: new ValueCriteria(Number, [new InSetCriterion(Number, [2])]),
                 bar: new ValueCriteria(Number, [new InSetCriterion(Number, [3])]),
             });
 
-            const b = new ObjectCriterion({
+            const b = new ObjectCriterion<FooBarBaz>({
                 foo: new ValueCriteria(Number, [new InSetCriterion(Number, [2])]),
                 bar: new ValueCriteria(Number, [new InSetCriterion(Number, [4])]),
             });

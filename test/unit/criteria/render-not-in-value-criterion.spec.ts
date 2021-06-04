@@ -1,4 +1,4 @@
-import { NotInSetCriterion } from "../../../src/criteria/value-criterion/_new-stuff/not-in-set-criterion";
+import { NotInSetCriterion } from "../../../src";
 
 describe("renderNotInValueCriterion", () => {
     it("should render correctly", () => {

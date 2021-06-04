@@ -1,4 +1,4 @@
-import { InRangeCriterion } from "../../../src/criteria/value-criterion/_new-stuff/in-range-criterion";
+import { InRangeCriterion } from "../../../src";
 
 describe("renderFromToValueCriterion", () => {
     it("[1, 7] should be rendered correctly", () => {

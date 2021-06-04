@@ -1,6 +1,4 @@
-import { InRangeCriterion } from "../../../src/criteria/value-criterion/_new-stuff/in-range-criterion";
-import { InSetCriterion } from "../../../src/criteria/value-criterion/_new-stuff/in-set-criterion";
-import { NotInSetCriterion } from "../../../src/criteria/value-criterion/_new-stuff/not-in-set-criterion";
+import { InRangeCriterion, InSetCriterion, NotInSetCriterion } from "../../../src";
 
 describe("reduce: not-in", () => {
     describe("full reduction", () => {

@@ -1,9 +1,4 @@
-import { Query, createAlwaysReducible, reduceQuery, Selection } from "src";
-import { InRangeCriterion } from "../../src/criteria/value-criterion/_new-stuff/in-range-criterion";
-import { InSetCriterion } from "../../src/criteria/value-criterion/_new-stuff/in-set-criterion";
-import { ObjectCriteria } from "../../src/criteria/value-criterion/_new-stuff/object-criteria";
-import { ObjectCriterion } from "../../src/criteria/value-criterion/_new-stuff/object-criterion";
-import { ValueCriteria } from "../../src/criteria/value-criterion/_new-stuff/value-criteria";
+import { Query, createAlwaysReducible, reduceQuery, Selection, ObjectCriteria, ObjectCriterion, ValueCriteria, InSetCriterion, InRangeCriterion } from "src";
 
 describe("reduceQuery()", () => {
     // need this so toBeEqual() works
@@ -114,7 +109,10 @@ describe("reduceQuery()", () => {
 
         it("{ index:[1, 7] / { foo, bar } } reduced by { index:[3, 4] / { foo } } should be { index:([1, 3), (4, 7]) / { foo, bar } }, { index:[3, 4] / { bar } }", () => {
             // arrange
-            const a = createQuery(new ObjectCriteria([new ObjectCriterion({ index: new ValueCriteria(Number, [new InRangeCriterion(Number, [1, 7])]) })]), { foo: true, bar: true });
+            const a = createQuery(new ObjectCriteria([new ObjectCriterion({ index: new ValueCriteria(Number, [new InRangeCriterion(Number, [1, 7])]) })]), {
+                foo: true,
+                bar: true,
+            });
             const b = createQuery(new ObjectCriteria([new ObjectCriterion({ index: new ValueCriteria(Number, [new InRangeCriterion(Number, [3, 4])]) })]), { foo: true });
 
             const expected = [

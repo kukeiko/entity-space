@@ -1,5 +1,4 @@
 import { ValueCriterion } from "./value-criterion";
-import { inRange } from "../in-range";
 
 export type FromCriterion<T extends number | string> = {
     op: ">=" | ">";
@@ -51,20 +50,6 @@ export class InRangeCriterion<T extends number | string> implements ValueCriteri
 
     static supportsValueType(x: unknown): x is () => string | number {
         return x === String || x === Number;
-    }
-
-    static tmp_fromOldFormat(old: ReturnType<typeof inRange>): InRangeCriterion<any> {
-        return new InRangeCriterion(Number, [old.from?.value, old.to?.value], [old.from?.op === ">=", old.to?.op === "<="]);
-    }
-
-    tmp_toOldFormat(): ReturnType<typeof inRange> {
-        const selfFrom = this.getFrom();
-        const selfTo = this.getTo();
-
-        return inRange(
-            [selfFrom === null ? void 0 : selfFrom.value, selfTo === null ? void 0 : selfTo.value],
-            [selfFrom === null ? false : selfFrom.op === ">=", selfTo === null ? false : selfTo.op === "<="]
-        );
     }
 
     getFrom(): FromCriterion<T> | null {

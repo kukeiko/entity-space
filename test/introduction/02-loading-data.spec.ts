@@ -1,8 +1,5 @@
-import { Query, Selection } from "src";
-import { InRangeCriterion } from "../../src/criteria/value-criterion/_new-stuff/in-range-criterion";
-import { ObjectCriteria } from "../../src/criteria/value-criterion/_new-stuff/object-criteria";
-import { ObjectCriterion } from "../../src/criteria/value-criterion/_new-stuff/object-criterion";
-import { ValueCriteria } from "../../src/criteria/value-criterion/_new-stuff/value-criteria";
+import { ObjectCriteria, ObjectCriterion, Query, Selection, ValueCriteria } from "src";
+import { InRangeCriterion } from "../../src/criteria/value-criterion/in-range-criterion";
 import { Product, ProductFilter } from "./model";
 import { ProductRepository } from "./repositories";
 

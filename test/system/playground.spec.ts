@@ -1,7 +1,23 @@
-import { TypedQuery, TypedInstance, TypedSelection, TypedSelector } from "src";
+import { TypedQuery, TypedInstance, TypedSelection, TypedSelector, ObjectCriterion, ValueCriteria, InSetCriterion } from "src";
 import { TreeNodeModel, CanvasModel, CircleModel, SquareModel, TriangleModel } from "../facade/model";
 
 xdescribe("prototyping-playground", () => {
+    it("new criteria class testing", () => {
+        interface FooBar {
+            foo?: number;
+            bar: number;
+            type: "square" | "circle";
+        }
+
+        const a = new ObjectCriterion<FooBar>({
+            foo: new ValueCriteria(Number, [new InSetCriterion(Number, [2])]),
+            bar: new ValueCriteria(Number, [new InSetCriterion(Number, [3, 4, 7])]),
+            // type: new ValueCriteria(String, []),
+        });
+
+        const lala = a.items.bar;
+    });
+
     const treeNodeCreatable: TypedInstance<TreeNodeModel, "creatable"> = {
         name: "foo",
         parentId: 3,

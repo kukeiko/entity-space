@@ -1,37 +1,29 @@
-import { isValuesCriteria } from "../../values-criterion";
+import { isValuesCriteria } from "../values-criterion";
 import { ObjectCriteria } from "./object-criteria";
 import { ValueCriteria } from "./value-criteria";
 
-type PropertyCriteria = ValueCriteria<unknown> | ObjectCriteria;
+type PropertyCriteria<T = unknown> = T extends boolean | number | string ? ValueCriteria<T> : ObjectCriteria<T>;
 
-export class ObjectCriterion {
-    // constructor(valueType: () => T, items: Record<string, PropertyCriteria<T>>) {
-    constructor(items: Record<string, PropertyCriteria>) {
-        // this.valueType = valueType;
+type PropertyCriteriaMap<T> = {
+    [K in keyof T]?: Exclude<T[K], undefined> extends boolean | number | string ? ValueCriteria<T[K]> : ObjectCriteria<T[K]>;
+};
+
+// [todo] remove all "any" occurrences
+export class ObjectCriterion<T> {
+    // constructor(items: Record<keyof T, PropertyCriteria<T[keyof T]>>) {
+    constructor(items: PropertyCriteriaMap<T>) {
         this.items = items;
     }
 
-    // readonly valueType: () => T;
-    readonly items: Record<string, PropertyCriteria>;
+    readonly items: PropertyCriteriaMap<T>;
 
-    // isOtherCompatibleWithMe(other: ObjectCriterion<unknown>): other is ObjectCriterion<T> {
-    //     return other.valueType === this.valueType;
-    // }
-
-    reduce(other: ObjectCriterion): ObjectCriteria | false {
-        // if (!this.isOtherCompatibleWithMe(other)) {
-        //     return false;
-        // }
-
-        // type PropertyCriteria = ValueCriteria | ValuesCriteria | ObjectCriteria;
-        // type PropertyCriteria = ValueCriteria<T> | ObjectCriterion<T>[];
-
+    reduce(other: ObjectCriterion<T>): ObjectCriteria<T> | false {
         const reducedPropertyCriteriaBag = new Map<string, PropertyCriteria>();
 
         for (const key in this.items) {
             const criteriaA = other.items[key];
             const criteriaB = this.items[key];
-            let reduced: PropertyCriteria | false = false;
+            let reduced: PropertyCriteria<any> | false = false;
 
             /**
              * [todo] need "invertCriterion()" for this case
@@ -59,12 +51,12 @@ export class ObjectCriterion {
                 }
             } else if (isValuesCriteria(criteriaB)) {
                 throw new Error("ValuesCriteria reduction not yet implemented");
-            } else if (criteriaB !== void 0) {
+            } else if (criteriaB instanceof ObjectCriteria) {
                 if (criteriaA instanceof ValueCriteria) {
                     throw new Error("trying to reduce two criteria of different types");
                 } else if (isValuesCriteria(criteriaA)) {
                     throw new Error("trying to reduce two criteria of different types");
-                } else {
+                } else if (criteriaA instanceof ObjectCriteria) {
                     reduced = criteriaB.reduce(criteriaA);
                 }
             }
@@ -75,7 +67,7 @@ export class ObjectCriterion {
                  */
                 return false;
             } else if (reduced.items.length > 0) {
-                reducedPropertyCriteriaBag.set(key, reduced);
+                reducedPropertyCriteriaBag.set(key, reduced as any);
             }
         }
 
@@ -87,17 +79,17 @@ export class ObjectCriterion {
 
         // [todo] i think there is an Object.fromEntries() method that we could use, but we need to upgrade our ES target @ tsconfigs
         for (const [key, reducedPropertyCriteria] of Object.entries(other.items)) {
-            objectCriterion[key] = reducedPropertyCriteria;
+            objectCriterion[key] = reducedPropertyCriteria as any;
         }
 
         const objectCriteria: Record<string, PropertyCriteria>[] = [];
 
         for (const [key, reducedPropertyCriteria] of reducedPropertyCriteriaBag) {
             objectCriteria.push({ ...objectCriterion, [key]: reducedPropertyCriteria });
-            objectCriterion[key] = this.items[key];
+            objectCriterion[key] = (this.items as any)[key];
         }
 
-        return new ObjectCriteria(objectCriteria.map(criteria => new ObjectCriterion(criteria)));
+        return new ObjectCriteria(objectCriteria.map(criteria => new ObjectCriterion(criteria as any)));
     }
 
     toString(): string {

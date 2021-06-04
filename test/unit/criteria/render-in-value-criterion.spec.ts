@@ -1,4 +1,4 @@
-import { InSetCriterion } from "../../../src/criteria/value-criterion/_new-stuff/in-set-criterion";
+import { InSetCriterion } from "../../../src";
 
 describe("renderInValueCriterion", () => {
     it("should render correctly", () => {

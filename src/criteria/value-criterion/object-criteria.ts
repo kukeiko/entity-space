@@ -1,15 +1,15 @@
 import { ObjectCriterion } from "./object-criterion";
 
-export class ObjectCriteria {
-    constructor(items: ObjectCriterion[]) {
+export class ObjectCriteria<T = unknown> {
+    constructor(items: ObjectCriterion<T>[]) {
         this.items = items;
     }
 
-    readonly items: ObjectCriterion[];
+    readonly items: ObjectCriterion<T>[];
 
-    reduce(other: ObjectCriteria): ObjectCriteria | false {
+    reduce(other: ObjectCriteria<T>): ObjectCriteria<T> | false {
         if (this.items.length === 0 && other.items.length === 0) {
-            return new ObjectCriteria([]);
+            return new ObjectCriteria<T>([]);
         }
 
         let reduced = other.items.slice();
@@ -18,7 +18,7 @@ export class ObjectCriteria {
         // for each criterion in B, pick each criterion in A and try to reduce it.
         // criteria in A are updated with the reduced results as we go.
         for (const criterionB of this.items) {
-            const nextReduced: ObjectCriterion[] = [];
+            const nextReduced: ObjectCriterion<T>[] = [];
 
             for (const criterionA of reduced) {
                 const reducedCriteria = criterionB.reduce(criterionA);

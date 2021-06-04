@@ -2,7 +2,7 @@ import { Query } from "./query";
 import { reduceSelection } from "../selection";
 
 // [todo] options reduction missing
-export function reduceQuery(a: Query, b: Query): Query[] | false {
+export function reduceQuery<T>(a: Query<T>, b: Query<T>): Query<T>[] | false {
     const reducedCriteria = b.criteria.reduce(a.criteria);
     const reducedSelection = reduceSelection(a.selection, b.selection);
 

@@ -1,8 +1,4 @@
-import { inRange, Query, reduceQuery, reduceSelection, Selection } from "../../src";
-import { InRangeCriterion } from "../../src/criteria/value-criterion/_new-stuff/in-range-criterion";
-import { ObjectCriteria } from "../../src/criteria/value-criterion/_new-stuff/object-criteria";
-import { ObjectCriterion } from "../../src/criteria/value-criterion/_new-stuff/object-criterion";
-import { ValueCriteria } from "../../src/criteria/value-criterion/_new-stuff/value-criteria";
+import { InRangeCriterion, ObjectCriteria, ObjectCriterion, Query, reduceQuery, reduceSelection, Selection, ValueCriteria } from "../../src";
 
 /**
  * This file serves as an introduction via code for anyone new and interested in this library.
@@ -66,32 +62,32 @@ describe("what's reduction for?", () => {
          * Typing out criteria like this: { op: "range", from: { op: ">=", value: 100 }, to: { op: "<=", value: 200 } }
          * is a lot of typing to do. So lets explore all the ways we can create ranges in a shorter way:
          */
-        const from_100_to_200 = inRange([100, 200]);
-        expect(from_100_to_200).toEqual({ op: "range", from: { op: ">=", value: 100 }, to: { op: "<=", value: 200 } });
+        // const from_100_to_200 = inRange([100, 200]);
+        // expect(from_100_to_200).toEqual({ op: "range", from: { op: ">=", value: 100 }, to: { op: "<=", value: 200 } });
 
-        const from_bigger_100_to_200 = inRange([100, 200], [false, true]);
-        expect(from_bigger_100_to_200).toEqual({ op: "range", from: { op: ">", value: 100 }, to: { op: "<=", value: 200 } });
+        // const from_bigger_100_to_200 = inRange([100, 200], [false, true]);
+        // expect(from_bigger_100_to_200).toEqual({ op: "range", from: { op: ">", value: 100 }, to: { op: "<=", value: 200 } });
 
-        const from_100_to_less_200 = inRange([100, 200], [true, false]);
-        expect(from_100_to_less_200).toEqual({ op: "range", from: { op: ">=", value: 100 }, to: { op: "<", value: 200 } });
+        // const from_100_to_less_200 = inRange([100, 200], [true, false]);
+        // expect(from_100_to_less_200).toEqual({ op: "range", from: { op: ">=", value: 100 }, to: { op: "<", value: 200 } });
 
-        const from_bigger_100_to_less_200 = inRange([100, 200], [false, false]);
-        expect(from_bigger_100_to_less_200).toEqual({ op: "range", from: { op: ">", value: 100 }, to: { op: "<", value: 200 } });
+        // const from_bigger_100_to_less_200 = inRange([100, 200], [false, false]);
+        // expect(from_bigger_100_to_less_200).toEqual({ op: "range", from: { op: ">", value: 100 }, to: { op: "<", value: 200 } });
 
-        const from_bigger_100_to_less_200_shorter = inRange([100, 200], false);
-        expect(from_bigger_100_to_less_200_shorter).toEqual(from_bigger_100_to_less_200);
+        // const from_bigger_100_to_less_200_shorter = inRange([100, 200], false);
+        // expect(from_bigger_100_to_less_200_shorter).toEqual(from_bigger_100_to_less_200);
 
-        const to_200 = inRange([void 0, 200]);
-        expect(to_200).toEqual({ op: "range", to: { op: "<=", value: 200 } });
+        // const to_200 = inRange([void 0, 200]);
+        // expect(to_200).toEqual({ op: "range", to: { op: "<=", value: 200 } });
 
-        const less_than_200 = inRange([void 0, 200], false);
-        expect(less_than_200).toEqual({ op: "range", to: { op: "<", value: 200 } });
+        // const less_than_200 = inRange([void 0, 200], false);
+        // expect(less_than_200).toEqual({ op: "range", to: { op: "<", value: 200 } });
 
-        const from_100 = inRange([100, void 0]);
-        expect(from_100).toEqual({ op: "range", from: { op: ">=", value: 100 } });
+        // const from_100 = inRange([100, void 0]);
+        // expect(from_100).toEqual({ op: "range", from: { op: ">=", value: 100 } });
 
-        const bigger_than_100 = inRange([100, void 0], false);
-        expect(bigger_than_100).toEqual({ op: "range", from: { op: ">", value: 100 } });
+        // const bigger_than_100 = inRange([100, void 0], false);
+        // expect(bigger_than_100).toEqual({ op: "range", from: { op: ">", value: 100 } });
     });
 
     it("a bit more complex criteria reduction", () => {

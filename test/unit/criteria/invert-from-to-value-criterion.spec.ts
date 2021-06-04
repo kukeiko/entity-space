@@ -1,6 +1,7 @@
-import { InRangeCriterion } from "../../../src/criteria/value-criterion/_new-stuff/in-range-criterion";
+import { InRangeCriterion } from "../../../src";
 
 // [todo] inverting an inversion should result in the original input.
+
 // afaik we'll need mergeCriterion() for that
 describe("invertFromToValueCriterion()", () => {
     it("[1, 7] inverted should be [..., 1) | (7, ...]", () => {
