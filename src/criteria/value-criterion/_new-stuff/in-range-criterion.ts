@@ -45,6 +45,14 @@ export class InRangeCriterion<T extends number | string> implements ValueCriteri
         return x instanceof InRangeCriterion && x.valueType === valueType;
     }
 
+    // static is<T extends string | number>(x: unknown, valueType: Primitive): x is InRangeCriterion<T> {
+    //     return x instanceof InRangeCriterion && (valueType === Number || valueType === String) && x.valueType === valueType;
+    // }
+
+    static supportsValueType(x: unknown): x is () => string | number {
+        return x === String || x === Number;
+    }
+
     static tmp_fromOldFormat(old: ReturnType<typeof inRange>): InRangeCriterion<any> {
         return new InRangeCriterion(Number, [old.from?.value, old.to?.value], [old.from?.op === ">=", old.to?.op === "<="]);
     }
@@ -69,7 +77,8 @@ export class InRangeCriterion<T extends number | string> implements ValueCriteri
 
     valueType: () => T;
 
-    reduce(other: ValueCriterion<T | null>): ValueCriterion<T>[] | false {
+    reduce(other: ValueCriterion<unknown>): ValueCriterion<T>[] | false {
+        // [todo] chaning "this.valueType" to just "Number" causes errors, which is good - is there a way to verify it via a test?
         if (InRangeCriterion.is(other, this.valueType)) {
             const otherFrom = other.getFrom();
             const otherTo = other.getTo();
@@ -87,12 +96,6 @@ export class InRangeCriterion<T extends number | string> implements ValueCriteri
                         // [todo] this code path should never be hit because if selfTo === null, and fromInside is true, then toInside has to be true as well.
                         // we either throw an error or restructure the code so that we won't end up in impossible code paths
                     } else {
-                        // if (selfTo.op === "<=") {
-                        //     return [{ op: "range", from: { op: ">", value: b.to.value }, to: { op: a.to.op, value: a.to.value } }];
-                        // } else {
-                        //     return [{ op: "range", from: { op: ">=", value: b.to.value }, to: { op: a.to.op, value: a.to.value } }];
-                        // }
-
                         return [new InRangeCriterion(other.valueType, [selfTo.value, otherTo.value], [selfTo.op === "<", otherTo.op === "<="])];
                     }
                 } else if (toInside) {
@@ -100,12 +103,6 @@ export class InRangeCriterion<T extends number | string> implements ValueCriteri
                         // [todo] this code path should never be hit because if selfFrom === null, and toInside is true, then fromInside has to be true as well.
                         // we either throw an error or restructure the code so that we won't end up in impossible code paths
                     } else {
-                        // if (selfFrom.op === ">=") {
-                        //     return [{ op: "range", from: { op: otherFrom.op, value: otherFrom.value }, to: { op: "<", value: selfFrom.value } }];
-                        // } else {
-                        //     return [{ op: "range", from: { op: otherFrom.op, value: otherFrom.value }, to: { op: "<=", value: selfFrom.value } }];
-                        // }
-
                         return [new InRangeCriterion(other.valueType, [otherFrom.value, selfFrom.value], [otherFrom.op === ">=", selfFrom.op === ">"])];
                     }
                 } else if (selfFrom !== null && selfTo !== null) {
@@ -117,26 +114,6 @@ export class InRangeCriterion<T extends number | string> implements ValueCriteri
                             new InRangeCriterion(other.valueType, [otherFrom.value, selfFrom.value], [otherFrom.op === ">=", selfFrom.op === ">"]),
                             new InRangeCriterion(other.valueType, [selfTo.value, otherTo.value], [selfTo.op === "<", otherTo.op === "<="]),
                         ];
-
-                        // const result: ValueCriterion<T>[] = [];
-
-                        // if (selfFrom.op === ">") {
-                        //     result.push(new InRangeCriterion(other.valueType, [otherFrom.value, selfFrom.value], [otherFrom.op === ">=", true]));
-                        //     // result.push({ op: "range", from: { ...otherFrom }, to: { op: "<=", value: selfFrom.value } });
-                        // } else {
-                        //     result.push(new InRangeCriterion(other.valueType, [otherFrom.value, selfFrom.value], [otherFrom.op === ">=", false]));
-                        //     // result.push({ op: "range", from: { ...otherFrom }, to: { op: "<", value: selfFrom.value } });
-                        // }
-
-                        // if (selfTo.op === "<") {
-                        //     result.push(new InRangeCriterion(other.valueType, [selfTo.value, otherTo.value], [true, otherTo.op === "<="]));
-                        //     // result.push({ op: "range", from: { op: ">=", value: selfTo.value }, to: { ...a.to } });
-                        // } else {
-                        //     result.push(new InRangeCriterion(other.valueType, [selfTo.value, otherTo.value], [false, otherTo.op === "<="]));
-                        //     // result.push({ op: "range", from: { op: ">", value: selfTo.value }, to: { ...a.to } });
-                        // }
-
-                        // return result;
                     }
                 }
             } else if (otherFrom !== null) {
@@ -144,12 +121,6 @@ export class InRangeCriterion<T extends number | string> implements ValueCriteri
                     if (selfTo === null) {
                         return [];
                     } else {
-                        // if (selfTo.op === "<=") {
-                        //     return [{ op: "range", from: { op: ">", value: selfTo.value } }];
-                        // } else {
-                        //     return [{ op: "range", from: { op: ">=", value: selfTo.value } }];
-                        // }
-
                         return [new InRangeCriterion(other.valueType, [selfTo.value, void 0], selfTo.op === "<")];
                     }
                 } else if (selfFrom !== null && selfTo !== null) {
@@ -161,22 +132,6 @@ export class InRangeCriterion<T extends number | string> implements ValueCriteri
                             new InRangeCriterion(other.valueType, [otherFrom.value, selfFrom.value], [otherFrom.op === ">=", selfFrom.op === ">"]),
                             new InRangeCriterion(other.valueType, [selfTo.value, void 0], selfTo.op === "<"),
                         ];
-
-                        // const result: ValueCriterion<T>[] = [];
-
-                        // if (selfFrom.op === ">") {
-                        //     result.push({ op: "range", from: { ...otherFrom }, to: { op: "<=", value: selfFrom.value } });
-                        // } else {
-                        //     result.push({ op: "range", from: { ...otherFrom }, to: { op: "<", value: selfFrom.value } });
-                        // }
-
-                        // if (selfTo.op === "<") {
-                        //     result.push({ op: "range", from: { op: ">=", value: selfTo.value } });
-                        // } else {
-                        //     result.push({ op: "range", from: { op: ">", value: selfTo.value } });
-                        // }
-
-                        // return result;
                     }
                 }
             } else if (otherTo !== null) {
@@ -184,12 +139,6 @@ export class InRangeCriterion<T extends number | string> implements ValueCriteri
                     if (selfFrom === null) {
                         return [];
                     } else {
-                        // if (selfFrom.op === ">=") {
-                        //     return [{ op: "range", to: { op: "<", value: selfFrom.value } }];
-                        // } else {
-                        //     return [{ op: "range", to: { op: "<=", value: selfFrom.value } }];
-                        // }
-
                         return [new InRangeCriterion(other.valueType, [void 0, selfFrom.value], selfFrom.op === ">")];
                     }
                 } else if (selfFrom !== null && selfTo !== null) {
@@ -201,21 +150,6 @@ export class InRangeCriterion<T extends number | string> implements ValueCriteri
                             new InRangeCriterion(other.valueType, [void 0, selfFrom.value], selfFrom.op === ">"),
                             new InRangeCriterion(other.valueType, [selfTo.value, otherTo.value], [selfTo.op === "<", otherTo.op === "<="]),
                         ];
-                        // const result: ValueCriterion<T>[] = [];
-
-                        // if (selfFrom.op === ">") {
-                        //     result.push({ op: "range", to: { op: "<=", value: selfFrom.value } });
-                        // } else {
-                        //     result.push({ op: "range", to: { op: "<", value: selfFrom.value } });
-                        // }
-
-                        // if (selfTo.op === "<") {
-                        //     result.push({ op: "range", from: { op: ">=", value: selfTo.value }, to: { ...a.to } });
-                        // } else {
-                        //     result.push({ op: "range", from: { op: ">", value: selfTo.value }, to: { ...a.to } });
-                        // }
-
-                        // return result;
                     }
                 }
             } else {
@@ -228,7 +162,27 @@ export class InRangeCriterion<T extends number | string> implements ValueCriteri
         return false;
     }
 
-    // getFrom()
+    toString(): string {
+        const shards: string[] = [];
+
+        if (this.from === null) {
+            shards.push("[...");
+        } else if (this.from.op === ">") {
+            shards.push(`(${this.from.value}`);
+        } else {
+            shards.push(`[${this.from.value}`);
+        }
+
+        if (this.to === null) {
+            shards.push("...]");
+        } else if (this.to.op === "<") {
+            shards.push(`${this.to.value})`);
+        } else {
+            shards.push(`${this.to.value}]`);
+        }
+
+        return shards.join(", ");
+    }
 }
 
 function isFromBiggerThanFrom<T extends number | string>(a: FromCriterion<T>, b: FromCriterion<T> | null): boolean {

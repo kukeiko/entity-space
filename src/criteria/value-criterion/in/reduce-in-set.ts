@@ -1,37 +1,32 @@
-import { subtractSets } from "../../../utils";
 import { ValueCriteria } from "../value-criteria";
 import { ValueCriterion } from "../value-criterion";
+import { InSetCriterion as InSetCriterion_V2 } from "../_new-stuff/in-set-criterion";
+import { NotInSetCriterion as NotInSetCriterion_V2 } from "../_new-stuff/not-in-set-criterion";
 import { InSetCriterion } from "./in-set-criterion";
 
 export function reduceInSet(a: InSetCriterion, b: ValueCriterion): ValueCriteria | false {
     switch (b.op) {
         case "in": {
-            const subtracted = subtractSets(a.values, b.values);
+            const instanceA = new InSetCriterion_V2(Number, a.values);
+            const instanceB = new InSetCriterion_V2(Number, b.values);
+            const result = instanceB.reduce(instanceA) as false | InSetCriterion_V2<any>[];
 
-            if (subtracted.size === a.values.size) {
+            if (result === false) {
                 return false;
-            } else if (subtracted.size === 0) {
-                return [];
             } else {
-                return [{ op: "in", values: subtracted }];
+                return result.map(x => ({ op: "in", values: new Set(x.getValues()) }));
             }
         }
 
         case "not-in": {
-            const values = new Set(a.values);
+            const instanceA = new InSetCriterion_V2(Number, a.values);
+            const instanceB = new NotInSetCriterion_V2(Number, b.values);
+            const result = instanceB.reduce(instanceA) as false | InSetCriterion_V2<any>[];
 
-            for (const value of a.values) {
-                if (!b.values.has(value)) {
-                    values.delete(value);
-                }
-            }
-
-            if (values.size === a.values.size) {
+            if (result === false) {
                 return false;
-            } else if (values.size === 0) {
-                return [];
             } else {
-                return [{ op: "in", values }];
+                return result.map(x => ({ op: "in", values: new Set(x.getValues()) }));
             }
         }
     }
