@@ -1,11 +1,11 @@
-import { InRangeCriterion, InSetCriterion } from "../../../src";
+import { inRange, inSet } from "../../../src";
 
 describe("reduce: from-to", () => {
     describe("full reduction", () => {
         it("[1, 7] should be completely reduced by itself", () => {
             // arrange
-            const a = new InRangeCriterion(Number, [1, 7]);
-            const b = new InRangeCriterion(Number, [1, 7]);
+            const a = inRange(1, 7);
+            const b = inRange(1, 7);
 
             // act
             const reduced = b.reduce(a);
@@ -16,8 +16,8 @@ describe("reduce: from-to", () => {
 
         it("[1, 7] should be completely reduced by [0, 8]", () => {
             // arrange
-            const a = new InRangeCriterion(Number, [1, 7]);
-            const b = new InRangeCriterion(Number, [0, 8]);
+            const a = inRange(1, 7);
+            const b = inRange(0, 8);
 
             // act
             const reduced = b.reduce(a);
@@ -28,8 +28,8 @@ describe("reduce: from-to", () => {
 
         it("[1, 7] should be completely reduced by (0, 8)", () => {
             // arrange
-            const a = new InRangeCriterion(Number, [1, 7]);
-            const b = new InRangeCriterion(Number, [0, 8], false);
+            const a = inRange(1, 7);
+            const b = inRange(0, 8, false);
 
             // act
             const reduced = b.reduce(a);
@@ -40,8 +40,8 @@ describe("reduce: from-to", () => {
 
         it("[1, 7] should be completely reduced by [0, ...]", () => {
             // arrange
-            const a = new InRangeCriterion(Number, [1, 7]);
-            const b = new InRangeCriterion(Number, [0, void 0]);
+            const a = inRange(1, 7);
+            const b = inRange(0, void 0);
 
             // act
             const reduced = b.reduce(a);
@@ -52,8 +52,8 @@ describe("reduce: from-to", () => {
 
         it("[4, ...] should be completely reduced by [3, ...]", () => {
             // arrange
-            const a = new InRangeCriterion(Number, [4, void 0]);
-            const b = new InRangeCriterion(Number, [3, void 0]);
+            const a = inRange(4, void 0);
+            const b = inRange(3, void 0);
 
             // act
             const reduced = b.reduce(a);
@@ -64,8 +64,8 @@ describe("reduce: from-to", () => {
 
         it("[..., 4] should be completely reduced by [..., 5]", () => {
             // arrange
-            const a = new InRangeCriterion(Number, [void 0, 4]);
-            const b = new InRangeCriterion(Number, [void 0, 5]);
+            const a = inRange(void 0, 4);
+            const b = inRange(void 0, 5);
 
             // act
             const reduced = b.reduce(a);
@@ -76,8 +76,8 @@ describe("reduce: from-to", () => {
 
         it("[1, 7] should be completely reduced by [..., 9]", () => {
             // arrange
-            const a = new InRangeCriterion(Number, [1, 7]);
-            const b = new InRangeCriterion(Number, [void 0, 9]);
+            const a = inRange(1, 7);
+            const b = inRange(void 0, 9);
 
             // act
             const reduced = b.reduce(a);
@@ -91,9 +91,9 @@ describe("reduce: from-to", () => {
         describe("head reduction", () => {
             it("[1, 7] reduced by [-3, 5] should be (5, 7]", () => {
                 // arrange
-                const a = new InRangeCriterion(Number, [1, 7]);
-                const b = new InRangeCriterion(Number, [-3, 5]);
-                const expected = [new InRangeCriterion(Number, [5, 7], [false, true])];
+                const a = inRange(1, 7);
+                const b = inRange(-3, 5);
+                const expected = [inRange(5, 7, [false, true])];
 
                 // act
                 const reduced = b.reduce(a);
@@ -104,9 +104,9 @@ describe("reduce: from-to", () => {
 
             it("[3, ...] reduced by [1, 8] should be (8, ...]", () => {
                 // arrange
-                const a = new InRangeCriterion(Number, [3, void 0]);
-                const b = new InRangeCriterion(Number, [1, 8]);
-                const expected = [new InRangeCriterion(Number, [8, void 0], false)];
+                const a = inRange(3, void 0);
+                const b = inRange(1, 8);
+                const expected = [inRange(8, void 0, false)];
 
                 // act
                 const reduced = b.reduce(a);
@@ -117,9 +117,9 @@ describe("reduce: from-to", () => {
 
             it("[3, ...] reduced by [1, 8) should be [8, ...]", () => {
                 // arrange
-                const a = new InRangeCriterion(Number, [3, void 0]);
-                const b = new InRangeCriterion(Number, [1, 8], [true, false]);
-                const expected = [new InRangeCriterion(Number, [8, void 0])];
+                const a = inRange(3, void 0);
+                const b = inRange(1, 8, [true, false]);
+                const expected = [inRange(8, void 0)];
 
                 // act
                 const reduced = b.reduce(a);
@@ -130,9 +130,9 @@ describe("reduce: from-to", () => {
 
             it("[1, 7] reduced by [..., 3) should be [3, 7]", () => {
                 // arrange
-                const a = new InRangeCriterion(Number, [1, 7]);
-                const b = new InRangeCriterion(Number, [void 0, 3], false);
-                const expected = [new InRangeCriterion(Number, [3, 7])];
+                const a = inRange(1, 7);
+                const b = inRange(void 0, 3, false);
+                const expected = [inRange(3, 7)];
 
                 // act
                 const reduced = b.reduce(a);
@@ -145,9 +145,9 @@ describe("reduce: from-to", () => {
         describe("tail reduction", () => {
             it("[1, 7] reduced by [3, 10] should be [1, 3)", () => {
                 // arrange
-                const a = new InRangeCriterion(Number, [1, 7]);
-                const b = new InRangeCriterion(Number, [3, 10]);
-                const expected = [new InRangeCriterion(Number, [1, 3], [true, false])];
+                const a = inRange(1, 7);
+                const b = inRange(3, 10);
+                const expected = [inRange(1, 3, [true, false])];
 
                 // act
                 const reduced = b.reduce(a);
@@ -158,9 +158,9 @@ describe("reduce: from-to", () => {
 
             it("[1, 7] reduced by (3, 8] should be [1, 3]", () => {
                 // arrange
-                const a = new InRangeCriterion(Number, [1, 7]);
-                const b = new InRangeCriterion(Number, [3, 8], [false, true]);
-                const expected = [new InRangeCriterion(Number, [1, 3])];
+                const a = inRange(1, 7);
+                const b = inRange(3, 8, [false, true]);
+                const expected = [inRange(1, 3)];
 
                 // act
                 const reduced = b.reduce(a);
@@ -171,9 +171,9 @@ describe("reduce: from-to", () => {
 
             it("[..., 3] reduced by [1, 8] should be [..., 1)", () => {
                 // arrange
-                const a = new InRangeCriterion(Number, [void 0, 3]);
-                const b = new InRangeCriterion(Number, [1, 8]);
-                const expected = [new InRangeCriterion(Number, [void 0, 1], false)];
+                const a = inRange(void 0, 3);
+                const b = inRange(1, 8);
+                const expected = [inRange(void 0, 1, false)];
 
                 // act
                 const reduced = b.reduce(a);
@@ -184,9 +184,9 @@ describe("reduce: from-to", () => {
 
             it("[..., 3] reduced by (1, 8] should be [..., 1)", () => {
                 // arrange
-                const a = new InRangeCriterion(Number, [void 0, 3]);
-                const b = new InRangeCriterion(Number, [1, 8], [false, true]);
-                const expected = [new InRangeCriterion(Number, [void 0, 1])];
+                const a = inRange(void 0, 3);
+                const b = inRange(1, 8, [false, true]);
+                const expected = [inRange(void 0, 1)];
 
                 // act
                 const reduced = b.reduce(a);
@@ -197,9 +197,9 @@ describe("reduce: from-to", () => {
 
             it("[1, 7] reduced by [3, ...] should be [1, 3)", () => {
                 // arrange
-                const a = new InRangeCriterion(Number, [1, 7]);
-                const b = new InRangeCriterion(Number, [3, void 0]);
-                const expected = [new InRangeCriterion(Number, [1, 3], [true, false])];
+                const a = inRange(1, 7);
+                const b = inRange(3, void 0);
+                const expected = [inRange(1, 3, [true, false])];
 
                 // act
                 const reduced = b.reduce(a);
@@ -212,9 +212,9 @@ describe("reduce: from-to", () => {
         describe("body reduction", () => {
             it("[1, 7] reduced by [3, 4] should be [1, 3) | (4, 7]", () => {
                 // arrange
-                const a = new InRangeCriterion(Number, [1, 7]);
-                const b = new InRangeCriterion(Number, [3, 4]);
-                const expected = [new InRangeCriterion(Number, [1, 3], [true, false]), new InRangeCriterion(Number, [4, 7], [false, true])];
+                const a = inRange(1, 7);
+                const b = inRange(3, 4);
+                const expected = [inRange(1, 3, [true, false]), inRange(4, 7, [false, true])];
 
                 // act
                 const reduced = b.reduce(a);
@@ -225,9 +225,9 @@ describe("reduce: from-to", () => {
 
             it("(1, 7) reduced by [3, 4] should be (1, 3) | (4, 7)", () => {
                 // arrange
-                const a = new InRangeCriterion(Number, [1, 7], false);
-                const b = new InRangeCriterion(Number, [3, 4]);
-                const expected = [new InRangeCriterion(Number, [1, 3], false), new InRangeCriterion(Number, [4, 7], false)];
+                const a = inRange(1, 7, false);
+                const b = inRange(3, 4);
+                const expected = [inRange(1, 3, false), inRange(4, 7, false)];
 
                 // act
                 const reduced = b.reduce(a);
@@ -238,9 +238,9 @@ describe("reduce: from-to", () => {
 
             it("(1, 7) reduced by (3, 4) should be (1, 3] | [4, 7)", () => {
                 // arrange
-                const a = new InRangeCriterion(Number, [1, 7], false);
-                const b = new InRangeCriterion(Number, [3, 4], false);
-                const expected = [new InRangeCriterion(Number, [1, 3], [false, true]), new InRangeCriterion(Number, [4, 7], [true, false])];
+                const a = inRange(1, 7, false);
+                const b = inRange(3, 4, false);
+                const expected = [inRange(1, 3, [false, true]), inRange(4, 7, [true, false])];
 
                 // act
                 const reduced = b.reduce(a);
@@ -251,9 +251,9 @@ describe("reduce: from-to", () => {
 
             it("[..., 7] reduced by [3, 4] should be [..., 3) | (4, 7]", () => {
                 // arrange
-                const a = new InRangeCriterion(Number, [void 0, 7]);
-                const b = new InRangeCriterion(Number, [3, 4]);
-                const expected = [new InRangeCriterion(Number, [void 0, 3], false), new InRangeCriterion(Number, [4, 7], [false, true])];
+                const a = inRange(void 0, 7);
+                const b = inRange(3, 4);
+                const expected = [inRange(void 0, 3, false), inRange(4, 7, [false, true])];
 
                 // act
                 const reduced = b.reduce(a);
@@ -264,9 +264,9 @@ describe("reduce: from-to", () => {
 
             it("[..., 7] reduced by (3, 4) should be [..., 3] | [4, 7]", () => {
                 // arrange
-                const a = new InRangeCriterion(Number, [void 0, 7]);
-                const b = new InRangeCriterion(Number, [3, 4], false);
-                const expected = [new InRangeCriterion(Number, [void 0, 3]), new InRangeCriterion(Number, [4, 7])];
+                const a = inRange(void 0, 7);
+                const b = inRange(3, 4, false);
+                const expected = [inRange(void 0, 3), inRange(4, 7)];
 
                 // act
                 const reduced = b.reduce(a);
@@ -277,9 +277,9 @@ describe("reduce: from-to", () => {
 
             it("[1, ...] reduced by [3, 4] should be [1, 3) | (4, ...]", () => {
                 // arrange
-                const a = new InRangeCriterion(Number, [1, void 0]);
-                const b = new InRangeCriterion(Number, [3, 4]);
-                const expected = [new InRangeCriterion(Number, [1, 3], [true, false]), new InRangeCriterion(Number, [4, void 0], false)];
+                const a = inRange(1, void 0);
+                const b = inRange(3, 4);
+                const expected = [inRange(1, 3, [true, false]), inRange(4, void 0, false)];
 
                 // act
                 const reduced = b.reduce(a);
@@ -290,9 +290,9 @@ describe("reduce: from-to", () => {
 
             it("[1, ...] reduced by (3, 4) should be [1, 3] | [4, ...]", () => {
                 // arrange
-                const a = new InRangeCriterion(Number, [1, void 0]);
-                const b = new InRangeCriterion(Number, [3, 4], false);
-                const expected = [new InRangeCriterion(Number, [1, 3]), new InRangeCriterion(Number, [4, void 0])];
+                const a = inRange(1, void 0);
+                const b = inRange(3, 4, false);
+                const expected = [inRange(1, 3), inRange(4, void 0)];
 
                 // act
                 const reduced = b.reduce(a);
@@ -305,9 +305,9 @@ describe("reduce: from-to", () => {
             // something to think about :)
             it("[1, 7] reduced by (1, 7) should be [1, 1] | [7, 7]", () => {
                 // arrange
-                const a = new InRangeCriterion(Number, [1, 7]);
-                const b = new InRangeCriterion(Number, [1, 7], false);
-                const expected = [new InRangeCriterion(Number, [1, 1]), new InRangeCriterion(Number, [7, 7])];
+                const a = inRange(1, 7);
+                const b = inRange(1, 7, false);
+                const expected = [inRange(1, 1), inRange(7, 7)];
 
                 // act
                 const reduced = b.reduce(a);
@@ -320,9 +320,9 @@ describe("reduce: from-to", () => {
         describe("reduction by: in", () => {
             it("[1, 2] reduced by {2} should be [1, 2)", () => {
                 // arrange
-                const a = new InRangeCriterion(Number, [1, 2]);
-                const b = new InSetCriterion(Number, [2]);
-                const expected = [new InRangeCriterion(Number, [1, 2], [true, false])];
+                const a = inRange(1, 2);
+                const b = inSet([2]);
+                const expected = [inRange(1, 2, [true, false])];
 
                 // act
                 const reduced = b.reduce(a);
@@ -333,9 +333,9 @@ describe("reduce: from-to", () => {
 
             it("[1, 2] reduced by {1} should be (1, 2]", () => {
                 // arrange
-                const a = new InRangeCriterion(Number, [1, 2]);
-                const b = new InSetCriterion(Number, [1]);
-                const expected = [new InRangeCriterion(Number, [1, 2], [false, true])];
+                const a = inRange(1, 2);
+                const b = inSet([1]);
+                const expected = [inRange(1, 2, [false, true])];
 
                 // act
                 const reduced = b.reduce(a);
@@ -346,9 +346,9 @@ describe("reduce: from-to", () => {
 
             it("[1, 2] reduced by {1, 2} should be (1, 2)", () => {
                 // arrange
-                const a = new InRangeCriterion(Number, [1, 2]);
-                const b = new InSetCriterion(Number, [1, 2]);
-                const expected = [new InRangeCriterion(Number, [1, 2], false)];
+                const a = inRange(1, 2);
+                const b = inSet([1, 2]);
+                const expected = [inRange(1, 2, false)];
 
                 // act
                 const reduced = b.reduce(a);
@@ -359,9 +359,9 @@ describe("reduce: from-to", () => {
 
             it("[..., 2] reduced by {1, 2} should be [..., 2)", () => {
                 // arrange
-                const a = new InRangeCriterion(Number, [void 0, 2]);
-                const b = new InSetCriterion(Number, [1, 2]);
-                const expected = [new InRangeCriterion(Number, [void 0, 2], false)];
+                const a = inRange(void 0, 2);
+                const b = inSet([1, 2]);
+                const expected = [inRange(void 0, 2, false)];
 
                 // act
                 const reduced = b.reduce(a);
@@ -372,9 +372,9 @@ describe("reduce: from-to", () => {
 
             it("[1, ...] reduced by {1, 2} should be (1, ...]", () => {
                 // arrange
-                const a = new InRangeCriterion(Number, [1, void 0]);
-                const b = new InSetCriterion(Number, [1, 2]);
-                const expected = [new InRangeCriterion(Number, [1, void 0], false)];
+                const a = inRange(1, void 0);
+                const b = inSet([1, 2]);
+                const expected = [inRange(1, void 0, false)];
 
                 // act
                 const reduced = b.reduce(a);
@@ -391,8 +391,8 @@ describe("reduce: from-to", () => {
         // lots of queries and hinder performance. also, it would only work with from-to of type integer (which we don't distinguish yet)
         it("[1, 3] should not be reduced by {2}", () => {
             // arrange
-            const a = new InRangeCriterion(Number, [1, 3]);
-            const b = new InSetCriterion(Number, [2]);
+            const a = inRange(1, 3);
+            const b = inSet([2]);
 
             // act
             const reduced = b.reduce(a);
@@ -403,8 +403,8 @@ describe("reduce: from-to", () => {
 
         it("[1, 7] should not be reduced by (7, 13]", () => {
             // arrange
-            const a = new InRangeCriterion(Number, [1, 7]);
-            const b = new InRangeCriterion(Number, [7, 13], [false, true]);
+            const a = inRange(1, 7);
+            const b = inRange(7, 13, [false, true]);
 
             // act
             const reduced = b.reduce(a);
@@ -415,8 +415,8 @@ describe("reduce: from-to", () => {
 
         it("[1, 7] should not be reduced by [8, 13]", () => {
             // arrange
-            const a = new InRangeCriterion(Number, [1, 7]);
-            const b = new InRangeCriterion(Number, [8, 13]);
+            const a = inRange(1, 7);
+            const b = inRange(8, 13);
 
             // act
             const reduced = b.reduce(a);
@@ -427,8 +427,8 @@ describe("reduce: from-to", () => {
 
         it("[1, 7] should not be reduced by [..., 1)", () => {
             // arrange
-            const a = new InRangeCriterion(Number, [1, 7]);
-            const b = new InRangeCriterion(Number, [void 0, 1], false);
+            const a = inRange(1, 7);
+            const b = inRange(void 0, 1, false);
 
             // act
             const reduced = b.reduce(a);
@@ -439,8 +439,8 @@ describe("reduce: from-to", () => {
 
         it("[1, 7] should not be reduced by [..., 0]", () => {
             // arrange
-            const a = new InRangeCriterion(Number, [1, 7]);
-            const b = new InRangeCriterion(Number, [void 0, 0]);
+            const a = inRange(1, 7);
+            const b = inRange(void 0, 0);
 
             // act
             const reduced = b.reduce(a);

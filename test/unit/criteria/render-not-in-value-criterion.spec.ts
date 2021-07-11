@@ -1,9 +1,9 @@
-import { NotInSetCriterion } from "../../../src";
+import { notInSet } from "../../../src";
 
 describe("renderNotInValueCriterion", () => {
     it("should render correctly", () => {
         // arrange
-        const criterion = new NotInSetCriterion(Number, [1, 2, 3]);
+        const criterion = notInSet([1, 2, 3]);
         const expected = "!{1, 2, 3}";
 
         // act

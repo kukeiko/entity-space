@@ -1,15 +1,15 @@
 import { ObjectCriterion } from "./object-criterion";
 
-export class ObjectCriteria<T = unknown> {
+export class Criteria<T = unknown> {
     constructor(items: ObjectCriterion<T>[]) {
         this.items = items;
     }
 
     readonly items: ObjectCriterion<T>[];
 
-    reduce(other: ObjectCriteria<T>): ObjectCriteria<T> | false {
+    reduce(other: Criteria<T>): Criteria<T> | false {
         if (this.items.length === 0 && other.items.length === 0) {
-            return new ObjectCriteria<T>([]);
+            return new Criteria<T>([]);
         }
 
         let reduced = other.items.slice();
@@ -34,7 +34,7 @@ export class ObjectCriteria<T = unknown> {
             reduced = nextReduced;
         }
 
-        return didReduceAny ? new ObjectCriteria(reduced) : false;
+        return didReduceAny ? new Criteria(reduced) : false;
     }
 
     toString(): string {

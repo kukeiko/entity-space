@@ -1,26 +1,20 @@
 import { ValueCriterion } from "./value-criterion";
 
-export class ValueCriteria<T> {
-    constructor(valueType: () => T, items: ValueCriterion<T>[]) {
-        this.valueType = valueType;
-        this.items = items;
+export class ValueCriteria<T = unknown> {
+    constructor(items: ValueCriterion<T>[]) {
+        this.items = Object.freeze(items);
     }
 
-    readonly valueType: () => T;
-    readonly items: ValueCriterion<T>[];
+    readonly items: readonly ValueCriterion<T>[];
 
-    isOtherCompatibleWithMe(other: ValueCriteria<unknown>): other is ValueCriteria<T> {
-        return other.valueType === this.valueType;
+    getItems(): readonly ValueCriterion<T>[] {
+        return this.items;
     }
 
-    reduce(other: ValueCriteria<T>): ValueCriteria<T> | false;
-    reduce(other: ValueCriteria<unknown>): ValueCriteria<ReturnType<typeof other["valueType"]>> | false {
-        if (!this.isOtherCompatibleWithMe(other)) {
-            return false;
-        }
-
+    // [todo] remove "as any" hacks
+    reduce(other: ValueCriteria<unknown>): false | ValueCriteria<T> {
         if (this.items.length === 0 || other.items.length === 0) {
-            return new ValueCriteria(this.valueType, []);
+            return new ValueCriteria([]);
         }
 
         let reduced = other.items.slice();
@@ -29,7 +23,7 @@ export class ValueCriteria<T> {
         // for each criterion in B, pick each criterion in A and try to reduce it.
         // criteria in A are updated with the reduced results as we go.
         for (const criterionB of this.items) {
-            const nextReduced: ValueCriterion<T>[] = [];
+            const nextReduced: ValueCriterion<unknown>[] = [];
 
             for (const criterionA of reduced) {
                 const reducedCriteria = criterionB.reduce(criterionA);
@@ -45,7 +39,7 @@ export class ValueCriteria<T> {
             reduced = nextReduced;
         }
 
-        return didReduceAny ? new ValueCriteria(this.valueType, reduced) : false;
+        return didReduceAny ? (new ValueCriteria(reduced) as any) : false;
     }
 
     invert(): ValueCriteria<T> {
@@ -55,7 +49,7 @@ export class ValueCriteria<T> {
             inverted.push(...criterion.invert());
         }
 
-        return new ValueCriteria(this.valueType, inverted);
+        return new ValueCriteria(inverted);
     }
 
     toString(): string {

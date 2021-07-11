@@ -1,4 +1,4 @@
-import { InRangeCriterion, ObjectCriteria, ObjectCriterion, Query, reduceQuery, reduceSelection, Selection, ValueCriteria } from "../../src";
+import { criteria, inRange, Criteria, ObjectCriterion, Query, reduceQuery, reduceSelection, Selection, ValueCriteria } from "../../src";
 
 /**
  * This file serves as an introduction via code for anyone new and interested in this library.
@@ -10,10 +10,9 @@ describe("what's reduction for?", () => {
         /**
          * Let's just jump right into a simple reduction case: we have two ranges and want to figure out the difference between them.
          */
-        const from_100_to_200 = new InRangeCriterion(Number, [100, 200]);
-        const from_100_to_300 = new InRangeCriterion(Number, [100, 300]);
-        // const expected = new ValueCriteria(Number, [new InRangeCriterion(Number, [200, 300], [false, true])]);
-        const expected = [new InRangeCriterion(Number, [200, 300], [false, true])];
+        const from_100_to_200 = inRange(100, 200);
+        const from_100_to_300 = inRange(100, 300);
+        const expected = [inRange(200, 300, [false, true])];
 
         const difference = from_100_to_200.reduce(from_100_to_300);
 
@@ -34,12 +33,12 @@ describe("what's reduction for?", () => {
          *
          * Our filter (from now on: criteria) for the first call (that is, load products with price 100 - 200) would look like this:
          */
-        const from_100_to_200 = new InRangeCriterion(Number, [100, 200]);
+        const from_100_to_200 = inRange(100, 200);
 
         /**
          * The criteria for the second call (100 to 300) would look like this:
          */
-        const from_100_to_300 = new InRangeCriterion(Number, [100, 300]);
+        const from_100_to_300 = inRange(100, 300);
 
         /**
          * We now want to know the difference between those two so we only load the difference from the server.
@@ -52,7 +51,7 @@ describe("what's reduction for?", () => {
          * The difference should now be the following criteria: a range starting at bigger 200 until less than equals 300,
          * which represents the data we still need to load.
          */
-        const expected = [new InRangeCriterion(Number, [200, 300], [false, true])];
+        const expected = [inRange(200, 300, [false, true])];
 
         expect(difference).toEqual(expected);
     });
@@ -64,28 +63,20 @@ describe("what's reduction for?", () => {
          */
         // const from_100_to_200 = inRange([100, 200]);
         // expect(from_100_to_200).toEqual({ op: "range", from: { op: ">=", value: 100 }, to: { op: "<=", value: 200 } });
-
         // const from_bigger_100_to_200 = inRange([100, 200], [false, true]);
         // expect(from_bigger_100_to_200).toEqual({ op: "range", from: { op: ">", value: 100 }, to: { op: "<=", value: 200 } });
-
         // const from_100_to_less_200 = inRange([100, 200], [true, false]);
         // expect(from_100_to_less_200).toEqual({ op: "range", from: { op: ">=", value: 100 }, to: { op: "<", value: 200 } });
-
         // const from_bigger_100_to_less_200 = inRange([100, 200], [false, false]);
         // expect(from_bigger_100_to_less_200).toEqual({ op: "range", from: { op: ">", value: 100 }, to: { op: "<", value: 200 } });
-
         // const from_bigger_100_to_less_200_shorter = inRange([100, 200], false);
         // expect(from_bigger_100_to_less_200_shorter).toEqual(from_bigger_100_to_less_200);
-
         // const to_200 = inRange([void 0, 200]);
         // expect(to_200).toEqual({ op: "range", to: { op: "<=", value: 200 } });
-
         // const less_than_200 = inRange([void 0, 200], false);
         // expect(less_than_200).toEqual({ op: "range", to: { op: "<", value: 200 } });
-
         // const from_100 = inRange([100, void 0]);
         // expect(from_100).toEqual({ op: "range", from: { op: ">=", value: 100 } });
-
         // const bigger_than_100 = inRange([100, void 0], false);
         // expect(bigger_than_100).toEqual({ op: "range", from: { op: ">", value: 100 } });
     });
@@ -99,17 +90,17 @@ describe("what's reduction for?", () => {
          *
          * The criteria for our first call would look like this:
          */
-        const price_100_to_200_rating_3_to_5 = new ObjectCriterion({
-            price: new ValueCriteria(Number, [new InRangeCriterion(Number, [100, 200])]),
-            rating: new ValueCriteria(Number, [new InRangeCriterion(Number, [3, 5])]),
+        const price_100_to_200_rating_3_to_5 = criteria({
+            price: inRange(100, 200),
+            rating: inRange(3, 5),
         });
 
         /**
          * The criteria for the second call would look like this:
          */
-        const price_100_to_300_rating_2_to_5 = new ObjectCriterion({
-            price: new ValueCriteria(Number, [new InRangeCriterion(Number, [100, 300])]),
-            rating: new ValueCriteria(Number, [new InRangeCriterion(Number, [2, 5])]),
+        const price_100_to_300_rating_2_to_5 = criteria({
+            price: inRange(100, 300),
+            rating: inRange(2, 5),
         });
 
         /**
@@ -117,15 +108,15 @@ describe("what's reduction for?", () => {
          *
          * We'll therefore have to load all the products with price of 200 to 300 and rating 2 to 5, and load all products with price of 100 to 200 and rating 2 to 3.
          */
-        const expected = new ObjectCriteria([
-            new ObjectCriterion({
-                price: new ValueCriteria(Number, [new InRangeCriterion(Number, [200, 300], [false, true])]),
-                rating: new ValueCriteria(Number, [new InRangeCriterion(Number, [2, 5])]),
-            }),
-            new ObjectCriterion({
-                price: new ValueCriteria(Number, [new InRangeCriterion(Number, [100, 200])]),
-                rating: new ValueCriteria(Number, [new InRangeCriterion(Number, [2, 3], [true, false])]),
-            }),
+        const expected = criteria([
+            {
+                price: [inRange(200, 300, [false, true])],
+                rating: [inRange(2, 5)],
+            },
+            {
+                price: [inRange(100, 200)],
+                rating: [inRange(2, 3, [true, false])],
+            },
         ]);
 
         /**
@@ -196,11 +187,11 @@ describe("what's reduction for?", () => {
         };
 
         const price_100_to_200_rating_3_to_5_no_reviews: Query = {
-            criteria: new ObjectCriteria([
-                new ObjectCriterion({
-                    price: new ValueCriteria(Number, [new InRangeCriterion(Number, [100, 200])]),
-                    rating: new ValueCriteria(Number, [new InRangeCriterion(Number, [3, 5])]),
-                }),
+            criteria: criteria([
+                {
+                    price: inRange(100, 200),
+                    rating: inRange(3, 5),
+                },
             ]),
             selection: {
                 ...basic_properties,
@@ -211,11 +202,11 @@ describe("what's reduction for?", () => {
         };
 
         const price_100_to_300_rating_2_to_5_with_reviews: Query = {
-            criteria: new ObjectCriteria([
-                new ObjectCriterion({
-                    price: new ValueCriteria(Number, [new InRangeCriterion(Number, [100, 300])]),
-                    rating: new ValueCriteria(Number, [new InRangeCriterion(Number, [2, 5])]),
-                }),
+            criteria: criteria([
+                {
+                    price: inRange(100, 300),
+                    rating: inRange(2, 5),
+                },
             ]),
             selection: {
                 ...basic_properties,
@@ -232,15 +223,15 @@ describe("what's reduction for?", () => {
         const expected: Query[] = [
             // one for loading the missing entities
             {
-                criteria: new ObjectCriteria([
-                    new ObjectCriterion({
-                        price: new ValueCriteria(Number, [new InRangeCriterion(Number, [200, 300], [false, true])]),
-                        rating: new ValueCriteria(Number, [new InRangeCriterion(Number, [2, 5])]),
-                    }),
-                    new ObjectCriterion({
-                        price: new ValueCriteria(Number, [new InRangeCriterion(Number, [100, 200])]),
-                        rating: new ValueCriteria(Number, [new InRangeCriterion(Number, [2, 3], [true, false])]),
-                    }),
+                criteria: criteria([
+                    {
+                        price: inRange(200, 300, [false, true]),
+                        rating: inRange(2, 5),
+                    },
+                    {
+                        price: inRange(100, 200),
+                        rating: inRange(2, 3, [true, false]),
+                    },
                 ]),
                 selection: {
                     ...basic_properties,
@@ -252,11 +243,11 @@ describe("what's reduction for?", () => {
             },
             // and one for loading the missing properties (i.e. the reviews) of the entities we already have
             {
-                criteria: new ObjectCriteria([
-                    new ObjectCriterion({
-                        price: new ValueCriteria(Number, [new InRangeCriterion(Number, [100, 200])]),
-                        rating: new ValueCriteria(Number, [new InRangeCriterion(Number, [3, 5])]),
-                    }),
+                criteria: criteria([
+                    {
+                        price: inRange(100, 200),
+                        rating: inRange(3, 5),
+                    },
                 ]),
                 selection: {
                     ...review_property,

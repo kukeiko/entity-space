@@ -1,36 +1,35 @@
 import { isValuesCriteria } from "../values-criterion";
-import { ObjectCriteria } from "./object-criteria";
+import { Criteria } from "./object-criteria";
 import { ValueCriteria } from "./value-criteria";
 
-type PropertyCriteria<T = unknown> = T extends boolean | number | string ? ValueCriteria<T> : ObjectCriteria<T>;
+type PropertyCriteria<T = unknown> = T extends boolean | number | string | null ? ValueCriteria<T> : Criteria<T>;
 
-type PropertyCriteriaMap<T> = {
-    [K in keyof T]?: Exclude<T[K], undefined> extends boolean | number | string ? ValueCriteria<T[K]> : ObjectCriteria<T[K]>;
+export type PropertyCriteriaBag<T> = {
+    [K in keyof T]?: Exclude<T[K], undefined> extends boolean | number | string | null ? ValueCriteria<T[K]> : Criteria<T[K]>;
 };
 
-// [todo] remove all "any" occurrences
-export class ObjectCriterion<T> {
-    // constructor(items: Record<keyof T, PropertyCriteria<T[keyof T]>>) {
-    constructor(items: PropertyCriteriaMap<T>) {
+export class ObjectCriterion<T = unknown> {
+    constructor(items: PropertyCriteriaBag<T>) {
         this.items = items;
     }
 
-    readonly items: PropertyCriteriaMap<T>;
+    readonly items: PropertyCriteriaBag<T>;
 
-    reduce(other: ObjectCriterion<T>): ObjectCriteria<T> | false {
-        const reducedPropertyCriteriaBag = new Map<string, PropertyCriteria>();
+    // [todo] remove "as any" hacks
+    reduce(other: ObjectCriterion<T>): Criteria<T> | false {
+        const reducedPropertyCriteriaBag = new Map<string, PropertyCriteria<T>>();
 
         for (const key in this.items) {
             const criteriaA = other.items[key];
             const criteriaB = this.items[key];
-            let reduced: PropertyCriteria<any> | false = false;
+            let reduced: PropertyCriteria<T[typeof key]> | false = false;
 
             /**
              * [todo] need "invertCriterion()" for this case
              */
             if (criteriaA === void 0) {
                 if (criteriaB instanceof ValueCriteria) {
-                    reduced = criteriaB.invert();
+                    reduced = criteriaB.invert() as any;
 
                     // [B] has criteria [A] doesn't, and we weren't able to compute the inversion of them => return [A] as is
                     // [todo] currently can't happen - for now we can invert all the value criteria we have. so maybe remove it?
@@ -45,19 +44,19 @@ export class ObjectCriterion<T> {
                 }
             } else if (criteriaB instanceof ValueCriteria) {
                 if (criteriaA instanceof ValueCriteria) {
-                    reduced = criteriaB.reduce(criteriaA);
+                    reduced = criteriaB.reduce(criteriaA) as any;
                 } else {
                     throw new Error("trying to reduce two criteria of different types");
                 }
             } else if (isValuesCriteria(criteriaB)) {
                 throw new Error("ValuesCriteria reduction not yet implemented");
-            } else if (criteriaB instanceof ObjectCriteria) {
+            } else if (criteriaB instanceof Criteria) {
                 if (criteriaA instanceof ValueCriteria) {
                     throw new Error("trying to reduce two criteria of different types");
                 } else if (isValuesCriteria(criteriaA)) {
                     throw new Error("trying to reduce two criteria of different types");
-                } else if (criteriaA instanceof ObjectCriteria) {
-                    reduced = criteriaB.reduce(criteriaA);
+                } else if (criteriaA instanceof Criteria) {
+                    reduced = criteriaB.reduce(criteriaA) as any;
                 }
             }
 
@@ -72,7 +71,7 @@ export class ObjectCriterion<T> {
         }
 
         if (reducedPropertyCriteriaBag.size == 0) {
-            return new ObjectCriteria([]);
+            return new Criteria([]);
         }
 
         const objectCriterion: Record<string, PropertyCriteria> = {};
@@ -85,11 +84,11 @@ export class ObjectCriterion<T> {
         const objectCriteria: Record<string, PropertyCriteria>[] = [];
 
         for (const [key, reducedPropertyCriteria] of reducedPropertyCriteriaBag) {
-            objectCriteria.push({ ...objectCriterion, [key]: reducedPropertyCriteria });
+            objectCriteria.push({ ...objectCriterion, [key]: reducedPropertyCriteria } as any);
             objectCriterion[key] = (this.items as any)[key];
         }
 
-        return new ObjectCriteria(objectCriteria.map(criteria => new ObjectCriterion(criteria as any)));
+        return new Criteria(objectCriteria.map(criteria => new ObjectCriterion(criteria as any)));
     }
 
     toString(): string {

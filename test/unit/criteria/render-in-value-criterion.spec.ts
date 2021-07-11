@@ -1,9 +1,9 @@
-import { InSetCriterion } from "../../../src";
+import { inSet } from "../../../src";
 
 describe("renderInValueCriterion", () => {
     it("should render correctly", () => {
         // arrange
-        const criterion = new InSetCriterion(Number, [1, 2, 3]);
+        const criterion = inSet([1, 2, 3]);
         const expected = "{1, 2, 3}";
 
         // act

@@ -1,11 +1,6 @@
-import { ObjectCriteria, ObjectCriterion, Query, Selection, ValueCriteria } from "src";
-import { InRangeCriterion } from "../../src/criteria/value-criterion/in-range-criterion";
+import { criteria, inRange, Query, Selection } from "src";
 import { Product, ProductFilter } from "./model";
 import { ProductRepository } from "./repositories";
-
-function isInRangeNumberCriterion(x: unknown): x is InRangeCriterion<number> {
-    return x instanceof InRangeCriterion && x.valueType === Number;
-}
 
 xdescribe("how do we actually load data?", () => {
     it("simple resolve of a query", async () => {
@@ -20,11 +15,11 @@ xdescribe("how do we actually load data?", () => {
         };
 
         const price_100_to_200_rating_3_to_5_no_reviews: Query = {
-            criteria: new ObjectCriteria([
-                new ObjectCriterion({
-                    price: new ValueCriteria(Number, [new InRangeCriterion(Number, [100, 200])]),
-                    rating: new ValueCriteria(Number, [new InRangeCriterion(Number, [3, 5])]),
-                }),
+            criteria: criteria([
+                {
+                    price: inRange(100, 200),
+                    rating: inRange(3, 5),
+                },
             ]),
             selection: {
                 ...basic_properties,
