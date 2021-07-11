@@ -1,6 +1,6 @@
 import { Class, Unbox } from "../utils";
 import { Reducible, Query } from "../query";
-import { TypedCriteria } from "./typed-criteria";
+// import { TypedCriteria } from "./typed-criteria";
 import { TypedInstance } from "./typed-instance";
 import { TypedSelection } from "./typed-selection";
 
@@ -13,7 +13,7 @@ export abstract class TypedQuery<T = any, S extends TypedSelection<T> = TypedSel
         this.options = args.options;
     }
 
-    criteria: TypedCriteria<T>;
+    criteria: any; //TypedCriteria<T>;
     selection: S & TypedSelection<T>;
     options: O;
 
@@ -23,7 +23,8 @@ export abstract class TypedQuery<T = any, S extends TypedSelection<T> = TypedSel
 }
 
 export module TypedQuery {
-    export type Construct<T, S, O> = { criteria?: TypedCriteria<T>; selection: S; options: O };
+    // export type Construct<T, S, O> = { criteria?: TypedCriteria<T>; selection: S; options: O };
+    export type Construct<T, S, O> = { criteria?: any; selection: S; options: O };
     export type Reduction<T> = TypedQuery<T> | TypedQuery<T>[] | null;
     export type Model<Q extends TypedQuery> = InstanceType<Unbox<Q["model"]>>;
 

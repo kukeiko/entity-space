@@ -1,4 +1,4 @@
-import { inSet, notInSet, invertInSet } from "../../../src";
+import { inSet, notInSet } from "../../../src";
 
 describe("invertInValueCriterion", () => {
     it("{1, 2, 3} inverted should be !{1, 2, 3}", () => {
@@ -7,7 +7,7 @@ describe("invertInValueCriterion", () => {
         const expected = [notInSet([1, 2, 3])];
 
         // act
-        const actual = invertInSet(criterion);
+        const actual = criterion.invert();
 
         // assert
         expect(actual).toEqual(expected);

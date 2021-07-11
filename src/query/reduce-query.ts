@@ -1,15 +1,14 @@
 import { Query } from "./query";
-import { reduceObjectCriteria } from "../criteria";
 import { reduceSelection } from "../selection";
 
 // [todo] options reduction missing
-export function reduceQuery(a: Query, b: Query): Query[] | false {
-    const reducedCriteria = reduceObjectCriteria(a.criteria, b.criteria);
+export function reduceQuery<T>(a: Query<T>, b: Query<T>): Query<T>[] | false {
+    const reducedCriteria = b.criteria.reduce(a.criteria);
     const reducedSelection = reduceSelection(a.selection, b.selection);
 
     if (!reducedCriteria || !reducedSelection) {
         return false;
-    } else if (reducedCriteria.length == 0) {
+    } else if (reducedCriteria.items.length == 0) {
         if (Object.keys(reducedSelection).length == 0) {
             return [];
         }

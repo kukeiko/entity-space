@@ -1,4 +1,4 @@
-import { inRange, inSet, notInSet, reduceInSet } from "src";
+import { inSet, notInSet, inRange } from "../../../src";
 
 describe("reduce: in", () => {
     /**
@@ -11,7 +11,7 @@ describe("reduce: in", () => {
             const b = inSet([1, 2, 3]);
 
             // act
-            const reduced = reduceInSet(a, b);
+            const reduced = b.reduce(a);
 
             // assert
             expect(reduced).toEqual([]);
@@ -23,7 +23,7 @@ describe("reduce: in", () => {
             const b = inSet([1, 2, 3, 4]);
 
             // act
-            const reduced = reduceInSet(a, b);
+            const reduced = b.reduce(a);
 
             // assert
             expect(reduced).toEqual([]);
@@ -35,7 +35,7 @@ describe("reduce: in", () => {
             const b = notInSet([4]);
 
             // act
-            const reduced = reduceInSet(a, b);
+            const reduced = b.reduce(a);
 
             // assert
             expect(reduced).toEqual([]);
@@ -53,7 +53,7 @@ describe("reduce: in", () => {
             const expected = [inSet([3])];
 
             // act
-            const reduced = reduceInSet(a, b);
+            const reduced = b.reduce(a);
 
             // assert
             expect(reduced).toEqual(expected);
@@ -66,7 +66,7 @@ describe("reduce: in", () => {
             const expected = [inSet([1])];
 
             // act
-            const reduced = reduceInSet(a, b);
+            const reduced = b.reduce(a);
 
             // assert
             expect(reduced).toEqual(expected);
@@ -83,7 +83,7 @@ describe("reduce: in", () => {
             const b = inSet([4, 5, 6]);
 
             // act
-            const reduced = reduceInSet(a, b);
+            const reduced = b.reduce(a);
 
             // assert
             expect(reduced).toBeFalse();
@@ -95,7 +95,7 @@ describe("reduce: in", () => {
             const b = notInSet([1, 2, 3]);
 
             // act
-            const reduced = reduceInSet(a, b);
+            const reduced = b.reduce(a);
 
             // assert
             expect(reduced).toBeFalse();
@@ -104,10 +104,10 @@ describe("reduce: in", () => {
         it("{1, 2, 3} should not be reduced by [1, 3]", () => {
             // arrange
             const a = inSet([1, 2, 3]);
-            const b = inRange([4, 7]);
+            const b = inRange(4, 7);
 
             // act
-            const reduced = reduceInSet(a, b);
+            const reduced = b.reduce(a);
 
             // assert
             expect(reduced).toBeFalse();

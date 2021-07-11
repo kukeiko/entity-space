@@ -2,6 +2,26 @@ import { TypedQuery, TypedInstance, TypedSelection, TypedSelector } from "src";
 import { TreeNodeModel, CanvasModel, CircleModel, SquareModel, TriangleModel } from "../facade/model";
 
 xdescribe("prototyping-playground", () => {
+    it("new criteria class testing", () => {
+        // interface FooBar {
+        //     foo?: number;
+        //     bar: number;
+        //     type: "square" | "circle";
+        // }
+        // const a = new ObjectCriterion<FooBar>({
+        //     foo: new ValueCriteria(Number, [new InSetCriterion(Number, [2])]),
+        //     bar: new ValueCriteria(Number, [new InSetCriterion(Number, [3, 4, 7])]),
+        //     // type: new ValueCriteria(String, []),
+        // });
+        // const lala = a.items.bar;
+    });
+
+    it("different types of T in in-set and in-range", () => {
+        // const inSet = new InSetCriterion(Number, [1]);
+        // const inRange = new InRangeCriterion(Number, [1, 2]);
+        // const reduced = inSet.reduce(inRange);
+    });
+
     const treeNodeCreatable: TypedInstance<TreeNodeModel, "creatable"> = {
         name: "foo",
         parentId: 3,

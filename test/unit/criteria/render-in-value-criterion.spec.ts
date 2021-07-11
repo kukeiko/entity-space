@@ -1,4 +1,4 @@
-import { inSet, renderInSet } from "../../../src";
+import { inSet } from "../../../src";
 
 describe("renderInValueCriterion", () => {
     it("should render correctly", () => {
@@ -7,7 +7,7 @@ describe("renderInValueCriterion", () => {
         const expected = "{1, 2, 3}";
 
         // act
-        const actual = renderInSet(criterion);
+        const actual = criterion.toString();
 
         // assert
         expect(actual).toEqual(expected);

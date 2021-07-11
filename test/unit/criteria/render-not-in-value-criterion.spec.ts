@@ -1,4 +1,4 @@
-import { notInSet, renderNotInSet } from "../../../src";
+import { notInSet } from "../../../src";
 
 describe("renderNotInValueCriterion", () => {
     it("should render correctly", () => {
@@ -7,7 +7,7 @@ describe("renderNotInValueCriterion", () => {
         const expected = "!{1, 2, 3}";
 
         // act
-        const actual = renderNotInSet(criterion);
+        const actual = criterion.toString();
 
         // assert
         expect(actual).toEqual(expected);

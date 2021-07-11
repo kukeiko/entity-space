@@ -1,4 +1,4 @@
-import { reduceNotInSet, notInSet, inSet, inRange } from "src";
+import { notInSet, inSet, inRange } from "../../../src";
 
 describe("reduce: not-in", () => {
     describe("full reduction", () => {
@@ -8,7 +8,7 @@ describe("reduce: not-in", () => {
             const b = notInSet([1, 2]);
 
             // act
-            const reduced = reduceNotInSet(a, b);
+            const reduced = b.reduce(a);
 
             // assert
             expect(reduced).toEqual([]);
@@ -20,7 +20,7 @@ describe("reduce: not-in", () => {
             const b = notInSet([1]);
 
             // act
-            const reduced = reduceNotInSet(a, b);
+            const reduced = b.reduce(a);
 
             // assert
             expect(reduced).toEqual([]);
@@ -35,7 +35,7 @@ describe("reduce: not-in", () => {
             const expected = [inSet([3])];
 
             // act
-            const reduced = reduceNotInSet(a, b);
+            const reduced = b.reduce(a);
 
             // assert
             expect(reduced).toEqual(expected);
@@ -48,7 +48,7 @@ describe("reduce: not-in", () => {
             const expected = [inSet([2, 3])];
 
             // act
-            const reduced = reduceNotInSet(a, b);
+            const reduced = b.reduce(a);
 
             // assert
             expect(reduced).toEqual(expected);
@@ -61,7 +61,7 @@ describe("reduce: not-in", () => {
             const expected = [notInSet([1, 2, 3])];
 
             // act
-            const reduced = reduceNotInSet(a, b);
+            const reduced = b.reduce(a);
 
             // assert
             expect(reduced).toEqual(expected);
@@ -72,10 +72,10 @@ describe("reduce: not-in", () => {
         it("!{1, 2, 3} should not be reduced by [4, 7]", () => {
             // arrange
             const a = notInSet([1, 2, 3]);
-            const b = inRange([4, 7]);
+            const b = inRange(4, 7);
 
             // act
-            const reduced = reduceNotInSet(a, b);
+            const reduced = b.reduce(a);
 
             // assert
             expect(reduced).toBeFalse();

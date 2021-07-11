@@ -1,5 +1,6 @@
-import { NotInSetCriterion } from "./not-in";
-import { InSetCriterion } from "./in";
-import { InRangeCriterion } from "./in-range";
-
-export type ValueCriterion = InRangeCriterion | InSetCriterion | NotInSetCriterion;
+export abstract class ValueCriterion<T = unknown> {
+    temp!: T;
+    abstract reduce(other: ValueCriterion): false | ValueCriterion<T>[];
+    abstract invert(): ValueCriterion<T>[];
+    abstract toString(): string;
+}
