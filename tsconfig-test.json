@@ -13,7 +13,7 @@
         "resolveJsonModule": true,
         "strict": true,
         "types": ["jasmine"],
-        "lib": ["DOM", "scripthost", "es2015", "es2016.array.include", "ES2017.Object"],
+        "lib": ["DOM", "scripthost", "ES2020"],
         "baseUrl": ".",
         "paths": { "src": ["src"] }
     },
