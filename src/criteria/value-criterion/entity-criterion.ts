@@ -1,27 +1,100 @@
+import { Class, getInstanceClass } from "../../utils";
 import { isValuesCriteria } from "../values-criterion";
-import { Criteria } from "./object-criteria";
+import { EntityCriteria } from "./entity-criteria";
 import { ValueCriteria } from "./value-criteria";
+import { ValueCriterion } from "./value-criterion";
 
-type PropertyCriteria<T = unknown> = T extends boolean | number | string | null ? ValueCriteria<T> : Criteria<T>;
+type PropertyCriteria<T = unknown> = T extends boolean | number | string | null ? ValueCriteria<T> : EntityCriteria<T>;
 
 export type PropertyCriteriaBag<T> = {
-    [K in keyof T]?: Exclude<T[K], undefined> extends boolean | number | string | null ? ValueCriteria<T[K]> : Criteria<T[K]>;
+    [K in keyof T]?: Exclude<T[K], undefined> extends boolean | number | string | null ? ValueCriteria<T[K]> : EntityCriteria<T[K]>;
 };
 
-export class ObjectCriterion<T = unknown> {
-    constructor(items: PropertyCriteriaBag<T>) {
-        this.items = items;
+type RemapTemplate<T> = {
+    [K in keyof T]?: Exclude<T[K], undefined> extends boolean | number | string | null ? Class<ValueCriterion<T[K]>> | Class<ValueCriterion<T[K]>>[] : never;
+};
+
+type InstantiatedTemplate<T> = {
+    [K in keyof T]?: T[K] extends Class<ValueCriterion>[] ? InstanceType<T[K][number]>[] : T[K] extends Class<ValueCriterion> ? InstanceType<T[K]> : never;
+};
+
+// [todo] move to utils once i've cleaned up the "any"s
+function permutate(aggregated: any, entries: [string, any[]][]): any[] {
+    if (entries.length === 0) {
+        return [aggregated];
     }
 
-    readonly items: PropertyCriteriaBag<T>;
+    let allAggregated: any[] = [];
+    let [key, shards] = entries[0];
+    entries = entries.slice(1);
+    aggregated = { ...aggregated };
+
+    for (const shard of shards) {
+        let nextAggregated = { ...aggregated, [key]: shard };
+        allAggregated.push(...permutate(nextAggregated, entries));
+    }
+
+    return allAggregated;
+}
+
+export class EntityCriterion<T = unknown> {
+    constructor(items: PropertyCriteriaBag<T>) {
+        this.bag = items;
+    }
+
+    readonly bag: PropertyCriteriaBag<T>;
+
+    getBag(): PropertyCriteriaBag<T> {
+        return this.bag;
+    }
+
+    // [todo] need to recursively get entries from nested ObjectCriterions
+    getEntries(): [string, ValueCriterion[]][] {
+        const entries: [string, ValueCriterion[]][] = [];
+        const bag = this.getBag();
+
+        for (const key in bag) {
+            const valueCriteria = bag[key];
+            if (valueCriteria === void 0 || !(valueCriteria instanceof ValueCriteria)) {
+                continue;
+            }
+
+            entries.push([key, valueCriteria.getItems()]);
+        }
+
+        return entries;
+    }
+
+    remap<U extends RemapTemplate<T>>(handler: () => U): InstantiatedTemplate<U>[] {
+        const entries = this.getEntries();
+        const permutationEntries: [string, any[]][] = [];
+        const template = handler();
+
+        for (const key in template) {
+            const entry = entries.find(([entryKey]) => entryKey === key);
+            if (!entry) continue;
+
+            const stuffInTemplate = template[key];
+            const allowedTypes = Array.isArray(stuffInTemplate) ? stuffInTemplate : ([stuffInTemplate] as any[]);
+            const filteredByType = entry[1].filter(item => allowedTypes.includes(getInstanceClass(item)));
+
+            if (Array.isArray(stuffInTemplate)) {
+                permutationEntries.push([key, [filteredByType]]);
+            } else {
+                permutationEntries.push([key, filteredByType]);
+            }
+        }
+
+        return permutate({}, permutationEntries);
+    }
 
     // [todo] remove "as any" hacks
-    reduce(other: ObjectCriterion<T>): Criteria<T> | false {
+    reduce(other: EntityCriterion<T>): EntityCriteria<T> | false {
         const reducedPropertyCriteriaBag = new Map<string, PropertyCriteria<T>>();
 
-        for (const key in this.items) {
-            const criteriaA = other.items[key];
-            const criteriaB = this.items[key];
+        for (const key in this.bag) {
+            const criteriaA = other.bag[key];
+            const criteriaB = this.bag[key];
             let reduced: PropertyCriteria<T[typeof key]> | false = false;
 
             /**
@@ -50,12 +123,12 @@ export class ObjectCriterion<T = unknown> {
                 }
             } else if (isValuesCriteria(criteriaB)) {
                 throw new Error("ValuesCriteria reduction not yet implemented");
-            } else if (criteriaB instanceof Criteria) {
+            } else if (criteriaB instanceof EntityCriteria) {
                 if (criteriaA instanceof ValueCriteria) {
                     throw new Error("trying to reduce two criteria of different types");
                 } else if (isValuesCriteria(criteriaA)) {
                     throw new Error("trying to reduce two criteria of different types");
-                } else if (criteriaA instanceof Criteria) {
+                } else if (criteriaA instanceof EntityCriteria) {
                     reduced = criteriaB.reduce(criteriaA) as any;
                 }
             }
@@ -71,13 +144,13 @@ export class ObjectCriterion<T = unknown> {
         }
 
         if (reducedPropertyCriteriaBag.size == 0) {
-            return new Criteria([]);
+            return new EntityCriteria([]);
         }
 
         const objectCriterion: Record<string, PropertyCriteria> = {};
 
         // [todo] i think there is an Object.fromEntries() method that we could use, but we need to upgrade our ES target @ tsconfigs
-        for (const [key, reducedPropertyCriteria] of Object.entries(other.items)) {
+        for (const [key, reducedPropertyCriteria] of Object.entries(other.bag)) {
             objectCriterion[key] = reducedPropertyCriteria as any;
         }
 
@@ -85,17 +158,17 @@ export class ObjectCriterion<T = unknown> {
 
         for (const [key, reducedPropertyCriteria] of reducedPropertyCriteriaBag) {
             objectCriteria.push({ ...objectCriterion, [key]: reducedPropertyCriteria } as any);
-            objectCriterion[key] = (this.items as any)[key];
+            objectCriterion[key] = (this.bag as any)[key];
         }
 
-        return new Criteria(objectCriteria.map(criteria => new ObjectCriterion(criteria as any)));
+        return new EntityCriteria(objectCriteria.map(criteria => new EntityCriterion(criteria as any)));
     }
 
     toString(): string {
         const shards: string[] = [];
 
-        for (const key in this.items) {
-            const criteria = this.items[key];
+        for (const key in this.bag) {
+            const criteria = this.bag[key];
 
             // [todo] this check only exists because i wanted typed ObjectCriterion to not require specifying a critera on each keyof T
             // seems kinda unclean, so revisit on how to do it better

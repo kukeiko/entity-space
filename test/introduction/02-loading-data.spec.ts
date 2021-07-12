@@ -1,9 +1,9 @@
-import { criteria, inRange, Query, Selection } from "src";
+import { EntityCriteria, entityCriteria, inRange, NumberRangeCriterion, Query, Selection } from "src";
 import { Product, ProductFilter } from "./model";
 import { ProductRepository } from "./repositories";
 
-xdescribe("how do we actually load data?", () => {
-    it("simple resolve of a query", async () => {
+describe("how do we actually load data?", () => {
+    fit("simple resolve of a query", async () => {
         /**
          * [todo] implement loading some products with filter criteria
          */
@@ -14,13 +14,14 @@ xdescribe("how do we actually load data?", () => {
             rating: true,
         };
 
-        const price_100_to_200_rating_3_to_5_no_reviews: Query = {
-            criteria: criteria([
-                {
-                    price: inRange(100, 200),
-                    rating: inRange(3, 5),
-                },
-            ]),
+        // we want all products priced between 100 and 200 with a rating of 3 to 5
+        const productCriteria = entityCriteria<Product>({
+            price: inRange(100, 200),
+            rating: inRange(3, 5),
+        });
+
+        const query: Query = {
+            criteria: productCriteria,
             selection: {
                 ...basic_properties,
             },
@@ -29,45 +30,49 @@ xdescribe("how do we actually load data?", () => {
             options: {} as any,
         };
 
-        // function mapCriteriaToProductFilters(productCriteria: ObjectCriteria<Product>): ProductFilter[] {
-        function mapCriteriaToProductFilters(productCriteria: any): ProductFilter[] {
-            const productFilters: ProductFilter[] = [];
+        function mapCriteriaToProductFilters(productCriteria: EntityCriteria<Product>): ProductFilter[] {
+            const remapped = productCriteria.getItems().map(criterion =>
+                criterion.remap(() => ({
+                    price: NumberRangeCriterion,
+                    rating: NumberRangeCriterion,
+                }))
+            );
 
-            // for (const criteria of productCriteria) {
-            //     const supportedPriceCriteria = (criteria.price || []).filter(isInRangeNumberCriterion);
-            //     const supportedRatingCriteria = (criteria.rating || []).filter(isInRangeNumberCriterion);
+            const filters: ProductFilter[] = [];
 
-            //     for (const priceCriterion of supportedPriceCriteria) {
-            //         const priceFilter: ProductFilter = {
-            //             minPrice: priceCriterion.from?.value,
-            //             maxPrice: priceCriterion.to?.value,
-            //         };
+            for (const criteria of remapped) {
+                for (const criterion of criteria) {
+                    const filter: ProductFilter = {};
 
-            //         if (supportedRatingCriteria.length == 0) {
-            //             productFilters.push(priceFilter);
-            //         } else {
-            //             for (const ratingCriterion of supportedRatingCriteria) {
-            //                 productFilters.push({ ...priceFilter, minRating: ratingCriterion.from?.value, maxRating: ratingCriterion.to?.value });
-            //             }
-            //         }
-            //     }
-            // }
+                    if (criterion.price !== void 0) {
+                        filter.minPrice = criterion.price.getFrom()?.value ?? void 0;
+                        filter.maxPrice = criterion.price.getTo()?.value ?? void 0;
+                    }
 
-            return productFilters;
+                    if (criterion.rating !== void 0) {
+                        filter.minRating = criterion.rating.getFrom()?.value ?? void 0;
+                        filter.maxRating = criterion.rating.getTo()?.value ?? void 0;
+                    }
+
+                    filters.push(filter);
+                }
+            }
+
+            return filters;
         }
 
         async function resolveProductQuery(query: Query): Promise<Product[]> {
             // [todo] query.criteria should probably already be properly typed so that this "cast" is not necessary
             const productCriteria = query.criteria as any; //ObjectCriteria<Product>;
             const productFilters = mapCriteriaToProductFilters(productCriteria);
-
+            console.log("product filters", JSON.stringify(productFilters));
             const repository = new ProductRepository();
             const allProducts = await Promise.all(productFilters.map(filter => repository.filter(filter)));
 
             return allProducts.reduce((acc, value) => [...acc, ...value], []);
         }
 
-        const products = await resolveProductQuery(price_100_to_200_rating_3_to_5_no_reviews);
+        const products = await resolveProductQuery(query);
 
         console.log(JSON.stringify(products));
     });

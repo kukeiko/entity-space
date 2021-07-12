@@ -1,25 +1,118 @@
-import { TypedQuery, TypedInstance, TypedSelection, TypedSelector } from "src";
+import {
+    TypedQuery,
+    TypedInstance,
+    TypedSelection,
+    TypedSelector,
+    EntityCriteria,
+    ValueCriterion,
+    Class,
+    InStringSetCriterion,
+    entityCriteria,
+    InNumberSetCriterion,
+    NumberRangeCriterion,
+    EntityCriterion,
+    inSet,
+    inRange,
+    getInstanceClass,
+    StringRangeCriterion,
+} from "src";
 import { TreeNodeModel, CanvasModel, CircleModel, SquareModel, TriangleModel } from "../facade/model";
+import { Product } from "../introduction/model";
 
-xdescribe("prototyping-playground", () => {
-    it("new criteria class testing", () => {
-        // interface FooBar {
-        //     foo?: number;
-        //     bar: number;
-        //     type: "square" | "circle";
-        // }
-        // const a = new ObjectCriterion<FooBar>({
-        //     foo: new ValueCriteria(Number, [new InSetCriterion(Number, [2])]),
-        //     bar: new ValueCriteria(Number, [new InSetCriterion(Number, [3, 4, 7])]),
-        //     // type: new ValueCriteria(String, []),
-        // });
-        // const lala = a.items.bar;
-    });
+type RemapTemplate<T> = {
+    [K in keyof T]?: Exclude<T[K], undefined> extends boolean | number | string | null ? Class<ValueCriterion<T[K]>> | Class<ValueCriterion<T[K]>>[] : never;
+    // : PropertyCriteriaBagTemplate<T[K]> | PropertyCriteriaBagTemplate<T[K]>[];
+};
 
-    it("different types of T in in-set and in-range", () => {
-        // const inSet = new InSetCriterion(Number, [1]);
-        // const inRange = new InRangeCriterion(Number, [1, 2]);
-        // const reduced = inSet.reduce(inRange);
+type InstantiatedTemplate<T> = {
+    [K in keyof T]?: T[K] extends Class<ValueCriterion>[] ? InstanceType<T[K][number]>[] : T[K] extends Class<ValueCriterion> ? InstanceType<T[K]> : never;
+};
+
+describe("prototyping-playground", () => {
+    it("remap criteria", () => {
+        type Permutated<T extends Record<string, any[]>> = {
+            [K in keyof T]: T[K][number];
+        };
+
+        function permutate(aggregated: any, entries: [string, any[]][]): any[] {
+            if (entries.length === 0) {
+                return [aggregated];
+            }
+
+            let allAggregated: any[] = [];
+            let [key, shards] = entries[0];
+            entries = entries.slice(1);
+            aggregated = { ...aggregated };
+
+            for (const shard of shards) {
+                let nextAggregated = { ...aggregated, [key]: shard };
+                allAggregated.push(...permutate(nextAggregated, entries));
+            }
+
+            return allAggregated;
+        }
+
+        function remap<T>(criterion: EntityCriterion<T>, template: RemapTemplate<T>): InstantiatedTemplate<T>[] {
+            const entries = criterion.getEntries();
+            const permutationEntries: [string, any[]][] = [];
+
+            for (const key in template) {
+                const entry = entries.find(([entryKey]) => entryKey === key);
+                if (!entry) continue;
+
+                const stuffInTemplate = template[key];
+                const allowedTypes = Array.isArray(stuffInTemplate) ? stuffInTemplate : ([stuffInTemplate] as any[]);
+                const filteredByType = entry[1].filter(item => allowedTypes.includes(getInstanceClass(item)));
+
+                // [todo] instanceof checks against what's in template is missing
+                if (Array.isArray(stuffInTemplate)) {
+                    permutationEntries.push([key, [filteredByType]]);
+                } else {
+                    permutationEntries.push([key, filteredByType]);
+                }
+            }
+
+            return permutate({}, permutationEntries);
+        }
+
+        const itemToPermutate = {
+            foo: ["foo-1", "foo-2"],
+            bar: ["bar-1", "bar-2", "bar-3"],
+        };
+
+        // console.log(JSON.stringify(permutate({}, Object.entries(itemToPermutate))));
+
+        const productCriteria = entityCriteria<Product>({
+            name: [inSet(["foo", "bar"]), inRange("a", "z"), inSet(["khaz", "mo", "dan"])],
+            price: [inRange(0, 100), inRange(700, 1200)],
+        });
+
+        const productCriterion = productCriteria.getItems()[0];
+        const remapped = remap(productCriterion, { name: InStringSetCriterion, price: NumberRangeCriterion });
+        console.log(JSON.stringify(remapped));
+        console.log(remapped.length);
+
+        // const permutations = permutate({}, productCriterion.getEntries());
+        // console.log(JSON.stringify(permutations));
+
+        // console.log(permutate(productCriteria.getItems()[0], Object.entries(productCriteria.getItems()[0].getBag())))
+
+        const foo: RemapTemplate<Product> = {
+            name: InStringSetCriterion,
+            price: [InNumberSetCriterion, NumberRangeCriterion],
+        };
+
+        function remapCriterion<T, U extends RemapTemplate<T>>(criterion: EntityCriterion<T>, handler: () => U): InstantiatedTemplate<U> {
+            const template = handler();
+            return {} as any;
+        }
+
+        function remapCriteria<T, U extends RemapTemplate<T>>(criteria: EntityCriteria<T>, handler: () => U): InstantiatedTemplate<U> {
+            const template = handler();
+            return {} as any;
+        }
+
+        const extracted = remapCriteria(entityCriteria<Product>([]), () => ({ name: InStringSetCriterion, price: [InNumberSetCriterion, NumberRangeCriterion] }));
     });
 
     const treeNodeCreatable: TypedInstance<TreeNodeModel, "creatable"> = {

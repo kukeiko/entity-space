@@ -2,12 +2,12 @@ import { ValueCriterion } from "./value-criterion";
 
 export class ValueCriteria<T = unknown> {
     constructor(items: ValueCriterion<T>[]) {
-        this.items = Object.freeze(items);
+        this.items = items;
     }
 
-    readonly items: readonly ValueCriterion<T>[];
+    readonly items: ValueCriterion<T>[];
 
-    getItems(): readonly ValueCriterion<T>[] {
+    getItems(): ValueCriterion<T>[] {
         return this.items;
     }
 

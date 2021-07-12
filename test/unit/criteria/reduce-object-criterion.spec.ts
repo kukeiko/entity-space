@@ -1,4 +1,4 @@
-import { inRange, inSet, notInSet, criteria } from "../../../src";
+import { inRange, inSet, notInSet, entityCriteria } from "../../../src";
 
 describe("reduce: object", () => {
     interface FooBarBaz {
@@ -11,12 +11,12 @@ describe("reduce: object", () => {
         // [todo] use all types of criteria for this test case - maybe even have two cases: 1 simple one, one with all types
         it("{ foo:{2} & bar:{3, 4, 7} } should be completely reduced by itself", () => {
             // arrange
-            const a = criteria<FooBarBaz>({
+            const a = entityCriteria<FooBarBaz>({
                 foo: inSet([2]),
                 bar: inSet([3, 4, 7]),
             });
 
-            const b = criteria<FooBarBaz>({
+            const b = entityCriteria<FooBarBaz>({
                 foo: inSet([2]),
                 bar: inSet([3, 4, 7]),
             });
@@ -25,17 +25,17 @@ describe("reduce: object", () => {
             const reduced = b.reduce(a);
 
             // assert
-            expect(reduced).toEqual(criteria<FooBarBaz>([]));
+            expect(reduced).toEqual(entityCriteria<FooBarBaz>([]));
         });
 
         it("{ foo:{2} & bar:{3} } should be completely reduced by { foo:{2} }", () => {
             // arrange
-            const a = criteria<FooBarBaz>({
+            const a = entityCriteria<FooBarBaz>({
                 foo: inSet([2]),
                 bar: inSet([3]),
             });
 
-            const b = criteria<FooBarBaz>({
+            const b = entityCriteria<FooBarBaz>({
                 foo: inSet([2]),
             });
 
@@ -43,23 +43,23 @@ describe("reduce: object", () => {
             const reduced = b.reduce(a);
 
             // assert
-            expect(reduced).toEqual(criteria<FooBarBaz>([]));
+            expect(reduced).toEqual(entityCriteria<FooBarBaz>([]));
         });
 
         it("{ foo:{2} & bar:{3} } should be completely reduced by { }", () => {
             // arrange
-            const a = criteria<FooBarBaz>({
+            const a = entityCriteria<FooBarBaz>({
                 foo: inSet([2]),
                 bar: inSet([3]),
             });
 
-            const b = criteria<FooBarBaz>({});
+            const b = entityCriteria<FooBarBaz>({});
 
             // act
             const reduced = b.reduce(a);
 
             // assert
-            expect(reduced).toEqual(criteria<FooBarBaz>([]));
+            expect(reduced).toEqual(entityCriteria<FooBarBaz>([]));
         });
     });
 
@@ -72,9 +72,9 @@ describe("reduce: object", () => {
         describe("1:1", () => {
             it("{ foo:{2, 3} } reduced by { foo:{3, 4} } should be { foo:{2} }", () => {
                 // arrange
-                const a = criteria<FooBarBaz>({ foo: inSet([2, 3]) });
-                const b = criteria<FooBarBaz>({ foo: inSet([3, 4]) });
-                const expected = criteria<FooBarBaz>([{ foo: inSet([2]) }]);
+                const a = entityCriteria<FooBarBaz>({ foo: inSet([2, 3]) });
+                const b = entityCriteria<FooBarBaz>({ foo: inSet([3, 4]) });
+                const expected = entityCriteria<FooBarBaz>([{ foo: inSet([2]) }]);
 
                 // act
                 const reduced = b.reduce(a);
@@ -85,15 +85,15 @@ describe("reduce: object", () => {
 
             it("{ foo:{2} } reduced by { bar:{2} } should be { foo:{2} & bar:!{2} }", () => {
                 // arrange
-                const a = criteria<FooBarBaz>({
+                const a = entityCriteria<FooBarBaz>({
                     foo: inSet([2]),
                 });
 
-                const b = criteria<FooBarBaz>({
+                const b = entityCriteria<FooBarBaz>({
                     bar: inSet([2]),
                 });
 
-                const expected = criteria<FooBarBaz>([
+                const expected = entityCriteria<FooBarBaz>([
                     {
                         foo: inSet([2]),
                         bar: notInSet([2]),
@@ -111,16 +111,16 @@ describe("reduce: object", () => {
         describe("1:2", () => {
             it("{ foo:{2} } reduced by { foo:{2} & bar:{3} } should be { foo:{2} & bar:!{3} }", () => {
                 // arrange
-                const a = criteria<FooBarBaz>({
+                const a = entityCriteria<FooBarBaz>({
                     foo: inSet([2]),
                 });
 
-                const b = criteria<FooBarBaz>({
+                const b = entityCriteria<FooBarBaz>({
                     foo: inSet([2]),
                     bar: inSet([3]),
                 });
 
-                const expected = criteria<FooBarBaz>([
+                const expected = entityCriteria<FooBarBaz>([
                     {
                         foo: inSet([2]),
                         bar: notInSet([3]),
@@ -138,16 +138,16 @@ describe("reduce: object", () => {
         describe("2:1", () => {
             it("{ foo:{1, 2} & bar:{3} } reduced by { foo:{2} } should be { foo:{1} & bar:{3} }", () => {
                 // arrange
-                const a = criteria<FooBarBaz>({
+                const a = entityCriteria<FooBarBaz>({
                     foo: inSet([1, 2]),
                     bar: inSet([3]),
                 });
 
-                const b = criteria<FooBarBaz>({
+                const b = entityCriteria<FooBarBaz>({
                     foo: inSet([2]),
                 });
 
-                const expected = criteria<FooBarBaz>([
+                const expected = entityCriteria<FooBarBaz>([
                     {
                         foo: inSet([1]),
                         bar: inSet([3]),
@@ -165,17 +165,17 @@ describe("reduce: object", () => {
         describe("2:2", () => {
             it("{ foo:{1, 2} & bar:{3} } reduced by { foo:{2} & bar:{3, 4} } should be { foo:{1} & bar:{3} }", () => {
                 // arrange
-                const a = criteria<FooBarBaz>({
+                const a = entityCriteria<FooBarBaz>({
                     foo: inSet([1, 2]),
                     bar: inSet([3]),
                 });
 
-                const b = criteria<FooBarBaz>({
+                const b = entityCriteria<FooBarBaz>({
                     foo: inSet([2]),
                     bar: inSet([3, 4]),
                 });
 
-                const expected = criteria<FooBarBaz>([
+                const expected = entityCriteria<FooBarBaz>([
                     {
                         foo: inSet([1]),
                         bar: inSet([3]),
@@ -191,17 +191,17 @@ describe("reduce: object", () => {
 
             it("{ foo:[1, 7] & bar:[100, 200] } reduced by { foo:[3, 4] & bar:[150, 175] } should be ({ foo:([1, 3) | (4, 7]) & bar:[100, 200] } | { foo:[3, 4] & bar:([100, 150) | (175, 200]) })", () => {
                 // arrange
-                const a = criteria<FooBarBaz>({
+                const a = entityCriteria<FooBarBaz>({
                     foo: inRange(1, 7),
                     bar: inRange(100, 200),
                 });
 
-                const b = criteria<FooBarBaz>({
+                const b = entityCriteria<FooBarBaz>({
                     foo: inRange(3, 4),
                     bar: inRange(150, 175),
                 });
 
-                const expected = criteria<FooBarBaz>([
+                const expected = entityCriteria<FooBarBaz>([
                     {
                         // foo: ([new InRangeCriterion(Number, [1, 3], [true, false]), new InRangeCriterion(Number, [4, 7], [false, true])]),
                         foo: [inRange(1, 3, [true, false]), inRange(4, 7, [false, true])],
@@ -222,22 +222,22 @@ describe("reduce: object", () => {
 
             it("changing order of criteria properties should still result in an equivalent outcome", () => {
                 // arrange
-                const a1 = criteria<FooBarBaz>({
+                const a1 = entityCriteria<FooBarBaz>({
                     bar: inRange(100, 200),
                     foo: inRange(1, 7),
                 });
 
-                const a2 = criteria<FooBarBaz>({
+                const a2 = entityCriteria<FooBarBaz>({
                     foo: inRange(1, 7),
                     bar: inRange(100, 200),
                 });
 
-                const b1 = criteria<FooBarBaz>({
+                const b1 = entityCriteria<FooBarBaz>({
                     bar: inRange(150, 175),
                     foo: inRange(3, 4),
                 });
 
-                const b2 = criteria<FooBarBaz>({
+                const b2 = entityCriteria<FooBarBaz>({
                     foo: inRange(3, 4),
                     bar: inRange(150, 175),
                 });
@@ -254,26 +254,26 @@ describe("reduce: object", () => {
                 const reduced_2_by_1 = reduced1.reduce(reduced2);
 
                 // assert
-                expect(reduced_1_by_2).toEqual(criteria<FooBarBaz>([]));
-                expect(reduced_2_by_1).toEqual(criteria<FooBarBaz>([]));
+                expect(reduced_1_by_2).toEqual(entityCriteria<FooBarBaz>([]));
+                expect(reduced_2_by_1).toEqual(entityCriteria<FooBarBaz>([]));
             });
         });
 
         describe("3:2", () => {
             it("{ foo:[1, 7] & bar:[100, 200] & baz:[50, 70] } reduced by { foo:[3, 4] & bar:[150, 175] } should be ({ foo:([1, 3) | (4, 7]) & bar:[100, 200] & baz:[50, 70] } | { foo:[3, 4] & bar:([100, 150) | (175, 200]) & baz:[50, 70] })", () => {
                 // arrange
-                const a = criteria<FooBarBaz>({
+                const a = entityCriteria<FooBarBaz>({
                     foo: inRange(1, 7),
                     bar: inRange(100, 200),
                     baz: inRange(50, 70),
                 });
 
-                const b = criteria<FooBarBaz>({
+                const b = entityCriteria<FooBarBaz>({
                     foo: inRange(3, 4),
                     bar: inRange(150, 175),
                 });
 
-                const expected = criteria<FooBarBaz>([
+                const expected = entityCriteria<FooBarBaz>([
                     {
                         foo: [inRange(1, 3, [true, false]), inRange(4, 7, [false, true])],
                         bar: inRange(100, 200),
@@ -297,19 +297,19 @@ describe("reduce: object", () => {
         describe("3:3", () => {
             it("{ foo:[1, 7] & bar:[100, 200] & baz:[50, 70] } reduced by { foo:[3, 4] & bar:[150, 175] & baz:[55, 65] } should be ({ foo:([1, 3) | (4, 7]) & bar:[100, 200] & baz:[50, 70] } | { foo:[3, 4] & bar:([100, 150) | (175, 200]) & baz:[50, 70] } | { foo:[3, 4] & bar:[150, 175] & baz:([50, 55) | (65, 70]) })", () => {
                 // arrange
-                const a = criteria<FooBarBaz>({
+                const a = entityCriteria<FooBarBaz>({
                     foo: inRange(1, 7),
                     bar: inRange(100, 200),
                     baz: inRange(50, 70),
                 });
 
-                const b = criteria<FooBarBaz>({
+                const b = entityCriteria<FooBarBaz>({
                     foo: inRange(3, 4),
                     bar: inRange(150, 175),
                     baz: inRange(55, 65),
                 });
 
-                const expected = criteria<FooBarBaz>([
+                const expected = entityCriteria<FooBarBaz>([
                     {
                         foo: [inRange(1, 3, [true, false]), inRange(4, 7, [false, true])],
                         bar: inRange(100, 200),
@@ -338,18 +338,18 @@ describe("reduce: object", () => {
         describe("2:3", () => {
             it("{ foo:[1, 7] & bar:[100, 200] } reduced by { foo:[3, 4] & bar:[150, 175] & baz:[50, 70] } should be ({ foo:([1, 3) | (4, 7]) & bar:[100, 200] } | { foo:[3, 4] & bar:([100, 150) | (175, 200]) } | { foo:[3, 4] & bar:[150, 175] & baz:([..., 50) | (70, ...]) })", () => {
                 // arrange
-                const a = criteria<FooBarBaz>({
+                const a = entityCriteria<FooBarBaz>({
                     foo: inRange(1, 7),
                     bar: inRange(100, 200),
                 });
 
-                const b = criteria<FooBarBaz>({
+                const b = entityCriteria<FooBarBaz>({
                     foo: inRange(3, 4),
                     bar: inRange(150, 175),
                     baz: inRange(50, 70),
                 });
 
-                const expected = criteria<FooBarBaz>([
+                const expected = entityCriteria<FooBarBaz>([
                     {
                         foo: [inRange(1, 3, [true, false]), inRange(4, 7, [false, true])],
                         bar: inRange(100, 200),
@@ -376,14 +376,14 @@ describe("reduce: object", () => {
         describe("0:2", () => {
             it("{ } reduced by { foo:{2} & bar:{4} } should be ({ foo:!{2} } | { foo:{2} & bar:!{4} })", () => {
                 // arrange
-                const a = criteria<FooBarBaz>({});
+                const a = entityCriteria<FooBarBaz>({});
 
-                const b = criteria<FooBarBaz>({
+                const b = entityCriteria<FooBarBaz>({
                     foo: inSet([2]),
                     bar: inSet([4]),
                 });
 
-                const expected = criteria<FooBarBaz>([
+                const expected = entityCriteria<FooBarBaz>([
                     {
                         foo: notInSet([2]),
                     },
@@ -409,22 +409,22 @@ describe("reduce: object", () => {
             }
 
             // arrange
-            criteria<NestedFooBar>({
+            entityCriteria<NestedFooBar>({
                 foo: [
                     {
                         bar: inRange(1, 7),
                     },
                 ],
             });
-            const a = criteria<NestedFooBar>({
+            const a = entityCriteria<NestedFooBar>({
                 foo: [{ bar: inRange(1, 7) }],
             });
 
-            const b = criteria<NestedFooBar>({
+            const b = entityCriteria<NestedFooBar>({
                 foo: [{ bar: inRange(3, 4) }],
             });
 
-            const expected = criteria<NestedFooBar>([
+            const expected = entityCriteria<NestedFooBar>([
                 {
                     foo: [
                         {
@@ -445,11 +445,11 @@ describe("reduce: object", () => {
     describe("no reduction", () => {
         it("{ foo:{3} } should not be reduced by { foo:{2} }", () => {
             // arrange
-            const a = criteria<FooBarBaz>({
+            const a = entityCriteria<FooBarBaz>({
                 foo: inSet([3]),
             });
 
-            const b = criteria<FooBarBaz>({
+            const b = entityCriteria<FooBarBaz>({
                 foo: inSet([2]),
             });
 
@@ -462,12 +462,12 @@ describe("reduce: object", () => {
 
         it("{ foo:{2} & bar:{3} } should not be reduced by { foo:{2} & bar:{4} }", () => {
             // arrange
-            const a = criteria<FooBarBaz>({
+            const a = entityCriteria<FooBarBaz>({
                 foo: inSet([2]),
                 bar: inSet([3]),
             });
 
-            const b = criteria<FooBarBaz>({
+            const b = entityCriteria<FooBarBaz>({
                 foo: inSet([2]),
                 bar: inSet([4]),
             });

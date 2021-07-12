@@ -1,9 +1,9 @@
-import { inRange, inSet, valueMatches } from "../../../src";
+import { inRange, inSet, valueCriteria } from "../../../src";
 
 describe("renderValueCriteria()", () => {
     it("should render 1 element without brackets", () => {
         // arrange
-        const criteria = valueMatches([inSet([1, 2, 3])]);
+        const criteria = valueCriteria([inSet([1, 2, 3])]);
         const expected = "{1, 2, 3}";
 
         // act
@@ -15,7 +15,7 @@ describe("renderValueCriteria()", () => {
 
     it("should render correctly", () => {
         // arrange
-        const criteria = valueMatches([inSet([1, 2, 3]), inRange(0, 7)]);
+        const criteria = valueCriteria([inSet([1, 2, 3]), inRange(0, 7)]);
         const expected = "({1, 2, 3} | [0, 7])";
 
         // act
