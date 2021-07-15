@@ -1,7 +1,7 @@
 import { ValueCriterion } from "../criteria/value-criterion";
-import { NumberRangeCriterion } from "./value-criterion/range/number-range-criterion";
+import { InNumberRangeCriterion } from "./value-criterion/range/in-number-range-criterion";
 import { InNumberSetCriterion } from "./value-criterion/set/in-number-set-criterion";
-import { StringRangeCriterion } from "./value-criterion/range/string-range-criterion";
+import { InStringRangeCriterion } from "./value-criterion/range/in-string-range-criterion";
 
 export function Void(): undefined {
     return void 0;
@@ -34,7 +34,7 @@ export class ValueType<T extends () => any = () => any> {
 export type ValueOfValueType<T extends ValueType> = T["defaultValues"][number];
 
 const inNumberSet = new InNumberSetCriterion([1, 2, 3]);
-const inNumberRange = new StringRangeCriterion(["1", "3"]);
+const inNumberRange = new InStringRangeCriterion(["1", "3"]);
 
 const reduced = inNumberSet.reduce(inNumberRange);
 type ShouldBeFalse = ValueCriterion<string> extends ValueCriterion<number> ? true : false;

@@ -11,7 +11,7 @@ export type ToCriterion<T> = {
     value: T;
 };
 
-export abstract class RangeCriterion<T> extends ValueCriterion<T> {
+export abstract class InRangeCriterion<T> extends ValueCriterion<T> {
     constructor(values: [T | undefined, T | undefined], inclusive: boolean | [boolean, boolean] = true) {
         super();
 
@@ -91,12 +91,12 @@ export abstract class RangeCriterion<T> extends ValueCriterion<T> {
         }
     }
 
-    static isFromInsideFromTo<T>(a: FromCriterion<T>, b: RangeCriterion<T>): boolean {
+    static isFromInsideFromTo<T>(a: FromCriterion<T>, b: InRangeCriterion<T>): boolean {
         return this.isFromBiggerThanFrom(a, b.getFrom()) && this.isFromSmallerThanTo(a, b.getTo());
     }
 
     isFromInsideFromTo(a: FromCriterion<T>): boolean {
-        return RangeCriterion.isFromBiggerThanFrom(a, this.getFrom()) && RangeCriterion.isFromSmallerThanTo(a, this.getTo());
+        return InRangeCriterion.isFromBiggerThanFrom(a, this.getFrom()) && InRangeCriterion.isFromSmallerThanTo(a, this.getTo());
     }
 
     static isToBiggerThanFrom<T>(a: ToCriterion<T>, b: FromCriterion<T> | null): boolean {
@@ -119,12 +119,12 @@ export abstract class RangeCriterion<T> extends ValueCriterion<T> {
         }
     }
 
-    static isToInsideFromTo<T>(a: ToCriterion<T>, b: RangeCriterion<T>): boolean {
+    static isToInsideFromTo<T>(a: ToCriterion<T>, b: InRangeCriterion<T>): boolean {
         return this.isToBiggerThanFrom(a, b.getFrom()) && this.isToSmallerThanTo(a, b.getTo());
     }
 
     isToInsideFromTo(a: ToCriterion<T>): boolean {
-        return RangeCriterion.isToBiggerThanFrom(a, this.getFrom()) && RangeCriterion.isToSmallerThanTo(a, this.getTo());
+        return InRangeCriterion.isToBiggerThanFrom(a, this.getFrom()) && InRangeCriterion.isToSmallerThanTo(a, this.getTo());
     }
 
     reduce(other: ValueCriterion): false | ValueCriterion<T>[] {
@@ -155,8 +155,8 @@ export abstract class RangeCriterion<T> extends ValueCriterion<T> {
                         return [new (getInstanceClass(this))([otherFrom.value, selfFrom.value], [otherFrom.op === ">=", selfFrom.op === ">"])];
                     }
                 } else if (selfFrom !== null && selfTo !== null) {
-                    const fromInside = RangeCriterion.isFromInsideFromTo(selfFrom, other);
-                    const toInside = RangeCriterion.isToInsideFromTo(selfTo, other);
+                    const fromInside = InRangeCriterion.isFromInsideFromTo(selfFrom, other);
+                    const toInside = InRangeCriterion.isToInsideFromTo(selfTo, other);
 
                     if (fromInside && toInside) {
                         return [

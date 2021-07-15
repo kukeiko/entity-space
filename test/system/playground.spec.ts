@@ -9,12 +9,12 @@ import {
     InStringSetCriterion,
     entityCriteria,
     InNumberSetCriterion,
-    NumberRangeCriterion,
+    InNumberRangeCriterion,
     EntityCriterion,
     inSet,
     inRange,
     getInstanceClass,
-    StringRangeCriterion,
+    InStringRangeCriterion,
 } from "src";
 import { TreeNodeModel, CanvasModel, CircleModel, SquareModel, TriangleModel } from "../facade/model";
 import { Product } from "../introduction/model";
@@ -88,7 +88,7 @@ describe("prototyping-playground", () => {
         });
 
         const productCriterion = productCriteria.getItems()[0];
-        const remapped = remap(productCriterion, { name: InStringSetCriterion, price: NumberRangeCriterion });
+        const remapped = remap(productCriterion, { name: InStringSetCriterion, price: InNumberRangeCriterion });
         console.log(JSON.stringify(remapped));
         console.log(remapped.length);
 
@@ -99,7 +99,7 @@ describe("prototyping-playground", () => {
 
         const foo: RemapTemplate<Product> = {
             name: InStringSetCriterion,
-            price: [InNumberSetCriterion, NumberRangeCriterion],
+            price: [InNumberSetCriterion, InNumberRangeCriterion],
         };
 
         function remapCriterion<T, U extends RemapTemplate<T>>(criterion: EntityCriterion<T>, handler: () => U): InstantiatedTemplate<U> {
@@ -112,7 +112,7 @@ describe("prototyping-playground", () => {
             return {} as any;
         }
 
-        const extracted = remapCriteria(entityCriteria<Product>([]), () => ({ name: InStringSetCriterion, price: [InNumberSetCriterion, NumberRangeCriterion] }));
+        const extracted = remapCriteria(entityCriteria<Product>([]), () => ({ name: InStringSetCriterion, price: [InNumberSetCriterion, InNumberRangeCriterion] }));
     });
 
     const treeNodeCreatable: TypedInstance<TreeNodeModel, "creatable"> = {

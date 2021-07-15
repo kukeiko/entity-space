@@ -1,4 +1,4 @@
-import { EntityCriteria, entityCriteria, inRange, NumberRangeCriterion, Query, Selection } from "src";
+import { EntityCriteria, entityCriteria, inRange, InNumberRangeCriterion, Query, Selection } from "src";
 import { Product, ProductFilter } from "./model";
 import { ProductRepository } from "./repositories";
 
@@ -33,8 +33,8 @@ describe("how do we actually load data?", () => {
         function mapCriteriaToProductFilters(productCriteria: EntityCriteria<Product>): ProductFilter[] {
             const remapped = productCriteria.getItems().map(criterion =>
                 criterion.remap(() => ({
-                    price: NumberRangeCriterion,
-                    rating: NumberRangeCriterion,
+                    price: InNumberRangeCriterion,
+                    rating: InNumberRangeCriterion,
                 }))
             );
 

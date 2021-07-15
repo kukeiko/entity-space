@@ -1,5 +1,5 @@
 import { Class, getInstanceClass } from "../../../utils";
-import { RangeCriterion } from "../range";
+import { InRangeCriterion } from "../range";
 import { ValueCriterion } from "../value-criterion";
 import { NotInSetCriterion } from "./not-in-set-criterion";
 
@@ -11,7 +11,7 @@ export abstract class InSetCriterion<T> extends ValueCriterion<T> {
 
     protected readonly values: Set<T>;
     protected abstract notInClass: Class<NotInSetCriterion<T>>;
-    protected abstract inRangeClass: Class<RangeCriterion<T>>;
+    protected abstract inRangeClass: Class<InRangeCriterion<T>>;
 
     getValues(): ReadonlySet<T> {
         return this.values;
