@@ -74,6 +74,6 @@ describe("how do we actually load data?", () => {
 
         const products = await resolveProductQuery(query);
 
-        console.log(JSON.stringify(products));
+        console.log("products:", JSON.stringify(products));
     });
 });
