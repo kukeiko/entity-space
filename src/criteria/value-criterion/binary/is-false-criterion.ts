@@ -1,18 +1,8 @@
-import { ValueCriterion } from "../value-criterion";
+import { BinaryCriterion } from "./binary-criterion";
 import { IsTrueCriterion } from "./is-true-criterion";
 
-export class IsFalseCriterion extends ValueCriterion<boolean> {
-    reduce(other: ValueCriterion): false | ValueCriterion<boolean>[] {
-        if (other instanceof IsFalseCriterion) {
-            return [];
-        }
-
-        return false;
-    }
-
-    invert(): ValueCriterion<boolean>[] {
-        return [new IsTrueCriterion()];
-    }
+export class IsFalseCriterion extends BinaryCriterion<boolean> {
+    inverseClass = IsTrueCriterion;
 
     toString(): string {
         return "is-false";
