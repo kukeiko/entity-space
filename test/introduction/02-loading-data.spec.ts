@@ -3,7 +3,7 @@ import { Product, ProductFilter } from "./model";
 import { ProductRepository } from "./repositories";
 
 describe("how do we actually load data?", () => {
-    fit("simple resolve of a query", async () => {
+    it("simple resolve of a query", async () => {
         /**
          * [todo] implement loading some products with filter criteria
          */
