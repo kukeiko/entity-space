@@ -14,7 +14,7 @@ describe("reduce: in", () => {
             const reduced = b.reduce(a);
 
             // assert
-            expect(reduced).toEqual([]);
+            expect(reduced).toEqual(true);
         });
 
         it("{1, 2, 3} should be completely reduced by {1, 2, 3, 4}", () => {
@@ -26,7 +26,7 @@ describe("reduce: in", () => {
             const reduced = b.reduce(a);
 
             // assert
-            expect(reduced).toEqual([]);
+            expect(reduced).toEqual(true);
         });
 
         it("{1, 2, 3} should be completely reduced by !{4}", () => {
@@ -38,7 +38,7 @@ describe("reduce: in", () => {
             const reduced = b.reduce(a);
 
             // assert
-            expect(reduced).toEqual([]);
+            expect(reduced).toEqual(true);
         });
     });
 
@@ -50,7 +50,7 @@ describe("reduce: in", () => {
             // arrange
             const a = inSet([1, 2, 3]);
             const b = inSet([1, 2, 4]);
-            const expected = [inSet([3])];
+            const expected = inSet([3]);
 
             // act
             const reduced = b.reduce(a);
@@ -63,7 +63,7 @@ describe("reduce: in", () => {
             // arrange
             const a = inSet([1, 2, 3]);
             const b = notInSet([1]);
-            const expected = [inSet([1])];
+            const expected = inSet([1]);
 
             // act
             const reduced = b.reduce(a);

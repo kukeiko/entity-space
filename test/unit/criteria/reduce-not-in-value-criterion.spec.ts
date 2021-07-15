@@ -11,7 +11,7 @@ describe("reduce: not-in", () => {
             const reduced = b.reduce(a);
 
             // assert
-            expect(reduced).toEqual([]);
+            expect(reduced).toEqual(true);
         });
 
         it("!{1, 2} should be completely reduced by !{1}", () => {
@@ -23,7 +23,7 @@ describe("reduce: not-in", () => {
             const reduced = b.reduce(a);
 
             // assert
-            expect(reduced).toEqual([]);
+            expect(reduced).toEqual(true);
         });
     });
 
@@ -32,7 +32,7 @@ describe("reduce: not-in", () => {
             // arrange
             const a = notInSet([1, 2]);
             const b = notInSet([1, 2, 3]);
-            const expected = [inSet([3])];
+            const expected = inSet([3]);
 
             // act
             const reduced = b.reduce(a);
@@ -45,7 +45,7 @@ describe("reduce: not-in", () => {
             // arrange
             const a = notInSet([1]);
             const b = notInSet([2, 3]);
-            const expected = [inSet([2, 3])];
+            const expected = inSet([2, 3]);
 
             // act
             const reduced = b.reduce(a);
@@ -58,7 +58,7 @@ describe("reduce: not-in", () => {
             // arrange
             const a = notInSet([1, 2]);
             const b = inSet([2, 3]);
-            const expected = [notInSet([1, 2, 3])];
+            const expected = notInSet([1, 2, 3]);
 
             // act
             const reduced = b.reduce(a);

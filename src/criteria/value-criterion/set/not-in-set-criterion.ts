@@ -1,4 +1,5 @@
 import { Class, getInstanceClass, subtractSets } from "../../../utils";
+import { ValueCriteria } from "../value-criteria";
 import { ValueCriterion } from "../value-criterion";
 import { InSetCriterion } from "./in-set-criterion";
 
@@ -15,7 +16,11 @@ export abstract class NotInSetCriterion<T> extends ValueCriterion<T> {
         return this.values;
     }
 
-    reduce(other: ValueCriterion): false | ValueCriterion<T>[] {
+    reduce(other: ValueCriterion): boolean | ValueCriterion<T> {
+        if (other instanceof ValueCriteria) {
+            return super.reduceValueCriteria(other);
+        }
+
         if (other instanceof this.inSetClass) {
             const copy = new Set(other.getValues());
 
@@ -28,24 +33,24 @@ export abstract class NotInSetCriterion<T> extends ValueCriterion<T> {
             if (copy.size === other.getValues().size) {
                 return false;
             } else if (copy.size === 0) {
-                return [];
+                return true;
             } else {
-                return [new this.inSetClass(copy)];
+                return new this.inSetClass(copy);
             }
         } else if (other instanceof getInstanceClass(this)) {
             const remaining = subtractSets(this.values, other.values);
             if (remaining.size === 0) {
-                return [];
+                return true;
             }
 
-            return [new this.inSetClass(remaining)];
+            return new this.inSetClass(remaining);
         }
 
         return false;
     }
 
-    invert(): ValueCriterion<T>[] {
-        return [new this.inSetClass(this.values)];
+    invert(): ValueCriterion<T> {
+        return new this.inSetClass(this.values);
     }
 
     toString(): string {

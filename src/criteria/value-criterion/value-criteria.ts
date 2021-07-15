@@ -1,7 +1,8 @@
 import { ValueCriterion } from "./value-criterion";
 
-export class ValueCriteria<T = unknown> {
+export class ValueCriteria<T = unknown> extends ValueCriterion<T> {
     constructor(items: ValueCriterion<T>[]) {
+        super();
         this.items = items;
     }
 
@@ -12,41 +13,49 @@ export class ValueCriteria<T = unknown> {
     }
 
     // [todo] remove "as any" hacks
-    reduce(other: ValueCriteria<unknown>): false | ValueCriteria<T> {
-        if (this.items.length === 0 || other.items.length === 0) {
-            return new ValueCriteria([]);
-        }
+    reduce(other: ValueCriterion<T>): boolean | ValueCriterion<T> {
+        // if (this.items.length === 0 || other.items.length === 0) {
+        //     return new ValueCriteria([]);
+        // }
 
-        let reduced = other.items.slice();
+        let reduced = other; //.items.slice();
         let didReduceAny = false;
 
         // for each criterion in B, pick each criterion in A and try to reduce it.
         // criteria in A are updated with the reduced results as we go.
         for (const criterionB of this.items) {
-            const nextReduced: ValueCriterion<unknown>[] = [];
+            const nextReduced = criterionB.reduce(reduced);
 
-            for (const criterionA of reduced) {
-                const reducedCriteria = criterionB.reduce(criterionA);
-
-                if (reducedCriteria) {
-                    nextReduced.push(...reducedCriteria);
-                    didReduceAny = true;
-                } else {
-                    nextReduced.push(criterionA);
-                }
+            if (nextReduced === true) {
+                return true;
+            } else if (nextReduced !== false) {
+                didReduceAny = true;
+                reduced = nextReduced;
             }
+            // const nextReduced: ValueCriterion<unknown>[] = [];
 
-            reduced = nextReduced;
+            // for (const criterionA of reduced) {
+            //     const reducedCriteria = criterionB.reduce(criterionA);
+
+            //     if (reducedCriteria) {
+            //         nextReduced.push(...reducedCriteria);
+            //         didReduceAny = true;
+            //     } else {
+            //         nextReduced.push(criterionA);
+            //     }
+            // }
+
+            // reduced = nextReduced;
         }
 
-        return didReduceAny ? (new ValueCriteria(reduced) as any) : false;
+        return didReduceAny ? reduced : false;
     }
 
-    invert(): ValueCriteria<T> {
+    invert(): ValueCriterion<T> {
         const inverted: ValueCriterion<T>[] = [];
 
         for (const criterion of this.items) {
-            inverted.push(...criterion.invert());
+            inverted.push(criterion.invert());
         }
 
         return new ValueCriteria(inverted);

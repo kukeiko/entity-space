@@ -1,4 +1,4 @@
-import { inRange, inSet } from "../../../src";
+import { inRange, inSet, valueCriteria } from "../../../src";
 
 describe("reduce: from-to", () => {
     describe("full reduction", () => {
@@ -11,7 +11,7 @@ describe("reduce: from-to", () => {
             const reduced = b.reduce(a);
 
             // assert
-            expect(reduced).toEqual([]);
+            expect(reduced).toEqual(true);
         });
 
         it("[1, 7] should be completely reduced by [0, 8]", () => {
@@ -23,7 +23,7 @@ describe("reduce: from-to", () => {
             const reduced = b.reduce(a);
 
             // assert
-            expect(reduced).toEqual([]);
+            expect(reduced).toEqual(true);
         });
 
         it("[1, 7] should be completely reduced by (0, 8)", () => {
@@ -35,7 +35,7 @@ describe("reduce: from-to", () => {
             const reduced = b.reduce(a);
 
             // assert
-            expect(reduced).toEqual([]);
+            expect(reduced).toEqual(true);
         });
 
         it("[1, 7] should be completely reduced by [0, ...]", () => {
@@ -47,7 +47,7 @@ describe("reduce: from-to", () => {
             const reduced = b.reduce(a);
 
             // assert
-            expect(reduced).toEqual([]);
+            expect(reduced).toEqual(true);
         });
 
         it("[4, ...] should be completely reduced by [3, ...]", () => {
@@ -59,7 +59,7 @@ describe("reduce: from-to", () => {
             const reduced = b.reduce(a);
 
             // assert
-            expect(reduced).toEqual([]);
+            expect(reduced).toEqual(true);
         });
 
         it("[..., 4] should be completely reduced by [..., 5]", () => {
@@ -71,7 +71,7 @@ describe("reduce: from-to", () => {
             const reduced = b.reduce(a);
 
             // assert
-            expect(reduced).toEqual([]);
+            expect(reduced).toEqual(true);
         });
 
         it("[1, 7] should be completely reduced by [..., 9]", () => {
@@ -83,7 +83,7 @@ describe("reduce: from-to", () => {
             const reduced = b.reduce(a);
 
             // assert
-            expect(reduced).toEqual([]);
+            expect(reduced).toEqual(true);
         });
     });
 
@@ -93,7 +93,7 @@ describe("reduce: from-to", () => {
                 // arrange
                 const a = inRange(1, 7);
                 const b = inRange(-3, 5);
-                const expected = [inRange(5, 7, [false, true])];
+                const expected = inRange(5, 7, [false, true]);
 
                 // act
                 const reduced = b.reduce(a);
@@ -106,7 +106,7 @@ describe("reduce: from-to", () => {
                 // arrange
                 const a = inRange(3, void 0);
                 const b = inRange(1, 8);
-                const expected = [inRange(8, void 0, false)];
+                const expected = inRange(8, void 0, false);
 
                 // act
                 const reduced = b.reduce(a);
@@ -119,7 +119,7 @@ describe("reduce: from-to", () => {
                 // arrange
                 const a = inRange(3, void 0);
                 const b = inRange(1, 8, [true, false]);
-                const expected = [inRange(8, void 0)];
+                const expected = inRange(8, void 0);
 
                 // act
                 const reduced = b.reduce(a);
@@ -132,7 +132,7 @@ describe("reduce: from-to", () => {
                 // arrange
                 const a = inRange(1, 7);
                 const b = inRange(void 0, 3, false);
-                const expected = [inRange(3, 7)];
+                const expected = inRange(3, 7);
 
                 // act
                 const reduced = b.reduce(a);
@@ -147,7 +147,7 @@ describe("reduce: from-to", () => {
                 // arrange
                 const a = inRange(1, 7);
                 const b = inRange(3, 10);
-                const expected = [inRange(1, 3, [true, false])];
+                const expected = inRange(1, 3, [true, false]);
 
                 // act
                 const reduced = b.reduce(a);
@@ -160,7 +160,7 @@ describe("reduce: from-to", () => {
                 // arrange
                 const a = inRange(1, 7);
                 const b = inRange(3, 8, [false, true]);
-                const expected = [inRange(1, 3)];
+                const expected = inRange(1, 3);
 
                 // act
                 const reduced = b.reduce(a);
@@ -173,7 +173,7 @@ describe("reduce: from-to", () => {
                 // arrange
                 const a = inRange(void 0, 3);
                 const b = inRange(1, 8);
-                const expected = [inRange(void 0, 1, false)];
+                const expected = inRange(void 0, 1, false);
 
                 // act
                 const reduced = b.reduce(a);
@@ -186,7 +186,7 @@ describe("reduce: from-to", () => {
                 // arrange
                 const a = inRange(void 0, 3);
                 const b = inRange(1, 8, [false, true]);
-                const expected = [inRange(void 0, 1)];
+                const expected = inRange(void 0, 1);
 
                 // act
                 const reduced = b.reduce(a);
@@ -199,7 +199,7 @@ describe("reduce: from-to", () => {
                 // arrange
                 const a = inRange(1, 7);
                 const b = inRange(3, void 0);
-                const expected = [inRange(1, 3, [true, false])];
+                const expected = inRange(1, 3, [true, false]);
 
                 // act
                 const reduced = b.reduce(a);
@@ -214,7 +214,7 @@ describe("reduce: from-to", () => {
                 // arrange
                 const a = inRange(1, 7);
                 const b = inRange(3, 4);
-                const expected = [inRange(1, 3, [true, false]), inRange(4, 7, [false, true])];
+                const expected = valueCriteria([inRange(1, 3, [true, false]), inRange(4, 7, [false, true])]);
 
                 // act
                 const reduced = b.reduce(a);
@@ -227,7 +227,7 @@ describe("reduce: from-to", () => {
                 // arrange
                 const a = inRange(1, 7, false);
                 const b = inRange(3, 4);
-                const expected = [inRange(1, 3, false), inRange(4, 7, false)];
+                const expected = valueCriteria([inRange(1, 3, false), inRange(4, 7, false)]);
 
                 // act
                 const reduced = b.reduce(a);
@@ -240,7 +240,7 @@ describe("reduce: from-to", () => {
                 // arrange
                 const a = inRange(1, 7, false);
                 const b = inRange(3, 4, false);
-                const expected = [inRange(1, 3, [false, true]), inRange(4, 7, [true, false])];
+                const expected = valueCriteria([inRange(1, 3, [false, true]), inRange(4, 7, [true, false])]);
 
                 // act
                 const reduced = b.reduce(a);
@@ -253,7 +253,7 @@ describe("reduce: from-to", () => {
                 // arrange
                 const a = inRange(void 0, 7);
                 const b = inRange(3, 4);
-                const expected = [inRange(void 0, 3, false), inRange(4, 7, [false, true])];
+                const expected = valueCriteria([inRange(void 0, 3, false), inRange(4, 7, [false, true])]);
 
                 // act
                 const reduced = b.reduce(a);
@@ -266,7 +266,7 @@ describe("reduce: from-to", () => {
                 // arrange
                 const a = inRange(void 0, 7);
                 const b = inRange(3, 4, false);
-                const expected = [inRange(void 0, 3), inRange(4, 7)];
+                const expected = valueCriteria([inRange(void 0, 3), inRange(4, 7)]);
 
                 // act
                 const reduced = b.reduce(a);
@@ -279,7 +279,7 @@ describe("reduce: from-to", () => {
                 // arrange
                 const a = inRange(1, void 0);
                 const b = inRange(3, 4);
-                const expected = [inRange(1, 3, [true, false]), inRange(4, void 0, false)];
+                const expected = valueCriteria([inRange(1, 3, [true, false]), inRange(4, void 0, false)]);
 
                 // act
                 const reduced = b.reduce(a);
@@ -292,7 +292,7 @@ describe("reduce: from-to", () => {
                 // arrange
                 const a = inRange(1, void 0);
                 const b = inRange(3, 4, false);
-                const expected = [inRange(1, 3), inRange(4, void 0)];
+                const expected = valueCriteria([inRange(1, 3), inRange(4, void 0)]);
 
                 // act
                 const reduced = b.reduce(a);
@@ -307,7 +307,7 @@ describe("reduce: from-to", () => {
                 // arrange
                 const a = inRange(1, 7);
                 const b = inRange(1, 7, false);
-                const expected = [inRange(1, 1), inRange(7, 7)];
+                const expected = valueCriteria([inRange(1, 1), inRange(7, 7)]);
 
                 // act
                 const reduced = b.reduce(a);
@@ -322,7 +322,7 @@ describe("reduce: from-to", () => {
                 // arrange
                 const a = inRange(1, 2);
                 const b = inSet([2]);
-                const expected = [inRange(1, 2, [true, false])];
+                const expected = inRange(1, 2, [true, false]);
 
                 // act
                 const reduced = b.reduce(a);
@@ -335,7 +335,7 @@ describe("reduce: from-to", () => {
                 // arrange
                 const a = inRange(1, 2);
                 const b = inSet([1]);
-                const expected = [inRange(1, 2, [false, true])];
+                const expected = inRange(1, 2, [false, true]);
 
                 // act
                 const reduced = b.reduce(a);
@@ -348,7 +348,7 @@ describe("reduce: from-to", () => {
                 // arrange
                 const a = inRange(1, 2);
                 const b = inSet([1, 2]);
-                const expected = [inRange(1, 2, false)];
+                const expected = inRange(1, 2, false);
 
                 // act
                 const reduced = b.reduce(a);
@@ -361,7 +361,7 @@ describe("reduce: from-to", () => {
                 // arrange
                 const a = inRange(void 0, 2);
                 const b = inSet([1, 2]);
-                const expected = [inRange(void 0, 2, false)];
+                const expected = inRange(void 0, 2, false);
 
                 // act
                 const reduced = b.reduce(a);
@@ -374,7 +374,7 @@ describe("reduce: from-to", () => {
                 // arrange
                 const a = inRange(1, void 0);
                 const b = inSet([1, 2]);
-                const expected = [inRange(1, void 0, false)];
+                const expected = inRange(1, void 0, false);
 
                 // act
                 const reduced = b.reduce(a);

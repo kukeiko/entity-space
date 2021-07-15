@@ -101,7 +101,8 @@ export class EntityCriterion<T = unknown> {
              * [todo] need "invertCriterion()" for this case
              */
             if (criteriaA === void 0) {
-                if (criteriaB instanceof ValueCriteria) {
+                // if (criteriaB instanceof ValueCriteria) {
+                if (criteriaB instanceof ValueCriterion) {
                     reduced = criteriaB.invert() as any;
 
                     // [B] has criteria [A] doesn't, and we weren't able to compute the inversion of them => return [A] as is
@@ -115,8 +116,10 @@ export class EntityCriterion<T = unknown> {
                      */
                     return false;
                 }
-            } else if (criteriaB instanceof ValueCriteria) {
-                if (criteriaA instanceof ValueCriteria) {
+                // } else if (criteriaB instanceof ValueCriteria) {
+            } else if (criteriaB instanceof ValueCriterion) {
+                // if (criteriaA instanceof ValueCriteria) {
+                if (criteriaA instanceof ValueCriterion) {
                     reduced = criteriaB.reduce(criteriaA) as any;
                 } else {
                     throw new Error("trying to reduce two criteria of different types");
@@ -138,12 +141,14 @@ export class EntityCriterion<T = unknown> {
                  * failed to reduce a property of [A] => no intersection => return [A] as is
                  */
                 return false;
-            } else if (reduced.items.length > 0) {
+                // } else if ((reduced as any) !== true && reduced.items.length > 0) {
+            } else if ((reduced as any) !== true) {
                 reducedPropertyCriteriaBag.set(key, reduced as any);
             }
         }
 
         if (reducedPropertyCriteriaBag.size == 0) {
+            // return true;
             return new EntityCriteria([]);
         }
 
