@@ -21,9 +21,7 @@ export abstract class InSetCriterion<T> extends ValueCriterion<T> {
     reduce(other: ValueCriterion): boolean | ValueCriterion<T> {
         if (other instanceof ValueCriteria) {
             return super.reduceValueCriteria(other);
-        }
-
-        if (other instanceof getInstanceClass(this)) {
+        } else if (other instanceof getInstanceClass(this)) {
             const copy = new Set(other.getValues());
 
             for (const value of this.values) {

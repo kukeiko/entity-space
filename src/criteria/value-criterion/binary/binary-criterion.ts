@@ -9,9 +9,7 @@ export abstract class BinaryCriterion<T> extends ValueCriterion<T> {
     reduce(other: ValueCriterion): boolean | ValueCriterion<T> {
         if (other instanceof ValueCriteria) {
             return super.reduceValueCriteria(other);
-        }
-
-        if (other instanceof getInstanceClass(this)) {
+        } else if (other instanceof getInstanceClass(this)) {
             return true;
         }
 
