@@ -1,6 +1,6 @@
-import { AndCombinedValueCriteria, inRange, inSet, isEven } from "../../../src";
+import { AndCombinedValueCriteria, inRange, inSet, isEven, OrCombinedValueCriteria } from "../../../src";
 
-fdescribe("reduce: and-combined-value-criteria", () => {
+describe("reduce: and-combined-value-criteria", () => {
     describe("full reduction", () => {
         it("([2, 3] & is-even) should be fully reduced by [1, 7]", () => {
             // arrange
@@ -29,8 +29,20 @@ fdescribe("reduce: and-combined-value-criteria", () => {
             expect(reduced).toEqual(expected);
         });
 
+        // [todo] implement
         it("[1, 7] reduced by ([3, 5] & is-even) should be (([1, 3) | (5, 7]) | ([3, 5] & is-odd))", () => {
-            //
+            // arrange
+            const a = inRange(1, 7);
+            const b = new AndCombinedValueCriteria([inRange(3, 5), isEven(true)]);
+            const expected = new OrCombinedValueCriteria([
+                new OrCombinedValueCriteria([inRange(1, 3, [true, false]), inRange(5, 7, [false, true])]),
+                new AndCombinedValueCriteria([inRange(3, 5), isEven(false)]),
+            ]);
+
+            const reduced = b.reduce(a);
+
+            // assert
+            expect(reduced).toEqual(expected);
         });
 
         it("[4, 8] reduced by ([1, 7] & [5, 12]) should be ((7, 8] | [4, 5))", () => {

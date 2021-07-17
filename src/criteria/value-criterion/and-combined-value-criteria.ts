@@ -4,46 +4,35 @@ import { ValueCriterion } from "./value-criterion";
 
 export class AndCombinedValueCriteria<T = unknown> extends ValueCriteria<T> {
     reduce(other: ValueCriterion): boolean | ValueCriterion<T> {
-        let didReduceAny = false;
-        const partiallyReduced: ValueCriterion[] = [];
-        const notReduced: ValueCriterion[] = [];
+        const items: { criterion: ValueCriterion; result: boolean | ValueCriterion }[] = this.items.map(criterion => ({ criterion, result: criterion.reduce(other) }));
 
-        for (const mine of this.items) {
-            const nextReduced = mine.reduce(other);
-
-            if (nextReduced === true) {
-                didReduceAny = true;
-            } else if (nextReduced !== false) {
-                didReduceAny = true;
-                partiallyReduced.push(nextReduced);
-            } else {
-                notReduced.push(other);
-            }
-        }
-
-        if (!didReduceAny) {
+        if (items.every(x => x.result === false)) {
             return false;
-        } else if (partiallyReduced.length === 0) {
+        } else if (items.every(x => x.result === true)) {
             return true;
-        } else if (notReduced.length === 0) {
-            if (partiallyReduced.length === 1) {
-                return partiallyReduced[0] as any;
-            } else {
-                return new OrCombinedValueCriteria(partiallyReduced as any);
-            }
-        } else {
-            // [todo] stopped here
         }
 
-        throw new Error("NotImplemented");
+        const reduced: ValueCriterion[][] = [];
+        const accumulated: ValueCriterion[] = [];
+
+        for (const item of items) {
+            if (item.result === true) {
+                continue;
+            }
+
+            const reducedCriterion = item.result === false ? item.criterion.invert() : item.result;
+            reduced.push([...accumulated, reducedCriterion]);
+            accumulated.push(item.criterion);
+        }
+
+        if (reduced.length === 0) {
+            return true;
+        }
+
+        return new OrCombinedValueCriteria<any>(reduced.map(foo => (foo.length === 1 ? foo[0] : new AndCombinedValueCriteria(foo))));
     }
 
     toString(): string {
-        if (this.items.length === 1) {
-            // [todo] maybe we still want to render brackets? (now that a value-criterion is no longer required to be nested in value-criteria for entity-criterion)
-            return this.items[0].toString();
-        }
-
         return `(${this.items.map(item => item.toString()).join(" & ")})`;
     }
 }
