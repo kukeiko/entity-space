@@ -9,7 +9,7 @@ function parseNumber(str: string): number | null {
 }
 
 export function parseCriteria(str: string): ValueCriterion {
-    const inRangePattern = /(\(|\[)((\.\d+)|(\d+(\.\d+)?)|\.{3}), ((\.\d+)|(\d+(\.\d+)?)|\.{3})(\)|\])/;
+    const inRangePattern = /(\(|\[)(([-+]?\.\d+)|([-+]?\d+(\.\d+)?)|\.{3}), (([-+]?\.\d+)|([-+]?\d+(\.\d+)?)|\.{3})(\)|\])/;
     const matches = inRangePattern.exec(str);
 
     if (matches !== null) {
