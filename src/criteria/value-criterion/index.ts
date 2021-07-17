@@ -9,3 +9,5 @@ export * from "./set";
 export * from "./value-criteria";
 export * from "./value-criteria.fn";
 export * from "./value-criterion";
+export * from "./and.fn";
+export * from "./or.fn";
