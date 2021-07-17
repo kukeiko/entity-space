@@ -3,6 +3,7 @@ import { ValueCriteria } from "./value-criteria";
 import { ValueCriterion } from "./value-criterion";
 
 export class AndCombinedValueCriteria<T = unknown> extends ValueCriteria<T> {
+    // [todo] remove "any" hacks
     reduce(other: ValueCriterion): boolean | ValueCriterion<T> {
         const items: { criterion: ValueCriterion; result: boolean | ValueCriterion }[] = this.items.map(criterion => ({ criterion, result: criterion.reduce(other) }));
 
@@ -30,6 +31,10 @@ export class AndCombinedValueCriteria<T = unknown> extends ValueCriteria<T> {
         }
 
         return new OrCombinedValueCriteria<any>(reduced.map(foo => (foo.length === 1 ? foo[0] : new AndCombinedValueCriteria(foo))));
+    }
+
+    invert(): ValueCriterion<T> {
+        return new AndCombinedValueCriteria(this.items.map(criterion => criterion.invert()));
     }
 
     toString(): string {
