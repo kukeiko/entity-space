@@ -1,4 +1,5 @@
 import { AndCombinedValueCriteria } from "./and-combined-value-criteria";
+import { OrCombinedValueCriteria } from "./or-combined-value-criteria";
 import { ValueCriteria } from "./value-criteria";
 
 export abstract class ValueCriterion<T = unknown> {
@@ -51,7 +52,7 @@ export abstract class ValueCriterion<T = unknown> {
                 return false;
             }
 
-            return items.length === 0 ? true : items.length === 1 ? items[0] : new ValueCriteria(items);
+            return items.length === 0 ? true : items.length === 1 ? items[0] : new OrCombinedValueCriteria(items);
         }
     }
 

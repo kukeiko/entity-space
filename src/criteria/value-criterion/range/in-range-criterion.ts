@@ -1,4 +1,5 @@
 import { getInstanceClass } from "../../../utils";
+import { OrCombinedValueCriteria } from "../or-combined-value-criteria";
 import { ValueCriteria } from "../value-criteria";
 import { ValueCriterion } from "../value-criterion";
 
@@ -162,7 +163,7 @@ export abstract class InRangeCriterion<T> extends ValueCriterion<T> {
                     const toInside = InRangeCriterion.isToInsideFromTo(selfTo, other);
 
                     if (fromInside && toInside) {
-                        return new ValueCriteria([
+                        return new OrCombinedValueCriteria([
                             new (getInstanceClass(this))([otherFrom.value, selfFrom.value], [otherFrom.op === ">=", selfFrom.op === ">"]),
                             new (getInstanceClass(this))([selfTo.value, otherTo.value], [selfTo.op === "<", otherTo.op === "<="]),
                         ]);
@@ -180,7 +181,7 @@ export abstract class InRangeCriterion<T> extends ValueCriterion<T> {
                     const toInside = this.isToInsideFromTo(selfTo);
 
                     if (fromInside && toInside) {
-                        return new ValueCriteria([
+                        return new OrCombinedValueCriteria([
                             new (getInstanceClass(this))([otherFrom.value, selfFrom.value], [otherFrom.op === ">=", selfFrom.op === ">"]),
                             new (getInstanceClass(this))([selfTo.value, void 0], selfTo.op === "<"),
                         ]);
@@ -198,7 +199,7 @@ export abstract class InRangeCriterion<T> extends ValueCriterion<T> {
                     const toInside = this.isToInsideFromTo(selfTo);
 
                     if (fromInside && toInside) {
-                        return new ValueCriteria([
+                        return new OrCombinedValueCriteria([
                             new (getInstanceClass(this))([void 0, selfFrom.value], selfFrom.op === ">"),
                             new (getInstanceClass(this))([selfTo.value, otherTo.value], [selfTo.op === "<", otherTo.op === "<="]),
                         ]);
@@ -225,6 +226,6 @@ export abstract class InRangeCriterion<T> extends ValueCriterion<T> {
             inverted.push(new (getInstanceClass(this))([this.to.value, void 0], this.to.op === "<"));
         }
 
-        return new ValueCriteria(inverted);
+        return new OrCombinedValueCriteria(inverted);
     }
 }
