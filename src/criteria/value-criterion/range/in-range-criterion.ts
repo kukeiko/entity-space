@@ -1,4 +1,4 @@
-import { getInstanceClass } from "../../../utils";
+import { Class, getInstanceClass } from "../../../utils";
 import { OrCombinedValueCriteria } from "../or-combined-value-criteria";
 import { ValueCriteria } from "../value-criteria";
 import { ValueCriterion } from "../value-criterion";
@@ -38,8 +38,11 @@ export abstract class InRangeCriterion<T> extends ValueCriterion<T> {
         } else {
             this.to = null;
         }
+
+        this.selfClass = getInstanceClass(this);
     }
 
+    private readonly selfClass: Class<this>;
     protected readonly from: FromCriterion<T> | null;
     protected readonly to: ToCriterion<T> | null;
 
@@ -132,7 +135,7 @@ export abstract class InRangeCriterion<T> extends ValueCriterion<T> {
     reduce(other: ValueCriterion): boolean | ValueCriterion<T> {
         if (other instanceof ValueCriteria) {
             return super.reduceValueCriteria(other);
-        } else if (other instanceof getInstanceClass(this)) {
+        } else if (other instanceof this.selfClass) {
             const otherFrom = other.getFrom();
             const otherTo = other.getTo();
             const selfFrom = this.getFrom();
@@ -149,14 +152,14 @@ export abstract class InRangeCriterion<T> extends ValueCriterion<T> {
                         // [todo] this code path should never be hit because if selfTo === null, and fromInside is true, then toInside has to be true as well.
                         // we either throw an error or restructure the code so that we won't end up in impossible code paths
                     } else {
-                        return new (getInstanceClass(this))([selfTo.value, otherTo.value], [selfTo.op === "<", otherTo.op === "<="]);
+                        return new this.selfClass([selfTo.value, otherTo.value], [selfTo.op === "<", otherTo.op === "<="]);
                     }
                 } else if (toInside) {
                     if (selfFrom === null) {
                         // [todo] this code path should never be hit because if selfFrom === null, and toInside is true, then fromInside has to be true as well.
                         // we either throw an error or restructure the code so that we won't end up in impossible code paths
                     } else {
-                        return new (getInstanceClass(this))([otherFrom.value, selfFrom.value], [otherFrom.op === ">=", selfFrom.op === ">"]);
+                        return new this.selfClass([otherFrom.value, selfFrom.value], [otherFrom.op === ">=", selfFrom.op === ">"]);
                     }
                 } else if (selfFrom !== null && selfTo !== null) {
                     const fromInside = InRangeCriterion.isFromInsideFromTo(selfFrom, other);
@@ -164,8 +167,8 @@ export abstract class InRangeCriterion<T> extends ValueCriterion<T> {
 
                     if (fromInside && toInside) {
                         return new OrCombinedValueCriteria([
-                            new (getInstanceClass(this))([otherFrom.value, selfFrom.value], [otherFrom.op === ">=", selfFrom.op === ">"]),
-                            new (getInstanceClass(this))([selfTo.value, otherTo.value], [selfTo.op === "<", otherTo.op === "<="]),
+                            new this.selfClass([otherFrom.value, selfFrom.value], [otherFrom.op === ">=", selfFrom.op === ">"]),
+                            new this.selfClass([selfTo.value, otherTo.value], [selfTo.op === "<", otherTo.op === "<="]),
                         ]);
                     }
                 }
@@ -174,7 +177,7 @@ export abstract class InRangeCriterion<T> extends ValueCriterion<T> {
                     if (selfTo === null) {
                         return true;
                     } else {
-                        return new (getInstanceClass(this))([selfTo.value, void 0], selfTo.op === "<");
+                        return new this.selfClass([selfTo.value, void 0], selfTo.op === "<");
                     }
                 } else if (selfFrom !== null && selfTo !== null) {
                     const fromInside = this.isFromInsideFromTo(selfFrom);
@@ -182,8 +185,8 @@ export abstract class InRangeCriterion<T> extends ValueCriterion<T> {
 
                     if (fromInside && toInside) {
                         return new OrCombinedValueCriteria([
-                            new (getInstanceClass(this))([otherFrom.value, selfFrom.value], [otherFrom.op === ">=", selfFrom.op === ">"]),
-                            new (getInstanceClass(this))([selfTo.value, void 0], selfTo.op === "<"),
+                            new this.selfClass([otherFrom.value, selfFrom.value], [otherFrom.op === ">=", selfFrom.op === ">"]),
+                            new this.selfClass([selfTo.value, void 0], selfTo.op === "<"),
                         ]);
                     }
                 }
@@ -192,7 +195,7 @@ export abstract class InRangeCriterion<T> extends ValueCriterion<T> {
                     if (selfFrom === null) {
                         return true;
                     } else {
-                        return new (getInstanceClass(this))([void 0, selfFrom.value], selfFrom.op === ">");
+                        return new this.selfClass([void 0, selfFrom.value], selfFrom.op === ">");
                     }
                 } else if (selfFrom !== null && selfTo !== null) {
                     const fromInside = this.isFromInsideFromTo(selfFrom);
@@ -200,8 +203,8 @@ export abstract class InRangeCriterion<T> extends ValueCriterion<T> {
 
                     if (fromInside && toInside) {
                         return new OrCombinedValueCriteria([
-                            new (getInstanceClass(this))([void 0, selfFrom.value], selfFrom.op === ">"),
-                            new (getInstanceClass(this))([selfTo.value, otherTo.value], [selfTo.op === "<", otherTo.op === "<="]),
+                            new this.selfClass([void 0, selfFrom.value], selfFrom.op === ">"),
+                            new this.selfClass([selfTo.value, otherTo.value], [selfTo.op === "<", otherTo.op === "<="]),
                         ]);
                     }
                 }
@@ -219,11 +222,11 @@ export abstract class InRangeCriterion<T> extends ValueCriterion<T> {
         const inverted: ValueCriterion<T>[] = [];
 
         if (this.from?.op !== void 0) {
-            inverted.push(new (getInstanceClass(this))([void 0, this.from.value], this.from.op === ">"));
+            inverted.push(new this.selfClass([void 0, this.from.value], this.from.op === ">"));
         }
 
         if (this.to?.op !== void 0) {
-            inverted.push(new (getInstanceClass(this))([this.to.value, void 0], this.to.op === "<"));
+            inverted.push(new this.selfClass([this.to.value, void 0], this.to.op === "<"));
         }
 
         return new OrCombinedValueCriteria(inverted);
