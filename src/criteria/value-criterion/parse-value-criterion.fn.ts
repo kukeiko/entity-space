@@ -9,17 +9,18 @@ function parseNumber(str: string): number | null {
     return null;
 }
 
+const inRangePattern = /(\(|\[)(([-+]?\d*\.?\d*)|\.{3}), (([-+]?\d*\.?\d*)|\.{3})(\)|\])/;
+
 export function parseCriteria(str: string): ValueCriterion {
     const orCombinedShards = str.split(" | ");
     const criteria: ValueCriterion[] = [];
 
     for (const shard of orCombinedShards) {
-        const inRangePattern = /(\(|\[)(([-+]?\.\d+)|([-+]?\d+(\.\d+)?)|\.{3}), (([-+]?\.\d+)|([-+]?\d+(\.\d+)?)|\.{3})(\)|\])/;
         const matches = inRangePattern.exec(shard);
 
         if (matches !== null) {
-            const inclusive: [boolean, boolean] = [matches[1] === "(" ? false : true, matches[10] === ")" ? false : true];
-            const rawValues = [matches[2], matches[6]];
+            const inclusive: [boolean, boolean] = [matches[1] === "(" ? false : true, matches[6] === ")" ? false : true];
+            const rawValues = [matches[2], matches[4]];
             const parsedValues: any[] = [void 0, void 0];
 
             if (rawValues[0] !== "...") {
