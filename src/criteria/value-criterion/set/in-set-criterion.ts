@@ -1,5 +1,6 @@
 import { Class, getInstanceClass } from "../../../utils";
 import { InRangeCriterion } from "../range";
+import { ValueCriteria } from "../value-criteria";
 import { ValueCriterion } from "../value-criterion";
 import { NotInSetCriterion } from "./not-in-set-criterion";
 
@@ -17,8 +18,10 @@ export abstract class InSetCriterion<T> extends ValueCriterion<T> {
         return this.values;
     }
 
-    reduce(other: ValueCriterion): false | ValueCriterion<T>[] {
-        if (other instanceof getInstanceClass(this)) {
+    reduce(other: ValueCriterion): boolean | ValueCriterion<T> {
+        if (other instanceof ValueCriteria) {
+            return super.reduceValueCriteria(other);
+        } else if (other instanceof getInstanceClass(this)) {
             const copy = new Set(other.getValues());
 
             for (const value of this.values) {
@@ -28,14 +31,14 @@ export abstract class InSetCriterion<T> extends ValueCriterion<T> {
             if (copy.size === other.getValues().size) {
                 return false;
             } else if (copy.size === 0) {
-                return [];
+                return true;
             } else {
-                return [new (getInstanceClass(this))(copy)];
+                return new (getInstanceClass(this))(copy);
             }
         } else if (other instanceof this.notInClass) {
             const merged = new Set([...other.getValues(), ...this.values]);
 
-            return [new this.notInClass(merged)];
+            return new this.notInClass(merged);
         } else if (other instanceof this.inRangeClass) {
             const selfValues = this.getValues();
             let otherFrom = other.getFrom();
@@ -53,15 +56,15 @@ export abstract class InSetCriterion<T> extends ValueCriterion<T> {
             }
 
             if (didReduce) {
-                return [new this.inRangeClass([otherFrom?.value, otherTo?.value], [otherFrom?.op === ">=", otherTo?.op === "<="])];
+                return new this.inRangeClass([otherFrom?.value, otherTo?.value], [otherFrom?.op === ">=", otherTo?.op === "<="]);
             }
         }
 
         return false;
     }
 
-    invert(): ValueCriterion<T>[] {
-        return [new this.notInClass(this.values)];
+    invert(): ValueCriterion<T> {
+        return new this.notInClass(this.values);
     }
 
     toString(): string {

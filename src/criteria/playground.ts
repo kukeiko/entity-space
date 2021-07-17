@@ -38,3 +38,8 @@ const inNumberRange = new InStringRangeCriterion(["1", "3"]);
 
 const reduced = inNumberSet.reduce(inNumberRange);
 type ShouldBeFalse = ValueCriterion<string> extends ValueCriterion<number> ? true : false;
+
+// credit to captain-yossarian https://captain-yossarian.medium.com/typescript-object-oriented-typings-4fd42ce14c75
+// function Mixin<T extends ClassType, R extends T[]>(...classRefs: [...R]): new (...args: any[]) => UnionToIntersection<InstanceType<[...R][number]>> {
+//     return merge(class {}, ...classRefs);
+// }
