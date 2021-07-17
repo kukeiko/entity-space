@@ -1,4 +1,4 @@
-import { ValueCriterion } from "../../../src";
+import { ValueCriterion } from "../../value-criterion";
 
 export function reducing(
     criterion: ValueCriterion

@@ -1,6 +1,6 @@
-import { inSet, notInSet, inRange } from "../../../src";
+import { inSet, notInSet, inRange } from "../../value-criterion";
 
-describe("reduce: in", () => {
+describe("reducing: in-set", () => {
     /**
      * A criteria that is a subset of another should always be completely reduced.
      */

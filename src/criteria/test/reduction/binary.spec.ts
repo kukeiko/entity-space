@@ -1,6 +1,6 @@
-import { isEven, AndCombinedValueCriteria, inRange, inSet } from "../../../src";
+import { isEven } from "../../value-criterion";
 
-describe("reduce: binary", () => {
+describe("reducing: binary", () => {
     describe("full reduction", () => {
         it("is-even should be fully reduced by itself", () => {
             // arrange

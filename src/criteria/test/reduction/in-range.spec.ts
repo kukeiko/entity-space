@@ -1,7 +1,7 @@
-import { inRange, inSet, or } from "../../../src";
-import { reducing } from "./criteria-reduction-helpers";
+import { inRange, inSet, or } from "../../value-criterion";
+import { reducing } from "./reducing.fn";
 
-describe("reduce: in-range", () => {
+describe("reducing: in-range", () => {
     describe("full reduction", () => {
         reducing(inRange(1, 7)).by(inRange(1, 7)).is(true);
         reducing(inRange(1, 7)).by(inRange(0, 8)).is(true);

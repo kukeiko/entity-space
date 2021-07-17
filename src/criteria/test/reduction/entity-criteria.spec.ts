@@ -1,6 +1,6 @@
-import { inRange, inSet, notInSet, entityCriteria } from "../../../src";
+import { inRange, inSet, notInSet, entityCriteria } from "../../value-criterion";
 
-describe("reduce: object", () => {
+describe("reducing: entity-criteria", () => {
     interface FooBarBaz {
         foo: number;
         bar: number;

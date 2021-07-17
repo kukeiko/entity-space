@@ -1,9 +1,48 @@
-import { inRange, or } from "../../../src";
+import { inRange, inSet, isEven, notInSet, or } from "../value-criterion";
 
-// [todo] inverting an inversion should result in the original input.
+describe("invert: binary", () => {
+    it("is-even inverted should be is-odd", () => {
+        // arrange
+        const criterion = isEven(true);
+        const expected = isEven(false);
 
-// afaik we'll need mergeCriterion() for that
-describe("invertFromToValueCriterion()", () => {
+        // act
+        const inverted = criterion.invert();
+
+        // assert
+        expect(inverted).toEqual(expected);
+    });
+});
+
+describe("invert: in-set", () => {
+    it("{1, 2, 3} inverted should be !{1, 2, 3}", () => {
+        // arrange
+        const criterion = inSet([1, 2, 3]);
+        const expected = notInSet([1, 2, 3]);
+
+        // act
+        const actual = criterion.invert();
+
+        // assert
+        expect(actual).toEqual(expected);
+    });
+});
+
+describe("invert: not-in-set", () => {
+    it("!{1, 2, 3} inverted should be {1, 2, 3}", () => {
+        // arrange
+        const criterion = notInSet([1, 2, 3]);
+        const expected = inSet([1, 2, 3]);
+
+        // act
+        const actual = criterion.invert();
+
+        // assert
+        expect(actual).toEqual(expected);
+    });
+});
+
+describe("invert: in-range", () => {
     it("[1, 7] inverted should be [..., 1) | (7, ...]", () => {
         // arrange
         const criterion = inRange(1, 7);

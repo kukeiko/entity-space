@@ -1,6 +1,6 @@
-import { and, inRange, inSet, isEven, or } from "../../../src";
+import { and, inRange, inSet, isEven, or } from "../../value-criterion";
 
-describe("reduce: and-combined-value-criteria", () => {
+describe("reducing: and-combined-value-criteria", () => {
     describe("full reduction", () => {
         it("([2, 3] & is-even) should be fully reduced by [1, 7]", () => {
             // arrange

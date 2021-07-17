@@ -1,6 +1,6 @@
-import { notInSet, inSet, inRange } from "../../../src";
+import { notInSet, inSet, inRange } from "../../value-criterion";
 
-describe("reduce: not-in", () => {
+describe("reduce: not-in-set", () => {
     describe("full reduction", () => {
         it("!{1, 2} should be completely reduced by itself", () => {
             // arrange
