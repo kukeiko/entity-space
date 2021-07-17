@@ -1,10 +1,10 @@
 import { inRange, inSet, valueCriteria } from "../../../src";
 
 describe("renderValueCriteria()", () => {
-    it("should render 1 element without brackets", () => {
+    it("should render brackets even if there is only 1 element", () => {
         // arrange
         const criteria = valueCriteria([inSet([1, 2, 3])]);
-        const expected = "{1, 2, 3}";
+        const expected = "({1, 2, 3})";
 
         // act
         const rendered = criteria.toString();
