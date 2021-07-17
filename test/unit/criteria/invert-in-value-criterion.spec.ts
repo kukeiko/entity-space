@@ -1,4 +1,4 @@
-import { inSet, notInSet, valueCriteria } from "../../../src";
+import { inSet, notInSet } from "../../../src";
 
 describe("invertInValueCriterion", () => {
     it("{1, 2, 3} inverted should be !{1, 2, 3}", () => {

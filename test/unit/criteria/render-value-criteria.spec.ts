@@ -1,9 +1,9 @@
-import { inRange, inSet, valueCriteria } from "../../../src";
+import { inRange, inSet, or } from "../../../src";
 
-describe("renderValueCriteria()", () => {
+describe("renderor()", () => {
     it("should render brackets even if there is only 1 element", () => {
         // arrange
-        const criteria = valueCriteria([inSet([1, 2, 3])]);
+        const criteria = or([inSet([1, 2, 3])]);
         const expected = "({1, 2, 3})";
 
         // act
@@ -15,7 +15,7 @@ describe("renderValueCriteria()", () => {
 
     it("should render correctly", () => {
         // arrange
-        const criteria = valueCriteria([inSet([1, 2, 3]), inRange(0, 7)]);
+        const criteria = or([inSet([1, 2, 3]), inRange(0, 7)]);
         const expected = "({1, 2, 3} | [0, 7])";
 
         // act

@@ -1,6 +1,6 @@
 import { EntityCriterion, PropertyCriteriaBag } from "./entity-criterion";
+import { or } from "./or.fn";
 import { ValueCriterion } from "./value-criterion";
-import { valueCriteria } from "./value-criteria.fn";
 
 type PropertyCriteriaBagConstruction<T> = {
     [K in keyof T]?: Exclude<T[K], undefined> extends boolean | number | string | null
@@ -78,7 +78,7 @@ export class EntityCriteria<T = unknown> {
                 const boxedCriterion = Array.isArray(bag[property]) ? bag[property] : ([bag[property]] as any);
 
                 if (boxedCriterion[0] instanceof ValueCriterion) {
-                    objectCriterion[property] = valueCriteria(boxedCriterion);
+                    objectCriterion[property] = or(boxedCriterion);
                 } else {
                     objectCriterion[property] = EntityCriteria.create(boxedCriterion);
                 }
