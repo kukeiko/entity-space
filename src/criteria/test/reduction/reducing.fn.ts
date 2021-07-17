@@ -1,6 +1,6 @@
 import { parseCriteria, ValueCriterion } from "../../value-criterion";
 
-function parseIfNecessary<T extends ValueCriterion | string>(item: T): ValueCriterion {
+function parse<T extends ValueCriterion | string>(item: T): ValueCriterion {
     if (typeof item === "string") {
         return parseCriteria(item);
     }
@@ -13,22 +13,34 @@ export function reducing(
 ): {
     by(other: ValueCriterion | string): { is(expected: ValueCriterion | string | boolean): void };
 } {
-    const parsedCriterion = parseIfNecessary(criterion);
-
     return {
         by(other: ValueCriterion | string) {
-            const parsedOther = parseIfNecessary(other);
-
             return {
                 is(expected: ValueCriterion | string | boolean) {
                     if (expected === true) {
-                        it(`${criterion} should be fully reduced by ${other}`, () => expect(parsedOther.reduce(parsedCriterion).toString()).toEqual("true"));
+                        it(`${criterion} should be fully reduced by ${other}`, () => {
+                            try {
+                                expect(parse(other).reduce(parse(criterion)).toString()).toEqual("true");
+                            } catch (error) {
+                                fail(error);
+                            }
+                        });
                     } else if (expected === false) {
-                        it(`${criterion} should not be reduced by ${other}`, () => expect(parsedOther.reduce(parsedCriterion).toString()).toEqual("false"));
+                        it(`${criterion} should not be reduced by ${other}`, () => {
+                            try {
+                                expect(parse(other).reduce(parse(criterion)).toString()).toEqual("false");
+                            } catch (error) {
+                                fail(error);
+                            }
+                        });
                     } else {
-                        const parsedExpected = parseIfNecessary(expected);
-                        it(`${criterion} reduced by ${other} should be ${expected}`, () =>
-                            expect(parsedOther.reduce(parsedCriterion).toString()).toEqual(parsedExpected.toString()));
+                        it(`${criterion} reduced by ${other} should be ${expected}`, () => {
+                            try {
+                                expect(parse(other).reduce(parse(criterion)).toString()).toEqual(parse(expected).toString());
+                            } catch (error) {
+                                fail(error);
+                            }
+                        });
                     }
                 },
             };

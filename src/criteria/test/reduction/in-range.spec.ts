@@ -1,9 +1,7 @@
-import { inSet } from "../../value-criterion";
 import { reducing } from "./reducing.fn";
 
-// [todo] parse errors prevent other specs from running
 describe("reducing: in-range", () => {
-    describe("full reduction", () => {
+    fdescribe("full reduction", () => {
         reducing("[1, 7]").by("[1, 7]").is(true);
         reducing("[1, 7]").by("[0, 8]").is(true);
         reducing("[1, 7]").by("(0, 8)").is(true);
@@ -50,13 +48,7 @@ describe("reducing: in-range", () => {
     });
 
     describe("no reduction", () => {
-        // [todo] now that we allow for splitting a range into smaller parts we might want this reduction to actually do something
-        // (instead of doing nothing). the problem is though that a "from-to" reduced by an "in" with lots of values will create
-        // lots of queries and hinder performance. also, it would only work with from-to of type integer (which we don't distinguish yet)
-        reducing("[1, 3]")
-            .by(inSet([2]))
-            .is(false);
-
+        reducing("[1, 3]").by("{2}").is(false);
         reducing("[1, 7]").by("(7, 13]").is(false);
         reducing("[1, 7]").by("[8, 13]").is(false);
         reducing("[1, 7]").by("[..., 1)").is(false);
