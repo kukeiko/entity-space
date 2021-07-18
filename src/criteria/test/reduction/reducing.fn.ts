@@ -1,4 +1,5 @@
-import { parseCriteria, ValueCriterion } from "../../value-criterion";
+import { ValueCriterion } from "../../value-criterion";
+import { parseCriteria } from "../../parser";
 
 function parse<T extends ValueCriterion | string>(item: T): ValueCriterion {
     if (typeof item === "string") {

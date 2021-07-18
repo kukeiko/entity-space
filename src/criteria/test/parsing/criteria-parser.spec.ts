@@ -1,6 +1,7 @@
-import { inRange, inSet, notInSet, or, parseCriteria, ValueCriterion } from "../value-criterion";
+import { parseCriteria } from "../../parser";
+import { inRange, inSet, notInSet, or, ValueCriterion } from "../../value-criterion";
 
-describe("parse", () => {
+describe("criteria-parser", () => {
     function shouldParse(stringified: string, expected: ValueCriterion): void {
         it(`should parse ${stringified}`, () => {
             const parse = () => parseCriteria(stringified);
@@ -14,6 +15,8 @@ describe("parse", () => {
     shouldParse("[.9, ...]", inRange(0.9));
     shouldParse("[-.9, +1.2]", inRange(-0.9, 1.2));
     shouldParse("[..., 3) | (4, 7]", or([inRange(void 0, 3, false), inRange(4, 7, [false, true])]));
+    shouldParse("([1, 7] | [3, 4])", or([inRange(1, 7), inRange(3, 4)]));
+    shouldParse("[1, 7] | [3, 4]", or([inRange(1, 7), inRange(3, 4)]));
     shouldParse("{1, 2}", inSet([1, 2]));
     shouldParse("!{1, 2}", notInSet([1, 2]));
 });
