@@ -1,6 +1,6 @@
 import { reducing } from "./reducing.fn";
 
-fdescribe("reduce: not-in-set", () => {
+describe("reduce: not-in-set", () => {
     describe("full reduction", () => {
         reducing("!{1, 2}").by("!{1, 2}").is(true);
         reducing("!{1, 2}").by("!{1}").is(true);
