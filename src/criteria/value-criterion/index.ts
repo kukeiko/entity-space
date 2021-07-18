@@ -10,4 +10,4 @@ export * from "./value-criteria";
 export * from "./value-criterion";
 export * from "./and.fn";
 export * from "./or.fn";
-export * from "./parse-value-criterion.fn";
+export * from "./parse-criteria.fn";
