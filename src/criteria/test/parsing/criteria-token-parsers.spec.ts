@@ -1,5 +1,4 @@
-import { Token, TokenType } from "../../parser";
-import { parseInRangeGenerator, parseInSetGenerator, ParseTokenGenerator, parseValueCriteriaGenerator } from "../../parser/token-parser";
+import { Token, TokenType, parseInRangeGenerator, parseInSetGenerator, ParseTokenGenerator, parseValueCriteriaGenerator, token } from "../../parser";
 import { inRange, inSet, notInSet, or, ValueCriterion } from "../../value-criterion";
 
 describe("criteria-token-parser", () => {
@@ -23,10 +22,6 @@ describe("criteria-token-parser", () => {
                 }
             }
         });
-    }
-
-    function token(type: TokenType, value: string): Token {
-        return { type, value };
     }
 
     generatorShouldParse(

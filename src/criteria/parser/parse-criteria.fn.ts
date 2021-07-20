@@ -2,6 +2,7 @@ import { ValueCriteria, ValueCriterion } from "../value-criterion";
 import { lex } from "./lex.fn";
 import { parseValueCriteriaGenerator } from "./token-parser";
 import { TokenType } from "./token-type.enum";
+import { token } from "./token.fn";
 
 export function parseCriteria(input: string): ValueCriterion {
     let tokens = lex(input);
@@ -10,7 +11,7 @@ export function parseCriteria(input: string): ValueCriterion {
         throw new Error("no tokens provided");
     }
 
-    tokens = [{ type: TokenType.Special, value: "(" }, ...tokens, { type: TokenType.Special, value: ")" }];
+    tokens = [token(TokenType.Special, "("), ...tokens, token(TokenType.Special, ")")];
     const generator = parseValueCriteriaGenerator();
     generator.next();
 

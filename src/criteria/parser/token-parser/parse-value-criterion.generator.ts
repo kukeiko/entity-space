@@ -1,8 +1,8 @@
 import { ValueCriterion } from "../../value-criterion";
-import { parseInRangeGenerator } from "./parse-in-range-generator.fn";
-import { parseInSetGenerator } from "./parse-in-set-generator.fn";
+import { parseInRangeGenerator } from "./parse-in-range.generator";
+import { parseInSetGenerator } from "./parse-in-set.generator";
 import { ParseTokenGenerator } from "./parse-token-generator.type";
-import { parseValueCriteriaGenerator } from "./parse-value-criteria-generator.fn";
+import { parseValueCriteriaGenerator } from "./parse-value-criteria.generator";
 
 export function* parseValueCriterionGenerator(): ParseTokenGenerator {
     let generators = [parseValueCriteriaGenerator(), parseInRangeGenerator(), parseInSetGenerator()];

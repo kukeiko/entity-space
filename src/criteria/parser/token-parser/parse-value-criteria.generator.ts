@@ -1,7 +1,7 @@
 import { and, or, ValueCriterion } from "../../value-criterion";
 import { TokenType } from "../token-type.enum";
 import { ParseTokenGenerator } from "./parse-token-generator.type";
-import { parseValueCriterionGenerator } from "./parse-value-criterion-generator.fn";
+import { parseValueCriterionGenerator } from "./parse-value-criterion.generator";
 
 export function* parseValueCriteriaGenerator(): ParseTokenGenerator {
     let token = yield true;

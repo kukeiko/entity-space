@@ -1,8 +1,9 @@
 import { scanNumber } from "./scan-number.fn";
 import { scanString } from "./scan-string.fn";
 import { scanSymbol } from "./scan-symbol.fn";
-import { Token } from "./token";
+import { Token } from "./token.contract";
 import { TokenType } from "./token-type.enum";
+import { token } from "./token.fn";
 
 const letterRegex = /[a-zA-Z]/;
 
@@ -21,28 +22,28 @@ export function lex(input: string): Token[] {
         const char = next.value;
 
         if ("(){}[]!:;,".includes(char)) {
-            tokens.push({ type: TokenType.Special, value: char });
+            tokens.push(token(TokenType.Special, char));
             next = iterator.next();
         } else if ('"'.includes(char)) {
             const [value, _next] = scanString(char, iterator);
-            tokens.push({ type: TokenType.String, value });
+            tokens.push(token(TokenType.String, value));
             next = _next;
         } else if ("+-.0123456789".includes(char)) {
             const [value, _next] = scanNumber(char, iterator);
 
             if (value === ".") {
-                tokens.push({ type: TokenType.Special, value });
+                tokens.push(token(TokenType.Special, value));
             } else {
-                tokens.push({ type: TokenType.Number, value });
+                tokens.push(token(TokenType.Number, value));
             }
 
             next = _next;
         } else if ("|&".includes(char)) {
-            tokens.push({ type: TokenType.Combinator, value: char });
+            tokens.push(token(TokenType.Combinator, char));
             next = iterator.next();
         } else if (letterRegex.test(char)) {
             const [value, _next] = scanSymbol(char, iterator);
-            tokens.push({ type: TokenType.Symbol, value });
+            tokens.push(token(TokenType.Symbol, value));
             next = _next;
         } else if ("\n\t ".includes(char)) {
             // ignore

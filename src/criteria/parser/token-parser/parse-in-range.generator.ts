@@ -1,5 +1,5 @@
 import { inRange } from "../../value-criterion";
-import { Token } from "../token";
+import { Token } from "../token.contract";
 import { TokenType } from "../token-type.enum";
 import { ParseTokenGenerator } from "./parse-token-generator.type";
 
