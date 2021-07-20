@@ -13,9 +13,6 @@ const letterRegex = /[a-zA-Z]/;
  * https://accu.org/journals/overload/26/146/balaam_2532/
  */
 export function lex(input: string): Token[] {
-    // [todo] hack until we can properly lex "..."
-    input = input.replace("...", "#");
-
     const iterator = input[Symbol.iterator]();
     const tokens: Token[] = [];
     let next = iterator.next();
@@ -31,10 +28,14 @@ export function lex(input: string): Token[] {
             tokens.push({ type: TokenType.String, value });
             next = _next;
         } else if ("+-.0123456789".includes(char)) {
-            // might need to split number up to support "..."
-            // before i do that i wanna get a general idea of how token parsing works
             const [value, _next] = scanNumber(char, iterator);
-            tokens.push({ type: TokenType.Number, value });
+
+            if (value === ".") {
+                tokens.push({ type: TokenType.Special, value });
+            } else {
+                tokens.push({ type: TokenType.Number, value });
+            }
+
             next = _next;
         } else if ("|&".includes(char)) {
             tokens.push({ type: TokenType.Combinator, value: char });
@@ -45,9 +46,6 @@ export function lex(input: string): Token[] {
             next = _next;
         } else if ("\n\t ".includes(char)) {
             // ignore
-            next = iterator.next();
-        } else if(char === "#") {
-            tokens.push({ type: TokenType.Number, value: "..." });
             next = iterator.next();
         } else {
             throw new Error(`unexpected character '${char}'`);

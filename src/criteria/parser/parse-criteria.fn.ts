@@ -1,6 +1,6 @@
-import { ValueCriterion } from "../value-criterion";
+import { ValueCriteria, ValueCriterion } from "../value-criterion";
 import { lex } from "./lex.fn";
-import { ValueCriteriaTokenParser } from "./token-parser";
+import { parseValueCriteriaGenerator } from "./token-parser";
 import { TokenType } from "./token-type.enum";
 
 export function parseCriteria(input: string): ValueCriterion {
@@ -11,21 +11,20 @@ export function parseCriteria(input: string): ValueCriterion {
     }
 
     tokens = [{ type: TokenType.Special, value: "(" }, ...tokens, { type: TokenType.Special, value: ")" }];
-    const parser = new ValueCriteriaTokenParser();
+    const generator = parseValueCriteriaGenerator();
+    generator.next();
 
     for (const token of tokens) {
-        if (!parser.accept(token)) {
-            throw new Error("syntax error, probably");
-        }
+        const result = generator.next(token);
 
-        if (parser.isComplete()) {
-            const result = parser.getResult();
-
-            if (result.getItems().length === 1) {
-                return result.getItems()[0];
+        if (result.value === false) {
+            throw new Error(`syntax error, probably - token: ${token}`);
+        } else if (result.value !== true && result.value instanceof ValueCriteria) {
+            if (result.value.getItems().length === 1) {
+                return result.value.getItems()[0];
             }
 
-            return result;
+            return result.value;
         }
     }
 

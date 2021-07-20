@@ -12,6 +12,7 @@ describe("criteria-parser", () => {
 
     shouldParse("[1, 7]", inRange(1, 7));
     shouldParse("[..., 7.8)", inRange(void 0, 7.8, false));
+    shouldParse("[.9, 2]", inRange(0.9, 2));
     shouldParse("[.9, ...]", inRange(0.9));
     shouldParse("[-.9, +1.2]", inRange(-0.9, 1.2));
     shouldParse("[..., 3) | (4, 7]", or([inRange(void 0, 3, false), inRange(4, 7, [false, true])]));
