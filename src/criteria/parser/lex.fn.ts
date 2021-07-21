@@ -5,7 +5,7 @@ import { Token } from "./token.contract";
 import { TokenType } from "./token-type.enum";
 import { token } from "./token.fn";
 
-const letterRegex = /[a-zA-Z]/;
+const symbolStartRegex = /[a-zA-Z]/;
 
 /**
  * big credits to andy balaam for providing nice info for lexing + parsing newbies such as myself
@@ -41,7 +41,7 @@ export function lex(input: string): Token[] {
         } else if ("|&".includes(char)) {
             tokens.push(token(TokenType.Combinator, char));
             next = iterator.next();
-        } else if (letterRegex.test(char)) {
+        } else if (symbolStartRegex.test(char)) {
             const [value, _next] = scanSymbol(char, iterator);
             tokens.push(token(TokenType.Symbol, value));
             next = _next;

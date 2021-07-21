@@ -28,6 +28,7 @@ describe("criteria-lexer-scanners", () => {
         shouldScan(input, "string", scanString, expected);
     }
 
+    // numbers
     shouldScanNumber("7");
     shouldScanNumber("777");
     shouldScanNumber("777.888");
@@ -38,6 +39,7 @@ describe("criteria-lexer-scanners", () => {
     shouldScanNumber("-.9.123abc", "-.9");
     shouldScanNumber("+.9.", "+.9");
 
+    // strings
     shouldScanString('"foo"');
     shouldScanString('"foo"bar', '"foo"');
 
@@ -51,4 +53,11 @@ describe("criteria-lexer-scanners", () => {
         // assert
         expect(scan).toThrow();
     });
+
+    // symbols
+    shouldScanSymbol("abc123", "abc");
+    shouldScanSymbol("a-b_c123", "a-b_c");
+    shouldScanSymbol("a-b_c.", "a-b_c");
+    shouldScanSymbol("_foo", "_foo");
+    shouldScanSymbol("-foo", "-foo");
 });
