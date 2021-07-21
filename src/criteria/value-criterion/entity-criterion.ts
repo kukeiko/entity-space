@@ -1,14 +1,8 @@
 import { Class, getInstanceClass } from "../../utils";
-import { isValuesCriteria } from "../values-criterion";
-import { EntityCriteria } from "./entity-criteria";
+
+import { OrCombinedValueCriteria } from "./or-combined-value-criteria";
 import { ValueCriteria } from "./value-criteria";
 import { ValueCriterion } from "./value-criterion";
-
-type PropertyCriteria<T = unknown> = T extends boolean | number | string | null ? ValueCriteria<T> : EntityCriteria<T>;
-
-export type PropertyCriteriaBag<T> = {
-    [K in keyof T]?: Exclude<T[K], undefined> extends boolean | number | string | null ? ValueCriteria<T[K]> : EntityCriteria<T[K]>;
-};
 
 type RemapTemplate<T> = {
     [K in keyof T]?: Exclude<T[K], undefined> extends boolean | number | string | null ? Class<ValueCriterion<T[K]>> | Class<ValueCriterion<T[K]>>[] : never;
@@ -37,14 +31,15 @@ function permutate(aggregated: any, entries: [string, any[]][]): any[] {
     return allAggregated;
 }
 
-export class EntityCriterion<T = unknown> {
-    constructor(items: PropertyCriteriaBag<T>) {
+export class EntityCriterion<T = unknown> extends ValueCriterion<T> {
+    constructor(items: Partial<Record<keyof T, ValueCriterion>>) {
+        super();
         this.bag = items;
     }
 
-    readonly bag: PropertyCriteriaBag<T>;
+    readonly bag: Partial<Record<keyof T, ValueCriterion>>;
 
-    getBag(): PropertyCriteriaBag<T> {
+    getBag(): Partial<Record<keyof T, ValueCriterion>> {
         return this.bag;
     }
 
@@ -89,84 +84,73 @@ export class EntityCriterion<T = unknown> {
     }
 
     // [todo] remove "as any" hacks
-    reduce(other: EntityCriterion<T>): EntityCriteria<T> | false {
-        const reducedPropertyCriteriaBag = new Map<string, PropertyCriteria<T>>();
+    reduce(other: ValueCriterion): boolean | ValueCriterion<T> {
+        if (other instanceof ValueCriteria) {
+            return super.reduceValueCriteria(other);
+        } else if (other instanceof EntityCriterion) {
+            const reducedPropertyCriteriaBag = new Map<string, ValueCriterion>();
 
-        for (const key in this.bag) {
-            const criteriaA = other.bag[key];
-            const criteriaB = this.bag[key];
-            let reduced: PropertyCriteria<T[typeof key]> | false = false;
+            for (const key in this.bag) {
+                const myCriterion = this.bag[key];
 
-            /**
-             * [todo] need "invertCriterion()" for this case
-             */
-            if (criteriaA === void 0) {
-                // if (criteriaB instanceof ValueCriteria) {
-                if (criteriaB instanceof ValueCriterion) {
-                    reduced = criteriaB.invert() as any;
+                if (myCriterion === void 0) {
+                    continue;
+                }
+
+                const otherCriterion = other.bag[key];
+                let reduced: ValueCriterion | boolean = false;
+
+                if (otherCriterion === void 0) {
+                    reduced = myCriterion.invert();
 
                     // [B] has criteria [A] doesn't, and we weren't able to compute the inversion of them => return [A] as is
                     // [todo] currently can't happen - for now we can invert all the value criteria we have. so maybe remove it?
-                    if (reduced === criteriaB) {
+                    if (reduced === myCriterion) {
                         return false;
                     }
                 } else {
-                    /**
-                     * [todo] implement inversion of all types of criteria
-                     */
+                    reduced = myCriterion.reduce(otherCriterion);
+                }
+
+                if (reduced === false) {
                     return false;
-                }
-                // } else if (criteriaB instanceof ValueCriteria) {
-            } else if (criteriaB instanceof ValueCriterion) {
-                // if (criteriaA instanceof ValueCriteria) {
-                if (criteriaA instanceof ValueCriterion) {
-                    reduced = criteriaB.reduce(criteriaA) as any;
-                } else {
-                    throw new Error("trying to reduce two criteria of different types");
-                }
-            } else if (isValuesCriteria(criteriaB)) {
-                throw new Error("ValuesCriteria reduction not yet implemented");
-            } else if (criteriaB instanceof EntityCriteria) {
-                if (criteriaA instanceof ValueCriteria) {
-                    throw new Error("trying to reduce two criteria of different types");
-                } else if (isValuesCriteria(criteriaA)) {
-                    throw new Error("trying to reduce two criteria of different types");
-                } else if (criteriaA instanceof EntityCriteria) {
-                    reduced = criteriaB.reduce(criteriaA) as any;
+                } else if (reduced !== true) {
+                    reducedPropertyCriteriaBag.set(key, reduced);
                 }
             }
 
-            if (!reduced) {
-                /**
-                 * failed to reduce a property of [A] => no intersection => return [A] as is
-                 */
-                return false;
-                // } else if ((reduced as any) !== true && reduced.items.length > 0) {
-            } else if ((reduced as any) !== true) {
-                reducedPropertyCriteriaBag.set(key, reduced as any);
+            if (reducedPropertyCriteriaBag.size == 0) {
+                return true;
             }
+
+            const objectCriterion: Record<string, ValueCriterion> = {};
+
+            // [todo] i think there is an Object.fromEntries() method that we could use, but we need to upgrade our ES target @ tsconfigs
+            for (const [key, reducedPropertyCriteria] of Object.entries(other.bag)) {
+                objectCriterion[key] = reducedPropertyCriteria as any;
+            }
+
+            const objectCriteria: Record<string, ValueCriterion>[] = [];
+
+            for (const [key, reducedPropertyCriteria] of reducedPropertyCriteriaBag) {
+                objectCriteria.push({ ...objectCriterion, [key]: reducedPropertyCriteria });
+                objectCriterion[key] = (this.bag as any)[key];
+            }
+
+            const entityCriterionPieces = objectCriteria.map(criteria => new EntityCriterion(criteria));
+
+            if (entityCriterionPieces.length === 1) {
+                return entityCriterionPieces[0] as any;
+            }
+
+            return new OrCombinedValueCriteria(entityCriterionPieces) as any;
         }
 
-        if (reducedPropertyCriteriaBag.size == 0) {
-            // return true;
-            return new EntityCriteria([]);
-        }
+        return false;
+    }
 
-        const objectCriterion: Record<string, PropertyCriteria> = {};
-
-        // [todo] i think there is an Object.fromEntries() method that we could use, but we need to upgrade our ES target @ tsconfigs
-        for (const [key, reducedPropertyCriteria] of Object.entries(other.bag)) {
-            objectCriterion[key] = reducedPropertyCriteria as any;
-        }
-
-        const objectCriteria: Record<string, PropertyCriteria>[] = [];
-
-        for (const [key, reducedPropertyCriteria] of reducedPropertyCriteriaBag) {
-            objectCriteria.push({ ...objectCriterion, [key]: reducedPropertyCriteria } as any);
-            objectCriterion[key] = (this.bag as any)[key];
-        }
-
-        return new EntityCriteria(objectCriteria.map(criteria => new EntityCriterion(criteria as any)));
+    invert(): ValueCriterion<T> {
+        throw new Error("not implemented yet");
     }
 
     toString(): string {
@@ -179,13 +163,7 @@ export class EntityCriterion<T = unknown> {
             // seems kinda unclean, so revisit on how to do it better
             if (criteria === void 0) continue;
 
-            if (criteria instanceof ValueCriteria) {
-                shards.push(`${key}:${criteria.toString()}`);
-            } else if (isValuesCriteria(criteria)) {
-                shards.push(`${key}:NOT_IMPLEMENTED`);
-            } else {
-                shards.push(`${key}:${criteria.toString()}`);
-            }
+            shards.push(`${key}: ${criteria.toString()}`);
         }
 
         return `{ ${shards.join(" & ")} }`;
