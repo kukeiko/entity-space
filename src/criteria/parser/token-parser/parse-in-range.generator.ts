@@ -3,18 +3,18 @@ import { Token } from "../token.contract";
 import { TokenType } from "../token-type.enum";
 import { ParseTokenGenerator } from "./parse-token-generator.type";
 
-function* acceptValue(): Generator<boolean, [string | number | undefined, typeof Number | typeof String | undefined] | false, Token> {
-    let token = yield true;
+function* acceptValue(): Generator<undefined, [string | number | undefined, typeof Number | typeof String | undefined] | false, Token> {
+    let token = yield;
 
     if (token.type === TokenType.String) {
         return [token.value, String];
     } else if (token.type === TokenType.Number) {
         return [parseFloat(token.value), Number];
     } else if (token.type === TokenType.Special && token.value === ".") {
-        token = yield true;
+        token = yield;
 
         if (token.type !== TokenType.Special || token.value !== ".") return false;
-        token = yield true;
+        token = yield;
 
         if (token.type !== TokenType.Special || token.value !== ".") return false;
 
@@ -25,7 +25,7 @@ function* acceptValue(): Generator<boolean, [string | number | undefined, typeof
 }
 
 export function* parseInRangeGenerator(): ParseTokenGenerator {
-    let token = yield true;
+    let token = yield;
 
     if (token.type !== TokenType.Special || !"([".includes(token.value)) {
         return false;
@@ -36,19 +36,19 @@ export function* parseInRangeGenerator(): ParseTokenGenerator {
     if (fromValueResult === false) return false;
     const [fromValue] = fromValueResult;
 
-    token = yield true;
+    token = yield;
 
     if (token.type === TokenType.Special && ")]".includes(token.value)) {
-        return inRange(fromValue as any, void 0, [fromInclusive, token.value === "]"] as any);
+        return () => inRange(fromValue as any, void 0, [fromInclusive, token.value === "]"] as any);
     } else if (token.type === TokenType.Special && token.value === ",") {
         const toValueResult = yield* acceptValue();
         if (toValueResult === false) return false;
         const [toValue] = toValueResult;
 
-        token = yield true;
+        token = yield;
 
         if (token.type === TokenType.Special && ")]".includes(token.value)) {
-            return inRange(fromValue as any, toValue as any, [fromInclusive, token.value === "]"] as any);
+            return () => inRange(fromValue as any, toValue as any, [fromInclusive, token.value === "]"] as any);
         } else {
             return false;
         }

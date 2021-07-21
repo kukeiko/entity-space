@@ -10,14 +10,14 @@ export function* parseValueCriterionGenerator(): ParseTokenGenerator {
 
     // eslint-disable-next-line no-constant-condition
     while (true) {
-        const token = yield true;
+        const token = yield;
 
         for (const generator of generators.slice()) {
             const result = generator.next(token);
 
             if (result.value === false) {
                 generators = generators.filter(gen => gen !== generator);
-            } else if (result.value instanceof ValueCriterion) {
+            } else if (result.value !== void 0) {
                 return result.value;
             }
 
