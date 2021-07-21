@@ -1,4 +1,4 @@
-import { entityCriteria, inRange, Query, reduceQuery, reduceSelection, Selection } from "../../src";
+import { inRange, matches, or, Query, reduceQuery, reduceSelection, Selection } from "../../src";
 
 /**
  * This file serves as an introduction via code for anyone new and interested in this library.
@@ -90,7 +90,7 @@ describe("what's reduction for?", () => {
          *
          * The criteria for our first call would look like this:
          */
-        const price_100_to_200_rating_3_to_5 = entityCriteria({
+        const price_100_to_200_rating_3_to_5 = matches({
             price: inRange(100, 200),
             rating: inRange(3, 5),
         });
@@ -98,7 +98,7 @@ describe("what's reduction for?", () => {
         /**
          * The criteria for the second call would look like this:
          */
-        const price_100_to_300_rating_2_to_5 = entityCriteria({
+        const price_100_to_300_rating_2_to_5 = matches({
             price: inRange(100, 300),
             rating: inRange(2, 5),
         });
@@ -108,15 +108,15 @@ describe("what's reduction for?", () => {
          *
          * We'll therefore have to load all the products with price of 200 to 300 and rating 2 to 5, and load all products with price of 100 to 200 and rating 2 to 3.
          */
-        const expected = entityCriteria([
-            {
+        const expected = or([
+            matches({
                 price: inRange(200, 300, [false, true]),
                 rating: inRange(2, 5),
-            },
-            {
+            }),
+            matches({
                 price: inRange(100, 200),
                 rating: inRange(2, 3, [true, false]),
-            },
+            }),
         ]);
 
         /**
@@ -187,12 +187,10 @@ describe("what's reduction for?", () => {
         };
 
         const price_100_to_200_rating_3_to_5_no_reviews: Query = {
-            criteria: entityCriteria([
-                {
-                    price: inRange(100, 200),
-                    rating: inRange(3, 5),
-                },
-            ]),
+            criteria: matches({
+                price: inRange(100, 200),
+                rating: inRange(3, 5),
+            }),
             selection: {
                 ...basic_properties,
             },
@@ -202,12 +200,10 @@ describe("what's reduction for?", () => {
         };
 
         const price_100_to_300_rating_2_to_5_with_reviews: Query = {
-            criteria: entityCriteria([
-                {
-                    price: inRange(100, 300),
-                    rating: inRange(2, 5),
-                },
-            ]),
+            criteria: matches({
+                price: inRange(100, 300),
+                rating: inRange(2, 5),
+            }),
             selection: {
                 ...basic_properties,
                 ...review_property,
@@ -223,15 +219,15 @@ describe("what's reduction for?", () => {
         const expected: Query[] = [
             // one for loading the missing entities
             {
-                criteria: entityCriteria([
-                    {
+                criteria: or([
+                    matches({
                         price: inRange(200, 300, [false, true]),
                         rating: inRange(2, 5),
-                    },
-                    {
+                    }),
+                    matches({
                         price: inRange(100, 200),
                         rating: inRange(2, 3, [true, false]),
-                    },
+                    }),
                 ]),
                 selection: {
                     ...basic_properties,
@@ -243,12 +239,10 @@ describe("what's reduction for?", () => {
             },
             // and one for loading the missing properties (i.e. the reviews) of the entities we already have
             {
-                criteria: entityCriteria([
-                    {
-                        price: inRange(100, 200),
-                        rating: inRange(3, 5),
-                    },
-                ]),
+                criteria: matches({
+                    price: inRange(100, 200),
+                    rating: inRange(3, 5),
+                }),
                 selection: {
                     ...review_property,
                 },

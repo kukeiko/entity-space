@@ -3,18 +3,18 @@ import {
     TypedInstance,
     TypedSelection,
     TypedSelector,
-    EntityCriteria,
     ValueCriterion,
     Class,
     InStringSetCriterion,
-    entityCriteria,
     InNumberSetCriterion,
     InNumberRangeCriterion,
     EntityCriterion,
     inSet,
     inRange,
     getInstanceClass,
-    InStringRangeCriterion,
+    matches,
+    or,
+    ValueCriteria,
 } from "src";
 import { TreeNodeModel, CanvasModel, CircleModel, SquareModel, TriangleModel } from "../facade/model";
 import { Product } from "../introduction/model";
@@ -82,13 +82,17 @@ describe("prototyping-playground", () => {
 
         // console.log(JSON.stringify(permutate({}, Object.entries(itemToPermutate))));
 
-        const productCriteria = entityCriteria<Product>({
-            name: [inSet(["foo", "bar"]), inRange("a", "z"), inSet(["khaz", "mo", "dan"])],
-            price: [inRange(0, 100), inRange(700, 1200)],
+        const productCriteria = matches<Product>({
+            name: or([inSet(["foo", "bar"]), inRange("a", "z"), inSet(["khaz", "mo", "dan"])]),
+            price: or([inRange(0, 100), inRange(700, 1200)]),
         });
 
         // [todo] hacky workaround to satisfy compiler; i don't want to comment out the current remapping
         // functionality so i still see the method uses here in case i do "find all references"
+        if (!(productCriteria instanceof ValueCriteria)) {
+            return;
+        }
+
         const productCriterion = productCriteria.getItems()[0] as EntityCriterion<Product>;
         const remapped = remap(productCriterion, { name: InStringSetCriterion, price: InNumberRangeCriterion });
         console.log(JSON.stringify(remapped));
@@ -109,12 +113,12 @@ describe("prototyping-playground", () => {
             return {} as any;
         }
 
-        function remapCriteria<T, U extends RemapTemplate<T>>(criteria: EntityCriteria<T>, handler: () => U): InstantiatedTemplate<U> {
-            const template = handler();
-            return {} as any;
-        }
+        // function remapCriteria<T, U extends RemapTemplate<T>>(criteria: EntityCriteria<T>, handler: () => U): InstantiatedTemplate<U> {
+        //     const template = handler();
+        //     return {} as any;
+        // }
 
-        const extracted = remapCriteria(entityCriteria<Product>([]), () => ({ name: InStringSetCriterion, price: [InNumberSetCriterion, InNumberRangeCriterion] }));
+        // const extracted = remapCriteria(entityCriteria<Product>([]), () => ({ name: InStringSetCriterion, price: [InNumberSetCriterion, InNumberRangeCriterion] }));
     });
 
     const treeNodeCreatable: TypedInstance<TreeNodeModel, "creatable"> = {

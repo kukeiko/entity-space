@@ -1,4 +1,4 @@
-import { inRange, inSet, notInSet, entityCriteria } from "../../value-criterion";
+import { inRange, inSet, notInSet, matches, or } from "../../value-criterion";
 
 describe("reducing: entity-criteria", () => {
     interface FooBarBaz {
@@ -11,12 +11,12 @@ describe("reducing: entity-criteria", () => {
         // [todo] use all types of criteria for this test case - maybe even have two cases: 1 simple one, one with all types
         it("{ foo:{2} & bar:{3, 4, 7} } should be completely reduced by itself", () => {
             // arrange
-            const a = entityCriteria<FooBarBaz>({
+            const a = matches<FooBarBaz>({
                 foo: inSet([2]),
                 bar: inSet([3, 4, 7]),
             });
 
-            const b = entityCriteria<FooBarBaz>({
+            const b = matches<FooBarBaz>({
                 foo: inSet([2]),
                 bar: inSet([3, 4, 7]),
             });
@@ -30,12 +30,12 @@ describe("reducing: entity-criteria", () => {
 
         it("{ foo:{2} & bar:{3} } should be completely reduced by { foo:{2} }", () => {
             // arrange
-            const a = entityCriteria<FooBarBaz>({
+            const a = matches<FooBarBaz>({
                 foo: inSet([2]),
                 bar: inSet([3]),
             });
 
-            const b = entityCriteria<FooBarBaz>({
+            const b = matches<FooBarBaz>({
                 foo: inSet([2]),
             });
 
@@ -48,12 +48,12 @@ describe("reducing: entity-criteria", () => {
 
         it("{ foo:{2} & bar:{3} } should be completely reduced by { }", () => {
             // arrange
-            const a = entityCriteria<FooBarBaz>({
+            const a = matches<FooBarBaz>({
                 foo: inSet([2]),
                 bar: inSet([3]),
             });
 
-            const b = entityCriteria<FooBarBaz>({});
+            const b = matches<FooBarBaz>({});
 
             // act
             const reduced = b.reduce(a);
@@ -72,9 +72,9 @@ describe("reducing: entity-criteria", () => {
         describe("1:1", () => {
             it("{ foo:{2, 3} } reduced by { foo:{3, 4} } should be { foo:{2} }", () => {
                 // arrange
-                const a = entityCriteria<FooBarBaz>({ foo: inSet([2, 3]) });
-                const b = entityCriteria<FooBarBaz>({ foo: inSet([3, 4]) });
-                const expected = entityCriteria<FooBarBaz>([{ foo: inSet([2]) }]);
+                const a = matches<FooBarBaz>({ foo: inSet([2, 3]) });
+                const b = matches<FooBarBaz>({ foo: inSet([3, 4]) });
+                const expected = matches<FooBarBaz>({ foo: inSet([2]) });
 
                 // act
                 const reduced = b.reduce(a);
@@ -85,20 +85,18 @@ describe("reducing: entity-criteria", () => {
 
             it("{ foo:{2} } reduced by { bar:{2} } should be { foo:{2} & bar:!{2} }", () => {
                 // arrange
-                const a = entityCriteria<FooBarBaz>({
+                const a = matches<FooBarBaz>({
                     foo: inSet([2]),
                 });
 
-                const b = entityCriteria<FooBarBaz>({
+                const b = matches<FooBarBaz>({
                     bar: inSet([2]),
                 });
 
-                const expected = entityCriteria<FooBarBaz>([
-                    {
-                        foo: inSet([2]),
-                        bar: notInSet([2]),
-                    },
-                ]);
+                const expected = matches<FooBarBaz>({
+                    foo: inSet([2]),
+                    bar: notInSet([2]),
+                });
 
                 // act
                 const reduced = b.reduce(a);
@@ -111,21 +109,19 @@ describe("reducing: entity-criteria", () => {
         describe("1:2", () => {
             it("{ foo:{2} } reduced by { foo:{2} & bar:{3} } should be { foo:{2} & bar:!{3} }", () => {
                 // arrange
-                const a = entityCriteria<FooBarBaz>({
+                const a = matches<FooBarBaz>({
                     foo: inSet([2]),
                 });
 
-                const b = entityCriteria<FooBarBaz>({
+                const b = matches<FooBarBaz>({
                     foo: inSet([2]),
                     bar: inSet([3]),
                 });
 
-                const expected = entityCriteria<FooBarBaz>([
-                    {
-                        foo: inSet([2]),
-                        bar: notInSet([3]),
-                    },
-                ]);
+                const expected = matches<FooBarBaz>({
+                    foo: inSet([2]),
+                    bar: notInSet([3]),
+                });
 
                 // act
                 const reduced = b.reduce(a);
@@ -138,21 +134,19 @@ describe("reducing: entity-criteria", () => {
         describe("2:1", () => {
             it("{ foo:{1, 2} & bar:{3} } reduced by { foo:{2} } should be { foo:{1} & bar:{3} }", () => {
                 // arrange
-                const a = entityCriteria<FooBarBaz>({
+                const a = matches<FooBarBaz>({
                     foo: inSet([1, 2]),
                     bar: inSet([3]),
                 });
 
-                const b = entityCriteria<FooBarBaz>({
+                const b = matches<FooBarBaz>({
                     foo: inSet([2]),
                 });
 
-                const expected = entityCriteria<FooBarBaz>([
-                    {
-                        foo: inSet([1]),
-                        bar: inSet([3]),
-                    },
-                ]);
+                const expected = matches<FooBarBaz>({
+                    foo: inSet([1]),
+                    bar: inSet([3]),
+                });
 
                 // act
                 const reduced = b.reduce(a);
@@ -165,22 +159,20 @@ describe("reducing: entity-criteria", () => {
         describe("2:2", () => {
             it("{ foo:{1, 2} & bar:{3} } reduced by { foo:{2} & bar:{3, 4} } should be { foo:{1} & bar:{3} }", () => {
                 // arrange
-                const a = entityCriteria<FooBarBaz>({
+                const a = matches<FooBarBaz>({
                     foo: inSet([1, 2]),
                     bar: inSet([3]),
                 });
 
-                const b = entityCriteria<FooBarBaz>({
+                const b = matches<FooBarBaz>({
                     foo: inSet([2]),
                     bar: inSet([3, 4]),
                 });
 
-                const expected = entityCriteria<FooBarBaz>([
-                    {
-                        foo: inSet([1]),
-                        bar: inSet([3]),
-                    },
-                ]);
+                const expected = matches<FooBarBaz>({
+                    foo: inSet([1]),
+                    bar: inSet([3]),
+                });
 
                 // act
                 const reduced = b.reduce(a);
@@ -191,26 +183,26 @@ describe("reducing: entity-criteria", () => {
 
             it("{ foo:[1, 7] & bar:[100, 200] } reduced by { foo:[3, 4] & bar:[150, 175] } should be ({ foo:([1, 3) | (4, 7]) & bar:[100, 200] } | { foo:[3, 4] & bar:([100, 150) | (175, 200]) })", () => {
                 // arrange
-                const a = entityCriteria<FooBarBaz>({
+                const a = matches<FooBarBaz>({
                     foo: inRange(1, 7),
                     bar: inRange(100, 200),
                 });
 
-                const b = entityCriteria<FooBarBaz>({
+                const b = matches<FooBarBaz>({
                     foo: inRange(3, 4),
                     bar: inRange(150, 175),
                 });
 
-                const expected = entityCriteria<FooBarBaz>([
-                    {
+                const expected = or([
+                    matches<FooBarBaz>({
                         // foo: ([new InRangeCriterion(Number, [1, 3], [true, false]), new InRangeCriterion(Number, [4, 7], [false, true])]),
-                        foo: [inRange(1, 3, [true, false]), inRange(4, 7, [false, true])],
+                        foo: or([inRange(1, 3, [true, false]), inRange(4, 7, [false, true])]),
                         bar: inRange(100, 200),
-                    },
-                    {
+                    }),
+                    matches<FooBarBaz>({
                         foo: inRange(3, 4),
-                        bar: [inRange(100, 150, [true, false]), inRange(175, 200, [false, true])],
-                    },
+                        bar: or([inRange(100, 150, [true, false]), inRange(175, 200, [false, true])]),
+                    }),
                 ]);
 
                 // act
@@ -222,22 +214,22 @@ describe("reducing: entity-criteria", () => {
 
             it("changing order of criteria properties should still result in an equivalent outcome", () => {
                 // arrange
-                const a1 = entityCriteria<FooBarBaz>({
+                const a1 = matches<FooBarBaz>({
                     bar: inRange(100, 200),
                     foo: inRange(1, 7),
                 });
 
-                const a2 = entityCriteria<FooBarBaz>({
+                const a2 = matches<FooBarBaz>({
                     foo: inRange(1, 7),
                     bar: inRange(100, 200),
                 });
 
-                const b1 = entityCriteria<FooBarBaz>({
+                const b1 = matches<FooBarBaz>({
                     bar: inRange(150, 175),
                     foo: inRange(3, 4),
                 });
 
-                const b2 = entityCriteria<FooBarBaz>({
+                const b2 = matches<FooBarBaz>({
                     foo: inRange(3, 4),
                     bar: inRange(150, 175),
                 });
@@ -262,28 +254,28 @@ describe("reducing: entity-criteria", () => {
         describe("3:2", () => {
             it("{ foo:[1, 7] & bar:[100, 200] & baz:[50, 70] } reduced by { foo:[3, 4] & bar:[150, 175] } should be ({ foo:([1, 3) | (4, 7]) & bar:[100, 200] & baz:[50, 70] } | { foo:[3, 4] & bar:([100, 150) | (175, 200]) & baz:[50, 70] })", () => {
                 // arrange
-                const a = entityCriteria<FooBarBaz>({
+                const a = matches<FooBarBaz>({
                     foo: inRange(1, 7),
                     bar: inRange(100, 200),
                     baz: inRange(50, 70),
                 });
 
-                const b = entityCriteria<FooBarBaz>({
+                const b = matches<FooBarBaz>({
                     foo: inRange(3, 4),
                     bar: inRange(150, 175),
                 });
 
-                const expected = entityCriteria<FooBarBaz>([
-                    {
-                        foo: [inRange(1, 3, [true, false]), inRange(4, 7, [false, true])],
+                const expected = or([
+                    matches<FooBarBaz>({
+                        foo: or([inRange(1, 3, [true, false]), inRange(4, 7, [false, true])]),
                         bar: inRange(100, 200),
                         baz: inRange(50, 70),
-                    },
-                    {
+                    }),
+                    matches<FooBarBaz>({
                         foo: inRange(3, 4),
-                        bar: [inRange(100, 150, [true, false]), inRange(175, 200, [false, true])],
+                        bar: or([inRange(100, 150, [true, false]), inRange(175, 200, [false, true])]),
                         baz: inRange(50, 70),
-                    },
+                    }),
                 ]);
 
                 // act
@@ -297,34 +289,34 @@ describe("reducing: entity-criteria", () => {
         describe("3:3", () => {
             it("{ foo:[1, 7] & bar:[100, 200] & baz:[50, 70] } reduced by { foo:[3, 4] & bar:[150, 175] & baz:[55, 65] } should be ({ foo:([1, 3) | (4, 7]) & bar:[100, 200] & baz:[50, 70] } | { foo:[3, 4] & bar:([100, 150) | (175, 200]) & baz:[50, 70] } | { foo:[3, 4] & bar:[150, 175] & baz:([50, 55) | (65, 70]) })", () => {
                 // arrange
-                const a = entityCriteria<FooBarBaz>({
+                const a = matches<FooBarBaz>({
                     foo: inRange(1, 7),
                     bar: inRange(100, 200),
                     baz: inRange(50, 70),
                 });
 
-                const b = entityCriteria<FooBarBaz>({
+                const b = matches<FooBarBaz>({
                     foo: inRange(3, 4),
                     bar: inRange(150, 175),
                     baz: inRange(55, 65),
                 });
 
-                const expected = entityCriteria<FooBarBaz>([
-                    {
-                        foo: [inRange(1, 3, [true, false]), inRange(4, 7, [false, true])],
+                const expected = or([
+                    matches<FooBarBaz>({
+                        foo: or([inRange(1, 3, [true, false]), inRange(4, 7, [false, true])]),
                         bar: inRange(100, 200),
                         baz: inRange(50, 70),
-                    },
-                    {
+                    }),
+                    matches<FooBarBaz>({
                         foo: inRange(3, 4),
-                        bar: [inRange(100, 150, [true, false]), inRange(175, 200, [false, true])],
+                        bar: or([inRange(100, 150, [true, false]), inRange(175, 200, [false, true])]),
                         baz: inRange(50, 70),
-                    },
-                    {
+                    }),
+                    matches<FooBarBaz>({
                         foo: inRange(3, 4),
                         bar: inRange(150, 175),
-                        baz: [inRange(50, 55, [true, false]), inRange(65, 70, [false, true])],
-                    },
+                        baz: or([inRange(50, 55, [true, false]), inRange(65, 70, [false, true])]),
+                    }),
                 ]);
 
                 // act
@@ -338,31 +330,31 @@ describe("reducing: entity-criteria", () => {
         describe("2:3", () => {
             it("{ foo:[1, 7] & bar:[100, 200] } reduced by { foo:[3, 4] & bar:[150, 175] & baz:[50, 70] } should be ({ foo:([1, 3) | (4, 7]) & bar:[100, 200] } | { foo:[3, 4] & bar:([100, 150) | (175, 200]) } | { foo:[3, 4] & bar:[150, 175] & baz:([..., 50) | (70, ...]) })", () => {
                 // arrange
-                const a = entityCriteria<FooBarBaz>({
+                const a = matches<FooBarBaz>({
                     foo: inRange(1, 7),
                     bar: inRange(100, 200),
                 });
 
-                const b = entityCriteria<FooBarBaz>({
+                const b = matches<FooBarBaz>({
                     foo: inRange(3, 4),
                     bar: inRange(150, 175),
                     baz: inRange(50, 70),
                 });
 
-                const expected = entityCriteria<FooBarBaz>([
-                    {
-                        foo: [inRange(1, 3, [true, false]), inRange(4, 7, [false, true])],
+                const expected = or([
+                    matches<FooBarBaz>({
+                        foo: or([inRange(1, 3, [true, false]), inRange(4, 7, [false, true])]),
                         bar: inRange(100, 200),
-                    },
-                    {
+                    }),
+                    matches<FooBarBaz>({
                         foo: inRange(3, 4),
-                        bar: [inRange(100, 150, [true, false]), inRange(175, 200, [false, true])],
-                    },
-                    {
+                        bar: or([inRange(100, 150, [true, false]), inRange(175, 200, [false, true])]),
+                    }),
+                    matches<FooBarBaz>({
                         foo: inRange(3, 4),
                         bar: inRange(150, 175),
-                        baz: [inRange(void 0, 50, false), inRange(70, void 0, false)],
-                    },
+                        baz: or([inRange(void 0, 50, false), inRange(70, void 0, false)]),
+                    }),
                 ]);
 
                 // act
@@ -376,21 +368,21 @@ describe("reducing: entity-criteria", () => {
         describe("0:2", () => {
             it("{ } reduced by { foo:{2} & bar:{4} } should be ({ foo:!{2} } | { foo:{2} & bar:!{4} })", () => {
                 // arrange
-                const a = entityCriteria<FooBarBaz>({});
+                const a = matches<FooBarBaz>({});
 
-                const b = entityCriteria<FooBarBaz>({
+                const b = matches<FooBarBaz>({
                     foo: inSet([2]),
                     bar: inSet([4]),
                 });
 
-                const expected = entityCriteria<FooBarBaz>([
-                    {
+                const expected = or([
+                    matches<FooBarBaz>({
                         foo: notInSet([2]),
-                    },
-                    {
+                    }),
+                    matches<FooBarBaz>({
                         foo: inSet([2]),
                         bar: notInSet([4]),
-                    },
+                    }),
                 ]);
 
                 // act
@@ -409,30 +401,25 @@ describe("reducing: entity-criteria", () => {
             }
 
             // arrange
-            entityCriteria<NestedFooBar>({
-                foo: [
-                    {
-                        bar: inRange(1, 7),
-                    },
-                ],
-            });
-            const a = entityCriteria<NestedFooBar>({
-                foo: [{ bar: inRange(1, 7) }],
+            matches<NestedFooBar>({
+                foo: matches<NestedFooBar["foo"]>({
+                    bar: inRange(1, 7),
+                }),
             });
 
-            const b = entityCriteria<NestedFooBar>({
-                foo: [{ bar: inRange(3, 4) }],
+            const a = matches<NestedFooBar>({
+                foo: matches<NestedFooBar["foo"]>({ bar: inRange(1, 7) }),
             });
 
-            const expected = entityCriteria<NestedFooBar>([
-                {
-                    foo: [
-                        {
-                            bar: [inRange(1, 3, [true, false]), inRange(4, 7, [false, true])],
-                        },
-                    ],
-                },
-            ]);
+            const b = matches<NestedFooBar>({
+                foo: matches<NestedFooBar["foo"]>({ bar: inRange(3, 4) }),
+            });
+
+            const expected = matches<NestedFooBar>({
+                foo: matches<NestedFooBar["foo"]>({
+                    bar: or([inRange(1, 3, [true, false]), inRange(4, 7, [false, true])]),
+                }),
+            });
 
             // act
             const reduced = b.reduce(a);
@@ -445,11 +432,11 @@ describe("reducing: entity-criteria", () => {
     describe("no reduction", () => {
         it("{ foo:{3} } should not be reduced by { foo:{2} }", () => {
             // arrange
-            const a = entityCriteria<FooBarBaz>({
+            const a = matches<FooBarBaz>({
                 foo: inSet([3]),
             });
 
-            const b = entityCriteria<FooBarBaz>({
+            const b = matches<FooBarBaz>({
                 foo: inSet([2]),
             });
 
@@ -462,12 +449,12 @@ describe("reducing: entity-criteria", () => {
 
         it("{ foo:{2} & bar:{3} } should not be reduced by { foo:{2} & bar:{4} }", () => {
             // arrange
-            const a = entityCriteria<FooBarBaz>({
+            const a = matches<FooBarBaz>({
                 foo: inSet([2]),
                 bar: inSet([3]),
             });
 
-            const b = entityCriteria<FooBarBaz>({
+            const b = matches<FooBarBaz>({
                 foo: inSet([2]),
                 bar: inSet([4]),
             });

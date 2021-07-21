@@ -1,4 +1,4 @@
-import { EntityCriteria, entityCriteria, inRange, InNumberRangeCriterion, Query, Selection, isInstanceOf, EntityCriterion } from "src";
+import { matches, inRange, InNumberRangeCriterion, Query, Selection, EntityCriterion, or, ValueCriterion, OrCombinedValueCriteria } from "src";
 import { Product, ProductFilter } from "./model";
 import { ProductRepository } from "./repositories";
 
@@ -15,10 +15,12 @@ describe("how do we actually load data?", () => {
         };
 
         // we want all products priced between 100 and 200 with a rating of 3 to 5
-        const productCriteria = entityCriteria<Product>({
-            price: inRange(100, 200),
-            rating: inRange(3, 5),
-        });
+        const productCriteria = or([
+            matches<Product>({
+                price: inRange(100, 200),
+                rating: inRange(3, 5),
+            }),
+        ]);
 
         const query: Query = {
             criteria: productCriteria,
@@ -30,11 +32,19 @@ describe("how do we actually load data?", () => {
             options: {} as any,
         };
 
-        function mapCriteriaToProductFilters(productCriteria: EntityCriteria<Product>): ProductFilter[] {
+        function mapCriteriaToProductFilters(productCriteria: ValueCriterion): ProductFilter[] {
             // [todo] hacky workaround to satisfy compiler; i don't want to comment out the current remapping
             // functionality so i still see the method uses here in case i do "find all references"
+            function isProductEntityCriteria(x: any): x is OrCombinedValueCriteria<Product> {
+                return x instanceof OrCombinedValueCriteria;
+            }
+
             function isProductEntityCriterion(x: any): x is EntityCriterion<Product> {
                 return x instanceof EntityCriterion;
+            }
+
+            if (!isProductEntityCriteria(productCriteria)) {
+                throw new Error("criteria unexpectedly not or-combined criteria");
             }
 
             const remapped = productCriteria
