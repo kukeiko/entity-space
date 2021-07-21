@@ -3,14 +3,9 @@ import { TokenType } from "../token-type.enum";
 import { ParseTokenGenerator } from "./parse-token-generator.type";
 import { parseValueCriterionGenerator } from "./parse-value-criterion.generator";
 
-export function* parseValueCriteriaGenerator(): ParseTokenGenerator {
-    let token = yield;
-
-    if (!(token.type === TokenType.Special && token.value === "(")) {
-        return false;
-    }
-
+export function* parseNotBracketedCriteriaGenerator(): ParseTokenGenerator {
     const items: ValueCriterion[] = [];
+
     let combinator = "|";
 
     while (true) {
@@ -22,12 +17,14 @@ export function* parseValueCriteriaGenerator(): ParseTokenGenerator {
             items.push(valueResult());
         }
 
-        token = yield;
+        let token = yield;
 
         if (token.type === TokenType.Special && token.value === ")") {
-            return () => (combinator === "|" ? or(items) : and(items));
+            return false;
         } else if (token.type === TokenType.Combinator) {
             combinator = token.value;
+        } else {
+            return () => (combinator === "|" ? or(items) : and(items));
         }
     }
 }

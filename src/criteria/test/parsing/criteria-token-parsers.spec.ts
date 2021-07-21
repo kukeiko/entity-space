@@ -1,4 +1,13 @@
-import { Token, TokenType, parseInRangeGenerator, parseInSetGenerator, ParseTokenGenerator, parseValueCriteriaGenerator, token } from "../../parser";
+import {
+    Token,
+    TokenType,
+    parseInRangeGenerator,
+    parseInSetGenerator,
+    ParseTokenGenerator,
+    parseValueCriteriaGenerator,
+    token,
+    parseNotBracketedCriteriaGenerator,
+} from "../../parser";
 import { inRange, inSet, notInSet, or, ValueCriterion } from "../../value-criterion";
 
 describe("criteria-token-parser", () => {
@@ -29,6 +38,7 @@ describe("criteria-token-parser", () => {
             }
 
             if (intermediateResult !== void 0) {
+                // assert
                 expect(intermediateResult()).toEqual(expected);
             } else {
                 fail("nothing parsed");
@@ -112,6 +122,8 @@ describe("criteria-token-parser", () => {
     });
 
     describe("value-criteria", () => {
+        const terminator = token(TokenType.Special, ";");
+
         generatorShouldParse(
             parseValueCriteriaGenerator,
             [
@@ -149,7 +161,7 @@ describe("criteria-token-parser", () => {
         );
 
         generatorShouldParse(
-            () => parseValueCriteriaGenerator(true),
+            parseNotBracketedCriteriaGenerator,
             [
                 token(TokenType.Special, "("),
                 token(TokenType.Number, "13"),
@@ -162,13 +174,14 @@ describe("criteria-token-parser", () => {
                 token(TokenType.Special, ","),
                 token(TokenType.Number, "200"),
                 token(TokenType.Special, ")"),
+                terminator,
             ],
             or([inRange(13, 37, [false, true]), inRange(100, 200, [true, false])])
         );
 
-        // [todo] should aktshually unpack nested or with only 1 item
+        // [todo] should actually unpack nested "or" with only 1 item
         generatorShouldParse(
-            () => parseValueCriteriaGenerator(true),
+            parseNotBracketedCriteriaGenerator,
             [
                 token(TokenType.Special, "("),
                 token(TokenType.Special, "("),
@@ -183,6 +196,7 @@ describe("criteria-token-parser", () => {
                 token(TokenType.Number, "200"),
                 token(TokenType.Special, ")"),
                 token(TokenType.Special, ")"),
+                terminator,
             ],
             or([or([inRange(13, 37, [false, true]), inRange(100, 200, [true, false])])])
         );

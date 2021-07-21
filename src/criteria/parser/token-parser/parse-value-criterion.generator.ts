@@ -1,29 +1,9 @@
-import { ValueCriterion } from "../../value-criterion";
+import { parseTokensGenerator } from "./parse-tokens.generator";
 import { parseInRangeGenerator } from "./parse-in-range.generator";
 import { parseInSetGenerator } from "./parse-in-set.generator";
 import { ParseTokenGenerator } from "./parse-token-generator.type";
 import { parseValueCriteriaGenerator } from "./parse-value-criteria.generator";
 
-export function* parseValueCriterionGenerator(): ParseTokenGenerator {
-    let generators = [parseValueCriteriaGenerator(), parseInRangeGenerator(), parseInSetGenerator()];
-    generators.forEach(generator => generator.next());
-
-    // eslint-disable-next-line no-constant-condition
-    while (true) {
-        const token = yield;
-
-        for (const generator of generators.slice()) {
-            const result = generator.next(token);
-
-            if (result.value === false) {
-                generators = generators.filter(gen => gen !== generator);
-            } else if (result.value !== void 0) {
-                return result.value;
-            }
-
-            if (generators.length === 0) {
-                return false;
-            }
-        }
-    }
+export function parseValueCriterionGenerator(): ParseTokenGenerator {
+    return parseTokensGenerator([parseValueCriteriaGenerator, parseInRangeGenerator, parseInSetGenerator]);
 }
