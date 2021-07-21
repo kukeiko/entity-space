@@ -5,3 +5,4 @@ export * from "./parse-token-generator.type";
 export * from "./parse-tokens.generator";
 export * from "./parse-value-criteria.generator";
 export * from "./parse-value-criterion.generator";
+export * from "./parse-entity-criterion.generator";
