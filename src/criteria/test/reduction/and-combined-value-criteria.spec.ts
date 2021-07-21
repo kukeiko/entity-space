@@ -41,6 +41,18 @@ describe("reducing: and-combined-value-criteria", () => {
             expect(reduced).toEqual(expected);
         });
 
+        it("[1, 7] reduced by (is-even & [3, 5]) should be (([1, 3) | (5, 7]) | ([3, 5] & is-odd))", () => {
+            // arrange
+            const a = inRange(1, 7);
+            const b = and([isEven(true), inRange(3, 5)]);
+            const expected = or([or([inRange(1, 3, [true, false]), inRange(5, 7, [false, true])]), and([inRange(3, 5), isEven(false)])]);
+
+            const reduced = b.reduce(a);
+
+            // assert
+            expect(reduced).toEqual(expected);
+        });
+
         xit("[4, 8] reduced by ([1, 7] & [5, 12]) should be ((7, 8] | [4, 5))", () => {
             //
         });

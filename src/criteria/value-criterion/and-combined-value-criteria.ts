@@ -5,13 +5,26 @@ import { ValueCriterion } from "./value-criterion";
 export class AndCombinedValueCriteria<T = unknown> extends ValueCriteria<T> {
     // [todo] remove "any" hacks
     reduce(other: ValueCriterion): boolean | ValueCriterion<T> {
-        const items: { criterion: ValueCriterion; result: boolean | ValueCriterion }[] = this.items.map(criterion => ({ criterion, result: criterion.reduce(other) }));
+        const items = this.items.map(criterion => ({ criterion, result: criterion.reduce(other) }));
 
         if (items.every(x => x.result === false)) {
             return false;
         } else if (items.every(x => x.result === true)) {
             return true;
         }
+
+        // we want items that did an actual reduction to be put first
+        items.sort((a, b) => {
+            if (a.result === false && b.result === false) {
+                return 0;
+            } else if (a.result !== false && b.result === false) {
+                return -1;
+            } else if (a.result === false && b.result !== false) {
+                return 1;
+            } else {
+                return 0;
+            }
+        });
 
         const reduced: ValueCriterion[][] = [];
         const accumulated: ValueCriterion[] = [];
