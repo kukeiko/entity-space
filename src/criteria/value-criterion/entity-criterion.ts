@@ -188,13 +188,7 @@ export class EntityCriterion<T = unknown> extends ValueCriterion<T> {
             // seems kinda unclean, so revisit on how to do it better
             if (criteria === void 0) continue;
 
-            if (criteria instanceof ValueCriteria) {
-                shards.push(`${key}:${criteria.toString()}`);
-            } else if (isValuesCriteria(criteria)) {
-                shards.push(`${key}:NOT_IMPLEMENTED`);
-            } else {
-                shards.push(`${key}:${criteria.toString()}`);
-            }
+            shards.push(criteria.toString());
         }
 
         return `{ ${shards.join(" & ")} }`;

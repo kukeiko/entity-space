@@ -87,7 +87,9 @@ describe("prototyping-playground", () => {
             price: [inRange(0, 100), inRange(700, 1200)],
         });
 
-        const productCriterion = productCriteria.getItems()[0];
+        // [todo] hacky workaround to satisfy compiler; i don't want to comment out the current remapping
+        // functionality so i still see the method uses here in case i do "find all references"
+        const productCriterion = productCriteria.getItems()[0] as EntityCriterion<Product>;
         const remapped = remap(productCriterion, { name: InStringSetCriterion, price: InNumberRangeCriterion });
         console.log(JSON.stringify(remapped));
         console.log(remapped.length);

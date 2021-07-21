@@ -8,7 +8,7 @@ export function reduceQuery<T>(a: Query<T>, b: Query<T>): Query<T>[] | false {
 
     if (!reducedCriteria || !reducedSelection) {
         return false;
-    } else if (reducedCriteria === true || reducedCriteria.items.length == 0) {
+    } else if (reducedCriteria === true) {
         if (Object.keys(reducedSelection).length == 0) {
             return [];
         }

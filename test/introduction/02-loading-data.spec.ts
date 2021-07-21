@@ -1,4 +1,4 @@
-import { EntityCriteria, entityCriteria, inRange, InNumberRangeCriterion, Query, Selection } from "src";
+import { EntityCriteria, entityCriteria, inRange, InNumberRangeCriterion, Query, Selection, isInstanceOf, EntityCriterion } from "src";
 import { Product, ProductFilter } from "./model";
 import { ProductRepository } from "./repositories";
 
@@ -31,12 +31,21 @@ describe("how do we actually load data?", () => {
         };
 
         function mapCriteriaToProductFilters(productCriteria: EntityCriteria<Product>): ProductFilter[] {
-            const remapped = productCriteria.getItems().map(criterion =>
-                criterion.remap(() => ({
-                    price: InNumberRangeCriterion,
-                    rating: InNumberRangeCriterion,
-                }))
-            );
+            // [todo] hacky workaround to satisfy compiler; i don't want to comment out the current remapping
+            // functionality so i still see the method uses here in case i do "find all references"
+            function isProductEntityCriterion(x: any): x is EntityCriterion<Product> {
+                return x instanceof EntityCriterion;
+            }
+
+            const remapped = productCriteria
+                .getItems()
+                .filter(isProductEntityCriterion)
+                .map(criterion =>
+                    criterion.remap(() => ({
+                        price: InNumberRangeCriterion,
+                        rating: InNumberRangeCriterion,
+                    }))
+                );
 
             const filters: ProductFilter[] = [];
 
