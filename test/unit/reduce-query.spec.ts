@@ -18,7 +18,7 @@ describe("reduceQuery()", () => {
             const reduced = reduceQuery(a, b);
 
             // assert
-            expect(reduced).toEqual([]);
+            expect(reduced).toEqual(false);
         });
 
         it("{ id in [1, 2] / { foo } } should be completely reduced by { id in [1, 2, 3] / { foo } }", () => {

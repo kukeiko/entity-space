@@ -25,7 +25,7 @@ describe("reducing: entity-criteria", () => {
             const reduced = b.reduce(a);
 
             // assert
-            expect(reduced).toEqual(entityCriteria<FooBarBaz>([]));
+            expect(reduced).toEqual(true);
         });
 
         it("{ foo:{2} & bar:{3} } should be completely reduced by { foo:{2} }", () => {
@@ -43,7 +43,7 @@ describe("reducing: entity-criteria", () => {
             const reduced = b.reduce(a);
 
             // assert
-            expect(reduced).toEqual(entityCriteria<FooBarBaz>([]));
+            expect(reduced).toEqual(true);
         });
 
         it("{ foo:{2} & bar:{3} } should be completely reduced by { }", () => {
@@ -59,7 +59,7 @@ describe("reducing: entity-criteria", () => {
             const reduced = b.reduce(a);
 
             // assert
-            expect(reduced).toEqual(entityCriteria<FooBarBaz>([]));
+            expect(reduced).toEqual(true);
         });
     });
 
@@ -254,8 +254,8 @@ describe("reducing: entity-criteria", () => {
                 const reduced_2_by_1 = reduced1.reduce(reduced2);
 
                 // assert
-                expect(reduced_1_by_2).toEqual(entityCriteria<FooBarBaz>([]));
-                expect(reduced_2_by_1).toEqual(entityCriteria<FooBarBaz>([]));
+                expect(reduced_1_by_2).toEqual(true);
+                expect(reduced_2_by_1).toEqual(true);
             });
         });
 

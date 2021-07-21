@@ -97,21 +97,18 @@ export class EntityCriterion<T = unknown> extends ValueCriterion<T> {
             const reducedPropertyCriteriaBag = new Map<string, PropertyCriteria<T>>();
 
             for (const key in this.bag) {
-                const criteriaA = other.bag[key];
-                const criteriaB = this.bag[key];
+                const otherCriterion = other.bag[key];
+                const myCriterion = this.bag[key];
                 let reduced: PropertyCriteria<T[typeof key]> | false = false;
 
-                /**
-                 * [todo] need "invertCriterion()" for this case
-                 */
-                if (criteriaA === void 0) {
+                if (otherCriterion === void 0) {
                     // if (criteriaB instanceof ValueCriteria) {
-                    if (criteriaB instanceof ValueCriterion) {
-                        reduced = criteriaB.invert() as any;
+                    if (myCriterion instanceof ValueCriterion) {
+                        reduced = myCriterion.invert() as any;
 
                         // [B] has criteria [A] doesn't, and we weren't able to compute the inversion of them => return [A] as is
                         // [todo] currently can't happen - for now we can invert all the value criteria we have. so maybe remove it?
-                        if (reduced === criteriaB) {
+                        if (reduced === myCriterion) {
                             return false;
                         }
                     } else {
@@ -121,23 +118,24 @@ export class EntityCriterion<T = unknown> extends ValueCriterion<T> {
                         return false;
                     }
                     // } else if (criteriaB instanceof ValueCriteria) {
-                } else if (criteriaB instanceof ValueCriterion) {
+                } else if (myCriterion instanceof ValueCriterion) {
                     // if (criteriaA instanceof ValueCriteria) {
-                    if (criteriaA instanceof ValueCriterion) {
-                        reduced = criteriaB.reduce(criteriaA) as any;
+                    if (otherCriterion instanceof ValueCriterion) {
+                        reduced = myCriterion.reduce(otherCriterion) as any;
                     } else {
                         throw new Error("trying to reduce two criteria of different types");
                     }
-                } else if (isValuesCriteria(criteriaB)) {
+                } else if (isValuesCriteria(myCriterion)) {
                     throw new Error("ValuesCriteria reduction not yet implemented");
-                } else if (criteriaB instanceof EntityCriteria) {
-                    if (criteriaA instanceof ValueCriteria) {
+                } else if (myCriterion instanceof EntityCriteria) {
+                    if (otherCriterion instanceof ValueCriteria) {
                         throw new Error("trying to reduce two criteria of different types");
-                    } else if (isValuesCriteria(criteriaA)) {
+                    } else if (isValuesCriteria(otherCriterion)) {
                         throw new Error("trying to reduce two criteria of different types");
-                    } else if (criteriaA instanceof EntityCriteria) {
-                        reduced = (criteriaB as any).reduce(criteriaA) as any;
                     }
+                    //  else if (otherCriterion instanceof EntityCriteria) {
+                    //     reduced = (myCriterion as any).reduce(otherCriterion) as any;
+                    // }
                 }
 
                 if (!reduced) {
@@ -152,8 +150,8 @@ export class EntityCriterion<T = unknown> extends ValueCriterion<T> {
             }
 
             if (reducedPropertyCriteriaBag.size == 0) {
-                // return true;
-                return new EntityCriteria([]);
+                return true;
+                // return new EntityCriteria([]);
             }
 
             const objectCriterion: Record<string, PropertyCriteria> = {};
