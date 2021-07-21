@@ -31,7 +31,7 @@ module.exports = function (config) {
             test: /\.ts$/,
             loader: "istanbul-instrumenter-loader",
             include: /src/,
-            exclude: /\.spec\.ts$/,
+            exclude: [/\.spec\.ts$/, /test(\/|\\)/],
         });
     }
 
