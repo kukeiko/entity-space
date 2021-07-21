@@ -1,7 +1,7 @@
 import { reducing } from "./reducing.fn";
 
 describe("reducing: in-range", () => {
-    fdescribe("full reduction", () => {
+    describe("full reduction", () => {
         reducing("[1, 7]").by("[1, 7]").is(true);
         reducing("[1, 7]").by("[0, 8]").is(true);
         reducing("[1, 7]").by("(0, 8)").is(true);
