@@ -11,57 +11,41 @@ import {
 import { inRange, inSet, notInSet, or, ValueCriterion } from "../../value-criterion";
 
 describe("criteria-token-parser", () => {
-    function generatorShouldParse(makeGenerator: () => ParseTokenGenerator, tokens: Token[], expected: ValueCriterion, specFn = it) {
+    function itShouldParse(makeGenerator: () => ParseTokenGenerator, tokens: Token[], expected: ValueCriterion, specFn = it) {
         specFn(`should parse tokens '${tokens.map(t => t.value).join("")}' to ${expected}`, () => {
             const generator = makeGenerator();
             generator.next();
-
-            let intermediateResult: (() => ValueCriterion) | undefined;
 
             for (const token of tokens) {
                 const result = generator.next(token);
 
                 if (result.value === false) {
                     return fail(`parser did not accept token ${JSON.stringify(token)}`);
-                } else if (result.value !== undefined) {
-                    if (result.done) {
-                        // assert
-                        expect(result.value()).toEqual(expected);
-                    } else {
-                        intermediateResult = result.value;
-                    }
-                }
-
-                if (result.done) {
-                    return;
+                } else if (result.value !== undefined && result.done) {
+                    return expect(result.value()).toEqual(expected);
                 }
             }
 
-            if (intermediateResult !== void 0) {
-                // assert
-                expect(intermediateResult()).toEqual(expected);
-            } else {
-                fail("nothing parsed");
-            }
+            fail("nothing parsed");
         });
     }
 
-    function fgeneratorShouldParse(makeGenerator: () => ParseTokenGenerator, tokens: Token[], expected: ValueCriterion) {
-        generatorShouldParse(makeGenerator, tokens, expected, fit);
+    function fitShouldParse(makeGenerator: () => ParseTokenGenerator, tokens: Token[], expected: ValueCriterion) {
+        itShouldParse(makeGenerator, tokens, expected, fit);
     }
 
-    function xgeneratorShouldParse(makeGenerator: () => ParseTokenGenerator, tokens: Token[], expected: ValueCriterion) {
-        generatorShouldParse(makeGenerator, tokens, expected, xit);
+    function xitShouldParse(makeGenerator: () => ParseTokenGenerator, tokens: Token[], expected: ValueCriterion) {
+        itShouldParse(makeGenerator, tokens, expected, xit);
     }
 
     describe("in-range", () => {
-        generatorShouldParse(
+        itShouldParse(
             parseInRangeGenerator,
             [token(TokenType.Special, "("), token(TokenType.Number, "13"), token(TokenType.Special, ","), token(TokenType.Number, "37"), token(TokenType.Special, "]")],
             inRange(13, 37, [false, true])
         );
 
-        generatorShouldParse(
+        itShouldParse(
             parseInRangeGenerator,
             [
                 token(TokenType.Special, "["),
@@ -75,7 +59,7 @@ describe("criteria-token-parser", () => {
             inRange(void 0, 7)
         );
 
-        generatorShouldParse(
+        itShouldParse(
             parseInRangeGenerator,
             [
                 token(TokenType.Special, "("),
@@ -91,7 +75,7 @@ describe("criteria-token-parser", () => {
     });
 
     describe("in-set / not-in-set", () => {
-        generatorShouldParse(
+        itShouldParse(
             parseInSetGenerator,
             [
                 token(TokenType.Special, "{"),
@@ -105,7 +89,7 @@ describe("criteria-token-parser", () => {
             inSet([1, 2, 3])
         );
 
-        generatorShouldParse(
+        itShouldParse(
             parseInSetGenerator,
             [
                 token(TokenType.Special, "!"),
@@ -124,7 +108,7 @@ describe("criteria-token-parser", () => {
     describe("value-criteria", () => {
         const terminator = token(TokenType.Special, ";");
 
-        generatorShouldParse(
+        itShouldParse(
             parseValueCriteriaGenerator,
             [
                 token(TokenType.Special, "("),
@@ -144,7 +128,7 @@ describe("criteria-token-parser", () => {
             or([inRange(13, 37, [false, true]), inRange(100, 200, [true, false])])
         );
 
-        generatorShouldParse(
+        itShouldParse(
             parseValueCriteriaGenerator,
             [
                 token(TokenType.Special, "("),
@@ -160,7 +144,7 @@ describe("criteria-token-parser", () => {
             or([inSet([1]), inSet([2])])
         );
 
-        generatorShouldParse(
+        itShouldParse(
             parseNotBracketedCriteriaGenerator,
             [
                 token(TokenType.Special, "("),
@@ -180,7 +164,7 @@ describe("criteria-token-parser", () => {
         );
 
         // [todo] should actually unpack nested "or" with only 1 item
-        generatorShouldParse(
+        itShouldParse(
             parseNotBracketedCriteriaGenerator,
             [
                 token(TokenType.Special, "("),
@@ -201,7 +185,7 @@ describe("criteria-token-parser", () => {
             or([or([inRange(13, 37, [false, true]), inRange(100, 200, [true, false])])])
         );
 
-        generatorShouldParse(
+        itShouldParse(
             parseValueCriteriaGenerator,
             [
                 token(TokenType.Special, "("),
