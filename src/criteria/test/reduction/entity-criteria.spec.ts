@@ -246,8 +246,8 @@ describe("reducing: entity-criteria", () => {
                 const reduced1 = b1.reduce(a1);
                 const reduced2 = b2.reduce(a2);
 
-                if (!reduced1 || reduced1.items.length == 0 || !reduced2 || reduced2.items.length == 0) {
-                    return fail("expected both reductions to not be null");
+                if (reduced1 === true || !reduced1 || reduced1.items.length == 0 || reduced2 === true || !reduced2 || reduced2.items.length == 0) {
+                    return fail("expected both reductions to not be false/true");
                 }
 
                 const reduced_1_by_2 = reduced2.reduce(reduced1);

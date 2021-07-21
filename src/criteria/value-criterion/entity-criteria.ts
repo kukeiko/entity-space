@@ -8,8 +8,9 @@ type PropertyCriteriaBagConstruction<T> = {
         : PropertyCriteriaBagConstruction<T[K]> | PropertyCriteriaBagConstruction<T[K]>[];
 };
 
-export class EntityCriteria<T = unknown> {
+export class EntityCriteria<T = unknown> extends ValueCriterion<T> {
     constructor(items: EntityCriterion<T>[]) {
+        super();
         this.items = items;
     }
 
@@ -19,7 +20,9 @@ export class EntityCriteria<T = unknown> {
         return this.items;
     }
 
-    reduce(other: EntityCriteria<T>): EntityCriteria<T> | false {
+    reduce(other: ValueCriterion): boolean | EntityCriteria<T> {
+        if (!(other instanceof EntityCriteria)) return false;
+
         if (this.items.length === 0 && other.items.length === 0) {
             return new EntityCriteria<T>([]);
         }
@@ -35,6 +38,10 @@ export class EntityCriteria<T = unknown> {
             for (const criterionA of reduced) {
                 const reducedCriteria = criterionB.reduce(criterionA);
 
+                if (reducedCriteria && !(reducedCriteria instanceof EntityCriteria)) {
+                    throw new Error("temp error until entity-criteria is redone");
+                }
+
                 if (reducedCriteria) {
                     nextReduced.push(...reducedCriteria.items);
                     didReduceAny = true;
@@ -47,6 +54,10 @@ export class EntityCriteria<T = unknown> {
         }
 
         return didReduceAny ? new EntityCriteria(reduced) : false;
+    }
+
+    invert(): ValueCriterion<T> {
+        throw new Error("Method not implemented.");
     }
 
     toString(): string {
