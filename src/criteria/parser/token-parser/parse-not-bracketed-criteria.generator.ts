@@ -24,7 +24,7 @@ export function* parseNotBracketedCriteriaGenerator(): ParseTokenGenerator {
         } else if (token.type === TokenType.Combinator) {
             combinator = token.value;
         } else {
-            return () => (combinator === "|" ? or(items) : and(items));
+            return () => (items.length === 1 ? items[0] : combinator === "|" ? or(items) : and(items));
         }
     }
 }

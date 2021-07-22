@@ -1,6 +1,6 @@
 import { parseNotBracketedCriteriaGenerator, parseValueCriteriaGenerator, token, TokenType } from "../../parser";
 import { inRange, inSet, or } from "../../value-criterion";
-import { itShouldParseTokens } from "./utils";
+import { fitShouldParseTokens, itShouldParseTokens } from "./utils";
 
 describe("token-parser: value-criteria", () => {
     const terminator = token(TokenType.Special, ";");
@@ -60,7 +60,6 @@ describe("token-parser: value-criteria", () => {
         or([inRange(13, 37, [false, true]), inRange(100, 200, [true, false])])
     );
 
-    // [todo] should actually unpack nested "or" with only 1 item
     itShouldParseTokens(
         parseNotBracketedCriteriaGenerator,
         [
@@ -79,7 +78,7 @@ describe("token-parser: value-criteria", () => {
             token(TokenType.Special, ")"),
             terminator,
         ],
-        or([or([inRange(13, 37, [false, true]), inRange(100, 200, [true, false])])])
+        or([inRange(13, 37, [false, true]), inRange(100, 200, [true, false])])
     );
 
     itShouldParseTokens(
@@ -101,6 +100,6 @@ describe("token-parser: value-criteria", () => {
             token(TokenType.Special, ")"),
             token(TokenType.Special, ")"),
         ],
-        or([or([inRange(13, 37, [false, true]), inRange(100, 200, [true, false])])])
+        or([inRange(13, 37, [false, true]), inRange(100, 200, [true, false])])
     );
 });

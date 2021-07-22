@@ -25,7 +25,7 @@ export function* parseValueCriteriaGenerator(): ParseTokenGenerator {
         token = yield;
 
         if (token.type === TokenType.Special && token.value === ")") {
-            return () => (combinator === "|" ? or(items) : and(items));
+            return () => (items.length === 1 ? items[0] : combinator === "|" ? or(items) : and(items));
         } else if (token.type === TokenType.Combinator) {
             combinator = token.value;
         }

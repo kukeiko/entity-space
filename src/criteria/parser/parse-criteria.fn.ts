@@ -21,7 +21,7 @@ export function parseCriteria(input: string): ValueCriterion {
         const result = generator.next(token);
 
         if (result.value === false) {
-            throw new Error(`syntax error, token: ${token}`);
+            throw new Error(`syntax error, token: ${JSON.stringify(token)}`);
         } else if (result.value !== undefined && result.done) {
             const criterion = result.value();
 
