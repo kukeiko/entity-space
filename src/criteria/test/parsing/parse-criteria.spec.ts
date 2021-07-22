@@ -1,5 +1,5 @@
 import { parseCriteria } from "../../parser";
-import { and, inRange, inSet, notInSet, or, ValueCriterion } from "../../value-criterion";
+import { and, inRange, inSet, matches, notInSet, or, ValueCriterion } from "../../value-criterion";
 
 describe("parse-criteria", () => {
     function shouldParse(stringified: string, expected: ValueCriterion): void {
@@ -25,5 +25,29 @@ describe("parse-criteria", () => {
     shouldParse(
         "(([1, 7] | [3, 4]) & ({123} | !{456})) | ({1,2,3} & [-0.9, ...])",
         or([and([or([inRange(1, 7), inRange(3, 4)]), or([inSet([123]), notInSet([456])])]), and([inSet([1, 2, 3]), inRange(-0.9, void 0)])])
+    );
+
+    interface FooBar {
+        foo: number;
+        bar: number;
+    }
+
+    shouldParse("{ foo: [1, 7] }", matches({ foo: inRange(1, 7) }));
+    shouldParse("{ foo: [1, 7], bar: [3, 4] }", matches({ foo: inRange(1, 7), bar: inRange(3, 4) }));
+    shouldParse(
+        "{ foo: [1, 7] } | { bar: [3, 4] }",
+        or([matches<FooBar>({ foo: inRange(1, 7) }), matches<FooBar>({ bar: inRange(3, 4) })])
+    );
+
+    shouldParse(
+        "(([1, 7] | [3, 4]) & ({123} | !{456})) | ({1,2,3} & [-0.9, ...] & ({ foo: [1, 7] } | { bar: [3, 4] }))",
+        or([
+            and([or([inRange(1, 7), inRange(3, 4)]), or([inSet([123]), notInSet([456])])]),
+            and<any>([
+                inSet([1, 2, 3]),
+                inRange(-0.9, void 0),
+                or([matches<FooBar>({ foo: inRange(1, 7) }), matches<FooBar>({ bar: inRange(3, 4) })]),
+            ]),
+        ])
     );
 });
