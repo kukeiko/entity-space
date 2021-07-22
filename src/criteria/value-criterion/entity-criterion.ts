@@ -1,4 +1,4 @@
-import { Class, getInstanceClass } from "../../utils";
+import { Class, getInstanceClass, permutateEntries } from "../../utils";
 
 import { OrCombinedValueCriteria } from "./or-combined-value-criteria";
 import { ValueCriteria } from "./value-criteria";
@@ -11,25 +11,6 @@ type RemapTemplate<T> = {
 type InstantiatedTemplate<T> = {
     [K in keyof T]?: T[K] extends Class<ValueCriterion>[] ? InstanceType<T[K][number]>[] : T[K] extends Class<ValueCriterion> ? InstanceType<T[K]> : never;
 };
-
-// [todo] move to utils once i've cleaned up the "any"s
-function permutate(aggregated: any, entries: [string, any[]][]): any[] {
-    if (entries.length === 0) {
-        return [aggregated];
-    }
-
-    let allAggregated: any[] = [];
-    let [key, shards] = entries[0];
-    entries = entries.slice(1);
-    aggregated = { ...aggregated };
-
-    for (const shard of shards) {
-        let nextAggregated = { ...aggregated, [key]: shard };
-        allAggregated.push(...permutate(nextAggregated, entries));
-    }
-
-    return allAggregated;
-}
 
 export class EntityCriterion<T = unknown> extends ValueCriterion<T> {
     constructor(items: Partial<Record<keyof T, ValueCriterion>>) {
@@ -80,7 +61,7 @@ export class EntityCriterion<T = unknown> extends ValueCriterion<T> {
             }
         }
 
-        return permutate({}, permutationEntries);
+        return permutateEntries(permutationEntries) as any;
     }
 
     // [todo] remove "as any" hacks
