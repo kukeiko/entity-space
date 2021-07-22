@@ -6,3 +6,4 @@ export * from "./parse-tokens.generator";
 export * from "./parse-value-criteria.generator";
 export * from "./parse-value-criterion.generator";
 export * from "./parse-entity-criterion.generator";
+export * from "./parse-binary-criterion.generator";
