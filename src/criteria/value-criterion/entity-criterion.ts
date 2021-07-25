@@ -31,11 +31,13 @@ export class EntityCriterion<T = unknown> extends ValueCriterion<T> {
 
         for (const key in bag) {
             const valueCriteria = bag[key];
-            if (valueCriteria === void 0 || !(valueCriteria instanceof ValueCriteria)) {
+            if (valueCriteria === void 0) {
                 continue;
+            } else if (valueCriteria instanceof OrCombinedValueCriteria) {
+                entries.push([key, valueCriteria.getItems()]);
+            } else {
+                entries.push([key, [valueCriteria]]);
             }
-
-            entries.push([key, valueCriteria.getItems()]);
         }
 
         return entries;
