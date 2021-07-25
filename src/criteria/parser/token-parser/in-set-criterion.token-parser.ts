@@ -1,8 +1,8 @@
 import { inSet, notInSet } from "../../value-criterion";
 import { TokenType } from "../token-type.enum";
-import { ParseTokenGenerator } from "./parse-token-generator.type";
+import { TokenParser } from "./token-parser.type";
 
-export function* parseInSetGenerator(): ParseTokenGenerator {
+export function* insetCriterionTokenParser(): TokenParser {
     let token = yield;
     let isNegated = false;
 

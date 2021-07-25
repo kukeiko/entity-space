@@ -1,9 +1,9 @@
 import { inRange } from "../../value-criterion";
 import { Token } from "../token.contract";
 import { TokenType } from "../token-type.enum";
-import { ParseTokenGenerator } from "./parse-token-generator.type";
+import { TokenParser } from "./token-parser.type";
 
-function* acceptValue(): Generator<undefined, [string | number | undefined, typeof Number | typeof String | undefined] | false, Token> {
+function* valueParser(): Generator<undefined, [string | number | undefined, typeof Number | typeof String | undefined] | false, Token> {
     let token = yield;
 
     if (token.type === TokenType.String) {
@@ -24,7 +24,7 @@ function* acceptValue(): Generator<undefined, [string | number | undefined, type
     }
 }
 
-export function* parseInRangeGenerator(): ParseTokenGenerator {
+export function* inRangeCriterionTokenParser(): TokenParser {
     let token = yield;
 
     if (token.type !== TokenType.Special || !"([".includes(token.value)) {
@@ -32,7 +32,7 @@ export function* parseInRangeGenerator(): ParseTokenGenerator {
     }
 
     const fromInclusive = token.value === "[";
-    const fromValueResult = yield* acceptValue();
+    const fromValueResult = yield* valueParser();
     if (fromValueResult === false) return false;
     const [fromValue] = fromValueResult;
 
@@ -41,7 +41,7 @@ export function* parseInRangeGenerator(): ParseTokenGenerator {
     if (token.type === TokenType.Special && ")]".includes(token.value)) {
         return () => inRange(fromValue as any, void 0, [fromInclusive, token.value === "]"] as any);
     } else if (token.type === TokenType.Special && token.value === ",") {
-        const toValueResult = yield* acceptValue();
+        const toValueResult = yield* valueParser();
         if (toValueResult === false) return false;
         const [toValue] = toValueResult;
 

@@ -1,4 +1,4 @@
-import { parseNotBracketedCriteriaGenerator, parseValueCriteriaGenerator, token, TokenType } from "../../parser";
+import { notBracketedCriteriaTokenParser, criteriaTokenParser, token, TokenType } from "../../parser";
 import { inRange, inSet, or } from "../../value-criterion";
 import { fitShouldParseTokens, itShouldParseTokens } from "./utils";
 
@@ -6,7 +6,7 @@ describe("token-parser: value-criteria", () => {
     const terminator = token(TokenType.Special, ";");
 
     itShouldParseTokens(
-        parseValueCriteriaGenerator,
+        criteriaTokenParser,
         [
             token(TokenType.Special, "("),
             token(TokenType.Special, "("),
@@ -26,7 +26,7 @@ describe("token-parser: value-criteria", () => {
     );
 
     itShouldParseTokens(
-        parseValueCriteriaGenerator,
+        criteriaTokenParser,
         [
             token(TokenType.Special, "("),
             token(TokenType.Special, "{"),
@@ -42,7 +42,7 @@ describe("token-parser: value-criteria", () => {
     );
 
     itShouldParseTokens(
-        parseNotBracketedCriteriaGenerator,
+        notBracketedCriteriaTokenParser,
         [
             token(TokenType.Special, "("),
             token(TokenType.Number, "13"),
@@ -61,7 +61,7 @@ describe("token-parser: value-criteria", () => {
     );
 
     itShouldParseTokens(
-        parseNotBracketedCriteriaGenerator,
+        notBracketedCriteriaTokenParser,
         [
             token(TokenType.Special, "("),
             token(TokenType.Special, "("),
@@ -82,7 +82,7 @@ describe("token-parser: value-criteria", () => {
     );
 
     itShouldParseTokens(
-        parseValueCriteriaGenerator,
+        criteriaTokenParser,
         [
             token(TokenType.Special, "("),
             token(TokenType.Special, "("),

@@ -1,16 +1,16 @@
-import { parseInRangeGenerator, token, TokenType } from "../../parser";
+import { inRangeCriterionTokenParser, token, TokenType } from "../../parser";
 import { inRange } from "../../value-criterion";
 import { itShouldParseTokens } from "./utils";
 
 describe("parse-tokens: in-range", () => {
     itShouldParseTokens(
-        parseInRangeGenerator,
+        inRangeCriterionTokenParser,
         [token(TokenType.Special, "("), token(TokenType.Number, "13"), token(TokenType.Special, ","), token(TokenType.Number, "37"), token(TokenType.Special, "]")],
         inRange(13, 37, [false, true])
     );
 
     itShouldParseTokens(
-        parseInRangeGenerator,
+        inRangeCriterionTokenParser,
         [
             token(TokenType.Special, "["),
             token(TokenType.Special, "."),
@@ -24,7 +24,7 @@ describe("parse-tokens: in-range", () => {
     );
 
     itShouldParseTokens(
-        parseInRangeGenerator,
+        inRangeCriterionTokenParser,
         [
             token(TokenType.Special, "("),
             token(TokenType.Number, "1"),

@@ -1,15 +1,15 @@
 import { and, or, ValueCriterion } from "../../value-criterion";
 import { TokenType } from "../token-type.enum";
-import { ParseTokenGenerator } from "./parse-token-generator.type";
-import { parseValueCriterionGenerator } from "./parse-value-criterion.generator";
+import { TokenParser } from "./token-parser.type";
+import { criterionTokenParser } from "./criterion.token-parser";
 
-export function* parseNotBracketedCriteriaGenerator(): ParseTokenGenerator {
+export function* notBracketedCriteriaTokenParser(): TokenParser {
     const items: ValueCriterion[] = [];
 
     let combinator = "|";
 
     while (true) {
-        let valueResult = yield* parseValueCriterionGenerator();
+        let valueResult = yield* criterionTokenParser();
 
         if (valueResult === false) {
             return false;

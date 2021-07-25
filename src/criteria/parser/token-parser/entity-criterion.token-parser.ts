@@ -1,9 +1,9 @@
 import { EntityCriterion, ValueCriterion } from "../../value-criterion";
 import { TokenType } from "../token-type.enum";
-import { parseNotBracketedCriteriaGenerator } from "./parse-not-bracketed-criteria.generator";
-import { ParseTokenGenerator } from "./parse-token-generator.type";
+import { notBracketedCriteriaTokenParser } from "./not-bracketed-criteria.token-parser";
+import { TokenParser } from "./token-parser.type";
 
-export function* parseEntityCriterionGenerator(): ParseTokenGenerator {
+export function* entityCriterionTokenParser(): TokenParser {
     let token = yield;
 
     if (!(token.type === TokenType.Special && token.value === "{")) {
@@ -27,7 +27,7 @@ export function* parseEntityCriterionGenerator(): ParseTokenGenerator {
             return false;
         }
 
-        const orCombinedCriteriaGenerator = parseNotBracketedCriteriaGenerator();
+        const orCombinedCriteriaGenerator = notBracketedCriteriaTokenParser();
         orCombinedCriteriaGenerator.next();
 
         while (true) {

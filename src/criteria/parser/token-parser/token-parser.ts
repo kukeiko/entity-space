@@ -1,6 +1,6 @@
-import { ParseTokenGenerator } from "./parse-token-generator.type";
+import { TokenParser } from "./token-parser.type";
 
-export function* parseTokensGenerator(createGenerators: (() => ParseTokenGenerator)[]): ParseTokenGenerator {
+export function* tokenParser(createGenerators: (() => TokenParser)[]): TokenParser {
     let generators = createGenerators.map(create => create());
     generators.forEach(gen => gen.next());
 

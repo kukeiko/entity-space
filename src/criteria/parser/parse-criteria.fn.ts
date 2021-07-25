@@ -1,6 +1,6 @@
 import { ValueCriteria, ValueCriterion } from "../value-criterion";
 import { lex } from "./lex.fn";
-import { parseNotBracketedCriteriaGenerator } from "./token-parser";
+import { notBracketedCriteriaTokenParser } from "./token-parser";
 import { TokenType } from "./token-type.enum";
 import { token } from "./token.fn";
 
@@ -14,7 +14,7 @@ export function parseCriteria(input: string): ValueCriterion {
     const terminator = token(TokenType.Special, ";");
     tokens.push(terminator);
 
-    const generator = parseNotBracketedCriteriaGenerator();
+    const generator = notBracketedCriteriaTokenParser();
     generator.next();
 
     for (const token of tokens) {

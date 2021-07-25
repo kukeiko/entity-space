@@ -1,10 +1,10 @@
-import { parseInSetGenerator, token, TokenType } from "../../parser";
+import { insetCriterionTokenParser, token, TokenType } from "../../parser";
 import { inSet, notInSet } from "../../value-criterion";
 import { itShouldParseTokens } from "./utils";
 
 describe("parse-tokens: in-set / not-in-set", () => {
     itShouldParseTokens(
-        parseInSetGenerator,
+        insetCriterionTokenParser,
         [
             token(TokenType.Special, "{"),
             token(TokenType.Number, "1"),
@@ -18,7 +18,7 @@ describe("parse-tokens: in-set / not-in-set", () => {
     );
 
     itShouldParseTokens(
-        parseInSetGenerator,
+        insetCriterionTokenParser,
         [
             token(TokenType.Special, "!"),
             token(TokenType.Special, "{"),
