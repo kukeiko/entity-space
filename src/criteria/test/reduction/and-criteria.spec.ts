@@ -1,6 +1,6 @@
 import { reducing } from "./reducing.fn";
 
-describe("reducing: and-combined-value-criteria", () => {
+describe("reducing: and-criteria", () => {
     describe("full reduction", () => {
         reducing("([2, 3] & is-even)").by("[1, 7]").is(true);
     });
