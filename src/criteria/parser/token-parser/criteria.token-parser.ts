@@ -1,4 +1,4 @@
-import { and, or, ValueCriterion } from "../../value-criterion";
+import { and, or, Criterion } from "../../value-criterion";
 import { TokenType } from "../token-type.enum";
 import { TokenParser } from "./token-parser.type";
 import { criterionTokenParser } from "./criterion.token-parser";
@@ -10,7 +10,7 @@ export function* criteriaTokenParser(): TokenParser {
         return false;
     }
 
-    const items: ValueCriterion[] = [];
+    const items: Criterion[] = [];
     let combinator = "|";
 
     while (true) {

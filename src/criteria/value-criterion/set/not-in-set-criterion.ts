@@ -1,9 +1,9 @@
 import { Class, getInstanceClass, subtractSets } from "../../../utils";
-import { ValueCriteria } from "../value-criteria";
-import { ValueCriterion } from "../value-criterion";
+import { Criteria } from "../criteria";
+import { Criterion } from "../criterion";
 import { InSetCriterion } from "./in-set-criterion";
 
-export abstract class NotInSetCriterion<T> extends ValueCriterion<T> {
+export abstract class NotInSetCriterion<T> extends Criterion<T> {
     constructor(values: Iterable<T>) {
         super();
         this.values = new Set(values);
@@ -16,8 +16,8 @@ export abstract class NotInSetCriterion<T> extends ValueCriterion<T> {
         return this.values;
     }
 
-    reduce(other: ValueCriterion): boolean | ValueCriterion<T> {
-        if (other instanceof ValueCriteria) {
+    reduce(other: Criterion): boolean | Criterion<T> {
+        if (other instanceof Criteria) {
             return super.reduceValueCriteria(other);
         } else if (other instanceof this.inSetClass) {
             const copy = new Set(other.getValues());
@@ -47,7 +47,7 @@ export abstract class NotInSetCriterion<T> extends ValueCriterion<T> {
         return false;
     }
 
-    invert(): ValueCriterion<T> {
+    invert(): Criterion<T> {
         return new this.inSetClass(this.values);
     }
 

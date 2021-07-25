@@ -1,10 +1,10 @@
-import { OrCombinedValueCriteria } from "./or-combined-value-criteria";
-import { ValueCriteria } from "./value-criteria";
-import { ValueCriterion } from "./value-criterion";
+import { OrCriteria } from "./or-criteria";
+import { Criteria } from "./criteria";
+import { Criterion } from "./criterion";
 
-export class AndCombinedValueCriteria<T = unknown> extends ValueCriteria<T> {
+export class AndCriteria<T = unknown> extends Criteria<T> {
     // [todo] remove "any" hacks
-    reduce(other: ValueCriterion): boolean | ValueCriterion<T> {
+    reduce(other: Criterion): boolean | Criterion<T> {
         const items = this.items.map(criterion => ({ criterion, result: criterion.reduce(other) }));
 
         if (items.every(x => x.result === false)) {
@@ -26,8 +26,8 @@ export class AndCombinedValueCriteria<T = unknown> extends ValueCriteria<T> {
             }
         });
 
-        const reduced: ValueCriterion[][] = [];
-        const accumulated: ValueCriterion[] = [];
+        const reduced: Criterion[][] = [];
+        const accumulated: Criterion[] = [];
 
         for (const item of items) {
             if (item.result === true) {
@@ -43,11 +43,11 @@ export class AndCombinedValueCriteria<T = unknown> extends ValueCriteria<T> {
             return true;
         }
 
-        return new OrCombinedValueCriteria<any>(reduced.map(foo => (foo.length === 1 ? foo[0] : new AndCombinedValueCriteria(foo))));
+        return new OrCriteria<any>(reduced.map(foo => (foo.length === 1 ? foo[0] : new AndCriteria(foo))));
     }
 
-    invert(): ValueCriterion<T> {
-        return new AndCombinedValueCriteria(this.items.map(criterion => criterion.invert()));
+    invert(): Criterion<T> {
+        return new AndCriteria(this.items.map(criterion => criterion.invert()));
     }
 
     toString(): string {

@@ -1,7 +1,7 @@
-import { ValueCriterion } from "../../value-criterion";
+import { Criterion } from "../../value-criterion";
 import { parseCriteria } from "../../parser";
 
-function parse<T extends ValueCriterion | string>(item: T): ValueCriterion {
+function parse<T extends Criterion | string>(item: T): Criterion {
     if (typeof item === "string") {
         return parseCriteria(item);
     }
@@ -10,14 +10,14 @@ function parse<T extends ValueCriterion | string>(item: T): ValueCriterion {
 }
 
 export function reducing(
-    criterion: ValueCriterion | string
+    criterion: Criterion | string
 ): {
-    by(other: ValueCriterion | string): { is(expected: ValueCriterion | string | boolean): void };
+    by(other: Criterion | string): { is(expected: Criterion | string | boolean): void };
 } {
     return {
-        by(other: ValueCriterion | string) {
+        by(other: Criterion | string) {
             return {
-                is(expected: ValueCriterion | string | boolean) {
+                is(expected: Criterion | string | boolean) {
                     if (expected === true) {
                         it(`${criterion} should be fully reduced by ${other}`, () => {
                             try {

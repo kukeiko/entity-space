@@ -1,7 +1,7 @@
 import { Class, getInstanceClass } from "../../../utils";
-import { OrCombinedValueCriteria } from "../or-combined-value-criteria";
-import { ValueCriteria } from "../value-criteria";
-import { ValueCriterion } from "../value-criterion";
+import { OrCriteria } from "../or-criteria";
+import { Criteria } from "../criteria";
+import { Criterion } from "../criterion";
 
 export type FromCriterion<T> = {
     op: ">=" | ">";
@@ -13,7 +13,7 @@ export type ToCriterion<T> = {
     value: T;
 };
 
-export abstract class InRangeCriterion<T> extends ValueCriterion<T> {
+export abstract class InRangeCriterion<T> extends Criterion<T> {
     constructor(values: [T | undefined, T | undefined], inclusive: boolean | [boolean, boolean] = true) {
         super();
 
@@ -132,8 +132,8 @@ export abstract class InRangeCriterion<T> extends ValueCriterion<T> {
         return InRangeCriterion.isToBiggerThanFrom(a, this.getFrom()) && InRangeCriterion.isToSmallerThanTo(a, this.getTo());
     }
 
-    reduce(other: ValueCriterion): boolean | ValueCriterion<T> {
-        if (other instanceof ValueCriteria) {
+    reduce(other: Criterion): boolean | Criterion<T> {
+        if (other instanceof Criteria) {
             return super.reduceValueCriteria(other);
         } else if (other instanceof this.selfClass) {
             const otherFrom = other.getFrom();
@@ -166,7 +166,7 @@ export abstract class InRangeCriterion<T> extends ValueCriterion<T> {
                     const toInside = InRangeCriterion.isToInsideFromTo(selfTo, other);
 
                     if (fromInside && toInside) {
-                        return new OrCombinedValueCriteria([
+                        return new OrCriteria([
                             new this.selfClass([otherFrom.value, selfFrom.value], [otherFrom.op === ">=", selfFrom.op === ">"]),
                             new this.selfClass([selfTo.value, otherTo.value], [selfTo.op === "<", otherTo.op === "<="]),
                         ]);
@@ -184,7 +184,7 @@ export abstract class InRangeCriterion<T> extends ValueCriterion<T> {
                     const toInside = this.isToInsideFromTo(selfTo);
 
                     if (fromInside && toInside) {
-                        return new OrCombinedValueCriteria([
+                        return new OrCriteria([
                             new this.selfClass([otherFrom.value, selfFrom.value], [otherFrom.op === ">=", selfFrom.op === ">"]),
                             new this.selfClass([selfTo.value, void 0], selfTo.op === "<"),
                         ]);
@@ -202,7 +202,7 @@ export abstract class InRangeCriterion<T> extends ValueCriterion<T> {
                     const toInside = this.isToInsideFromTo(selfTo);
 
                     if (fromInside && toInside) {
-                        return new OrCombinedValueCriteria([
+                        return new OrCriteria([
                             new this.selfClass([void 0, selfFrom.value], selfFrom.op === ">"),
                             new this.selfClass([selfTo.value, otherTo.value], [selfTo.op === "<", otherTo.op === "<="]),
                         ]);
@@ -218,8 +218,8 @@ export abstract class InRangeCriterion<T> extends ValueCriterion<T> {
         return false;
     }
 
-    invert(): ValueCriterion<T> {
-        const inverted: ValueCriterion<T>[] = [];
+    invert(): Criterion<T> {
+        const inverted: Criterion<T>[] = [];
 
         if (this.from?.op !== void 0) {
             inverted.push(new this.selfClass([void 0, this.from.value], this.from.op === ">"));
@@ -229,6 +229,6 @@ export abstract class InRangeCriterion<T> extends ValueCriterion<T> {
             inverted.push(new this.selfClass([this.to.value, void 0], this.to.op === "<"));
         }
 
-        return new OrCombinedValueCriteria(inverted);
+        return new OrCriteria(inverted);
     }
 }

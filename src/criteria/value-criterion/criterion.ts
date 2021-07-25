@@ -1,16 +1,16 @@
-import { AndCombinedValueCriteria } from "./and-combined-value-criteria";
-import { OrCombinedValueCriteria } from "./or-combined-value-criteria";
-import { ValueCriteria } from "./value-criteria";
+import { AndCriteria } from "./and-criteria";
+import { OrCriteria } from "./or-criteria";
+import { Criteria } from "./criteria";
 
-export abstract class ValueCriterion<T = unknown> {
+export abstract class Criterion<T = unknown> {
     temp!: T; // need this for proper type-safety, otherwise ValueCriterion<number> is assignable to ValueCriterion<string>
-    abstract reduce(other: ValueCriterion): boolean | ValueCriterion<T>;
-    abstract invert(): ValueCriterion<T>;
+    abstract reduce(other: Criterion): boolean | Criterion<T>;
+    abstract invert(): Criterion<T>;
     abstract toString(): string;
 
-    protected reduceValueCriteria(valueCriteria: ValueCriteria): boolean | ValueCriterion<T> {
-        if (valueCriteria instanceof AndCombinedValueCriteria) {
-            const items: ValueCriterion<T>[] = [];
+    protected reduceValueCriteria(valueCriteria: Criteria): boolean | Criterion<T> {
+        if (valueCriteria instanceof AndCriteria) {
+            const items: Criterion<T>[] = [];
             let didReduceAny = false;
 
             for (const other of valueCriteria.getItems()) {
@@ -30,9 +30,9 @@ export abstract class ValueCriterion<T = unknown> {
                 return false;
             }
 
-            return items.length === 1 ? items[0] : new AndCombinedValueCriteria(items);
+            return items.length === 1 ? items[0] : new AndCriteria(items);
         } else {
-            const items: ValueCriterion<T>[] = [];
+            const items: Criterion<T>[] = [];
             let didReduceAny = false;
 
             for (const other of valueCriteria.getItems()) {
@@ -52,7 +52,7 @@ export abstract class ValueCriterion<T = unknown> {
                 return false;
             }
 
-            return items.length === 0 ? true : items.length === 1 ? items[0] : new OrCombinedValueCriteria(items);
+            return items.length === 0 ? true : items.length === 1 ? items[0] : new OrCriteria(items);
         }
     }
 

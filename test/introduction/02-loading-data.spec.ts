@@ -1,4 +1,4 @@
-import { matches, inRange, InNumberRangeCriterion, Query, Selection, EntityCriterion, or, ValueCriterion, OrCombinedValueCriteria } from "src";
+import { matches, inRange, InNumberRangeCriterion, Query, Selection, EntityCriterion, or, Criterion, OrCriteria } from "src";
 import { Product, ProductFilter } from "./model";
 import { ProductRepository } from "./repositories";
 
@@ -32,11 +32,11 @@ describe("how do we actually load data?", () => {
             options: {} as any,
         };
 
-        function mapCriteriaToProductFilters(productCriteria: ValueCriterion): ProductFilter[] {
+        function mapCriteriaToProductFilters(productCriteria: Criterion): ProductFilter[] {
             // [todo] hacky workaround to satisfy compiler; i don't want to comment out the current remapping
             // functionality so i still see the method uses here in case i do "find all references"
-            function isProductEntityCriteria(x: any): x is OrCombinedValueCriteria<Product> {
-                return x instanceof OrCombinedValueCriteria;
+            function isProductEntityCriteria(x: any): x is OrCriteria<Product> {
+                return x instanceof OrCriteria;
             }
 
             function isProductEntityCriterion(x: any): x is EntityCriterion<Product> {

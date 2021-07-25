@@ -1,10 +1,10 @@
-import { ValueCriteria, ValueCriterion } from "../value-criterion";
+import { Criteria, Criterion } from "../value-criterion";
 import { lex } from "./lex.fn";
 import { notBracketedCriteriaTokenParser } from "./token-parser";
 import { TokenType } from "./token-type.enum";
 import { token } from "./token.fn";
 
-export function parseCriteria(input: string): ValueCriterion {
+export function parseCriteria(input: string): Criterion {
     let tokens = lex(input);
 
     if (tokens.length === 0) {
@@ -25,7 +25,7 @@ export function parseCriteria(input: string): ValueCriterion {
         } else if (result.value !== undefined && result.done) {
             const criterion = result.value();
 
-            if (criterion instanceof ValueCriteria) {
+            if (criterion instanceof Criteria) {
                 if (criterion.getItems().length === 1) {
                     return criterion.getItems()[0];
                 }

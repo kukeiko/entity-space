@@ -1,13 +1,13 @@
 import { Class, getInstanceClass } from "../../../utils";
-import { ValueCriteria } from "../value-criteria";
-import { ValueCriterion } from "../value-criterion";
+import { Criteria } from "../criteria";
+import { Criterion } from "../criterion";
 
 // [todo] think about if we want "is-null", "is-not-null", "is-true" and "is-false" to extend from this
-export abstract class BinaryCriterion<T> extends ValueCriterion<T> {
+export abstract class BinaryCriterion<T> extends Criterion<T> {
     protected abstract inverseClass: Class<BinaryCriterion<T>>;
 
-    reduce(other: ValueCriterion): boolean | ValueCriterion<T> {
-        if (other instanceof ValueCriteria) {
+    reduce(other: Criterion): boolean | Criterion<T> {
+        if (other instanceof Criteria) {
             return super.reduceValueCriteria(other);
         } else if (other instanceof getInstanceClass(this)) {
             return true;
@@ -16,7 +16,7 @@ export abstract class BinaryCriterion<T> extends ValueCriterion<T> {
         return false;
     }
 
-    invert(): ValueCriterion<T> {
+    invert(): Criterion<T> {
         return new this.inverseClass();
     }
 }

@@ -1,8 +1,8 @@
 import { parseCriteria } from "../../parser";
-import { and, inRange, inSet, isEven, isNull, isTrue, matches, notInSet, or, ValueCriterion } from "../../value-criterion";
+import { and, inRange, inSet, isEven, isNull, isTrue, matches, notInSet, or, Criterion } from "../../value-criterion";
 
 describe("parse-criteria", () => {
-    function shouldParse(stringified: string, expected: ValueCriterion): void {
+    function shouldParse(stringified: string, expected: Criterion): void {
         it(`should parse ${stringified}`, () => {
             const parse = () => parseCriteria(stringified);
             expect(parse).not.toThrow();

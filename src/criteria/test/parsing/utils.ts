@@ -1,7 +1,7 @@
 import { TokenParser, Token } from "../../parser";
-import { ValueCriterion } from "../../value-criterion";
+import { Criterion } from "../../value-criterion";
 
-export function itShouldParseTokens(makeGenerator: () => TokenParser, tokens: Token[], expected: ValueCriterion, specFn = it) {
+export function itShouldParseTokens(makeGenerator: () => TokenParser, tokens: Token[], expected: Criterion, specFn = it) {
     specFn(`should parse tokens '${tokens.map(t => t.value).join("")}' to ${expected}`, () => {
         const generator = makeGenerator();
         generator.next();
@@ -20,10 +20,10 @@ export function itShouldParseTokens(makeGenerator: () => TokenParser, tokens: To
     });
 }
 
-export function fitShouldParseTokens(makeGenerator: () => TokenParser, tokens: Token[], expected: ValueCriterion) {
+export function fitShouldParseTokens(makeGenerator: () => TokenParser, tokens: Token[], expected: Criterion) {
     itShouldParseTokens(makeGenerator, tokens, expected, fit);
 }
 
-export function xitShouldParseTokens(makeGenerator: () => TokenParser, tokens: Token[], expected: ValueCriterion) {
+export function xitShouldParseTokens(makeGenerator: () => TokenParser, tokens: Token[], expected: Criterion) {
     itShouldParseTokens(makeGenerator, tokens, expected, xit);
 }

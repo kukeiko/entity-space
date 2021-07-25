@@ -1,10 +1,10 @@
 import { Class } from "../utils";
 import { Selection } from "../selection";
 import { Reducible } from "./reducible";
-import { ValueCriterion } from "../criteria";
+import { Criterion } from "../criteria";
 
 export interface Query<T = unknown> {
-    criteria: ValueCriterion<T>;
+    criteria: Criterion<T>;
     model: Class[];
     options: Reducible;
     selection: Selection;

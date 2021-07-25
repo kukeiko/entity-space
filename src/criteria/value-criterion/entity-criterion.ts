@@ -1,39 +1,39 @@
 import { Class, getInstanceClass, permutateEntries } from "../../utils";
 
-import { OrCombinedValueCriteria } from "./or-combined-value-criteria";
-import { ValueCriteria } from "./value-criteria";
-import { ValueCriterion } from "./value-criterion";
+import { OrCriteria } from "./or-criteria";
+import { Criteria } from "./criteria";
+import { Criterion } from "./criterion";
 
 type RemapTemplate<T> = {
-    [K in keyof T]?: Exclude<T[K], undefined> extends boolean | number | string | null ? Class<ValueCriterion<T[K]>> | Class<ValueCriterion<T[K]>>[] : never;
+    [K in keyof T]?: Exclude<T[K], undefined> extends boolean | number | string | null ? Class<Criterion<T[K]>> | Class<Criterion<T[K]>>[] : never;
 };
 
 type InstantiatedTemplate<T> = {
-    [K in keyof T]?: T[K] extends Class<ValueCriterion>[] ? InstanceType<T[K][number]>[] : T[K] extends Class<ValueCriterion> ? InstanceType<T[K]> : never;
+    [K in keyof T]?: T[K] extends Class<Criterion>[] ? InstanceType<T[K][number]>[] : T[K] extends Class<Criterion> ? InstanceType<T[K]> : never;
 };
 
-export class EntityCriterion<T = unknown> extends ValueCriterion<T> {
-    constructor(items: Partial<Record<keyof T, ValueCriterion>>) {
+export class EntityCriterion<T = unknown> extends Criterion<T> {
+    constructor(items: Partial<Record<keyof T, Criterion>>) {
         super();
         this.bag = items;
     }
 
-    readonly bag: Partial<Record<keyof T, ValueCriterion>>;
+    readonly bag: Partial<Record<keyof T, Criterion>>;
 
-    getBag(): Partial<Record<keyof T, ValueCriterion>> {
+    getBag(): Partial<Record<keyof T, Criterion>> {
         return this.bag;
     }
 
     // [todo] need to recursively get entries from nested ObjectCriterions
-    getEntries(): [string, ValueCriterion[]][] {
-        const entries: [string, ValueCriterion[]][] = [];
+    getEntries(): [string, Criterion[]][] {
+        const entries: [string, Criterion[]][] = [];
         const bag = this.getBag();
 
         for (const key in bag) {
             const valueCriteria = bag[key];
             if (valueCriteria === void 0) {
                 continue;
-            } else if (valueCriteria instanceof OrCombinedValueCriteria) {
+            } else if (valueCriteria instanceof OrCriteria) {
                 entries.push([key, valueCriteria.getItems()]);
             } else {
                 entries.push([key, [valueCriteria]]);
@@ -67,11 +67,11 @@ export class EntityCriterion<T = unknown> extends ValueCriterion<T> {
     }
 
     // [todo] remove "as any" hacks
-    reduce(other: ValueCriterion): boolean | ValueCriterion<T> {
-        if (other instanceof ValueCriteria) {
+    reduce(other: Criterion): boolean | Criterion<T> {
+        if (other instanceof Criteria) {
             return super.reduceValueCriteria(other);
         } else if (other instanceof EntityCriterion) {
-            const reducedPropertyCriteriaBag = new Map<string, ValueCriterion>();
+            const reducedPropertyCriteriaBag = new Map<string, Criterion>();
 
             for (const key in this.bag) {
                 const myCriterion = this.bag[key];
@@ -81,7 +81,7 @@ export class EntityCriterion<T = unknown> extends ValueCriterion<T> {
                 }
 
                 const otherCriterion = other.bag[key];
-                let reduced: ValueCriterion | boolean = false;
+                let reduced: Criterion | boolean = false;
 
                 if (otherCriterion === void 0) {
                     reduced = myCriterion.invert();
@@ -106,14 +106,14 @@ export class EntityCriterion<T = unknown> extends ValueCriterion<T> {
                 return true;
             }
 
-            const objectCriterion: Record<string, ValueCriterion> = {};
+            const objectCriterion: Record<string, Criterion> = {};
 
             // [todo] i think there is an Object.fromEntries() method that we could use, but we need to upgrade our ES target @ tsconfigs
             for (const [key, reducedPropertyCriteria] of Object.entries(other.bag)) {
                 objectCriterion[key] = reducedPropertyCriteria as any;
             }
 
-            const objectCriteria: Record<string, ValueCriterion>[] = [];
+            const objectCriteria: Record<string, Criterion>[] = [];
 
             for (const [key, reducedPropertyCriteria] of reducedPropertyCriteriaBag) {
                 objectCriteria.push({ ...objectCriterion, [key]: reducedPropertyCriteria });
@@ -126,13 +126,13 @@ export class EntityCriterion<T = unknown> extends ValueCriterion<T> {
                 return entityCriterionPieces[0] as any;
             }
 
-            return new OrCombinedValueCriteria(entityCriterionPieces) as any;
+            return new OrCriteria(entityCriterionPieces) as any;
         }
 
         return false;
     }
 
-    invert(): ValueCriterion<T> {
+    invert(): Criterion<T> {
         throw new Error("not implemented yet");
     }
 

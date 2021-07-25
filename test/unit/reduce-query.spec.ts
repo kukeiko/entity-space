@@ -1,10 +1,10 @@
-import { Query, createAlwaysReducible, reduceQuery, Selection, inSet, inRange, ValueCriterion, matches, or } from "src";
+import { Query, createAlwaysReducible, reduceQuery, Selection, inSet, inRange, Criterion, matches, or } from "src";
 
 describe("reduceQuery()", () => {
     // need this so toBeEqual() works
     const defaultOptions = createAlwaysReducible();
 
-    function createQuery(criteria: ValueCriterion = matches({}), selection: Selection = {}): Query {
+    function createQuery(criteria: Criterion = matches({}), selection: Selection = {}): Query {
         return { criteria, model: [], options: defaultOptions, selection };
     }
 

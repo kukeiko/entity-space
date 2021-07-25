@@ -3,7 +3,7 @@ import {
     TypedInstance,
     TypedSelection,
     TypedSelector,
-    ValueCriterion,
+    Criterion,
     Class,
     InStringSetCriterion,
     InNumberSetCriterion,
@@ -14,19 +14,19 @@ import {
     getInstanceClass,
     matches,
     or,
-    ValueCriteria,
+    Criteria,
     InStringRangeCriterion,
 } from "src";
 import { TreeNodeModel, CanvasModel, CircleModel, SquareModel, TriangleModel } from "../facade/model";
 import { Product } from "../introduction/model";
 
 type RemapTemplate<T> = {
-    [K in keyof T]?: Exclude<T[K], undefined> extends boolean | number | string | null ? Class<ValueCriterion<T[K]>> | Class<ValueCriterion<T[K]>>[] : never;
+    [K in keyof T]?: Exclude<T[K], undefined> extends boolean | number | string | null ? Class<Criterion<T[K]>> | Class<Criterion<T[K]>>[] : never;
     // : PropertyCriteriaBagTemplate<T[K]> | PropertyCriteriaBagTemplate<T[K]>[];
 };
 
 type InstantiatedTemplate<T> = {
-    [K in keyof T]?: T[K] extends Class<ValueCriterion>[] ? InstanceType<T[K][number]>[] : T[K] extends Class<ValueCriterion> ? InstanceType<T[K]> : never;
+    [K in keyof T]?: T[K] extends Class<Criterion>[] ? InstanceType<T[K][number]>[] : T[K] extends Class<Criterion> ? InstanceType<T[K]> : never;
 };
 
 export function Void(): undefined {
@@ -63,7 +63,7 @@ const inNumberSet = new InNumberSetCriterion([1, 2, 3]);
 const inNumberRange = new InStringRangeCriterion(["1", "3"]);
 
 const reduced = inNumberSet.reduce(inNumberRange);
-type ShouldBeFalse = ValueCriterion<string> extends ValueCriterion<number> ? true : false;
+type ShouldBeFalse = Criterion<string> extends Criterion<number> ? true : false;
 
 // credit to captain-yossarian https://captain-yossarian.medium.com/typescript-object-oriented-typings-4fd42ce14c75
 // function Mixin<T extends ClassType, R extends T[]>(...classRefs: [...R]): new (...args: any[]) => UnionToIntersection<InstanceType<[...R][number]>> {
@@ -156,7 +156,7 @@ describe("prototyping-playground", () => {
 
         // [todo] hacky workaround to satisfy compiler; i don't want to comment out the current remapping
         // functionality so i still see the method uses here in case i do "find all references"
-        if (!(productCriteria instanceof ValueCriteria)) {
+        if (!(productCriteria instanceof Criteria)) {
             return;
         }
 

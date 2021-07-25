@@ -1,4 +1,4 @@
-import { EntityCriterion, ValueCriterion } from "../../value-criterion";
+import { EntityCriterion, Criterion } from "../../value-criterion";
 import { TokenType } from "../token-type.enum";
 import { notBracketedCriteriaTokenParser } from "./not-bracketed-criteria.token-parser";
 import { TokenParser } from "./token-parser.type";
@@ -10,7 +10,7 @@ export function* entityCriterionTokenParser(): TokenParser {
         return false;
     }
 
-    const bag: Record<string, ValueCriterion> = {};
+    const bag: Record<string, Criterion> = {};
 
     while (true) {
         token = yield;

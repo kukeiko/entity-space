@@ -1,9 +1,9 @@
-import { ValueCriteria } from "./value-criteria";
-import { ValueCriterion } from "./value-criterion";
+import { Criteria } from "./criteria";
+import { Criterion } from "./criterion";
 
-export class OrCombinedValueCriteria<T = unknown> extends ValueCriteria<T> {
+export class OrCriteria<T = unknown> extends Criteria<T> {
     // [todo] remove "as any" hacks
-    reduce(other: ValueCriterion): boolean | ValueCriterion<T> {
+    reduce(other: Criterion): boolean | Criterion<T> {
         let reduced = other;
 
         for (const mine of this.items) {
@@ -19,8 +19,8 @@ export class OrCombinedValueCriteria<T = unknown> extends ValueCriteria<T> {
         return reduced === other ? false : (reduced as any);
     }
 
-    invert(): ValueCriterion<T> {
-        return new OrCombinedValueCriteria(this.items.map(criterion => criterion.invert()));
+    invert(): Criterion<T> {
+        return new OrCriteria(this.items.map(criterion => criterion.invert()));
     }
 
     toString(): string {
