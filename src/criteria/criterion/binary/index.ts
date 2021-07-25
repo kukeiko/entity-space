@@ -7,3 +7,4 @@ export * from "./is-true-or-false";
 export * from "./is-even-criterion";
 export * from "./is-odd-criterion";
 export * from "./is-even.fn";
+export * from "./binary-criterion";

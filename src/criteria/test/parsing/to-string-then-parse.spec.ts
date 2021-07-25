@@ -1,5 +1,5 @@
 import { parseCriteria } from "../../parser";
-import { and, inRange, inSet, notInSet, or, Criterion } from "../../value-criterion";
+import { and, inRange, inSet, notInSet, or, Criterion } from "../../criterion";
 
 describe("to-string-then-parse", () => {
     function shouldParse(stringified: string, expected: Criterion): void {

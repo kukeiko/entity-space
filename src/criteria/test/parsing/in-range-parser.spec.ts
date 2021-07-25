@@ -1,5 +1,5 @@
 import { inRangeCriterionTokenParser, token, TokenType } from "../../parser";
-import { inRange } from "../../value-criterion";
+import { inRange } from "../../criterion";
 import { itShouldParseTokens } from "./utils";
 
 describe("parse-tokens: in-range", () => {

@@ -1,5 +1,5 @@
 import { entityCriterionTokenParser, inRangeCriterionTokenParser, token, TokenType } from "../../parser";
-import { inRange, matches, or } from "../../value-criterion";
+import { inRange, matches, or } from "../../criterion";
 import { fitShouldParseTokens, itShouldParseTokens } from "./utils";
 
 describe("parse-tokens: entity-criterion", () => {

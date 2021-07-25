@@ -1,5 +1,5 @@
 import { binaryCriterionTokenParser, token, TokenType } from "../../parser";
-import { isEven, isNull, isTrue } from "../../value-criterion";
+import { isEven, isNull, isTrue } from "../../criterion";
 import { itShouldParseTokens } from "./utils";
 
 describe("parse-tokens: binary", () => {

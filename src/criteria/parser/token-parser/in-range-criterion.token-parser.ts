@@ -1,4 +1,4 @@
-import { inRange } from "../../value-criterion";
+import { inRange } from "../../criterion";
 import { Token } from "../token.contract";
 import { TokenType } from "../token-type.enum";
 import { TokenParser } from "./token-parser.type";

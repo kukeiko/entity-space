@@ -1,4 +1,4 @@
-import { and, or, Criterion } from "../../value-criterion";
+import { and, or, Criterion } from "../../criterion";
 import { TokenType } from "../token-type.enum";
 import { TokenParser } from "./token-parser.type";
 import { criterionTokenParser } from "./criterion.token-parser";

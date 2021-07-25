@@ -1,4 +1,4 @@
-import { inRange, inSet, notInSet, or } from "../value-criterion";
+import { inRange, inSet, notInSet, or } from "../criterion";
 
 describe("render: in-set", () => {
     it("should render correctly", () => {

@@ -1,5 +1,5 @@
 import { insetCriterionTokenParser, token, TokenType } from "../../parser";
-import { inSet, notInSet } from "../../value-criterion";
+import { inSet, notInSet } from "../../criterion";
 import { itShouldParseTokens } from "./utils";
 
 describe("parse-tokens: in-set / not-in-set", () => {

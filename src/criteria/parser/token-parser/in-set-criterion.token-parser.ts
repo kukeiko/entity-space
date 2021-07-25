@@ -1,4 +1,4 @@
-import { inSet, notInSet } from "../../value-criterion";
+import { inSet, notInSet } from "../../criterion";
 import { TokenType } from "../token-type.enum";
 import { TokenParser } from "./token-parser.type";
 

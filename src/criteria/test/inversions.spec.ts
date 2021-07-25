@@ -1,4 +1,4 @@
-import { inRange, inSet, isEven, notInSet, or } from "../value-criterion";
+import { inRange, inSet, isEven, notInSet, or } from "../criterion";
 
 describe("invert: binary", () => {
     it("is-even inverted should be is-odd", () => {

@@ -1,4 +1,4 @@
-import { Criteria, Criterion } from "../value-criterion";
+import { Criteria, Criterion } from "../criterion";
 import { lex } from "./lex.fn";
 import { notBracketedCriteriaTokenParser } from "./token-parser";
 import { TokenType } from "./token-type.enum";

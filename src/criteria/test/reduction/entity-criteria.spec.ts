@@ -1,4 +1,4 @@
-import { inRange, inSet, notInSet, matches, or } from "../../value-criterion";
+import { inRange, inSet, notInSet, matches, or } from "../../criterion";
 import { reducing } from "./reducing.fn";
 
 describe("reducing: entity-criteria", () => {

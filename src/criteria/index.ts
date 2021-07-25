@@ -1,1 +1,1 @@
-export * from "./value-criterion";
+export * from "./criterion";

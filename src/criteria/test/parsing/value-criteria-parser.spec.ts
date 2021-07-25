@@ -1,5 +1,5 @@
 import { notBracketedCriteriaTokenParser, criteriaTokenParser, token, TokenType } from "../../parser";
-import { inRange, inSet, or } from "../../value-criterion";
+import { inRange, inSet, or } from "../../criterion";
 import { fitShouldParseTokens, itShouldParseTokens } from "./utils";
 
 describe("token-parser: value-criteria", () => {
