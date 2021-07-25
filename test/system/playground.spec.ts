@@ -15,6 +15,7 @@ import {
     matches,
     or,
     ValueCriteria,
+    InStringRangeCriterion,
 } from "src";
 import { TreeNodeModel, CanvasModel, CircleModel, SquareModel, TriangleModel } from "../facade/model";
 import { Product } from "../introduction/model";
@@ -28,7 +29,73 @@ type InstantiatedTemplate<T> = {
     [K in keyof T]?: T[K] extends Class<ValueCriterion>[] ? InstanceType<T[K][number]>[] : T[K] extends Class<ValueCriterion> ? InstanceType<T[K]> : never;
 };
 
+export function Void(): undefined {
+    return void 0;
+}
+
+export function Null(): null {
+    return null;
+}
+
+const anySymbol: Symbol = Symbol("any");
+
+export function Any(): any {
+    return anySymbol;
+}
+
+export class ValueType<T extends () => any = () => any> {
+    constructor(constructors: Iterable<T>) {
+        this.constructors = Array.from(constructors);
+        this.defaultValues = this.constructors.map(ctor => ctor());
+    }
+
+    readonly constructors: ReadonlyArray<T>;
+    readonly defaultValues: ReadonlyArray<ReturnType<T>>;
+
+    static Any(): ValueType {
+        return new ValueType([Any]);
+    }
+}
+
+export type ValueOfValueType<T extends ValueType> = T["defaultValues"][number];
+
+const inNumberSet = new InNumberSetCriterion([1, 2, 3]);
+const inNumberRange = new InStringRangeCriterion(["1", "3"]);
+
+const reduced = inNumberSet.reduce(inNumberRange);
+type ShouldBeFalse = ValueCriterion<string> extends ValueCriterion<number> ? true : false;
+
+// credit to captain-yossarian https://captain-yossarian.medium.com/typescript-object-oriented-typings-4fd42ce14c75
+// function Mixin<T extends ClassType, R extends T[]>(...classRefs: [...R]): new (...args: any[]) => UnionToIntersection<InstanceType<[...R][number]>> {
+//     return merge(class {}, ...classRefs);
+// }
+
 describe("prototyping-playground", () => {
+    it("remap criteria v2", () => {
+        // [todo] without thinking i've written [1-7] a lot (instead of [1, 7]) - maybe good idea to switch to that notation?
+        // it would make it easier to pick out in-range criteria in a string where there's also in-set criteria
+        // i've also put spaces after each entity-criterion name symbol
+
+        // [1-7] pick in-range is [1-7]
+        // {1,2,3} pick in-range is missing payload: {1,2,3}
+        // [1-7] & {1,2,3} pick in-range is [1-7]
+        // [1-7] & [0-1] & [6-8] pick in-set is missing payload: [1-7] & [0-1] & [6-8]
+        // [1-7] | {1,2,3} pick in-range is [1-7], missing payload: {1,2,3}
+        // { foo: [1-7], bar: {1,2,3} } pick in-range is { foo: [1-7] }
+        // { foo: [1-7] | {4,5,6}, bar: {1,2,3} } pick in-range is { foo: [1-7] }, missing payload: { foo: {4,5,6} }
+        // { foo: [1-7] | {4,5,6}, bar: {1,2,3} | [10-20] } pick in-range is { foo: [1-7], bar: [10-20] }, missing payload: { foo: {4,5,6}, bar: {1,2,3} | [10-20]  } | { foo: [1-7], bar: {4,5,6} }
+        //
+        class Pickerli<M = {}> {}
+
+        function acceptOneOf(): any {
+            //
+        }
+
+        function acceptCombinationOf(): any {
+            //
+        }
+    });
+
     it("remap criteria", () => {
         type Permutated<T extends Record<string, any[]>> = {
             [K in keyof T]: T[K][number];
@@ -134,17 +201,17 @@ describe("prototyping-playground", () => {
         const selector = new TypedSelector([TreeNodeModel]);
         const selection = selector
             .select(
-                x => x.children,
-                x =>
-                    x.select(
-                        x => x.parents,
-                        x => x.select(x => x.level)
+                treeNode => treeNode.children,
+                children =>
+                    children.select(
+                        child => child.parents,
+                        parents => parents.select(parent => parent.level)
                     )
             )
-            .select(x => x.metadata)
+            .select(treeNode => treeNode.metadata)
             .select(
-                x => x.children,
-                x => x.select(x => x.name)
+                treeNode => treeNode.children,
+                children => children.select(child => child.name)
             )
             .get();
     });
