@@ -141,9 +141,6 @@ export class EntityCriterion<T = unknown> extends Criterion<T> {
 
         for (const key in this.bag) {
             const criteria = this.bag[key];
-
-            // [todo] this check only exists because i wanted typed ObjectCriterion to not require specifying a critera on each keyof T
-            // seems kinda unclean, so revisit on how to do it better
             if (criteria === void 0) continue;
 
             shards.push(`${key}: ${criteria.toString()}`);

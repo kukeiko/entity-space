@@ -16,7 +16,7 @@ describe("reducing: and-combined-value-criteria", () => {
         });
 
         xit("starts-with(foo) reduced by (starts-with(foo) & contains(bar) & ends-with(baz)) should be (starts-with(foo) & !(contains(bar) & ends-with(baz))) ", () => {
-            // [todo] string fn criteria not yet implemented
+            // [todo] string-fn criteria not yet implemented
         });
     });
 

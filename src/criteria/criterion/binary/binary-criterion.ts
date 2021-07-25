@@ -2,7 +2,6 @@ import { Class, getInstanceClass } from "../../../utils";
 import { Criteria } from "../criteria";
 import { Criterion } from "../criterion";
 
-// [todo] think about if we want "is-null", "is-not-null", "is-true" and "is-false" to extend from this
 export abstract class BinaryCriterion<T> extends Criterion<T> {
     protected abstract inverseClass: Class<BinaryCriterion<T>>;
 
