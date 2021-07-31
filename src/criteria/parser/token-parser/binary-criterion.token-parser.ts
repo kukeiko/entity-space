@@ -10,13 +10,11 @@ const mappings: Record<string, () => BinaryCriterion<any>> = {
     "is-null": () => new IsNullCriterion(),
     "is-not-null": () => new IsNotNullCriterion(),
 };
+
 export function* binaryCriterionTokenParser(): TokenParser {
     let token = yield;
-
     if (token.type !== TokenType.Symbol) return false;
-
     const mapping = mappings[token.value];
-
     if (mapping === void 0) return false;
 
     return () => mapping();
