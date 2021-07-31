@@ -26,7 +26,7 @@ describe("parse-criteria", () => {
     shouldParse("[1, 7] | [3, 4]", or([inRange(1, 7), inRange(3, 4)]));
     shouldParse("{1, 2}", inSet([1, 2]));
     shouldParse("!{1, 2}", notInSet([1, 2]));
-    shouldParse("([1, 7] | [3, 4]) & ({123} | !{456})", and([or([inRange(1, 7), inRange(3, 4)]), or([inSet([123]), notInSet([456])])]));
+    shouldParse("([1, 7] | [3, 4]) & ({123} | !{456})", and(or(inRange(1, 7), inRange(3, 4)), or(inSet([123]), notInSet([456]))));
     shouldParse(
         "(([1, 7] | [3, 4]) & ({123} | !{456} | is-odd | is-null)) | ({1,2,3} & [-0.9, ...])",
         or([and([or([inRange(1, 7), inRange(3, 4)]), or([inSet([123]), notInSet([456]), isEven(false), isNull(true)])]), and([inSet([1, 2, 3]), inRange(-0.9, void 0)])])
@@ -47,11 +47,14 @@ describe("parse-criteria", () => {
     shouldParse(
         "(([1, 7] | [3, 4]) & ({123} | !{456})) | ({1,2,3} & [-0.9, ...] & ({ foo: [1, 7] } | { bar: [3, 4] }))",
         or([
-            and([or([inRange(1, 7), inRange(3, 4)]), or([inSet([123]), notInSet([456])])]),
+            and(or(inRange(1, 7), inRange(3, 4)), or(inSet([123]), notInSet([456]))),
             and<any>([
                 inSet([1, 2, 3]),
                 inRange(-0.9, void 0),
-                or([matches<FooBar>({ foo: inRange(1, 7) }), matches<FooBar>({ bar: inRange(3, 4) })]),
+                or(
+                    matches<FooBar>({ foo: inRange(1, 7) }),
+                    matches<FooBar>({ bar: inRange(3, 4) })
+                ),
             ]),
         ])
     );
