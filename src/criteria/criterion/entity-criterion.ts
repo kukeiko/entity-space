@@ -69,7 +69,7 @@ export class EntityCriterion<T = unknown> extends Criterion {
     // [todo] remove "as any" hacks
     reduce(other: Criterion): boolean | Criterion {
         if (other instanceof Criteria) {
-            return super.reduceValueCriteria(other);
+            return other.reduceBy(this);
         } else if (other instanceof EntityCriterion) {
             const reducedPropertyCriteriaBag = new Map<string, Criterion>();
 
@@ -123,10 +123,10 @@ export class EntityCriterion<T = unknown> extends Criterion {
             const entityCriterionPieces = objectCriteria.map(criteria => new EntityCriterion(criteria));
 
             if (entityCriterionPieces.length === 1) {
-                return entityCriterionPieces[0] as any;
+                return entityCriterionPieces[0];
             }
 
-            return new OrCriteria(entityCriterionPieces) as any;
+            return new OrCriteria(entityCriterionPieces);
         }
 
         return false;

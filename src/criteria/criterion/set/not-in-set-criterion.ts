@@ -18,7 +18,7 @@ export abstract class NotInSetCriterion<T> extends Criterion {
 
     reduce(other: Criterion): boolean | Criterion {
         if (other instanceof Criteria) {
-            return super.reduceValueCriteria(other);
+            return other.reduceBy(this);
         } else if (other instanceof this.inSetClass) {
             const copy = new Set(other.getValues());
 

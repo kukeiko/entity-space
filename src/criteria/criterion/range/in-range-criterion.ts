@@ -134,7 +134,7 @@ export abstract class InRangeCriterion<T> extends Criterion {
 
     reduce(other: Criterion): boolean | Criterion {
         if (other instanceof Criteria) {
-            return super.reduceValueCriteria(other);
+            return other.reduceBy(this);
         } else if (other instanceof this.selfClass) {
             const otherFrom = other.getFrom();
             const otherTo = other.getTo();

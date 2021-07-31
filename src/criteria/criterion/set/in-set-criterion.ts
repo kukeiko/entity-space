@@ -20,7 +20,7 @@ export abstract class InSetCriterion<T> extends Criterion {
 
     reduce(other: Criterion): boolean | Criterion {
         if (other instanceof Criteria) {
-            return super.reduceValueCriteria(other);
+            return other.reduceBy(this);
         } else if (other instanceof getInstanceClass(this)) {
             const copy = new Set(other.getValues());
 

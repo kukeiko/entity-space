@@ -1,8 +1,7 @@
 import { Criteria } from "./criteria";
 import { Criterion } from "./criterion";
 
-export class OrCriteria extends Criteria {
-    // [todo] remove "as any" hacks
+export class OrCriteria<T extends Criterion = Criterion> extends Criteria<T> {
     reduce(other: Criterion): boolean | Criterion {
         let reduced = other;
 
@@ -16,7 +15,31 @@ export class OrCriteria extends Criteria {
             }
         }
 
-        return reduced === other ? false : (reduced as any);
+        return reduced === other ? false : reduced;
+    }
+
+    reduceBy(other: Criterion): boolean | Criterion {
+        const items: Criterion[] = [];
+        let didReduceAny = false;
+
+        for (const mine of this.getItems()) {
+            const reduced = other.reduce(mine);
+
+            if (reduced === true) {
+                didReduceAny = true;
+            } else if (reduced !== false) {
+                items.push(reduced);
+                didReduceAny = true;
+            } else {
+                items.push(mine);
+            }
+        }
+
+        if (!didReduceAny) {
+            return false;
+        }
+
+        return items.length === 0 ? true : items.length === 1 ? items[0] : new OrCriteria(items);
     }
 
     invert(): Criterion {
