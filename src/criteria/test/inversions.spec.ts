@@ -82,7 +82,7 @@ describe("invert: in-range", () => {
     it("[..., 7] inverted should be (7, ...]", () => {
         // arrange
         const criterion = inRange(void 0, 7);
-        const expected = or([inRange(7, void 0, false)]);
+        const expected = inRange(7, void 0, false);
 
         // act
         const actual = criterion.invert();
@@ -94,7 +94,7 @@ describe("invert: in-range", () => {
     it("[7, ...] inverted should be [..., 7)", () => {
         // arrange
         const criterion = inRange(7, void 0);
-        const expected = or([inRange(void 0, 7, false)]);
+        const expected = inRange(void 0, 7, false);
 
         // act
         const actual = criterion.invert();

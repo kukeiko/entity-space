@@ -229,6 +229,6 @@ export abstract class InRangeCriterion<T> extends Criterion {
             inverted.push(new this.selfClass([this.to.value, void 0], this.to.op === "<"));
         }
 
-        return new OrCriteria(inverted);
+        return inverted.length === 1 ? inverted[0] : new OrCriteria(inverted);
     }
 }
