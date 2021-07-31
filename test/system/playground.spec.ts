@@ -21,7 +21,7 @@ import { TreeNodeModel, CanvasModel, CircleModel, SquareModel, TriangleModel } f
 import { Product } from "../introduction/model";
 
 type RemapTemplate<T> = {
-    [K in keyof T]?: Exclude<T[K], undefined> extends boolean | number | string | null ? Class<Criterion<T[K]>> | Class<Criterion<T[K]>>[] : never;
+    [K in keyof T]?: Exclude<T[K], undefined> extends boolean | number | string | null ? Class<Criterion> | Class<Criterion>[] : never;
     // : PropertyCriteriaBagTemplate<T[K]> | PropertyCriteriaBagTemplate<T[K]>[];
 };
 
@@ -63,7 +63,6 @@ const inNumberSet = new InNumberSetCriterion([1, 2, 3]);
 const inNumberRange = new InStringRangeCriterion(["1", "3"]);
 
 const reduced = inNumberSet.reduce(inNumberRange);
-type ShouldBeFalse = Criterion<string> extends Criterion<number> ? true : false;
 
 // credit to captain-yossarian https://captain-yossarian.medium.com/typescript-object-oriented-typings-4fd42ce14c75
 // function Mixin<T extends ClassType, R extends T[]>(...classRefs: [...R]): new (...args: any[]) => UnionToIntersection<InstanceType<[...R][number]>> {
@@ -71,7 +70,44 @@ type ShouldBeFalse = Criterion<string> extends Criterion<number> ? true : false;
 // }
 
 describe("prototyping-playground", () => {
-    it("remap criteria v2", () => {
+    it("user-criterion classes", () => {
+        // instead of mapping, i'm thinking of letting the user create their own criterion class implementation.
+        // i think we'll need a way to typify the contents of an/or criteria - e.g. "price" can be inRange or or (inRange | inRange),
+        // but nothing else - so no and combinator and exactly 2 inRange instances
+    });
+
+    it("criteria <> user-filter mapping", () => {
+        interface Mapping {
+            properties: string[];
+            criterionType: Class<Criterion>;
+        }
+
+        interface Entity {
+            productId: number;
+            price: number;
+        }
+
+        interface FilterA {
+            productIds?: number[];
+            searchText?: string; // could be "and" combined string-fn criteria
+        }
+
+        // {number} => number[]
+
+        interface FilterB {
+            minPrice?: number;
+            maxPrice?: number;
+        }
+
+        class Mapperli<T> {
+            // property(x).mapsTo(inSet)
+            // properties(a,b).mapTo(inRange)
+            // property(productIds).mapToPropertyOfEntity(productId, inSet)
+            // property(minPrice, maxPrice).mapToPropertyOfEntity(price, inRange)
+        }
+    });
+
+    it("picking criteria", () => {
         // [todo] without thinking i've written [1-7] a lot (instead of [1, 7]) - maybe good idea to switch to that notation?
         // it would make it easier to pick out in-range criteria in a string where there's also in-set criteria
         // i've also put spaces after each entity-criterion name symbol

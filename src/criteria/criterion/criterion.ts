@@ -2,15 +2,14 @@ import { AndCriteria } from "./and-criteria";
 import { OrCriteria } from "./or-criteria";
 import { Criteria } from "./criteria";
 
-export abstract class Criterion<T = unknown> {
-    temp!: T; // need this for proper type-safety, otherwise ValueCriterion<number> is assignable to ValueCriterion<string>
-    abstract reduce(other: Criterion): boolean | Criterion<T>;
-    abstract invert(): Criterion<T>;
+export abstract class Criterion {
+    abstract reduce(other: Criterion): boolean | Criterion;
+    abstract invert(): Criterion;
     abstract toString(): string;
 
-    protected reduceValueCriteria(valueCriteria: Criteria): boolean | Criterion<T> {
+    protected reduceValueCriteria(valueCriteria: Criteria): boolean | Criterion {
         if (valueCriteria instanceof AndCriteria) {
-            const items: Criterion<T>[] = [];
+            const items: Criterion[] = [];
             let didReduceAny = false;
 
             for (const other of valueCriteria.getItems()) {
@@ -32,7 +31,7 @@ export abstract class Criterion<T = unknown> {
 
             return items.length === 1 ? items[0] : new AndCriteria(items);
         } else {
-            const items: Criterion<T>[] = [];
+            const items: Criterion[] = [];
             let didReduceAny = false;
 
             for (const other of valueCriteria.getItems()) {
@@ -56,7 +55,7 @@ export abstract class Criterion<T = unknown> {
         }
     }
 
-    // reduceBy(other: ValueCriterion): boolean | ValueCriterion<T> {
+    // reduceBy(other: ValueCriterion): boolean | ValueCriterion {
     //     return false;
     // }
 }

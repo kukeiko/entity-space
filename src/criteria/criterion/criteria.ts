@@ -1,14 +1,14 @@
 import { Criterion } from "./criterion";
 
-export abstract class Criteria<T = unknown> extends Criterion<T> {
-    constructor(items: Criterion<T>[]) {
+export abstract class Criteria extends Criterion {
+    constructor(items: Criterion[]) {
         super();
         this.items = items;
     }
 
-    readonly items: Criterion<T>[];
+    readonly items: Criterion[];
 
-    getItems(): Criterion<T>[] {
+    getItems(): Criterion[] {
         return this.items;
     }
 }

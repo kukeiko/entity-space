@@ -35,7 +35,7 @@ describe("how do we actually load data?", () => {
         function mapCriteriaToProductFilters(productCriteria: Criterion): ProductFilter[] {
             // [todo] hacky workaround to satisfy compiler; i don't want to comment out the current remapping
             // functionality so i still see the method uses here in case i do "find all references"
-            function isProductEntityCriteria(x: any): x is OrCriteria<Product> {
+            function isProductEntityCriteria(x: any): x is OrCriteria {
                 return x instanceof OrCriteria;
             }
 

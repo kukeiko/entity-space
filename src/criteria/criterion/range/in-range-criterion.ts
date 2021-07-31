@@ -13,7 +13,7 @@ export type ToCriterion<T> = {
     value: T;
 };
 
-export abstract class InRangeCriterion<T> extends Criterion<T> {
+export abstract class InRangeCriterion<T> extends Criterion {
     constructor(values: [T | undefined, T | undefined], inclusive: boolean | [boolean, boolean] = true) {
         super();
 
@@ -132,7 +132,7 @@ export abstract class InRangeCriterion<T> extends Criterion<T> {
         return InRangeCriterion.isToBiggerThanFrom(a, this.getFrom()) && InRangeCriterion.isToSmallerThanTo(a, this.getTo());
     }
 
-    reduce(other: Criterion): boolean | Criterion<T> {
+    reduce(other: Criterion): boolean | Criterion {
         if (other instanceof Criteria) {
             return super.reduceValueCriteria(other);
         } else if (other instanceof this.selfClass) {
@@ -218,8 +218,8 @@ export abstract class InRangeCriterion<T> extends Criterion<T> {
         return false;
     }
 
-    invert(): Criterion<T> {
-        const inverted: Criterion<T>[] = [];
+    invert(): Criterion {
+        const inverted: Criterion[] = [];
 
         if (this.from?.op !== void 0) {
             inverted.push(new this.selfClass([void 0, this.from.value], this.from.op === ">"));

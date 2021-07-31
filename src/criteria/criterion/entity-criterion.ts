@@ -5,14 +5,14 @@ import { Criteria } from "./criteria";
 import { Criterion } from "./criterion";
 
 type RemapTemplate<T> = {
-    [K in keyof T]?: Exclude<T[K], undefined> extends boolean | number | string | null ? Class<Criterion<T[K]>> | Class<Criterion<T[K]>>[] : never;
+    [K in keyof T]?: Exclude<T[K], undefined> extends boolean | number | string | null ? Class<Criterion> | Class<Criterion>[] : never;
 };
 
 type InstantiatedTemplate<T> = {
     [K in keyof T]?: T[K] extends Class<Criterion>[] ? InstanceType<T[K][number]>[] : T[K] extends Class<Criterion> ? InstanceType<T[K]> : never;
 };
 
-export class EntityCriterion<T = unknown> extends Criterion<T> {
+export class EntityCriterion<T = unknown> extends Criterion {
     constructor(items: Partial<Record<keyof T, Criterion>>) {
         super();
         this.bag = items;
@@ -67,7 +67,7 @@ export class EntityCriterion<T = unknown> extends Criterion<T> {
     }
 
     // [todo] remove "as any" hacks
-    reduce(other: Criterion): boolean | Criterion<T> {
+    reduce(other: Criterion): boolean | Criterion {
         if (other instanceof Criteria) {
             return super.reduceValueCriteria(other);
         } else if (other instanceof EntityCriterion) {
@@ -132,7 +132,7 @@ export class EntityCriterion<T = unknown> extends Criterion<T> {
         return false;
     }
 
-    invert(): Criterion<T> {
+    invert(): Criterion {
         throw new Error("not implemented yet");
     }
 

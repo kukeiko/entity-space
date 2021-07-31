@@ -4,7 +4,7 @@ import { Criteria } from "../criteria";
 import { Criterion } from "../criterion";
 import { NotInSetCriterion } from "./not-in-set-criterion";
 
-export abstract class InSetCriterion<T> extends Criterion<T> {
+export abstract class InSetCriterion<T> extends Criterion {
     constructor(values: Iterable<T>) {
         super();
         this.values = new Set(values);
@@ -18,7 +18,7 @@ export abstract class InSetCriterion<T> extends Criterion<T> {
         return this.values;
     }
 
-    reduce(other: Criterion): boolean | Criterion<T> {
+    reduce(other: Criterion): boolean | Criterion {
         if (other instanceof Criteria) {
             return super.reduceValueCriteria(other);
         } else if (other instanceof getInstanceClass(this)) {
@@ -63,7 +63,7 @@ export abstract class InSetCriterion<T> extends Criterion<T> {
         return false;
     }
 
-    invert(): Criterion<T> {
+    invert(): Criterion {
         return new this.notInClass(this.values);
     }
 

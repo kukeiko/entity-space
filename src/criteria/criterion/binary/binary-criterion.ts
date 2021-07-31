@@ -2,10 +2,10 @@ import { Class, getInstanceClass } from "../../../utils";
 import { Criteria } from "../criteria";
 import { Criterion } from "../criterion";
 
-export abstract class BinaryCriterion<T> extends Criterion<T> {
+export abstract class BinaryCriterion<T> extends Criterion {
     protected abstract inverseClass: Class<BinaryCriterion<T>>;
 
-    reduce(other: Criterion): boolean | Criterion<T> {
+    reduce(other: Criterion): boolean | Criterion {
         if (other instanceof Criteria) {
             return super.reduceValueCriteria(other);
         } else if (other instanceof getInstanceClass(this)) {
@@ -15,7 +15,7 @@ export abstract class BinaryCriterion<T> extends Criterion<T> {
         return false;
     }
 
-    invert(): Criterion<T> {
+    invert(): Criterion {
         return new this.inverseClass();
     }
 }

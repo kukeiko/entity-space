@@ -1,9 +1,9 @@
 import { Criteria } from "./criteria";
 import { Criterion } from "./criterion";
 
-export class OrCriteria<T = unknown> extends Criteria<T> {
+export class OrCriteria extends Criteria {
     // [todo] remove "as any" hacks
-    reduce(other: Criterion): boolean | Criterion<T> {
+    reduce(other: Criterion): boolean | Criterion {
         let reduced = other;
 
         for (const mine of this.items) {
@@ -19,7 +19,7 @@ export class OrCriteria<T = unknown> extends Criteria<T> {
         return reduced === other ? false : (reduced as any);
     }
 
-    invert(): Criterion<T> {
+    invert(): Criterion {
         return new OrCriteria(this.items.map(criterion => criterion.invert()));
     }
 

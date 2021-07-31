@@ -2,9 +2,9 @@ import { OrCriteria } from "./or-criteria";
 import { Criteria } from "./criteria";
 import { Criterion } from "./criterion";
 
-export class AndCriteria<T = unknown> extends Criteria<T> {
+export class AndCriteria extends Criteria {
     // [todo] remove "any" hacks
-    reduce(other: Criterion): boolean | Criterion<T> {
+    reduce(other: Criterion): boolean | Criterion {
         const items = this.items.map(criterion => ({ criterion, result: criterion.reduce(other) }));
 
         if (items.every(x => x.result === false)) {
@@ -43,10 +43,10 @@ export class AndCriteria<T = unknown> extends Criteria<T> {
             return true;
         }
 
-        return new OrCriteria<any>(reduced.map(foo => (foo.length === 1 ? foo[0] : new AndCriteria(foo))));
+        return new OrCriteria(reduced.map(foo => (foo.length === 1 ? foo[0] : new AndCriteria(foo))));
     }
 
-    invert(): Criterion<T> {
+    invert(): Criterion {
         return new AndCriteria(this.items.map(criterion => criterion.invert()));
     }
 
