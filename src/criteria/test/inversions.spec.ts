@@ -16,4 +16,11 @@ describe("inverting criteria", () => {
     inverting("(1, 7)").shouldBe("[..., 1] | [7, ...]");
     inverting("[..., 7]").shouldBe("(7, ...]");
     inverting("[7, ...]").shouldBe("[..., 7)");
+
+    // or-criteria
+    // [todo] i want case B to work instead of case A https://github.com/kukeiko/entity-space/issues/88
+    // case A:
+    inverting("[1, 7] | [10, 13]").shouldBe("[..., 1) | (7, ...] | [..., 10) | (13, ...]");
+    // case B:
+    // inverting("[1, 7] | [10, 13]").shouldBe("[..., 1) | (7, 10) | (13, ...]");
 });

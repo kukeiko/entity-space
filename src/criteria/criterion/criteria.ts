@@ -1,4 +1,4 @@
-import { Class, getInstanceClass, isInstanceOf } from "../../utils";
+import { getInstanceClass, isInstanceOf } from "../../utils";
 import { Criterion } from "./criterion";
 
 export abstract class Criteria<T extends Criterion = Criterion> extends Criterion {
@@ -18,7 +18,11 @@ export abstract class Criteria<T extends Criterion = Criterion> extends Criterio
         const selfClass = getInstanceClass(this);
 
         if (inverted.every(isInstanceOf(Criterion))) {
-            return new selfClass(inverted);
+            const flattenedInverted = inverted
+                .map(criterion => (criterion instanceof selfClass ? [...criterion.getItems()] : [criterion]))
+                .reduce((acc, value) => [...acc, ...value], []);
+
+            return new selfClass(flattenedInverted);
         }
 
         return false;
