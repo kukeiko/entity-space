@@ -18,4 +18,12 @@ export abstract class BinaryCriterion<T> extends Criterion {
     invert(): Criterion {
         return new this.inverseClass();
     }
+
+    merge(other: Criterion): false | Criterion {
+        if (other instanceof getInstanceClass(this)) {
+            return this;
+        }
+
+        return false;
+    }
 }

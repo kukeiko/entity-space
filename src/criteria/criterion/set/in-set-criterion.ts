@@ -63,6 +63,16 @@ export abstract class InSetCriterion<T> extends Criterion {
         return false;
     }
 
+    merge(other: Criterion): false | Criterion {
+        const selfClass = getInstanceClass(this);
+
+        if (other instanceof selfClass) {
+            return new selfClass([...this.values, ...other.values]);
+        }
+
+        return false;
+    }
+
     invert(): Criterion {
         return new this.notInClass(this.values);
     }
