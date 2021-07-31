@@ -36,4 +36,34 @@ describe("parse-tokens: in-range", () => {
         ],
         inRange(1, void 0, false)
     );
+
+    // parsing (1, ...) should be  (1, ...]
+    itShouldParseTokens(
+        inRangeCriterionTokenParser,
+        [
+            token(TokenType.Special, "("),
+            token(TokenType.Number, "1"),
+            token(TokenType.Special, ","),
+            token(TokenType.Special, "."),
+            token(TokenType.Special, "."),
+            token(TokenType.Special, "."),
+            token(TokenType.Special, ")"),
+        ],
+        inRange(1, void 0, false)
+    );
+
+    // parsing (..., 1) should be  [..., 1)
+    itShouldParseTokens(
+        inRangeCriterionTokenParser,
+        [
+            token(TokenType.Special, "("),
+            token(TokenType.Special, "."),
+            token(TokenType.Special, "."),
+            token(TokenType.Special, "."),
+            token(TokenType.Special, ","),
+            token(TokenType.Number, "1"),
+            token(TokenType.Special, ")"),
+        ],
+        inRange(void 0, 1, false)
+    );
 });
