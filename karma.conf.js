@@ -59,6 +59,7 @@ module.exports = function (config) {
         reporters,
         mochaReporter: {
             ignoreSkipped: true,
+            output: "minimal"
         },
         coverageIstanbulReporter: {
             reports: ["text-summary", "html"],
