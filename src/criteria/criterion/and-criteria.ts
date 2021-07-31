@@ -1,6 +1,7 @@
 import { OrCriteria } from "./or-criteria";
 import { Criteria } from "./criteria";
 import { Criterion } from "./criterion";
+import { isInstanceOf } from "../../utils";
 
 export class AndCriteria<T extends Criterion = Criterion> extends Criteria<T> {
     reduce(other: Criterion): boolean | Criterion {
@@ -34,6 +35,11 @@ export class AndCriteria<T extends Criterion = Criterion> extends Criteria<T> {
             }
 
             const reducedCriterion = item.result === false ? item.criterion.invert() : item.result;
+
+            if (reducedCriterion === false) {
+                return false;
+            }
+
             reduced.push([...accumulated, reducedCriterion]);
             accumulated.push(item.criterion);
         }
@@ -67,10 +73,6 @@ export class AndCriteria<T extends Criterion = Criterion> extends Criteria<T> {
         }
 
         return items.length === 1 ? items[0] : new AndCriteria(items);
-    }
-
-    invert(): Criterion {
-        return new AndCriteria(this.items.map(criterion => criterion.invert()));
     }
 
     toString(): string {

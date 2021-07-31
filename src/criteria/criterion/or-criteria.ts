@@ -42,10 +42,6 @@ export class OrCriteria<T extends Criterion = Criterion> extends Criteria<T> {
         return items.length === 0 ? true : items.length === 1 ? items[0] : new OrCriteria(items);
     }
 
-    invert(): Criterion {
-        return new OrCriteria(this.items.map(criterion => criterion.invert()));
-    }
-
     toString(): string {
         return `(${this.items.map(item => item.toString()).join(" | ")})`;
     }

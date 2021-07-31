@@ -86,9 +86,9 @@ export class EntityCriterion<T = unknown> extends Criterion {
                 if (otherCriterion === void 0) {
                     reduced = myCriterion.invert();
 
-                    // [B] has criteria [A] doesn't, and we weren't able to compute the inversion of them => return [A] as is
-                    // [todo] currently can't happen - for now we can invert all the value criteria we have. so maybe remove it?
-                    if (reduced === myCriterion) {
+                    // this criterion has a criterion that the other doesn't, and we weren't able to compute the inverse
+                    // => no reduction can be made
+                    if (reduced === false) {
                         return false;
                     }
                 } else {
@@ -133,6 +133,7 @@ export class EntityCriterion<T = unknown> extends Criterion {
     }
 
     invert(): Criterion {
+        // [todo] implement
         throw new Error("not implemented yet");
     }
 
