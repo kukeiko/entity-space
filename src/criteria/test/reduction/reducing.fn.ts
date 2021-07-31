@@ -21,12 +21,12 @@ export function reducing(
     criterion: Criterion | string,
     specFn = it
 ): {
-    by(other: Criterion | string): { is(expected: Criterion | string | boolean): void };
+    by(other: Criterion | string): { shouldBe(expected: Criterion | string | boolean): void };
 } {
     return {
         by(other: Criterion | string) {
             return {
-                is(expected: Criterion | string | boolean) {
+                shouldBe(expected: Criterion | string | boolean) {
                     if (expected === true) {
                         specFn(`${criterion} should be fully reduced by ${other}`, () => {
                             try {

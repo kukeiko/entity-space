@@ -9,8 +9,8 @@ describe("reducing: entity-criteria", () => {
     }
 
     describe("full reduction", () => {
-        reducing("{ foo:{2}, bar:{3, 4, 7} }").by("{ foo:{2}, bar:{3, 4, 7} }").is(true);
-        reducing("{ foo:{2}, bar:{3} }").by("{ foo:{2} }").is(true);
+        reducing("{ foo:{2}, bar:{3, 4, 7} }").by("{ foo:{2}, bar:{3, 4, 7} }").shouldBe(true);
+        reducing("{ foo:{2}, bar:{3} }").by("{ foo:{2} }").shouldBe(true);
         // [todo] figure out what to do with this
         // reducing("{ foo:{2}, bar:{3} }").by("{ }").is(true);
 
@@ -33,31 +33,31 @@ describe("reducing: entity-criteria", () => {
     });
 
     describe("partial reduction", () => {
-        reducing("{ foo:{2, 3} }").by("{ foo:{3, 4} }").is("{ foo:{2} }");
-        reducing("{ foo:{2} }").by("{ bar:{2} }").is("{ foo:{2}, bar:!{2} }");
-        reducing("{ foo:{2} }").by("{ foo:{2}, bar:{3} }").is("{ foo:{2}, bar:!{3} }");
-        reducing("{ foo:{1, 2}, bar:{3} }").by("{ foo:{2} }").is("{ foo:{1}, bar:{3} }");
-        reducing("{ foo:[1, 7] } }").by("{ foo:[3, 4] }").is("{ foo:([1, 3) | (4, 7]) }");
-        reducing("{ foo:{ bar:[1, 7] } }").by("{ foo: { bar:[3, 4] } }").is("{ foo:{ bar:([1, 3) | (4, 7]) } }");
-        reducing("{ foo:{1, 2}, bar:{3} }").by("{ foo:{2}, bar:{3, 4} }").is("{ foo:{1}, bar:{3} }");
+        reducing("{ foo:{2, 3} }").by("{ foo:{3, 4} }").shouldBe("{ foo:{2} }");
+        reducing("{ foo:{2} }").by("{ bar:{2} }").shouldBe("{ foo:{2}, bar:!{2} }");
+        reducing("{ foo:{2} }").by("{ foo:{2}, bar:{3} }").shouldBe("{ foo:{2}, bar:!{3} }");
+        reducing("{ foo:{1, 2}, bar:{3} }").by("{ foo:{2} }").shouldBe("{ foo:{1}, bar:{3} }");
+        reducing("{ foo:[1, 7] } }").by("{ foo:[3, 4] }").shouldBe("{ foo:([1, 3) | (4, 7]) }");
+        reducing("{ foo:{ bar:[1, 7] } }").by("{ foo: { bar:[3, 4] } }").shouldBe("{ foo:{ bar:([1, 3) | (4, 7]) } }");
+        reducing("{ foo:{1, 2}, bar:{3} }").by("{ foo:{2}, bar:{3, 4} }").shouldBe("{ foo:{1}, bar:{3} }");
 
         reducing("{ foo:[1, 7], bar:[100, 200] }")
             .by("{ foo:[3, 4], bar:[150, 175] }")
-            .is("({ foo:([1, 3) | (4, 7]), bar:[100, 200] } | { foo:[3, 4], bar:([100, 150) | (175, 200]) })");
+            .shouldBe("({ foo:([1, 3) | (4, 7]), bar:[100, 200] } | { foo:[3, 4], bar:([100, 150) | (175, 200]) })");
 
         reducing("{ foo:[1, 7], bar:[100, 200], baz:[50, 70] }")
             .by("{ foo:[3, 4], bar:[150, 175] }")
-            .is("({ foo:([1, 3) | (4, 7]), bar:[100, 200], baz:[50, 70] } | { foo:[3, 4], bar:([100, 150) | (175, 200]), baz:[50, 70] })");
+            .shouldBe("({ foo:([1, 3) | (4, 7]), bar:[100, 200], baz:[50, 70] } | { foo:[3, 4], bar:([100, 150) | (175, 200]), baz:[50, 70] })");
 
         reducing("{ foo:[1, 7], bar:[100, 200], baz:[50, 70] }")
             .by("{ foo:[3, 4], bar:[150, 175], baz:[55, 65] }")
-            .is(
+            .shouldBe(
                 "({ foo:([1, 3) | (4, 7]), bar:[100, 200], baz:[50, 70] } | { foo:[3, 4], bar:([100, 150) | (175, 200]), baz:[50, 70] } | { foo:[3, 4], bar:[150, 175], baz:([50, 55) | (65, 70]) })"
             );
 
         reducing("{ foo:[1, 7], bar:[100, 200] }")
             .by("{ foo:[3, 4], bar:[150, 175], baz:[50, 70] }")
-            .is("({ foo:([1, 3) | (4, 7]), bar:[100, 200] } | { foo:[3, 4], bar:([100, 150) | (175, 200]) } | { foo:[3, 4], bar:[150, 175], baz:([..., 50) | (70, ...]) })");
+            .shouldBe("({ foo:([1, 3) | (4, 7]), bar:[100, 200] } | { foo:[3, 4], bar:([100, 150) | (175, 200]) } | { foo:[3, 4], bar:[150, 175], baz:([..., 50) | (70, ...]) })");
 
         // [todo] figure out what to do with this
         it("{ } reduced by { foo:{2}, bar:{4} } should be ({ foo:!{2} } | { foo:{2}, bar:!{4} })", () => {
@@ -126,7 +126,7 @@ describe("reducing: entity-criteria", () => {
     });
 
     describe("no reduction", () => {
-        reducing("{ foo:{3} }").by("{ foo:{2} }").is(false);
-        reducing("{ foo:{2}, bar:{3} }").by("{ foo:{2}, bar:{4} }").is(false);
+        reducing("{ foo:{3} }").by("{ foo:{2} }").shouldBe(false);
+        reducing("{ foo:{2}, bar:{3} }").by("{ foo:{2}, bar:{4} }").shouldBe(false);
     });
 });

@@ -21,10 +21,10 @@ export function inverting(
     criterion: Criterion | string,
     specFn = it
 ): {
-    is(expected: Criterion | string | false): void;
+    shouldBe(expected: Criterion | string | false): void;
 } {
     return {
-        is(expected: Criterion | string | false) {
+        shouldBe(expected: Criterion | string | false) {
             if (expected === false) {
                 specFn(`${criterion} should not be invertible`, () => {
                     try {
