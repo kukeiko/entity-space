@@ -37,6 +37,7 @@ describe("reducing: entity-criteria", () => {
         reducing("{ foo:{2} }").by("{ bar:{2} }").is("{ foo:{2}, bar:!{2} }");
         reducing("{ foo:{2} }").by("{ foo:{2}, bar:{3} }").is("{ foo:{2}, bar:!{3} }");
         reducing("{ foo:{1, 2}, bar:{3} }").by("{ foo:{2} }").is("{ foo:{1}, bar:{3} }");
+        reducing("{ foo:[1, 7] } }").by("{ foo:[3, 4] }").is("{ foo:([1, 3) | (4, 7]) }");
         reducing("{ foo:{ bar:[1, 7] } }").by("{ foo: { bar:[3, 4] } }").is("{ foo:{ bar:([1, 3) | (4, 7]) } }");
         reducing("{ foo:{1, 2}, bar:{3} }").by("{ foo:{2}, bar:{3, 4} }").is("{ foo:{1}, bar:{3} }");
 
