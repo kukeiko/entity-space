@@ -9,8 +9,17 @@ function parse<T extends Criterion | string>(item: T): Criterion {
     return item;
 }
 
+export function freducing(criterion: Criterion | string) {
+    return reducing(criterion, fit);
+}
+
+export function xreducing(criterion: Criterion | string) {
+    return reducing(criterion, xit);
+}
+
 export function reducing(
-    criterion: Criterion | string
+    criterion: Criterion | string,
+    specFn = it
 ): {
     by(other: Criterion | string): { is(expected: Criterion | string | boolean): void };
 } {
@@ -19,7 +28,7 @@ export function reducing(
             return {
                 is(expected: Criterion | string | boolean) {
                     if (expected === true) {
-                        it(`${criterion} should be fully reduced by ${other}`, () => {
+                        specFn(`${criterion} should be fully reduced by ${other}`, () => {
                             try {
                                 expect(parse(other).reduce(parse(criterion)).toString()).toEqual("true");
                             } catch (error) {
@@ -27,7 +36,7 @@ export function reducing(
                             }
                         });
                     } else if (expected === false) {
-                        it(`${criterion} should not be reduced by ${other}`, () => {
+                        specFn(`${criterion} should not be reduced by ${other}`, () => {
                             try {
                                 expect(parse(other).reduce(parse(criterion)).toString()).toEqual("false");
                             } catch (error) {
@@ -35,7 +44,7 @@ export function reducing(
                             }
                         });
                     } else {
-                        it(`${criterion} reduced by ${other} should be ${expected}`, () => {
+                        specFn(`${criterion} reduced by ${other} should be ${expected}`, () => {
                             try {
                                 expect(parse(other).reduce(parse(criterion)).toString()).toEqual(parse(expected).toString());
                             } catch (error) {
