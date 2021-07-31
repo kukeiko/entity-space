@@ -39,6 +39,10 @@ export abstract class InRangeCriterion<T> extends Criterion {
             this.to = null;
         }
 
+        if (this.from === null && this.to === null) {
+            throw new Error("both from & to @ in-range were null");
+        }
+
         this.selfClass = getInstanceClass(this);
     }
 
