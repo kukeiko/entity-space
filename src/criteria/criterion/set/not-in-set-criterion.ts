@@ -10,12 +10,15 @@ export abstract class NotInSetCriterion<T> extends Criterion {
     }
 
     protected readonly values: Set<T>;
-    protected abstract inSetClass: Class<InSetCriterion<T>>;
+    abstract readonly inSetClass: Class<InSetCriterion<T>>;
 
     getValues(): ReadonlySet<T> {
         return this.values;
     }
 
+    reduce(other: this): boolean | InstanceType<this["inSetClass"]>;
+    reduce(other: InstanceType<this["inSetClass"]>): boolean | InstanceType<this["inSetClass"]>;
+    reduce(other: Criterion): boolean | Criterion;
     reduce(other: Criterion): boolean | Criterion {
         if (other instanceof Criteria) {
             return other.reduceBy(this);

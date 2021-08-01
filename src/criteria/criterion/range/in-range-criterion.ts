@@ -110,6 +110,8 @@ export abstract class InRangeCriterion<T> extends Criterion {
         return this.isToBiggerThanFrom(to, range.getFrom()) && this.isToSmallerThanTo(to, range.getTo());
     }
 
+    reduce(other: this): boolean | this | OrCriteria<this>;
+    reduce(other: Criterion): boolean | Criterion;
     reduce(other: Criterion): boolean | Criterion {
         if (other instanceof Criteria) {
             return other.reduceBy(this);
