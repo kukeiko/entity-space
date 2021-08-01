@@ -147,6 +147,6 @@ export class EntityCriterion<T = unknown> extends Criterion {
             shards.push(`${key}: ${criteria.toString()}`);
         }
 
-        return `{ ${shards.join(" & ")} }`;
+        return `{ ${shards.join(", ")} }`;
     }
 }
