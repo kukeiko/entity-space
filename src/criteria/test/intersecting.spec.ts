@@ -14,7 +14,6 @@ describe("intersecting criteria", () => {
     // range
     intersecting("[1, 7]").with("[3, 5]").shouldBe("[3, 5]");
     intersecting("[3, 5]").with("[1, 7]").shouldBe("[3, 5]");
-
     intersecting("[1, 7]").with("[5, 9]").shouldBe("[5, 7]");
     intersecting("[1, ...]").with("[3, ...]").shouldBe("[3, ...]");
     intersecting("[..., 7]").with("[..., -1]").shouldBe("[..., -1]");
@@ -22,4 +21,9 @@ describe("intersecting criteria", () => {
     intersecting("[1, 7]").with("[0, 8]").shouldBe("[1, 7]");
     intersecting("[1, 7]").with("[8, 10]").shouldBe(false);
     intersecting("[1, 7]").with("(3, 5)").shouldBe("(3, 5)");
+
+    // or-criteria
+    intersecting("[1, 7] | [10, 13]").with("[3, 9]").shouldBe("[3, 7]");
+    intersecting("[1, 7] | [10, 13]").with("[3, 11]").shouldBe("[3, 7] | [10, 11]");
+    intersecting("[1, 7] | [10, 13]").with("[3, 11] | [13, 17]").shouldBe("[3, 7] | [10, 11] | [13, 13]");
 });

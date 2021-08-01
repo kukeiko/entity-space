@@ -1,3 +1,4 @@
+import { isInstanceOf } from "../../utils";
 import { Criteria } from "./criteria";
 import { Criterion } from "./criterion";
 
@@ -60,9 +61,46 @@ export class OrCriteria<T extends Criterion = Criterion> extends Criteria<T> {
             return false;
         }
 
-        const mergedItems = [merged, ...unmerged];
+        const items = [merged, ...unmerged];
 
-        return mergedItems.length === 1 ? mergedItems[0] : new OrCriteria([merged, ...unmerged]);
+        return items.length === 1 ? items[0] : new OrCriteria(items);
+    }
+
+    intersect(other: Criterion): false | Criterion {
+        const intersected: Criterion[] = [];
+
+        for (const mine of this.getItems()) {
+            const result = mine.intersect(other);
+
+            if (result !== false) {
+                if (result instanceof OrCriteria) {
+                    // [todo] clone items?
+                    intersected.push(...result.getItems());
+                } else {
+                    intersected.push(result);
+                }
+            }
+        }
+
+        if (intersected.length === 0) {
+            return false;
+        }
+
+        return intersected.length === 1 ? intersected[0] : new OrCriteria(intersected);
+    }
+
+    invert(): false | Criterion {
+        const inverted = this.items.map(criterion => criterion.invert());
+
+        if (inverted.every(isInstanceOf(OrCriteria))) {
+            const flattenedInverted = inverted
+                .map(criterion => (criterion instanceof OrCriteria ? [...criterion.getItems()] : [criterion]))
+                .reduce((acc, value) => [...acc, ...value], []);
+
+            return new OrCriteria(flattenedInverted);
+        }
+
+        return false;
     }
 
     toString(): string {

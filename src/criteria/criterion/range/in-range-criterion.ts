@@ -182,7 +182,9 @@ export abstract class InRangeCriterion<T> extends Criterion {
     }
 
     intersect(other: Criterion): false | Criterion {
-        if (other instanceof this.selfClass) {
+        if (other instanceof Criteria) {
+            return other.intersect(this);
+        } else if (other instanceof this.selfClass) {
             const [otherFrom, otherTo, selfFrom, selfTo] = [other.getFrom(), other.getTo(), this.getFrom(), this.getTo()];
             const otherFromInsideMe = InRangeCriterion.isFromInsideRange(other.getFrom(), this);
             const otherToInsideMe = InRangeCriterion.isToInsideRange(other.getTo(), this);
