@@ -9,15 +9,15 @@ function parse<T extends Criterion | string>(item: T): Criterion {
     return item;
 }
 
-export function fmerging(criterion: Criterion | string) {
-    return merging(criterion, fit);
+export function fintersecting(criterion: Criterion | string) {
+    return intersecting(criterion, fit);
 }
 
-export function xmerging(criterion: Criterion | string) {
-    return merging(criterion, xit);
+export function xintersecting(criterion: Criterion | string) {
+    return intersecting(criterion, xit);
 }
 
-export function merging(
+export function intersecting(
     criterion: Criterion | string,
     specFn = it
 ): {
@@ -28,17 +28,17 @@ export function merging(
             return {
                 shouldBe(expected: Criterion | string | false) {
                     if (expected === false) {
-                        specFn(`${criterion} should not merge with ${other}`, () => {
+                        specFn(`${criterion} should not intersect with ${other}`, () => {
                             try {
-                                expect(parse(criterion).merge(parse(other)).toString()).toEqual("false");
+                                expect(parse(criterion).intersect(parse(other)).toString()).toEqual("false");
                             } catch (error) {
                                 fail(error);
                             }
                         });
                     } else {
-                        specFn(`${criterion} merged with ${other} should be ${expected}`, () => {
+                        specFn(`${criterion} intersected with ${other} should be ${expected}`, () => {
                             try {
-                                expect(parse(criterion).merge(parse(other)).toString()).toEqual(parse(expected).toString());
+                                expect(parse(criterion).intersect(parse(other)).toString()).toEqual(parse(expected).toString());
                             } catch (error) {
                                 fail(error);
                             }

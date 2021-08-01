@@ -57,6 +57,16 @@ export abstract class NotInSetCriterion<T> extends Criterion {
         return false;
     }
 
+    intersect(other: Criterion): false | Criterion {
+        const selfClass = getInstanceClass(this);
+
+        if (other instanceof selfClass) {
+            return new selfClass([...this.values, ...other.values]);
+        }
+
+        return false;
+    }
+
     invert(): Criterion {
         return new this.inSetClass(this.values);
     }
