@@ -1,4 +1,4 @@
-import { inverting } from "./inverting.fn";
+import { inverting, xinverting } from "./inverting.fn";
 
 describe("inverting criteria", () => {
     // binary
@@ -23,4 +23,7 @@ describe("inverting criteria", () => {
     inverting("[1, 7] | [10, 13]").shouldBe("[..., 1) | (7, ...] | [..., 10) | (13, ...]");
     // case B:
     // inverting("[1, 7] | [10, 13]").shouldBe("[..., 1) | (7, 10) | (13, ...]");
+
+    // and-riteria
+    xinverting("[1, 7] & is-even").shouldBe("([..., 1) | (7, ...]) | ([1, 7] & is-odd)");
 });
