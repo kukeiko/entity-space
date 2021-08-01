@@ -1,4 +1,4 @@
-import { inRange, inSet, notInSet, or } from "../criterion";
+import { inRange, inSet, matches, notInSet, or } from "../criterion";
 
 describe("render: in-set", () => {
     it("should render correctly", () => {
@@ -119,6 +119,20 @@ describe("render: in-range", () => {
         // arrange
         const criterion = inRange(7, void 0, false);
         const expected = "(7, ...]";
+
+        // act
+        const actual = criterion.toString();
+
+        // assert
+        expect(actual).toEqual(expected);
+    });
+});
+
+describe("render: entity-criteria", () => {
+    it("{ foo: [1, 7], bar: {1, 2, 3} } should be rendered correctly", () => {
+        // arrange
+        const criterion = matches({ foo: inRange(1, 7), bar: inSet([1, 2, 3]) });
+        const expected = "{ foo: [1, 7], bar: {1, 2, 3} }";
 
         // act
         const actual = criterion.toString();
