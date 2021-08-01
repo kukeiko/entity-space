@@ -26,4 +26,14 @@ export abstract class BinaryCriterion<T> extends Criterion {
 
         return false;
     }
+
+    intersect(other: Criterion): false | Criterion {
+        const selfClass = getInstanceClass(this);
+
+        if (other instanceof selfClass) {
+            return new selfClass();
+        }
+
+        return false;
+    }
 }

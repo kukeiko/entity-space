@@ -73,6 +73,24 @@ export abstract class InSetCriterion<T> extends Criterion {
         return false;
     }
 
+    intersect(other: Criterion): false | Criterion {
+        const selfClass = getInstanceClass(this);
+
+        if (other instanceof selfClass) {
+            const intersection = new Set();
+
+            for (const value of other.getValues()) {
+                if (this.values.has(value)) {
+                    intersection.add(value);
+                }
+            }
+
+            return new selfClass(intersection);
+        }
+
+        return false;
+    }
+
     invert(): Criterion {
         return new this.notInClass(this.values);
     }
