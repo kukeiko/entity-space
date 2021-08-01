@@ -10,7 +10,11 @@ describe("merging criteria", () => {
     merging("is-not-null").with("is-not-null").shouldBe("is-not-null");
 
     // range
-    xmerging("[1, 7]").with("[3, 9]").shouldBe("[1, 9]");
+    merging("[1, 7]").with("[3, 5]").shouldBe("[1, 7]");
+    merging("[1, 7]").with("[3, 9]").shouldBe("[1, 9]");
+    merging("[1, ...]").with("[3, 5]").shouldBe("[1, ...]");
+    merging("[..., 7]").with("[3, 5]").shouldBe("[..., 7]");
+    merging("[3, 5]").with("[1, 7]").shouldBe("[1, 7]");
 
     // in-set
     merging("{1, 2, 3}").with("{4, 5, 6}").shouldBe("{1, 2, 3, 4, 5, 6}");

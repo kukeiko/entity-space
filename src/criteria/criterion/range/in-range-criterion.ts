@@ -136,11 +136,43 @@ export abstract class InRangeCriterion<T> extends Criterion {
                 } else {
                     return new this.selfClass([otherFrom?.value, selfFrom?.value], [otherFrom?.op === ">=", selfFrom?.op === ">"]);
                 }
-            } else if (InRangeCriterion.isFromInsideRange(this.getFrom(), other) && InRangeCriterion.isToInsideRange(this.getTo(), other)) {
+            } else if (InRangeCriterion.isFromInsideRange(selfFrom, other) && InRangeCriterion.isToInsideRange(selfTo, other)) {
                 return new OrCriteria([
                     new this.selfClass([otherFrom?.value, selfFrom?.value], [otherFrom?.op === ">=", selfFrom?.op === ">"]),
                     new this.selfClass([selfTo?.value, otherTo?.value], [selfTo?.op === "<", otherTo?.op === "<="]),
                 ]);
+            }
+        }
+
+        return false;
+    }
+
+    merge(other: Criterion): false | Criterion {
+        if (other instanceof this.selfClass) {
+            const otherFrom = other.getFrom();
+            const otherTo = other.getTo();
+            const selfFrom = this.getFrom();
+            const selfTo = this.getTo();
+
+            const otherFromInsideMe = InRangeCriterion.isFromInsideRange(other.getFrom(), this);
+            const otherToInsideMe = InRangeCriterion.isToInsideRange(other.getTo(), this);
+
+            if (otherFromInsideMe && otherToInsideMe) {
+                return new this.selfClass([selfFrom?.value, selfTo?.value], [selfFrom?.op === ">=", selfTo?.op === "<="]);
+            } else if (otherFromInsideMe) {
+                if (selfTo === null) {
+                    return new this.selfClass([selfFrom?.value, void 0], selfFrom?.op === ">=");
+                } else {
+                    return new this.selfClass([selfFrom?.value, otherTo?.value], [selfFrom?.op === ">=", otherTo?.op === "<="]);
+                }
+            } else if (otherToInsideMe) {
+                if (selfFrom === null) {
+                    return new this.selfClass([void 0, selfTo?.value], selfTo?.op === "<=");
+                } else {
+                    return new this.selfClass([otherFrom?.value, selfTo?.value], [otherFrom?.op === ">=", selfTo?.op === "<="]);
+                }
+            } else {
+                return new this.selfClass([otherFrom?.value, otherTo?.value], [otherFrom?.op === ">=", otherTo?.op === "<="]);
             }
         }
 
