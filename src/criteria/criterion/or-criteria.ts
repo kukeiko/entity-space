@@ -42,6 +42,29 @@ export class OrCriteria<T extends Criterion = Criterion> extends Criteria<T> {
         return items.length === 0 ? true : items.length === 1 ? items[0] : new OrCriteria(items);
     }
 
+    merge(other: Criterion): false | Criterion {
+        const unmerged: Criterion[] = [];
+        let merged = other;
+
+        for (const criterion of this.getItems()) {
+            const mergeResult = criterion.merge(merged);
+
+            if (mergeResult === false) {
+                unmerged.push(criterion);
+            } else {
+                merged = mergeResult;
+            }
+        }
+
+        if (merged === other) {
+            return false;
+        }
+
+        const mergedItems = [merged, ...unmerged];
+
+        return mergedItems.length === 1 ? mergedItems[0] : new OrCriteria([merged, ...unmerged]);
+    }
+
     toString(): string {
         return `(${this.items.map(item => item.toString()).join(" | ")})`;
     }

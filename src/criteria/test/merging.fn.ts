@@ -28,7 +28,7 @@ export function merging(
             return {
                 shouldBe(expected: Criterion | string | false) {
                     if (expected === false) {
-                        specFn(`${criterion} should not be reduced by ${other}`, () => {
+                        specFn(`${criterion} should not merge with ${other}`, () => {
                             try {
                                 expect(parse(criterion).merge(parse(other)).toString()).toEqual("false");
                             } catch (error) {
@@ -36,7 +36,7 @@ export function merging(
                             }
                         });
                     } else {
-                        specFn(`${criterion} reduced by ${other} should be ${expected}`, () => {
+                        specFn(`${criterion} merged with ${other} should be ${expected}`, () => {
                             try {
                                 expect(parse(criterion).merge(parse(other)).toString()).toEqual(parse(expected).toString());
                             } catch (error) {

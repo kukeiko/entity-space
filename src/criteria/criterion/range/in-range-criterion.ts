@@ -148,7 +148,9 @@ export abstract class InRangeCriterion<T> extends Criterion {
     }
 
     merge(other: Criterion): false | Criterion {
-        if (other instanceof this.selfClass) {
+        if (other instanceof Criteria) {
+            return other.merge(this);
+        } else if (other instanceof this.selfClass) {
             const otherFrom = other.getFrom();
             const otherTo = other.getTo();
             const selfFrom = this.getFrom();
@@ -171,7 +173,7 @@ export abstract class InRangeCriterion<T> extends Criterion {
                 } else {
                     return new this.selfClass([otherFrom?.value, selfTo?.value], [otherFrom?.op === ">=", selfTo?.op === "<="]);
                 }
-            } else {
+            } else if (InRangeCriterion.isFromInsideRange(selfFrom, other) && InRangeCriterion.isToInsideRange(selfTo, other)) {
                 return new this.selfClass([otherFrom?.value, otherTo?.value], [otherFrom?.op === ">=", otherTo?.op === "<="]);
             }
         }
