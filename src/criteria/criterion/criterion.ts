@@ -3,6 +3,10 @@ export abstract class Criterion {
         return false;
     }
 
+    merge(other: Criterion): false | Criterion {
+        return false;
+    }
+
     abstract reduce(other: Criterion): boolean | Criterion;
     abstract toString(): string;
 }
