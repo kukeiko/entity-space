@@ -147,6 +147,9 @@ More details for running karma with different browsers can be found [here](http:
 **Q:** Why is prepublish called npm prepublish?  
 **A:** Npm doesnt distinguish between npm install and prepublish. See more details [here](https://github.com/npm/npm/issues/3059)
 
+**Q:** When i run "npm run test-types" i get an error similar to this: "Errors in typescript@3.9 for external dependencies: ...", what do i do?  
+**A:** The minimum dtslint typescript version needs to be updated in the index.d.ts of the types test folder (should be "test/types/index.d.ts")
+
 ##
 
 Template:
