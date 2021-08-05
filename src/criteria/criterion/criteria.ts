@@ -1,4 +1,3 @@
-import { getInstanceClass, isInstanceOf } from "../../utils";
 import { Criterion } from "./criterion";
 
 export abstract class Criteria<T extends Criterion = Criterion> extends Criterion {

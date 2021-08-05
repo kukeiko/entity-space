@@ -22,19 +22,19 @@ export abstract class InRangeCriterion<T> extends Criterion {
         }
 
         if (values[0] !== void 0) {
-            this.from = {
+            this.from = Object.freeze({
                 op: inclusive[0] ? ">=" : ">",
                 value: values[0],
-            };
+            });
         } else {
             this.from = null;
         }
 
         if (values[1] !== void 0) {
-            this.to = {
+            this.to = Object.freeze({
                 op: inclusive[1] ? "<=" : "<",
                 value: values[1],
-            };
+            });
         } else {
             this.to = null;
         }
@@ -47,14 +47,14 @@ export abstract class InRangeCriterion<T> extends Criterion {
     }
 
     private readonly selfClass: Class<this>;
-    protected readonly from: FromCriterion<T> | null;
-    protected readonly to: ToCriterion<T> | null;
+    protected readonly from: Readonly<FromCriterion<T>> | null;
+    protected readonly to: Readonly<ToCriterion<T>> | null;
 
-    getFrom(): FromCriterion<T> | null {
+    getFrom(): Readonly<FromCriterion<T>> | null {
         return this.from;
     }
 
-    getTo(): ToCriterion<T> | null {
+    getTo(): Readonly<ToCriterion<T>> | null {
         return this.to;
     }
 

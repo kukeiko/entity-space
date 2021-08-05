@@ -7,10 +7,10 @@ import { NotInSetCriterion } from "./not-in-set-criterion";
 export abstract class InSetCriterion<T> extends Criterion {
     constructor(values: Iterable<T>) {
         super();
-        this.values = new Set(values);
+        this.values = Object.freeze(new Set(values));
     }
 
-    protected readonly values: Set<T>;
+    protected readonly values: ReadonlySet<T>;
     abstract readonly notInClass: Class<NotInSetCriterion<T>>;
     abstract readonly inRangeClass: Class<InRangeCriterion<T>>;
 

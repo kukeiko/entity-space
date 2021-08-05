@@ -12,15 +12,16 @@ type InstantiatedTemplate<T> = {
     [K in keyof T]?: T[K] extends Class<Criterion>[] ? InstanceType<T[K][number]>[] : T[K] extends Class<Criterion> ? InstanceType<T[K]> : never;
 };
 
+// [todo] rename to ObjectCriterion
 export class EntityCriterion<T = unknown> extends Criterion {
     constructor(items: Partial<Record<keyof T, Criterion>>) {
         super();
-        this.bag = items;
+        this.bag = Object.freeze(items);
     }
 
-    readonly bag: Partial<Record<keyof T, Criterion>>;
+    readonly bag: Readonly<Partial<Record<keyof T, Criterion>>>;
 
-    getBag(): Partial<Record<keyof T, Criterion>> {
+    getBag(): Readonly<Partial<Record<keyof T, Criterion>>> {
         return this.bag;
     }
 
