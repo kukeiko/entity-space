@@ -1,7 +1,6 @@
 import { OrCriteria } from "./or-criteria";
 import { Criteria } from "./criteria";
 import { Criterion } from "./criterion";
-import { isInstanceOf } from "../../utils";
 
 export class AndCriteria<T extends Criterion = Criterion> extends Criteria<T> {
     reduce(other: Criterion): boolean | Criterion {
@@ -15,9 +14,7 @@ export class AndCriteria<T extends Criterion = Criterion> extends Criteria<T> {
 
         // we want items that did an actual reduction to be put first
         items.sort((a, b) => {
-            if (a.result === false && b.result === false) {
-                return 0;
-            } else if (a.result !== false && b.result === false) {
+            if (a.result !== false && b.result === false) {
                 return -1;
             } else if (a.result === false && b.result !== false) {
                 return 1;
