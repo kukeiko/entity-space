@@ -15,6 +15,26 @@ So we're using ESLint for everything, and TSLint just for the files in the test/
 
 We can drop TSLint once dtslint (which is the actual tool used for running our type tests, see package.json "test-types" script) migrates to ESLint.
 
+# Running Tests
+
+Run tests once including coverage (and type-tests, the only commmand that runs them):
+
+```bash
+$ npm run test
+```
+
+Run tests in watch-mode with coverage:
+
+```bash
+$ npm run test:watch
+```
+
+Run tests in watch-mode without coverage so that sourcemaps in browser console work:
+
+```bash
+$ npm run test:debug
+```
+
 # FAQ
 
 **Q:** I have the following error when I try to

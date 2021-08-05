@@ -12,6 +12,7 @@ if (npmCommand.includes(":watch")) {
     withCoverage = false;
 } else {
     process.env.CHROME_BIN = require("puppeteer").executablePath();
+    reporters.push("coverage-istanbul");
 }
 
 module.exports = function (config) {
@@ -59,7 +60,7 @@ module.exports = function (config) {
         reporters,
         mochaReporter: {
             ignoreSkipped: true,
-            output: "minimal"
+            output: "minimal",
         },
         coverageIstanbulReporter: {
             reports: ["text-summary", "html"],

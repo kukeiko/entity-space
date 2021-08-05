@@ -13,14 +13,14 @@
     "scripts": {
         "build": "rimraf dist && tsc",
         "build:watch": "tsc -w",
-        "test": "karma start --single-run",
-        "test:watch": "karma start",
-        "test:debug": "karma start",
-        "npmprepublish": "npm run build && npm run test",
-        "lint": "eslint .",
-        "commitizen": "git-cz",
         "commit": "npm run lint && npm run commitizen",
-        "test-types": "dtslint ./test/types"
+        "commitizen": "git-cz",
+        "lint": "eslint .",
+        "npmprepublish": "npm run build && npm run test",
+        "test": "npm run test:types && karma start --single-run",
+        "test:debug": "karma start",
+        "test:types": "dtslint --localTs node_modules/typescript/lib ./test/types",
+        "test:watch": "karma start"
     },
     "dependencies": {
         "reflect-metadata": "0.1.12",
