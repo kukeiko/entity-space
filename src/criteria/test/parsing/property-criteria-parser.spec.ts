@@ -1,10 +1,10 @@
-import { entityCriterionTokenParser, inRangeCriterionTokenParser, token, TokenType } from "../../parser";
+import { propertyCriteriaTokenParser, token, TokenType } from "../../parser";
 import { inRange, matches, or } from "../../criterion";
-import { fitShouldParseTokens, itShouldParseTokens } from "./utils";
+import { itShouldParseTokens } from "./utils";
 
-describe("parse-tokens: entity-criterion", () => {
+describe("parse-tokens: property-criteria", () => {
     itShouldParseTokens(
-        entityCriterionTokenParser,
+        propertyCriteriaTokenParser,
         [
             token(TokenType.Special, "{"),
             token(TokenType.Symbol, "foo"),
@@ -26,7 +26,7 @@ describe("parse-tokens: entity-criterion", () => {
     );
 
     itShouldParseTokens(
-        entityCriterionTokenParser,
+        propertyCriteriaTokenParser,
         [
             token(TokenType.Special, "{"),
             token(TokenType.Symbol, "foo"),

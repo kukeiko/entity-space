@@ -5,6 +5,11 @@ export function permutateEntries<T>(entries: [string, T[]][], aggregated: Record
 
     let allAggregated: any[] = [];
     let [key, shards] = entries[0];
+
+    if (!Array.isArray(shards)) {
+        shards = [shards];
+    }
+
     entries = entries.slice(1);
     aggregated = { ...aggregated };
 
@@ -14,4 +19,12 @@ export function permutateEntries<T>(entries: [string, T[]][], aggregated: Record
     }
 
     return allAggregated;
+}
+
+type Permutated<T> = { [K in keyof T]: T[K] extends any[] ? T[K][number] : T[K] };
+
+export function permutateEntries_V2<T>(entries: T, aggregated: Partial<T> = {}): Permutated<T>[] {
+    const entries_ = Object.entries(entries);
+
+    return permutateEntries(entries_, aggregated) as any;
 }

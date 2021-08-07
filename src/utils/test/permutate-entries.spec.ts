@@ -1,7 +1,32 @@
-import { permutateEntries } from "../permutate-entries.fn";
+import { permutateEntries, permutateEntries_V2 } from "../permutate-entries.fn";
 
 describe("permutateEntries()", () => {
     type Entries = [string, any[]][];
+
+    it("should permutate into 2 items (V2)", () => {
+        // arrange
+        const item = {
+            foo: ["foo-A", "foo-B"],
+            bar: "bar-A",
+        };
+
+        const expected = [
+            {
+                foo: "foo-A",
+                bar: "bar-A",
+            },
+            {
+                foo: "foo-B",
+                bar: "bar-A",
+            },
+        ];
+
+        // act
+        const permutated = permutateEntries_V2(item);
+
+        // assert
+        expect(permutated).toEqual(expected);
+    });
 
     it("should permutate into 2 items", () => {
         // arrange

@@ -1,7 +1,7 @@
 import { inRange, inSet, notInSet, matches, or } from "../../criterion";
-import { reducing } from "./reducing.fn";
+import { freducing, reducing, xreducing } from "./reducing.fn";
 
-describe("reducing: entity-criteria", () => {
+describe("reducing: property-criteria", () => {
     interface FooBarBaz {
         foo: number;
         bar: number;
@@ -9,41 +9,41 @@ describe("reducing: entity-criteria", () => {
     }
 
     describe("full reduction", () => {
-        reducing("{ foo:{2}, bar:{3, 4, 7} }").by("{ foo:{2}, bar:{3, 4, 7} }").shouldBe(true);
+        reducing("{ foo:{2}, bar:{3,4,7} }").by("{ foo:{2}, bar:{3,4,7} }").shouldBe(true);
         reducing("{ foo:{2}, bar:{3} }").by("{ foo:{2} }").shouldBe(true);
-        // [todo] figure out what to do with this
-        // reducing("{ foo:{2}, bar:{3} }").by("{ }").is(true);
+    });
 
-        // [todo] figure out what to do with this
-        it("{ foo:{2}, bar:{3} } should be completely reduced by { }", () => {
-            // arrange
-            const a = matches<FooBarBaz>({
-                foo: inSet([2]),
-                bar: inSet([3]),
-            });
+    describe("no reduction", () => {
+        // [todo] need to figure out if we want A or B (or both, depending on something else)
+        // A
+        reducing("{ foo:{2} }").by("{ bar:{2} }").shouldBe(false);
+        // B
+        // reducing("{ foo:{2} }").by("{ bar:{2} }").shouldBe("{ foo:{2} & bar:!{2} }");
 
-            const b = matches<FooBarBaz>({});
-
-            // act
-            const reduced = b.reduce(a);
-
-            // assert
-            expect(reduced).toEqual(true);
-        });
+        reducing("{ foo:{3} }").by("{ foo:{2} }").shouldBe(false);
+        reducing("{ foo:{2}, bar:{3} }").by("{ foo:{2}, bar:{4} }").shouldBe(false);
+        reducing("{ foo:{2}, bar:{3,4} }").by("{ foo:{2}, bar:{4} }").shouldBe("{ foo:{2}, bar:{3} }");
+        reducing("{ foo:{2}, bar:{3}, baz:{7} }").by("{ foo:{2}, bar:{4}, baz:{7, 8} }").shouldBe(false);
     });
 
     describe("partial reduction", () => {
         reducing("{ foo:{2, 3} }").by("{ foo:{3, 4} }").shouldBe("{ foo:{2} }");
-        reducing("{ foo:{2} }").by("{ bar:{2} }").shouldBe("{ foo:{2}, bar:!{2} }");
         reducing("{ foo:{2} }").by("{ foo:{2}, bar:{3} }").shouldBe("{ foo:{2}, bar:!{3} }");
         reducing("{ foo:{1, 2}, bar:{3} }").by("{ foo:{2} }").shouldBe("{ foo:{1}, bar:{3} }");
         reducing("{ foo:[1, 7] } }").by("{ foo:[3, 4] }").shouldBe("{ foo:([1, 3) | (4, 7]) }");
         reducing("{ foo:{ bar:[1, 7] } }").by("{ foo: { bar:[3, 4] } }").shouldBe("{ foo:{ bar:([1, 3) | (4, 7]) } }");
         reducing("{ foo:{1, 2}, bar:{3} }").by("{ foo:{2}, bar:{3, 4} }").shouldBe("{ foo:{1}, bar:{3} }");
 
+        reducing("{ foo:[1, 7] }").by("{ foo:[3, 4], bar:[150, 175] }").shouldBe("({ foo:([1, 3) | (4, 7]) } | { foo:[3, 4], bar:([..., 150) | (175, ...]) })");
+
         reducing("{ foo:[1, 7], bar:[100, 200] }")
             .by("{ foo:[3, 4], bar:[150, 175] }")
             .shouldBe("({ foo:([1, 3) | (4, 7]), bar:[100, 200] } | { foo:[3, 4], bar:([100, 150) | (175, 200]) })");
+
+        {
+            reducing("{ foo:[1, 7] }").by("{ foo:[3, 4], bar:[150, 175] }").shouldBe("{ foo: [1, 3) | (4, 7] } | { foo: [3, 4], bar: ([..., 150) | (175, ...]) }");
+            reducing("{ foo:[1, 7] }").by("{ bar:[150, 175], foo:[3, 4] }").shouldBe("{ foo: [1, 3) | (4, 7] } | { foo: [3, 4], bar: ([..., 150) | (175, ...]) }");
+        }
 
         reducing("{ foo:[1, 7], bar:[100, 200], baz:[50, 70] }")
             .by("{ foo:[3, 4], bar:[150, 175] }")
@@ -58,33 +58,6 @@ describe("reducing: entity-criteria", () => {
         reducing("{ foo:[1, 7], bar:[100, 200] }")
             .by("{ foo:[3, 4], bar:[150, 175], baz:[50, 70] }")
             .shouldBe("({ foo:([1, 3) | (4, 7]), bar:[100, 200] } | { foo:[3, 4], bar:([100, 150) | (175, 200]) } | { foo:[3, 4], bar:[150, 175], baz:([..., 50) | (70, ...]) })");
-
-        // [todo] figure out what to do with this
-        it("{ } reduced by { foo:{2}, bar:{4} } should be ({ foo:!{2} } | { foo:{2}, bar:!{4} })", () => {
-            // arrange
-            const a = matches<FooBarBaz>({});
-
-            const b = matches<FooBarBaz>({
-                foo: inSet([2]),
-                bar: inSet([4]),
-            });
-
-            const expected = or([
-                matches<FooBarBaz>({
-                    foo: notInSet([2]),
-                }),
-                matches<FooBarBaz>({
-                    foo: inSet([2]),
-                    bar: notInSet([4]),
-                }),
-            ]);
-
-            // act
-            const reduced = b.reduce(a);
-
-            // assert
-            expect(reduced).toEqual(expected);
-        });
 
         it("changing order of criteria properties should still result in an equivalent outcome", () => {
             // arrange
@@ -123,10 +96,5 @@ describe("reducing: entity-criteria", () => {
             expect(reduced_1_by_2).toEqual(true);
             expect(reduced_2_by_1).toEqual(true);
         });
-    });
-
-    describe("no reduction", () => {
-        reducing("{ foo:{3} }").by("{ foo:{2} }").shouldBe(false);
-        reducing("{ foo:{2}, bar:{3} }").by("{ foo:{2}, bar:{4} }").shouldBe(false);
     });
 });

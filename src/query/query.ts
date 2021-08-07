@@ -4,7 +4,7 @@ import { Reducible } from "./reducible";
 import { Criterion } from "../criteria";
 
 export interface Query<T = unknown> {
-    criteria: Criterion;
+    criteria?: Criterion;
     model: Class[];
     options: Reducible;
     selection: Selection;

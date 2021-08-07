@@ -1,4 +1,5 @@
 export * from "./get-instance-class";
+export * from "./is-defined.fn";
 export * from "./is-instance-of.fn";
 export * from "./is-not-null.fn";
 export * from "./is-primitive";
