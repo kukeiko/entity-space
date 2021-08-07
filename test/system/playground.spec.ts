@@ -8,7 +8,7 @@ import {
     InStringSetCriterion,
     InNumberSetCriterion,
     InNumberRangeCriterion,
-    EntityCriterion,
+    PropertyCriteria,
     inSet,
     inRange,
     getInstanceClass,
@@ -16,6 +16,8 @@ import {
     or,
     Criteria,
     InStringRangeCriterion,
+    OrCriteria,
+    permutateEntries_V2,
 } from "src";
 import { TreeNodeModel, CanvasModel, CircleModel, SquareModel, TriangleModel } from "../facade/model";
 import { Product } from "../introduction/model";
@@ -63,6 +65,8 @@ const inNumberSet = new InNumberSetCriterion([1, 2, 3]);
 const inNumberRange = new InStringRangeCriterion(["1", "3"]);
 
 const reduced = inNumberSet.reduce(inNumberRange);
+const reducedSet = inNumberSet.reduce(inNumberSet);
+const reducedRange = inNumberRange.reduce(inNumberRange);
 
 // credit to captain-yossarian https://captain-yossarian.medium.com/typescript-object-oriented-typings-4fd42ce14c75
 // function Mixin<T extends ClassType, R extends T[]>(...classRefs: [...R]): new (...args: any[]) => UnionToIntersection<InstanceType<[...R][number]>> {
@@ -74,6 +78,108 @@ describe("prototyping-playground", () => {
         // instead of mapping, i'm thinking of letting the user create their own criterion class implementation.
         // i think we'll need a way to typify the contents of an/or criteria - e.g. "price" can be inRange or or (inRange | inRange),
         // but nothing else - so no and combinator and exactly 2 inRange instances
+
+        interface Entity {
+            productId: number;
+            price: number;
+        }
+
+        const expected = or([
+            matches<Entity>({
+                price: inRange(200, 300, [false, true]),
+                productId: inSet([2, 5]),
+            }),
+            inRange(100, 200),
+        ]);
+
+        interface ProductFilter {
+            productIds?: number[];
+            minPrice?: number;
+            maxPrice?: number;
+            minRating?: number;
+            maxRating?: number;
+        }
+
+        class ProductCriterion extends Criterion {
+            constructor() {
+                super();
+            }
+
+            productIds?: InNumberSetCriterion;
+            priceRange?: InNumberRangeCriterion;
+            ratingRange?: InNumberRangeCriterion;
+            searchText?: any;
+
+            reduce(other: Criterion): boolean | Criterion {
+                if (!(other instanceof ProductCriterion)) return false;
+
+                const reductions: {
+                    productIds?: InNumberSetCriterion;
+                    priceRange?: InNumberRangeCriterion | InNumberRangeCriterion[];
+                    ratingRange?: InNumberRangeCriterion | InNumberRangeCriterion[];
+                } = {};
+
+                if (this.productIds !== void 0 && other.productIds !== void 0) {
+                    const result = this.productIds.reduce(other.productIds);
+
+                    if (result === false) {
+                        return false;
+                    } else if (result !== true) {
+                        reductions.productIds = result;
+                    }
+                }
+
+                if (this.priceRange !== void 0 && other.priceRange !== void 0) {
+                    const result = this.priceRange.reduce(other.priceRange);
+
+                    if (result === false) {
+                        return false;
+                    } else if (result !== true) {
+                        reductions.priceRange = result instanceof OrCriteria ? [...result.getItems()] : result;
+                    }
+                }
+
+                if (this.ratingRange !== void 0 && other.ratingRange !== void 0) {
+                    const result = this.ratingRange.reduce(other.ratingRange);
+
+                    if (result === false) {
+                        return false;
+                    } else if (result !== true) {
+                        reductions.ratingRange = result instanceof OrCriteria ? [...result.getItems()] : result;
+                    }
+                }
+
+                if (Object.keys(reductions).length === 0) {
+                    return true;
+                }
+
+                const reduced: typeof reductions = {};
+                const criteria : ProductCriterion[] = [];
+
+                if (reductions.productIds !== void 0) {
+                    reduced.productIds = reductions.productIds;
+                    // criteria.pu
+                }
+
+                const permutated = permutateEntries_V2(reductions);
+
+                for (const permutation of permutated) {
+                    const criterion = new ProductCriterion();
+
+                    // criterion.priceRange = permutation.p
+                }
+
+                throw new Error("Method not implemented.");
+            }
+
+            toString(): string {
+                throw new Error("Method not implemented.");
+            }
+
+            toFilterDto(): ProductFilter[] {
+                throw new Error("Method not implemented.");
+            }
+        }
     });
 
     it("criteria <> user-filter mapping", () => {
@@ -155,7 +261,7 @@ describe("prototyping-playground", () => {
             return allAggregated;
         }
 
-        function remap<T>(criterion: EntityCriterion<T>, template: RemapTemplate<T>): InstantiatedTemplate<T>[] {
+        function remap<T>(criterion: PropertyCriteria<T>, template: RemapTemplate<T>): InstantiatedTemplate<T>[] {
             const entries = criterion.getEntries();
             const permutationEntries: [string, any[]][] = [];
 
@@ -196,7 +302,7 @@ describe("prototyping-playground", () => {
             return;
         }
 
-        const productCriterion = productCriteria.getItems()[0] as EntityCriterion<Product>;
+        const productCriterion = productCriteria.getItems()[0] as PropertyCriteria<Product>;
         const remapped = remap(productCriterion, { name: InStringSetCriterion, price: InNumberRangeCriterion });
         console.log(JSON.stringify(remapped));
         console.log(remapped.length);
@@ -211,7 +317,7 @@ describe("prototyping-playground", () => {
             price: [InNumberSetCriterion, InNumberRangeCriterion],
         };
 
-        function remapCriterion<T, U extends RemapTemplate<T>>(criterion: EntityCriterion<T>, handler: () => U): InstantiatedTemplate<U> {
+        function remapCriterion<T, U extends RemapTemplate<T>>(criterion: PropertyCriteria<T>, handler: () => U): InstantiatedTemplate<U> {
             const template = handler();
             return {} as any;
         }

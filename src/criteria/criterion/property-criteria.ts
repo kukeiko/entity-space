@@ -1,5 +1,4 @@
 import { Class, getInstanceClass, permutateEntries } from "../../utils";
-
 import { OrCriteria } from "./or-criteria";
 import { Criteria } from "./criteria";
 import { Criterion } from "./criterion";
@@ -12,16 +11,26 @@ type InstantiatedTemplate<T> = {
     [K in keyof T]?: T[K] extends Class<Criterion>[] ? InstanceType<T[K][number]>[] : T[K] extends Class<Criterion> ? InstanceType<T[K]> : never;
 };
 
+export type CriterionBag<T = any> = {
+    [K in keyof T]?: Criterion;
+};
+
 // [todo] rename to ObjectCriterion
-export class EntityCriterion<T = unknown> extends Criterion {
-    constructor(items: Partial<Record<keyof T, Criterion>>) {
+// [todo] or rename to PropertyCriteria
+export class PropertyCriteria<T = any> extends Criterion {
+    constructor(items: CriterionBag<T>) {
         super();
+
+        if (Object.keys(items).length === 0) {
+            throw new Error(`can not create empty property criteria`);
+        }
+
         this.bag = Object.freeze(items);
     }
 
-    readonly bag: Readonly<Partial<Record<keyof T, Criterion>>>;
+    readonly bag: Readonly<CriterionBag<T>>;
 
-    getBag(): Readonly<Partial<Record<keyof T, Criterion>>> {
+    getBag(): Readonly<CriterionBag<T>> {
         return this.bag;
     }
 
@@ -67,67 +76,79 @@ export class EntityCriterion<T = unknown> extends Criterion {
         return permutateEntries(permutationEntries) as any;
     }
 
-    // [todo] remove "as any" hacks
     reduce(other: Criterion): boolean | Criterion {
         if (other instanceof Criteria) {
             return other.reduceBy(this);
-        } else if (other instanceof EntityCriterion) {
-            const reducedPropertyCriteriaBag = new Map<string, Criterion>();
+        } else if (other instanceof PropertyCriteria) {
+            // same reduction mechanics as found in and-criteria.ts
+            const otherBag = other.getBag();
+            const reductions: { criterion: Criterion; result: Criterion | boolean; key: string; inverted?: Criterion }[] = [];
 
             for (const key in this.bag) {
-                const myCriterion = this.bag[key];
+                const mine = this.bag[key];
 
-                if (myCriterion === void 0) {
+                if (mine === void 0) {
                     continue;
                 }
 
-                const otherCriterion = other.bag[key];
-                let reduced: Criterion | boolean = false;
+                const otherCriterion = otherBag[key];
 
                 if (otherCriterion === void 0) {
-                    reduced = myCriterion.invert();
+                    const inverted = mine.invert();
 
-                    // this criterion has a criterion that the other doesn't, and we weren't able to compute the inverse
-                    // => no reduction can be made
-                    if (reduced === false) {
+                    if (inverted === false) {
                         return false;
                     }
-                } else {
-                    reduced = myCriterion.reduce(otherCriterion);
-                }
 
-                if (reduced === false) {
-                    return false;
-                } else if (reduced !== true) {
-                    reducedPropertyCriteriaBag.set(key, reduced);
+                    reductions.push({ criterion: mine, key, result: false, inverted });
+                } else {
+                    const result = mine.reduce(otherCriterion);
+
+                    if (result === false) {
+                        return false;
+                    }
+
+                    reductions.push({ criterion: mine, key, result });
                 }
             }
 
-            if (reducedPropertyCriteriaBag.size == 0) {
+            if (reductions.every(x => x.result === false)) {
+                return false;
+            } else if (reductions.every(x => x.result === true)) {
                 return true;
             }
 
-            const objectCriterion: Record<string, Criterion> = {};
+            // we want items that did an actual reduction to be put first
+            reductions.sort((a, b) => {
+                if (a.result !== false && b.result === false) {
+                    return -1;
+                } else if (a.result === false && b.result !== false) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            });
 
-            // [todo] i think there is an Object.fromEntries() method that we could use, but we need to upgrade our ES target @ tsconfigs
-            for (const [key, reducedPropertyCriteria] of Object.entries(other.bag)) {
-                objectCriterion[key] = reducedPropertyCriteria as any;
+            const accumulator = { ...other.getBag() };
+            const built: CriterionBag[] = [];
+            const myBag: CriterionBag = this.bag;
+
+            for (const { criterion, key, result, inverted } of reductions) {
+                if (result === true) {
+                    continue;
+                }
+
+                const reduced = result === false ? inverted ?? criterion.invert() : result;
+
+                if (reduced === false) {
+                    return false;
+                }
+
+                built.push({ ...accumulator, [key]: reduced });
+                accumulator[key] = myBag[key];
             }
 
-            const objectCriteria: Record<string, Criterion>[] = [];
-
-            for (const [key, reducedPropertyCriteria] of reducedPropertyCriteriaBag) {
-                objectCriteria.push({ ...objectCriterion, [key]: reducedPropertyCriteria });
-                objectCriterion[key] = (this.bag as any)[key];
-            }
-
-            const entityCriterionPieces = objectCriteria.map(criteria => new EntityCriterion(criteria));
-
-            if (entityCriterionPieces.length === 1) {
-                return entityCriterionPieces[0];
-            }
-
-            return new OrCriteria(entityCriterionPieces);
+            return built.length === 1 ? new PropertyCriteria(built[0]) : new OrCriteria(built.map(bag => new PropertyCriteria(bag)));
         }
 
         return false;

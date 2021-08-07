@@ -1,6 +1,5 @@
-import { EntityCriterion } from "./entity-criterion";
-import { Criterion } from "./criterion";
+import { PropertyCriteria, CriterionBag } from "./property-criteria";
 
-export function matches<T>(bag: Partial<Record<keyof T, Criterion>>): EntityCriterion<T> {
-    return new EntityCriterion(bag);
+export function matches<T>(bag: CriterionBag): PropertyCriteria<T> {
+    return new PropertyCriteria(bag);
 }

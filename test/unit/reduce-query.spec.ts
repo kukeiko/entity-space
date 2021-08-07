@@ -4,23 +4,11 @@ describe("reduceQuery()", () => {
     // need this so toBeEqual() works
     const defaultOptions = createAlwaysReducible();
 
-    function createQuery(criteria: Criterion = matches({}), selection: Selection = {}): Query {
+    function createQuery(criteria: Criterion, selection: Selection = {}): Query {
         return { criteria, model: [], options: defaultOptions, selection };
     }
 
     describe("full reduction", () => {
-        it("{ } should be completely reduced by { }", () => {
-            // arrange
-            const a = createQuery();
-            const b = createQuery();
-
-            // act
-            const reduced = reduceQuery(a, b);
-
-            // assert
-            expect(reduced).toEqual([]);
-        });
-
         it("{ id in [1, 2] / { foo } } should be completely reduced by { id in [1, 2, 3] / { foo } }", () => {
             // arrange
             const a = createQuery(matches({ id: inSet([1, 2]) }), { foo: true });

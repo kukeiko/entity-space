@@ -3,6 +3,8 @@ export abstract class Criterion {
         return false;
     }
 
+    // [todo] should return boolean | Criterion if we dont want empty criteria
+    // reason: merging("(7, ...]").with("[..., 10)").shouldBe("[..., ...]");
     merge(other: Criterion): false | Criterion {
         return false;
     }

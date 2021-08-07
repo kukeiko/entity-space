@@ -1,4 +1,4 @@
-import { matches, inRange, InNumberRangeCriterion, Query, Selection, EntityCriterion, or, Criterion, OrCriteria } from "src";
+import { matches, inRange, InNumberRangeCriterion, Query, Selection, PropertyCriteria, or, Criterion, OrCriteria } from "src";
 import { Product, ProductFilter } from "./model";
 import { ProductRepository } from "./repositories";
 
@@ -39,8 +39,8 @@ describe("how do we actually load data?", () => {
                 return x instanceof OrCriteria;
             }
 
-            function isProductEntityCriterion(x: any): x is EntityCriterion<Product> {
-                return x instanceof EntityCriterion;
+            function isProductEntityCriterion(x: any): x is PropertyCriteria<Product> {
+                return x instanceof PropertyCriteria;
             }
 
             if (!isProductEntityCriteria(productCriteria)) {

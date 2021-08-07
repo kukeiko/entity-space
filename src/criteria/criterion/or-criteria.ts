@@ -92,7 +92,7 @@ export class OrCriteria<T extends Criterion = Criterion> extends Criteria<T> {
     invert(): false | Criterion {
         const inverted = this.items.map(criterion => criterion.invert());
 
-        if (inverted.every(isInstanceOf(OrCriteria))) {
+        if (inverted.every(isInstanceOf(Criterion))) {
             const flattenedInverted = inverted
                 .map(criterion => (criterion instanceof OrCriteria ? [...criterion.getItems()] : [criterion]))
                 .reduce((acc, value) => [...acc, ...value], []);

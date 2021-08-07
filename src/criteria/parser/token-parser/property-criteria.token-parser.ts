@@ -1,9 +1,9 @@
-import { EntityCriterion, Criterion } from "../../criterion";
+import { PropertyCriteria, Criterion } from "../../criterion";
 import { TokenType } from "../token-type.enum";
 import { notBracketedCriteriaTokenParser } from "./not-bracketed-criteria.token-parser";
 import { TokenParser } from "./token-parser.type";
 
-export function* entityCriterionTokenParser(): TokenParser {
+export function* propertyCriteriaTokenParser(): TokenParser {
     let token = yield;
 
     if (!(token.type === TokenType.Special && token.value === "{")) {
@@ -41,7 +41,7 @@ export function* entityCriterionTokenParser(): TokenParser {
                 bag[propertyName] = result.value();
 
                 if (token.type === TokenType.Special && token.value === "}") {
-                    return () => new EntityCriterion(bag);
+                    return () => new PropertyCriteria(bag);
                 } else if (!(token.type === TokenType.Special && token.value === ",")) {
                     return false;
                 } else {
