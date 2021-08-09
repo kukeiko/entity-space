@@ -3,6 +3,8 @@ import { Criteria } from "./criteria";
 import { Criterion } from "./criterion";
 
 export class OrCriteria<T extends Criterion = Criterion> extends Criteria<T> {
+    readonly combinator: "|" = "|"; // otherwise typeof OrCriteria === typeof AndCriteria
+
     reduce(other: Criterion): boolean | Criterion {
         let reduced = other;
 
