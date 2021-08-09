@@ -8,6 +8,5 @@ export * from "./matches.fn";
 export * from "./named-criteria";
 export * from "./or-criteria";
 export * from "./or.fn";
-export * from "./property-criteria";
 export * from "./range";
 export * from "./set";

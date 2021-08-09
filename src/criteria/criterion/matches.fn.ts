@@ -1,5 +1,6 @@
-import { PropertyCriteria, CriterionBag } from "./property-criteria";
+import { Criterion } from "./criterion";
+import { NamedCriteria } from "./named-criteria";
 
-export function matches<T>(bag: CriterionBag): PropertyCriteria<T> {
-    return new PropertyCriteria(bag);
+export function matches<T>(bag: Partial<Record<keyof T, Criterion>>): NamedCriteria {
+    return new NamedCriteria(bag);
 }

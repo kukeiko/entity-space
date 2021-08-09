@@ -2,8 +2,10 @@ import { OrCriteria } from "./or-criteria";
 import { Criteria } from "./criteria";
 import { Criterion } from "./criterion";
 
-export class NamedCriteria<T extends Record<string, Criterion>> extends Criterion {
-    constructor(items: T) {
+export type NamedCriteriaBag = Record<string, Criterion>;
+
+export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag> extends Criterion {
+    constructor(items: Partial<T>) {
         super();
 
         if (Object.keys(items).length === 0) {
@@ -13,9 +15,9 @@ export class NamedCriteria<T extends Record<string, Criterion>> extends Criterio
         this.bag = Object.freeze(items);
     }
 
-    readonly bag: Readonly<T>;
+    readonly bag: Readonly<Partial<T>>;
 
-    getBag(): Readonly<T> {
+    getBag(): Readonly<Partial<T>> {
         return this.bag;
     }
 
@@ -74,7 +76,6 @@ export class NamedCriteria<T extends Record<string, Criterion>> extends Criterio
 
             const accumulator = { ...other.getBag() };
             const built: Record<string, Criterion>[] = [];
-            const myBag: Record<string, Criterion> = this.bag;
 
             for (const { criterion, key, result, inverted } of reductions) {
                 if (result === true) {
@@ -88,7 +89,7 @@ export class NamedCriteria<T extends Record<string, Criterion>> extends Criterio
                 }
 
                 built.push({ ...accumulator, [key]: reduced });
-                accumulator[key] = myBag[key];
+                accumulator[key] = this.bag[key];
             }
 
             return built.length === 1 ? new NamedCriteria(built[0]) : new OrCriteria(built.map(bag => new NamedCriteria(bag)));
