@@ -154,19 +154,24 @@ describe("prototyping-playground", () => {
                 }
 
                 const reduced: typeof reductions = {};
-                const criteria : ProductCriterion[] = [];
+                const criteria: ProductCriterion[] = [];
 
                 if (reductions.productIds !== void 0) {
                     reduced.productIds = reductions.productIds;
                     // criteria.pu
                 }
 
+                type Foo = never extends Array<infer U> ? U : true;
+
                 const permutated = permutateEntries_V2(reductions);
+                // const criteria : ProductCriterion[] = [];
 
                 for (const permutation of permutated) {
                     const criterion = new ProductCriterion();
 
-                    // criterion.priceRange = permutation.p
+                    criterion.priceRange = permutation.priceRange;
+                    criterion.productIds = permutation.productIds;
+                    criterion.ratingRange = permutation.ratingRange;
                 }
 
                 throw new Error("Method not implemented.");

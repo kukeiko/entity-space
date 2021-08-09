@@ -21,7 +21,9 @@ export function permutateEntries<T>(entries: [string, T[]][], aggregated: Record
     return allAggregated;
 }
 
-type Permutated<T> = { [K in keyof T]: T[K] extends any[] ? T[K][number] : T[K] };
+type Unbox<T> = T extends any[] ? T[number] : T;
+
+type Permutated<T> = { [K in keyof T]: Unbox<T[K]> };
 
 export function permutateEntries_V2<T>(entries: T, aggregated: Partial<T> = {}): Permutated<T>[] {
     const entries_ = Object.entries(entries);
