@@ -1,6 +1,8 @@
-import { OrCriteria } from "./or-criteria";
-import { Criteria } from "./criteria";
-import { Criterion } from "./criterion";
+import { OrCriteria, OrCriteriaTemplate } from "../or";
+import { Criteria } from "../criteria";
+import { Criterion } from "../criterion";
+import { CriterionTemplate } from "..";
+import { NamedCriteriaTemplate } from ".";
 
 export type NamedCriteriaBag = Record<string, Criterion>;
 
@@ -114,5 +116,16 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag> extend
         }
 
         return `{ ${shards.join(", ")} }`;
+    }
+
+    remapOne(template: CriterionTemplate): [false, undefined] | [Criterion, Criterion?] {
+        if (template instanceof NamedCriteriaTemplate) {
+            const openBag = { ...this.getBag() } as NamedCriteriaBag;
+            //
+        } else if (template instanceof OrCriteriaTemplate && template.items.some(item => item instanceof NamedCriteriaTemplate)) {
+            //
+        }
+
+        return [false, void 0];
     }
 }

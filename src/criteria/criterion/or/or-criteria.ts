@@ -1,6 +1,8 @@
-import { isInstanceOf } from "../../utils";
-import { Criteria } from "./criteria";
-import { Criterion } from "./criterion";
+import { OrCriteriaTemplate } from ".";
+import { isInstanceOf } from "../../../utils";
+import { Criteria } from "../criteria";
+import { Criterion } from "../criterion";
+import { CriterionTemplate } from "../criterion-template.types";
 
 export class OrCriteria<T extends Criterion = Criterion> extends Criteria<T> {
     readonly combinator: "|" = "|"; // otherwise typeof OrCriteria === typeof AndCriteria
@@ -107,5 +109,48 @@ export class OrCriteria<T extends Criterion = Criterion> extends Criteria<T> {
 
     toString(): string {
         return `(${this.items.map(item => item.toString()).join(" | ")})`;
+    }
+
+    remapOne(template: CriterionTemplate): [false, undefined] | [Criterion, Criterion?] {
+        if (template instanceof OrCriteriaTemplate) {
+            let openItems = this.items.slice() as Criterion[];
+            const remappedItems: Criterion[] = [];
+
+            for (const criterion of this.items) {
+                const [remapped, open] = criterion.remap(template.items);
+
+                if (remapped !== false) {
+                    openItems = openItems.filter(openItem => openItem !== criterion);
+
+                    if (open !== void 0) {
+                        openItems.push(open);
+                    }
+
+                    remappedItems.push(remapped);
+                }
+            }
+
+            if (remappedItems.length > 0) {
+                return [new OrCriteria(remappedItems), openItems.length > 0 ? new OrCriteria(openItems) : void 0];
+            }
+        } else {
+            let openItems = this.items.slice() as Criterion[];
+
+            for (const criterion of this.items) {
+                const [remapped, open] = criterion.remapOne(template);
+
+                if (remapped !== false) {
+                    openItems = openItems.filter(openItem => openItem !== criterion);
+
+                    if (open !== void 0) {
+                        openItems.push(open);
+                    }
+
+                    return [remapped, new OrCriteria(openItems)];
+                }
+            }
+        }
+
+        return [false, void 0];
     }
 }

@@ -15,9 +15,11 @@ import {
     OrCriteria,
     permutateEntries_V2,
     AndCriteria,
-    NamedCriteria,
     CriterionTemplate,
     InstancedCriterionTemplate,
+    OrCriteriaTemplate,
+    AndCriteriaTemplate,
+    NamedCriteriaTemplate,
 } from "src";
 import { TreeNodeModel, CanvasModel, CircleModel, SquareModel, TriangleModel } from "../facade/model";
 
@@ -88,15 +90,35 @@ describe("prototyping-playground", () => {
 
         type ShouldBeFalse = typeof OrCriteria extends typeof AndCriteria ? true : false;
 
-        const instanced_or_inNumberRange = takesTemplate([OrCriteria, [InNumberRangeCriterion]]);
+        // const instanced_or_inNumberRange = takesTemplate([OrCriteria, [InNumberRangeCriterion]]);
+        // instanced_or_inNumberRange.getItems()[0];
+
+        // const instanced_or_inNumberRange_inNumberSet = takesTemplate([OrCriteria, [InNumberRangeCriterion, InNumberSetCriterion, [AndCriteria, [InStringRangeCriterion]]]]);
+        // const item_B = instanced_or_inNumberRange_inNumberSet.getItems()[0];
+        // const instanced_or_propertyCriteria = takesTemplate([
+        //     NamedCriteria,
+        //     { foo: [InNumberRangeCriterion, [OrCriteria, [InNumberRangeCriterion]]], bar: [InNumberSetCriterion, InNumberRangeCriterion] },
+        // ]);
+
+        // const foo = instanced_or_propertyCriteria.getBag().foo;
+        // const bar = instanced_or_propertyCriteria.getBag().bar;
+        // const instanced_deepMix = takesTemplate([OrCriteria, [[NamedCriteria, { foo: [InNumberRangeCriterion, [OrCriteria, [InNumberRangeCriterion]]] }]]]);
+        const instanced_or_inNumberRange = takesTemplate(new OrCriteriaTemplate([InNumberRangeCriterion]));
         instanced_or_inNumberRange.getItems()[0];
 
-        const instanced_or_inNumberRange_inNumberSet = takesTemplate([OrCriteria, [InNumberRangeCriterion, InNumberSetCriterion, [AndCriteria, [InStringRangeCriterion]]]]);
+        const instanced_or_inNumberRange_inNumberSet = takesTemplate(
+            new OrCriteriaTemplate([InNumberRangeCriterion, InNumberSetCriterion, new AndCriteriaTemplate([InStringRangeCriterion])])
+        );
         const item_B = instanced_or_inNumberRange_inNumberSet.getItems()[0];
-        const instanced_or_propertyCriteria = takesTemplate([NamedCriteria, { foo: [InNumberRangeCriterion, [OrCriteria, [InNumberRangeCriterion]]] }]);
+        const instanced_or_propertyCriteria = takesTemplate(
+            new NamedCriteriaTemplate({ foo: [InNumberRangeCriterion, new OrCriteriaTemplate([InNumberRangeCriterion])], bar: [InNumberSetCriterion, InNumberRangeCriterion] })
+        );
 
         const foo = instanced_or_propertyCriteria.getBag().foo;
-        const instanced_heavilyMixed = takesTemplate([OrCriteria, [[NamedCriteria, { foo: [InNumberRangeCriterion, [OrCriteria, [InNumberRangeCriterion]]] }]]]);
+        const bar = instanced_or_propertyCriteria.getBag().bar;
+        const instanced_deepMix = takesTemplate(
+            new OrCriteriaTemplate([new NamedCriteriaTemplate({ foo: [InNumberRangeCriterion, new OrCriteriaTemplate([InNumberRangeCriterion])] })])
+        );
     });
 
     // interf

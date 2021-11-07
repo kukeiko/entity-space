@@ -1,5 +1,4 @@
-import { Criterion } from "../criterion";
-import { fmerging, merging, xmerging } from "./merging.fn";
+import { merging, xmerging } from "./merging.fn";
 
 describe("merging criteria", () => {
     // binary
@@ -12,10 +11,10 @@ describe("merging criteria", () => {
 
     // range
     merging("[1, 7]").with("[3, 5]").shouldBe("[1, 7]");
+    merging("[3, 5]").with("[1, 7]").shouldBe("[1, 7]");
     merging("[1, 7]").with("[3, 9]").shouldBe("[1, 9]");
     merging("[1, ...]").with("[3, 5]").shouldBe("[1, ...]");
     merging("[..., 7]").with("[3, 5]").shouldBe("[..., 7]");
-    merging("[3, 5]").with("[1, 7]").shouldBe("[1, 7]");
     merging("[1, 3]").with("[5, 7]").shouldBe(false);
 
     // [todo] left as a reminder to myself
