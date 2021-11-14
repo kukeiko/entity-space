@@ -3,6 +3,7 @@ import { Criteria } from "../criteria";
 import { Criterion } from "../criterion";
 import { CriterionTemplate } from "..";
 import { NamedCriteriaTemplate } from ".";
+import { permutateEntries } from "../../../utils";
 
 export type NamedCriteriaBag = Record<string, Criterion>;
 
@@ -118,10 +119,34 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag> extend
         return `{ ${shards.join(", ")} }`;
     }
 
-    remapOne(template: CriterionTemplate): [false, undefined] | [Criterion, Criterion?] {
+    remapOne(template: CriterionTemplate): [false, undefined] | [Criterion[], Criterion?] {
         if (template instanceof NamedCriteriaTemplate) {
             const openBag = { ...this.getBag() } as NamedCriteriaBag;
-            //
+            const otherBag = template.items;
+            const theBagToPermutate: Record<string, Criterion[]> = {};
+
+            for (const key in otherBag) {
+                const criterion = openBag[key];
+
+                if (criterion == void 0) {
+                    continue;
+                }
+
+                const templates = otherBag[key];
+
+                // [todo] what to do with "open"?
+                const [remapped, open] = criterion.remap(templates);
+
+                if (remapped === false) {
+                    continue;
+                }
+
+                theBagToPermutate[key] = remapped;
+            }
+
+            const permutations = permutateEntries(theBagToPermutate);
+
+            return [permutations.map(bag => new NamedCriteria(bag))];
         } else if (template instanceof OrCriteriaTemplate && template.items.some(item => item instanceof NamedCriteriaTemplate)) {
             //
         }

@@ -13,7 +13,7 @@ import {
     or,
     InStringRangeCriterion,
     OrCriteria,
-    permutateEntries_V2,
+    permutateEntries,
     AndCriteria,
     CriterionTemplate,
     InstancedCriterionTemplate,
@@ -119,6 +119,8 @@ describe("prototyping-playground", () => {
         const instanced_deepMix = takesTemplate(
             new OrCriteriaTemplate([new NamedCriteriaTemplate({ foo: [InNumberRangeCriterion, new OrCriteriaTemplate([InNumberRangeCriterion])] })])
         );
+
+        instanced_deepMix.getItems()[0].getBag().foo;
     });
 
     // interf
@@ -212,7 +214,7 @@ describe("prototyping-playground", () => {
 
                 type Foo = never extends Array<infer U> ? U : true;
 
-                const permutated = permutateEntries_V2(reductions);
+                const permutated = permutateEntries(reductions);
                 // const criteria : ProductCriterion[] = [];
 
                 for (const permutation of permutated) {

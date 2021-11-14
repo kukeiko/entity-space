@@ -251,15 +251,15 @@ export abstract class InRangeCriterion<T> extends Criterion {
         return shards.join(", ");
     }
 
-    remapOne(template: CriterionTemplate): [false, undefined] | [Criterion, Criterion?] {
+    remapOne(template: CriterionTemplate): [false, undefined] | [Criterion[], Criterion?] {
         const thisClass = getInstanceClass(this);
 
         if (template === thisClass) {
-            return [this];
+            return [[this]];
         } else if (template instanceof OrCriteriaTemplate && template.items.some(item => item === thisClass)) {
-            return [new OrCriteria([this])];
+            return [[new OrCriteria([this])]];
         } else if (template instanceof AndCriteriaTemplate && template.items.some(item => item === thisClass)) {
-            return [new AndCriteria([this])];
+            return [[new AndCriteria([this])]];
         }
 
         return [false, void 0];

@@ -7,3 +7,4 @@ export * from "./named";
 export * from "./or";
 export * from "./range";
 export * from "./set";
+export * from "./value";

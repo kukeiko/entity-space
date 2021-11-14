@@ -7,3 +7,4 @@ export * from "./in-set-criterion.token-parser";
 export * from "./not-bracketed-criteria.token-parser";
 export * from "./token-parser";
 export * from "./token-parser.type";
+export * from "./value-criterion.token-parser";

@@ -12,6 +12,7 @@ export type CriterionTemplate = Class<Criterion> | AndCriteriaTemplate | OrCrite
 // | [typeof OrCriteria, CriterionTemplate[]]
 // | [typeof NamedCriteria, NamedCriteriaBagTemplate];
 
+// export type InstancedCriterionTemplate<T extends CriterionTemplate | CriterionTemplate[]> = T extends Class<Criterion>
 export type InstancedCriterionTemplate<T extends CriterionTemplate | CriterionTemplate[]> = T extends Class<Criterion>
     ? InstanceType<T>
     : T extends NamedCriteriaTemplate<infer U>
@@ -19,7 +20,7 @@ export type InstancedCriterionTemplate<T extends CriterionTemplate | CriterionTe
     : T extends OrCriteriaTemplate<infer U>
     ? OrCriteria<InstancedCriterionTemplate<U>>
     : T extends AndCriteriaTemplate<infer U>
-    ? AndCriteria<InstancedCriterionTemplate<U>>
+    ? AndCriteria<InstancedCriterionTemplate<U>> // [todo] causes "possibly infinite type recursion" when we add a signature to Criterion.ts that returns InstanceCriterionTemplate. i believe its because CriterionTemplate can be "Class<Criterion>"
     : T extends CriterionTemplate[]
     ? InstancedCriterionTemplate<T[number]>
     : never;

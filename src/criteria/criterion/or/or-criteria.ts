@@ -111,10 +111,10 @@ export class OrCriteria<T extends Criterion = Criterion> extends Criteria<T> {
         return `(${this.items.map(item => item.toString()).join(" | ")})`;
     }
 
-    remapOne(template: CriterionTemplate): [false, undefined] | [Criterion, Criterion?] {
+    remapOne(template: CriterionTemplate): [false, undefined] | [Criterion[], Criterion?] {
         if (template instanceof OrCriteriaTemplate) {
             let openItems = this.items.slice() as Criterion[];
-            const remappedItems: Criterion[] = [];
+            const remappedItems: Criterion[][] = [];
 
             for (const criterion of this.items) {
                 const [remapped, open] = criterion.remap(template.items);
@@ -131,24 +131,28 @@ export class OrCriteria<T extends Criterion = Criterion> extends Criteria<T> {
             }
 
             if (remappedItems.length > 0) {
-                return [new OrCriteria(remappedItems), openItems.length > 0 ? new OrCriteria(openItems) : void 0];
+                const flattenedRemappedItems = remappedItems.reduce((acc, value) => [...acc, ...value], []);
+                return [[new OrCriteria(flattenedRemappedItems)], openItems.length > 0 ? new OrCriteria(openItems) : void 0];
             }
         } else {
-            let openItems = this.items.slice() as Criterion[];
+            const allRemapped: Criterion[] = [];
+            const allOpen: Criterion[] = [];
 
             for (const criterion of this.items) {
                 const [remapped, open] = criterion.remapOne(template);
 
                 if (remapped !== false) {
-                    openItems = openItems.filter(openItem => openItem !== criterion);
+                    allRemapped.push(...remapped);
 
                     if (open !== void 0) {
-                        openItems.push(open);
+                        allOpen.push(open);
                     }
-
-                    return [remapped, new OrCriteria(openItems)];
+                } else {
+                    allOpen.push(criterion);
                 }
             }
+
+            return [allRemapped, allOpen.length > 0 ? new OrCriteria(allOpen) : void 0];
         }
 
         return [false, void 0];
