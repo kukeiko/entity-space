@@ -1,4 +1,4 @@
-import { matches, inRange, InNumberRangeCriterion, Query, Selection, NamedCriteria, or, Criterion, OrCriteria, NamedCriteriaTemplate, InstancedCriterionTemplate } from "src";
+import { matches, inRange, InNumberRangeCriterion, Query, Selection, or, Criterion, NamedCriteriaTemplate } from "src";
 import { Product, ProductFilter } from "./model";
 import { ProductRepository } from "./repositories";
 
@@ -48,8 +48,7 @@ xdescribe("how do we actually load data?", () => {
             const filters: ProductFilter[] = [];
 
             for (const criterion of remapped) {
-                // [todo] get rid of the cast
-                const bag = (criterion as InstancedCriterionTemplate<typeof template>).getBag();
+                const bag = criterion.getBag();
                 const filter: ProductFilter = {};
 
                 if (bag.price !== void 0) {
