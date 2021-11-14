@@ -13,11 +13,19 @@ describe("criteria-lexer", () => {
         expect(lexed).toEqual(expected);
     });
 
-    function shouldLex(input: string, tokens: Token[]): void {
-        it(`should lex ${input} to ${JSON.stringify(tokens)}`, () => {
+    function shouldLex(input: string, tokens: Token[], specFn = it): void {
+        specFn(`should lex ${input} to ${JSON.stringify(tokens)}`, () => {
             const lexed = lex(input);
             expect(lexed).toEqual(tokens);
         });
+    }
+
+    function fshouldLex(input: string, tokens: Token[]): void {
+        shouldLex(input, tokens, fit);
+    }
+
+    function xshouldLex(input: string, tokens: Token[]): void {
+        shouldLex(input, tokens, xit);
     }
 
     const sample = `{
@@ -49,4 +57,6 @@ describe("criteria-lexer", () => {
         token(TokenType.Number, "789"),
         token(TokenType.Special, ")"),
     ]);
+
+    shouldLex('"foo"', [token(TokenType.String, "foo")]);
 });

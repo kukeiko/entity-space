@@ -40,8 +40,8 @@ describe("criteria-lexer-scanners", () => {
     shouldScanNumber("+.9.", "+.9");
 
     // strings
-    shouldScanString('"foo"');
-    shouldScanString('"foo"bar', '"foo"');
+    shouldScanString('"foo"', "foo");
+    shouldScanString('"foo"bar', "foo");
 
     it("should throw if string is not terminated", () => {
         // arrange

@@ -27,7 +27,7 @@ export function lex(input: string): Token[] {
         } else if ('"'.includes(char)) {
             const [value, _next] = scanString(char, iterator);
             tokens.push(token(TokenType.String, value));
-            next = _next;
+            next = iterator.next();
         } else if ("+-.0123456789".includes(char)) {
             const [value, _next] = scanNumber(char, iterator);
 
