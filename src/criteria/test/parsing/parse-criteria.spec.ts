@@ -1,5 +1,5 @@
 import { parseCriteria } from "../../parser";
-import { and, inRange, inSet, isEven, isNull, isTrue, matches, notInSet, or, Criterion } from "../../criterion";
+import { and, inRange, inSet, isEven, isNull, isTrue, matches, notInSet, or, Criterion, isValue, notValue } from "../../criterion";
 
 describe("parse-criteria", () => {
     function shouldParse(stringified: string, expected: Criterion): void {
@@ -10,6 +10,10 @@ describe("parse-criteria", () => {
         });
     }
 
+    shouldParse("is 7", isValue(7));
+    shouldParse("not 7", notValue(7));
+    shouldParse('is "foo"', isValue("foo"));
+    shouldParse('not "foo"', notValue("foo"));
     shouldParse("is-true", isTrue(true));
     shouldParse(
         "is-true & is-odd",

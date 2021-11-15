@@ -1,7 +1,7 @@
 import { inRange, inSet, notInSet, matches, or } from "../../criterion";
 import { freducing, reducing, xreducing } from "./reducing.fn";
 
-describe("reducing: property-criteria", () => {
+describe("reducing: named-criteria", () => {
     interface FooBarBaz {
         foo: number;
         bar: number;
@@ -35,6 +35,7 @@ describe("reducing: property-criteria", () => {
         reducing("{ foo:{1, 2}, bar:{3} }").by("{ foo:{2}, bar:{3, 4} }").shouldBe("{ foo:{1}, bar:{3} }");
 
         reducing("{ foo:[1, 7] }").by("{ foo:[3, 4], bar:[150, 175] }").shouldBe("({ foo:([1, 3) | (4, 7]) } | { foo:[3, 4], bar:([..., 150) | (175, ...]) })");
+        // "({ foo:([1, 3) | (4, 7]) } | { foo:[3, 4], bar:([..., 150) | (175, ...]) })" remapped with "i do not support filtering on property bar" should be "{ foo:[1, 7] }"
 
         reducing("{ foo:[1, 7], bar:[100, 200] }")
             .by("{ foo:[3, 4], bar:[150, 175] }")

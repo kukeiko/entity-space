@@ -1,9 +1,9 @@
-import { PropertyCriteria, Criterion } from "../../criterion";
+import { NamedCriteria, Criterion } from "../../criterion";
 import { TokenType } from "../token-type.enum";
 import { notBracketedCriteriaTokenParser } from "./not-bracketed-criteria.token-parser";
 import { TokenParser } from "./token-parser.type";
 
-export function* propertyCriteriaTokenParser(): TokenParser {
+export function* namedCriteriaTokenParser(): TokenParser {
     let token = yield;
 
     if (!(token.type === TokenType.Special && token.value === "{")) {
@@ -41,7 +41,7 @@ export function* propertyCriteriaTokenParser(): TokenParser {
                 bag[propertyName] = result.value();
 
                 if (token.type === TokenType.Special && token.value === "}") {
-                    return () => new PropertyCriteria(bag);
+                    return () => new NamedCriteria(bag);
                 } else if (!(token.type === TokenType.Special && token.value === ",")) {
                     return false;
                 } else {

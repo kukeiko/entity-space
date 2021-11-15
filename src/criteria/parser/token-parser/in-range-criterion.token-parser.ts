@@ -27,20 +27,20 @@ function* valueParser(): Generator<undefined, [string | number | undefined, type
 export function* inRangeCriterionTokenParser(): TokenParser {
     let token = yield;
 
+    // in-range has to start with either an inclusive "[" or exclusive "(" bracket
     if (token.type !== TokenType.Special || !"([".includes(token.value)) {
         return false;
     }
 
     const fromInclusive = token.value === "[";
+    // expecting a string, a number or "..." sequence (to represent infinity)
     const fromValueResult = yield* valueParser();
     if (fromValueResult === false) return false;
     const [fromValue] = fromValueResult;
 
     token = yield;
 
-    if (token.type === TokenType.Special && ")]".includes(token.value)) {
-        return () => inRange(fromValue as any, void 0, [fromInclusive, token.value === "]"] as any);
-    } else if (token.type === TokenType.Special && token.value === ",") {
+    if (token.type === TokenType.Special && token.value === ",") {
         const toValueResult = yield* valueParser();
         if (toValueResult === false) return false;
         const [toValue] = toValueResult;

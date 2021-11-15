@@ -5,22 +5,23 @@ import {
     TypedSelector,
     Criterion,
     Class,
-    InStringSetCriterion,
     InNumberSetCriterion,
     InNumberRangeCriterion,
-    PropertyCriteria,
     inSet,
     inRange,
-    getInstanceClass,
     matches,
     or,
-    Criteria,
     InStringRangeCriterion,
     OrCriteria,
-    permutateEntries_V2,
+    permutateEntries,
+    AndCriteria,
+    CriterionTemplate,
+    InstancedCriterionTemplate,
+    OrCriteriaTemplate,
+    AndCriteriaTemplate,
+    NamedCriteriaTemplate,
 } from "src";
 import { TreeNodeModel, CanvasModel, CircleModel, SquareModel, TriangleModel } from "../facade/model";
-import { Product } from "../introduction/model";
 
 type RemapTemplate<T> = {
     [K in keyof T]?: Exclude<T[K], undefined> extends boolean | number | string | null ? Class<Criterion> | Class<Criterion>[] : never;
@@ -74,6 +75,56 @@ const reducedRange = inNumberRange.reduce(inNumberRange);
 // }
 
 describe("prototyping-playground", () => {
+    xit("screwing around with criterion templates", () => {
+        function takesTemplate<T extends CriterionTemplate>(template: T): InstancedCriterionTemplate<T> {
+            if (Array.isArray(template)) {
+                // is NamedCriteria or OrCriteria or AndCriteria
+                const criteriaClass = template[0];
+                const containedItems = template[1];
+            } else {
+                //
+            }
+
+            return {} as any;
+        }
+
+        type ShouldBeFalse = typeof OrCriteria extends typeof AndCriteria ? true : false;
+
+        // const instanced_or_inNumberRange = takesTemplate([OrCriteria, [InNumberRangeCriterion]]);
+        // instanced_or_inNumberRange.getItems()[0];
+
+        // const instanced_or_inNumberRange_inNumberSet = takesTemplate([OrCriteria, [InNumberRangeCriterion, InNumberSetCriterion, [AndCriteria, [InStringRangeCriterion]]]]);
+        // const item_B = instanced_or_inNumberRange_inNumberSet.getItems()[0];
+        // const instanced_or_propertyCriteria = takesTemplate([
+        //     NamedCriteria,
+        //     { foo: [InNumberRangeCriterion, [OrCriteria, [InNumberRangeCriterion]]], bar: [InNumberSetCriterion, InNumberRangeCriterion] },
+        // ]);
+
+        // const foo = instanced_or_propertyCriteria.getBag().foo;
+        // const bar = instanced_or_propertyCriteria.getBag().bar;
+        // const instanced_deepMix = takesTemplate([OrCriteria, [[NamedCriteria, { foo: [InNumberRangeCriterion, [OrCriteria, [InNumberRangeCriterion]]] }]]]);
+        const instanced_or_inNumberRange = takesTemplate(new OrCriteriaTemplate([InNumberRangeCriterion]));
+        instanced_or_inNumberRange.getItems()[0];
+
+        const instanced_or_inNumberRange_inNumberSet = takesTemplate(
+            new OrCriteriaTemplate([InNumberRangeCriterion, InNumberSetCriterion, new AndCriteriaTemplate([InStringRangeCriterion])])
+        );
+        const item_B = instanced_or_inNumberRange_inNumberSet.getItems()[0];
+        const instanced_or_propertyCriteria = takesTemplate(
+            new NamedCriteriaTemplate({ foo: [InNumberRangeCriterion, new OrCriteriaTemplate([InNumberRangeCriterion])], bar: [InNumberSetCriterion, InNumberRangeCriterion] })
+        );
+
+        const foo = instanced_or_propertyCriteria.getBag().foo;
+        const bar = instanced_or_propertyCriteria.getBag().bar;
+        const instanced_deepMix = takesTemplate(
+            new OrCriteriaTemplate([new NamedCriteriaTemplate({ foo: [InNumberRangeCriterion, new OrCriteriaTemplate([InNumberRangeCriterion])] })])
+        );
+
+        instanced_deepMix.getItems()[0].getBag().foo;
+    });
+
+    // interf
+
     it("user-criterion classes", () => {
         // instead of mapping, i'm thinking of letting the user create their own criterion class implementation.
         // i think we'll need a way to typify the contents of an/or criteria - e.g. "price" can be inRange or or (inRange | inRange),
@@ -163,7 +214,7 @@ describe("prototyping-playground", () => {
 
                 type Foo = never extends Array<infer U> ? U : true;
 
-                const permutated = permutateEntries_V2(reductions);
+                const permutated = permutateEntries(reductions);
                 // const criteria : ProductCriterion[] = [];
 
                 for (const permutation of permutated) {
@@ -241,98 +292,6 @@ describe("prototyping-playground", () => {
         function acceptCombinationOf(): any {
             //
         }
-    });
-
-    it("remap criteria", () => {
-        type Permutated<T extends Record<string, any[]>> = {
-            [K in keyof T]: T[K][number];
-        };
-
-        function permutate(aggregated: any, entries: [string, any[]][]): any[] {
-            if (entries.length === 0) {
-                return [aggregated];
-            }
-
-            let allAggregated: any[] = [];
-            let [key, shards] = entries[0];
-            entries = entries.slice(1);
-            aggregated = { ...aggregated };
-
-            for (const shard of shards) {
-                let nextAggregated = { ...aggregated, [key]: shard };
-                allAggregated.push(...permutate(nextAggregated, entries));
-            }
-
-            return allAggregated;
-        }
-
-        function remap<T>(criterion: PropertyCriteria<T>, template: RemapTemplate<T>): InstantiatedTemplate<T>[] {
-            const entries = criterion.getEntries();
-            const permutationEntries: [string, any[]][] = [];
-
-            for (const key in template) {
-                const entry = entries.find(([entryKey]) => entryKey === key);
-                if (!entry) continue;
-
-                const stuffInTemplate = template[key];
-                const allowedTypes = Array.isArray(stuffInTemplate) ? stuffInTemplate : ([stuffInTemplate] as any[]);
-                const filteredByType = entry[1].filter(item => allowedTypes.includes(getInstanceClass(item)));
-
-                // [todo] instanceof checks against what's in template is missing
-                if (Array.isArray(stuffInTemplate)) {
-                    permutationEntries.push([key, [filteredByType]]);
-                } else {
-                    permutationEntries.push([key, filteredByType]);
-                }
-            }
-
-            return permutate({}, permutationEntries);
-        }
-
-        const itemToPermutate = {
-            foo: ["foo-1", "foo-2"],
-            bar: ["bar-1", "bar-2", "bar-3"],
-        };
-
-        // console.log(JSON.stringify(permutate({}, Object.entries(itemToPermutate))));
-
-        const productCriteria = matches<Product>({
-            name: or([inSet(["foo", "bar"]), inRange("a", "z"), inSet(["khaz", "mo", "dan"])]),
-            price: or([inRange(0, 100), inRange(700, 1200)]),
-        });
-
-        // [todo] hacky workaround to satisfy compiler; i don't want to comment out the current remapping
-        // functionality so i still see the method uses here in case i do "find all references"
-        if (!(productCriteria instanceof Criteria)) {
-            return;
-        }
-
-        const productCriterion = productCriteria.getItems()[0] as PropertyCriteria<Product>;
-        const remapped = remap(productCriterion, { name: InStringSetCriterion, price: InNumberRangeCriterion });
-        console.log(JSON.stringify(remapped));
-        console.log(remapped.length);
-
-        // const permutations = permutate({}, productCriterion.getEntries());
-        // console.log(JSON.stringify(permutations));
-
-        // console.log(permutate(productCriteria.getItems()[0], Object.entries(productCriteria.getItems()[0].getBag())))
-
-        const foo: RemapTemplate<Product> = {
-            name: InStringSetCriterion,
-            price: [InNumberSetCriterion, InNumberRangeCriterion],
-        };
-
-        function remapCriterion<T, U extends RemapTemplate<T>>(criterion: PropertyCriteria<T>, handler: () => U): InstantiatedTemplate<U> {
-            const template = handler();
-            return {} as any;
-        }
-
-        // function remapCriteria<T, U extends RemapTemplate<T>>(criteria: EntityCriteria<T>, handler: () => U): InstantiatedTemplate<U> {
-        //     const template = handler();
-        //     return {} as any;
-        // }
-
-        // const extracted = remapCriteria(entityCriteria<Product>([]), () => ({ name: InStringSetCriterion, price: [InNumberSetCriterion, InNumberRangeCriterion] }));
     });
 
     const treeNodeCreatable: TypedInstance<TreeNodeModel, "creatable"> = {

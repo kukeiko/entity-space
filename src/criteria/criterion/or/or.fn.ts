@@ -1,6 +1,6 @@
 import { OrCriteria } from "./or-criteria";
-import { Criterion } from "./criterion";
-import { Criteria } from "./criteria";
+import { Criterion } from "../criterion";
+import { Criteria } from "../criteria";
 
 export function or<T extends Criterion, U extends T[]>(...criteria: [...U]): Criteria<[...U][number]>;
 export function or<T extends Criterion>(criteria: T[]): Criteria<T>;

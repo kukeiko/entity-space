@@ -1,10 +1,10 @@
-import { propertyCriteriaTokenParser, token, TokenType } from "../../parser";
+import { namedCriteriaTokenParser, token, TokenType } from "../../parser";
 import { inRange, matches, or } from "../../criterion";
 import { itShouldParseTokens } from "./utils";
 
-describe("parse-tokens: property-criteria", () => {
+describe("parse-tokens: named-criteria", () => {
     itShouldParseTokens(
-        propertyCriteriaTokenParser,
+        namedCriteriaTokenParser,
         [
             token(TokenType.Special, "{"),
             token(TokenType.Symbol, "foo"),
@@ -26,7 +26,7 @@ describe("parse-tokens: property-criteria", () => {
     );
 
     itShouldParseTokens(
-        propertyCriteriaTokenParser,
+        namedCriteriaTokenParser,
         [
             token(TokenType.Special, "{"),
             token(TokenType.Symbol, "foo"),

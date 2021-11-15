@@ -1,8 +1,8 @@
-import { and, inRange, matches, or, PropertyCriteria } from "../criterion";
+import { and, inRange, matches, or, NamedCriteria } from "../criterion";
 
 describe("a criterion can't be empty", () => {
-    it("should be true for PropertyCriteria", () => {
-        const create = () => new PropertyCriteria({});
+    it("should be true for NamedCriteria", () => {
+        const create = () => new NamedCriteria({});
         expect(create).toThrow();
     });
 

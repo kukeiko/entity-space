@@ -12,6 +12,7 @@ export abstract class Criteria<T extends Criterion = Criterion> extends Criterio
     }
 
     readonly items: T[];
+    abstract readonly combinator: "|" | "&";
 
     getItems(): T[] {
         return this.items;

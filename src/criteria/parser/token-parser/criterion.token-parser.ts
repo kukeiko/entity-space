@@ -3,9 +3,17 @@ import { inRangeCriterionTokenParser } from "./in-range-criterion.token-parser";
 import { insetCriterionTokenParser } from "./in-set-criterion.token-parser";
 import { TokenParser } from "./token-parser.type";
 import { criteriaTokenParser } from "./criteria.token-parser";
-import { propertyCriteriaTokenParser } from "./property-criteria.token-parser";
+import { namedCriteriaTokenParser } from "./named-criteria.token-parser";
 import { binaryCriterionTokenParser } from "./binary-criterion.token-parser";
+import { valueCriterionTokenParser } from "./value-criterion.token-parser";
 
 export function criterionTokenParser(): TokenParser {
-    return tokenParser([criteriaTokenParser, inRangeCriterionTokenParser, insetCriterionTokenParser, propertyCriteriaTokenParser, binaryCriterionTokenParser]);
+    return tokenParser([
+        criteriaTokenParser,
+        inRangeCriterionTokenParser,
+        insetCriterionTokenParser,
+        namedCriteriaTokenParser,
+        binaryCriterionTokenParser,
+        valueCriterionTokenParser,
+    ]);
 }

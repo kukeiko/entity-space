@@ -1,8 +1,6 @@
-import { permutateEntries, permutateEntries_V2 } from "../permutate-entries.fn";
+import { permutateEntries } from "../permutate-entries.fn";
 
 describe("permutateEntries()", () => {
-    type Entries = [string, any[]][];
-
     it("should permutate into 2 items (V2)", () => {
         // arrange
         const item = {
@@ -22,7 +20,7 @@ describe("permutateEntries()", () => {
         ];
 
         // act
-        const permutated = permutateEntries_V2(item);
+        const permutated = permutateEntries(item);
 
         // assert
         expect(permutated).toEqual(expected);
@@ -30,10 +28,7 @@ describe("permutateEntries()", () => {
 
     it("should permutate into 2 items", () => {
         // arrange
-        const entries: Entries = [
-            ["foo", ["foo-A", "foo-B"]],
-            ["bar", ["bar-A"]],
-        ];
+        const entries = { foo: ["foo-A", "foo-B"], bar: ["bar-A"] };
 
         const expected = [
             {
@@ -50,15 +45,15 @@ describe("permutateEntries()", () => {
         const permutated = permutateEntries(entries);
 
         // assert
-        expect(permutated).toEqual(expected);
+        expect(permutated).toEqual(expected as any);
     });
 
     it("should permutate into 4 items", () => {
         // arrange
-        const entries: Entries = [
-            ["foo", ["foo-A", "foo-B"]],
-            ["bar", ["bar-A", "bar-B"]],
-        ];
+        const entries = {
+            foo: ["foo-A", "foo-B"],
+            bar: ["bar-A", "bar-B"],
+        };
 
         const expected = [
             {

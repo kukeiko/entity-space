@@ -1,9 +1,11 @@
-import { OrCriteria } from "./or-criteria";
-import { Criteria } from "./criteria";
-import { Criterion } from "./criterion";
-import { isInstanceOf } from "../../utils";
+import { OrCriteria } from "../or/or-criteria";
+import { Criteria } from "../criteria";
+import { Criterion } from "../criterion";
+import { isInstanceOf } from "../../../utils";
 
 export class AndCriteria<T extends Criterion = Criterion> extends Criteria<T> {
+    readonly combinator: "&" = "&"; // otherwise typeof OrCriteria === typeof AndCriteria
+
     reduce(other: Criterion): boolean | Criterion {
         const items = this.items.map(criterion => ({ criterion, result: criterion.reduce(other) }));
 

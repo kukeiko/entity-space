@@ -1,85 +1,33 @@
-import { Class, getInstanceClass, permutateEntries } from "../../utils";
-import { OrCriteria } from "./or-criteria";
-import { Criteria } from "./criteria";
-import { Criterion } from "./criterion";
+import { OrCriteria, OrCriteriaTemplate } from "../or";
+import { Criteria } from "../criteria";
+import { Criterion } from "../criterion";
+import { CriterionTemplate } from "..";
+import { NamedCriteriaTemplate } from ".";
+import { permutateEntries } from "../../../utils";
 
-type RemapTemplate<T> = {
-    [K in keyof T]?: Exclude<T[K], undefined> extends boolean | number | string | null ? Class<Criterion> | Class<Criterion>[] : never;
-};
+export type NamedCriteriaBag = Record<string, Criterion>;
 
-type InstantiatedTemplate<T> = {
-    [K in keyof T]?: T[K] extends Class<Criterion>[] ? InstanceType<T[K][number]>[] : T[K] extends Class<Criterion> ? InstanceType<T[K]> : never;
-};
-
-export type CriterionBag<T = any> = {
-    [K in keyof T]?: Criterion;
-};
-
-// [todo] rename to ObjectCriterion
-// [todo] or rename to PropertyCriteria
-export class PropertyCriteria<T = any> extends Criterion {
-    constructor(items: CriterionBag<T>) {
+export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag> extends Criterion {
+    constructor(items: Partial<T>) {
         super();
 
         if (Object.keys(items).length === 0) {
-            throw new Error(`can not create empty property criteria`);
+            throw new Error(`can not create empty named criteria`);
         }
 
         this.bag = Object.freeze(items);
     }
 
-    readonly bag: Readonly<CriterionBag<T>>;
+    readonly bag: Readonly<Partial<T>>;
 
-    getBag(): Readonly<CriterionBag<T>> {
+    getBag(): Readonly<Partial<T>> {
         return this.bag;
-    }
-
-    // [todo] need to recursively get entries from nested ObjectCriterions
-    getEntries(): [string, Criterion[]][] {
-        const entries: [string, Criterion[]][] = [];
-        const bag = this.getBag();
-
-        for (const key in bag) {
-            const valueCriteria = bag[key];
-            if (valueCriteria === void 0) {
-                continue;
-            } else if (valueCriteria instanceof OrCriteria) {
-                entries.push([key, valueCriteria.getItems()]);
-            } else {
-                entries.push([key, [valueCriteria]]);
-            }
-        }
-
-        return entries;
-    }
-
-    remap<U extends RemapTemplate<T>>(handler: () => U): InstantiatedTemplate<U>[] {
-        const entries = this.getEntries();
-        const permutationEntries: [string, any[]][] = [];
-        const template = handler();
-
-        for (const key in template) {
-            const entry = entries.find(([entryKey]) => entryKey === key);
-            if (!entry) continue;
-
-            const stuffInTemplate = template[key];
-            const allowedTypes = Array.isArray(stuffInTemplate) ? stuffInTemplate : ([stuffInTemplate] as any[]);
-            const filteredByType = entry[1].filter(item => allowedTypes.includes(getInstanceClass(item)));
-
-            if (Array.isArray(stuffInTemplate)) {
-                permutationEntries.push([key, [filteredByType]]);
-            } else {
-                permutationEntries.push([key, filteredByType]);
-            }
-        }
-
-        return permutateEntries(permutationEntries) as any;
     }
 
     reduce(other: Criterion): boolean | Criterion {
         if (other instanceof Criteria) {
             return other.reduceBy(this);
-        } else if (other instanceof PropertyCriteria) {
+        } else if (other instanceof NamedCriteria) {
             // same reduction mechanics as found in and-criteria.ts
             const otherBag = other.getBag();
             const reductions: { criterion: Criterion; result: Criterion | boolean; key: string; inverted?: Criterion }[] = [];
@@ -130,8 +78,7 @@ export class PropertyCriteria<T = any> extends Criterion {
             });
 
             const accumulator = { ...other.getBag() };
-            const built: CriterionBag[] = [];
-            const myBag: CriterionBag = this.bag;
+            const built: Record<string, Criterion>[] = [];
 
             for (const { criterion, key, result, inverted } of reductions) {
                 if (result === true) {
@@ -145,10 +92,10 @@ export class PropertyCriteria<T = any> extends Criterion {
                 }
 
                 built.push({ ...accumulator, [key]: reduced });
-                accumulator[key] = myBag[key];
+                accumulator[key] = this.bag[key];
             }
 
-            return built.length === 1 ? new PropertyCriteria(built[0]) : new OrCriteria(built.map(bag => new PropertyCriteria(bag)));
+            return built.length === 1 ? new NamedCriteria(built[0]) : new OrCriteria(built.map(bag => new NamedCriteria(bag)));
         }
 
         return false;
@@ -170,5 +117,40 @@ export class PropertyCriteria<T = any> extends Criterion {
         }
 
         return `{ ${shards.join(", ")} }`;
+    }
+
+    remapOne(template: CriterionTemplate): [false, undefined] | [Criterion[], Criterion?] {
+        if (template instanceof NamedCriteriaTemplate) {
+            const openBag = { ...this.getBag() } as NamedCriteriaBag;
+            const otherBag = template.items;
+            const theBagToPermutate: Record<string, Criterion[]> = {};
+
+            for (const key in otherBag) {
+                const criterion = openBag[key];
+
+                if (criterion == void 0) {
+                    continue;
+                }
+
+                const templates = otherBag[key];
+
+                // [todo] what to do with "open"?
+                const [remapped, open] = criterion.remap(templates);
+
+                if (remapped === false) {
+                    continue;
+                }
+
+                theBagToPermutate[key] = remapped;
+            }
+
+            const permutations = permutateEntries(theBagToPermutate);
+
+            return [permutations.map(bag => new NamedCriteria(bag))];
+        } else if (template instanceof OrCriteriaTemplate && template.items.some(item => item instanceof NamedCriteriaTemplate)) {
+            //
+        }
+
+        return [false, void 0];
     }
 }
