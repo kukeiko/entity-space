@@ -1,3 +1,3 @@
-export * from './matches.fn';
-export * from './named-criteria-template';
-export * from './named-criteria';
+export * from "./matches.fn";
+export * from "./named-criteria-template";
+export * from "./named-criteria";
