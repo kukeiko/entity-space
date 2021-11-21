@@ -1,4 +1,4 @@
-import { matches, inRange, InNumberRangeCriterion, Query, Selection, or, Criterion, NamedCriteriaTemplate } from "src";
+import { matches, inRange, InNumberRangeCriterion, Query, Expansion, or, Criterion, NamedCriteriaTemplate } from "src";
 import { Product, ProductFilter } from "./model";
 import { ProductRepository } from "./repositories";
 
@@ -7,7 +7,7 @@ xdescribe("how do we actually load data?", () => {
         /**
          * [todo] implement loading some products with filter criteria
          */
-        const basic_properties: Selection = {
+        const basic_properties: Expansion = {
             id: true,
             name: true,
             price: true,
@@ -25,12 +25,9 @@ xdescribe("how do we actually load data?", () => {
 
         const query: Query = {
             criteria: productCriteria,
-            selection: {
+            expansion: {
                 ...basic_properties,
             },
-            // [todo] please ignore those 2 lines for now
-            model: [],
-            options: {} as any,
         };
 
         function mapCriteriaToProductFilters(productCriteria: Criterion): ProductFilter[] {

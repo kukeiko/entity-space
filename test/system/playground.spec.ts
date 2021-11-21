@@ -7,7 +7,10 @@ import {
     OrCriteriaTemplate,
     AndCriteriaTemplate,
     NamedCriteriaTemplate,
+    Expansion,
 } from "src";
+import { Instance } from "../../src/model/instance";
+import { CanvasModel, UserModel } from "../facade/model";
 
 const inNumberSet = new InNumberSetCriterion([1, 2, 3]);
 const inNumberRange = new InStringRangeCriterion(["1", "3"]);
@@ -24,6 +27,52 @@ type Box<T, U = any[]> = any[] extends U ? T[] : T;
 // }
 
 describe("prototyping-playground", () => {
+    it("generic expand w/ union types", () => {
+        // type Expansion<T> = T extends number | string
+        //     ? true
+        //     : T extends any[]
+        //     ? Expansion<T[number]> | true
+        //     : T extends Record<string, infer U>
+        //     ? Expansion<U>
+        //     : { [K in keyof T]?: Expansion<T[K]> } | true;
+
+        // type Expand<T, E> = T extends number | string
+        //     ? Exclude<T, undefined>
+        //     : T extends any[]
+        //     ? Expand<T[number], E>[]
+        //     : "valueOf" extends keyof E // dirty solution, but cleaner for intellisense
+        //     ? T
+        //     : T extends Record<string, infer X>
+        //     ? Record<string, Expand<X, E>>
+        //     : T & { [K in keyof (T | E)]-?: Expand<T[K], E[K]> };
+
+        interface Square {
+            id: number;
+            area: number;
+            length: number;
+            type: "square";
+        }
+
+        interface Circle {
+            id: number;
+            area: number;
+            radius: number;
+            type: "circle";
+        }
+
+        interface Canvas {
+            id: number;
+            name: string;
+            shapes?: (Square | Circle)[];
+        }
+
+        function takesExpansion<E = Expansion<Instance<CanvasModel>>>(expansion: E): typeof expansion {
+            return {} as any;
+        }
+
+        takesExpansion({ author: {} });
+    });
+
     it("trying to implement generic expand", () => {
         interface Brand {
             id: number;
@@ -40,7 +89,7 @@ describe("prototyping-playground", () => {
             name: string;
             price: number;
             rating?: number;
-            brand?: Brand;
+            brand: Brand;
             reviews?: ProductReview[];
             _stuff?: {
                 [k: string]: Stuff;
@@ -49,35 +98,18 @@ describe("prototyping-playground", () => {
 
         interface ProductReview {
             id: number;
-            productId: number;
-            reviewText: string;
+            productId?: number;
+            reviewText?: string;
             product?: Product;
         }
-
-        // type Expansion = { [key: string]: true | Expansion | undefined };
-        // type Expansion = { [key: string]: true | Expansion };
-
-        // type TypedExpansion<T> = 1;
-
-        type ExpandableKeys<T> = { [K in keyof T]: undefined extends T[K] ? K : never }[keyof T];
-
-        // type Expansion<T> = { [K in ExpandableKeys<T>]?: true };
-        // type Expansion<T> = { [K in keyof T]?: true | (T[K] extends Record<string, any> ? Expansion<T[K]> : never) };
-        // type Expansion<T> = { [K in keyof T]?: T[K] extends number | string | undefined ? true : any[] extends T[K] ? Expansion<T[K][number]> : never };
-        // type Expansion<T> = { [K in keyof T]?: T[K] extends number | string | undefined ? true : T[K] extends [] ? Expansion<T[K][number]> : never };
-
-        // export type Expand<T, K extends Expansion<T>> = T & Required<Pick<T, keyof K>>;
-        // type Expand<T, E extends Expansion<T>> = T & { [K in keyof E]: K extends keyof T ? Exclude<T[K], undefined> : never };
-        // type Expand<T, E extends Expansion<Unbox<T>>> = T & { [K in keyof (E | T)]: Exclude<T[K], undefined> };
-        // type Expand<T, E> = T & { [K in keyof (E | T)]: Exclude<T[K], undefined> };
 
         type Expansion<T> = T extends number | string
             ? true
             : T extends any[]
             ? Expansion<T[number]> | true
-            : T extends Record<string, infer X>
-            ? Expansion<T[keyof T]>
-            : { [K in keyof T]?: Expansion<T[K]> } | true;
+            : // : T extends Record<string, infer U>
+              // ? Expansion<U>
+              { [K in keyof T]?: Expansion<T[K]> } | true;
 
         type Expand<T, E> = T extends number | string
             ? Exclude<T, undefined>
@@ -92,14 +124,24 @@ describe("prototyping-playground", () => {
         type X = keyof true;
         type ExpandedValue = Expand<Product["rating"], "asdasd">;
         type ExpandedArray = Expand<Product["reviews"], "asdasd">;
+        type MappedProduct = { [K in keyof Product]: number };
+        // type MappedProduct = { [K in keyof Product]: K extends "brand" ? Brand : number };
 
-        function takesExpansion<E extends Expansion<Product>>(expansion: E): typeof expansion {
+        // function takesExpansion<E extends Expansion<MappedProduct>>(expansion: E): typeof expansion {
+        type ProductOrReview = Product | ProductReview;
+
+        function takesExpansion<E extends Expansion<ProductOrReview>>(expansion: E): typeof expansion {
             return {} as any;
         }
-        const int: Object[] = [];
-        // const int = 3;
+        // [todo] note somewhere that we cant have Expansion of mapped types w/ keyof; so we need to make model metadata
+        // simpler when getting the Instance type of it
+        function takesExpansion_notWorky<E extends Expansion<Record<keyof Product, true>>>(expansion: E): typeof expansion {
+            return {} as any;
+        }
 
-        const expansion = takesExpansion({ _stuff: { moo: true } });
+        const expansion = takesExpansion({ _stuff: { moo: true }, reviews: { reviewText: true } });
+        takesExpansion_notWorky({});
+
         type ExpandedProduct = Expand<Product, typeof expansion>;
         const expandedProduct: ExpandedProduct = {
             id: 1,
@@ -109,7 +151,18 @@ describe("prototyping-playground", () => {
             _stuff: {
                 foo: { id: 3, moo: 4 },
             },
+            reviews: [{ id: 123, reviewText: "" }],
         };
+
+        type UserInstance = Instance<UserModel>;
+        const user: UserInstance = { id: 1, name: "foo" };
+        type UserExpansion = Expansion<UserInstance>;
+
+        function takesUserExpansion_old<E extends UserExpansion>(expansion: E): typeof expansion {
+            return expansion;
+        }
+
+        takesUserExpansion_old({});
     });
 
     xit("screwing around with criterion templates", () => {

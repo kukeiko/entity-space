@@ -1,5 +1,5 @@
-import { createProperty, Class } from "src";
-import { DataEntryModel } from "../data-entry.model";
+import { define, Class } from "src";
+import { DataEntryModel } from "./data-entry.model";
 import { AuthorModel } from "./author.model";
 
 /**
@@ -18,55 +18,55 @@ import { AuthorModel } from "./author.model";
 /**
  * A model that points to an array of unioned models: circles, squares, triangles and grouped shapes.
  */
-export class CanvasModel extends DataEntryModel {
-    id = createProperty("id", [Number], b => b.loadable().identifier());
-    authorId = createProperty("authorId", [Number], b => b.loadable());
-    author = createProperty("author", [AuthorModel], b => b.loadable(["optional"]).identifiedBy(this.authorId));
-    name = createProperty("name", [String], b => b.loadable());
-    shapes = createProperty("shapes", allShapeModels, b => b.loadable(["optional"]).iterable());
+export class CanvasModel  {
+    id = define(Number, { id: true, required: true });
+    authorId = define(Number);
+    author = define(AuthorModel);
+    name = define(String);
+    shapes = define(allShapeModels, { array: true });
 }
 
 /**
  * Base class (and therefore abstract) for all other shapes.
  */
 export abstract class ShapeModel extends DataEntryModel {
-    id = createProperty("id", [Number], b => b.loadable().identifier());
-    area = createProperty("area", [Number], b => b.loadable(["optional"]));
-    canvas = createProperty("canvas", [CanvasModel], b => b.loadable(["optional"]));
+    id = define(Number, { id: true, required: true });
+    area = define(Number);
+    canvas = define(CanvasModel);
 }
 
 /**
  * A circle, based on a shape, with a "type" property as a discriminator to identify it correctly as a circle.
  */
 export class CircleModel extends ShapeModel {
-    radius = createProperty("radius", [Number], b => b.loadable(["optional"]));
-    type = createProperty("type", ["circle" as const], b => b.loadable().discriminant());
+    radius = define(Number);
+    type = define("circle" as const, { discriminator: true, required: true });
 }
 
 /**
  * A square, based on a shape, with a "type" property as a discriminator to identify it correctly as a square.
  */
 export class SquareModel extends ShapeModel {
-    length = createProperty("length", [Number], b => b.loadable(["optional"]));
-    type = createProperty("type", ["square" as const], b => b.loadable().discriminant());
+    length = define(Number);
+    type = define("square" as const, { discriminator: true, required: true });
 }
 
 /**
  * A triangle, based on a shape, with a "type" property as a discriminator to identify it correctly as a triangle.
  */
 export class TriangleModel extends ShapeModel {
-    type = createProperty("type", ["triangle" as const], b => b.loadable().discriminant());
-    angleA = createProperty("angleA", [Number], b => b.loadable(["optional"]));
-    angleB = createProperty("angleB", [Number], b => b.loadable(["optional"]));
-    angleC = createProperty("angleC", [Number], b => b.loadable(["optional"]));
+    type = define("triangle" as const, { discriminator: true, required: true });
+    angleA = define(Number);
+    angleB = define(Number);
+    angleC = define(Number);
 }
 
 /**
  * A group of shapes, with a "type" property as a discriminator to identify it correctly as a group of shapes.
  */
 export class ShapeGroupModel extends ShapeModel {
-    type = createProperty("type", ["group" as const], b => b.loadable().discriminant());
-    shapes = createProperty("shapes", allShapeModels, b => b.loadable(["optional"]).iterable());
+    type = define("group" as const, { discriminator: true, required: true });
+    shapes = define(allShapeModels, { array: true });
 }
 
 /**
