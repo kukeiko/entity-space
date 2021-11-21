@@ -1,6 +1,6 @@
-import { createProperty } from "src";
+import { define } from "src";
 import { MetadataModel } from "./metadata.model";
 
 export abstract class DataEntryModel {
-    metadata = createProperty("metadata", [MetadataModel], b => b.loadable(["optional"]));
+    metadata = define(MetadataModel);
 }

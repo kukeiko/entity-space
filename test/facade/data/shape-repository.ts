@@ -1,5 +1,5 @@
 import { Shape } from "../model";
-import { TypedInstance } from "src";
+import { Instance } from "src";
 
 let id = 1;
 
@@ -8,7 +8,7 @@ function nextId(): number {
 }
 
 export class ShapeRepository {
-    all(): TypedInstance<Shape>[] {
+    all(): Instance<Shape>[] {
         return [
             {
                 type: "circle",

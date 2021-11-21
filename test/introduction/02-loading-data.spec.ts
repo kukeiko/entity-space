@@ -1,13 +1,13 @@
-import { matches, inRange, InNumberRangeCriterion, Query, Selection, PropertyCriteria, or, Criterion, OrCriteria } from "src";
+import { matches, inRange, InNumberRangeCriterion, Query, Expansion, or, Criterion, NamedCriteriaTemplate } from "src";
 import { Product, ProductFilter } from "./model";
 import { ProductRepository } from "./repositories";
 
-describe("how do we actually load data?", () => {
+xdescribe("how do we actually load data?", () => {
     it("simple resolve of a query", async () => {
         /**
          * [todo] implement loading some products with filter criteria
          */
-        const basic_properties: Selection = {
+        const basic_properties: Expansion = {
             id: true,
             name: true,
             price: true,
@@ -17,64 +17,48 @@ describe("how do we actually load data?", () => {
         // we want all products priced between 100 and 200 with a rating of 3 to 5
         const productCriteria = or([
             matches<Product>({
-                price: inRange(100, 200),
+                // price: inRange(100, 200),
+                price: or(inRange(100, 200), inRange(400, 800)),
                 rating: inRange(3, 5),
             }),
         ]);
 
         const query: Query = {
             criteria: productCriteria,
-            selection: {
+            expansion: {
                 ...basic_properties,
             },
-            // [todo] please ignore those 2 lines for now
-            model: [],
-            options: {} as any,
         };
 
         function mapCriteriaToProductFilters(productCriteria: Criterion): ProductFilter[] {
-            // [todo] hacky workaround to satisfy compiler; i don't want to comment out the current remapping
-            // functionality so i still see the method uses here in case i do "find all references"
-            function isProductEntityCriteria(x: any): x is OrCriteria {
-                return x instanceof OrCriteria;
-            }
+            const template = new NamedCriteriaTemplate({
+                price: [InNumberRangeCriterion],
+                rating: [InNumberRangeCriterion],
+            });
 
-            function isProductEntityCriterion(x: any): x is PropertyCriteria<Product> {
-                return x instanceof PropertyCriteria;
-            }
+            const [remapped, open] = productCriteria.remap([template]);
 
-            if (!isProductEntityCriteria(productCriteria)) {
-                throw new Error("criteria unexpectedly not or-combined criteria");
+            if (remapped === false) {
+                throw new Error(`failed to remap criterion`);
             }
-
-            const remapped = productCriteria
-                .getItems()
-                .filter(isProductEntityCriterion)
-                .map(criterion =>
-                    criterion.remap(() => ({
-                        price: InNumberRangeCriterion,
-                        rating: InNumberRangeCriterion,
-                    }))
-                );
 
             const filters: ProductFilter[] = [];
 
-            for (const criteria of remapped) {
-                for (const criterion of criteria) {
-                    const filter: ProductFilter = {};
+            for (const criterion of remapped) {
+                const bag = criterion.getBag();
+                const filter: ProductFilter = {};
 
-                    if (criterion.price !== void 0) {
-                        filter.minPrice = criterion.price.getFrom()?.value ?? void 0;
-                        filter.maxPrice = criterion.price.getTo()?.value ?? void 0;
-                    }
-
-                    if (criterion.rating !== void 0) {
-                        filter.minRating = criterion.rating.getFrom()?.value ?? void 0;
-                        filter.maxRating = criterion.rating.getTo()?.value ?? void 0;
-                    }
-
-                    filters.push(filter);
+                if (bag.price !== void 0) {
+                    filter.minPrice = bag.price.getFrom()?.value ?? void 0;
+                    filter.maxPrice = bag.price.getTo()?.value ?? void 0;
                 }
+
+                if (bag.rating !== void 0) {
+                    filter.minRating = bag.rating.getFrom()?.value ?? void 0;
+                    filter.maxRating = bag.rating.getTo()?.value ?? void 0;
+                }
+
+                filters.push(filter);
             }
 
             return filters;

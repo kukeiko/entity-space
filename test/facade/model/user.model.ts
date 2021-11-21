@@ -1,6 +1,6 @@
-import { createProperty } from "src";
+import { define } from "src";
 
 export class UserModel {
-    id = createProperty("id", [Number], b => b.loadable().identifier());
-    name = createProperty("name", [String], b => b.loadable().creatable());
+    id = define(Number, { id: true, required: true, readOnly: true });
+    name = define(String);
 }

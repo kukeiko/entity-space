@@ -1,13 +1,13 @@
-import { Selection, mergeSelections } from "src";
+import { Expansion, mergeExpansions } from "src";
 
-describe("mergeSelections()", () => {
+describe("mergeExpansions()", () => {
     it("should merge { foo } and { bar } to create { foo, bar }", () => {
         // arrange
-        const a: Selection = { foo: true };
-        const b: Selection = { bar: true };
+        const a: Expansion = { foo: true };
+        const b: Expansion = { bar: true };
 
         // act
-        const merged = mergeSelections(a, b);
+        const merged = mergeExpansions(a, b);
 
         // assert
         expect(merged).toEqual({ foo: true, bar: true });
@@ -15,11 +15,11 @@ describe("mergeSelections()", () => {
 
     it("should merge { foo: { bar } } and { foo: { baz } } to create { foo: { bar, baz } }", () => {
         // arrange
-        const a: Selection = { foo: { bar: true } };
-        const b: Selection = { foo: { baz: true } };
+        const a: Expansion = { foo: { bar: true } };
+        const b: Expansion = { foo: { baz: true } };
 
         // act
-        const merged = mergeSelections(a, b);
+        const merged = mergeExpansions(a, b);
 
         // assert
         expect(merged).toEqual({ foo: { bar: true, baz: true } });
@@ -27,11 +27,11 @@ describe("mergeSelections()", () => {
 
     it("should merge { foo } and { foo: { bar } } to create { foo: { bar } }", () => {
         // arrange
-        const a: Selection = { foo: true };
-        const b: Selection = { foo: { bar: true } };
+        const a: Expansion = { foo: true };
+        const b: Expansion = { foo: { bar: true } };
 
         // act
-        const merged = mergeSelections(a, b);
+        const merged = mergeExpansions(a, b);
 
         // assert
         expect(merged).toEqual({ foo: { bar: true } });

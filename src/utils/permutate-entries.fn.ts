@@ -1,4 +1,4 @@
-export function permutateEntries<T>(entries: [string, T[]][], aggregated: Record<string, T> = {}): Record<string, T>[] {
+function permutateEntriesInternal<T>(entries: [string, T[]][], aggregated: Record<string, T> = {}): Record<string, T>[] {
     if (entries.length === 0) {
         return [aggregated];
     }
@@ -15,7 +15,7 @@ export function permutateEntries<T>(entries: [string, T[]][], aggregated: Record
 
     for (const shard of shards) {
         let nextAggregated = { ...aggregated, [key]: shard };
-        allAggregated.push(...permutateEntries(entries, nextAggregated));
+        allAggregated.push(...permutateEntriesInternal(entries, nextAggregated));
     }
 
     return allAggregated;
@@ -25,8 +25,8 @@ type Unbox<T> = T extends any[] ? T[number] : T;
 
 type Permutated<T> = { [K in keyof T]: Unbox<T[K]> };
 
-export function permutateEntries_V2<T>(entries: T, aggregated: Partial<T> = {}): Permutated<T>[] {
+export function permutateEntries<T>(entries: T, aggregated: Partial<T> = {}): Permutated<T>[] {
     const entries_ = Object.entries(entries);
 
-    return permutateEntries(entries_, aggregated) as any;
+    return permutateEntriesInternal(entries_, aggregated) as any;
 }

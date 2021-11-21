@@ -1,7 +1,6 @@
 export * from "./criteria";
-export * from "./property";
-export * from "./query";
-export * from "./typed";
-export * from "./selection";
+export * from "./expansion";
 export * from "./utils";
-
+export * from "./query";
+export * from "./model/property";
+export * from "./model/instance";

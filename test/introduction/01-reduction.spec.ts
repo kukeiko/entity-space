@@ -1,4 +1,4 @@
-import { inRange, matches, or, Query, reduceQuery, reduceSelection, Selection } from "../../src";
+import { inRange, matches, or, Query, reduceQuery, reduceExpansion, Expansion } from "../../src";
 
 /**
  * This file serves as an introduction via code for anyone new and interested in this library.
@@ -138,10 +138,10 @@ describe("what's reduction for?", () => {
          * We want our app to be able to only load what's needed, i.e. pick the properties we want. And sometimes we want to load
          * additional properties later on - so we'll need the same reduction mechanism to figure out what we already have in cache.
          *
-         * We call an object that tells us which properties to load a "Selection". Our initial selection of our products will contain
+         * We call an object that tells us which properties to load a "Expansion". Our initial selection of our products will contain
          * the id, the name, the price and the rating.
          */
-        const basic_properties: Selection = {
+        const basic_properties: Expansion = {
             id: true,
             name: true,
             price: true,
@@ -151,7 +151,7 @@ describe("what's reduction for?", () => {
         /**
          * Later on we also want to load the customer reviews of the product:
          */
-        const basic_properties_with_reviews: Selection = {
+        const basic_properties_with_reviews: Expansion = {
             ...basic_properties,
             reviews: true,
         };
@@ -159,11 +159,11 @@ describe("what's reduction for?", () => {
         /**
          * Since we've loaded the basic_properties_only already, the difference should just be the reviews:
          */
-        const expected: Selection = {
+        const expected: Expansion = {
             reviews: true,
         };
 
-        const actual = reduceSelection(basic_properties_with_reviews, basic_properties);
+        const actual = reduceExpansion(basic_properties_with_reviews, basic_properties);
 
         expect(actual).toEqual(expected);
     });
@@ -175,14 +175,14 @@ describe("what's reduction for?", () => {
          * We're going to load products with a price range of 100 to 200, rating range of 3 to 5, without reviews.
          * We then load products with price range of 100 to 300, rating range of 2 to 5, including the reviews.
          */
-        const basic_properties: Selection = {
+        const basic_properties: Expansion = {
             id: true,
             name: true,
             price: true,
             rating: true,
         };
 
-        const review_property: Selection = {
+        const review_property: Expansion = {
             reviews: true,
         };
 
@@ -191,12 +191,9 @@ describe("what's reduction for?", () => {
                 price: inRange(100, 200),
                 rating: inRange(3, 5),
             }),
-            selection: {
+            expansion: {
                 ...basic_properties,
             },
-            // [todo] please ignore those 2 lines for now
-            model: [],
-            options: {} as any,
         };
 
         const price_100_to_300_rating_2_to_5_with_reviews: Query = {
@@ -204,13 +201,10 @@ describe("what's reduction for?", () => {
                 price: inRange(100, 300),
                 rating: inRange(2, 5),
             }),
-            selection: {
+            expansion: {
                 ...basic_properties,
                 ...review_property,
             },
-            // [todo] please ignore those 2 lines for now
-            model: [],
-            options: {} as any,
         };
 
         /**
@@ -229,13 +223,10 @@ describe("what's reduction for?", () => {
                         rating: inRange(2, 3, [true, false]),
                     }),
                 ]),
-                selection: {
+                expansion: {
                     ...basic_properties,
                     ...review_property,
                 },
-                // [todo] please ignore those 2 lines for now
-                model: [],
-                options: {} as any,
             },
             // and one for loading the missing properties (i.e. the reviews) of the entities we already have
             {
@@ -243,12 +234,9 @@ describe("what's reduction for?", () => {
                     price: inRange(100, 200),
                     rating: inRange(3, 5),
                 }),
-                selection: {
+                expansion: {
                     ...review_property,
                 },
-                // [todo] please ignore those 2 lines for now
-                model: [],
-                options: {} as any,
             },
         ];
 
