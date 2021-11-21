@@ -1,4 +1,4 @@
-import { Primitive, MergeUnion } from "../utils";
+import { Primitive, MergeUnion } from "../../utils";
 import { Property, Context } from "../property";
 
 type SelectedValue<P extends Property, CTX extends Context> = P["value"][number] extends Primitive
@@ -14,5 +14,5 @@ type SelectedValue<P extends Property, CTX extends Context> = P["value"][number]
 type UnionSelection<T, CTX extends Context> = T extends any ? TypedSelection<T, CTX> : never;
 
 export type TypedSelection<T, CTX extends Context = "loadable"> = {
-    [K in Property.Keys<MergeUnion<T>, Context.Has<CTX>>]?: SelectedValue<MergeUnion<T>[K], CTX>;
+    [K in Property.Keys<MergeUnion<T>, Context.Has<CTX>>]?: SelectedValue<Extract<MergeUnion<T>[K], Property>, CTX>;
 };

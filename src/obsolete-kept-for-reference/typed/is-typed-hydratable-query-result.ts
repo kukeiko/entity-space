@@ -1,4 +1,4 @@
-import { Class } from "../utils";
+import { Class } from "../../utils";
 import { TypedHydratableQueryResult } from "./typed-hydratable-query-result";
 import { isTypedQueryResult } from "./is-typed-query-result";
 

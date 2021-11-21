@@ -1,4 +1,4 @@
-import { Class } from "../utils";
+import { Class } from "../../utils";
 import { TypedQuery } from "./typed-query";
 import { Query } from "../query";
 

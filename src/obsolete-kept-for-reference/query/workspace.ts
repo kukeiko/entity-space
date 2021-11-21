@@ -6,7 +6,7 @@ import { Instance } from "./instance";
 import { ComponentProvider } from "./component-provider";
 import { QueryStreamPacket } from "./query-stream-packet";
 import { PayloadHydration } from "./payload-hydration";
-import { Class } from "../utils";
+import { Class } from "../../utils";
 // import { reduceQuery } from "./reduce-query";
 import { queryToString } from "./query-to-string";
 

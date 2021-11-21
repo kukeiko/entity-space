@@ -1,4 +1,4 @@
-import { Unbox, Primitive, Class } from "../utils";
+import { Unbox, Primitive, Class } from "../../utils";
 
 export interface Property<K extends string = string, V extends Property.Value = Property.Value> {
     key: K;

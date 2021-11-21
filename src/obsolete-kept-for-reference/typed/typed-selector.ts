@@ -1,5 +1,5 @@
 import { Property, pickProperties } from "../property";
-import { MergeUnion, Class } from "../utils";
+import { MergeUnion, Class } from "../../utils";
 import { Selection, mergeSelections } from "../selection";
 
 export class TypedSelector<T, M = {}> {

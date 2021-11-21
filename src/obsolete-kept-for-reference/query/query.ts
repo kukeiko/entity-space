@@ -1,7 +1,7 @@
-import { Class } from "../utils";
+import { Class } from "../../utils";
 import { Selection } from "../selection";
 import { Reducible } from "./reducible";
-import { Criterion } from "../criteria";
+import { Criterion } from "../../criteria";
 
 export interface Query<T = unknown> {
     criteria?: Criterion;

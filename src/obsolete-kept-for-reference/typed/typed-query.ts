@@ -1,4 +1,4 @@
-import { Class, Unbox } from "../utils";
+import { Class, Unbox } from "../../utils";
 import { Reducible, Query } from "../query";
 // import { TypedCriteria } from "./typed-criteria";
 import { TypedInstance } from "./typed-instance";

@@ -1,4 +1,4 @@
-import { Class } from "../utils";
+import { Class } from "../../utils";
 import { Query } from "./query";
 import { QueryTranslator } from "./query-translator";
 import { PayloadHydrator } from "./payload-hydrator";
