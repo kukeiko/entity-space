@@ -1,6 +1,5 @@
-import { Expansion } from "./expansion";
 import { Criterion } from "./criteria";
-import { reduceExpansion } from ".";
+import { Expansion, reduceExpansion } from "./expansion/public";
 
 export interface Query {
     criteria: Criterion;
@@ -8,39 +7,23 @@ export interface Query {
 }
 
 export function reduceQuery(a: Query, b: Query): Query[] | false {
-    let reducedCriteria = b.criteria === void 0 ? true : a.criteria === void 0 ? false : b.criteria.reduce(a.criteria);
-    const reducedSelection = reduceExpansion(a.expansion, b.expansion);
+    const criteria = b.criteria === void 0 ? true : a.criteria === void 0 ? false : b.criteria.reduce(a.criteria);
+    const expansion = reduceExpansion(a.expansion, b.expansion);
 
-    if (!reducedCriteria || !reducedSelection) {
+    if (!criteria || !expansion) {
         return false;
-    } else if (reducedCriteria === true) {
-        if (Object.keys(reducedSelection).length == 0) {
+    } else if (criteria === true) {
+        if (Object.keys(expansion).length == 0) {
             return [];
         }
 
-        return [
-            {
-                criteria: a.criteria,
-                expansion: reducedSelection,
-            },
-        ];
-    } else if (Object.keys(reducedSelection).length == 0) {
-        return [
-            {
-                criteria: reducedCriteria,
-                expansion: a.expansion,
-            },
-        ];
+        return [{ criteria: a.criteria, expansion }];
+    } else if (Object.keys(expansion).length == 0) {
+        return [{ criteria, expansion: a.expansion }];
     } else {
         return [
-            {
-                criteria: reducedCriteria,
-                expansion: a.expansion,
-            },
-            {
-                criteria: b.criteria,
-                expansion: reducedSelection,
-            },
+            { criteria, expansion: a.expansion },
+            { criteria: b.criteria, expansion },
         ];
     }
 }

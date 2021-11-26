@@ -2,7 +2,7 @@ import { Criterion, NamedCriteriaBag } from "../criteria";
 import { Instance } from "./instance";
 import { define } from "./property";
 import { Class } from "../utils";
-import { Expand, Expansion } from "../expansion";
+import { Expand, Expansion } from "../expansion/public";
 
 interface Brand {
     id: number;

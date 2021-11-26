@@ -2,7 +2,6 @@ import { Class, Primitive } from "../utils";
 
 export type Discriminant = string | number;
 
-// export type PropertyValueType = Primitive[] | Discriminant[] | Class[];
 export type PropertyValueType = Primitive | Discriminant | Class | Class[];
 
 export interface Property<V extends PropertyValueType = PropertyValueType> {

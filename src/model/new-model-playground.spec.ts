@@ -1,4 +1,4 @@
-import { Expand, Expansion } from "../expansion";
+import { Expand, Expansion } from "../expansion/public";
 import { Instance } from "./instance";
 import { define } from "./property";
 
