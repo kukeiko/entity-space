@@ -1,3 +1,5 @@
+import { Unbox } from "./types";
+
 function permutateEntriesInternal<T>(entries: [string, T[]][], aggregated: Record<string, T> = {}): Record<string, T>[] {
     if (entries.length === 0) {
         return [aggregated];
@@ -20,8 +22,6 @@ function permutateEntriesInternal<T>(entries: [string, T[]][], aggregated: Recor
 
     return allAggregated;
 }
-
-type Unbox<T> = T extends any[] ? T[number] : T;
 
 type Permutated<T> = { [K in keyof T]: Unbox<T[K]> };
 
