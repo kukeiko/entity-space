@@ -1,4 +1,4 @@
-import { Class, Primitive, Unbox } from "../utils";
+import { Class, Primitive, Unbox } from "../utils/public";
 import { ArrayAttribute, Discriminant, Property, RequiredAttribute, NullableAttribute } from "./property";
 
 type InstancePropertyValueType<V> = V extends Primitive ? ReturnType<V> : V extends Discriminant ? V : V extends Class ? Instance<InstanceType<V>> : never;

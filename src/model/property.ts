@@ -1,4 +1,4 @@
-import { Class, Primitive } from "../utils";
+import { Class, Primitive } from "../utils/public";
 
 export type Discriminant = string | number;
 

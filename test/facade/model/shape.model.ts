@@ -1,4 +1,5 @@
-import { define, Class } from "src";
+import { Class } from "@entity-space/utils";
+import { define } from "@entity-space/model";
 import { DataEntryModel } from "./data-entry.model";
 import { AuthorModel } from "./author.model";
 

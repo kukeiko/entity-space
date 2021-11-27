@@ -18,10 +18,11 @@
         "lint": "eslint .",
         "npmprepublish": "npm run build && npm run test",
         "test": "npm run test:types && karma start --single-run",
+        "test:no-types": "karma start --single-run",
         "test:debug": "karma start",
-        "test:types": "npm run test:types:global && npm run test:types:expansion",
-        "test:types:global": "dtslint --localTs node_modules/typescript/lib /test/types",
-        "test:types:expansion": "dtslint --localTs node_modules/typescript/lib /src/expansion/test/types",
+        "test:types": "npm run test:types:criteria && npm run test:types:expansion",
+        "test:types:criteria": "dtslint --localTs node_modules/typescript/lib /src/core/criteria/test/types",
+        "test:types:expansion": "dtslint --localTs node_modules/typescript/lib /src/core/expansion/test/types",
         "test:watch": "karma start"
     },
     "dependencies": {

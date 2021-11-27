@@ -15,7 +15,7 @@
         "types": ["jasmine"],
         "lib": ["DOM", "scripthost", "ES2020"],
         "baseUrl": ".",
-        "paths": { "src": ["src"] }
+        "paths": { "@entity-space/utils": ["src/utils/public.ts"], "@entity-space/core": ["src/core/public.ts"], "@entity-space/model": ["src/model/public.ts"] }
     },
     "include": ["./src/**/*.ts", "./test/**/*.ts"]
 }

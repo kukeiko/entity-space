@@ -51,6 +51,9 @@ module.exports = function (config) {
                 extensions: [".ts", ".tsx", ".js"],
                 alias: {
                     src: `${__dirname}/src`,
+                    "@entity-space/utils": `${__dirname}/src/utils/public.ts`,
+                    "@entity-space/core": `${__dirname}/src/core/public.ts`,
+                    "@entity-space/model": `${__dirname}/src/model/public.ts`,
                 },
             },
             module: {

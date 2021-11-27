@@ -1,4 +1,4 @@
-import { inRange, matches, or, Query, reduceQuery, reduceExpansion, Expansion } from "../../src";
+import { inRange, matches, or, Query, reduceExpansion, Expansion, reduceQuery } from "@entity-space/core";
 
 /**
  * This file serves as an introduction via code for anyone new and interested in this library.

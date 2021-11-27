@@ -1,4 +1,4 @@
-import { define } from "src";
+import { define } from "@entity-space/model";
 import { TreeNodeModel } from "./tree-node.model";
 
 export class TreeNodeParentsModel {
