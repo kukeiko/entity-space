@@ -1,5 +1,4 @@
 const testsInSourceFolder = require.context("../src", true, /\.spec\.ts/);
-const unitTests = require.context("./unit", true, /\.spec\.ts/);
 const systemTests = require.context("./system", true, /\.spec\.ts/);
 const introductionTests = require.context("./introduction", true, /\.spec\.ts/);
 
@@ -14,6 +13,5 @@ function requireAll(requireContext) {
 
 // requires and returns all modules that match
 requireAll(testsInSourceFolder);
-requireAll(unitTests);
 requireAll(systemTests);
 requireAll(introductionTests);

@@ -1,4 +1,4 @@
-import { Instance } from "src";
+import { Instance } from "@entity-space/model";
 import { TreeNodeModel } from "../model";
 
 interface GenerateTreeNodesOptions {

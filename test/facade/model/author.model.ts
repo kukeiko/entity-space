@@ -1,4 +1,4 @@
-import { define } from "src";
+import { define } from "@entity-space/model";
 import { DataEntryModel } from "./data-entry.model";
 
 export class AuthorModel extends DataEntryModel {

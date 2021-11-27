@@ -1,5 +1,5 @@
+import { Instance } from "@entity-space/model";
 import { Shape } from "../model";
-import { Instance } from "src";
 
 let id = 1;
 
