@@ -48,7 +48,7 @@ export function* inRangeCriterionTokenParser(): TokenParser {
         token = yield;
 
         if (token.type === TokenType.Special && ")]".includes(token.value)) {
-            return () => inRange(fromValue as any, toValue as any, [fromInclusive, token.value === "]"] as any);
+            return () => inRange([fromValue as any, fromInclusive], [toValue as any, token.value === "]"]);
         } else {
             return false;
         }
