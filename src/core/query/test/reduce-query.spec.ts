@@ -103,7 +103,7 @@ describe("reduceQuery()", () => {
             const expected = [
                 createQuery(
                     matches({
-                        index: or([inRange(1, [3, false]), inRange([4, false], 7)]),
+                        index: or([inRange(1, 3, [true, false]), inRange(4, 7, [false, true])]),
                     }),
                     {
                         foo: true,
@@ -128,7 +128,7 @@ describe("reduceQuery()", () => {
             const expected = [
                 createQuery(
                     matches({
-                        index: or([inRange(1, [3, false]), inRange([4, false], 7)]),
+                        index: or([inRange(1, 3, [true, false]), inRange(4, 7, [false, true])]),
                     })
                 ),
             ];
@@ -159,12 +159,12 @@ describe("reduceQuery()", () => {
                 createQuery(
                     or([
                         matches({
-                            index: or([inRange(1, [3, false]), inRange([4, false], 7)]),
+                            index: or([inRange(1, 3, [true, false]), inRange(4, 7, [false, true])]),
                             price: inRange(900, 1300),
                         }),
                         matches({
                             index: inRange(3, 4),
-                            price: or([inRange(900, [1000, false]), inRange([1200, false], 1300)]),
+                            price: or([inRange(900, 1000, [true, false]), inRange(1200, 1300, [false, true])]),
                         }),
                     ])
                 ),
@@ -198,12 +198,12 @@ describe("reduceQuery()", () => {
                 createQuery(
                     or([
                         matches({
-                            index: or([inRange(1, [3, false]), inRange([4, false], 7)]),
+                            index: or([inRange(1, 3, [true, false]), inRange(4, 7, [false, true])]),
                             price: inRange(900, 1300),
                         }),
                         matches({
                             index: inRange(3, 4),
-                            price: or([inRange(900, [1000, false]), inRange([1200, false], 1300)]),
+                            price: or([inRange(900, 1000, [true, false]), inRange(1200, 1300, [false, true])]),
                         }),
                     ]),
                     { foo: true, bar: true }

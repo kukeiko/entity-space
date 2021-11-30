@@ -12,7 +12,7 @@ describe("what's reduction for?", () => {
          */
         const from_100_to_200 = inRange(100, 200);
         const from_100_to_300 = inRange(100, 300);
-        const expected = inRange([200, false], 300);
+        const expected = inRange(200, 300, [false, true]);
 
         const difference = from_100_to_200.reduce(from_100_to_300);
 
@@ -51,7 +51,7 @@ describe("what's reduction for?", () => {
          * The difference should now be the following criteria: a range starting at bigger 200 until less than equals 300,
          * which represents the data we still need to load.
          */
-        const expected = inRange([200, false], 300);
+        const expected = inRange(200, 300, [false, true]);
 
         expect(difference).toEqual(expected);
     });
@@ -110,12 +110,12 @@ describe("what's reduction for?", () => {
          */
         const expected = or([
             matches({
-                price: inRange([200, false], 300),
+                price: inRange(200, 300, [false, true]),
                 rating: inRange(2, 5),
             }),
             matches({
                 price: inRange(100, 200),
-                rating: inRange(2, [3, false]),
+                rating: inRange(2, 3, [true, false]),
             }),
         ]);
 
@@ -215,12 +215,12 @@ describe("what's reduction for?", () => {
             {
                 criteria: or([
                     matches({
-                        price: inRange([200, false], 300),
+                        price: inRange(200, 300, [false, true]),
                         rating: inRange(2, 5),
                     }),
                     matches({
                         price: inRange(100, 200),
-                        rating: inRange(2, [3, false]),
+                        rating: inRange(2, 3, [true, false]),
                     }),
                 ]),
                 expansion: {

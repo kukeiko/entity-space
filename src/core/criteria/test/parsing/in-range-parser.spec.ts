@@ -6,7 +6,7 @@ describe("parse-tokens: in-range", () => {
     itShouldParseTokens(
         inRangeCriterionTokenParser,
         [token(TokenType.Special, "("), token(TokenType.Number, "13"), token(TokenType.Special, ","), token(TokenType.Number, "37"), token(TokenType.Special, "]")],
-        inRange([13, false], 37)
+        inRange(13, 37, [false, true])
     );
 
     itShouldParseTokens(
@@ -34,7 +34,7 @@ describe("parse-tokens: in-range", () => {
             token(TokenType.Special, "."),
             token(TokenType.Special, "]"),
         ],
-        inRange([1, false], void 0)
+        inRange(1, void 0, false)
     );
 
     // parsing (1, ...) should be  (1, ...]
@@ -49,7 +49,7 @@ describe("parse-tokens: in-range", () => {
             token(TokenType.Special, "."),
             token(TokenType.Special, ")"),
         ],
-        inRange([1, false], void 0)
+        inRange(1, void 0, false)
     );
 
     // parsing (..., 1) should be  [..., 1)
@@ -64,6 +64,6 @@ describe("parse-tokens: in-range", () => {
             token(TokenType.Number, "1"),
             token(TokenType.Special, ")"),
         ],
-        inRange(void 0, [1, false])
+        inRange(void 0, 1, false)
     );
 });

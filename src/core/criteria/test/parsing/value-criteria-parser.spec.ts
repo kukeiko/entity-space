@@ -22,7 +22,7 @@ describe("token-parser: value-criteria", () => {
             token(TokenType.Special, ")"),
             token(TokenType.Special, ")"),
         ],
-        or([inRange([13, false], 37), inRange(100, [200, false])])
+        or([inRange(13, 37, [false, true]), inRange(100, 200, [true, false])])
     );
 
     itShouldParseTokens(
@@ -57,7 +57,7 @@ describe("token-parser: value-criteria", () => {
             token(TokenType.Special, ")"),
             terminator,
         ],
-        or([inRange([13, false], 37), inRange(100, [200, false])])
+        or([inRange(13, 37, [false, true]), inRange(100, 200, [true, false])])
     );
 
     itShouldParseTokens(
@@ -78,7 +78,7 @@ describe("token-parser: value-criteria", () => {
             token(TokenType.Special, ")"),
             terminator,
         ],
-        or([inRange([13, false], 37), inRange(100, [200, false])])
+        or([inRange(13, 37, [false, true]), inRange(100, 200, [true, false])])
     );
 
     itShouldParseTokens(
@@ -100,6 +100,6 @@ describe("token-parser: value-criteria", () => {
             token(TokenType.Special, ")"),
             token(TokenType.Special, ")"),
         ],
-        or([inRange([13, false], 37), inRange(100, [200, false])])
+        or([inRange(13, 37, [false, true]), inRange(100, 200, [true, false])])
     );
 });
