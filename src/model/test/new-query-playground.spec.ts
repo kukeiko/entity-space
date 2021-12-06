@@ -65,8 +65,6 @@ class CircleModel {
 
 const ShapeModels = [SquareModel, CircleModel];
 
-const foo = Symbol("foo");
-
 class CanvasModel {
     id = define(Number, { required: true });
     name = define(String);
