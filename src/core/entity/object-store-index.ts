@@ -46,49 +46,53 @@ export class ObjectStoreIndex<K, V> {
         }
     }
 
-    update(newItem: V): void;
-    update(newItem: V, oldItem?: V): void;
-    update(...args: any[]): void {
-        if (args[1] == null) {
-            let item = args[0] as V;
-            let value = this.getIndexValue(item);
-            if (value == null) return;
+    insert(item: V): void {
+        let value = this.getIndexValue(item);
+        if (value == null) return;
 
-            let map = this._maps.get(value);
+        let map = this._maps.get(value);
 
-            if (map == null) {
-                map = new Map<K, V>();
-                this._maps.set(value, map);
+        if (map == null) {
+            map = new Map<K, V>();
+            this._maps.set(value, map);
+        }
+
+        let key = this.getKey(item);
+        map.set(key, item);
+        this._pkMaps.set(key, map);
+    }
+
+    update(newItem: V, oldItem: V): void {
+        let key = this.getKey(newItem);
+
+        if (key != this.getKey(oldItem)) {
+            throw "can't update indexes for 2 items that have different primary keys";
+        }
+
+        let [newValue, oldValue] = [this.getIndexValue(newItem), this.getIndexValue(oldItem)];
+        let [newMap, oldMap] = [this._maps.get(newValue), this._maps.get(oldValue)];
+
+        if (oldMap != null) {
+            oldMap.delete(key);
+            this._pkMaps.delete(key);
+        }
+
+        if (newValue != null) {
+            if (newMap == null) {
+                newMap = new Map<K, V>();
+                this._maps.set(newValue, newMap);
             }
 
-            let key = this.getKey(item);
-            map.set(key, item);
-            this._pkMaps.set(key, map);
+            newMap.set(key, newItem);
+            this._pkMaps.set(key, newMap);
+        }
+    }
+
+    upsert(newItem: V, oldItem?: V): void {
+        if (oldItem === void 0) {
+            this.insert(newItem);
         } else {
-            let [newItem, oldItem] = <V[]>[args[0], args[1]];
-
-            let key = this.getKey(newItem);
-            if (key != this.getKey(oldItem)) {
-                throw "can't update indexes for 2 items that have different primary keys";
-            }
-
-            let [newValue, oldValue] = [this.getIndexValue(newItem), this.getIndexValue(oldItem)];
-            let [newMap, oldMap] = [this._maps.get(newValue), this._maps.get(oldValue)];
-
-            if (oldMap != null) {
-                oldMap.delete(key);
-                this._pkMaps.delete(key);
-            }
-
-            if (newValue != null) {
-                if (newMap == null) {
-                    newMap = new Map<K, V>();
-                    this._maps.set(newValue, newMap);
-                }
-
-                newMap.set(key, newItem);
-                this._pkMaps.set(key, newMap);
-            }
+            this.update(newItem, oldItem);
         }
     }
 

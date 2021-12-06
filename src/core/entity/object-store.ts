@@ -94,7 +94,7 @@ export class ObjectStore<K, V> {
             let existing = this.entities.get(key);
 
             this.entities.set(key, item);
-            this.indexes.forEach(i => i.update(item, existing));
+            this.indexes.forEach(i => i.upsert(item, existing));
         }
     }
 
