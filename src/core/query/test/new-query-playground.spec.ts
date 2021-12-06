@@ -1,8 +1,8 @@
-import { Criterion, NamedCriteriaBag } from "../../core/criteria/public";
-import { Instance } from "../instance";
-import { define } from "../property";
-import { Class } from "../../utils/public";
-import { Expand, Expansion } from "../../core/expansion/public";
+import { Criterion, NamedCriteriaBag } from "../../criteria/public";
+import { Instance } from "../../entity/blueprint/instance";
+import { define } from "../../entity/blueprint/property";
+import { Class } from "../../../utils/public";
+import { Expand, Expansion } from "../../expansion/public";
 
 interface Brand {
     id: number;

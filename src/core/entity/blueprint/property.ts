@@ -1,4 +1,4 @@
-import { Class, Primitive } from "../utils/public";
+import { Class, Primitive } from "../../../utils/public";
 import { Metadata, MetadataReference } from "./instance";
 
 export type Discriminant = string | number;

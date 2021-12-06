@@ -1,4 +1,4 @@
-import { Class, Primitive, Unbox } from "../utils/public";
+import { Class, Primitive, Unbox } from "../../../utils/public";
 import { ArrayAttribute, Discriminant, Property, RequiredAttribute, NullableAttribute } from "./property";
 
 export interface Metadata<T = any> {

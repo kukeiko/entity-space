@@ -1,5 +1,9 @@
 import { ObjectStoreIndex } from "./object-store-index";
 
+/**
+ * [todo] copied over from a file that i've last worked on some years ago, so some polish is needed
+ * since i've changed my code style quite a bit
+ */
 export class ObjectStore<K, V> {
     constructor(args: { getKey: (item: V) => K; indexes?: { [index: string]: (item: V) => any } }) {
         this.getKey = args.getKey;

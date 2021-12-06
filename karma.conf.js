@@ -53,7 +53,6 @@ module.exports = function (config) {
                     src: `${__dirname}/src`,
                     "@entity-space/utils": `${__dirname}/src/utils/public.ts`,
                     "@entity-space/core": `${__dirname}/src/core/public.ts`,
-                    "@entity-space/model": `${__dirname}/src/model/public.ts`,
                 },
             },
             module: {

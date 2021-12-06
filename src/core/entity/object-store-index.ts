@@ -1,3 +1,7 @@
+/**
+ * [todo] copied over from a file that i've last worked on some years ago, so some polish is needed
+ * since i've changed my code style quite a bit
+ */
 export class ObjectStoreIndex<K, V> {
     readonly name: string;
     readonly getIndexValue: (item: V) => any;
@@ -15,6 +19,9 @@ export class ObjectStoreIndex<K, V> {
     /**
      * Returns a copy of the items stored for the given index value,
      * with the key being the primary key of an item.
+     *
+     * [todo] do we really want to return a copy? seems wasteful if not really needed.
+     * might get real bad on huge indexes.
      */
     get(value: any): Map<K, V> {
         let map = this._maps.get(value);
