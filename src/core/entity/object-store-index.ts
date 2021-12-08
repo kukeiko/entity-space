@@ -1,116 +1,121 @@
-/**
- * [todo] copied over from a file that i've last worked on some years ago, so some polish is needed
- * since i've changed my code style quite a bit
- */
-export class ObjectStoreIndex<K, V> {
+type IndexSingleValue = string | number;
+export type IndexValue = IndexSingleValue | IndexSingleValue[];
+
+// [todo] not happy with various method/variable/type names, revisit.
+export class ObjectStoreIndex {
+    constructor(name: string, key: string[], options?: { unique?: boolean }) {
+        this.name = name;
+        this.key = key;
+        this.unique = options?.unique ?? false;
+    }
+
     readonly name: string;
-    readonly getIndexValue: (item: V) => any;
-    readonly getKey: (item: V) => K;
+    private readonly key: string[];
+    private readonly unique: boolean;
+    private index = new Map();
 
-    private _maps = new Map<any, Map<K, V>>();
-    private _pkMaps = new Map<K, Map<K, V>>();
-
-    constructor(args: { getIndexValue: (item: V) => any; getKey: (item: V) => K; name: string }) {
-        this.getIndexValue = args.getIndexValue;
-        this.getKey = args.getKey;
-        this.name = args.name;
+    // [todo] instead have "insert()", "update()" and "upsert()"
+    add(item: Record<string, any>, recordIndex: number): void {
+        const indexValue = this.read(item);
+        this.addToIndex(indexValue, recordIndex);
     }
 
-    /**
-     * Returns a copy of the items stored for the given index value,
-     * with the key being the primary key of an item.
-     *
-     * [todo] do we really want to return a copy? seems wasteful if not really needed.
-     * might get real bad on huge indexes.
-     */
-    get(value: any): Map<K, V> {
-        let map = this._maps.get(value);
-        return map ? new Map<K, V>(map) : new Map<K, V>();
-    }
+    get(indexValues: IndexValue[]): number[] {
+        const recordIndexes: number[] = [];
 
-    getAsArray(value: any): V[] {
-        let map = this._maps.get(value);
-        if (!map) return [];
-
-        return Array.from(map.values());
-    }
-
-    clear(): void;
-    clear(value: any): void;
-    clear(...args: any[]): void {
-        if (args.length == 0) {
-            this._maps.clear();
-            this._pkMaps.clear();
-        } else {
-            let map = this._maps.get(args[0]);
-
-            if (map != null) {
-                map.clear();
-                let keys: K[] = [];
-                this._pkMaps.forEach((m, k) => (m == map ? keys.push(k) : null));
-                keys.forEach(k => this._pkMaps.delete(k));
-            }
-        }
-    }
-
-    insert(item: V): void {
-        let value = this.getIndexValue(item);
-        if (value == null) return;
-
-        let map = this._maps.get(value);
-
-        if (map == null) {
-            map = new Map<K, V>();
-            this._maps.set(value, map);
-        }
-
-        let key = this.getKey(item);
-        map.set(key, item);
-        this._pkMaps.set(key, map);
-    }
-
-    update(newItem: V, oldItem: V): void {
-        let key = this.getKey(newItem);
-
-        if (key != this.getKey(oldItem)) {
-            throw "can't update indexes for 2 items that have different primary keys";
-        }
-
-        let [newValue, oldValue] = [this.getIndexValue(newItem), this.getIndexValue(oldItem)];
-        let [newMap, oldMap] = [this._maps.get(newValue), this._maps.get(oldValue)];
-
-        if (oldMap != null) {
-            oldMap.delete(key);
-            this._pkMaps.delete(key);
-        }
-
-        if (newValue != null) {
-            if (newMap == null) {
-                newMap = new Map<K, V>();
-                this._maps.set(newValue, newMap);
+        for (let indexValue of indexValues) {
+            if (typeof indexValue === "string" || typeof indexValue === "number") {
+                indexValue = [indexValue];
             }
 
-            newMap.set(key, newItem);
-            this._pkMaps.set(key, newMap);
+            let map = this.index;
+
+            for (let i = 0; i < indexValue.length; ++i) {
+                const value = indexValue[i];
+
+                if (i < indexValue.length - 1) {
+                    map = map.get(value);
+
+                    if (map === void 0) {
+                        break;
+                    }
+                } else {
+                    let indexedValues = map.get(value);
+
+                    if (indexedValues === void 0) {
+                        break;
+                    }
+
+                    if (typeof indexedValues === "number") {
+                        indexedValues = [indexedValues];
+                    }
+
+                    recordIndexes.push(...indexedValues);
+                }
+            }
         }
+
+        return recordIndexes;
     }
 
-    upsert(newItem: V, oldItem?: V): void {
-        if (oldItem === void 0) {
-            this.insert(newItem);
-        } else {
-            this.update(newItem, oldItem);
-        }
+    clear(): void {
+        this.index = new Map();
     }
 
-    remove(item: V): void {
-        let key = this.getKey(item);
-        if (key == null) return;
+    private read(item: Record<string, any>): IndexValue {
+        const key: IndexValue = [];
 
-        let map = this._maps.get(this.getIndexValue(item));
-        if (map == null) return;
+        for (const keyPath of this.key) {
+            key.push(this.readOne(item, keyPath));
+        }
 
-        map.delete(key);
-        this._pkMaps.delete(key);
+        return key;
+    }
+
+    private readOne(item: Record<string, any>, key: string): string | number {
+        const parts = key.split(".");
+        let value = item;
+
+        for (const part of parts) {
+            value = value[part];
+        }
+
+        if (typeof value !== "string" && typeof value !== "number") {
+            throw new Error(`index "${key}" did not evaluate to a string or number`);
+        }
+
+        return value;
+    }
+
+    private addToIndex(indexValue: IndexValue, itemsIndex: number): void {
+        if (typeof indexValue === "string" || typeof indexValue === "number") {
+            indexValue = [indexValue];
+        }
+
+        let map = this.index;
+
+        for (let i = 0; i < indexValue.length; ++i) {
+            const value = indexValue[i];
+
+            if (i === indexValue.length - 1) {
+                if (this.unique) {
+                    // [todo] should probably throw if its already occupied?
+                    // should check how indexeddb handles it
+                    map.set(value, itemsIndex);
+                } else {
+                    if (!map.has(value)) {
+                        map.set(value, []);
+                    }
+
+                    map.get(value).push(itemsIndex);
+                }
+            } else {
+                if (!map.has(value)) {
+                    map.set(value, new Map());
+                }
+
+                map = map.get(value);
+            }
+        }
     }
 }
