@@ -14,6 +14,10 @@ export class ObjectStoreIndex {
     private readonly unique: boolean;
     private index = new Map();
 
+    getKeyPath() : string[] {
+        return this.key;
+    }
+
     // [todo] instead have "insert()", "update()" and "upsert()"
     insert(item: Record<string, any>, recordIndex: number): void {
         const indexValue = this.read(item);

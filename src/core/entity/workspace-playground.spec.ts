@@ -40,6 +40,43 @@ describe("playground: workspace", () => {
         expect(result).toEqual(jasmine.arrayWithExactContents(expectedEntities));
     });
 
+    it("should execute query w/ composite indexes", () => {
+        interface Foo {
+            id: number;
+            bar: number;
+            baz: number;
+        }
+
+        const workspace = new Workspace();
+        const store = new ObjectStore("foo", ["id"], { barAndBaz: { paths: ["bar", "baz"] } });
+        workspace.addStore(store);
+
+        const entities: Foo[] = [
+            { id: 1, bar: 2, baz: 1337 },
+            { id: 2, bar: 3, baz: 1337 },
+            { id: 3, bar: 2, baz: 64 },
+            { id: 4, bar: 1, baz: 1337 },
+        ];
+
+        const expectedEntities = [
+            { id: 1, bar: 2, baz: 1337 },
+            { id: 2, bar: 3, baz: 1337 },
+        ];
+
+        store.add(entities);
+
+        const query: Query = {
+            model: "foo",
+            criteria: matches<Foo>({ bar: inSet([2, 3]), baz: inSet([1337]) }),
+            expansion: {},
+        };
+
+        const result = workspace.executeQuery(query);
+
+        console.log(result);
+        expect(result).toEqual(jasmine.arrayWithExactContents(expectedEntities));
+    });
+
     xit("indexeddb interface looky looky stuff", () => {
         const db: IDBDatabase = {} as any;
         // db.transaction().

@@ -1,6 +1,8 @@
-import { InNumberSetCriterion, NamedCriteriaTemplate } from "../public";
+import { permutateEntries } from "../../utils/permutate-entries.fn";
+import { InNumberSetCriterion, NamedCriteriaBagTemplate, NamedCriteriaTemplate } from "../public";
 import { Query } from "../query/public";
 import { ObjectStore } from "./object-store";
+import { ObjectStoreIndex } from "./object-store-index";
 
 export class Workspace {
     private stores = new Map<string, ObjectStore>();
@@ -14,19 +16,34 @@ export class Workspace {
 
         const criteriaTemplates: NamedCriteriaTemplate<{ [key: string]: typeof InNumberSetCriterion[] }>[] = [];
 
-        for (const index of store.getIndexes()) {
-            if (index.key.length > 1 || index.key.some(key => key.includes("."))) {
+        const storeIndexes = store
+            .getIndexes()
+            .slice()
+            // we want most narrow indexes first
+            .sort((a, b) => b.getKeyPath().length - a.getKeyPath().length);
+
+        for (const index of storeIndexes) {
+            const keyPath = index.getKeyPath();
+
+            // if (index.key.length > 1 || index.key.some(key => key.includes("."))) {
+            if (index.key.some(key => key.includes("."))) {
                 // for now, we only support non-nested, non-composite indexes
+                // for now we only support non-nested indexes
                 continue;
             }
 
-            const key = index.key[0];
-            const criteriaTemplate = new NamedCriteriaTemplate({
-                // [todo] i was a bit suprised that i have to supply an array; was a bit unintuitive
-                [key]: [InNumberSetCriterion],
-            });
+            // [todo] would like to use this line, but need to introduce generic for it.
+            // don't wanna do now cause i need to thoroughly check places for "infinitely deep" stuff,
+            // and right now im too lazy.
+            // const namedBagTemplate: NamedCriteriaBagTemplate = {} ;
+            const namedBagTemplate: { [key: string]: typeof InNumberSetCriterion[] } = {};
 
-            criteriaTemplates.push(criteriaTemplate);
+            for (const key of keyPath) {
+                // [todo] i was a bit suprised that i have to supply an array; was a bit unintuitive
+                namedBagTemplate[key] = [InNumberSetCriterion];
+            }
+
+            criteriaTemplates.push(new NamedCriteriaTemplate(namedBagTemplate));
         }
 
         const [remappedCriteria] = query.criteria.remap(criteriaTemplates);
@@ -37,11 +54,42 @@ export class Workspace {
             // load items from store using index
             for (const remappedCriterion of remappedCriteria) {
                 const bag = remappedCriterion.getBag();
+                const bagKeys = Object.keys(bag).sort((a, b) => a.localeCompare(b));
+                const bagKeysJson = JSON.stringify(bagKeys);
+                let index: ObjectStoreIndex | undefined = void 0;
 
-                for (const property in remappedCriterion.getBag()) {
-                    const values = bag[property]?.getValues() ?? new Set();
-                    items = [...items, ...store.getByIndex(property, Array.from(values.values()))];
+                for (const indexCandidate of store.getIndexes()) {
+                    const indexKeys = indexCandidate.getKeyPath().sort((a, b) => a.localeCompare(b));
+                    if (JSON.stringify(indexKeys) === bagKeysJson) {
+                        index = indexCandidate;
+                        break;
+                    }
                 }
+
+                if (index === void 0) {
+                    throw new Error(`failed to find index matching criteria bag: ${bagKeysJson}`);
+                }
+
+                const bagWithPrimitives: Record<string, any> = {};
+
+                for (const property in bag) {
+                    bagWithPrimitives[property] = Array.from(bag[property]?.getValues() ?? new Set());
+                }
+
+                const permutatedBags = permutateEntries(bagWithPrimitives);
+                const indexValues: any[][] = [];
+
+                for (const permutatedBag of permutatedBags) {
+                    const indexValue: any[] = [];
+
+                    for (const key of index.getKeyPath()) {
+                        indexValue.push(permutatedBag[key]);
+                    }
+
+                    indexValues.push(indexValue);
+                }
+
+                items = [...items, ...store.getByIndex(index.name, indexValues)];
             }
         } else {
             items = store.getAll();
