@@ -149,7 +149,7 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag> extend
                 return [permutations.map(bag => new NamedCriteria(bag))];
             }
         } else if (template instanceof OrCriteriaTemplate && template.items.some(item => item instanceof NamedCriteriaTemplate)) {
-            //
+            // [todo] i was clearly having some plan here
         }
 
         return [false, void 0];

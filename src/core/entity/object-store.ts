@@ -98,6 +98,24 @@ export class ObjectStore<V = any> {
         return items;
     }
 
+    getIndexMatchingKeyPaths(keyPaths: string[]): ObjectStoreIndex {
+        const keyPathsJson = JSON.stringify(keyPaths.sort());
+
+        for (const indexCandidate of this.getIndexes()) {
+            const indexKeys = indexCandidate.getKeyPath();
+
+            if (indexKeys.length !== keyPaths.length) {
+                continue;
+            }
+
+            if (JSON.stringify(indexKeys.slice().sort()) === keyPathsJson) {
+                return indexCandidate;
+            }
+        }
+
+        throw new Error(`failed to find index matching keyPaths: ${JSON.stringify(keyPaths)}`);
+    }
+
     readKey(item: V): KeyValue {
         const key: KeyValue = [];
 

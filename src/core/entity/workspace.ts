@@ -1,5 +1,5 @@
 import { permutateEntries } from "../../utils/permutate-entries.fn";
-import { InNumberSetCriterion, NamedCriteriaBagTemplate, NamedCriteriaTemplate } from "../public";
+import { InNumberSetCriterion, InSetCriterion, NamedCriteria, NamedCriteriaBagTemplate, NamedCriteriaTemplate } from "../public";
 import { Query } from "../query/public";
 import { ObjectStore } from "./object-store";
 import { ObjectStoreIndex } from "./object-store-index";
@@ -25,11 +25,8 @@ export class Workspace {
         for (const index of storeIndexes) {
             const keyPath = index.getKeyPath();
 
-            // if (index.key.length > 1 || index.key.some(key => key.includes("."))) {
-            if (index.key.some(key => key.includes("."))) {
-                // for now, we only support non-nested, non-composite indexes
-                // for now we only support non-nested indexes
-                continue;
+            if (index.key.some(key => key.split(".").length > 2)) {
+                throw new Error(`arbitrary depth of nested index paths not yet supported`);
             }
 
             // [todo] would like to use this line, but need to introduce generic for it.
@@ -39,8 +36,19 @@ export class Workspace {
             const namedBagTemplate: { [key: string]: typeof InNumberSetCriterion[] } = {};
 
             for (const key of keyPath) {
-                // [todo] i was a bit suprised that i have to supply an array; was a bit unintuitive
-                namedBagTemplate[key] = [InNumberSetCriterion];
+                if (key.includes(".")) {
+                    // [todo] support more than 1 level of nesting
+                    const [first, second] = key.split(".");
+
+                    if (!namedBagTemplate[first]) {
+                        namedBagTemplate[first] = [new NamedCriteriaTemplate({})] as any;
+                    }
+
+                    (namedBagTemplate[first][0] as any).items[second] = [InNumberSetCriterion];
+                } else {
+                    // [todo] i was a bit suprised that i have to supply an array; was a bit unintuitive
+                    namedBagTemplate[key] = [InNumberSetCriterion];
+                }
             }
 
             criteriaTemplates.push(new NamedCriteriaTemplate(namedBagTemplate));
@@ -54,26 +62,39 @@ export class Workspace {
             // load items from store using index
             for (const remappedCriterion of remappedCriteria) {
                 const bag = remappedCriterion.getBag();
-                const bagKeys = Object.keys(bag).sort((a, b) => a.localeCompare(b));
-                const bagKeysJson = JSON.stringify(bagKeys);
-                let index: ObjectStoreIndex | undefined = void 0;
+                const bagKeyPaths: string[] = [];
 
-                for (const indexCandidate of store.getIndexes()) {
-                    const indexKeys = indexCandidate.getKeyPath().sort((a, b) => a.localeCompare(b));
-                    if (JSON.stringify(indexKeys) === bagKeysJson) {
-                        index = indexCandidate;
-                        break;
+                for (const property in bag) {
+                    const criterionInBag = bag[property];
+
+                    // [todo] support more than 1 level of nesting
+                    if (criterionInBag instanceof NamedCriteria) {
+                        for (const property_2 in criterionInBag.getBag()) {
+                            bagKeyPaths.push(`${property}.${property_2}`);
+                        }
+                    } else {
+                        bagKeyPaths.push(property);
                     }
                 }
 
-                if (index === void 0) {
-                    throw new Error(`failed to find index matching criteria bag: ${bagKeysJson}`);
-                }
-
+                const index = store.getIndexMatchingKeyPaths(bagKeyPaths);
                 const bagWithPrimitives: Record<string, any> = {};
 
                 for (const property in bag) {
-                    bagWithPrimitives[property] = Array.from(bag[property]?.getValues() ?? new Set());
+                    const criterionInBag = bag[property] as any;
+
+                    if (criterionInBag instanceof InSetCriterion) {
+                        bagWithPrimitives[property] = Array.from(criterionInBag.getValues());
+                    } else if (criterionInBag instanceof NamedCriteria) {
+                        for (const property_2 in criterionInBag.getBag()) {
+                            const criterionInBag_2 = criterionInBag.getBag()[property_2];
+
+                            if (criterionInBag_2 instanceof InSetCriterion) {
+                                // [todo] support more than 1 level of nesting
+                                bagWithPrimitives[`${property}.${property_2}`] = Array.from(criterionInBag_2.getValues());
+                            }
+                        }
+                    }
                 }
 
                 const permutatedBags = permutateEntries(bagWithPrimitives);
