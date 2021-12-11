@@ -53,4 +53,9 @@ export abstract class Criterion {
 
     abstract reduce(other: Criterion): boolean | Criterion;
     abstract toString(): string;
+
+    filter<T>(items: T[]): T[] {
+        // [todo] implement
+        return items;
+    }
 }

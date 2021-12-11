@@ -11,7 +11,9 @@ export class InNumberSetCriterion extends InSetCriterion<number> {
     notInClass = NotInNumberSetCriterion;
 
     remapOne(template: CriterionTemplate): [false, undefined] | [Criterion[], Criterion?] {
-        if (template === IsNumberValueCriterion) {
+        if (template === InNumberSetCriterion) {
+            return [[this]];
+        } else if (template === IsNumberValueCriterion) {
             return [Array.from(this.values).map(value => new IsNumberValueCriterion(value))];
         } else if (template instanceof OrCriteriaTemplate && template.items.some(item => item === IsNumberValueCriterion)) {
             return [[new OrCriteria(Array.from(this.values).map(value => new IsNumberValueCriterion(value)))]];

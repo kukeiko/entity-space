@@ -5,7 +5,7 @@ import { reduceQuery } from "../reduce-query.fn";
 
 describe("reduceQuery()", () => {
     function createQuery(criteria: Criterion, expansion: Expansion = {}): Query {
-        return { criteria, expansion };
+        return { model: "", criteria, expansion };
     }
 
     describe("full reduction", () => {

@@ -4,13 +4,6 @@ import { IndexValue, ObjectStoreIndex } from "./object-store-index";
 
 type KeyValue = (string | number) | (string | number)[];
 
-// const db: IDBDatabase = {} as any;
-// const myStore = db.createObjectStore("foo");
-// const myIndex = myStore.createIndex("", "", { multiEntry: true });
-// myIndex.get(["foo", 1, [[3]]]);
-// myStore.openCursor();
-// myStore.delete
-
 /**
  * [todo] copied over from a file that i've last worked on some years ago, so some polish is needed
  * since i've changed my code style quite a bit
@@ -34,7 +27,7 @@ export class ObjectStore<V = any> {
         this.indexes = storeIndexes;
     }
 
-    private readonly name: string;
+    readonly name: string;
     private readonly key: SchemaKey;
     private readonly indexes: Record<string, ObjectStoreIndex>;
     private items: (V | undefined)[] = [];
@@ -52,6 +45,10 @@ export class ObjectStore<V = any> {
         }
 
         return this.items[recordIndex];
+    }
+
+    getIndexes(): ObjectStoreIndex[] {
+        return Object.values(this.indexes);
     }
 
     private getRecordIndexByKey(key: KeyValue): number | undefined {
@@ -111,7 +108,7 @@ export class ObjectStore<V = any> {
         return key;
     }
 
-    // [todo] instead have "insert()", "update()" and "upsert()"
+    // [todo] handle case where items my already exist in indexes?
     add(items: any[]): void {
         for (const item of items) {
             const key = this.readKey(item);
@@ -120,7 +117,7 @@ export class ObjectStore<V = any> {
             this.addToKeyIndex(key, itemsIndex);
 
             for (const indexName in this.indexes) {
-                this.indexes[indexName].add(item, itemsIndex);
+                this.indexes[indexName].insert(item, itemsIndex);
             }
         }
     }

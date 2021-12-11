@@ -24,6 +24,7 @@ xdescribe("how do we actually load data?", () => {
         ]);
 
         const query: Query = {
+            model: "TODO",
             criteria: productCriteria,
             expansion: {
                 ...basic_properties,

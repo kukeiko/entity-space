@@ -12,13 +12,13 @@ export function reduceQuery(a: Query, b: Query): Query[] | false {
             return [];
         }
 
-        return [{ criteria: a.criteria, expansion }];
+        return [{ model: a.model, criteria: a.criteria, expansion }];
     } else if (Object.keys(expansion).length == 0) {
-        return [{ criteria, expansion: a.expansion }];
+        return [{ model: a.model, criteria, expansion: a.expansion }];
     } else {
         return [
-            { criteria, expansion: a.expansion },
-            { criteria: b.criteria, expansion },
+            { model: a.model, criteria, expansion: a.expansion },
+            { model: a.model, criteria: b.criteria, expansion },
         ];
     }
 }
