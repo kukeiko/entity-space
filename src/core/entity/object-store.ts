@@ -1,5 +1,5 @@
 import { isDefined } from "../../utils/is-defined.fn";
-import { SchemaIndexes, SchemaKey } from "./metadata/schema";
+import { SchemaIndex } from "./metadata/schema";
 import { IndexValue, ObjectStoreIndex } from "./object-store-index";
 
 type KeyValue = (string | number) | (string | number)[];
@@ -9,18 +9,22 @@ type KeyValue = (string | number) | (string | number)[];
  * since i've changed my code style quite a bit
  */
 
+const KEY_INDEX_NAME = "key";
+
 // [todo] not happy with various method/variable/type names, revisit.
 export class ObjectStore<V = any> {
-    constructor(name: string, key: string[], indexes?: SchemaIndexes) {
+    constructor(name: string, key: string[], indexes?: Record<string, SchemaIndex>) {
         this.name = name;
         this.key = key;
 
         const storeIndexes: Record<string, ObjectStoreIndex> = {};
         indexes = indexes ?? {};
 
+        storeIndexes[KEY_INDEX_NAME] = new ObjectStoreIndex(KEY_INDEX_NAME, key, { unique: true });
+
         for (const name in indexes) {
             const indexArgs = indexes[name];
-            const index = new ObjectStoreIndex(name, indexArgs.paths, { unique: indexArgs.unique });
+            const index = new ObjectStoreIndex(name, typeof indexArgs.path === "string" ? [indexArgs.path] : indexArgs.path, { unique: indexArgs.unique });
             storeIndexes[name] = index;
         }
 
@@ -28,49 +32,32 @@ export class ObjectStore<V = any> {
     }
 
     readonly name: string;
-    private readonly key: SchemaKey;
+    private readonly key: string[];
     private readonly indexes: Record<string, ObjectStoreIndex>;
     private items: (V | undefined)[] = [];
-    private keyIndex = new Map();
 
     getAll(): V[] {
         return this.items.filter(isDefined);
     }
 
     getByKey(key: KeyValue): V | undefined {
-        const recordIndex = this.getRecordIndexByKey(key);
+        const items = this.getByIndex(KEY_INDEX_NAME, [key]);
 
-        if (recordIndex === void 0) {
-            return void 0;
-        }
-
-        return this.items[recordIndex];
+        return items[0];
     }
 
     getIndexes(): ObjectStoreIndex[] {
         return Object.values(this.indexes);
     }
 
-    private getRecordIndexByKey(key: KeyValue): number | undefined {
-        let mapOrRecordIndex: Map<any, any> | V | undefined = this.keyIndex;
+    getIndex(name: string): ObjectStoreIndex {
+        const index = this.indexes[name];
 
-        if (typeof key === "string" || typeof key === "number") {
-            key = [key];
+        if (index === void 0) {
+            throw new Error(`index not found: ${name}`);
         }
 
-        for (const value of key) {
-            mapOrRecordIndex = mapOrRecordIndex?.get(value);
-
-            if (mapOrRecordIndex === void 0) {
-                return void 0;
-            } else if (typeof mapOrRecordIndex === "number") {
-                return mapOrRecordIndex;
-            } else if (!(mapOrRecordIndex instanceof Map)) {
-                throw new Error(`invalid key: ${key}`);
-            }
-        }
-
-        return void 0;
+        return index;
     }
 
     getByKeys(keys: KeyValue[]): V[] {
@@ -116,23 +103,11 @@ export class ObjectStore<V = any> {
         throw new Error(`failed to find index matching keyPaths: ${JSON.stringify(keyPaths)}`);
     }
 
-    readKey(item: V): KeyValue {
-        const key: KeyValue = [];
-
-        for (const keyPath of this.key) {
-            key.push(this.readStringOrNumberKey(item, keyPath));
-        }
-
-        return key;
-    }
-
     // [todo] handle case where items my already exist in indexes?
     add(items: any[]): void {
         for (const item of items) {
-            const key = this.readKey(item);
             const itemsIndex = this.items.length;
             this.items.push(item);
-            this.addToKeyIndex(key, itemsIndex);
 
             for (const indexName in this.indexes) {
                 this.indexes[indexName].insert(item, itemsIndex);
@@ -140,64 +115,11 @@ export class ObjectStore<V = any> {
         }
     }
 
-    // [todo] not cleaning up indexes on purpose. deleting entry from record array
-    // is enough for items to not show up anymore. doing it this way since i guess
-    // it is the most performant; and while we do make the record array sparse this way,
-    // ii don't suspect deletions happening too often. lets see.
-    remove(items: any[]): void {
-        for (const item of items) {
-            const key = this.readKey(item);
-            const recordIndex = this.getRecordIndexByKey(key);
-
-            if (recordIndex !== void 0) {
-                delete this.items[recordIndex];
-            }
-        }
-    }
-
     clear(): void {
-        this.keyIndex = new Map();
         this.items = [];
 
         for (const indexName in this.indexes) {
             this.indexes[indexName].clear();
-        }
-    }
-
-    private readStringOrNumberKey(item: any, key: string): string | number {
-        const parts = key.split(".");
-        let value = item;
-
-        for (const part of parts) {
-            value = value[part];
-        }
-
-        if (typeof value !== "string" && typeof value !== "number") {
-            throw new Error(`key "${key}" did not evaluate to a string or number`);
-        }
-
-        return value;
-    }
-
-    private addToKeyIndex(key: KeyValue, itemsIndex: number): void {
-        let map = this.keyIndex;
-
-        if (typeof key === "string" || typeof key === "number") {
-            key = [key];
-        }
-
-        for (let i = 0; i < key.length; ++i) {
-            const keyPrimitiveValue = key[i];
-
-            if (i === key.length - 1) {
-                map.set(keyPrimitiveValue, itemsIndex);
-            } else {
-                if (!map.has(keyPrimitiveValue)) {
-                    map.set(keyPrimitiveValue, new Map());
-                }
-
-                map = map.get(keyPrimitiveValue);
-            }
         }
     }
 }

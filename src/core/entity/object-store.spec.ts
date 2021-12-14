@@ -80,7 +80,7 @@ describe("object-store", () => {
         const notBaz = { id: 64, tag: "not-baz" };
 
         const store = new ObjectStore("foo", ["id"], {
-            tag: { paths: ["tag"] },
+            tag: { path: ["tag"] },
         });
 
         // act
@@ -100,7 +100,7 @@ describe("object-store", () => {
         const bazButNotSweet = { id: 64, tag: "bag", flavor: "salty" };
 
         const store = new ObjectStore("foo", ["id"], {
-            tagAndFlavor: { paths: ["tag", "flavor"] },
+            tagAndFlavor: { path: ["tag", "flavor"] },
         });
 
         // act
@@ -186,7 +186,7 @@ describe("object-store", () => {
     it("should be empty after clearing", () => {
         // arrange
         const foo = { id: 7, name: "foo", tag: "baz" };
-        const store = new ObjectStore("foo", ["id"], { tag: { paths: ["tag"] } });
+        const store = new ObjectStore("foo", ["id"], { tag: { path: ["tag"] } });
 
         // act
         store.add([foo]);

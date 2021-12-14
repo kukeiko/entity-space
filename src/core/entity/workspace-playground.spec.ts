@@ -1,16 +1,84 @@
 import { inSet, matches, Query } from "../public";
+import { Schema } from "./metadata/schema";
 import { ObjectStore } from "./object-store";
 import { Workspace } from "./workspace";
 
 describe("playground: workspace", () => {
-    it("should do things", () => {
+    it("expanding", () => {
+        const workspace = new Workspace();
+
+        workspace.addSchema({
+            name: "foo",
+            key: { path: "id" },
+            properties: {
+                bar: {
+                    type: "object",
+                    model: "bar",
+                    link: {
+                        from: "id",
+                        to: "fooId",
+                    },
+                },
+            },
+        });
+
+        workspace.addSchema({
+            name: "bar",
+            key: { path: "id" },
+            properties: {},
+        });
+
+        workspace.addStore(new ObjectStore("foo", ["id"], { id: { path: ["id", "secondaryId"] } }));
+        workspace.addStore(new ObjectStore("bar", ["id"], { fooId: { path: ["fooId", "secondaryId"] } }));
+
+        workspace.addItems("foo", [{ id: 1337, secondaryId: 128, name: "i am foo" }]);
+        workspace.addItems("bar", [{ id: 64, fooId: 1337, secondaryId: 128, name: "i belong to foo" }]);
+
+        const query: Query = { model: "foo", expansion: { bar: true }, criteria: matches({ id: inSet([1337]) }) };
+        const fooItems = workspace.executeQuery(query);
+        // const barItemsOfFooItems = workspace.expandResult("foo", "bar", fooItems);
+
+        console.log("expanded foo items:", fooItems);
+        // console.log("bar items:", barItemsOfFooItems);
+    });
+
+    it("squawking around", () => {
+        const schema: Schema = {} as any;
+
+        for (const key in schema.properties) {
+            const property = schema.properties[key];
+        }
+
+        const workspace = new Workspace();
+        const store = new ObjectStore("foo", ["id"], { bar: { path: ["bar"] } });
+        workspace.addStore(store);
+
+        const criteria = workspace.createCriteriaForIndex("foo", "bar", [1, 2, 3]);
+        console.log(criteria);
+
+        workspace.addStore(new ObjectStore("bar", ["id"], { baz: { path: ["khaz.mo", "foo", "khaz.dan"] } }));
+        const barCriteria = workspace.createCriteriaForIndex("bar", "baz", [
+            [1337, 64, 1],
+            [42, 64, 2],
+            [1337, 128, 1],
+            [1337, 64, 2],
+            [42, 128, 1],
+            [42, 64, 2],
+            [1337, 64, 1],
+            [1337, 128, 1],
+        ]);
+
+        console.log(barCriteria);
+    });
+
+    it("should execute query w/ 1 simple index", () => {
         interface Foo {
             id: number;
             bar: number;
         }
 
         const workspace = new Workspace();
-        const store = new ObjectStore("foo", ["id"], { bar: { paths: ["bar"] } });
+        const store = new ObjectStore("foo", ["id"], { bar: { path: ["bar"] } });
         workspace.addStore(store);
 
         const entities: Foo[] = [
@@ -48,7 +116,7 @@ describe("playground: workspace", () => {
         }
 
         const workspace = new Workspace();
-        const store = new ObjectStore("foo", ["id"], { barAndBaz: { paths: ["bar", "baz"] } });
+        const store = new ObjectStore("foo", ["id"], { barAndBaz: { path: ["bar", "baz"] } });
         workspace.addStore(store);
 
         const entities: Foo[] = [
@@ -86,7 +154,7 @@ describe("playground: workspace", () => {
         }
 
         const workspace = new Workspace();
-        const store = new ObjectStore("foo", ["id"], { bar: { paths: ["bar.baz"] } });
+        const store = new ObjectStore("foo", ["id"], { bar: { path: ["bar.baz"] } });
         workspace.addStore(store);
 
         const entities: Foo[] = [
@@ -126,7 +194,7 @@ describe("playground: workspace", () => {
         }
 
         const workspace = new Workspace();
-        const store = new ObjectStore("foo", ["id"], { bar: { paths: ["bar.baz", "bar.moo"] } });
+        const store = new ObjectStore("foo", ["id"], { bar: { path: ["bar.baz", "bar.moo"] } });
         workspace.addStore(store);
 
         const entities: Foo[] = [
@@ -169,7 +237,7 @@ describe("playground: workspace", () => {
         }
 
         const workspace = new Workspace();
-        const store = new ObjectStore("foo", ["id"], { bar: { paths: ["bar.baz", "bar.moo", "khaz.mo", "khaz.dan"] } });
+        const store = new ObjectStore("foo", ["id"], { bar: { path: ["bar.baz", "bar.moo", "khaz.mo", "khaz.dan"] } });
         workspace.addStore(store);
 
         const entities: Foo[] = [
@@ -200,6 +268,7 @@ describe("playground: workspace", () => {
         // db.transaction().
         const myStore = db.createObjectStore("foo", {});
         const myIndex = myStore.createIndex("", "", { multiEntry: true });
+
         myIndex.get(["foo", 1, [[3]]]);
         myStore.openCursor();
         myStore.delete;

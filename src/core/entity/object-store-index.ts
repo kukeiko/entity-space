@@ -14,7 +14,7 @@ export class ObjectStoreIndex {
     private readonly unique: boolean;
     private index = new Map();
 
-    getKeyPath() : string[] {
+    getKeyPath(): string[] {
         return this.key;
     }
 
@@ -76,7 +76,11 @@ export class ObjectStoreIndex {
         this.index = new Map();
     }
 
-    private read(item: Record<string, any>): IndexValue {
+    readMany(items: any[]): IndexValue[] {
+        return items.map(item => this.read(item));
+    }
+
+    read(item: Record<string, any>): IndexValue {
         const key: IndexValue = [];
 
         for (const keyPath of this.key) {

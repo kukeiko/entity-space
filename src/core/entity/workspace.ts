@@ -1,11 +1,17 @@
 import { permutateEntries } from "../../utils/permutate-entries.fn";
-import { InNumberSetCriterion, InSetCriterion, NamedCriteria, NamedCriteriaBagTemplate, NamedCriteriaTemplate } from "../public";
+import { Criterion, Expansion, fromDeepBag, InNumberSetCriterion, inSet, InSetCriterion, NamedCriteria, NamedCriteriaBag, NamedCriteriaTemplate, or } from "../public";
 import { Query } from "../query/public";
 import { ObjectStore } from "./object-store";
-import { ObjectStoreIndex } from "./object-store-index";
+import { IndexValue } from "./object-store-index";
+import { Schema, SchemaProperty } from "./metadata/schema";
 
 export class Workspace {
     private stores = new Map<string, ObjectStore>();
+    private schemas = new Map<string, Schema>();
+
+    addItems(model: string, items: any[]): void {
+        this.getStore(model).add(items);
+    }
 
     executeQuery(query: Query) {
         const store = this.stores.get(query.model);
@@ -116,10 +122,169 @@ export class Workspace {
             items = store.getAll();
         }
 
+        if (Object.keys(query.expansion).length > 0) {
+            this.expand(query.model, query.expansion, items);
+        }
+
         return query.criteria.filter(items);
     }
 
+    expand(model: string, expansion: Expansion, items: any[]): any {
+        const schema = this.getSchema(model);
+
+        for (const propertyKey in expansion) {
+            const expansionValue = expansion[propertyKey];
+            const propertySchema = this.getPropertyOfSchema(schema, propertyKey);
+            const link = propertySchema.link;
+            const referencedModel = propertySchema.model;
+
+            if (link === void 0) {
+                if (expansionValue === true) {
+                    // [todo] not yet sure if this should be considered a user error.
+                    // so for now we'll just throw so i definitely notice it in case it happens.
+                    throw new Error(`trying to expand a value that has no link; and no deeper expansion was provided: ${model}.${propertyKey}`);
+                } else if (expansionValue !== void 0) {
+                    if (referencedModel === void 0) {
+                        throw new Error(`can't expand ${model}.${propertyKey}: no model defined`);
+                    }
+
+                    const referencedItems: any[] = [];
+
+                    for (const item of items) {
+                        const reference = item[propertyKey];
+
+                        if (Array.isArray(reference)) {
+                            referencedItems.push(...reference);
+                        } else {
+                            referencedItems.push(reference);
+                        }
+                    }
+
+                    this.expand(referencedModel, expansionValue, referencedItems);
+                }
+            } else {
+                this.expandOne(model, propertyKey, items, expansionValue === true ? void 0 : expansionValue);
+            }
+            // if (expansionValue === true && link === void 0) {
+            // } else if (expansionValue === true) {
+            //     this.expandOne(model, propertyKey, items);
+            // } else if (expansionValue !== true && link === void 0) {
+            //     // [todo] we might want to expand on an object that itself requires no link to the object
+            //     // it is referenced by, so we have to store referenced model metadata somewhere else than on the link
+            //     throw new Error(`expanding deeper on objects that themselves are not linked is not yet implemented`);
+            // } else if (expansionValue !== true && link !== void 0) {
+
+            // }
+        }
+    }
+
+    private expandOne(model: string, propertyKey: string, items: any[], expansion?: Expansion): any {
+        const schema = this.getSchema(model);
+        const propertySchema = this.getPropertyOfSchema(schema, propertyKey);
+        const link = propertySchema.link;
+
+        if (link === void 0) {
+            throw new Error(`can't expand property ${model}.${propertyKey}: no link`);
+        }
+
+        const linkedModel = propertySchema.model;
+
+        if (linkedModel === void 0) {
+            throw new Error(`can't expand property ${model}.${propertyKey}: no model`);
+        }
+
+        const fromIndexValues = this.getStore(model).getIndex(link.from).readMany(items);
+        const criteria = this.createCriteriaForIndex(linkedModel, link.to, fromIndexValues);
+        const referencedItems = this.executeQuery({ criteria, expansion: expansion ?? {}, model: linkedModel });
+        const referencedIndex = this.getStore(linkedModel).getIndex(link.to);
+
+        for (const item of items) {
+            const indexValue = this.getStore(model).getIndex(link.from).read(item);
+            const matchingReferencedItems = referencedItems.filter(item => JSON.stringify(indexValue) === JSON.stringify(referencedIndex.read(item)));
+
+            if (propertySchema.array) {
+                item[propertyKey] = matchingReferencedItems;
+            } else {
+                item[propertyKey] = matchingReferencedItems[0] ?? null;
+            }
+        }
+    }
+
+    getPropertyOfSchema(schema: Schema, propertyKey: string): SchemaProperty {
+        const propertySchema = schema.properties[propertyKey];
+
+        if (propertySchema === void 0) {
+            throw new Error(`schema for model ${schema.name} does not have a property named ${propertyKey}`);
+        }
+
+        return propertySchema;
+    }
     addStore(store: ObjectStore): void {
         this.stores.set(store.name, store);
+    }
+
+    getStore(model: string): ObjectStore {
+        const store = this.stores.get(model);
+
+        if (store === void 0) {
+            throw new Error(`store not found: ${model}`);
+        }
+
+        return store;
+    }
+
+    addSchema(schema: Schema): void {
+        this.schemas.set(schema.name, schema);
+    }
+
+    getSchema(model: string): Schema {
+        const schema = this.schemas.get(model);
+
+        if (schema === void 0) {
+            throw new Error(`schema not found: ${model}`);
+        }
+
+        return schema;
+    }
+
+    createCriteriaForIndex(model: string, indexName: string, indexValues: IndexValue[]): Criterion {
+        const store = this.getStore(model);
+        const index = store.getIndex(indexName);
+        const indexKeyPath = index.getKeyPath();
+        const criteria: Criterion[] = [];
+
+        for (let indexValue of indexValues) {
+            if (!Array.isArray(indexValue)) {
+                indexValue = [indexValue];
+            }
+
+            const namedCriteriaBag: Record<string, any> = {};
+
+            for (let i = 0; i < indexKeyPath.length; ++i) {
+                const indexSingleKeyPath = indexKeyPath[i];
+                const parts = indexSingleKeyPath.split(".");
+
+                let bag = namedCriteriaBag;
+
+                for (let e = 0; e < parts.length; ++e) {
+                    const part = parts[e];
+
+                    if (e < parts.length - 1) {
+                        if (bag[part] === void 0) {
+                            bag[part] = {} as NamedCriteriaBag;
+                        }
+
+                        bag = bag[part];
+                    } else {
+                        bag[part] = inSet([indexValue[i] as number]);
+                    }
+                }
+            }
+
+            const criterion = fromDeepBag(namedCriteriaBag);
+            criteria.push(criterion);
+        }
+
+        return or(criteria);
     }
 }
