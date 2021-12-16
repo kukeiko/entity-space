@@ -1,19 +1,15 @@
 import { isDefined } from "../../utils/is-defined.fn";
-import { SchemaIndex } from "./metadata/schema";
+import { SchemaIndexJson } from "./metadata/schema-json";
 import { IndexValue, ObjectStoreIndex } from "./object-store-index";
 
 type KeyValue = (string | number) | (string | number)[];
 
-/**
- * [todo] copied over from a file that i've last worked on some years ago, so some polish is needed
- * since i've changed my code style quite a bit
- */
-
+// [todo] duplicated @ schema.ts
 const KEY_INDEX_NAME = "key";
 
 // [todo] not happy with various method/variable/type names, revisit.
 export class ObjectStore<V = any> {
-    constructor(name: string, key: string[], indexes?: Record<string, SchemaIndex>) {
+    constructor(name: string, key: string[], indexes?: Record<string, SchemaIndexJson>) {
         this.name = name;
         this.key = key;
 
@@ -89,7 +85,7 @@ export class ObjectStore<V = any> {
         const keyPathsJson = JSON.stringify(keyPaths.sort());
 
         for (const indexCandidate of this.getIndexes()) {
-            const indexKeys = indexCandidate.getKeyPath();
+            const indexKeys = indexCandidate.path;
 
             if (indexKeys.length !== keyPaths.length) {
                 continue;

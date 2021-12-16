@@ -1,36 +1,32 @@
 import { inSet, matches, Query } from "../public";
 import { Schema } from "./metadata/schema";
+import { SchemaIndex } from "./metadata/schema-index";
+import { SchemaJson } from "./metadata/schema-json";
 import { ObjectStore } from "./object-store";
 import { Workspace } from "./workspace";
 
 describe("playground: workspace", () => {
     it("expanding", () => {
-        const workspace = new Workspace();
-
-        workspace.addSchema({
+        const fooSchema = new Schema({
             name: "foo",
-            key: { path: "id" },
+            key: new SchemaIndex("id", ["id", "secondaryId"]),
             properties: {
-                bar: {
-                    type: "object",
-                    model: "bar",
-                    link: {
-                        from: "id",
-                        to: "fooId",
-                    },
-                },
+                bar: { type: "object", model: "bar", link: { from: "id", to: "fooId" } },
             },
         });
 
-        workspace.addSchema({
+        const barSchema = new Schema({
             name: "bar",
-            key: { path: "id" },
+            key: new SchemaIndex("id", ["id"]),
+            indexes: [new SchemaIndex("fooId", ["fooId", "secondaryId"])],
             properties: {},
         });
 
+        const workspace = new Workspace();
+        workspace.addSchema(fooSchema);
+        workspace.addSchema(barSchema);
         workspace.addStore(new ObjectStore("foo", ["id"], { id: { path: ["id", "secondaryId"] } }));
         workspace.addStore(new ObjectStore("bar", ["id"], { fooId: { path: ["fooId", "secondaryId"] } }));
-
         workspace.addItems("foo", [{ id: 1337, secondaryId: 128, name: "i am foo" }]);
         workspace.addItems("bar", [{ id: 64, fooId: 1337, secondaryId: 128, name: "i belong to foo" }]);
 
@@ -42,8 +38,55 @@ describe("playground: workspace", () => {
         // console.log("bar items:", barItemsOfFooItems);
     });
 
+    fit("expanding #2", () => {
+        const fooSchema = new Schema({
+            name: "foo",
+            key: new SchemaIndex("id", ["id"]),
+            properties: {
+                bar: {
+                    type: "object",
+                    model: "bar",
+                },
+            },
+        });
+
+        const barSchema = new Schema({
+            name: "bar",
+            indexes: [new SchemaIndex("bazId", ["bazId"])],
+            properties: {
+                baz: {
+                    type: "object",
+                    model: "baz",
+                    link: { from: "bazId", to: "id" },
+                },
+            },
+        });
+
+        const bazSchema = new Schema({
+            name: "baz",
+            key: new SchemaIndex("id", ["id"]),
+            properties: {},
+        });
+
+        const workspace = new Workspace();
+        workspace.addSchema(barSchema);
+        workspace.addSchema(fooSchema);
+        workspace.addSchema(bazSchema);
+        workspace.addStore(new ObjectStore("foo", ["id"]));
+        workspace.addStore(new ObjectStore("baz", ["id"], { id: { path: ["id"] } }));
+        workspace.addItems("foo", [{ id: 1337, name: "i am foo", bar: { bazId: 128 } }]);
+        workspace.addItems("baz", [{ id: 128, name: "i am baz" }]);
+
+        const query: Query = { model: "foo", expansion: { bar: { baz: true } }, criteria: matches({ id: inSet([1337]) }) };
+        const fooItems = workspace.executeQuery(query);
+        // const barItemsOfFooItems = workspace.expandResult("foo", "bar", fooItems);
+
+        console.log("expanded foo items:", fooItems);
+        // console.log("bar items:", barItemsOfFooItems);
+    });
+
     it("squawking around", () => {
-        const schema: Schema = {} as any;
+        const schema: SchemaJson = {} as any;
 
         for (const key in schema.properties) {
             const property = schema.properties[key];

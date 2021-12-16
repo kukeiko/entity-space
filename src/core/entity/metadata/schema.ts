@@ -1,70 +1,49 @@
-export interface SchemaIndex {
-    // name: string;
-    path: string | string[];
-    unique?: boolean;
-}
+import { SchemaIndex } from "./schema-index";
+import { SchemaProperty, SchemaPropertyOptionsArgument, SchemaPropertyType } from "./schema-property";
 
-export interface SchemaKey {
-    // name: "key";
-    path: string | string[];
-    // unique: true;
-}
+export class Schema {
+    constructor(args: { name: string; properties: Record<string, { type: SchemaPropertyType } & SchemaPropertyOptionsArgument>; key?: SchemaIndex; indexes?: SchemaIndex[] }) {
+        this.name = args.name;
+        const properties: SchemaProperty[] = [];
 
-export interface SchemaPropertyLink {
-    from: string;
-    to: string;
-}
+        for (const propertyKey in args.properties) {
+            const propertyArgs = args.properties[propertyKey];
+            const property = new SchemaProperty(propertyKey, propertyArgs.type, propertyArgs);
+            properties.push(property);
+        }
 
-export interface SchemaPropertyStringValueType {
-    type: "string";
-    format?: "byte" | "binary" | "date" | "date-time" | "password";
-}
+        this.properties = Object.freeze(properties);
+        this.key = args.key;
+        this.indexes = Object.freeze((args.indexes ?? []).slice());
+    }
 
-export interface SchemaPropertyNumberValueType {
-    type: "number";
-    format: "int32" | "int64" | "float" | "double";
-}
+    readonly name: string;
+    readonly properties: readonly SchemaProperty[];
+    readonly key?: SchemaIndex;
+    readonly indexes: readonly SchemaIndex[];
 
-export interface SchemaPropertyBooleanValueType {
-    type: "boolean";
-}
+    getIndex(name: string): SchemaIndex {
+        if (this.key !== void 0 && this.key.name === name) {
+            return this.key;
+        }
 
-export interface SchemaPropertyReferenceValueType {
-    type: "reference";
-}
+        // [todo] i don't want a linear lookup here as it's on the critical path
+        const index = this.indexes.find(index => index.name === name);
 
-export type SchemaPropertyValueType = SchemaPropertyStringValueType | SchemaPropertyNumberValueType | SchemaPropertyBooleanValueType | SchemaPropertyReferenceValueType;
+        if (index === void 0) {
+            throw new Error(`index not found: ${name}`);
+        }
 
-export interface SchemaProperty {
-    type: "boolean" | "number" | "string" | "object";
-    model?: string;
-    // valueType: SchemaPropertyValueType;
-    link?: SchemaPropertyLink;
-    array?: boolean;
-}
+        return index;
+    }
 
-// opan-api formats:
-// boolean
-// integer	int32	signed 32 bits
-// integer	int64	signed 64 bits (a.k.a long)
-// number	float
-// number	double
-// string
-// string	byte	base64 encoded characters
-// string	binary	any sequence of octets
-// string	date	As defined by full-date - RFC3339
-// string	date-time	As defined by date-time - RFC3339
-// string	password	A hint to UIs to obscure input.
+    getProperty(name: string): SchemaProperty {
+        const property = this.properties.find(property => property.name === name);
 
-export interface SchemaReference<T = any> {
-    $ref: string;
-}
+        if (property === void 0) {
+            throw new Error(`schema for model ${this.name} does not have a property named ${name}`);
+        }
 
-export interface Schema {
-    // in open-api context, its the uri. in indexeddb, its going to be the object store name.
-    // we may want to split it up at some point - let's see.
-    name: string;
-    key: SchemaKey;
-    indexes?: Record<string, SchemaIndex>;
-    properties: Record<string, SchemaProperty>;
+        return property;
+    }
 }

@@ -3,7 +3,8 @@ import { Criterion, Expansion, fromDeepBag, InNumberSetCriterion, inSet, InSetCr
 import { Query } from "../query/public";
 import { ObjectStore } from "./object-store";
 import { IndexValue } from "./object-store-index";
-import { Schema, SchemaProperty } from "./metadata/schema";
+import { SchemaJson, SchemaPropertyJson } from "./metadata/schema-json";
+import { Schema } from "./metadata/schema";
 
 export class Workspace {
     private stores = new Map<string, ObjectStore>();
@@ -26,12 +27,12 @@ export class Workspace {
             .getIndexes()
             .slice()
             // we want most narrow indexes first
-            .sort((a, b) => b.getKeyPath().length - a.getKeyPath().length);
+            .sort((a, b) => b.path.length - a.path.length);
 
         for (const index of storeIndexes) {
-            const keyPath = index.getKeyPath();
+            const keyPath = index.path;
 
-            if (index.key.some(key => key.split(".").length > 2)) {
+            if (index.path.some(key => key.split(".").length > 2)) {
                 throw new Error(`arbitrary depth of nested index paths not yet supported`);
             }
 
@@ -109,7 +110,7 @@ export class Workspace {
                 for (const permutatedBag of permutatedBags) {
                     const indexValue: any[] = [];
 
-                    for (const key of index.getKeyPath()) {
+                    for (const key of index.path) {
                         indexValue.push(permutatedBag[key]);
                     }
 
@@ -134,20 +135,16 @@ export class Workspace {
 
         for (const propertyKey in expansion) {
             const expansionValue = expansion[propertyKey];
-            const propertySchema = this.getPropertyOfSchema(schema, propertyKey);
-            const link = propertySchema.link;
-            const referencedModel = propertySchema.model;
+            const property = schema.getProperty(propertyKey);
 
-            if (link === void 0) {
+            if (property.isExpandable()) {
+                this.expandOne(model, propertyKey, items, expansionValue === true ? void 0 : expansionValue);
+            } else if (property.isNavigable()) {
                 if (expansionValue === true) {
                     // [todo] not yet sure if this should be considered a user error.
                     // so for now we'll just throw so i definitely notice it in case it happens.
                     throw new Error(`trying to expand a value that has no link; and no deeper expansion was provided: ${model}.${propertyKey}`);
                 } else if (expansionValue !== void 0) {
-                    if (referencedModel === void 0) {
-                        throw new Error(`can't expand ${model}.${propertyKey}: no model defined`);
-                    }
-
                     const referencedItems: any[] = [];
 
                     for (const item of items) {
@@ -160,27 +157,17 @@ export class Workspace {
                         }
                     }
 
-                    this.expand(referencedModel, expansionValue, referencedItems);
+                    this.expand(property.model, expansionValue, referencedItems);
                 }
             } else {
-                this.expandOne(model, propertyKey, items, expansionValue === true ? void 0 : expansionValue);
+                throw new Error(`can't expand ${model}.${propertyKey}: not a navigable/expandable property`);
             }
-            // if (expansionValue === true && link === void 0) {
-            // } else if (expansionValue === true) {
-            //     this.expandOne(model, propertyKey, items);
-            // } else if (expansionValue !== true && link === void 0) {
-            //     // [todo] we might want to expand on an object that itself requires no link to the object
-            //     // it is referenced by, so we have to store referenced model metadata somewhere else than on the link
-            //     throw new Error(`expanding deeper on objects that themselves are not linked is not yet implemented`);
-            // } else if (expansionValue !== true && link !== void 0) {
-
-            // }
         }
     }
 
     private expandOne(model: string, propertyKey: string, items: any[], expansion?: Expansion): any {
         const schema = this.getSchema(model);
-        const propertySchema = this.getPropertyOfSchema(schema, propertyKey);
+        const propertySchema = schema.getProperty(propertyKey);
         const link = propertySchema.link;
 
         if (link === void 0) {
@@ -193,14 +180,14 @@ export class Workspace {
             throw new Error(`can't expand property ${model}.${propertyKey}: no model`);
         }
 
-        const fromIndexValues = this.getStore(model).getIndex(link.from).readMany(items);
+        const fromIndexValues = this.getSchema(model).getIndex(link.from).read(items);
         const criteria = this.createCriteriaForIndex(linkedModel, link.to, fromIndexValues);
         const referencedItems = this.executeQuery({ criteria, expansion: expansion ?? {}, model: linkedModel });
-        const referencedIndex = this.getStore(linkedModel).getIndex(link.to);
+        const referencedIndex = this.getSchema(linkedModel).getIndex(link.to);
 
         for (const item of items) {
-            const indexValue = this.getStore(model).getIndex(link.from).read(item);
-            const matchingReferencedItems = referencedItems.filter(item => JSON.stringify(indexValue) === JSON.stringify(referencedIndex.read(item)));
+            const indexValue = this.getSchema(model).getIndex(link.from).readOne(item);
+            const matchingReferencedItems = referencedItems.filter(item => JSON.stringify(indexValue) === JSON.stringify(referencedIndex.readOne(item)));
 
             if (propertySchema.array) {
                 item[propertyKey] = matchingReferencedItems;
@@ -210,15 +197,6 @@ export class Workspace {
         }
     }
 
-    getPropertyOfSchema(schema: Schema, propertyKey: string): SchemaProperty {
-        const propertySchema = schema.properties[propertyKey];
-
-        if (propertySchema === void 0) {
-            throw new Error(`schema for model ${schema.name} does not have a property named ${propertyKey}`);
-        }
-
-        return propertySchema;
-    }
     addStore(store: ObjectStore): void {
         this.stores.set(store.name, store);
     }
@@ -250,7 +228,7 @@ export class Workspace {
     createCriteriaForIndex(model: string, indexName: string, indexValues: IndexValue[]): Criterion {
         const store = this.getStore(model);
         const index = store.getIndex(indexName);
-        const indexKeyPath = index.getKeyPath();
+        const indexKeyPath = index.path;
         const criteria: Criterion[] = [];
 
         for (let indexValue of indexValues) {

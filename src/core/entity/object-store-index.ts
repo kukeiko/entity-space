@@ -1,26 +1,32 @@
+import { SchemaIndex } from "./metadata/schema-index";
+
 type IndexSingleValue = string | number;
 export type IndexValue = IndexSingleValue | IndexSingleValue[];
 
 // [todo] not happy with various method/variable/type names, revisit.
 export class ObjectStoreIndex {
-    constructor(name: string, key: string[], options?: { unique?: boolean }) {
-        this.name = name;
-        this.key = key;
-        this.unique = options?.unique ?? false;
+    constructor(name: string, path: string[], options?: { unique?: boolean }) {
+        this.schemaIndex = new SchemaIndex(name, path, options);
     }
 
-    readonly name: string;
-    readonly key: string[];
-    private readonly unique: boolean;
-    private index = new Map();
+    private readonly schemaIndex: SchemaIndex;
+    private store = new Map();
 
-    getKeyPath(): string[] {
-        return this.key;
+    get name(): string {
+        return this.schemaIndex.name;
+    }
+
+    get path(): readonly string[] {
+        return this.schemaIndex.path;
+    }
+
+    get unique(): boolean {
+        return this.schemaIndex.unique;
     }
 
     // [todo] instead have "insert()", "update()" and "upsert()"
     insert(item: Record<string, any>, recordIndex: number): void {
-        const indexValue = this.read(item);
+        const indexValue = this.readOne(item);
         this.addToIndex(indexValue, recordIndex);
     }
 
@@ -31,7 +37,7 @@ export class ObjectStoreIndex {
     }
 
     remove(item: Record<string, any>, recordIndex: number): void {
-        this.removeFromIndex(this.read(item), recordIndex);
+        this.removeFromIndex(this.readOne(item), recordIndex);
     }
 
     get(indexValues: IndexValue[]): number[] {
@@ -42,7 +48,7 @@ export class ObjectStoreIndex {
                 indexValue = [indexValue];
             }
 
-            let map = this.index;
+            let map = this.store;
 
             for (let i = 0; i < indexValue.length; ++i) {
                 const value = indexValue[i];
@@ -73,36 +79,15 @@ export class ObjectStoreIndex {
     }
 
     clear(): void {
-        this.index = new Map();
+        this.store = new Map();
     }
 
-    readMany(items: any[]): IndexValue[] {
-        return items.map(item => this.read(item));
+    read(items: any[]): IndexValue[] {
+        return this.schemaIndex.read(items);
     }
 
-    read(item: Record<string, any>): IndexValue {
-        const key: IndexValue = [];
-
-        for (const keyPath of this.key) {
-            key.push(this.readOne(item, keyPath));
-        }
-
-        return key;
-    }
-
-    private readOne(item: Record<string, any>, key: string): string | number {
-        const parts = key.split(".");
-        let value = item;
-
-        for (const part of parts) {
-            value = value[part];
-        }
-
-        if (typeof value !== "string" && typeof value !== "number") {
-            throw new Error(`index "${key}" did not evaluate to a string or number`);
-        }
-
-        return value;
+    readOne(item: Record<string, any>): IndexValue {
+        return this.schemaIndex.read([item])[0];
     }
 
     private addToIndex(indexValue: IndexValue, itemsIndex: number): void {
@@ -110,7 +95,7 @@ export class ObjectStoreIndex {
             indexValue = [indexValue];
         }
 
-        let map = this.index;
+        let map = this.store;
 
         for (let i = 0; i < indexValue.length; ++i) {
             const value = indexValue[i];
@@ -142,7 +127,7 @@ export class ObjectStoreIndex {
             indexValue = [indexValue];
         }
 
-        let map = this.index;
+        let map = this.store;
 
         for (let i = 0; i < indexValue.length; ++i) {
             const value = indexValue[i];
