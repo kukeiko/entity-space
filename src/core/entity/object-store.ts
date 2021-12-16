@@ -1,34 +1,32 @@
 import { isDefined } from "../../utils/is-defined.fn";
-import { SchemaIndexJson } from "./metadata/schema-json";
+import { Schema } from "./metadata/schema";
 import { IndexValue, ObjectStoreIndex } from "./object-store-index";
 
 type KeyValue = (string | number) | (string | number)[];
 
-// [todo] duplicated @ schema.ts
-const KEY_INDEX_NAME = "key";
-
 // [todo] not happy with various method/variable/type names, revisit.
 export class ObjectStore<V = any> {
-    constructor(name: string, key: string[], indexes?: Record<string, SchemaIndexJson>) {
-        this.name = name;
-        this.key = key;
+    constructor(schema: Schema) {
+        const key = schema.key;
+
+        if (key === void 0) {
+            throw new Error(`can't create object-store for schema that has no key defined`);
+        }
+
+        this.name = schema.name;
+        this.keyIndexName = key.name;
 
         const storeIndexes: Record<string, ObjectStoreIndex> = {};
-        indexes = indexes ?? {};
 
-        storeIndexes[KEY_INDEX_NAME] = new ObjectStoreIndex(KEY_INDEX_NAME, key, { unique: true });
-
-        for (const name in indexes) {
-            const indexArgs = indexes[name];
-            const index = new ObjectStoreIndex(name, typeof indexArgs.path === "string" ? [indexArgs.path] : indexArgs.path, { unique: indexArgs.unique });
-            storeIndexes[name] = index;
+        for (const schemaIndex of schema.getIndexes()) {
+            storeIndexes[schemaIndex.name] = new ObjectStoreIndex(schemaIndex);
         }
 
         this.indexes = storeIndexes;
     }
 
     readonly name: string;
-    private readonly key: string[];
+    private readonly keyIndexName: string;
     private readonly indexes: Record<string, ObjectStoreIndex>;
     private items: (V | undefined)[] = [];
 
@@ -37,9 +35,7 @@ export class ObjectStore<V = any> {
     }
 
     getByKey(key: KeyValue): V | undefined {
-        const items = this.getByIndex(KEY_INDEX_NAME, [key]);
-
-        return items[0];
+        return this.getByIndex(this.keyIndexName, [key])[0];
     }
 
     getIndexes(): ObjectStoreIndex[] {
@@ -50,7 +46,7 @@ export class ObjectStore<V = any> {
         const index = this.indexes[name];
 
         if (index === void 0) {
-            throw new Error(`index not found: ${name}`);
+            throw new Error(`index ${name} not found in object-store ${this.name}`);
         }
 
         return index;
@@ -96,7 +92,7 @@ export class ObjectStore<V = any> {
             }
         }
 
-        throw new Error(`failed to find index matching keyPaths: ${JSON.stringify(keyPaths)}`);
+        throw new Error(`failed to find index on ${this.name} matching keyPaths: ${JSON.stringify(keyPaths)}`);
     }
 
     // [todo] handle case where items my already exist in indexes?

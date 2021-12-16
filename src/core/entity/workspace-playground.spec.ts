@@ -9,7 +9,7 @@ describe("playground: workspace", () => {
     it("expanding", () => {
         const fooSchema = new Schema({
             name: "foo",
-            key: new SchemaIndex("id", ["id", "secondaryId"]),
+            key: { name: "id", path: ["id", "secondaryId"] },
             properties: {
                 bar: { type: "object", model: "bar", link: { from: "id", to: "fooId" } },
             },
@@ -17,20 +17,20 @@ describe("playground: workspace", () => {
 
         const barSchema = new Schema({
             name: "bar",
-            key: new SchemaIndex("id", ["id"]),
-            indexes: [new SchemaIndex("fooId", ["fooId", "secondaryId"])],
+            key: "id",
+            indexes: [{ name: "fooId", path: ["fooId", "secondaryId"] }],
             properties: {},
         });
 
         const workspace = new Workspace();
         workspace.addSchema(fooSchema);
         workspace.addSchema(barSchema);
-        workspace.addStore(new ObjectStore("foo", ["id"], { id: { path: ["id", "secondaryId"] } }));
-        workspace.addStore(new ObjectStore("bar", ["id"], { fooId: { path: ["fooId", "secondaryId"] } }));
+        workspace.addStore(new ObjectStore(fooSchema));
+        workspace.addStore(new ObjectStore(barSchema));
         workspace.addItems("foo", [{ id: 1337, secondaryId: 128, name: "i am foo" }]);
         workspace.addItems("bar", [{ id: 64, fooId: 1337, secondaryId: 128, name: "i belong to foo" }]);
 
-        const query: Query = { model: "foo", expansion: { bar: true }, criteria: matches({ id: inSet([1337]) }) };
+        const query: Query = { model: "foo", expansion: { bar: true }, criteria: matches({ id: inSet([1337]), secondaryId: inSet([128]) }) };
         const fooItems = workspace.executeQuery(query);
         // const barItemsOfFooItems = workspace.expandResult("foo", "bar", fooItems);
 
@@ -38,10 +38,10 @@ describe("playground: workspace", () => {
         // console.log("bar items:", barItemsOfFooItems);
     });
 
-    fit("expanding #2", () => {
+    it("expanding #2", () => {
         const fooSchema = new Schema({
             name: "foo",
-            key: new SchemaIndex("id", ["id"]),
+            key: "id",
             properties: {
                 bar: {
                     type: "object",
@@ -52,7 +52,7 @@ describe("playground: workspace", () => {
 
         const barSchema = new Schema({
             name: "bar",
-            indexes: [new SchemaIndex("bazId", ["bazId"])],
+            indexes: ["bazId"],
             properties: {
                 baz: {
                     type: "object",
@@ -64,16 +64,16 @@ describe("playground: workspace", () => {
 
         const bazSchema = new Schema({
             name: "baz",
-            key: new SchemaIndex("id", ["id"]),
+            key: "id",
             properties: {},
         });
 
         const workspace = new Workspace();
-        workspace.addSchema(barSchema);
         workspace.addSchema(fooSchema);
+        workspace.addSchema(barSchema);
         workspace.addSchema(bazSchema);
-        workspace.addStore(new ObjectStore("foo", ["id"]));
-        workspace.addStore(new ObjectStore("baz", ["id"], { id: { path: ["id"] } }));
+        workspace.addStore(new ObjectStore(fooSchema));
+        workspace.addStore(new ObjectStore(bazSchema));
         workspace.addItems("foo", [{ id: 1337, name: "i am foo", bar: { bazId: 128 } }]);
         workspace.addItems("baz", [{ id: 128, name: "i am baz" }]);
 
@@ -85,21 +85,18 @@ describe("playground: workspace", () => {
         // console.log("bar items:", barItemsOfFooItems);
     });
 
-    it("squawking around", () => {
+    xit("squawking around", () => {
         const schema: SchemaJson = {} as any;
-
         for (const key in schema.properties) {
             const property = schema.properties[key];
         }
-
         const workspace = new Workspace();
-        const store = new ObjectStore("foo", ["id"], { bar: { path: ["bar"] } });
-        workspace.addStore(store);
 
+        const store = new ObjectStore(new Schema({ name: "foo", key: "id", indexes: ["bar"], properties: {} }));
+        workspace.addStore(store);
         const criteria = workspace.createCriteriaForIndex("foo", "bar", [1, 2, 3]);
         console.log(criteria);
-
-        workspace.addStore(new ObjectStore("bar", ["id"], { baz: { path: ["khaz.mo", "foo", "khaz.dan"] } }));
+        workspace.addStore(new ObjectStore(new Schema({ name: "bar", key: "id", properties: {}, indexes: [{ name: "baz", path: ["khaz.mo", "foo", "khaz.dan"] }] })));
         const barCriteria = workspace.createCriteriaForIndex("bar", "baz", [
             [1337, 64, 1],
             [42, 64, 2],
@@ -110,7 +107,6 @@ describe("playground: workspace", () => {
             [1337, 64, 1],
             [1337, 128, 1],
         ]);
-
         console.log(barCriteria);
     });
 
@@ -121,7 +117,15 @@ describe("playground: workspace", () => {
         }
 
         const workspace = new Workspace();
-        const store = new ObjectStore("foo", ["id"], { bar: { path: ["bar"] } });
+        const schema = new Schema({
+            name: "foo",
+            key: "id",
+            indexes: ["bar"],
+            properties: {},
+        });
+
+        // const store = new ObjectStore("foo", ["id"], { bar: { path: ["bar"] } });
+        const store = new ObjectStore(schema);
         workspace.addStore(store);
 
         const entities: Foo[] = [
@@ -158,8 +162,15 @@ describe("playground: workspace", () => {
             baz: number;
         }
 
+        const schema = new Schema({
+            name: "foo",
+            key: "id",
+            indexes: [{ name: "barAndBaz", path: ["bar", "baz"] }],
+            properties: {},
+        });
+
+        const store = new ObjectStore(schema);
         const workspace = new Workspace();
-        const store = new ObjectStore("foo", ["id"], { barAndBaz: { path: ["bar", "baz"] } });
         workspace.addStore(store);
 
         const entities: Foo[] = [
@@ -196,8 +207,15 @@ describe("playground: workspace", () => {
             };
         }
 
+        const schema = new Schema({
+            name: "foo",
+            key: "id",
+            indexes: [{ name: "bar", path: "bar.baz" }],
+            properties: {},
+        });
+
+        const store = new ObjectStore(schema);
         const workspace = new Workspace();
-        const store = new ObjectStore("foo", ["id"], { bar: { path: ["bar.baz"] } });
         workspace.addStore(store);
 
         const entities: Foo[] = [
@@ -236,8 +254,15 @@ describe("playground: workspace", () => {
             };
         }
 
+        const schema = new Schema({
+            name: "foo",
+            key: "id",
+            properties: {},
+            indexes: [{ name: "bar", path: ["bar.baz", "bar.moo"] }],
+        });
+
+        const store = new ObjectStore(schema);
         const workspace = new Workspace();
-        const store = new ObjectStore("foo", ["id"], { bar: { path: ["bar.baz", "bar.moo"] } });
         workspace.addStore(store);
 
         const entities: Foo[] = [
@@ -266,7 +291,7 @@ describe("playground: workspace", () => {
         expect(result).toEqual(jasmine.arrayWithExactContents(expectedEntities));
     });
 
-    it("should execute query w/ composite dsitributed nested index", () => {
+    it("should execute query w/ composite distributed nested index", () => {
         interface Foo {
             id: number;
             bar: {
@@ -279,8 +304,15 @@ describe("playground: workspace", () => {
             };
         }
 
+        const schema = new Schema({
+            name: "foo",
+            key: "id",
+            properties: {},
+            indexes: [{ name: "bar", path: ["bar.baz", "bar.moo", "khaz.mo", "khaz.dan"] }],
+        });
+
+        const store = new ObjectStore(schema);
         const workspace = new Workspace();
-        const store = new ObjectStore("foo", ["id"], { bar: { path: ["bar.baz", "bar.moo", "khaz.mo", "khaz.dan"] } });
         workspace.addStore(store);
 
         const entities: Foo[] = [

@@ -5,8 +5,8 @@ export type IndexValue = IndexSingleValue | IndexSingleValue[];
 
 // [todo] not happy with various method/variable/type names, revisit.
 export class ObjectStoreIndex {
-    constructor(name: string, path: string[], options?: { unique?: boolean }) {
-        this.schemaIndex = new SchemaIndex(name, path, options);
+    constructor(schemaIndex: SchemaIndex) {
+        this.schemaIndex = schemaIndex;
     }
 
     private readonly schemaIndex: SchemaIndex;

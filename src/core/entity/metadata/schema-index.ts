@@ -1,15 +1,25 @@
 export type SchemaIndexValue = number | number[] | string | string[];
 type Entity = Record<string, any>;
 
+export interface SchemaIndexOptionsArgument {
+    unique?: boolean;
+}
+
 /**
  * [todo] not happy having "read index values" functionality in the Schema itself.
  * i did have to extract it out of the ObjectStoreIndex because we need indexes on entities
  * that are not separately stored; therefore need no ObjectStore, and so there's no ObjectStoreIndex.
  */
 export class SchemaIndex<T extends number | string = number | string> {
-    constructor(name: string, path: string[], options?: { unique?: boolean }) {
+    constructor(name: string, path: string | string[], options?: SchemaIndexOptionsArgument) {
         this.name = name;
-        this.path = Object.freeze(path.slice());
+
+        if (typeof path === "string") {
+            this.path = Object.freeze([path]);
+        } else {
+            this.path = Object.freeze(path.slice());
+        }
+
         this.unique = options?.unique ?? false;
     }
 

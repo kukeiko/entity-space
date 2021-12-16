@@ -1,9 +1,14 @@
+import { Schema, SchemaIndexArgument } from "./metadata/schema";
 import { ObjectStore } from "./object-store";
+
+function createSchema(name: string, key: string | string[], indexes?: SchemaIndexArgument[]): Schema {
+    return new Schema({ name, key, properties: {}, indexes });
+}
 
 describe("object-store", () => {
     it("returns an object by key", () => {
         // arrange
-        const store = new ObjectStore("foo", ["bar"]);
+        const store = new ObjectStore(createSchema("foo", "bar"));
         const expected = { bar: 3 };
 
         // act
@@ -16,7 +21,7 @@ describe("object-store", () => {
 
     it("returns an object by composite key", () => {
         // arrange
-        const store = new ObjectStore("foo", ["bar", "baz"]);
+        const store = new ObjectStore(createSchema("foo", ["bar", "baz"]));
         const expected = { bar: 3, baz: 4 };
 
         // act
@@ -29,7 +34,7 @@ describe("object-store", () => {
 
     it("returns an object by composite nested key", () => {
         // arrange
-        const store = new ObjectStore("foo", ["bar", "baz", "khaz.modan"]);
+        const store = new ObjectStore(createSchema("foo", ["bar", "baz", "khaz.modan"]));
         const expected = { bar: 3, baz: 4, khaz: { modan: 7 } };
 
         // act
@@ -45,7 +50,7 @@ describe("object-store", () => {
         const khaz = { id: 64, name: "khaz" };
         const mo = { id: 128, name: "mo" };
         const dan = { id: 256, name: "dan" };
-        const store = new ObjectStore("foo", ["id"]);
+        const store = new ObjectStore(createSchema("foo", "id"));
 
         // act
         store.add([khaz, mo, dan]);
@@ -61,7 +66,7 @@ describe("object-store", () => {
 
     it("doesn't throw if it didn't find anything or just partial results", () => {
         // arrange
-        const store = new ObjectStore("foo", ["bar"]);
+        const store = new ObjectStore(createSchema("foo", "bar"));
 
         // assert
         expect(() => store.getByKey(64)).not.toThrow();
@@ -79,9 +84,7 @@ describe("object-store", () => {
         ];
         const notBaz = { id: 64, tag: "not-baz" };
 
-        const store = new ObjectStore("foo", ["id"], {
-            tag: { path: ["tag"] },
-        });
+        const store = new ObjectStore(createSchema("foo", "id", ["tag"]));
 
         // act
         store.add([...baz, notBaz]);
@@ -99,9 +102,14 @@ describe("object-store", () => {
         ];
         const bazButNotSweet = { id: 64, tag: "bag", flavor: "salty" };
 
-        const store = new ObjectStore("foo", ["id"], {
-            tagAndFlavor: { path: ["tag", "flavor"] },
-        });
+        const store = new ObjectStore(
+            createSchema("foo", "id", [
+                {
+                    name: "tagAndFlavor",
+                    path: ["tag", "flavor"],
+                },
+            ])
+        );
 
         // act
         store.add([...bazAndSweet, bazButNotSweet]);
@@ -112,8 +120,9 @@ describe("object-store", () => {
     });
 
     // [todo] in the old object store, composite index access worked by intersecting multiple single indexes.
-    // since we now support composite indexes, we probably don't need this feature. i'll figure that out once
-    // i work on the "execute query against store" feature
+    // since we now support composite indexes, we probably don't need this feature.
+    // i'll probably figure that out once i work on the "execute query against store" feature
+    //
     // it("returns a map of objects for n indexes", () => {
     //     let foo = { id: 7, name: "foo", tag: "baz", scope: "global" };
     //     let bar = { id: 13, name: "bar", tag: "baz", scope: "global" };
@@ -149,7 +158,7 @@ describe("object-store", () => {
 
     it("throws when trying to access by non-existing index", () => {
         // arrange
-        const store = new ObjectStore("foo", ["id"]);
+        const store = new ObjectStore(createSchema("foo", "id"));
 
         // assert
         expect(() => store.getByIndex("i-dont-exist", ["me-too"])).toThrow();
@@ -160,7 +169,7 @@ describe("object-store", () => {
 
     it("throws if trying to add item with a null/undefined primary key", () => {
         // arrange
-        const cache = new ObjectStore("foo", ["id"]);
+        const cache = new ObjectStore(createSchema("foo", "id"));
 
         // assert
         expect(() => cache.add([{}])).toThrow();
@@ -186,7 +195,7 @@ describe("object-store", () => {
     it("should be empty after clearing", () => {
         // arrange
         const foo = { id: 7, name: "foo", tag: "baz" };
-        const store = new ObjectStore("foo", ["id"], { tag: { path: ["tag"] } });
+        const store = new ObjectStore(createSchema("foo", "id", ["tag"]));
 
         // act
         store.add([foo]);
