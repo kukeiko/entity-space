@@ -1,1 +1,0 @@
-this folder is a great candidate to have as a separate package, i.e. "@entity-space/criteria", as it is (and always should be) completely decoupled from the rest of the library (except for the utils package)

@@ -1,4 +1,4 @@
-import { define } from "@entity-space/model";
+import { define } from "@entity-space/core";
 import { MetadataModel } from "./metadata.model";
 
 export abstract class DataEntryModel {

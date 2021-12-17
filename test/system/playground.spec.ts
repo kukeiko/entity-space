@@ -8,8 +8,8 @@ import {
     AndCriteriaTemplate,
     NamedCriteriaTemplate,
     Expansion,
+    Instance,
 } from "@entity-space/core";
-import { Instance } from "@entity-space/model";
 import { CanvasModel, UserModel } from "../facade/model";
 
 const inNumberSet = new InNumberSetCriterion([1, 2, 3]);

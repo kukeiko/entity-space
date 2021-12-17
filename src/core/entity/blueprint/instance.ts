@@ -1,12 +1,38 @@
-import { Class, Primitive, Unbox } from "../utils/public";
+import { Class, Primitive, Unbox } from "../../../utils/public";
 import { ArrayAttribute, Discriminant, Property, RequiredAttribute, NullableAttribute } from "./property";
 
-type InstancePropertyValueType<V> = V extends Primitive ? ReturnType<V> : V extends Discriminant ? V : V extends Class ? Instance<InstanceType<V>> : never;
+export interface Metadata<T = any> {
+    // in open-api context, its the uri. in indexeddb, its going to be the object store name.
+    // we may want to split it up at some point - let's see.
+    name: string;
+    properties: Record<keyof T, Property>;
+    key: string[];
+    indexes?: string[];
+}
+
+export interface MetadataReference<T = any> {
+    $ref: string;
+}
+
+type InstancePropertyValueType<V> = V extends Primitive
+    ? ReturnType<V>
+    : V extends Discriminant
+    ? V
+    : V extends Class
+    ? Instance<InstanceType<V>>
+    : V extends Metadata<infer U>
+    ? U
+    : V extends MetadataReference<infer U>
+    ? U
+    : never;
+
 type BoxIfArray<P, V> = P extends ArrayAttribute ? V[] : V;
 type NullIfNullable<P, V> = P extends NullableAttribute ? V | null : V;
 
-export type RequiredPropertyKeys<T> = Exclude<{ [K in keyof T]: T[K] extends RequiredAttribute ? K : never }[keyof T], undefined>;
+type RequiredPropertyKeys<T> = Exclude<{ [K in keyof T]: T[K] extends RequiredAttribute ? K : never }[keyof T], undefined>;
 
+// [todo] for both InstanceDefault & InstanceRequired, consider extracting "NullIfNullable<..., BoxIfArray<...,"
+// into a single "WidenValueBasedOnAttributes" (better name to be found) type. make sure to write type tests.
 type InstanceDefault<T> = {
     // [todo] document that this *has* to be "keyof T", otherwise intellisense for expansion won't work.
     // in absolute worst case scenario we could still do something like the TypedSelector - but it just is much

@@ -6,4 +6,5 @@ export * from "./is-primitive.fn";
 export * from "./is-string.fn";
 export * from "./permutate-entries.fn";
 export * from "./subtract-sets.fn";
+export * from "./to-map.fn";
 export * from "./types";

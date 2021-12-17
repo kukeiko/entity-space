@@ -1,4 +1,4 @@
-import { Instance } from "@entity-space/model";
+import { Instance } from "@entity-space/core";
 import { TreeNodeModel } from "../model";
 import { generateTreeNodes } from "./generate-tree-nodes";
 
