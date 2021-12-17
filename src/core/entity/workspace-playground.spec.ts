@@ -6,6 +6,82 @@ import { ObjectStore } from "./object-store";
 import { Workspace } from "./workspace";
 
 describe("playground: workspace", () => {
+    it("normalize", () => {
+        interface Foo {
+            id: number;
+            bar: Bar;
+        }
+
+        interface Bar {
+            bazId: number;
+            baz?: Baz;
+        }
+
+        interface Baz {
+            id: number;
+        }
+
+        const fooSchema = new Schema({
+            name: "foo",
+            key: "id",
+            properties: {
+                bar: {
+                    type: "object",
+                    model: "bar",
+                },
+            },
+        });
+
+        const barSchema = new Schema({
+            name: "bar",
+            indexes: ["bazId"],
+            properties: {
+                baz: {
+                    type: "object",
+                    model: "baz",
+                    link: { from: "bazId", to: "id" },
+                },
+            },
+        });
+
+        const bazSchema = new Schema({
+            name: "baz",
+            key: "id",
+            properties: {},
+        });
+
+        const workspace = new Workspace();
+        workspace.addSchemaAndStore(fooSchema);
+        workspace.addSchema(barSchema);
+        workspace.addSchemaAndStore(bazSchema);
+
+        const items: Foo[] = [
+            {
+                id: 1337,
+                bar: {
+                    bazId: 128,
+                    baz: {
+                        id: 128,
+                    },
+                },
+            },
+        ];
+
+        const normalized = workspace.normalize(fooSchema.name, items);
+
+        for (const model in normalized) {
+            workspace.addItems(model, normalized[model]);
+        }
+
+        const query: Query = { model: "foo", expansion: { bar: { baz: true } }, criteria: matches({ id: inSet([1337]) }) };
+        const fooItems = workspace.executeQuery(query);
+        // const barItemsOfFooItems = workspace.expandResult("foo", "bar", fooItems);
+
+        expect(fooItems).toEqual(items);
+        console.log("expanded foo items:", fooItems);
+        // console.log("bar items:", barItemsOfFooItems);
+    });
+
     it("expanding", () => {
         const fooSchema = new Schema({
             name: "foo",
@@ -23,10 +99,8 @@ describe("playground: workspace", () => {
         });
 
         const workspace = new Workspace();
-        workspace.addSchema(fooSchema);
-        workspace.addSchema(barSchema);
-        workspace.addStore(new ObjectStore(fooSchema));
-        workspace.addStore(new ObjectStore(barSchema));
+        workspace.addSchemaAndStore(fooSchema);
+        workspace.addSchemaAndStore(barSchema);
         workspace.addItems("foo", [{ id: 1337, secondaryId: 128, name: "i am foo" }]);
         workspace.addItems("bar", [{ id: 64, fooId: 1337, secondaryId: 128, name: "i belong to foo" }]);
 
@@ -69,11 +143,9 @@ describe("playground: workspace", () => {
         });
 
         const workspace = new Workspace();
-        workspace.addSchema(fooSchema);
+        workspace.addSchemaAndStore(fooSchema);
         workspace.addSchema(barSchema);
-        workspace.addSchema(bazSchema);
-        workspace.addStore(new ObjectStore(fooSchema));
-        workspace.addStore(new ObjectStore(bazSchema));
+        workspace.addSchemaAndStore(bazSchema);
         workspace.addItems("foo", [{ id: 1337, name: "i am foo", bar: { bazId: 128 } }]);
         workspace.addItems("baz", [{ id: 128, name: "i am baz" }]);
 

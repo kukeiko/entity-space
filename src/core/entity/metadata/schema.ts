@@ -13,6 +13,8 @@ function buildDefaultIndexName(path: string[]): string {
     return path.join(",");
 }
 
+export type SchemaWithKey = Schema & Required<Pick<Schema, "key">>;
+
 export class Schema {
     constructor(args: { name: string; properties: SchemaPropertiesArgument; key?: SchemaKeyArgument; indexes?: SchemaIndexArgument[] }) {
         this.name = args.name;
@@ -97,5 +99,13 @@ export class Schema {
         }
 
         return property;
+    }
+
+    getProperties(): readonly SchemaProperty[] {
+        return this.properties;
+    }
+
+    hasKey(): this is SchemaWithKey {
+        return this.key !== void 0;
     }
 }

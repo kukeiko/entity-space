@@ -5,6 +5,7 @@ import { ObjectStore } from "./object-store";
 import { IndexValue } from "./object-store-index";
 import { SchemaJson, SchemaPropertyJson } from "./metadata/schema-json";
 import { Schema } from "./metadata/schema";
+import { SchemaProperty } from "./metadata/schema-property";
 
 export class Workspace {
     private stores = new Map<string, ObjectStore>();
@@ -12,6 +13,44 @@ export class Workspace {
 
     addItems(model: string, items: any[]): void {
         this.getStore(model).add(items);
+    }
+
+    // [todo] not a fan of having the "shouldAddSelf" flag
+    normalize(model: string, items: any[], shouldAddSelf = true): Record<string, any[]> {
+        const schema = this.getSchema(model);
+        const navigable = schema.getProperties().filter(SchemaProperty.isNavigable);
+        const normalized: Record<string, any[]> = {};
+
+        if (shouldAddSelf) {
+            normalized[model] = items;
+        }
+
+        for (const property of navigable) {
+            const navigated: any[] = [];
+
+            for (const item of items) {
+                const value = item[property.name];
+                if (value == null) continue;
+
+                if (Array.isArray(value)) {
+                    navigated.push(...value);
+                } else {
+                    navigated.push(value);
+                }
+
+                if (property.isExpandable()) {
+                    delete item[property.name];
+                }
+            }
+
+            const deeperNormalized = this.normalize(property.model, navigated, property.isExpandable());
+
+            for (const key in deeperNormalized) {
+                normalized[key] = [...(normalized[key] ?? []), ...deeperNormalized[key]];
+            }
+        }
+
+        return normalized;
     }
 
     executeQuery(query: Query) {
@@ -213,6 +252,11 @@ export class Workspace {
 
     addSchema(schema: Schema): void {
         this.schemas.set(schema.name, schema);
+    }
+
+    addSchemaAndStore(schema: Schema): void {
+        this.addSchema(schema);
+        this.addStore(new ObjectStore(schema));
     }
 
     getSchema(model: string): Schema {
