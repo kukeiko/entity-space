@@ -1,11 +1,11 @@
 import { permutateEntries } from "../../utils/permutate-entries.fn";
-import { Criterion, Expansion, fromDeepBag, InNumberSetCriterion, inSet, InSetCriterion, NamedCriteria, NamedCriteriaBag, NamedCriteriaTemplate, or } from "../public";
+import { InNumberSetCriterion, InSetCriterion, NamedCriteria, NamedCriteriaTemplate } from "../criteria/public";
 import { Query } from "../query/public";
 import { ObjectStore } from "./object-store";
-import { IndexValue } from "./object-store-index";
-import { SchemaJson, SchemaPropertyJson } from "./metadata/schema-json";
 import { Schema } from "./metadata/schema";
 import { SchemaProperty } from "./metadata/schema-property";
+import { createCriteriaForIndex } from "./create-criteria-for-index.fn";
+import { Expansion } from "../expansion/public";
 
 export class Workspace {
     private stores = new Map<string, ObjectStore>();
@@ -13,44 +13,6 @@ export class Workspace {
 
     addItems(model: string, items: any[]): void {
         this.getStore(model).add(items);
-    }
-
-    // [todo] not a fan of having the "shouldAddSelf" flag
-    normalize(model: string, items: any[], shouldAddSelf = true): Record<string, any[]> {
-        const schema = this.getSchema(model);
-        const navigable = schema.getProperties().filter(SchemaProperty.isNavigable);
-        const normalized: Record<string, any[]> = {};
-
-        if (shouldAddSelf) {
-            normalized[model] = items;
-        }
-
-        for (const property of navigable) {
-            const navigated: any[] = [];
-
-            for (const item of items) {
-                const value = item[property.name];
-                if (value == null) continue;
-
-                if (Array.isArray(value)) {
-                    navigated.push(...value);
-                } else {
-                    navigated.push(value);
-                }
-
-                if (property.isExpandable()) {
-                    delete item[property.name];
-                }
-            }
-
-            const deeperNormalized = this.normalize(property.model, navigated, property.isExpandable());
-
-            for (const key in deeperNormalized) {
-                normalized[key] = [...(normalized[key] ?? []), ...deeperNormalized[key]];
-            }
-        }
-
-        return normalized;
     }
 
     executeQuery(query: Query) {
@@ -219,8 +181,10 @@ export class Workspace {
             throw new Error(`can't expand property ${model}.${propertyKey}: no model`);
         }
 
-        const fromIndexValues = this.getSchema(model).getIndex(link.from).read(items);
-        const criteria = this.createCriteriaForIndex(linkedModel, link.to, fromIndexValues);
+        const toIndex = this.getSchema(linkedModel).getIndex(link.to);
+        const fromIndex = this.getSchema(model).getIndex(link.from);
+
+        const criteria = createCriteriaForIndex(toIndex.path.slice(), fromIndex.read(items));
         const referencedItems = this.executeQuery({ criteria, expansion: expansion ?? {}, model: linkedModel });
         const referencedIndex = this.getSchema(linkedModel).getIndex(link.to);
 
@@ -267,46 +231,5 @@ export class Workspace {
         }
 
         return schema;
-    }
-
-    createCriteriaForIndex(model: string, indexName: string, indexValues: IndexValue[]): Criterion {
-        const store = this.getStore(model);
-        const index = store.getIndex(indexName);
-        const indexKeyPath = index.path;
-        const criteria: Criterion[] = [];
-
-        for (let indexValue of indexValues) {
-            if (!Array.isArray(indexValue)) {
-                indexValue = [indexValue];
-            }
-
-            const namedCriteriaBag: Record<string, any> = {};
-
-            for (let i = 0; i < indexKeyPath.length; ++i) {
-                const indexSingleKeyPath = indexKeyPath[i];
-                const parts = indexSingleKeyPath.split(".");
-
-                let bag = namedCriteriaBag;
-
-                for (let e = 0; e < parts.length; ++e) {
-                    const part = parts[e];
-
-                    if (e < parts.length - 1) {
-                        if (bag[part] === void 0) {
-                            bag[part] = {} as NamedCriteriaBag;
-                        }
-
-                        bag = bag[part];
-                    } else {
-                        bag[part] = inSet([indexValue[i] as number]);
-                    }
-                }
-            }
-
-            const criterion = fromDeepBag(namedCriteriaBag);
-            criteria.push(criterion);
-        }
-
-        return or(criteria);
     }
 }

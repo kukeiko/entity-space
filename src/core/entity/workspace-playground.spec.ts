@@ -1,12 +1,16 @@
 import { inSet, matches, Query } from "../public";
+import { createCriteriaForIndex } from "./create-criteria-for-index.fn";
 import { Schema } from "./metadata/schema";
+import { SchemaCatalog } from "./metadata/schema-catalog";
 import { SchemaIndex } from "./metadata/schema-index";
 import { SchemaJson } from "./metadata/schema-json";
+import { normalizeEntities } from "./normalize-entities.fn";
 import { ObjectStore } from "./object-store";
 import { Workspace } from "./workspace";
 
 describe("playground: workspace", () => {
-    it("normalize", () => {
+    it("normalize items, add them to store, then query", () => {
+        // arrange
         interface Foo {
             id: number;
             bar: Bar;
@@ -50,12 +54,13 @@ describe("playground: workspace", () => {
             properties: {},
         });
 
+        const catalog = new SchemaCatalog([fooSchema, barSchema, bazSchema]);
         const workspace = new Workspace();
         workspace.addSchemaAndStore(fooSchema);
         workspace.addSchema(barSchema);
         workspace.addSchemaAndStore(bazSchema);
 
-        const items: Foo[] = [
+        const addedItems: Foo[] = [
             {
                 id: 1337,
                 bar: {
@@ -67,19 +72,23 @@ describe("playground: workspace", () => {
             },
         ];
 
-        const normalized = workspace.normalize(fooSchema.name, items);
+        // act
+        const normalized = normalizeEntities(fooSchema.name, addedItems, catalog);
 
         for (const model in normalized) {
             workspace.addItems(model, normalized[model]);
         }
 
-        const query: Query = { model: "foo", expansion: { bar: { baz: true } }, criteria: matches({ id: inSet([1337]) }) };
-        const fooItems = workspace.executeQuery(query);
-        // const barItemsOfFooItems = workspace.expandResult("foo", "bar", fooItems);
+        const query: Query = {
+            model: fooSchema.name,
+            expansion: { bar: { baz: true } },
+            criteria: matches({ id: inSet([1337]) }),
+        };
 
-        expect(fooItems).toEqual(items);
-        console.log("expanded foo items:", fooItems);
-        // console.log("bar items:", barItemsOfFooItems);
+        const queriedItems = workspace.executeQuery(query);
+
+        // assert
+        expect(queriedItems).toEqual(addedItems);
     });
 
     it("expanding", () => {
@@ -166,19 +175,22 @@ describe("playground: workspace", () => {
 
         const store = new ObjectStore(new Schema({ name: "foo", key: "id", indexes: ["bar"], properties: {} }));
         workspace.addStore(store);
-        const criteria = workspace.createCriteriaForIndex("foo", "bar", [1, 2, 3]);
+        const criteria = createCriteriaForIndex(["bar"], [1, 2, 3]);
         console.log(criteria);
         workspace.addStore(new ObjectStore(new Schema({ name: "bar", key: "id", properties: {}, indexes: [{ name: "baz", path: ["khaz.mo", "foo", "khaz.dan"] }] })));
-        const barCriteria = workspace.createCriteriaForIndex("bar", "baz", [
-            [1337, 64, 1],
-            [42, 64, 2],
-            [1337, 128, 1],
-            [1337, 64, 2],
-            [42, 128, 1],
-            [42, 64, 2],
-            [1337, 64, 1],
-            [1337, 128, 1],
-        ]);
+        const barCriteria = createCriteriaForIndex(
+            ["khaz.mo", "foo", "khaz.dan"],
+            [
+                [1337, 64, 1],
+                [42, 64, 2],
+                [1337, 128, 1],
+                [1337, 64, 2],
+                [42, 128, 1],
+                [42, 64, 2],
+                [1337, 64, 1],
+                [1337, 128, 1],
+            ]
+        );
         console.log(barCriteria);
     });
 
