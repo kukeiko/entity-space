@@ -70,11 +70,7 @@ describe("playground: workspace", () => {
         ];
 
         // act
-        const normalized = normalizeEntities(fooSchema.name, addedItems, catalog);
-
-        for (const model in normalized) {
-            workspace.add(model, normalized[model]);
-        }
+        workspace.add(fooSchema.name, addedItems);
 
         const query: Query = {
             model: fooSchema.name,

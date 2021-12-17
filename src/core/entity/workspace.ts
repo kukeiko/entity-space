@@ -6,6 +6,7 @@ import { Schema } from "./metadata/schema";
 import { createCriteriaForIndex } from "./create-criteria-for-index.fn";
 import { Expansion } from "../expansion/public";
 import { SchemaCatalog } from "./metadata/schema-catalog";
+import { normalizeEntities } from "./normalize-entities.fn";
 
 export class Workspace {
     constructor(catalog: SchemaCatalog) {
@@ -20,7 +21,11 @@ export class Workspace {
     private readonly stores = new Map<string, ObjectStore>();
 
     add(model: string, items: any[]): void {
-        this.getStore(model).add(items);
+        const normalized = normalizeEntities(model, items, this.catalog);
+
+        for (const model in normalized) {
+            this.getStore(model).add(normalized[model]);
+        }
     }
 
     query(query: Query) {
