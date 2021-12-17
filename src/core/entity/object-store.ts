@@ -1,32 +1,29 @@
 import { isDefined } from "../../utils/is-defined.fn";
-import { Schema } from "./metadata/schema";
+import { Schema, SchemaWithKey } from "./metadata/schema";
 import { IndexValue, ObjectStoreIndex } from "./object-store-index";
 
-type KeyValue = (string | number) | (string | number)[];
-
-// [todo] not happy with various method/variable/type names, revisit.
 export class ObjectStore<V = any> {
     constructor(schema: Schema) {
-        const key = schema.key;
-
-        if (key === void 0) {
+        if (!schema.hasKey()) {
             throw new Error(`can't create object-store for schema that has no key defined`);
         }
 
-        this.name = schema.name;
-        this.keyIndexName = key.name;
-
-        const storeIndexes: Record<string, ObjectStoreIndex> = {};
+        this.schema = schema;
+        const indexes: Record<string, ObjectStoreIndex> = {};
 
         for (const schemaIndex of schema.getIndexes()) {
-            storeIndexes[schemaIndex.name] = new ObjectStoreIndex(schemaIndex);
+            indexes[schemaIndex.name] = new ObjectStoreIndex(schemaIndex);
         }
 
-        this.indexes = storeIndexes;
+        this.indexes = indexes;
     }
 
-    readonly name: string;
-    private readonly keyIndexName: string;
+    private readonly schema: SchemaWithKey;
+
+    get name(): string {
+        return this.schema.name;
+    }
+
     private readonly indexes: Record<string, ObjectStoreIndex>;
     private items: (V | undefined)[] = [];
 
@@ -34,8 +31,8 @@ export class ObjectStore<V = any> {
         return this.items.filter(isDefined);
     }
 
-    getByKey(key: KeyValue): V | undefined {
-        return this.getByIndex(this.keyIndexName, [key])[0];
+    getByKey(key: IndexValue): V | undefined {
+        return this.getByIndex(this.schema.key.name, [key])[0];
     }
 
     getIndexes(): ObjectStoreIndex[] {
@@ -52,7 +49,7 @@ export class ObjectStore<V = any> {
         return index;
     }
 
-    getByKeys(keys: KeyValue[]): V[] {
+    getByKeys(keys: IndexValue[]): V[] {
         return keys.map(key => this.getByKey(key)).filter(isDefined);
     }
 
