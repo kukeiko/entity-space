@@ -55,10 +55,7 @@ describe("playground: workspace", () => {
         });
 
         const catalog = new SchemaCatalog([fooSchema, barSchema, bazSchema]);
-        const workspace = new Workspace();
-        workspace.addSchemaAndStore(fooSchema);
-        workspace.addSchema(barSchema);
-        workspace.addSchemaAndStore(bazSchema);
+        const workspace = new Workspace(catalog);
 
         const addedItems: Foo[] = [
             {
@@ -76,7 +73,7 @@ describe("playground: workspace", () => {
         const normalized = normalizeEntities(fooSchema.name, addedItems, catalog);
 
         for (const model in normalized) {
-            workspace.addItems(model, normalized[model]);
+            workspace.add(model, normalized[model]);
         }
 
         const query: Query = {
@@ -85,7 +82,7 @@ describe("playground: workspace", () => {
             criteria: matches({ id: inSet([1337]) }),
         };
 
-        const queriedItems = workspace.executeQuery(query);
+        const queriedItems = workspace.query(query);
 
         // assert
         expect(queriedItems).toEqual(addedItems);
@@ -107,14 +104,14 @@ describe("playground: workspace", () => {
             properties: {},
         });
 
-        const workspace = new Workspace();
-        workspace.addSchemaAndStore(fooSchema);
-        workspace.addSchemaAndStore(barSchema);
-        workspace.addItems("foo", [{ id: 1337, secondaryId: 128, name: "i am foo" }]);
-        workspace.addItems("bar", [{ id: 64, fooId: 1337, secondaryId: 128, name: "i belong to foo" }]);
+        const catalog = new SchemaCatalog([fooSchema, barSchema]);
+        const workspace = new Workspace(catalog);
+
+        workspace.add("foo", [{ id: 1337, secondaryId: 128, name: "i am foo" }]);
+        workspace.add("bar", [{ id: 64, fooId: 1337, secondaryId: 128, name: "i belong to foo" }]);
 
         const query: Query = { model: "foo", expansion: { bar: true }, criteria: matches({ id: inSet([1337]), secondaryId: inSet([128]) }) };
-        const fooItems = workspace.executeQuery(query);
+        const fooItems = workspace.query(query);
         // const barItemsOfFooItems = workspace.expandResult("foo", "bar", fooItems);
 
         console.log("expanded foo items:", fooItems);
@@ -151,15 +148,13 @@ describe("playground: workspace", () => {
             properties: {},
         });
 
-        const workspace = new Workspace();
-        workspace.addSchemaAndStore(fooSchema);
-        workspace.addSchema(barSchema);
-        workspace.addSchemaAndStore(bazSchema);
-        workspace.addItems("foo", [{ id: 1337, name: "i am foo", bar: { bazId: 128 } }]);
-        workspace.addItems("baz", [{ id: 128, name: "i am baz" }]);
+        const catalog = new SchemaCatalog([fooSchema, barSchema, bazSchema]);
+        const workspace = new Workspace(catalog);
+        workspace.add("foo", [{ id: 1337, name: "i am foo", bar: { bazId: 128 } }]);
+        workspace.add("baz", [{ id: 128, name: "i am baz" }]);
 
         const query: Query = { model: "foo", expansion: { bar: { baz: true } }, criteria: matches({ id: inSet([1337]) }) };
-        const fooItems = workspace.executeQuery(query);
+        const fooItems = workspace.query(query);
         // const barItemsOfFooItems = workspace.expandResult("foo", "bar", fooItems);
 
         console.log("expanded foo items:", fooItems);
@@ -167,31 +162,30 @@ describe("playground: workspace", () => {
     });
 
     xit("squawking around", () => {
-        const schema: SchemaJson = {} as any;
-        for (const key in schema.properties) {
-            const property = schema.properties[key];
-        }
-        const workspace = new Workspace();
-
-        const store = new ObjectStore(new Schema({ name: "foo", key: "id", indexes: ["bar"], properties: {} }));
-        workspace.addStore(store);
-        const criteria = createCriteriaForIndex(["bar"], [1, 2, 3]);
-        console.log(criteria);
-        workspace.addStore(new ObjectStore(new Schema({ name: "bar", key: "id", properties: {}, indexes: [{ name: "baz", path: ["khaz.mo", "foo", "khaz.dan"] }] })));
-        const barCriteria = createCriteriaForIndex(
-            ["khaz.mo", "foo", "khaz.dan"],
-            [
-                [1337, 64, 1],
-                [42, 64, 2],
-                [1337, 128, 1],
-                [1337, 64, 2],
-                [42, 128, 1],
-                [42, 64, 2],
-                [1337, 64, 1],
-                [1337, 128, 1],
-            ]
-        );
-        console.log(barCriteria);
+        // const schema: SchemaJson = {} as any;
+        // for (const key in schema.properties) {
+        //     const property = schema.properties[key];
+        // }
+        // const workspace = new Workspace();
+        // const store = new ObjectStore(new Schema({ name: "foo", key: "id", indexes: ["bar"], properties: {} }));
+        // workspace.addStore(store);
+        // const criteria = createCriteriaForIndex(["bar"], [1, 2, 3]);
+        // console.log(criteria);
+        // workspace.addStore(new ObjectStore(new Schema({ name: "bar", key: "id", properties: {}, indexes: [{ name: "baz", path: ["khaz.mo", "foo", "khaz.dan"] }] })));
+        // const barCriteria = createCriteriaForIndex(
+        //     ["khaz.mo", "foo", "khaz.dan"],
+        //     [
+        //         [1337, 64, 1],
+        //         [42, 64, 2],
+        //         [1337, 128, 1],
+        //         [1337, 64, 2],
+        //         [42, 128, 1],
+        //         [42, 64, 2],
+        //         [1337, 64, 1],
+        //         [1337, 128, 1],
+        //     ]
+        // );
+        // console.log(barCriteria);
     });
 
     it("should execute query w/ 1 simple index", () => {
@@ -200,7 +194,6 @@ describe("playground: workspace", () => {
             bar: number;
         }
 
-        const workspace = new Workspace();
         const schema = new Schema({
             name: "foo",
             key: "id",
@@ -208,9 +201,8 @@ describe("playground: workspace", () => {
             properties: {},
         });
 
-        // const store = new ObjectStore("foo", ["id"], { bar: { path: ["bar"] } });
-        const store = new ObjectStore(schema);
-        workspace.addStore(store);
+        const catalog = new SchemaCatalog([schema]);
+        const workspace = new Workspace(catalog);
 
         const entities: Foo[] = [
             { id: 1, bar: 2 },
@@ -225,7 +217,7 @@ describe("playground: workspace", () => {
             { id: 3, bar: 2 },
         ];
 
-        store.add(entities);
+        workspace.add(schema.name, entities);
 
         const query: Query = {
             model: "foo",
@@ -233,7 +225,7 @@ describe("playground: workspace", () => {
             expansion: {},
         };
 
-        const result = workspace.executeQuery(query);
+        const result = workspace.query(query);
 
         console.log(result);
         expect(result).toEqual(jasmine.arrayWithExactContents(expectedEntities));
@@ -253,9 +245,8 @@ describe("playground: workspace", () => {
             properties: {},
         });
 
-        const store = new ObjectStore(schema);
-        const workspace = new Workspace();
-        workspace.addStore(store);
+        const catalog = new SchemaCatalog([schema]);
+        const workspace = new Workspace(catalog);
 
         const entities: Foo[] = [
             { id: 1, bar: 2, baz: 1337 },
@@ -269,7 +260,7 @@ describe("playground: workspace", () => {
             { id: 2, bar: 3, baz: 1337 },
         ];
 
-        store.add(entities);
+        workspace.add(schema.name, entities);
 
         const query: Query = {
             model: "foo",
@@ -277,7 +268,7 @@ describe("playground: workspace", () => {
             expansion: {},
         };
 
-        const result = workspace.executeQuery(query);
+        const result = workspace.query(query);
 
         console.log(result);
         expect(result).toEqual(jasmine.arrayWithExactContents(expectedEntities));
@@ -298,9 +289,8 @@ describe("playground: workspace", () => {
             properties: {},
         });
 
-        const store = new ObjectStore(schema);
-        const workspace = new Workspace();
-        workspace.addStore(store);
+        const catalog = new SchemaCatalog([schema]);
+        const workspace = new Workspace(catalog);
 
         const entities: Foo[] = [
             { id: 1, bar: { baz: 2 } },
@@ -315,7 +305,7 @@ describe("playground: workspace", () => {
             { id: 3, bar: { baz: 2 } },
         ];
 
-        store.add(entities);
+        workspace.add(schema.name, entities);
 
         const query: Query = {
             model: "foo",
@@ -323,7 +313,7 @@ describe("playground: workspace", () => {
             expansion: {},
         };
 
-        const result = workspace.executeQuery(query);
+        const result = workspace.query(query);
 
         console.log(result);
         expect(result).toEqual(jasmine.arrayWithExactContents(expectedEntities));
@@ -345,9 +335,8 @@ describe("playground: workspace", () => {
             indexes: [{ name: "bar", path: ["bar.baz", "bar.moo"] }],
         });
 
-        const store = new ObjectStore(schema);
-        const workspace = new Workspace();
-        workspace.addStore(store);
+        const catalog = new SchemaCatalog([schema]);
+        const workspace = new Workspace(catalog);
 
         const entities: Foo[] = [
             { id: 1, bar: { baz: 2, moo: 10 } },
@@ -361,7 +350,7 @@ describe("playground: workspace", () => {
             { id: 2, bar: { baz: 3, moo: 10 } },
         ];
 
-        store.add(entities);
+        workspace.add(schema.name, entities);
 
         const query: Query = {
             model: "foo",
@@ -369,7 +358,7 @@ describe("playground: workspace", () => {
             expansion: {},
         };
 
-        const result = workspace.executeQuery(query);
+        const result = workspace.query(query);
 
         console.log(result);
         expect(result).toEqual(jasmine.arrayWithExactContents(expectedEntities));
@@ -395,9 +384,8 @@ describe("playground: workspace", () => {
             indexes: [{ name: "bar", path: ["bar.baz", "bar.moo", "khaz.mo", "khaz.dan"] }],
         });
 
-        const store = new ObjectStore(schema);
-        const workspace = new Workspace();
-        workspace.addStore(store);
+        const catalog = new SchemaCatalog([schema]);
+        const workspace = new Workspace(catalog);
 
         const entities: Foo[] = [
             { id: 1, bar: { baz: 2, moo: 10 }, khaz: { mo: 1, dan: 2 } },
@@ -408,7 +396,7 @@ describe("playground: workspace", () => {
 
         const expectedEntities = [{ id: 1, bar: { baz: 2, moo: 10 }, khaz: { mo: 1, dan: 2 } }];
 
-        store.add(entities);
+        workspace.add(schema.name, entities);
 
         const query: Query = {
             model: "foo",
@@ -416,7 +404,7 @@ describe("playground: workspace", () => {
             expansion: {},
         };
 
-        const result = workspace.executeQuery(query);
+        const result = workspace.query(query);
 
         console.log(result);
         expect(result).toEqual(jasmine.arrayWithExactContents(expectedEntities));

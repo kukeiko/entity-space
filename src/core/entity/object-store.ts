@@ -3,6 +3,9 @@ import { Schema, SchemaWithKey } from "./metadata/schema";
 import { IndexValue, ObjectStoreIndex } from "./object-store-index";
 
 export class ObjectStore<V = any> {
+    // [todo] would be nice to use this commented out line, but then we can't just supply
+    // the argument by using e.g. "new Schema({ key: ... })" cause of key being optional in Schema.ctor()
+    // constructor(schema: SchemaWithKey) {
     constructor(schema: Schema) {
         if (!schema.hasKey()) {
             throw new Error(`can't create object-store for schema that has no key defined`);

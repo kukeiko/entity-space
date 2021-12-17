@@ -3,19 +3,27 @@ import { InNumberSetCriterion, InSetCriterion, NamedCriteria, NamedCriteriaTempl
 import { Query } from "../query/public";
 import { ObjectStore } from "./object-store";
 import { Schema } from "./metadata/schema";
-import { SchemaProperty } from "./metadata/schema-property";
 import { createCriteriaForIndex } from "./create-criteria-for-index.fn";
 import { Expansion } from "../expansion/public";
+import { SchemaCatalog } from "./metadata/schema-catalog";
 
 export class Workspace {
-    private stores = new Map<string, ObjectStore>();
-    private schemas = new Map<string, Schema>();
+    constructor(catalog: SchemaCatalog) {
+        this.catalog = catalog;
 
-    addItems(model: string, items: any[]): void {
+        for (const schema of catalog.getSchemas().filter(Schema.hasKey)) {
+            this.stores.set(schema.name, new ObjectStore(schema));
+        }
+    }
+
+    private readonly catalog: SchemaCatalog;
+    private readonly stores = new Map<string, ObjectStore>();
+
+    add(model: string, items: any[]): void {
         this.getStore(model).add(items);
     }
 
-    executeQuery(query: Query) {
+    query(query: Query) {
         const store = this.stores.get(query.model);
 
         if (store === void 0) {
@@ -185,7 +193,7 @@ export class Workspace {
         const fromIndex = this.getSchema(model).getIndex(link.from);
 
         const criteria = createCriteriaForIndex(toIndex.path.slice(), fromIndex.read(items));
-        const referencedItems = this.executeQuery({ criteria, expansion: expansion ?? {}, model: linkedModel });
+        const referencedItems = this.query({ criteria, expansion: expansion ?? {}, model: linkedModel });
         const referencedIndex = this.getSchema(linkedModel).getIndex(link.to);
 
         for (const item of items) {
@@ -200,11 +208,7 @@ export class Workspace {
         }
     }
 
-    addStore(store: ObjectStore): void {
-        this.stores.set(store.name, store);
-    }
-
-    getStore(model: string): ObjectStore {
+    private getStore(model: string): ObjectStore {
         const store = this.stores.get(model);
 
         if (store === void 0) {
@@ -214,22 +218,7 @@ export class Workspace {
         return store;
     }
 
-    addSchema(schema: Schema): void {
-        this.schemas.set(schema.name, schema);
-    }
-
-    addSchemaAndStore(schema: Schema): void {
-        this.addSchema(schema);
-        this.addStore(new ObjectStore(schema));
-    }
-
-    getSchema(model: string): Schema {
-        const schema = this.schemas.get(model);
-
-        if (schema === void 0) {
-            throw new Error(`schema not found: ${model}`);
-        }
-
-        return schema;
+    private getSchema(model: string): Schema {
+        return this.catalog.getSchema(model);
     }
 }

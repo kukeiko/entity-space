@@ -106,6 +106,10 @@ export class Schema {
     }
 
     hasKey(): this is SchemaWithKey {
-        return this.key !== void 0;
+        return Schema.hasKey(this);
+    }
+
+    static hasKey(schema: Schema): schema is SchemaWithKey {
+        return schema.key !== void 0;
     }
 }

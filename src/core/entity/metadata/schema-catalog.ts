@@ -18,4 +18,8 @@ export class SchemaCatalog {
 
         return schema;
     }
+
+    getSchemas(): Schema[] {
+        return Array.from(this.schemas.values());
+    }
 }
