@@ -1,4 +1,13 @@
-import { matches, inRange, InNumberRangeCriterion, Query, Expansion, or, Criterion, NamedCriteriaTemplate } from "@entity-space/core";
+import {
+    matches,
+    inRange,
+    InNumberRangeCriterion,
+    Query,
+    Expansion,
+    or,
+    Criterion,
+    NamedCriteriaTemplate,
+} from "@entity-space/core";
 import { Product, ProductFilter } from "./model";
 import { ProductRepository } from "./repositories";
 

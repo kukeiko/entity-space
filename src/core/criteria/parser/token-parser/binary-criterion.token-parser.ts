@@ -1,4 +1,12 @@
-import { IsEvenCriterion, IsFalseCriterion, IsNotNullCriterion, IsNullCriterion, IsOddCriterion, IsTrueCriterion, BinaryCriterion } from "../../criterion";
+import {
+    IsEvenCriterion,
+    IsFalseCriterion,
+    IsNotNullCriterion,
+    IsNullCriterion,
+    IsOddCriterion,
+    IsTrueCriterion,
+    BinaryCriterion,
+} from "../../criterion";
 import { TokenType } from "../token-type.enum";
 import { TokenParser } from "./token-parser.type";
 

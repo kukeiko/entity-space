@@ -2,7 +2,12 @@ import { SchemaCatalog } from "./metadata/schema-catalog";
 import { SchemaProperty } from "./metadata/schema-property";
 
 // [todo] not a fan of having the "shouldAddSelf" flag
-export function normalizeEntities(model: string, items: any[], catalog: SchemaCatalog, shouldAddSelf = true): Record<string, any[]> {
+export function normalizeEntities(
+    model: string,
+    items: any[],
+    catalog: SchemaCatalog,
+    shouldAddSelf = true
+): Record<string, any[]> {
     const schema = catalog.getSchema(model);
     const navigable = schema.getProperties().filter(SchemaProperty.isNavigable);
     const normalized: Record<string, any[]> = {};

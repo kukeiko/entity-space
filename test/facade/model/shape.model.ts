@@ -19,7 +19,7 @@ import { AuthorModel } from "./author.model";
 /**
  * A model that points to an array of unioned models: circles, squares, triangles and grouped shapes.
  */
-export class CanvasModel  {
+export class CanvasModel {
     id = define(Number, { id: true, required: true });
     authorId = define(Number);
     author = define(AuthorModel);

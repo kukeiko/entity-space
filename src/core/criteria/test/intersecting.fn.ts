@@ -38,7 +38,9 @@ export function intersecting(
                     } else {
                         specFn(`${criterion} intersected with ${other} should be ${expected}`, () => {
                             try {
-                                expect(parse(criterion).intersect(parse(other)).toString()).toEqual(parse(expected).toString());
+                                expect(parse(criterion).intersect(parse(other)).toString()).toEqual(
+                                    parse(expected).toString()
+                                );
                             } catch (error) {
                                 fail(error);
                             }

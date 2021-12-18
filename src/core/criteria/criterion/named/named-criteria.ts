@@ -30,7 +30,12 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag> extend
         } else if (other instanceof NamedCriteria) {
             // same reduction mechanics as found in and-criteria.ts
             const otherBag = other.getBag();
-            const reductions: { criterion: Criterion; result: Criterion | boolean; key: string; inverted?: Criterion }[] = [];
+            const reductions: {
+                criterion: Criterion;
+                result: Criterion | boolean;
+                key: string;
+                inverted?: Criterion;
+            }[] = [];
 
             for (const key in this.bag) {
                 const mine = this.bag[key];
@@ -95,7 +100,9 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag> extend
                 accumulator[key] = this.bag[key];
             }
 
-            return built.length === 1 ? new NamedCriteria(built[0]) : new OrCriteria(built.map(bag => new NamedCriteria(bag)));
+            return built.length === 1
+                ? new NamedCriteria(built[0])
+                : new OrCriteria(built.map(bag => new NamedCriteria(bag)));
         }
 
         return false;
@@ -148,7 +155,10 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag> extend
                 const permutations = permutateEntries(theBagToPermutate);
                 return [permutations.map(bag => new NamedCriteria(bag))];
             }
-        } else if (template instanceof OrCriteriaTemplate && template.items.some(item => item instanceof NamedCriteriaTemplate)) {
+        } else if (
+            template instanceof OrCriteriaTemplate &&
+            template.items.some(item => item instanceof NamedCriteriaTemplate)
+        ) {
             // [todo] i was clearly having some plan here
         }
 

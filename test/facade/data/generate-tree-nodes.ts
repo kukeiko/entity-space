@@ -25,7 +25,11 @@ export function generateTreeNodes(options: GenerateTreeNodesOptions = defaultOpt
         return id++;
     }
 
-    function generateChildren(allNodes: Instance<TreeNodeModel>[], parent: Instance<TreeNodeModel>, childGenMalus = 1): void {
+    function generateChildren(
+        allNodes: Instance<TreeNodeModel>[],
+        parent: Instance<TreeNodeModel>,
+        childGenMalus = 1
+    ): void {
         const numChildren = Math.floor(Math.random() * numMaxChildren);
 
         for (let i = 0; i < numChildren; i++) {

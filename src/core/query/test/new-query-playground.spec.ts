@@ -85,18 +85,30 @@ xdescribe("new query playground", () => {
     });
 
     it("working example #2", () => {
-        function query<T, E = Expansion<Instance<T>>>(type: Class<T>, criteria: NamedCriteriaBag, expansion: E): Expand<Instance<T>, E> {
+        function query<T, E = Expansion<Instance<T>>>(
+            type: Class<T>,
+            criteria: NamedCriteriaBag,
+            expansion: E
+        ): Expand<Instance<T>, E> {
             return {} as any;
         }
 
-        const user = query(UserModel, {}, { name: true, children: { name: true, reviews: { createdBy: { name: true } } } });
+        const user = query(
+            UserModel,
+            {},
+            { name: true, children: { name: true, reviews: { createdBy: { name: true } } } }
+        );
         user.id;
         user.children[0].name;
         user.children[0].reviews[0].createdBy.name;
     });
 
     it("working example #3", () => {
-        function query<T, E = Expansion<Instance<T>>>(type: Class<T>, criteria: NamedCriteriaBag, expansion: E): Expand<Instance<T>, E> {
+        function query<T, E = Expansion<Instance<T>>>(
+            type: Class<T>,
+            criteria: NamedCriteriaBag,
+            expansion: E
+        ): Expand<Instance<T>, E> {
             return {} as any;
         }
 

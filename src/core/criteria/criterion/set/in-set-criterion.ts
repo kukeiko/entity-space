@@ -60,7 +60,10 @@ export abstract class InSetCriterion<T> extends Criterion {
             }
 
             if (didReduce) {
-                return new this.inRangeClass([otherFrom?.value, otherTo?.value], [otherFrom?.op === ">=", otherTo?.op === "<="]);
+                return new this.inRangeClass(
+                    [otherFrom?.value, otherTo?.value],
+                    [otherFrom?.op === ">=", otherTo?.op === "<="]
+                );
             }
         }
 

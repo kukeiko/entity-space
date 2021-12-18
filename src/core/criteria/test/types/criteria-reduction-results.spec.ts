@@ -59,7 +59,9 @@ import { inRange, inSet, isTrue, notInSet } from "../../criterion";
 
     // String
     {
-        const notInStringSet_reduce_notInStringSet = notInSet(["foo", "bar", "baz"]).reduce(notInSet(["foo", "bar", "baz"]));
+        const notInStringSet_reduce_notInStringSet = notInSet(["foo", "bar", "baz"]).reduce(
+            notInSet(["foo", "bar", "baz"])
+        );
         // $ExpectType boolean | InStringSetCriterion
         type NotInStringSet_Reduce_NotInStringSet = typeof notInStringSet_reduce_notInStringSet;
 

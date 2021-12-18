@@ -244,7 +244,10 @@ describe("what's reduction for?", () => {
             },
         ];
 
-        const actual = reduceQuery(price_100_to_300_rating_2_to_5_with_reviews, price_100_to_200_rating_3_to_5_no_reviews);
+        const actual = reduceQuery(
+            price_100_to_300_rating_2_to_5_with_reviews,
+            price_100_to_200_rating_3_to_5_no_reviews
+        );
 
         expect(actual).toEqual(jasmine.arrayWithExactContents(expected));
     });

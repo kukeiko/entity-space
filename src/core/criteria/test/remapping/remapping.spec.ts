@@ -1,4 +1,14 @@
-import { Criterion, InNumberRangeCriterion, InNumberSetCriterion, inRange, inSet, matches, NamedCriteriaTemplate, or, OrCriteriaTemplate } from "../../criterion";
+import {
+    Criterion,
+    InNumberRangeCriterion,
+    InNumberSetCriterion,
+    inRange,
+    inSet,
+    matches,
+    NamedCriteriaTemplate,
+    or,
+    OrCriteriaTemplate,
+} from "../../criterion";
 import { IsNumberValueCriterion, isValue } from "../../criterion/value";
 
 type RemapOneResult = ReturnType<Criterion["remapOne"]>;
@@ -98,7 +108,9 @@ describe("remapping", () => {
         // arrange
         const criterion = matches({ foo: inSet([1, 2, 3]) });
         const template = new NamedCriteriaTemplate({ foo: [IsNumberValueCriterion] });
-        const expected: RemapOneResult = [[matches({ foo: isValue(1) }), matches({ foo: isValue(2) }), matches({ foo: isValue(3) })]];
+        const expected: RemapOneResult = [
+            [matches({ foo: isValue(1) }), matches({ foo: isValue(2) }), matches({ foo: isValue(3) })],
+        ];
 
         // act
         const actual = criterion.remapOne(template);
@@ -140,7 +152,10 @@ describe("remapping", () => {
          */
         // arrange
         const criterion = matches({ foo: inSet([1, 2]), bar: matches({ baz: inSet([4, 5]) }) });
-        const template = new NamedCriteriaTemplate({ foo: [IsNumberValueCriterion], bar: [new NamedCriteriaTemplate({ baz: [IsNumberValueCriterion] })] });
+        const template = new NamedCriteriaTemplate({
+            foo: [IsNumberValueCriterion],
+            bar: [new NamedCriteriaTemplate({ baz: [IsNumberValueCriterion] })],
+        });
 
         const expected: RemapOneResult = [
             [

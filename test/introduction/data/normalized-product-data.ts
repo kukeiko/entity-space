@@ -31,5 +31,5 @@ const reviews: ProductReview[] = [
 
 export default {
     products,
-    reviews
+    reviews,
 };

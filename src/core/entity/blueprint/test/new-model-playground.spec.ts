@@ -121,7 +121,10 @@ xdescribe("new model playground", () => {
 
     const expandedUser: ExpandedUserInstance = {
         id: 1,
-        createdBy: { id: 90123, createdBy: { id: 123123, name: "foo", children: [{ id: 8234, createdBy: { id: 1312 }, name: "foo" }] } },
+        createdBy: {
+            id: 90123,
+            createdBy: { id: 123123, name: "foo", children: [{ id: 8234, createdBy: { id: 1312 }, name: "foo" }] },
+        },
         updatedBy: null,
         canvas: {
             id: 4123,

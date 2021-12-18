@@ -38,7 +38,9 @@ export function merging(
                     } else {
                         specFn(`${criterion} merged with ${other} should be ${expected}`, () => {
                             try {
-                                expect(parse(criterion).merge(parse(other)).toString()).toEqual(parse(expected).toString());
+                                expect(parse(criterion).merge(parse(other)).toString()).toEqual(
+                                    parse(expected).toString()
+                                );
                             } catch (error) {
                                 fail(error);
                             }

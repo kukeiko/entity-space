@@ -112,7 +112,9 @@ export class Workspace {
 
                             if (criterionInBag_2 instanceof InSetCriterion) {
                                 // [todo] support more than 1 level of nesting
-                                bagWithPrimitives[`${property}.${property_2}`] = Array.from(criterionInBag_2.getValues());
+                                bagWithPrimitives[`${property}.${property_2}`] = Array.from(
+                                    criterionInBag_2.getValues()
+                                );
                             }
                         }
                     }
@@ -157,7 +159,9 @@ export class Workspace {
                 if (expansionValue === true) {
                     // [todo] not yet sure if this should be considered a user error.
                     // so for now we'll just throw so i definitely notice it in case it happens.
-                    throw new Error(`trying to expand a value that has no link; and no deeper expansion was provided: ${model}.${propertyKey}`);
+                    throw new Error(
+                        `trying to expand a value that has no link; and no deeper expansion was provided: ${model}.${propertyKey}`
+                    );
                 } else if (expansionValue !== void 0) {
                     const referencedItems: any[] = [];
 
@@ -203,7 +207,9 @@ export class Workspace {
 
         for (const item of items) {
             const indexValue = this.getSchema(model).getIndex(link.from).readOne(item);
-            const matchingReferencedItems = referencedItems.filter(item => JSON.stringify(indexValue) === JSON.stringify(referencedIndex.readOne(item)));
+            const matchingReferencedItems = referencedItems.filter(
+                item => JSON.stringify(indexValue) === JSON.stringify(referencedIndex.readOne(item))
+            );
 
             if (propertySchema.array) {
                 item[propertyKey] = matchingReferencedItems;

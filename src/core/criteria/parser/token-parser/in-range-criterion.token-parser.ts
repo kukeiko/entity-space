@@ -3,7 +3,11 @@ import { Token } from "../token.contract";
 import { TokenType } from "../token-type.enum";
 import { TokenParser } from "./token-parser.type";
 
-function* valueParser(): Generator<undefined, [string | number | undefined, typeof Number | typeof String | undefined] | false, Token> {
+function* valueParser(): Generator<
+    undefined,
+    [string | number | undefined, typeof Number | typeof String | undefined] | false,
+    Token
+> {
     let token = yield;
 
     if (token.type === TokenType.String) {

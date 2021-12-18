@@ -82,7 +82,10 @@ describe("reduceQuery()", () => {
             const a = createQuery(matches({ id: inSet([1, 2]) }), { foo: true, bar: true });
             const b = createQuery(matches({ id: inSet([1]) }), { foo: true });
 
-            const expected = [createQuery(matches({ id: inSet([2]) }), { foo: true, bar: true }), createQuery(matches({ id: inSet([1]) }), { bar: true })];
+            const expected = [
+                createQuery(matches({ id: inSet([2]) }), { foo: true, bar: true }),
+                createQuery(matches({ id: inSet([1]) }), { bar: true }),
+            ];
 
             // act
             const reduced = reduceQuery(a, b);

@@ -27,7 +27,9 @@ export abstract class Criterion {
     // - [Criterion, Criterion]
     // - [false, void 0]
     // templates input order should be considered as an additional way to set priority. this way user has more control.
-    remap<T extends CriterionTemplate>(templates: T[]): [false, undefined] | [InstancedCriterionTemplate<T>[], Criterion?] {
+    remap<T extends CriterionTemplate>(
+        templates: T[]
+    ): [false, undefined] | [InstancedCriterionTemplate<T>[], Criterion?] {
         // remap<T extends CriterionTemplate>(templates: T[]): [false, undefined] | [InstancedCriterionTemplate<T>[], Criterion?] {
         const results: ([false, undefined] | [Criterion[], Criterion?])[] = [];
 

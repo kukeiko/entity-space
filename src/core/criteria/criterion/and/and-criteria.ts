@@ -48,7 +48,9 @@ export class AndCriteria<T extends Criterion = Criterion> extends Criteria<T> {
             return true;
         }
 
-        return new OrCriteria(reduced.map(criteria => (criteria.length === 1 ? criteria[0] : new AndCriteria(criteria))));
+        return new OrCriteria(
+            reduced.map(criteria => (criteria.length === 1 ? criteria[0] : new AndCriteria(criteria)))
+        );
     }
 
     reduceBy(other: Criterion): boolean | Criterion {

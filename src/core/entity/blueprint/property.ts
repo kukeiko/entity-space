@@ -43,8 +43,17 @@ export interface ReadOnlyAttribute {
 //     writeOnly: true;
 // }
 
-export type AllAttributes = DiscriminatorAttribute | NullableAttribute | IdAttribute | ArrayAttribute | RequiredAttribute | ReadOnlyAttribute;
+export type AllAttributes =
+    | DiscriminatorAttribute
+    | NullableAttribute
+    | IdAttribute
+    | ArrayAttribute
+    | RequiredAttribute
+    | ReadOnlyAttribute;
 
-export function define<V extends PropertyValueType, O extends Partial<AllAttributes>>(valueType: V, options?: O): Property<V> & O {
+export function define<V extends PropertyValueType, O extends Partial<AllAttributes>>(
+    valueType: V,
+    options?: O
+): Property<V> & O {
     return { valueType, ...(options ?? {}) } as Property<V> & O;
 }

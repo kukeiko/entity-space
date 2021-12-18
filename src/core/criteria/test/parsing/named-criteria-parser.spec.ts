@@ -52,6 +52,9 @@ describe("parse-tokens: named-criteria", () => {
             token(TokenType.Special, ")"),
             token(TokenType.Special, "}"),
         ],
-        matches({ foo: or([inRange(13, 37, [false, true]), inRange(100, 200, [true, false])]), bar: inRange(100, 200, [true, false]) })
+        matches({
+            foo: or([inRange(13, 37, [false, true]), inRange(100, 200, [true, false])]),
+            bar: inRange(100, 200, [true, false]),
+        })
     );
 });

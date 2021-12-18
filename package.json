@@ -17,6 +17,7 @@
         "commitizen": "git-cz",
         "lint": "eslint .",
         "npmprepublish": "npm run build && npm run test",
+        "prettier": "prettier --loglevel warn --write .",
         "test": "npm run test:types && karma start --single-run",
         "test:no-types": "karma start --single-run",
         "test:debug": "karma start",

@@ -135,7 +135,9 @@ describe("prototyping-playground", () => {
         }
         // [todo] note somewhere that we cant have Expansion of mapped types w/ keyof; so we need to make model metadata
         // simpler when getting the Instance type of it
-        function takesExpansion_notWorky<E extends Expansion<Record<keyof Product, true>>>(expansion: E): typeof expansion {
+        function takesExpansion_notWorky<E extends Expansion<Record<keyof Product, true>>>(
+            expansion: E
+        ): typeof expansion {
             return {} as any;
         }
 
@@ -174,17 +176,28 @@ describe("prototyping-playground", () => {
         instanced_or_inNumberRange.getItems()[0];
 
         const instanced_or_inNumberRange_inNumberSet = instantiateTemplate(
-            new OrCriteriaTemplate([InNumberRangeCriterion, InNumberSetCriterion, new AndCriteriaTemplate([InStringRangeCriterion])])
+            new OrCriteriaTemplate([
+                InNumberRangeCriterion,
+                InNumberSetCriterion,
+                new AndCriteriaTemplate([InStringRangeCriterion]),
+            ])
         );
         const item_B = instanced_or_inNumberRange_inNumberSet.getItems()[0];
         const instanced_or_propertyCriteria = instantiateTemplate(
-            new NamedCriteriaTemplate({ foo: [InNumberRangeCriterion, new OrCriteriaTemplate([InNumberRangeCriterion])], bar: [InNumberSetCriterion, InNumberRangeCriterion] })
+            new NamedCriteriaTemplate({
+                foo: [InNumberRangeCriterion, new OrCriteriaTemplate([InNumberRangeCriterion])],
+                bar: [InNumberSetCriterion, InNumberRangeCriterion],
+            })
         );
 
         const foo = instanced_or_propertyCriteria.getBag().foo;
         const bar = instanced_or_propertyCriteria.getBag().bar;
         const instanced_deepMix = instantiateTemplate(
-            new OrCriteriaTemplate([new NamedCriteriaTemplate({ foo: [InNumberRangeCriterion, new OrCriteriaTemplate([InNumberRangeCriterion])] })])
+            new OrCriteriaTemplate([
+                new NamedCriteriaTemplate({
+                    foo: [InNumberRangeCriterion, new OrCriteriaTemplate([InNumberRangeCriterion])],
+                }),
+            ])
         );
 
         instanced_deepMix.getItems()[0].getBag().foo;

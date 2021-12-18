@@ -1,0 +1,9 @@
+# non-src folders
+.vscode
+
+# artifacts
+coverage
+dist
+
+# file types
+*.html

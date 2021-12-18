@@ -1,7 +1,12 @@
 import { scanNumber, scanString, scanSymbol } from "../../parser";
 
 describe("criteria-lexer-scanners", () => {
-    function shouldScan(input: string, type: string, scanner: (char: string, iterator: IterableIterator<string>) => [string, IteratorResult<string>], expected = input) {
+    function shouldScan(
+        input: string,
+        type: string,
+        scanner: (char: string, iterator: IterableIterator<string>) => [string, IteratorResult<string>],
+        expected = input
+    ) {
         let title = `should scan ${type} ${input}`;
 
         if (input !== expected) {

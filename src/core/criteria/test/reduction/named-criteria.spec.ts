@@ -34,7 +34,9 @@ describe("reducing: named-criteria", () => {
         reducing("{ foo:{ bar:[1, 7] } }").by("{ foo: { bar:[3, 4] } }").shouldBe("{ foo:{ bar:([1, 3) | (4, 7]) } }");
         reducing("{ foo:{1, 2}, bar:{3} }").by("{ foo:{2}, bar:{3, 4} }").shouldBe("{ foo:{1}, bar:{3} }");
 
-        reducing("{ foo:[1, 7] }").by("{ foo:[3, 4], bar:[150, 175] }").shouldBe("({ foo:([1, 3) | (4, 7]) } | { foo:[3, 4], bar:([..., 150) | (175, ...]) })");
+        reducing("{ foo:[1, 7] }")
+            .by("{ foo:[3, 4], bar:[150, 175] }")
+            .shouldBe("({ foo:([1, 3) | (4, 7]) } | { foo:[3, 4], bar:([..., 150) | (175, ...]) })");
         // "({ foo:([1, 3) | (4, 7]) } | { foo:[3, 4], bar:([..., 150) | (175, ...]) })" remapped with "i do not support filtering on property bar" should be "{ foo:[1, 7] }"
 
         reducing("{ foo:[1, 7], bar:[100, 200] }")
@@ -42,13 +44,19 @@ describe("reducing: named-criteria", () => {
             .shouldBe("({ foo:([1, 3) | (4, 7]), bar:[100, 200] } | { foo:[3, 4], bar:([100, 150) | (175, 200]) })");
 
         {
-            reducing("{ foo:[1, 7] }").by("{ foo:[3, 4], bar:[150, 175] }").shouldBe("{ foo: [1, 3) | (4, 7] } | { foo: [3, 4], bar: ([..., 150) | (175, ...]) }");
-            reducing("{ foo:[1, 7] }").by("{ bar:[150, 175], foo:[3, 4] }").shouldBe("{ foo: [1, 3) | (4, 7] } | { foo: [3, 4], bar: ([..., 150) | (175, ...]) }");
+            reducing("{ foo:[1, 7] }")
+                .by("{ foo:[3, 4], bar:[150, 175] }")
+                .shouldBe("{ foo: [1, 3) | (4, 7] } | { foo: [3, 4], bar: ([..., 150) | (175, ...]) }");
+            reducing("{ foo:[1, 7] }")
+                .by("{ bar:[150, 175], foo:[3, 4] }")
+                .shouldBe("{ foo: [1, 3) | (4, 7] } | { foo: [3, 4], bar: ([..., 150) | (175, ...]) }");
         }
 
         reducing("{ foo:[1, 7], bar:[100, 200], baz:[50, 70] }")
             .by("{ foo:[3, 4], bar:[150, 175] }")
-            .shouldBe("({ foo:([1, 3) | (4, 7]), bar:[100, 200], baz:[50, 70] } | { foo:[3, 4], bar:([100, 150) | (175, 200]), baz:[50, 70] })");
+            .shouldBe(
+                "({ foo:([1, 3) | (4, 7]), bar:[100, 200], baz:[50, 70] } | { foo:[3, 4], bar:([100, 150) | (175, 200]), baz:[50, 70] })"
+            );
 
         reducing("{ foo:[1, 7], bar:[100, 200], baz:[50, 70] }")
             .by("{ foo:[3, 4], bar:[150, 175], baz:[55, 65] }")
@@ -58,7 +66,9 @@ describe("reducing: named-criteria", () => {
 
         reducing("{ foo:[1, 7], bar:[100, 200] }")
             .by("{ foo:[3, 4], bar:[150, 175], baz:[50, 70] }")
-            .shouldBe("({ foo:([1, 3) | (4, 7]), bar:[100, 200] } | { foo:[3, 4], bar:([100, 150) | (175, 200]) } | { foo:[3, 4], bar:[150, 175], baz:([..., 50) | (70, ...]) })");
+            .shouldBe(
+                "({ foo:([1, 3) | (4, 7]), bar:[100, 200] } | { foo:[3, 4], bar:([100, 150) | (175, 200]) } | { foo:[3, 4], bar:[150, 175], baz:([..., 50) | (70, ...]) })"
+            );
 
         it("changing order of criteria properties should still result in an equivalent outcome", () => {
             // arrange

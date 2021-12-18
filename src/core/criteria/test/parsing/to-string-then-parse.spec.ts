@@ -10,7 +10,10 @@ describe("to-string-then-parse", () => {
         });
     }
 
-    const toStringAndParse = or([and([or([inRange(1, 7), inRange(3, 4)]), or([inSet([123]), notInSet([456])])]), and([inSet([1, 2, 3]), inRange(-0.9, void 0)])]);
+    const toStringAndParse = or([
+        and([or([inRange(1, 7), inRange(3, 4)]), or([inSet([123]), notInSet([456])])]),
+        and([inSet([1, 2, 3]), inRange(-0.9, void 0)]),
+    ]);
 
     shouldParse(toStringAndParse.toString(), toStringAndParse);
 });

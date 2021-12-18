@@ -46,7 +46,9 @@ export function reducing(
                     } else {
                         specFn(`${criterion} reduced by ${other} should be ${expected}`, () => {
                             try {
-                                expect(parse(other).reduce(parse(criterion)).toString()).toEqual(parse(expected).toString());
+                                expect(parse(other).reduce(parse(criterion)).toString()).toEqual(
+                                    parse(expected).toString()
+                                );
                             } catch (error) {
                                 fail(error);
                             }

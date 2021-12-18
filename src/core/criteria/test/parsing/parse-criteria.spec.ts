@@ -1,5 +1,18 @@
 import { parseCriteria } from "../../parser";
-import { and, inRange, inSet, isEven, isNull, isTrue, matches, notInSet, or, Criterion, isValue, notValue } from "../../criterion";
+import {
+    and,
+    inRange,
+    inSet,
+    isEven,
+    isNull,
+    isTrue,
+    matches,
+    notInSet,
+    or,
+    Criterion,
+    isValue,
+    notValue,
+} from "../../criterion";
 
 describe("parse-criteria", () => {
     function shouldParse(stringified: string, expected: Criterion): void {
@@ -15,10 +28,7 @@ describe("parse-criteria", () => {
     shouldParse('is "foo"', isValue("foo"));
     shouldParse('not "foo"', notValue("foo"));
     shouldParse("is-true", isTrue(true));
-    shouldParse(
-        "is-true & is-odd",
-        and<any>([isTrue(true), isEven(false)])
-    );
+    shouldParse("is-true & is-odd", and<any>([isTrue(true), isEven(false)]));
     shouldParse("[1, 7]", inRange(1, 7));
     shouldParse("[..., 7.8)", inRange(void 0, 7.8, false));
     shouldParse("[.9, 2]", inRange(0.9, 2));
@@ -30,10 +40,16 @@ describe("parse-criteria", () => {
     shouldParse("[1, 7] | [3, 4]", or([inRange(1, 7), inRange(3, 4)]));
     shouldParse("{1, 2}", inSet([1, 2]));
     shouldParse("!{1, 2}", notInSet([1, 2]));
-    shouldParse("([1, 7] | [3, 4]) & ({123} | !{456})", and(or(inRange(1, 7), inRange(3, 4)), or(inSet([123]), notInSet([456]))));
+    shouldParse(
+        "([1, 7] | [3, 4]) & ({123} | !{456})",
+        and(or(inRange(1, 7), inRange(3, 4)), or(inSet([123]), notInSet([456])))
+    );
     shouldParse(
         "(([1, 7] | [3, 4]) & ({123} | !{456} | is-odd | is-null)) | ({1,2,3} & [-0.9, ...])",
-        or([and([or([inRange(1, 7), inRange(3, 4)]), or([inSet([123]), notInSet([456]), isEven(false), isNull(true)])]), and([inSet([1, 2, 3]), inRange(-0.9, void 0)])])
+        or([
+            and([or([inRange(1, 7), inRange(3, 4)]), or([inSet([123]), notInSet([456]), isEven(false), isNull(true)])]),
+            and([inSet([1, 2, 3]), inRange(-0.9, void 0)]),
+        ])
     );
 
     interface FooBar {
@@ -55,10 +71,7 @@ describe("parse-criteria", () => {
             and<any>([
                 inSet([1, 2, 3]),
                 inRange(-0.9, void 0),
-                or(
-                    matches<FooBar>({ foo: inRange(1, 7) }),
-                    matches<FooBar>({ bar: inRange(3, 4) })
-                ),
+                or(matches<FooBar>({ foo: inRange(1, 7) }), matches<FooBar>({ bar: inRange(3, 4) })),
             ]),
         ])
     );

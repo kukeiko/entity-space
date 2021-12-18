@@ -1,7 +1,16 @@
 export type SchemaPropertyType = "boolean" | "number" | "string" | "object";
 
 // formats taken from open-api
-export type SchemaPropertyFormat = "int32" | "int64" | "float" | "double" | "byte" | "binary" | "date" | "date-time" | "password";
+export type SchemaPropertyFormat =
+    | "int32"
+    | "int64"
+    | "float"
+    | "double"
+    | "byte"
+    | "binary"
+    | "date"
+    | "date-time"
+    | "password";
 
 export type NavigableSchemaProperty = SchemaProperty & Required<Pick<SchemaProperty, "model">>;
 export type ExpandableSchemaProperty = SchemaProperty & Required<Pick<SchemaProperty, "link" | "model">>;

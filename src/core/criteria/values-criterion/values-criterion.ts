@@ -21,7 +21,9 @@ export module ValuesCriterion {
         return reducer(a.op)(a, b);
     }
 
-    export function reducer<OP extends ValuesCriterion["op"]>(op: OP): (a: Extract<ValuesCriterion, { op: OP }>, b: ValuesCriterion) => ValuesCriterion | null {
+    export function reducer<OP extends ValuesCriterion["op"]>(
+        op: OP
+    ): (a: Extract<ValuesCriterion, { op: OP }>, b: ValuesCriterion) => ValuesCriterion | null {
         switch (op) {
             case "intersect":
             case "subset":

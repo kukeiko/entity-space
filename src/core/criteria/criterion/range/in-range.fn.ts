@@ -11,7 +11,11 @@ function isNumberOrVoid(value: unknown): value is number | undefined {
 
 export function inRange(from?: number, to?: number, inclusive?: boolean | [boolean, boolean]): InNumberRangeCriterion;
 export function inRange(from?: string, to?: string, inclusive?: boolean | [boolean, boolean]): InStringRangeCriterion;
-export function inRange<T extends number | string>(from?: T, to?: T, inclusive?: boolean | [boolean, boolean]): InNumberRangeCriterion | InStringRangeCriterion {
+export function inRange<T extends number | string>(
+    from?: T,
+    to?: T,
+    inclusive?: boolean | [boolean, boolean]
+): InNumberRangeCriterion | InStringRangeCriterion {
     if (from === void 0 && to === void 0) {
         throw new Error(`from & to can't both be undefined`);
     } else if (isStringOrVoid(from) && isStringOrVoid(to)) {

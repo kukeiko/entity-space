@@ -132,17 +132,29 @@ export abstract class InRangeCriterion<T> extends Criterion {
                 if (selfTo === null) {
                     return true;
                 } else {
-                    return new this.selfClass([selfTo.value, otherTo?.value], [selfTo.op === "<", otherTo?.op === "<="]);
+                    return new this.selfClass(
+                        [selfTo.value, otherTo?.value],
+                        [selfTo.op === "<", otherTo?.op === "<="]
+                    );
                 }
             } else if (otherToInsideMe) {
                 if (selfFrom === null) {
                     return true;
                 } else {
-                    return new this.selfClass([otherFrom?.value, selfFrom.value], [otherFrom?.op === ">=", selfFrom.op === ">"]);
+                    return new this.selfClass(
+                        [otherFrom?.value, selfFrom.value],
+                        [otherFrom?.op === ">=", selfFrom.op === ">"]
+                    );
                 }
-            } else if (InRangeCriterion.isFromInsideRange(selfFrom, other) && InRangeCriterion.isToInsideRange(selfTo, other)) {
+            } else if (
+                InRangeCriterion.isFromInsideRange(selfFrom, other) &&
+                InRangeCriterion.isToInsideRange(selfTo, other)
+            ) {
                 return new OrCriteria([
-                    new this.selfClass([otherFrom?.value, selfFrom?.value], [otherFrom?.op === ">=", selfFrom?.op === ">"]),
+                    new this.selfClass(
+                        [otherFrom?.value, selfFrom?.value],
+                        [otherFrom?.op === ">=", selfFrom?.op === ">"]
+                    ),
                     new this.selfClass([selfTo?.value, otherTo?.value], [selfTo?.op === "<", otherTo?.op === "<="]),
                 ]);
             }
@@ -164,21 +176,36 @@ export abstract class InRangeCriterion<T> extends Criterion {
             const otherToInsideMe = InRangeCriterion.isToInsideRange(other.getTo(), this);
 
             if (otherFromInsideMe && otherToInsideMe) {
-                return new this.selfClass([selfFrom?.value, selfTo?.value], [selfFrom?.op === ">=", selfTo?.op === "<="]);
+                return new this.selfClass(
+                    [selfFrom?.value, selfTo?.value],
+                    [selfFrom?.op === ">=", selfTo?.op === "<="]
+                );
             } else if (otherFromInsideMe) {
                 if (selfTo === null) {
                     return new this.selfClass([selfFrom?.value, void 0], selfFrom?.op === ">=");
                 } else {
-                    return new this.selfClass([selfFrom?.value, otherTo?.value], [selfFrom?.op === ">=", otherTo?.op === "<="]);
+                    return new this.selfClass(
+                        [selfFrom?.value, otherTo?.value],
+                        [selfFrom?.op === ">=", otherTo?.op === "<="]
+                    );
                 }
             } else if (otherToInsideMe) {
                 if (selfFrom === null) {
                     return new this.selfClass([void 0, selfTo?.value], selfTo?.op === "<=");
                 } else {
-                    return new this.selfClass([otherFrom?.value, selfTo?.value], [otherFrom?.op === ">=", selfTo?.op === "<="]);
+                    return new this.selfClass(
+                        [otherFrom?.value, selfTo?.value],
+                        [otherFrom?.op === ">=", selfTo?.op === "<="]
+                    );
                 }
-            } else if (InRangeCriterion.isFromInsideRange(selfFrom, other) && InRangeCriterion.isToInsideRange(selfTo, other)) {
-                return new this.selfClass([otherFrom?.value, otherTo?.value], [otherFrom?.op === ">=", otherTo?.op === "<="]);
+            } else if (
+                InRangeCriterion.isFromInsideRange(selfFrom, other) &&
+                InRangeCriterion.isToInsideRange(selfTo, other)
+            ) {
+                return new this.selfClass(
+                    [otherFrom?.value, otherTo?.value],
+                    [otherFrom?.op === ">=", otherTo?.op === "<="]
+                );
             }
         }
 
@@ -189,26 +216,46 @@ export abstract class InRangeCriterion<T> extends Criterion {
         if (other instanceof Criteria) {
             return other.intersect(this);
         } else if (other instanceof this.selfClass) {
-            const [otherFrom, otherTo, selfFrom, selfTo] = [other.getFrom(), other.getTo(), this.getFrom(), this.getTo()];
+            const [otherFrom, otherTo, selfFrom, selfTo] = [
+                other.getFrom(),
+                other.getTo(),
+                this.getFrom(),
+                this.getTo(),
+            ];
             const otherFromInsideMe = InRangeCriterion.isFromInsideRange(other.getFrom(), this);
             const otherToInsideMe = InRangeCriterion.isToInsideRange(other.getTo(), this);
 
             if (otherFromInsideMe && otherToInsideMe) {
-                return new this.selfClass([otherFrom?.value, otherTo?.value], [otherFrom?.op === ">=", otherTo?.op === "<="]);
+                return new this.selfClass(
+                    [otherFrom?.value, otherTo?.value],
+                    [otherFrom?.op === ">=", otherTo?.op === "<="]
+                );
             } else if (otherFromInsideMe) {
                 if (selfTo === null) {
                     return new this.selfClass([otherFrom?.value, void 0], otherFrom?.op === ">=");
                 } else {
-                    return new this.selfClass([otherFrom?.value, selfTo.value], [otherFrom?.op === ">=", selfTo.op === "<="]);
+                    return new this.selfClass(
+                        [otherFrom?.value, selfTo.value],
+                        [otherFrom?.op === ">=", selfTo.op === "<="]
+                    );
                 }
             } else if (otherToInsideMe) {
                 if (selfFrom === null) {
                     return new this.selfClass([void 0, otherTo?.value], otherTo?.op === "<=");
                 } else {
-                    return new this.selfClass([selfFrom.value, otherTo?.value], [selfFrom.op === ">=", otherTo?.op === "<="]);
+                    return new this.selfClass(
+                        [selfFrom.value, otherTo?.value],
+                        [selfFrom.op === ">=", otherTo?.op === "<="]
+                    );
                 }
-            } else if (InRangeCriterion.isFromInsideRange(selfFrom, other) && InRangeCriterion.isToInsideRange(selfTo, other)) {
-                return new this.selfClass([selfFrom?.value, selfTo?.value], [selfFrom?.op === ">=", selfTo?.op === "<="]);
+            } else if (
+                InRangeCriterion.isFromInsideRange(selfFrom, other) &&
+                InRangeCriterion.isToInsideRange(selfTo, other)
+            ) {
+                return new this.selfClass(
+                    [selfFrom?.value, selfTo?.value],
+                    [selfFrom?.op === ">=", selfTo?.op === "<="]
+                );
             }
         }
 

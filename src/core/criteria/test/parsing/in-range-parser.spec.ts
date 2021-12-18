@@ -5,7 +5,13 @@ import { itShouldParseTokens } from "./utils";
 describe("parse-tokens: in-range", () => {
     itShouldParseTokens(
         inRangeCriterionTokenParser,
-        [token(TokenType.Special, "("), token(TokenType.Number, "13"), token(TokenType.Special, ","), token(TokenType.Number, "37"), token(TokenType.Special, "]")],
+        [
+            token(TokenType.Special, "("),
+            token(TokenType.Number, "13"),
+            token(TokenType.Special, ","),
+            token(TokenType.Number, "37"),
+            token(TokenType.Special, "]"),
+        ],
         inRange(13, 37, [false, true])
     );
 

@@ -1,7 +1,12 @@
 import { TokenParser, Token } from "../../parser";
 import { Criterion } from "../../criterion";
 
-export function itShouldParseTokens(makeGenerator: () => TokenParser, tokens: Token[], expected: Criterion, specFn = it) {
+export function itShouldParseTokens(
+    makeGenerator: () => TokenParser,
+    tokens: Token[],
+    expected: Criterion,
+    specFn = it
+) {
     specFn(`should parse tokens '${tokens.map(t => t.value).join("")}' to ${expected}`, () => {
         const generator = makeGenerator();
         generator.next();

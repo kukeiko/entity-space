@@ -16,7 +16,10 @@ export function* valueCriterionTokenParser(): TokenParser {
     token = yield;
 
     if (token.type === TokenType.Number) {
-        return () => (isTruthy ? new IsNumberValueCriterion(parseFloat(token.value)) : new NotNumberValueCriterion(parseFloat(token.value)));
+        return () =>
+            isTruthy
+                ? new IsNumberValueCriterion(parseFloat(token.value))
+                : new NotNumberValueCriterion(parseFloat(token.value));
     } else if (token.type === TokenType.String) {
         return () => (isTruthy ? new IsStringValueCriterion(token.value) : new NotStringValueCriterion(token.value));
     }

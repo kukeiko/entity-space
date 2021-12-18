@@ -106,7 +106,11 @@ describe("playground: workspace", () => {
         workspace.add("foo", [{ id: 1337, secondaryId: 128, name: "i am foo" }]);
         workspace.add("bar", [{ id: 64, fooId: 1337, secondaryId: 128, name: "i belong to foo" }]);
 
-        const query: Query = { model: "foo", expansion: { bar: true }, criteria: matches({ id: inSet([1337]), secondaryId: inSet([128]) }) };
+        const query: Query = {
+            model: "foo",
+            expansion: { bar: true },
+            criteria: matches({ id: inSet([1337]), secondaryId: inSet([128]) }),
+        };
         const fooItems = workspace.query(query);
         // const barItemsOfFooItems = workspace.expandResult("foo", "bar", fooItems);
 
@@ -149,7 +153,11 @@ describe("playground: workspace", () => {
         workspace.add("foo", [{ id: 1337, name: "i am foo", bar: { bazId: 128 } }]);
         workspace.add("baz", [{ id: 128, name: "i am baz" }]);
 
-        const query: Query = { model: "foo", expansion: { bar: { baz: true } }, criteria: matches({ id: inSet([1337]) }) };
+        const query: Query = {
+            model: "foo",
+            expansion: { bar: { baz: true } },
+            criteria: matches({ id: inSet([1337]) }),
+        };
         const fooItems = workspace.query(query);
         // const barItemsOfFooItems = workspace.expandResult("foo", "bar", fooItems);
 
@@ -396,7 +404,10 @@ describe("playground: workspace", () => {
 
         const query: Query = {
             model: "foo",
-            criteria: matches<Foo>({ bar: matches({ baz: inSet([2, 3]), moo: inSet([10]) }), khaz: matches({ mo: inSet([1]), dan: inSet([2]) }) }),
+            criteria: matches<Foo>({
+                bar: matches({ baz: inSet([2, 3]), moo: inSet([10]) }),
+                khaz: matches({ mo: inSet([1]), dan: inSet([2]) }),
+            }),
             expansion: {},
         };
 

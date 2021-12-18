@@ -132,7 +132,10 @@ export class OrCriteria<T extends Criterion = Criterion> extends Criteria<T> {
 
             if (remappedItems.length > 0) {
                 const flattenedRemappedItems = remappedItems.reduce((acc, value) => [...acc, ...value], []);
-                return [[new OrCriteria(flattenedRemappedItems)], openItems.length > 0 ? new OrCriteria(openItems) : void 0];
+                return [
+                    [new OrCriteria(flattenedRemappedItems)],
+                    openItems.length > 0 ? new OrCriteria(openItems) : void 0,
+                ];
             }
         } else {
             const allRemapped: Criterion[] = [];

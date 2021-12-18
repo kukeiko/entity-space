@@ -1,4 +1,8 @@
-type ExpansionValue<T> = T extends number | string ? true : T extends any[] ? Expansion<T[number]> | true : Expansion<T> | true;
+type ExpansionValue<T> = T extends number | string
+    ? true
+    : T extends any[]
+    ? Expansion<T[number]> | true
+    : Expansion<T> | true;
 
 export type Expansion<T = Record<string, unknown>> = { [K in keyof T]?: ExpansionValue<T[K]> };
 
@@ -16,4 +20,3 @@ export type Expand<T, E> = T extends number | string | null
     : "valueOf" extends keyof E // dirty solution, but cleaner for intellisense
     ? T
     : T & { [K in keyof (T | E)]-?: Expand<T[K], E[K]> };
-

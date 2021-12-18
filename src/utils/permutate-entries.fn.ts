@@ -1,6 +1,9 @@
 import { Unbox } from "./types";
 
-function permutateEntriesInternal<T>(entries: [string, T[]][], aggregated: Record<string, T> = {}): Record<string, T>[] {
+function permutateEntriesInternal<T>(
+    entries: [string, T[]][],
+    aggregated: Record<string, T> = {}
+): Record<string, T>[] {
     if (entries.length === 0) {
         return [aggregated];
     }

@@ -7,7 +7,10 @@ export type SchemaKeyArgument = string | string[] | { name: string; path: string
 // (instead of either just a string or string[]). consider allowing "[...string[], boolean]" as a valid type of argument,
 // where the boolean is the "unique" flag. i do think it makes sense to keep the SchemaIndexOptions - reason i'm even
 // mentioning this is because, as of writing this, there is only the "unique" flag in there.
-export type SchemaIndexArgument = string | string[] | ({ name?: string; path: string | string[] } & SchemaIndexOptionsArgument);
+export type SchemaIndexArgument =
+    | string
+    | string[]
+    | ({ name?: string; path: string | string[] } & SchemaIndexOptionsArgument);
 
 function buildDefaultIndexName(path: string[]): string {
     return path.join(",");
@@ -16,7 +19,12 @@ function buildDefaultIndexName(path: string[]): string {
 export type SchemaWithKey = Schema & Required<Pick<Schema, "key">>;
 
 export class Schema {
-    constructor(args: { name: string; properties: SchemaPropertiesArgument; key?: SchemaKeyArgument; indexes?: SchemaIndexArgument[] }) {
+    constructor(args: {
+        name: string;
+        properties: SchemaPropertiesArgument;
+        key?: SchemaKeyArgument;
+        indexes?: SchemaIndexArgument[];
+    }) {
         this.name = args.name;
         const properties: SchemaProperty[] = [];
 
