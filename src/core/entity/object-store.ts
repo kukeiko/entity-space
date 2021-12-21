@@ -56,6 +56,10 @@ export class ObjectStore<V = any> {
         return keys.map(key => this.getByKey(key)).filter(isDefined);
     }
 
+    getKeyIndex(): ObjectStoreIndex {
+        return this.getIndex(this.schema.key.name);
+    }
+
     getByIndex(name: string, values: IndexValue[]): V[] {
         const index = this.indexes[name];
 
@@ -97,12 +101,16 @@ export class ObjectStore<V = any> {
 
     // [todo] handle case where items my already exist in indexes?
     add(items: any[]): void {
-        for (const item of items) {
-            const itemsIndex = this.items.length;
-            this.items.push(item);
+        const keyIndex = this.getKeyIndex();
 
+        for (const item of items) {
+            const storedArrayIndex = keyIndex.get(keyIndex.read([item]))[0];
+            let arrayIndex = storedArrayIndex ?? this.items.length;
+            this.items[arrayIndex] = item;
+
+            // [todo] if it already existet, it's values to index might've changed, which we're not accounting for yet.
             for (const indexName in this.indexes) {
-                this.indexes[indexName].insert(item, itemsIndex);
+                this.indexes[indexName].add(item, arrayIndex);
             }
         }
     }
