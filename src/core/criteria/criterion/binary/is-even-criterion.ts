@@ -7,4 +7,8 @@ export class IsEvenCriterion extends BinaryCriterion<number> {
     toString(): string {
         return "is-even";
     }
+
+    matches(value: any): boolean {
+        return value % 2 === 0;
+    }
 }

@@ -7,4 +7,8 @@ export class IsFalseCriterion extends BinaryCriterion<boolean> {
     toString(): string {
         return "is-false";
     }
+
+    matches(value: any): boolean {
+        return value === false;
+    }
 }

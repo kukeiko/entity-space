@@ -19,4 +19,8 @@ export abstract class IsValueCriterion<T> extends Criterion {
 
         return false;
     }
+
+    matches(value: any): boolean {
+        return this.value === value;
+    }
 }

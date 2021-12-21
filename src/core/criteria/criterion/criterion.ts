@@ -55,9 +55,9 @@ export abstract class Criterion {
 
     abstract reduce(other: Criterion): boolean | Criterion;
     abstract toString(): string;
+    abstract matches<T>(item: T): boolean;
 
     filter<T>(items: T[]): T[] {
-        // [todo] implement
-        return items;
+        return items.filter(item => this.matches(item));
     }
 }
