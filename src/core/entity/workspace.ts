@@ -9,6 +9,7 @@ import { SchemaCatalog } from "./metadata/schema-catalog";
 import { normalizeEntities } from "./normalize-entities.fn";
 import { createCriteriaTemplateForIndex } from "./create-criteria-template-for-index.fn";
 import { namedCriteriaToKeyPaths } from "./named-criteria-to-key-path.fn";
+import { flattenNamedCriteria } from "./flatten-named-criteria.fn";
 
 export class Workspace {
     constructor(catalog: SchemaCatalog) {
@@ -47,31 +48,9 @@ export class Workspace {
         } else {
             // load items from store using index
             for (const remappedCriterion of remappedCriteria) {
-                const bag = remappedCriterion.getBag();
-                const bagWithPrimitives: Record<string, any> = {};
-
-                for (const property in bag) {
-                    const criterionInBag = bag[property] as any;
-
-                    if (criterionInBag instanceof InSetCriterion) {
-                        bagWithPrimitives[property] = Array.from(criterionInBag.getValues());
-                    } else if (criterionInBag instanceof NamedCriteria) {
-                        for (const property_2 in criterionInBag.getBag()) {
-                            const criterionInBag_2 = criterionInBag.getBag()[property_2];
-
-                            if (criterionInBag_2 instanceof InSetCriterion) {
-                                // [todo] support more than 1 level of nesting
-                                bagWithPrimitives[`${property}.${property_2}`] = Array.from(
-                                    criterionInBag_2.getValues()
-                                );
-                            }
-                        }
-                    }
-                }
-
                 const bagKeyPaths = namedCriteriaToKeyPaths(remappedCriterion);
                 const index = store.getIndexMatchingKeyPaths(bagKeyPaths);
-
+                const bagWithPrimitives = flattenNamedCriteria(remappedCriterion);
                 const permutatedBags = permutateEntries(bagWithPrimitives);
                 const indexValues: any[][] = [];
 
