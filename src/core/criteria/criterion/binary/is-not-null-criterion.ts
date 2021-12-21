@@ -7,4 +7,8 @@ export class IsNotNullCriterion extends BinaryCriterion<null> {
     toString(): string {
         return "is-not-null";
     }
+
+    matches(value: any): boolean {
+        return value !== null;
+    }
 }

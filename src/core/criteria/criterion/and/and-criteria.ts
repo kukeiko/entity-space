@@ -94,4 +94,8 @@ export class AndCriteria<T extends Criterion = Criterion> extends Criteria<T> {
     toString(): string {
         return `(${this.items.map(item => item.toString()).join(" & ")})`;
     }
+
+    matches(item: any): boolean {
+        return this.items.every(criterion => criterion.matches(item));
+    }
 }

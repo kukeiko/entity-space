@@ -160,4 +160,8 @@ export class OrCriteria<T extends Criterion = Criterion> extends Criteria<T> {
 
         return [false, void 0];
     }
+
+    matches(item: any): boolean {
+        return this.items.some(criterion => criterion.matches(item));
+    }
 }

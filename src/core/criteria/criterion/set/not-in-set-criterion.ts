@@ -77,4 +77,8 @@ export abstract class NotInSetCriterion<T> extends Criterion {
     toString(): string {
         return `!{${Array.from(this.values).join(", ")}}`;
     }
+
+    matches(value: any): boolean {
+        return !this.values.has(value);
+    }
 }
