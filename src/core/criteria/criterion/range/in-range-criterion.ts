@@ -311,4 +311,27 @@ export abstract class InRangeCriterion<T> extends Criterion {
 
         return [false, void 0];
     }
+
+    matches(value: any): boolean {
+        let matchesFrom = true;
+        let matchesTo = true;
+
+        if (this.from !== null) {
+            if (this.from.op === ">=") {
+                matchesFrom = value >= this.from.value;
+            } else {
+                matchesFrom = value > this.from.value;
+            }
+        }
+
+        if (this.to !== null) {
+            if (this.to.op === "<=") {
+                matchesTo = value <= this.to.value;
+            } else {
+                matchesTo = value < this.to.value;
+            }
+        }
+
+        return matchesFrom && matchesTo;
+    }
 }

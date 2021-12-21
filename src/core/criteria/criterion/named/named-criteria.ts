@@ -164,4 +164,16 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag> extend
 
         return [false, void 0];
     }
+
+    matches(item: any): boolean {
+        for (const key in this.bag) {
+            const criterion = this.bag[key];
+
+            if (!criterion?.matches(item[key])) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }

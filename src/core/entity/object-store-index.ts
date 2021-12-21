@@ -25,15 +25,16 @@ export class ObjectStoreIndex {
     }
 
     // [todo] instead have "insert()", "update()" and "upsert()"
-    insert(item: Record<string, any>, recordIndex: number): void {
+    add(item: Record<string, any>, recordIndex: number): void {
         const indexValue = this.readOne(item);
+
         this.addToIndex(indexValue, recordIndex);
     }
 
     // [todo] not yet used, but we definitely need to
     update(newItem: Record<string, any>, olditem: Record<string, any>, newIndex: number, oldRecordIndex: number): void {
         this.remove(olditem, oldRecordIndex);
-        this.insert(newItem, newIndex);
+        this.add(newItem, newIndex);
     }
 
     remove(item: Record<string, any>, recordIndex: number): void {

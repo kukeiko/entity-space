@@ -7,4 +7,8 @@ export class IsOddCriterion extends BinaryCriterion<number> {
     toString(): string {
         return "is-odd";
     }
+
+    matches(value: any): boolean {
+        return value % 2 === 1;
+    }
 }
