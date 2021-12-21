@@ -155,6 +155,10 @@ export class OrCriteria<T extends Criterion = Criterion> extends Criteria<T> {
                 }
             }
 
+            if (allRemapped.length === 0) {
+                return [false, void 0];
+            }
+
             return [allRemapped, allOpen.length > 0 ? new OrCriteria(allOpen) : void 0];
         }
 

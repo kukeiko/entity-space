@@ -8,14 +8,14 @@ const products: Product[] = [
         rating: 5,
     },
     {
-        id: 3,
+        id: 2,
         name: "A decent Shirt",
         price: 200,
         rating: 3,
     },
     {
         id: 3,
-        name: "A really ugly Shirt",
+        name: "A kind of unsightly Shirt",
         price: 100,
         rating: 2,
     },

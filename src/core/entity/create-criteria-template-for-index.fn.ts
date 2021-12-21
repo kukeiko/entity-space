@@ -7,6 +7,7 @@ export function createCriteriaTemplateForIndex(
     const keyPath = index.path;
 
     if (index.path.some(key => key.split(".").length > 2)) {
+        // [todo] support arbitrary depth
         throw new Error(`arbitrary depth of nested index paths not yet supported`);
     }
 

@@ -1,5 +1,4 @@
 import { permutateEntries } from "../../utils/permutate-entries.fn";
-import { InNumberSetCriterion, InSetCriterion, NamedCriteria, NamedCriteriaTemplate } from "../criteria/public";
 import { Query } from "../query/public";
 import { ObjectStore } from "./object-store";
 import { Schema } from "./metadata/schema";
@@ -129,7 +128,6 @@ export class Workspace {
 
         const toIndex = this.getSchema(linkedModel).getIndex(link.to);
         const fromIndex = this.getSchema(model).getIndex(link.from);
-
         const criteria = createCriteriaForIndex(toIndex.path.slice(), fromIndex.read(items));
         const referencedItems = this.query({ criteria, expansion: expansion ?? {}, model: linkedModel });
         const referencedIndex = this.getSchema(linkedModel).getIndex(link.to);
