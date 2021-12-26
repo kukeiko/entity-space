@@ -8,10 +8,10 @@ import {
     Criterion,
     NamedCriteriaTemplate,
     reduceQueries,
+    Schema,
+    SchemaCatalog,
+    Workspace,
 } from "@entity-space/core";
-import { Schema } from "../../src/core/entity/metadata/schema";
-import { SchemaCatalog } from "../../src/core/entity/metadata/schema-catalog";
-import { Workspace } from "../../src/core/entity/workspace";
 import { Product, ProductFilter } from "./model";
 import { ProductRepository } from "./repositories";
 

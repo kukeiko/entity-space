@@ -249,6 +249,8 @@ describe("what's reduction for?", () => {
             price_100_to_200_rating_3_to_5_no_reviews
         );
 
-        expect(actual).toEqual(jasmine.arrayWithExactContents(expected));
+        // expect(actual).toEqual(jasmine.arrayWithExactContents(expected));
+        expect((actual as []).length).toEqual(expected.length);
+        expect(actual).toEqual(expect.arrayContaining(expected));
     });
 });

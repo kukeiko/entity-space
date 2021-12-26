@@ -11,6 +11,7 @@ import {
     Instance,
 } from "@entity-space/core";
 import { CanvasModel, UserModel } from "../facade/model";
+import { TreeNodeRepository } from "../facade/data";
 
 const inNumberSet = new InNumberSetCriterion([1, 2, 3]);
 const inNumberRange = new InStringRangeCriterion(["1", "3"]);
@@ -27,6 +28,7 @@ type Box<T, U = any[]> = any[] extends U ? T[] : T;
 // }
 
 describe("prototyping-playground", () => {
+    const treeNodeRepo = new TreeNodeRepository();
     it("generic expand w/ union types", () => {
         // type Expansion<T> = T extends number | string
         //     ? true

@@ -35,6 +35,8 @@ export class TreeNodeRepository {
         if (item !== void 0) {
             return this._clone([item])[0];
         }
+
+        return void 0;
     }
 
     getMany(ids: number[]): Instance<TreeNodeModel>[] {
