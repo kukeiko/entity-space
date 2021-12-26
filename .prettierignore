@@ -1,9 +1,4 @@
-# non-src folders
-.vscode
+# Add files here to ignore them from prettier formatting
 
-# artifacts
-coverage
-dist
-
-# file types
-*.html
+/dist
+/coverage
