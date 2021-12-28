@@ -1,4 +1,5 @@
 import { Component } from "@angular/core";
+import { inRange, or } from "@entity-space/core";
 
 @Component({
     selector: "entity-space-root",
@@ -6,5 +7,5 @@ import { Component } from "@angular/core";
     styleUrls: ["./app.component.scss"],
 })
 export class AppComponent {
-    title = "apps-sandbox-ui";
+    title = or([inRange(1, 7)]).toString();
 }
