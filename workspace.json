@@ -1,6 +1,8 @@
 {
     "version": 2,
     "projects": {
+        "apps-sandbox-ui": "packages/apps/sandbox-ui",
+        "apps-sandbox-ui-e2e": "packages/apps/sandbox-ui-e2e",
         "core": "packages/core",
         "utils": "packages/utils"
     }
