@@ -64,7 +64,8 @@
             "defaultConfiguration": "development",
             "options": {
                 "port": 7000,
-                "browserTarget": "apps-sandbox-ui:build:development"
+                "browserTarget": "apps-sandbox-ui:build:development",
+                "proxyConfig": "packages/apps/sandbox-ui/proxy.conf.json"
             }
         },
         "extract-i18n": {
