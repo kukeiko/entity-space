@@ -4,7 +4,7 @@
         "apps-sandbox-api": "packages/apps/sandbox-api",
         "apps-sandbox-ui": "packages/apps/sandbox-ui",
         "apps-sandbox-ui-e2e": "packages/apps/sandbox-ui-e2e",
-        "core": "packages/core",
-        "utils": "packages/utils"
+        "libs-core": "packages/libs/core",
+        "libs-utils": "packages/libs/utils"
     }
 }
