@@ -1,59 +1,60 @@
-import { SchemaIndex, SchemaIndexOptionsArgument } from "./schema-index";
-import { SchemaProperty, SchemaPropertyOptionsArgument, SchemaPropertyType } from "./schema-property";
+import { SchemaIndexV1, SchemaIndexOptionsArgumentV1 } from "./schema-v1-index";
+import { SchemaPropertyV1, SchemaPropertyOptionsArgumentV1, SchemaPropertyTypeV1 } from "./schema-v1-property";
 
-export type SchemaPropertiesArgument = Record<string, { type: SchemaPropertyType } & SchemaPropertyOptionsArgument>;
+export type SchemaPropertiesArgument = Record<string, { type: SchemaPropertyTypeV1 } & SchemaPropertyOptionsArgumentV1>;
 export type SchemaKeyArgument = string | string[] | { name: string; path: string | string[] };
+
 // [todo] so just because you want to set an index to unique, you suddenly are forced to use the object declaration
 // (instead of either just a string or string[]). consider allowing "[...string[], boolean]" as a valid type of argument,
 // where the boolean is the "unique" flag. i do think it makes sense to keep the SchemaIndexOptions - reason i'm even
 // mentioning this is because, as of writing this, there is only the "unique" flag in there.
-export type SchemaIndexArgument =
+export type SchemaIndexArgumentV1 =
     | string
     | string[]
-    | ({ name?: string; path: string | string[] } & SchemaIndexOptionsArgument);
+    | ({ name?: string; path: string | string[] } & SchemaIndexOptionsArgumentV1);
 
 function buildDefaultIndexName(path: string[]): string {
     return path.join(",");
 }
 
-export type SchemaWithKey = Schema & Required<Pick<Schema, "key">>;
+export type SchemaWithKeyV1 = SchemaV1 & Required<Pick<SchemaV1, "key">>;
 
-export class Schema {
+export class SchemaV1 {
     constructor(args: {
         name: string;
         properties: SchemaPropertiesArgument;
         key?: SchemaKeyArgument;
-        indexes?: SchemaIndexArgument[];
+        indexes?: SchemaIndexArgumentV1[];
     }) {
         this.name = args.name;
-        const properties: SchemaProperty[] = [];
+        const properties: SchemaPropertyV1[] = [];
 
         for (const key in args.properties) {
-            properties.push(new SchemaProperty(key, args.properties[key].type, args.properties[key]));
+            properties.push(new SchemaPropertyV1(key, args.properties[key].type, args.properties[key]));
         }
 
         this.properties = Object.freeze(properties);
 
         if (args.key !== void 0) {
             if (typeof args.key === "string") {
-                this.key = new SchemaIndex(args.key, [args.key], { unique: true });
+                this.key = new SchemaIndexV1(args.key, [args.key], { unique: true });
             } else if (Array.isArray(args.key)) {
-                this.key = new SchemaIndex(buildDefaultIndexName(args.key), args.key, { unique: true });
+                this.key = new SchemaIndexV1(buildDefaultIndexName(args.key), args.key, { unique: true });
             } else {
-                this.key = new SchemaIndex(args.key.name, args.key.path, { unique: true });
+                this.key = new SchemaIndexV1(args.key.name, args.key.path, { unique: true });
             }
         }
 
-        const indexes: SchemaIndex[] = [];
+        const indexes: SchemaIndexV1[] = [];
 
         if (args.indexes !== void 0) {
             for (const indexArgs of args.indexes) {
-                let index: SchemaIndex;
+                let index: SchemaIndexV1;
 
                 if (typeof indexArgs === "string") {
-                    index = new SchemaIndex(indexArgs, [indexArgs]);
+                    index = new SchemaIndexV1(indexArgs, [indexArgs]);
                 } else if (Array.isArray(indexArgs)) {
-                    index = new SchemaIndex(buildDefaultIndexName(indexArgs), indexArgs);
+                    index = new SchemaIndexV1(buildDefaultIndexName(indexArgs), indexArgs);
                 } else {
                     let name = indexArgs.name;
 
@@ -65,7 +66,7 @@ export class Schema {
                         }
                     }
 
-                    index = new SchemaIndex(name, indexArgs.path, indexArgs);
+                    index = new SchemaIndexV1(name, indexArgs.path, indexArgs);
                 }
 
                 indexes.push(index);
@@ -80,11 +81,11 @@ export class Schema {
     }
 
     readonly name: string;
-    readonly properties: readonly SchemaProperty[];
-    readonly key?: SchemaIndex;
-    readonly indexes: readonly SchemaIndex[];
+    readonly properties: readonly SchemaPropertyV1[];
+    readonly key?: SchemaIndexV1;
+    readonly indexes: readonly SchemaIndexV1[];
 
-    getIndex(name: string): SchemaIndex {
+    getIndex(name: string): SchemaIndexV1 {
         // [todo] i don't want a linear lookup here as it's on the critical path
         const index = this.indexes.find(index => index.name === name);
 
@@ -95,11 +96,11 @@ export class Schema {
         return index;
     }
 
-    getIndexes(): readonly SchemaIndex[] {
+    getIndexes(): readonly SchemaIndexV1[] {
         return this.indexes;
     }
 
-    getProperty(name: string): SchemaProperty {
+    getProperty(name: string): SchemaPropertyV1 {
         const property = this.properties.find(property => property.name === name);
 
         if (property === void 0) {
@@ -109,15 +110,15 @@ export class Schema {
         return property;
     }
 
-    getProperties(): readonly SchemaProperty[] {
+    getProperties(): readonly SchemaPropertyV1[] {
         return this.properties;
     }
 
-    hasKey(): this is SchemaWithKey {
-        return Schema.hasKey(this);
+    hasKey(): this is SchemaWithKeyV1 {
+        return SchemaV1.hasKey(this);
     }
 
-    static hasKey(schema: Schema): schema is SchemaWithKey {
+    static hasKey(schema: SchemaV1): schema is SchemaWithKeyV1 {
         return schema.key !== void 0;
     }
 }

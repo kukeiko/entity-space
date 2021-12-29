@@ -1,8 +1,8 @@
 import { inSet, matches, Query } from "../public";
 import { createCriteriaForIndex } from "./create-criteria-for-index.fn";
-import { Schema } from "./metadata/schema";
+import { SchemaV1 } from "./metadata/schema-v1";
 import { SchemaCatalog } from "./metadata/schema-catalog";
-import { SchemaIndex } from "./metadata/schema-index";
+import { SchemaIndexV1 } from "./metadata/schema-v1-index";
 import { SchemaJson } from "./metadata/schema-json";
 import { normalizeEntities } from "./normalize-entities.fn";
 import { ObjectStore } from "./object-store";
@@ -25,7 +25,7 @@ describe("playground: workspace", () => {
             id: number;
         }
 
-        const fooSchema = new Schema({
+        const fooSchema = new SchemaV1({
             name: "foo",
             key: "id",
             properties: {
@@ -36,7 +36,7 @@ describe("playground: workspace", () => {
             },
         });
 
-        const barSchema = new Schema({
+        const barSchema = new SchemaV1({
             name: "bar",
             indexes: ["bazId"],
             properties: {
@@ -48,7 +48,7 @@ describe("playground: workspace", () => {
             },
         });
 
-        const bazSchema = new Schema({
+        const bazSchema = new SchemaV1({
             name: "baz",
             key: "id",
             properties: {},
@@ -85,7 +85,7 @@ describe("playground: workspace", () => {
     });
 
     it("expanding", () => {
-        const fooSchema = new Schema({
+        const fooSchema = new SchemaV1({
             name: "foo",
             key: { name: "id", path: ["id", "secondaryId"] },
             properties: {
@@ -93,7 +93,7 @@ describe("playground: workspace", () => {
             },
         });
 
-        const barSchema = new Schema({
+        const barSchema = new SchemaV1({
             name: "bar",
             key: "id",
             indexes: [{ name: "fooId", path: ["fooId", "secondaryId"] }],
@@ -119,7 +119,7 @@ describe("playground: workspace", () => {
     });
 
     it("expanding #2", () => {
-        const fooSchema = new Schema({
+        const fooSchema = new SchemaV1({
             name: "foo",
             key: "id",
             properties: {
@@ -130,7 +130,7 @@ describe("playground: workspace", () => {
             },
         });
 
-        const barSchema = new Schema({
+        const barSchema = new SchemaV1({
             name: "bar",
             indexes: ["bazId"],
             properties: {
@@ -142,7 +142,7 @@ describe("playground: workspace", () => {
             },
         });
 
-        const bazSchema = new Schema({
+        const bazSchema = new SchemaV1({
             name: "baz",
             key: "id",
             properties: {},
@@ -198,7 +198,7 @@ describe("playground: workspace", () => {
             bar: number;
         }
 
-        const schema = new Schema({
+        const schema = new SchemaV1({
             name: "foo",
             key: "id",
             indexes: ["bar"],
@@ -244,7 +244,7 @@ describe("playground: workspace", () => {
             baz: number;
         }
 
-        const schema = new Schema({
+        const schema = new SchemaV1({
             name: "foo",
             key: "id",
             indexes: [{ name: "barAndBaz", path: ["bar", "baz"] }],
@@ -289,7 +289,7 @@ describe("playground: workspace", () => {
             };
         }
 
-        const schema = new Schema({
+        const schema = new SchemaV1({
             name: "foo",
             key: "id",
             indexes: [{ name: "bar", path: "bar.baz" }],
@@ -337,7 +337,7 @@ describe("playground: workspace", () => {
             };
         }
 
-        const schema = new Schema({
+        const schema = new SchemaV1({
             name: "foo",
             key: "id",
             properties: {},
@@ -388,7 +388,7 @@ describe("playground: workspace", () => {
             };
         }
 
-        const schema = new Schema({
+        const schema = new SchemaV1({
             name: "foo",
             key: "id",
             properties: {},

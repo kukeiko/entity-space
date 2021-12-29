@@ -1,7 +1,7 @@
 import { permutateEntries } from "@entity-space/utils";
 import { Query } from "../query/public";
 import { ObjectStore } from "./object-store";
-import { Schema } from "./metadata/schema";
+import { SchemaV1 } from "./metadata/schema-v1";
 import { createCriteriaForIndex } from "./create-criteria-for-index.fn";
 import { Expansion } from "../expansion/public";
 import { SchemaCatalog } from "./metadata/schema-catalog";
@@ -14,7 +14,7 @@ export class Workspace {
     constructor(catalog: SchemaCatalog) {
         this.catalog = catalog;
 
-        for (const schema of catalog.getSchemas().filter(Schema.hasKey)) {
+        for (const schema of catalog.getSchemas().filter(SchemaV1.hasKey)) {
             this.stores.set(schema.name, new ObjectStore(schema));
         }
     }
@@ -156,7 +156,7 @@ export class Workspace {
         return store;
     }
 
-    private getSchema(model: string): Schema {
+    private getSchema(model: string): SchemaV1 {
         return this.catalog.getSchema(model);
     }
 }

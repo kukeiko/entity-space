@@ -1,12 +1,12 @@
 import { isDefined } from "@entity-space/utils";
-import { Schema, SchemaWithKey } from "./metadata/schema";
+import { SchemaV1, SchemaWithKeyV1 } from "./metadata/schema-v1";
 import { IndexValue, ObjectStoreIndex } from "./object-store-index";
 
 export class ObjectStore<V = any> {
     // [todo] would be nice to use this commented out line, but then we can't just supply
     // the argument by using e.g. "new Schema({ key: ... })" cause of key being optional in Schema.ctor()
     // constructor(schema: SchemaWithKey) {
-    constructor(schema: Schema) {
+    constructor(schema: SchemaV1) {
         if (!schema.hasKey()) {
             throw new Error(`can't create object-store for schema that has no key defined`);
         }
@@ -21,7 +21,7 @@ export class ObjectStore<V = any> {
         this.indexes = indexes;
     }
 
-    private readonly schema: SchemaWithKey;
+    private readonly schema: SchemaWithKeyV1;
 
     get name(): string {
         return this.schema.name;

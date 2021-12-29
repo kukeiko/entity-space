@@ -1,5 +1,5 @@
 import { SchemaCatalog } from "./metadata/schema-catalog";
-import { SchemaProperty } from "./metadata/schema-property";
+import { SchemaPropertyV1 } from "./metadata/schema-v1-property";
 
 // [todo] not a fan of having the "shouldAddSelf" flag
 export function normalizeEntities(
@@ -9,7 +9,7 @@ export function normalizeEntities(
     shouldAddSelf = true
 ): Record<string, any[]> {
     const schema = catalog.getSchema(model);
-    const navigable = schema.getProperties().filter(SchemaProperty.isNavigable);
+    const navigable = schema.getProperties().filter(SchemaPropertyV1.isNavigable);
     const normalized: Record<string, any[]> = {};
 
     if (shouldAddSelf) {

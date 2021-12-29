@@ -1,8 +1,8 @@
 import { InNumberSetCriterion, NamedCriteriaTemplate } from "../criteria/public";
-import { SchemaIndex } from "./metadata/schema-index";
+import { SchemaIndexV1 } from "./metadata/schema-v1-index";
 
 export function createCriteriaTemplateForIndex(
-    index: SchemaIndex
+    index: SchemaIndexV1
 ): NamedCriteriaTemplate<{ [key: string]: typeof InNumberSetCriterion[] }> {
     const keyPath = index.path;
 

@@ -1,15 +1,15 @@
-import { SchemaIndex } from "./metadata/schema-index";
+import { SchemaIndexV1 } from "./metadata/schema-v1-index";
 
 type IndexSingleValue = string | number;
 export type IndexValue = IndexSingleValue | IndexSingleValue[];
 
 // [todo] not happy with various method/variable/type names, revisit.
 export class ObjectStoreIndex {
-    constructor(schemaIndex: SchemaIndex) {
+    constructor(schemaIndex: SchemaIndexV1) {
         this.schemaIndex = schemaIndex;
     }
 
-    private readonly schemaIndex: SchemaIndex;
+    private readonly schemaIndex: SchemaIndexV1;
     private store = new Map();
 
     get name(): string {

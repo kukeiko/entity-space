@@ -8,7 +8,7 @@ import {
     Criterion,
     NamedCriteriaTemplate,
     reduceQueries,
-    Schema,
+    SchemaV1,
     SchemaCatalog,
     Workspace,
 } from "@entity-space/core";
@@ -77,7 +77,7 @@ describe("how do we actually load data?", () => {
 
         const workspace = new Workspace(
             new SchemaCatalog([
-                new Schema({
+                new SchemaV1({
                     name: "product",
                     key: "id",
                     properties: {

@@ -1,7 +1,7 @@
-export type SchemaIndexValue = number | number[] | string | string[];
+export type SchemaIndexValueV1 = number | number[] | string | string[];
 type Entity = Record<string, any>;
 
-export interface SchemaIndexOptionsArgument {
+export interface SchemaIndexOptionsArgumentV1 {
     unique?: boolean;
 }
 
@@ -10,8 +10,8 @@ export interface SchemaIndexOptionsArgument {
  * i did have to extract it out of the ObjectStoreIndex because we need indexes on entities
  * that are not separately stored; therefore need no ObjectStore, and so there's no ObjectStoreIndex.
  */
-export class SchemaIndex<T extends number | string = number | string> {
-    constructor(name: string, path: string | string[], options?: SchemaIndexOptionsArgument) {
+export class SchemaIndexV1<T extends number | string = number | string> {
+    constructor(name: string, path: string | string[], options?: SchemaIndexOptionsArgumentV1) {
         this.name = name;
 
         if (typeof path === "string") {

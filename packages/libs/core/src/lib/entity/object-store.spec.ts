@@ -1,8 +1,8 @@
-import { Schema, SchemaIndexArgument } from "./metadata/schema";
+import { SchemaV1, SchemaIndexArgumentV1 } from "./metadata/schema-v1";
 import { ObjectStore } from "./object-store";
 
-function createSchema(name: string, key: string | string[], indexes?: SchemaIndexArgument[]): Schema {
-    return new Schema({ name, key, properties: {}, indexes });
+function createSchema(name: string, key: string | string[], indexes?: SchemaIndexArgumentV1[]): SchemaV1 {
+    return new SchemaV1({ name, key, properties: {}, indexes });
 }
 
 describe("object-store", () => {
