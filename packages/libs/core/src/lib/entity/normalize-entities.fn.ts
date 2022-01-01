@@ -8,7 +8,7 @@ export function normalizeEntities(
     catalog: SchemaCatalog,
     shouldAddSelf = true
 ): Record<string, any[]> {
-    const schema = catalog.getSchema(model);
+    const schema = catalog.getSchemaV1(model);
     const navigable = schema.getProperties().filter(SchemaPropertyV1.isNavigable);
     const normalized: Record<string, any[]> = {};
 

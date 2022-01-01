@@ -1,12 +1,12 @@
 import { isDefined } from "@entity-space/utils";
-import { SchemaV1, SchemaWithKeyV1 } from "./metadata/schema-v1";
+import { Schema } from "./metadata/schema";
 import { IndexValue, ObjectStoreIndex } from "./object-store-index";
 
 export class ObjectStore<V = any> {
     // [todo] would be nice to use this commented out line, but then we can't just supply
     // the argument by using e.g. "new Schema({ key: ... })" cause of key being optional in Schema.ctor()
     // constructor(schema: SchemaWithKey) {
-    constructor(schema: SchemaV1) {
+    constructor(schema: Schema) {
         if (!schema.hasKey()) {
             throw new Error(`can't create object-store for schema that has no key defined`);
         }
@@ -14,17 +14,17 @@ export class ObjectStore<V = any> {
         this.schema = schema;
         const indexes: Record<string, ObjectStoreIndex> = {};
 
-        for (const schemaIndex of schema.getIndexes()) {
+        for (const schemaIndex of schema.getAllIndexes()) {
             indexes[schemaIndex.name] = new ObjectStoreIndex(schemaIndex);
         }
 
         this.indexes = indexes;
     }
 
-    private readonly schema: SchemaWithKeyV1;
+    private readonly schema: Schema;
 
     get name(): string {
-        return this.schema.name;
+        return this.schema.getSchemaName();
     }
 
     private readonly indexes: Record<string, ObjectStoreIndex>;
@@ -35,7 +35,7 @@ export class ObjectStore<V = any> {
     }
 
     getByKey(key: IndexValue): V | undefined {
-        return this.getByIndex(this.schema.key.name, [key])[0];
+        return this.getByIndex(this.schema.getKeyIndex().name, [key])[0];
     }
 
     getIndexes(): ObjectStoreIndex[] {
@@ -57,7 +57,7 @@ export class ObjectStore<V = any> {
     }
 
     getKeyIndex(): ObjectStoreIndex {
-        return this.getIndex(this.schema.key.name);
+        return this.getIndex(this.schema.getKeyIndex().name);
     }
 
     getByIndex(name: string, values: IndexValue[]): V[] {

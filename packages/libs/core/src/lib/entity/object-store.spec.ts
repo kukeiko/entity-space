@@ -1,8 +1,56 @@
-import { SchemaV1, SchemaIndexArgumentV1 } from "./metadata/schema-v1";
+import { Schema } from "./metadata/schema";
+import { SchemaDev } from "./metadata/schema-dev";
+import { EntitySpaceSchemaIndex } from "./metadata/schema-json";
+import { SchemaIndexArgumentV1 } from "./metadata/schema-v1";
 import { ObjectStore } from "./object-store";
+import { SchemaCatalog } from "./public";
 
-function createSchema(name: string, key: string | string[], indexes?: SchemaIndexArgumentV1[]): SchemaV1 {
-    return new SchemaV1({ name, key, properties: {}, indexes });
+function buildDefaultIndexName(path: string[]): string {
+    return path.join(",");
+}
+
+function createSchema(name: string, key: string | string[], indexes_oldStyle?: SchemaIndexArgumentV1[]): Schema {
+    const indexes: Record<string, EntitySpaceSchemaIndex> = {};
+
+    for (const indexArgs of indexes_oldStyle ?? []) {
+        let index: EntitySpaceSchemaIndex;
+        let name: string;
+
+        if (typeof indexArgs === "string") {
+            index = { path: [indexArgs] };
+            name = indexArgs;
+        } else if (Array.isArray(indexArgs)) {
+            index = { path: indexArgs };
+            name = buildDefaultIndexName(indexArgs);
+        } else {
+            if (indexArgs.name === void 0) {
+                if (typeof indexArgs.path === "string") {
+                    name = indexArgs.path;
+                } else {
+                    name = buildDefaultIndexName(indexArgs.path);
+                }
+            } else {
+                name = indexArgs.name;
+            }
+
+            index = {
+                path: Array.isArray(indexArgs.path) ? indexArgs.path : [indexArgs.path],
+                unique: indexArgs.unique,
+            };
+        }
+
+        indexes[name] = index;
+    }
+
+    return new SchemaDev(
+        name,
+        {
+            type: "object",
+            key,
+            indexes,
+        },
+        new SchemaCatalog([])
+    );
 }
 
 describe("object-store", () => {

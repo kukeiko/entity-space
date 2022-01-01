@@ -1,3 +1,5 @@
+import { Schema } from "./schema";
+import { EntitySpaceSchemaRelation, OpenApiDiscriminator } from "./schema-json";
 import { SchemaIndexV1, SchemaIndexOptionsArgumentV1 } from "./schema-v1-index";
 import { SchemaPropertyV1, SchemaPropertyOptionsArgumentV1, SchemaPropertyTypeV1 } from "./schema-v1-property";
 
@@ -19,7 +21,7 @@ function buildDefaultIndexName(path: string[]): string {
 
 export type SchemaWithKeyV1 = SchemaV1 & Required<Pick<SchemaV1, "key">>;
 
-export class SchemaV1 {
+export class SchemaV1 implements Schema {
     constructor(args: {
         name: string;
         properties: SchemaPropertiesArgument;
@@ -85,6 +87,42 @@ export class SchemaV1 {
     readonly key?: SchemaIndexV1;
     readonly indexes: readonly SchemaIndexV1[];
 
+    getKeyIndex(): SchemaIndexV1 {
+        if (this.key === void 0) {
+            throw new Error(`no key defined on schema ${this.name}`);
+        }
+
+        return this.key;
+    }
+
+    getSchemaName(): string {
+        return this.name;
+    }
+
+    getAllOf(): Schema[] {
+        return [];
+    }
+
+    getType(): string {
+        return "object";
+    }
+
+    isUnion(): boolean {
+        return false;
+    }
+
+    getUnionDiscriminator(): OpenApiDiscriminator | undefined {
+        return void 0;
+    }
+
+    getDiscriminators(): OpenApiDiscriminator[] {
+        return [];
+    }
+
+    getRelations(): EntitySpaceSchemaRelation[] {
+        return [];
+    }
+
     getIndex(name: string): SchemaIndexV1 {
         // [todo] i don't want a linear lookup here as it's on the critical path
         const index = this.indexes.find(index => index.name === name);
@@ -96,8 +134,12 @@ export class SchemaV1 {
         return index;
     }
 
-    getIndexes(): readonly SchemaIndexV1[] {
+    getAllIndexes(): readonly SchemaIndexV1[] {
         return this.indexes;
+    }
+
+    getIndexes(): readonly SchemaIndexV1[] {
+        return this.indexes.filter(index => index.name !== this.key?.name);
     }
 
     getProperty(name: string): SchemaPropertyV1 {

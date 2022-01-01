@@ -1,3 +1,5 @@
+import { SchemaProperty } from "./schema";
+
 export type SchemaPropertyTypeV1 = "boolean" | "number" | "string" | "object";
 
 // formats taken from open-api
@@ -27,7 +29,7 @@ export interface SchemaPropertyOptionsArgumentV1 {
     model?: string;
 }
 
-export class SchemaPropertyV1 {
+export class SchemaPropertyV1 implements SchemaProperty {
     constructor(name: string, type: SchemaPropertyTypeV1, options?: SchemaPropertyOptionsArgumentV1) {
         this.name = name;
         this.type = type;
@@ -35,6 +37,14 @@ export class SchemaPropertyV1 {
         this.link = options?.link;
         this.array = options?.array ?? false;
         this.model = options?.model;
+    }
+
+    getPropertyName(): string {
+        return this.name;
+    }
+
+    getType(): string {
+        return this.type;
     }
 
     readonly name: string;

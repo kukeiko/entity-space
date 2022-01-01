@@ -32,7 +32,7 @@ export class Workspace {
 
     query(query: Query) {
         const indexes = this.getSchema(query.model)
-            .getIndexes()
+            .getAllIndexes()
             .slice()
             .sort((a, b) => b.path.length - a.path.length);
 
@@ -157,6 +157,6 @@ export class Workspace {
     }
 
     private getSchema(model: string): SchemaV1 {
-        return this.catalog.getSchema(model);
+        return this.catalog.getSchemaV1(model);
     }
 }
