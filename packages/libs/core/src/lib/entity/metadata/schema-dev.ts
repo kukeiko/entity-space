@@ -21,6 +21,14 @@ export class SchemaDev implements Schema {
         this.catalog = catalog;
     }
 
+    getPropertyByPath(path: string): SchemaProperty {
+        if (path.includes(".")) {
+            throw new Error("path not implemented yet");
+        }
+
+        return this.getProperty(path);
+    }
+
     protected readonly name: string;
     protected readonly json: EntitySpaceSchema;
     protected readonly catalog: SchemaCatalog;
@@ -138,6 +146,16 @@ export class SchemaDev implements Schema {
         return discriminators;
     }
 
+    getProperty(name: string): SchemaProperty {
+        const property = this.getProperties().find(property => property.getPropertyName() === name);
+
+        if (property === void 0) {
+            throw new Error(`schema for model ${this.name} does not have a property named ${name}`);
+        }
+
+        return property;
+    }
+
     getProperties(): readonly SchemaProperty[] {
         const properties: SchemaProperty[] = [];
         const parentSchemas = this.getAllOf();
@@ -170,6 +188,10 @@ export class SchemaDev implements Schema {
         const index = this.getIndexes().find(index => index.name === name);
 
         if (index === void 0) {
+            if (this.hasKey() && this.getKeyIndex().name === name) {
+                return this.getKeyIndex();
+            }
+
             throw new Error(`index ${name} not found on schema ${this.name}`);
         }
 
@@ -224,5 +246,13 @@ export class SchemaDevProperty extends SchemaDev implements SchemaProperty {
 
     getPropertyName(): string {
         return this.name;
+    }
+
+    isNavigable(): boolean {
+        return SchemaDevProperty.isNavigable(this);
+    }
+
+    static isNavigable(property: SchemaDevProperty): boolean {
+        return property.getType() === "object";
     }
 }

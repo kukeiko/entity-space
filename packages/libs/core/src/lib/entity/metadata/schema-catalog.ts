@@ -4,7 +4,7 @@ import { SchemaDev } from "./schema-dev";
 import { Schema } from "./schema";
 
 export class SchemaCatalog {
-    constructor(schemas: SchemaV1[], schemaJsons: Record<string, OpenApiSchema> = {}) {
+    constructor(schemas: SchemaV1[], schemaJsons: Record<string, EntitySpaceSchema> = {}) {
         for (const schema of schemas) {
             this.schemasV1.set(schema.name, schema);
         }
@@ -53,7 +53,14 @@ export class SchemaCatalog {
         return schemaJson;
     }
 
-    getSchemas(): SchemaV1[] {
+    getSchemasV1(): SchemaV1[] {
         return Array.from(this.schemasV1.values());
+    }
+
+    getSchemas(): Schema[] {
+        return [
+            ...Array.from(this.schemasV1.values()),
+            ...Array.from(this.schemaJsons.keys()).map(key => this.getSchema(key)),
+        ];
     }
 }

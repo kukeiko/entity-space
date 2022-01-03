@@ -1,4 +1,4 @@
-import { Schema } from "./schema";
+import { Schema, SchemaProperty } from "./schema";
 import { EntitySpaceSchemaRelation, OpenApiDiscriminator } from "./schema-json";
 import { SchemaIndexV1, SchemaIndexOptionsArgumentV1 } from "./schema-v1-index";
 import { SchemaPropertyV1, SchemaPropertyOptionsArgumentV1, SchemaPropertyTypeV1 } from "./schema-v1-property";
@@ -81,6 +81,9 @@ export class SchemaV1 implements Schema {
 
         this.indexes = Object.freeze(indexes.slice());
     }
+    getPropertyByPath(path: string): SchemaProperty {
+        throw new Error("Method not implemented.");
+    }
 
     readonly name: string;
     readonly properties: readonly SchemaPropertyV1[];
@@ -142,18 +145,18 @@ export class SchemaV1 implements Schema {
         return this.indexes.filter(index => index.name !== this.key?.name);
     }
 
-    getProperty(name: string): SchemaPropertyV1 {
+    getProperty(name: string): SchemaProperty {
         const property = this.properties.find(property => property.name === name);
 
         if (property === void 0) {
             throw new Error(`schema for model ${this.name} does not have a property named ${name}`);
         }
 
-        return property;
+        return property as any;
     }
 
-    getProperties(): readonly SchemaPropertyV1[] {
-        return this.properties;
+    getProperties(): readonly SchemaProperty[] {
+        return this.properties as any[];
     }
 
     hasKey(): this is SchemaWithKeyV1 {

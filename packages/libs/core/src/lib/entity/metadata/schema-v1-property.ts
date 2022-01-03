@@ -1,4 +1,6 @@
-import { SchemaProperty } from "./schema";
+import { Schema, SchemaProperty } from "./schema";
+import { OpenApiDiscriminator, EntitySpaceSchemaRelation } from "./schema-json";
+import { SchemaIndexV1 } from "./schema-v1-index";
 
 export type SchemaPropertyTypeV1 = "boolean" | "number" | "string" | "object";
 
@@ -37,6 +39,48 @@ export class SchemaPropertyV1 implements SchemaProperty {
         this.link = options?.link;
         this.array = options?.array ?? false;
         this.model = options?.model;
+    }
+    getAllOf(): Schema[] {
+        throw new Error("Method not implemented.");
+    }
+    getDiscriminators(): OpenApiDiscriminator[] {
+        throw new Error("Method not implemented.");
+    }
+    getIndex(name: string): SchemaIndexV1<string | number> {
+        throw new Error("Method not implemented.");
+    }
+    getAllIndexes(): readonly SchemaIndexV1<string | number>[] {
+        throw new Error("Method not implemented.");
+    }
+    getIndexes(): readonly SchemaIndexV1<string | number>[] {
+        throw new Error("Method not implemented.");
+    }
+    getProperties(): readonly SchemaProperty[] {
+        throw new Error("Method not implemented.");
+    }
+    getProperty(name: string): SchemaProperty {
+        throw new Error("Method not implemented.");
+    }
+    getPropertyByPath(path: string): SchemaProperty {
+        throw new Error("Method not implemented.");
+    }
+    getRelations(): EntitySpaceSchemaRelation[] {
+        throw new Error("Method not implemented.");
+    }
+    getSchemaName(): string {
+        throw new Error("Method not implemented.");
+    }
+    getUnionDiscriminator(): OpenApiDiscriminator | undefined {
+        throw new Error("Method not implemented.");
+    }
+    isUnion(): boolean {
+        throw new Error("Method not implemented.");
+    }
+    hasKey(): boolean {
+        throw new Error("Method not implemented.");
+    }
+    getKeyIndex(): SchemaIndexV1<string | number> {
+        throw new Error("Method not implemented.");
     }
 
     getPropertyName(): string {

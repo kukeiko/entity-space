@@ -8,6 +8,8 @@ export interface Schema {
     getAllIndexes(): readonly SchemaIndexV1[];
     getIndexes(): readonly SchemaIndexV1[];
     getProperties(): readonly SchemaProperty[];
+    getProperty(name: string): SchemaProperty;
+    getPropertyByPath(path: string): SchemaProperty;
     getRelations(): EntitySpaceSchemaRelation[];
     getSchemaName(): string;
     getType(): string;
@@ -17,6 +19,7 @@ export interface Schema {
     getKeyIndex(): SchemaIndexV1;
 }
 
-export interface SchemaProperty {
+export interface SchemaProperty extends Schema {
     getPropertyName(): string;
+    isNavigable(): boolean;
 }
