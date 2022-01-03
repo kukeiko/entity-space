@@ -1,22 +1,20 @@
 import { inSet, matches, Query } from "../public";
-import { createCriteriaForIndex } from "./create-criteria-for-index.fn";
-import { Schema } from "./metadata/schema";
+import { SchemaV1 } from "./metadata/schema-v1";
 import { SchemaCatalog } from "./metadata/schema-catalog";
-import { SchemaIndex } from "./metadata/schema-index";
-import { SchemaJson } from "./metadata/schema-json";
-import { normalizeEntities } from "./normalize-entities.fn";
-import { ObjectStore } from "./object-store";
 import { Workspace } from "./workspace";
+import { EntitySpaceSchema } from "./metadata/schema-json";
 
 describe("playground: workspace", () => {
     it("normalize items, add them to store, then query", () => {
         // arrange
         interface Foo {
             id: number;
+            barId: number;
             bar: Bar;
         }
 
         interface Bar {
+            id: number;
             bazId: number;
             baz?: Baz;
         }
@@ -25,42 +23,72 @@ describe("playground: workspace", () => {
             id: number;
         }
 
-        const fooSchema = new Schema({
-            name: "foo",
+        const fooSchema: EntitySpaceSchema = {
+            type: "object",
             key: "id",
             properties: {
                 bar: {
-                    type: "object",
-                    model: "bar",
+                    $ref: "bar",
                 },
             },
-        });
-
-        const barSchema = new Schema({
-            name: "bar",
-            indexes: ["bazId"],
-            properties: {
-                baz: {
-                    type: "object",
-                    model: "baz",
-                    link: { from: "bazId", to: "id" },
+            indexes: {
+                barId: {
+                    path: ["barId"],
                 },
             },
-        });
+            relations: [
+                {
+                    path: "baz",
+                    fromIndexName: "barId",
+                    toIndexName: "id",
+                },
+            ],
+        };
 
-        const bazSchema = new Schema({
-            name: "baz",
+        const barSchema: EntitySpaceSchema = {
+            type: "object",
             key: "id",
-            properties: {},
+            properties: {
+                bazId: {
+                    type: "number",
+                },
+                baz: {
+                    $ref: "baz",
+                },
+            },
+            indexes: {
+                bazId: {
+                    path: ["bazId"],
+                },
+            },
+            relations: [
+                {
+                    path: "baz",
+                    fromIndexName: "bazId",
+                    toIndexName: "id",
+                },
+            ],
+        };
+
+        const bazSchema: EntitySpaceSchema = {
+            type: "object",
+            key: "id",
+        };
+
+        const catalog = new SchemaCatalog([], {
+            foo: fooSchema,
+            bar: barSchema,
+            baz: bazSchema,
         });
 
-        const catalog = new SchemaCatalog([fooSchema, barSchema, bazSchema]);
         const workspace = new Workspace(catalog);
 
         const addedItems: Foo[] = [
             {
                 id: 1337,
+                barId: 64,
                 bar: {
+                    id: 64,
                     bazId: 128,
                     baz: {
                         id: 128,
@@ -70,10 +98,10 @@ describe("playground: workspace", () => {
         ];
 
         // act
-        workspace.add(fooSchema.name, addedItems);
+        workspace.add("foo", addedItems);
 
         const query: Query = {
-            model: fooSchema.name,
+            model: "foo",
             expansion: { bar: { baz: true } },
             criteria: matches({ id: inSet([1337]) }),
         };
@@ -85,22 +113,23 @@ describe("playground: workspace", () => {
     });
 
     it("expanding", () => {
-        const fooSchema = new Schema({
-            name: "foo",
-            key: { name: "id", path: ["id", "secondaryId"] },
+        const fooSchema: EntitySpaceSchema = {
+            type: "object",
+            key: ["id", "secondaryId"],
             properties: {
-                bar: { type: "object", model: "bar", link: { from: "id", to: "fooId" } },
+                bar: { type: "object", $ref: "bar" },
             },
-        });
+            relations: [{ fromIndexName: "id,secondaryId", toIndexName: "fooId", path: "bar" }],
+        };
 
-        const barSchema = new Schema({
-            name: "bar",
+        const barSchema: EntitySpaceSchema = {
+            type: "object",
             key: "id",
-            indexes: [{ name: "fooId", path: ["fooId", "secondaryId"] }],
+            indexes: { fooId: { path: ["fooId", "secondaryId"] } },
             properties: {},
-        });
+        };
 
-        const catalog = new SchemaCatalog([fooSchema, barSchema]);
+        const catalog = new SchemaCatalog([], { foo: fooSchema, bar: barSchema });
         const workspace = new Workspace(catalog);
 
         workspace.add("foo", [{ id: 1337, secondaryId: 128, name: "i am foo" }]);
@@ -119,36 +148,71 @@ describe("playground: workspace", () => {
     });
 
     it("expanding #2", () => {
-        const fooSchema = new Schema({
-            name: "foo",
+        const fooSchema: EntitySpaceSchema = {
+            type: "object",
             key: "id",
             properties: {
                 bar: {
-                    type: "object",
-                    model: "bar",
+                    $ref: "bar",
                 },
             },
-        });
+        };
 
-        const barSchema = new Schema({
-            name: "bar",
-            indexes: ["bazId"],
+        // const fooSchema = new SchemaV1({
+        //     name: "foo",
+        //     key: "id",
+        //     properties: {
+        //         bar: {
+        //             type: "object",
+        //             model: "bar",
+        //         },
+        //     },
+        // });
+
+        const barSchema: EntitySpaceSchema = {
+            type: "object",
+            indexes: {
+                bazId: {
+                    path: ["bazId"],
+                },
+            },
             properties: {
                 baz: {
-                    type: "object",
-                    model: "baz",
-                    link: { from: "bazId", to: "id" },
+                    $ref: "baz",
                 },
             },
-        });
+            relations: [
+                {
+                    fromIndexName: "bazId",
+                    toIndexName: "id",
+                    path: "baz",
+                },
+            ],
+        };
 
-        const bazSchema = new Schema({
-            name: "baz",
+        // const barSchema = new SchemaV1({
+        //     name: "bar",
+        //     indexes: ["bazId"],
+        //     properties: {
+        //         baz: {
+        //             type: "object",
+        //             model: "baz",
+        //             link: { from: "bazId", to: "id" },
+        //         },
+        //     },
+        // });
+
+        const bazSchema: EntitySpaceSchema = {
+            type: "object",
             key: "id",
-            properties: {},
+        };
+
+        const catalog = new SchemaCatalog([], {
+            foo: fooSchema,
+            bar: barSchema,
+            baz: bazSchema,
         });
 
-        const catalog = new SchemaCatalog([fooSchema, barSchema, bazSchema]);
         const workspace = new Workspace(catalog);
         workspace.add("foo", [{ id: 1337, name: "i am foo", bar: { bazId: 128 } }]);
         workspace.add("baz", [{ id: 128, name: "i am baz" }]);
@@ -198,7 +262,7 @@ describe("playground: workspace", () => {
             bar: number;
         }
 
-        const schema = new Schema({
+        const schema = new SchemaV1({
             name: "foo",
             key: "id",
             indexes: ["bar"],
@@ -244,7 +308,7 @@ describe("playground: workspace", () => {
             baz: number;
         }
 
-        const schema = new Schema({
+        const schema = new SchemaV1({
             name: "foo",
             key: "id",
             indexes: [{ name: "barAndBaz", path: ["bar", "baz"] }],
@@ -289,7 +353,7 @@ describe("playground: workspace", () => {
             };
         }
 
-        const schema = new Schema({
+        const schema = new SchemaV1({
             name: "foo",
             key: "id",
             indexes: [{ name: "bar", path: "bar.baz" }],
@@ -337,7 +401,7 @@ describe("playground: workspace", () => {
             };
         }
 
-        const schema = new Schema({
+        const schema = new SchemaV1({
             name: "foo",
             key: "id",
             properties: {},
@@ -388,7 +452,7 @@ describe("playground: workspace", () => {
             };
         }
 
-        const schema = new Schema({
+        const schema = new SchemaV1({
             name: "foo",
             key: "id",
             properties: {},

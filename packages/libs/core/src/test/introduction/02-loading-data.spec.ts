@@ -8,7 +8,7 @@ import {
     Criterion,
     NamedCriteriaTemplate,
     reduceQueries,
-    Schema,
+    SchemaV1,
     SchemaCatalog,
     Workspace,
 } from "@entity-space/core";
@@ -77,7 +77,7 @@ describe("how do we actually load data?", () => {
 
         const workspace = new Workspace(
             new SchemaCatalog([
-                new Schema({
+                new SchemaV1({
                     name: "product",
                     key: "id",
                     properties: {
@@ -130,7 +130,7 @@ describe("how do we actually load data?", () => {
 
         const moreProducts = await executeQuery(price_100_to_300_rating_2_to_5);
 
-        // [todo] returns duplicate results, need to fix what happens when atting same item twice to workspace
+        // [todo] returns duplicate results, need to fix what happens when adding same item twice to workspace
         console.log("[more products]:", moreProducts);
     });
 });

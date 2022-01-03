@@ -1,7 +1,7 @@
 import { permutateEntries } from "@entity-space/utils";
 import { Query } from "../query/public";
 import { ObjectStore } from "./object-store";
-import { Schema } from "./metadata/schema";
+import { SchemaV1 } from "./metadata/schema-v1";
 import { createCriteriaForIndex } from "./create-criteria-for-index.fn";
 import { Expansion } from "../expansion/public";
 import { SchemaCatalog } from "./metadata/schema-catalog";
@@ -9,13 +9,17 @@ import { normalizeEntities } from "./normalize-entities.fn";
 import { createCriteriaTemplateForIndex } from "./create-criteria-template-for-index.fn";
 import { namedCriteriaToKeyPaths } from "./named-criteria-to-key-path.fn";
 import { flattenNamedCriteria } from "./flatten-named-criteria.fn";
+import { Schema } from "./metadata/schema";
+import { expandRelation } from "./expand-relation.fn";
 
 export class Workspace {
     constructor(catalog: SchemaCatalog) {
         this.catalog = catalog;
 
-        for (const schema of catalog.getSchemas().filter(Schema.hasKey)) {
-            this.stores.set(schema.name, new ObjectStore(schema));
+        // for (const schema of catalog.getSchemas().filter(SchemaV1.hasKey)) {
+        for (const schema of catalog.getSchemas()) {
+            if (!schema.hasKey()) continue;
+            this.stores.set(schema.getSchemaName(), new ObjectStore(schema));
         }
     }
 
@@ -32,7 +36,7 @@ export class Workspace {
 
     query(query: Query) {
         const indexes = this.getSchema(query.model)
-            .getIndexes()
+            .getAllIndexes()
             .slice()
             .sort((a, b) => b.path.length - a.path.length);
 
@@ -80,9 +84,18 @@ export class Workspace {
         for (const propertyKey in expansion) {
             const expansionValue = expansion[propertyKey];
             const property = schema.getProperty(propertyKey);
+            // [todo] support nested paths
+            const relation = schema.getRelations().find(relation => relation.path === propertyKey);
 
-            if (property.isExpandable()) {
-                this.expandOne(model, propertyKey, items, expansionValue === true ? void 0 : expansionValue);
+            if (relation !== void 0) {
+                expandRelation(
+                    schema,
+                    relation,
+                    items,
+                    q => this.query(q),
+                    expansionValue === true ? void 0 : expansionValue
+                );
+                // this.expandOne(model, propertyKey, items, expansionValue === true ? void 0 : expansionValue);
             } else if (property.isNavigable()) {
                 if (expansionValue === true) {
                     // [todo] not yet sure if this should be considered a user error.
@@ -103,45 +116,10 @@ export class Workspace {
                         }
                     }
 
-                    this.expand(property.model, expansionValue, referencedItems);
+                    this.expand(property.getSchemaName(), expansionValue, referencedItems);
                 }
             } else {
                 throw new Error(`can't expand ${model}.${propertyKey}: not a navigable/expandable property`);
-            }
-        }
-    }
-
-    private expandOne(model: string, propertyKey: string, items: any[], expansion?: Expansion): any {
-        const schema = this.getSchema(model);
-        const propertySchema = schema.getProperty(propertyKey);
-        const link = propertySchema.link;
-
-        if (link === void 0) {
-            throw new Error(`can't expand property ${model}.${propertyKey}: no link`);
-        }
-
-        const linkedModel = propertySchema.model;
-
-        if (linkedModel === void 0) {
-            throw new Error(`can't expand property ${model}.${propertyKey}: no model`);
-        }
-
-        const toIndex = this.getSchema(linkedModel).getIndex(link.to);
-        const fromIndex = this.getSchema(model).getIndex(link.from);
-        const criteria = createCriteriaForIndex(toIndex.path.slice(), fromIndex.read(items));
-        const referencedItems = this.query({ criteria, expansion: expansion ?? {}, model: linkedModel });
-        const referencedIndex = this.getSchema(linkedModel).getIndex(link.to);
-
-        for (const item of items) {
-            const indexValue = this.getSchema(model).getIndex(link.from).readOne(item);
-            const matchingReferencedItems = referencedItems.filter(
-                item => JSON.stringify(indexValue) === JSON.stringify(referencedIndex.readOne(item))
-            );
-
-            if (propertySchema.array) {
-                item[propertyKey] = matchingReferencedItems;
-            } else {
-                item[propertyKey] = matchingReferencedItems[0] ?? null;
             }
         }
     }

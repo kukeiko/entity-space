@@ -1,5 +1,5 @@
 import { isDefined } from "@entity-space/utils";
-import { Schema, SchemaWithKey } from "./metadata/schema";
+import { Schema } from "./metadata/schema";
 import { IndexValue, ObjectStoreIndex } from "./object-store-index";
 
 export class ObjectStore<V = any> {
@@ -14,17 +14,17 @@ export class ObjectStore<V = any> {
         this.schema = schema;
         const indexes: Record<string, ObjectStoreIndex> = {};
 
-        for (const schemaIndex of schema.getIndexes()) {
+        for (const schemaIndex of schema.getAllIndexes()) {
             indexes[schemaIndex.name] = new ObjectStoreIndex(schemaIndex);
         }
 
         this.indexes = indexes;
     }
 
-    private readonly schema: SchemaWithKey;
+    private readonly schema: Schema;
 
     get name(): string {
-        return this.schema.name;
+        return this.schema.getSchemaName();
     }
 
     private readonly indexes: Record<string, ObjectStoreIndex>;
@@ -35,7 +35,7 @@ export class ObjectStore<V = any> {
     }
 
     getByKey(key: IndexValue): V | undefined {
-        return this.getByIndex(this.schema.key.name, [key])[0];
+        return this.getByIndex(this.schema.getKeyIndex().name, [key])[0];
     }
 
     getIndexes(): ObjectStoreIndex[] {
@@ -57,7 +57,7 @@ export class ObjectStore<V = any> {
     }
 
     getKeyIndex(): ObjectStoreIndex {
-        return this.getIndex(this.schema.key.name);
+        return this.getIndex(this.schema.getKeyIndex().name);
     }
 
     getByIndex(name: string, values: IndexValue[]): V[] {
