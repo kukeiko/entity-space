@@ -38,7 +38,7 @@ describe("playground: workspace", () => {
             },
             relations: [
                 {
-                    path: "baz",
+                    path: "bar",
                     fromIndexName: "barId",
                     toIndexName: "id",
                 },
