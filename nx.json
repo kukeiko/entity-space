@@ -12,7 +12,7 @@
         "default": {
             "runner": "@nrwl/workspace/tasks-runners/default",
             "options": {
-                "cacheableOperations": ["build", "lint", "test", "e2e"]
+                "cacheableOperations": ["build", "lint", "test"]
             }
         }
     },
@@ -20,8 +20,7 @@
         "@nrwl/angular:application": {
             "style": "scss",
             "linter": "eslint",
-            "unitTestRunner": "jest",
-            "e2eTestRunner": "cypress"
+            "unitTestRunner": "jest"
         },
         "@nrwl/angular:library": {
             "linter": "eslint",

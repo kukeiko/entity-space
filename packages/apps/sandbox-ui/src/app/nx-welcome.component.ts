@@ -425,7 +425,7 @@ import { Component, OnInit, ViewEncapsulation } from "@angular/core";
                 <div id="welcome">
                     <h1>
                         <span> Hello there, </span>
-                        Welcome apps-sandbox-ui 👋
+                        Welcome apps-sandbox-ui 🌌
                     </h1>
                 </div>
 
