@@ -16,7 +16,7 @@ describe("AppController", () => {
     describe("getData", () => {
         it('should return "Welcome to sandbox-api!"', () => {
             const appController = app.get<AppController>(AppController);
-            expect(appController.getData()).toEqual({ message: "Welcome to sandbox-api!" });
+            expect(appController.getData().message).toEqual("Welcome to sandbox-api!");
         });
     });
 });

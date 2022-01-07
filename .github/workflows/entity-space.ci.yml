@@ -1,4 +1,4 @@
-name: Node.js CI🔭
+name: Node.js CI🚀
 
 on:
   push:
@@ -32,5 +32,5 @@ jobs:
     - name: 📦Node.js ${{ matrix.node-version }}    
       run: npm i
     
-    - name: run tests
+    - name: 🕵️run tests
       run: npx nx run apps-sandbox-api:test

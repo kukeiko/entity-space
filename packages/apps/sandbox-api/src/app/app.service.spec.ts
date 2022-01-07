@@ -15,7 +15,10 @@ describe("AppService", () => {
 
     describe("getData", () => {
         it('should return "Welcome to sandbox-api!"', () => {
-            expect(service.getData()).toEqual({ message: "Welcome to sandbox-api!" });
+            expect(service.getData()).toEqual({ 
+                message: "Welcome to sandbox-api!",
+                criteria: "([1, 7])"
+            });
         });
     });
 });
