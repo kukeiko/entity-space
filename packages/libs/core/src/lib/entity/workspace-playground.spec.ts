@@ -1,8 +1,7 @@
 import { inSet, matches, Query } from "../public";
-import { SchemaV1 } from "./metadata/schema-v1";
-import { SchemaCatalog } from "./metadata/schema-catalog";
+import { EntitySpaceSchema } from "../schema/entity-space-schema";
+import { UnbakedSchemaCatalog } from "../schema/unbaked-schema-catalog";
 import { Workspace } from "./workspace";
-import { EntitySpaceSchema } from "./metadata/schema-json";
 
 describe("playground: workspace", () => {
     it("normalize items, add them to store, then query", () => {
@@ -24,6 +23,7 @@ describe("playground: workspace", () => {
         }
 
         const fooSchema: EntitySpaceSchema = {
+            $id: "foo",
             type: "object",
             key: "id",
             properties: {
@@ -36,16 +36,13 @@ describe("playground: workspace", () => {
                     path: ["barId"],
                 },
             },
-            relations: [
-                {
-                    path: "bar",
-                    fromIndexName: "barId",
-                    toIndexName: "id",
-                },
-            ],
+            relations: {
+                bar: ["barId", "id"],
+            },
         };
 
         const barSchema: EntitySpaceSchema = {
+            $id: "bar",
             type: "object",
             key: "id",
             properties: {
@@ -61,25 +58,19 @@ describe("playground: workspace", () => {
                     path: ["bazId"],
                 },
             },
-            relations: [
-                {
-                    path: "baz",
-                    fromIndexName: "bazId",
-                    toIndexName: "id",
-                },
-            ],
+            relations: { baz: ["bazId", "id"] },
         };
 
         const bazSchema: EntitySpaceSchema = {
+            $id: "baz",
             type: "object",
             key: "id",
         };
 
-        const catalog = new SchemaCatalog([], {
-            foo: fooSchema,
-            bar: barSchema,
-            baz: bazSchema,
-        });
+        const catalog = new UnbakedSchemaCatalog();
+        catalog.addSchema(fooSchema);
+        catalog.addSchema(barSchema);
+        catalog.addSchema(bazSchema);
 
         const workspace = new Workspace(catalog);
 
@@ -114,22 +105,26 @@ describe("playground: workspace", () => {
 
     it("expanding", () => {
         const fooSchema: EntitySpaceSchema = {
+            $id: "foo",
             type: "object",
             key: ["id", "secondaryId"],
             properties: {
                 bar: { type: "object", $ref: "bar" },
             },
-            relations: [{ fromIndexName: "id,secondaryId", toIndexName: "fooId", path: "bar" }],
+            relations: { bar: ["id,secondaryId", "fooId"] },
         };
 
         const barSchema: EntitySpaceSchema = {
+            $id: "bar",
             type: "object",
             key: "id",
             indexes: { fooId: { path: ["fooId", "secondaryId"] } },
             properties: {},
         };
 
-        const catalog = new SchemaCatalog([], { foo: fooSchema, bar: barSchema });
+        const catalog = new UnbakedSchemaCatalog();
+        catalog.addSchema(fooSchema);
+        catalog.addSchema(barSchema);
         const workspace = new Workspace(catalog);
 
         workspace.add("foo", [{ id: 1337, secondaryId: 128, name: "i am foo" }]);
@@ -141,14 +136,20 @@ describe("playground: workspace", () => {
             criteria: matches({ id: inSet([1337]), secondaryId: inSet([128]) }),
         };
         const fooItems = workspace.query(query);
-        // const barItemsOfFooItems = workspace.expandResult("foo", "bar", fooItems);
 
-        console.log("expanded foo items:", fooItems);
-        // console.log("bar items:", barItemsOfFooItems);
+        expect(fooItems).toEqual([
+            {
+                id: 1337,
+                secondaryId: 128,
+                name: "i am foo",
+                bar: { id: 64, fooId: 1337, secondaryId: 128, name: "i belong to foo" },
+            },
+        ]);
     });
 
     it("expanding #2", () => {
         const fooSchema: EntitySpaceSchema = {
+            $id: "foo",
             type: "object",
             key: "id",
             properties: {
@@ -158,18 +159,8 @@ describe("playground: workspace", () => {
             },
         };
 
-        // const fooSchema = new SchemaV1({
-        //     name: "foo",
-        //     key: "id",
-        //     properties: {
-        //         bar: {
-        //             type: "object",
-        //             model: "bar",
-        //         },
-        //     },
-        // });
-
         const barSchema: EntitySpaceSchema = {
+            $id: "bar",
             type: "object",
             indexes: {
                 bazId: {
@@ -181,37 +172,19 @@ describe("playground: workspace", () => {
                     $ref: "baz",
                 },
             },
-            relations: [
-                {
-                    fromIndexName: "bazId",
-                    toIndexName: "id",
-                    path: "baz",
-                },
-            ],
+            relations: { baz: ["bazId", "id"] },
         };
 
-        // const barSchema = new SchemaV1({
-        //     name: "bar",
-        //     indexes: ["bazId"],
-        //     properties: {
-        //         baz: {
-        //             type: "object",
-        //             model: "baz",
-        //             link: { from: "bazId", to: "id" },
-        //         },
-        //     },
-        // });
-
         const bazSchema: EntitySpaceSchema = {
+            $id: "baz",
             type: "object",
             key: "id",
         };
 
-        const catalog = new SchemaCatalog([], {
-            foo: fooSchema,
-            bar: barSchema,
-            baz: bazSchema,
-        });
+        const catalog = new UnbakedSchemaCatalog();
+        catalog.addSchema(fooSchema);
+        catalog.addSchema(barSchema);
+        catalog.addSchema(bazSchema);
 
         const workspace = new Workspace(catalog);
         workspace.add("foo", [{ id: 1337, name: "i am foo", bar: { bazId: 128 } }]);
@@ -222,11 +195,12 @@ describe("playground: workspace", () => {
             expansion: { bar: { baz: true } },
             criteria: matches({ id: inSet([1337]) }),
         };
-        const fooItems = workspace.query(query);
-        // const barItemsOfFooItems = workspace.expandResult("foo", "bar", fooItems);
 
-        console.log("expanded foo items:", fooItems);
-        // console.log("bar items:", barItemsOfFooItems);
+        const fooItems = workspace.query(query);
+
+        expect(fooItems).toEqual([
+            { id: 1337, name: "i am foo", bar: { bazId: 128, baz: { id: 128, name: "i am baz" } } },
+        ]);
     });
 
     xit("squawking around", () => {
@@ -262,14 +236,15 @@ describe("playground: workspace", () => {
             bar: number;
         }
 
-        const schema = new SchemaV1({
-            name: "foo",
+        const schema: EntitySpaceSchema = {
+            $id: "foo",
             key: "id",
-            indexes: ["bar"],
+            indexes: { bar: true },
             properties: {},
-        });
+        };
 
-        const catalog = new SchemaCatalog([schema]);
+        const catalog = new UnbakedSchemaCatalog();
+        catalog.addSchema(schema);
         const workspace = new Workspace(catalog);
 
         const entities: Foo[] = [
@@ -285,7 +260,7 @@ describe("playground: workspace", () => {
             { id: 3, bar: 2 },
         ];
 
-        workspace.add(schema.name, entities);
+        workspace.add("foo", entities);
 
         const query: Query = {
             model: "foo",
@@ -295,8 +270,6 @@ describe("playground: workspace", () => {
 
         const result = workspace.query(query);
 
-        console.log(result);
-        // expect(result).toEqual(jasmine.arrayWithExactContents(expectedEntities));
         expect(result.length).toEqual(expectedEntities.length);
         expect(result).toEqual(expect.arrayContaining(expectedEntities));
     });
@@ -308,14 +281,15 @@ describe("playground: workspace", () => {
             baz: number;
         }
 
-        const schema = new SchemaV1({
-            name: "foo",
+        const schema: EntitySpaceSchema = {
+            $id: "foo",
             key: "id",
-            indexes: [{ name: "barAndBaz", path: ["bar", "baz"] }],
+            indexes: { barAndBaz: ["bar", "baz"] },
             properties: {},
-        });
+        };
 
-        const catalog = new SchemaCatalog([schema]);
+        const catalog = new UnbakedSchemaCatalog();
+        catalog.addSchema(schema);
         const workspace = new Workspace(catalog);
 
         const entities: Foo[] = [
@@ -330,7 +304,7 @@ describe("playground: workspace", () => {
             { id: 2, bar: 3, baz: 1337 },
         ];
 
-        workspace.add(schema.name, entities);
+        workspace.add("foo", entities);
 
         const query: Query = {
             model: "foo",
@@ -340,7 +314,6 @@ describe("playground: workspace", () => {
 
         const result = workspace.query(query);
 
-        console.log(result);
         expect(result.length).toEqual(expectedEntities.length);
         expect(result).toEqual(expect.arrayContaining(expectedEntities));
     });
@@ -353,14 +326,15 @@ describe("playground: workspace", () => {
             };
         }
 
-        const schema = new SchemaV1({
-            name: "foo",
+        const schema: EntitySpaceSchema = {
+            $id: "foo",
             key: "id",
-            indexes: [{ name: "bar", path: "bar.baz" }],
+            indexes: { bar: "bar.baz" },
             properties: {},
-        });
+        };
 
-        const catalog = new SchemaCatalog([schema]);
+        const catalog = new UnbakedSchemaCatalog();
+        catalog.addSchema(schema);
         const workspace = new Workspace(catalog);
 
         const entities: Foo[] = [
@@ -376,7 +350,7 @@ describe("playground: workspace", () => {
             { id: 3, bar: { baz: 2 } },
         ];
 
-        workspace.add(schema.name, entities);
+        workspace.add("foo", entities);
 
         const query: Query = {
             model: "foo",
@@ -386,8 +360,6 @@ describe("playground: workspace", () => {
 
         const result = workspace.query(query);
 
-        console.log(result);
-        // expect(result).toEqual(jasmine.arrayWithExactContents(expectedEntities));
         expect(result.length).toEqual(expectedEntities.length);
         expect(result).toEqual(expect.arrayContaining(expectedEntities));
     });
@@ -401,14 +373,15 @@ describe("playground: workspace", () => {
             };
         }
 
-        const schema = new SchemaV1({
-            name: "foo",
+        const schema: EntitySpaceSchema = {
+            $id: "foo",
             key: "id",
             properties: {},
-            indexes: [{ name: "bar", path: ["bar.baz", "bar.moo"] }],
-        });
+            indexes: { bar: ["bar.baz", "bar.moo"] },
+        };
 
-        const catalog = new SchemaCatalog([schema]);
+        const catalog = new UnbakedSchemaCatalog();
+        catalog.addSchema(schema);
         const workspace = new Workspace(catalog);
 
         const entities: Foo[] = [
@@ -423,7 +396,7 @@ describe("playground: workspace", () => {
             { id: 2, bar: { baz: 3, moo: 10 } },
         ];
 
-        workspace.add(schema.name, entities);
+        workspace.add("foo", entities);
 
         const query: Query = {
             model: "foo",
@@ -433,8 +406,6 @@ describe("playground: workspace", () => {
 
         const result = workspace.query(query);
 
-        console.log(result);
-        // expect(result).toEqual(jasmine.arrayWithExactContents(expectedEntities));
         expect(result.length).toEqual(expectedEntities.length);
         expect(result).toEqual(expect.arrayContaining(expectedEntities));
     });
@@ -452,14 +423,15 @@ describe("playground: workspace", () => {
             };
         }
 
-        const schema = new SchemaV1({
-            name: "foo",
+        const schema: EntitySpaceSchema = {
+            $id: "foo",
             key: "id",
             properties: {},
-            indexes: [{ name: "bar", path: ["bar.baz", "bar.moo", "khaz.mo", "khaz.dan"] }],
-        });
+            indexes: { bar: ["bar.baz", "bar.moo", "khaz.mo", "khaz.dan"] },
+        };
 
-        const catalog = new SchemaCatalog([schema]);
+        const catalog = new UnbakedSchemaCatalog();
+        catalog.addSchema(schema);
         const workspace = new Workspace(catalog);
 
         const entities: Foo[] = [
@@ -471,7 +443,7 @@ describe("playground: workspace", () => {
 
         const expectedEntities = [{ id: 1, bar: { baz: 2, moo: 10 }, khaz: { mo: 1, dan: 2 } }];
 
-        workspace.add(schema.name, entities);
+        workspace.add("foo", entities);
 
         const query: Query = {
             model: "foo",
@@ -484,8 +456,6 @@ describe("playground: workspace", () => {
 
         const result = workspace.query(query);
 
-        console.log(result);
-        // expect(result).toEqual(jasmine.arrayWithExactContents(expectedEntities));
         expect(result.length).toEqual(expectedEntities.length);
         expect(result).toEqual(expect.arrayContaining(expectedEntities));
     });

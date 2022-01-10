@@ -1,5 +1,5 @@
 import { InNumberSetCriterion, NamedCriteriaTemplate } from "../criteria/public";
-import { SchemaIndexV1 } from "./metadata/schema-v1-index";
+import { SchemaIndexV1 } from "../schema/schema-v1-index";
 
 export function createCriteriaTemplateForIndex(
     index: SchemaIndexV1

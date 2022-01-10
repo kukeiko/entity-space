@@ -1,17 +1,16 @@
 import {
-    matches,
-    inRange,
-    InNumberRangeCriterion,
-    Query,
-    Expansion,
-    or,
     Criterion,
+    InNumberRangeCriterion,
+    inRange,
+    matches,
     NamedCriteriaTemplate,
+    or,
+    Query,
     reduceQueries,
-    SchemaV1,
-    SchemaCatalog,
     Workspace,
 } from "@entity-space/core";
+import { EntitySpaceSchema } from "../../lib/schema/entity-space-schema";
+import { UnbakedSchemaCatalog } from "../../lib/schema/unbaked-schema-catalog";
 import { Product, ProductFilter } from "./model";
 import { ProductRepository } from "./repositories";
 
@@ -75,20 +74,20 @@ describe("how do we actually load data?", () => {
             expansion: {},
         };
 
-        const workspace = new Workspace(
-            new SchemaCatalog([
-                new SchemaV1({
-                    name: "product",
-                    key: "id",
-                    properties: {
-                        id: { type: "number" },
-                        name: { type: "string" },
-                        price: { type: "number" },
-                        rating: { type: "number" },
-                    },
-                }),
-            ])
-        );
+        const schema: EntitySpaceSchema = {
+            $id: "product",
+            key: "id",
+            properties: {
+                id: { type: "number" },
+                name: { type: "string" },
+                price: { type: "number" },
+                rating: { type: "number" },
+            },
+        };
+
+        const catalog = new UnbakedSchemaCatalog();
+        catalog.addSchema(schema);
+        const workspace = new Workspace(catalog);
 
         const executedQueries: Query[] = [];
 

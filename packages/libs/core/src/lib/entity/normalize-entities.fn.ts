@@ -1,17 +1,18 @@
-import { SchemaCatalog } from "./metadata/schema-catalog";
+import { SchemaCatalog_Interface } from "../schema/schema-catalog";
 
 // [todo] not a fan of having the "shouldAddSelf" flag
 export function normalizeEntities(
     model: string,
     items: any[],
-    catalog: SchemaCatalog,
+    catalog: SchemaCatalog_Interface,
     shouldAddSelf = true
 ): Record<string, any[]> {
     const schema = catalog.getSchema(model);
     const normalized: Record<string, any[]> = {};
 
     if (shouldAddSelf) {
-        normalized[model] = items;
+        // normalized[model] = items;
+        normalized[schema.getSchemaId()] = items;
     }
 
     for (const relation of schema.getRelations()) {
@@ -34,7 +35,7 @@ export function normalizeEntities(
         }
 
         const deeperNormalized = normalizeEntities(
-            schema.getPropertyByPath(relation.path).getSchemaName(),
+            schema.getPropertyByPath(relation.path).getNominalSchemaId(),
             navigated,
             catalog
         );

@@ -1,19 +1,20 @@
-import { Schema } from "./metadata/schema";
-import { SchemaDev } from "./metadata/schema-dev";
-import { EntitySpaceSchemaIndex } from "./metadata/schema-json";
-import { SchemaIndexArgumentV1 } from "./metadata/schema-v1";
+import { EntitySpaceSchemaIndexObject_V2 } from "../schema/entity-space-schema";
+import { Schema } from "../schema/schema";
+import { UnbakedSchema } from "../schema/unbaked-schema";
+import { UnbakedSchemaCatalog } from "../schema/unbaked-schema-catalog";
 import { ObjectStore } from "./object-store";
-import { SchemaCatalog } from "./public";
 
 function buildDefaultIndexName(path: string[]): string {
     return path.join(",");
 }
 
+type SchemaIndexArgumentV1 = string | string[] | { name?: string; path: string | string[]; unique?: boolean };
+
 function createSchema(name: string, key: string | string[], indexes_oldStyle?: SchemaIndexArgumentV1[]): Schema {
-    const indexes: Record<string, EntitySpaceSchemaIndex> = {};
+    const indexes: Record<string, EntitySpaceSchemaIndexObject_V2> = {};
 
     for (const indexArgs of indexes_oldStyle ?? []) {
-        let index: EntitySpaceSchemaIndex;
+        let index: EntitySpaceSchemaIndexObject_V2;
         let name: string;
 
         if (typeof indexArgs === "string") {
@@ -42,14 +43,14 @@ function createSchema(name: string, key: string | string[], indexes_oldStyle?: S
         indexes[name] = index;
     }
 
-    return new SchemaDev(
-        name,
+    return new UnbakedSchema(
         {
+            $id: name,
             type: "object",
             key,
             indexes,
         },
-        new SchemaCatalog([])
+        new UnbakedSchemaCatalog()
     );
 }
 

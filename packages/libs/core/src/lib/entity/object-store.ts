@@ -1,5 +1,5 @@
 import { isDefined } from "@entity-space/utils";
-import { Schema } from "./metadata/schema";
+import { Schema } from "../schema/schema";
 import { IndexValue, ObjectStoreIndex } from "./object-store-index";
 
 export class ObjectStore<V = any> {

@@ -2,7 +2,11 @@ export interface JsonSchemaReference {
     $ref: string;
 }
 
-export type OpenApiDataType = "boolean" | "integer" | "number" | "string";
+export function isJsonSchemaReference(value: any): value is JsonSchemaReference {
+    return value != null ? typeof value.$ref === "string" : false;
+}
+
+export type OpenApiSchemaType = "array" | "boolean" | "integer" | "number" | "object" | "string";
 
 export type OpenApiDataTypeFormat =
     | "int32"
@@ -21,6 +25,7 @@ export interface OpenApiDiscriminator {
 }
 
 export interface OpenApiSchema {
+    $id?: string;
     allOf?: (JsonSchemaReference | OpenApiSchema)[];
     anyOf?: (JsonSchemaReference | OpenApiSchema)[];
     discriminator?: OpenApiDiscriminator;
@@ -30,7 +35,7 @@ export interface OpenApiSchema {
     oneOf?: (JsonSchemaReference | OpenApiSchema)[];
     properties?: Record<string, JsonSchemaReference | OpenApiSchemaProperty>;
     required?: string[];
-    type: OpenApiDataType | "object" | "array";
+    type?: OpenApiSchemaType;
 }
 
 export interface OpenApiSchemaProperty extends OpenApiSchema {
@@ -38,22 +43,7 @@ export interface OpenApiSchemaProperty extends OpenApiSchema {
     writeOnly?: boolean;
 }
 
-export interface EntitySpaceSchema extends OpenApiSchema {
-    key?: string | string[];
-    indexes?: Record<string, EntitySpaceSchemaIndex>;
-    relations?: EntitySpaceSchemaRelation[];
-    properties?: Record<string, JsonSchemaReference | EntitySpaceSchemaProperty>;
-}
-
-export type EntitySpaceSchemaProperty = OpenApiSchemaProperty & EntitySpaceSchema;
-
-export interface EntitySpaceSchemaIndex {
-    path: string[];
-    unique?: boolean;
-}
-
-export interface EntitySpaceSchemaRelation {
-    path: string;
-    fromIndexName: string;
-    toIndexName: string;
-}
+// export interface OpenApiSchemaArrayProperty extends OpenApiSchemaProperty {
+//     type: "array";
+//     items: JsonSchemaReference | OpenApiSchema;
+// }

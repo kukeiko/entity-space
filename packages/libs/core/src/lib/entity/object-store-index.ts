@@ -1,4 +1,4 @@
-import { SchemaIndexV1 } from "./metadata/schema-v1-index";
+import { SchemaIndexV1 } from "../schema/schema-v1-index";
 
 type IndexSingleValue = string | number;
 export type IndexValue = IndexSingleValue | IndexSingleValue[];

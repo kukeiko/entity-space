@@ -1,19 +1,17 @@
 import { permutateEntries } from "@entity-space/utils";
-import { Query } from "../query/public";
-import { ObjectStore } from "./object-store";
-import { SchemaV1 } from "./metadata/schema-v1";
-import { createCriteriaForIndex } from "./create-criteria-for-index.fn";
 import { Expansion } from "../expansion/public";
-import { SchemaCatalog } from "./metadata/schema-catalog";
-import { normalizeEntities } from "./normalize-entities.fn";
+import { Query } from "../query/public";
+import { Schema } from "../schema/schema";
+import { SchemaCatalog_Interface } from "../schema/schema-catalog";
 import { createCriteriaTemplateForIndex } from "./create-criteria-template-for-index.fn";
-import { namedCriteriaToKeyPaths } from "./named-criteria-to-key-path.fn";
-import { flattenNamedCriteria } from "./flatten-named-criteria.fn";
-import { Schema } from "./metadata/schema";
 import { expandRelation } from "./expand-relation.fn";
+import { flattenNamedCriteria } from "./flatten-named-criteria.fn";
+import { namedCriteriaToKeyPaths } from "./named-criteria-to-key-path.fn";
+import { normalizeEntities } from "./normalize-entities.fn";
+import { ObjectStore } from "./object-store";
 
 export class Workspace {
-    constructor(catalog: SchemaCatalog) {
+    constructor(catalog: SchemaCatalog_Interface) {
         this.catalog = catalog;
 
         // for (const schema of catalog.getSchemas().filter(SchemaV1.hasKey)) {
@@ -23,7 +21,7 @@ export class Workspace {
         }
     }
 
-    private readonly catalog: SchemaCatalog;
+    private readonly catalog: SchemaCatalog_Interface;
     private readonly stores = new Map<string, ObjectStore>();
 
     add(model: string, items: any[]): void {
@@ -79,7 +77,14 @@ export class Workspace {
     }
 
     expand(model: string, expansion: Expansion, items: any[]): any {
-        const schema = this.getSchema(model);
+        let schema = this.getSchema(model);
+
+        // [todo] dirty
+        const nominalSchema = schema.getNominalSchema();
+
+        if (nominalSchema !== schema) {
+            schema = nominalSchema;
+        }
 
         for (const propertyKey in expansion) {
             const expansionValue = expansion[propertyKey];
@@ -96,6 +101,7 @@ export class Workspace {
                     expansionValue === true ? void 0 : expansionValue
                 );
                 // this.expandOne(model, propertyKey, items, expansionValue === true ? void 0 : expansionValue);
+                // } else if (property.isNavigable()) {
             } else if (property.isNavigable()) {
                 if (expansionValue === true) {
                     // [todo] not yet sure if this should be considered a user error.
