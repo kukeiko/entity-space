@@ -42,8 +42,3 @@ export interface OpenApiSchemaProperty extends OpenApiSchema {
     readOnly?: boolean;
     writeOnly?: boolean;
 }
-
-// export interface OpenApiSchemaArrayProperty extends OpenApiSchemaProperty {
-//     type: "array";
-//     items: JsonSchemaReference | OpenApiSchema;
-// }

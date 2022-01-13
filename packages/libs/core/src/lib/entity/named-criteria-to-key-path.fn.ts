@@ -17,6 +17,7 @@ function namedCriteriaToKeyPathsInternal(namedCriteria: NamedCriteria, prefix: s
     return bagKeyPaths;
 }
 
+// [todo] move to criteria folder :?
 export function namedCriteriaToKeyPaths(namedCriteria: NamedCriteria): string[] {
     return namedCriteriaToKeyPathsInternal(namedCriteria, []);
 }

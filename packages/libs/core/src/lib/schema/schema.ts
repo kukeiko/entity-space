@@ -1,29 +1,67 @@
-import { EntitySpaceSchemaRelation_Old } from "./entity-space-schema";
-import { OpenApiDiscriminator } from "./open-api-schema";
-import { SchemaIndexV1 } from "./schema-v1-index";
+// [todo] can we get rid of the "schemaType" discriminator somehow, and instead
+// find an analogue to c# "instance is ITheInterface"?
+export interface PrimitiveSchema {
+    readonly schemaType: "primitive";
 
-export interface Schema {
-    getAllIndexes(): readonly SchemaIndexV1[];
-    getAllOf(): Schema[];
-    getDiscriminators(): OpenApiDiscriminator[];
-    getIndex(name: string): SchemaIndexV1;
-    getIndexes(): readonly SchemaIndexV1[];
-    getKeyIndex(): SchemaIndexV1;
-    getNominalSchemaId(): string;
-    getNominalSchema(): Schema;
-    getProperties(): readonly SchemaProperty[];
-    getProperty(name: string): SchemaProperty;
-    getPropertyByPath(path: string): SchemaProperty;
-    getRelations(): EntitySpaceSchemaRelation_Old[];
-    getSchemaId(): string;
-    getSchemaName(): string;
-    getType(): string;
-    getUnionDiscriminator(): OpenApiDiscriminator | undefined;
+    getDataType(): "boolean" | "integer" | "number" | "string";
+}
+
+export interface EntitySchemaKey extends EntitySchemaIndex {}
+
+export interface EntitySchemaIndex {
+    getName(): string;
+    getPath(): string[];
+    isUnique(): boolean;
+}
+
+export interface EntitySchemaRelation {
+    getFromIndex(): EntitySchemaIndex;
+    getPath(): string;
+    getProperty(): EntitySchemaProperty;
+    getRelatedSchema(): EntitySchema;
+    getToIndex(): EntitySchemaIndex;
+}
+
+export interface EntitySchema {
+    readonly schemaType: "entity";
+
+    getAllOf(): EntitySchema[];
+    getAnyOf(): EntitySchema[];
+    getId(): string;
+    getIndex(name: string): EntitySchemaIndex;
+    getIndexOrKey(name: string): EntitySchemaIndex;
+    getIndexes(): EntitySchemaIndex[];
+    getIndexesIncludingKey(): EntitySchemaIndex[];
+    getKey(): EntitySchemaKey;
+    getOneOf(): EntitySchema[];
+    getProperties(): EntitySchemaProperty[];
+    getProperty(path: string): EntitySchemaProperty;
+    getRelation(path: string): EntitySchemaRelation;
+    getRelations(): EntitySchemaRelation[];
     hasKey(): boolean;
-    isUnion(): boolean;
 }
 
-export interface SchemaProperty extends Schema {
-    getPropertyName(): string;
-    isNavigable(): boolean;
+export interface EntitySchemaProperty {
+    readonly schemaType: "property";
+
+    getName(): string;
+    // [todo] a bit questionable. added because workspace requires it
+    getValueEntitySchema(): EntitySchema;
+    getValueSchema(): PropertyValueSchema;
+    isReadOnly(): boolean;
+    isWriteOnly(): boolean;
 }
+
+export interface DictionarySchema {
+    readonly schemaType: "dictionary";
+
+    getItemSchema(): EntitySchema | PrimitiveSchema;
+}
+
+export interface ArraySchema {
+    readonly schemaType: "array";
+
+    getItemSchema(): EntitySchema | PrimitiveSchema;
+}
+
+export type PropertyValueSchema = ArraySchema | DictionarySchema | EntitySchema | PrimitiveSchema;

@@ -7,7 +7,7 @@ export interface EntitySpaceSchemaKeyObject {
 
 export type EntitySpaceSchemaKey = string | string[] | EntitySpaceSchemaKeyObject;
 
-export interface EntitySpaceSchemaIndexObject_V2 {
+export interface EntitySpaceSchemaIndexObject {
     name?: string;
     path?: string | string[];
     unique?: boolean;
@@ -15,14 +15,14 @@ export interface EntitySpaceSchemaIndexObject_V2 {
     multiEntry?: boolean;
 }
 
-export type EntitySpaceSchemaIndex = true | string | string[] | EntitySpaceSchemaIndexObject_V2;
+export type EntitySpaceSchemaIndex = true | string | string[] | EntitySpaceSchemaIndexObject;
 
-export interface EntitySpaceSchemaRelationObject_V2 {
+export interface EntitySpaceSchemaRelationObject {
     from: string;
     to: string;
 }
 
-export type EntitySpaceSchemaRelation = [string, string] | EntitySpaceSchemaRelationObject_V2;
+export type EntitySpaceSchemaRelation = [string, string] | EntitySpaceSchemaRelationObject;
 
 export type EntitySpaceSchemaProperty = OpenApiSchemaProperty & EntitySpaceSchema;
 
@@ -35,10 +35,4 @@ export interface EntitySpaceSchema extends OpenApiSchema {
     properties?: Record<string, JsonSchemaReference | EntitySpaceSchemaProperty>;
     relations?: Record<string, EntitySpaceSchemaRelation>;
     items?: JsonSchemaReference | EntitySpaceSchema;
-}
-
-export interface EntitySpaceSchemaRelation_Old {
-    path: string;
-    from: string;
-    to: string;
 }

@@ -1,12 +1,12 @@
 import { InNumberSetCriterion, NamedCriteriaTemplate } from "../criteria/public";
-import { SchemaIndexV1 } from "../schema/schema-v1-index";
+import { EntitySchemaIndex } from "../schema/public";
 
 export function createCriteriaTemplateForIndex(
-    index: SchemaIndexV1
+    index: EntitySchemaIndex
 ): NamedCriteriaTemplate<{ [key: string]: typeof InNumberSetCriterion[] }> {
-    const keyPath = index.path;
+    const keyPath = index.getPath();
 
-    if (index.path.some(key => key.split(".").length > 2)) {
+    if (index.getPath().some(key => key.split(".").length > 2)) {
         // [todo] support arbitrary depth
         throw new Error(`arbitrary depth of nested index paths not yet supported`);
     }

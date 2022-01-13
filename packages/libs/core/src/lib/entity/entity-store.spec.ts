@@ -1,27 +1,24 @@
-import { EntitySpaceSchemaIndexObject_V2 } from "../schema/entity-space-schema";
-import { Schema } from "../schema/schema";
-import { UnbakedSchema } from "../schema/unbaked-schema";
-import { UnbakedSchemaCatalog } from "../schema/unbaked-schema-catalog";
-import { ObjectStore } from "./object-store";
-
-function buildDefaultIndexName(path: string[]): string {
-    return path.join(",");
-}
+import { buildDefaultIndexName } from "../schema/build-default-index-name.fn";
+import { EntitySchema } from "../schema/schema";
+import { UnbakedEntitySchema } from "../schema/unbaked-entity-schema";
+import { EntityStore } from "./entity-store";
 
 type SchemaIndexArgumentV1 = string | string[] | { name?: string; path: string | string[]; unique?: boolean };
 
-function createSchema(name: string, key: string | string[], indexes_oldStyle?: SchemaIndexArgumentV1[]): Schema {
-    const indexes: Record<string, EntitySpaceSchemaIndexObject_V2> = {};
+function createSchema(name: string, key: string | string[], indexes_oldStyle?: SchemaIndexArgumentV1[]): EntitySchema {
+    const schema = new UnbakedEntitySchema(name);
+    schema.setKey(key);
 
     for (const indexArgs of indexes_oldStyle ?? []) {
-        let index: EntitySpaceSchemaIndexObject_V2;
         let name: string;
+        let path: string | string[];
+        let unique = false;
 
         if (typeof indexArgs === "string") {
-            index = { path: [indexArgs] };
+            path = [indexArgs];
             name = indexArgs;
         } else if (Array.isArray(indexArgs)) {
-            index = { path: indexArgs };
+            path = indexArgs;
             name = buildDefaultIndexName(indexArgs);
         } else {
             if (indexArgs.name === void 0) {
@@ -34,30 +31,20 @@ function createSchema(name: string, key: string | string[], indexes_oldStyle?: S
                 name = indexArgs.name;
             }
 
-            index = {
-                path: Array.isArray(indexArgs.path) ? indexArgs.path : [indexArgs.path],
-                unique: indexArgs.unique,
-            };
+            unique = indexArgs.unique ?? false;
+            path = Array.isArray(indexArgs.path) ? indexArgs.path : [indexArgs.path];
         }
 
-        indexes[name] = index;
+        schema.addIndex(path, { name, unique });
     }
 
-    return new UnbakedSchema(
-        {
-            $id: name,
-            type: "object",
-            key,
-            indexes,
-        },
-        new UnbakedSchemaCatalog()
-    );
+    return schema;
 }
 
-describe("object-store", () => {
+describe("entity-store", () => {
     it("returns an object by key", () => {
         // arrange
-        const store = new ObjectStore(createSchema("foo", "bar"));
+        const store = new EntityStore(createSchema("foo", "bar"));
         const expected = { bar: 3 };
 
         // act
@@ -70,7 +57,7 @@ describe("object-store", () => {
 
     it("returns an object by composite key", () => {
         // arrange
-        const store = new ObjectStore(createSchema("foo", ["bar", "baz"]));
+        const store = new EntityStore(createSchema("foo", ["bar", "baz"]));
         const expected = { bar: 3, baz: 4 };
 
         // act
@@ -83,7 +70,7 @@ describe("object-store", () => {
 
     it("returns an object by composite nested key", () => {
         // arrange
-        const store = new ObjectStore(createSchema("foo", ["bar", "baz", "khaz.modan"]));
+        const store = new EntityStore(createSchema("foo", ["bar", "baz", "khaz.modan"]));
         const expected = { bar: 3, baz: 4, khaz: { modan: 7 } };
 
         // act
@@ -99,7 +86,7 @@ describe("object-store", () => {
         const khaz = { id: 64, name: "khaz" };
         const mo = { id: 128, name: "mo" };
         const dan = { id: 256, name: "dan" };
-        const store = new ObjectStore(createSchema("foo", "id"));
+        const store = new EntityStore(createSchema("foo", "id"));
 
         // act
         store.add([khaz, mo, dan]);
@@ -117,7 +104,7 @@ describe("object-store", () => {
 
     it("doesn't throw if it didn't find anything or just partial results", () => {
         // arrange
-        const store = new ObjectStore(createSchema("foo", "bar"));
+        const store = new EntityStore(createSchema("foo", "bar"));
 
         // assert
         expect(() => store.getByKey(64)).not.toThrow();
@@ -135,7 +122,7 @@ describe("object-store", () => {
         ];
         const notBaz = { id: 64, tag: "not-baz" };
 
-        const store = new ObjectStore(createSchema("foo", "id", ["tag"]));
+        const store = new EntityStore(createSchema("foo", "id", ["tag"]));
 
         // act
         store.add([...baz, notBaz]);
@@ -153,7 +140,7 @@ describe("object-store", () => {
         ];
         const bazButNotSweet = { id: 64, tag: "bag", flavor: "salty" };
 
-        const store = new ObjectStore(
+        const store = new EntityStore(
             createSchema("foo", "id", [
                 {
                     name: "tagAndFlavor",
@@ -180,7 +167,7 @@ describe("object-store", () => {
     //     let notBaz = { id: 64, name: "notBaz", tag: "not-baz", scope: "global" };
     //     let bazButNotGlobal = { id: 128, name: "notBaz", tag: "baz", scope: "local" };
 
-    //     let cache = new ObjectStore<number, any>({
+    //     let cache = new EntityStore<number, any>({
     //         getKey: v => v.id,
     //         indexes: { tag: v => v.tag, scope: v => v.scope, name: v => v.name },
     //     });
@@ -209,7 +196,7 @@ describe("object-store", () => {
 
     it("throws when trying to access by non-existing index", () => {
         // arrange
-        const store = new ObjectStore(createSchema("foo", "id"));
+        const store = new EntityStore(createSchema("foo", "id"));
 
         // assert
         expect(() => store.getByIndex("i-dont-exist", ["me-too"])).toThrow();
@@ -220,7 +207,7 @@ describe("object-store", () => {
 
     it("throws if trying to add item with a null/undefined primary key", () => {
         // arrange
-        const cache = new ObjectStore(createSchema("foo", "id"));
+        const cache = new EntityStore(createSchema("foo", "id"));
 
         // assert
         expect(() => cache.add([{}])).toThrow();
@@ -230,7 +217,7 @@ describe("object-store", () => {
 
     // [todo] reimplement. indexeddb has a "count()" method which takes a query, so we probably wanna offer the same.
     // it("should have a size indicating number of cached objects", () => {
-    //     let cache = new ObjectStore<number, any>({ getKey: v => v.id });
+    //     let cache = new EntityStore<number, any>({ getKey: v => v.id });
 
     //     expect(cache.size).toBe(0);
     //     cache.add([{ id: 1 }]);
@@ -246,7 +233,7 @@ describe("object-store", () => {
     it("should be empty after clearing", () => {
         // arrange
         const foo = { id: 7, name: "foo", tag: "baz" };
-        const store = new ObjectStore(createSchema("foo", "id", ["tag"]));
+        const store = new EntityStore(createSchema("foo", "id", ["tag"]));
 
         // act
         store.add([foo]);
