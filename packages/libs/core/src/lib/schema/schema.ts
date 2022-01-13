@@ -45,8 +45,8 @@ export interface EntitySchemaProperty {
     readonly schemaType: "property";
 
     getName(): string;
-    // [todo] a bit questionable. added because workspace requires it
-    getValueEntitySchema(): EntitySchema;
+    getUnboxedEntitySchema(): EntitySchema;
+    getUnboxedValueSchema(): EntitySchema | PrimitiveSchema;
     getValueSchema(): PropertyValueSchema;
     isReadOnly(): boolean;
     isWriteOnly(): boolean;

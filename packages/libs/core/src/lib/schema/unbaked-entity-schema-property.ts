@@ -1,4 +1,4 @@
-import { EntitySchema, EntitySchemaProperty, PropertyValueSchema } from "./schema";
+import { EntitySchema, EntitySchemaProperty, PrimitiveSchema, PropertyValueSchema } from "./schema";
 
 export class UnbakedEntitySchemaProperty implements EntitySchemaProperty {
     constructor(entitySchema: EntitySchema, name: string, valueSchema: PropertyValueSchema) {
@@ -20,18 +20,20 @@ export class UnbakedEntitySchemaProperty implements EntitySchemaProperty {
         return this.name;
     }
 
-    getValueSchema(): PropertyValueSchema {
-        return this.valueSchema;
+    getUnboxedEntitySchema(): EntitySchema {
+        const unboxedSchema = this.getUnboxedValueSchema();
+
+        if (unboxedSchema.schemaType !== "entity") {
+            throw new Error(`unboxed value schema was not of type entity: ${unboxedSchema.schemaType}`);
+        }
+
+        return unboxedSchema;
     }
 
-    // [todo] a bit questionable. added because workspace requires it
-    getValueEntitySchema(): EntitySchema {
+    getUnboxedValueSchema(): EntitySchema | PrimitiveSchema {
         const valueSchema = this.getValueSchema();
 
         switch (valueSchema.schemaType) {
-            case "entity":
-                return valueSchema;
-
             case "array":
             case "dictionary": {
                 const itemSchema = valueSchema.getItemSchema();
@@ -43,9 +45,14 @@ export class UnbakedEntitySchemaProperty implements EntitySchemaProperty {
                 return itemSchema;
             }
 
-            default:
-                throw new Error(`property w/ schema type ${valueSchema.schemaType} not supported`);
+            default: {
+                return valueSchema;
+            }
         }
+    }
+
+    getValueSchema(): PropertyValueSchema {
+        return this.valueSchema;
     }
 
     isReadOnly(): boolean {

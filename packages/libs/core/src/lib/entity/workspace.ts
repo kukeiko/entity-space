@@ -66,7 +66,7 @@ export class Workspace {
         return query.criteria.filter(entities);
     }
 
-    expand(schema: EntitySchema, expansion: Expansion, items: Entity[]): void {
+    expand(schema: EntitySchema, expansion: Expansion, entities: Entity[]): void {
         for (const propertyKey in expansion) {
             const expansionValue = expansion[propertyKey];
             // [todo] support nested paths
@@ -74,7 +74,7 @@ export class Workspace {
 
             if (relation !== void 0) {
                 expandEntities(
-                    items,
+                    entities,
                     relation,
                     q => this.query(q, relation.getRelatedSchema()),
                     expansionValue === true ? void 0 : expansionValue
@@ -83,7 +83,7 @@ export class Workspace {
                 const property = schema.getProperty(propertyKey);
 
                 try {
-                    const entitySchema = property.getValueEntitySchema();
+                    const entitySchema = property.getUnboxedEntitySchema();
 
                     if (expansionValue === true) {
                         // [todo] not yet sure if this should be considered a user error.
@@ -94,8 +94,8 @@ export class Workspace {
                     } else if (expansionValue !== void 0) {
                         const referencedItems: Entity[] = [];
 
-                        for (const item of items) {
-                            const reference = item[propertyKey];
+                        for (const entity of entities) {
+                            const reference = entity[propertyKey];
 
                             if (Array.isArray(reference)) {
                                 referencedItems.push(...reference);
