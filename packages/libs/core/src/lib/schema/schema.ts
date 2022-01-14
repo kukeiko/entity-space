@@ -16,9 +16,9 @@ export interface EntitySchemaIndex {
 
 export interface EntitySchemaRelation {
     getFromIndex(): EntitySchemaIndex;
-    getPath(): string;
+    getPropertyName(): string;
     getProperty(): EntitySchemaProperty;
-    getRelatedSchema(): EntitySchema;
+    getRelatedEntitySchema(): EntitySchema;
     getToIndex(): EntitySchemaIndex;
 }
 
@@ -36,8 +36,8 @@ export interface EntitySchema {
     getOneOf(): EntitySchema[];
     getProperties(): EntitySchemaProperty[];
     getProperty(path: string): EntitySchemaProperty;
-    getRelation(path: string): EntitySchemaRelation;
-    findRelation(path: string): EntitySchemaRelation | undefined;
+    getRelation(propertyName: string): EntitySchemaRelation;
+    findRelation(propertyName: string): EntitySchemaRelation | undefined;
     getRelations(): EntitySchemaRelation[];
     hasKey(): boolean;
 }

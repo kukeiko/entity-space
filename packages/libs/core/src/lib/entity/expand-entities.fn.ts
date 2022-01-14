@@ -12,7 +12,7 @@ export function expandEntities(
     expansion?: Expansion
 ): void {
     const entityReader = new UnbakedEntityReader();
-    const relatedSchema = relation.getRelatedSchema();
+    const relatedSchema = relation.getRelatedEntitySchema();
     // [todo] what about dictionaries?
     const isArray = relation.getProperty().getValueSchema().schemaType === "array";
     const fromIndex = relation.getFromIndex();
@@ -27,9 +27,9 @@ export function expandEntities(
         );
 
         if (isArray) {
-            entity[relation.getPath()] = matchingReferencedItems;
+            entity[relation.getPropertyName()] = matchingReferencedItems;
         } else {
-            entity[relation.getPath()] = matchingReferencedItems[0] ?? null;
+            entity[relation.getPropertyName()] = matchingReferencedItems[0] ?? null;
         }
     }
 }

@@ -69,50 +69,36 @@ export class Workspace {
     expand(schema: EntitySchema, expansion: Expansion, entities: Entity[]): void {
         for (const propertyKey in expansion) {
             const expansionValue = expansion[propertyKey];
-            // [todo] support nested paths
+
+            if (expansionValue === void 0) {
+                continue;
+            }
+
             const relation = schema.findRelation(propertyKey);
 
             if (relation !== void 0) {
                 expandEntities(
                     entities,
                     relation,
-                    q => this.query(q, relation.getRelatedSchema()),
+                    q => this.query(q, relation.getRelatedEntitySchema()),
                     expansionValue === true ? void 0 : expansionValue
                 );
-            } else {
+            } else if (expansionValue !== true) {
                 const property = schema.getProperty(propertyKey);
+                const referencedItems: Entity[] = [];
 
-                try {
-                    const entitySchema = property.getUnboxedEntitySchema();
+                for (const entity of entities) {
+                    const reference = entity[propertyKey];
 
-                    if (expansionValue === true) {
-                        // [todo] not yet sure if this should be considered a user error.
-                        // so for now we'll just throw so i definitely notice it in case it happens.
-                        throw new Error(
-                            `trying to expand a value that has no link; and no deeper expansion was provided: ${entitySchema.getId()}.${propertyKey}`
-                        );
-                    } else if (expansionValue !== void 0) {
-                        const referencedItems: Entity[] = [];
-
-                        for (const entity of entities) {
-                            const reference = entity[propertyKey];
-
-                            if (Array.isArray(reference)) {
-                                referencedItems.push(...reference);
-                            } else {
-                                referencedItems.push(reference);
-                            }
-                        }
-
-                        this.expand(entitySchema, expansionValue, referencedItems);
+                    if (Array.isArray(reference)) {
+                        referencedItems.push(...reference);
+                    } else {
+                        referencedItems.push(reference);
                     }
-                } catch (error) {
-                    const innerErrorMessage = error instanceof Error ? error.message : `${error}`;
-
-                    throw new Error(
-                        `can't expand ${schema.getId()}.${propertyKey}: not a navigable/expandable property: ${innerErrorMessage}`
-                    );
                 }
+
+                const entitySchema = property.getUnboxedEntitySchema();
+                this.expand(entitySchema, expansionValue, referencedItems);
             }
         }
     }

@@ -1,4 +1,3 @@
-import { splitOne } from "@entity-space/utils";
 import {
     EntitySchema,
     EntitySchemaIndex,
@@ -43,13 +42,13 @@ export class UnbakedEntitySchema implements EntitySchema {
         this.properties.push(property);
     }
 
-    addRelation(path: string, from: string, to: string): void {
-        const relation = new UnbakedEntitySchemaRelation(this, path, from, to);
+    addRelation(propertyKey: string, from: string, to: string): void {
+        const relation = new UnbakedEntitySchemaRelation(this, propertyKey, from, to);
         this.relations.push(relation);
     }
 
-    findRelation(path: string): EntitySchemaRelation | undefined {
-        return this.getRelations().find(relation => relation.getPath() === path);
+    findRelation(propertyName: string): EntitySchemaRelation | undefined {
+        return this.getRelations().find(relation => relation.getPropertyName() === propertyName);
     }
 
     getAllOf(): EntitySchema[] {
@@ -107,18 +106,7 @@ export class UnbakedEntitySchema implements EntitySchema {
         return this.properties.slice();
     }
 
-    getProperty(path: string): EntitySchemaProperty {
-        const [name, remaining] = splitOne(path, ".");
-        const property = this.getLocalProperty(name);
-
-        if (remaining === void 0) {
-            return property;
-        }
-
-        return property.getUnboxedEntitySchema().getProperty(remaining);
-    }
-
-    private getLocalProperty(name: string): EntitySchemaProperty {
+    getProperty(name: string): EntitySchemaProperty {
         const property = this.getProperties().find(property => property.getName() === name);
 
         if (property === void 0) {
@@ -128,11 +116,11 @@ export class UnbakedEntitySchema implements EntitySchema {
         return property;
     }
 
-    getRelation(path: string): EntitySchemaRelation {
-        const relation = this.relations.find(relation => relation.getPath() === path);
+    getRelation(propertyKey: string): EntitySchemaRelation {
+        const relation = this.findRelation(propertyKey);
 
         if (relation === void 0) {
-            throw new Error(`relation "${path}" not found on schema ${this.getId()}`);
+            throw new Error(`relation "${propertyKey}" not found on schema ${this.getId()}`);
         }
 
         return relation;
@@ -140,7 +128,6 @@ export class UnbakedEntitySchema implements EntitySchema {
 
     getRelations(): EntitySchemaRelation[] {
         // [todo] add relations inherited from allOf
-        // [todo] what about relations that exist on properties that refere to non-normalized entities?
         return this.relations.slice();
     }
 

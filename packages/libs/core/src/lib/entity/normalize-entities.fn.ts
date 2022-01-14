@@ -2,25 +2,21 @@ import { EntitySchema } from "../public";
 import { Entity } from "./entity";
 import { NormalizedEntities } from "./normalized-entities";
 
-// [todo] not a fan of having the "shouldAddSelf" flag
 export function normalizeEntities(
-    entitySchema: EntitySchema,
+    schema: EntitySchema,
     entities: Entity[],
-    shouldAddSelf = true,
     normalized?: NormalizedEntities
 ): NormalizedEntities {
     normalized = normalized ?? new NormalizedEntities();
+    normalized.add(schema, entities);
 
-    if (shouldAddSelf) {
-        normalized.add(entitySchema, entities);
-    }
-
-    for (const relation of entitySchema.getRelations()) {
+    for (const relation of schema.getRelations()) {
         const navigated: Entity[] = [];
 
-        for (const item of entities) {
+        for (const entity of entities) {
             // [todo] support nested path. use EntityReader?
-            const value = item[relation.getPath()];
+            const value = entity[relation.getPropertyName()];
+            
             if (value == null) continue;
 
             if (Array.isArray(value)) {
@@ -29,10 +25,10 @@ export function normalizeEntities(
                 navigated.push(value);
             }
 
-            delete item[relation.getPath()];
+            delete entity[relation.getPropertyName()];
         }
 
-        normalizeEntities(relation.getRelatedSchema(), navigated, true, normalized);
+        normalizeEntities(relation.getRelatedEntitySchema(), navigated, normalized);
     }
 
     return normalized;
