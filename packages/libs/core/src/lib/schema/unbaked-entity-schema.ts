@@ -34,10 +34,6 @@ export class UnbakedEntitySchema implements EntitySchema {
     }
 
     addIndex(path: string | string[], options?: { name?: string; unique?: boolean; multiEntry?: boolean }): void {
-        if (!Array.isArray(path)) {
-            path = [path];
-        }
-
         const index = new UnbakedEntitySchemaIndex(this, path, options);
         this.indexes.push(index);
     }
@@ -153,10 +149,6 @@ export class UnbakedEntitySchema implements EntitySchema {
     }
 
     setKey(path: string | string[]): void {
-        if (!Array.isArray(path)) {
-            path = [path];
-        }
-
         this.key = new UnbakedEntitySchemaKey(this, path);
     }
 }

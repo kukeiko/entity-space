@@ -2,9 +2,9 @@ import { buildDefaultIndexName } from "./build-default-index-name.fn";
 import { EntitySchema, EntitySchemaKey } from "./schema";
 
 export class UnbakedEntitySchemaKey implements EntitySchemaKey {
-    constructor(entitySchema: EntitySchema, path: string[], options?: { name?: string }) {
+    constructor(entitySchema: EntitySchema, path: string | string[], options?: { name?: string }) {
         this.entitySchema = entitySchema;
-        this.path = path;
+        this.path = Array.isArray(path) ? path.slice() : [path];
         this.name = options?.name;
     }
 

@@ -12,12 +12,12 @@ import { EntitySchema, EntitySchemaIndex } from "./schema";
 export class UnbakedEntitySchemaIndex implements EntitySchemaIndex {
     constructor(
         entitySchema: EntitySchema,
-        path: string[],
+        path: string | string[],
         options?: { name?: string; unique?: boolean; multiEntry?: boolean }
     ) {
         this.entitySchema = entitySchema;
         this.name = options?.name;
-        this.path = path;
+        this.path = Array.isArray(path) ? path.slice() : [path];
         this.unique = options?.unique ?? false;
         this.multiEntry = options?.multiEntry ?? false;
     }
