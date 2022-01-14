@@ -1,3 +1,4 @@
+import { splitOne } from "@entity-space/utils";
 import {
     EntitySchema,
     EntitySchemaIndex,
@@ -49,6 +50,10 @@ export class UnbakedEntitySchema implements EntitySchema {
     addRelation(path: string, from: string, to: string): void {
         const relation = new UnbakedEntitySchemaRelation(this, path, from, to);
         this.relations.push(relation);
+    }
+
+    findRelation(path: string): EntitySchemaRelation | undefined {
+        return this.getRelations().find(relation => relation.getPath() === path);
     }
 
     getAllOf(): EntitySchema[] {
@@ -107,45 +112,24 @@ export class UnbakedEntitySchema implements EntitySchema {
     }
 
     getProperty(path: string): EntitySchemaProperty {
-        const fragments = path.split(".");
+        const [name, remaining] = splitOne(path, ".");
+        const property = this.getLocalProperty(name);
 
-        if (fragments.length === 1) {
-            const property = this.getProperties().find(property => property.getName() === path);
-
-            if (property === void 0) {
-                throw new Error(`property "${path}" not found on schema ${this.getId()}`);
-            }
-
+        if (remaining === void 0) {
             return property;
-        } else {
-            const [name, ...remaining] = fragments;
-            const remainingPath = remaining.join(".");
-            const property = this.getProperties().find(property => property.getName() === name);
-
-            if (property === void 0) {
-                throw new Error(`property "${name}" not found on schema ${this.getId()}`);
-            }
-
-            const valueSchema = property.getValueSchema();
-
-            if (valueSchema.schemaType === "array" || valueSchema.schemaType === "dictionary") {
-                const itemSchema = valueSchema.getItemSchema();
-
-                if (itemSchema.schemaType === "primitive") {
-                    throw new Error(
-                        `property ${name} on schema ${this.getId()} does not have property ${remainingPath} because it contains primitives`
-                    );
-                }
-
-                return itemSchema.getProperty(remainingPath);
-            } else if (valueSchema.schemaType === "entity") {
-                return valueSchema.getProperty(remainingPath);
-            } else {
-                throw new Error(
-                    `property ${name} on schema ${this.getId()} does not have property ${remainingPath} because it is a primitive`
-                );
-            }
         }
+
+        return property.getUnboxedEntitySchema().getProperty(remaining);
+    }
+
+    private getLocalProperty(name: string): EntitySchemaProperty {
+        const property = this.getProperties().find(property => property.getName() === name);
+
+        if (property === void 0) {
+            throw new Error(`property "${name}" not found on schema ${this.getId()}`);
+        }
+
+        return property;
     }
 
     getRelation(path: string): EntitySchemaRelation {
@@ -159,6 +143,8 @@ export class UnbakedEntitySchema implements EntitySchema {
     }
 
     getRelations(): EntitySchemaRelation[] {
+        // [todo] add relations inherited from allOf
+        // [todo] what about relations that exist on properties that refere to non-normalized entities?
         return this.relations.slice();
     }
 

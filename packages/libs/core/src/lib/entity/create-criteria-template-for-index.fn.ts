@@ -1,3 +1,4 @@
+import { splitOne } from "@entity-space/utils";
 import { InNumberSetCriterion, NamedCriteriaTemplate } from "../criteria/public";
 import { EntitySchemaIndex } from "../schema/public";
 
@@ -20,13 +21,15 @@ export function createCriteriaTemplateForIndex(
     for (const key of keyPath) {
         if (key.includes(".")) {
             // [todo] support more than 1 level of nesting
-            const [first, second] = key.split(".");
+            const [first, second] = splitOne(key, ".");
 
             if (!namedBagTemplate[first]) {
                 namedBagTemplate[first] = [new NamedCriteriaTemplate({})] as any;
             }
 
-            (namedBagTemplate[first][0] as any).items[second] = [InNumberSetCriterion];
+            if (second !== void 0) {
+                (namedBagTemplate[first][0] as any).items[second] = [InNumberSetCriterion];
+            }
         } else {
             // [todo] i was a bit suprised that i have to supply an array; was a bit unintuitive
             namedBagTemplate[key] = [InNumberSetCriterion];

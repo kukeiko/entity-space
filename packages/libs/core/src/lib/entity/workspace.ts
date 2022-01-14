@@ -70,7 +70,7 @@ export class Workspace {
         for (const propertyKey in expansion) {
             const expansionValue = expansion[propertyKey];
             // [todo] support nested paths
-            const relation = schema.getRelations().find(relation => relation.getPath() === propertyKey);
+            const relation = schema.findRelation(propertyKey);
 
             if (relation !== void 0) {
                 expandEntities(

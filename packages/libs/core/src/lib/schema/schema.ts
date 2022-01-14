@@ -37,6 +37,7 @@ export interface EntitySchema {
     getProperties(): EntitySchemaProperty[];
     getProperty(path: string): EntitySchemaProperty;
     getRelation(path: string): EntitySchemaRelation;
+    findRelation(path: string): EntitySchemaRelation | undefined;
     getRelations(): EntitySchemaRelation[];
     hasKey(): boolean;
 }
