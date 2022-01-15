@@ -33,4 +33,4 @@ jobs:
       run: npm i
     
     - name: 🕵️run tests
-      run: npx nx run apps-sandbox-api:test
+      run: npx nx test libs-core
