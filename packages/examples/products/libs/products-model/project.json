@@ -1,0 +1,23 @@
+{
+    "root": "packages/examples/products/libs/products-model",
+    "sourceRoot": "packages/examples/products/libs/products-model/src",
+    "projectType": "library",
+    "targets": {
+        "lint": {
+            "executor": "@nrwl/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": ["packages/examples/products/libs/products-model/**/*.ts"]
+            }
+        },
+        "test": {
+            "executor": "@nrwl/jest:jest",
+            "outputs": ["coverage/packages/examples/products/libs/products-model"],
+            "options": {
+                "jestConfig": "packages/examples/products/libs/products-model/jest.config.js",
+                "passWithNoTests": true
+            }
+        }
+    },
+    "tags": []
+}
