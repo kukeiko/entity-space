@@ -15,7 +15,7 @@
         "skipDefaultLibCheck": true,
         "baseUrl": ".",
         "paths": {
-            "@entity-space/core": ["packages/libs/core/src/index.ts"],
+            "@entity-space/core": ["packages/core/src/index.ts"],
             "@entity-space/utils": ["packages/utils/src/index.ts"]
         }
     },

@@ -33,4 +33,4 @@ jobs:
       run: npm i
     
     - name: 🕵️run tests
-      run: npx nx test libs-core
+      run: npx nx test core
