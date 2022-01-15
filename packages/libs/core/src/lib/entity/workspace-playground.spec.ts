@@ -1,212 +1,19 @@
 import { inSet, matches, Query } from "../public";
-import { createCriteriaForIndex } from "./create-criteria-for-index.fn";
-import { Schema } from "./metadata/schema";
-import { SchemaCatalog } from "./metadata/schema-catalog";
-import { SchemaIndex } from "./metadata/schema-index";
-import { SchemaJson } from "./metadata/schema-json";
-import { normalizeEntities } from "./normalize-entities.fn";
-import { ObjectStore } from "./object-store";
+import { UnbakedEntitySchema } from "../schema/unbaked-entity-schema";
 import { Workspace } from "./workspace";
 
 describe("playground: workspace", () => {
-    it("normalize items, add them to store, then query", () => {
-        // arrange
-        interface Foo {
-            id: number;
-            bar: Bar;
-        }
-
-        interface Bar {
-            bazId: number;
-            baz?: Baz;
-        }
-
-        interface Baz {
-            id: number;
-        }
-
-        const fooSchema = new Schema({
-            name: "foo",
-            key: "id",
-            properties: {
-                bar: {
-                    type: "object",
-                    model: "bar",
-                },
-            },
-        });
-
-        const barSchema = new Schema({
-            name: "bar",
-            indexes: ["bazId"],
-            properties: {
-                baz: {
-                    type: "object",
-                    model: "baz",
-                    link: { from: "bazId", to: "id" },
-                },
-            },
-        });
-
-        const bazSchema = new Schema({
-            name: "baz",
-            key: "id",
-            properties: {},
-        });
-
-        const catalog = new SchemaCatalog([fooSchema, barSchema, bazSchema]);
-        const workspace = new Workspace(catalog);
-
-        const addedItems: Foo[] = [
-            {
-                id: 1337,
-                bar: {
-                    bazId: 128,
-                    baz: {
-                        id: 128,
-                    },
-                },
-            },
-        ];
-
-        // act
-        workspace.add(fooSchema.name, addedItems);
-
-        const query: Query = {
-            model: fooSchema.name,
-            expansion: { bar: { baz: true } },
-            criteria: matches({ id: inSet([1337]) }),
-        };
-
-        const queriedItems = workspace.query(query);
-
-        // assert
-        expect(queriedItems).toEqual(addedItems);
-    });
-
-    it("expanding", () => {
-        const fooSchema = new Schema({
-            name: "foo",
-            key: { name: "id", path: ["id", "secondaryId"] },
-            properties: {
-                bar: { type: "object", model: "bar", link: { from: "id", to: "fooId" } },
-            },
-        });
-
-        const barSchema = new Schema({
-            name: "bar",
-            key: "id",
-            indexes: [{ name: "fooId", path: ["fooId", "secondaryId"] }],
-            properties: {},
-        });
-
-        const catalog = new SchemaCatalog([fooSchema, barSchema]);
-        const workspace = new Workspace(catalog);
-
-        workspace.add("foo", [{ id: 1337, secondaryId: 128, name: "i am foo" }]);
-        workspace.add("bar", [{ id: 64, fooId: 1337, secondaryId: 128, name: "i belong to foo" }]);
-
-        const query: Query = {
-            model: "foo",
-            expansion: { bar: true },
-            criteria: matches({ id: inSet([1337]), secondaryId: inSet([128]) }),
-        };
-        const fooItems = workspace.query(query);
-        // const barItemsOfFooItems = workspace.expandResult("foo", "bar", fooItems);
-
-        console.log("expanded foo items:", fooItems);
-        // console.log("bar items:", barItemsOfFooItems);
-    });
-
-    it("expanding #2", () => {
-        const fooSchema = new Schema({
-            name: "foo",
-            key: "id",
-            properties: {
-                bar: {
-                    type: "object",
-                    model: "bar",
-                },
-            },
-        });
-
-        const barSchema = new Schema({
-            name: "bar",
-            indexes: ["bazId"],
-            properties: {
-                baz: {
-                    type: "object",
-                    model: "baz",
-                    link: { from: "bazId", to: "id" },
-                },
-            },
-        });
-
-        const bazSchema = new Schema({
-            name: "baz",
-            key: "id",
-            properties: {},
-        });
-
-        const catalog = new SchemaCatalog([fooSchema, barSchema, bazSchema]);
-        const workspace = new Workspace(catalog);
-        workspace.add("foo", [{ id: 1337, name: "i am foo", bar: { bazId: 128 } }]);
-        workspace.add("baz", [{ id: 128, name: "i am baz" }]);
-
-        const query: Query = {
-            model: "foo",
-            expansion: { bar: { baz: true } },
-            criteria: matches({ id: inSet([1337]) }),
-        };
-        const fooItems = workspace.query(query);
-        // const barItemsOfFooItems = workspace.expandResult("foo", "bar", fooItems);
-
-        console.log("expanded foo items:", fooItems);
-        // console.log("bar items:", barItemsOfFooItems);
-    });
-
-    xit("squawking around", () => {
-        // const schema: SchemaJson = {} as any;
-        // for (const key in schema.properties) {
-        //     const property = schema.properties[key];
-        // }
-        // const workspace = new Workspace();
-        // const store = new ObjectStore(new Schema({ name: "foo", key: "id", indexes: ["bar"], properties: {} }));
-        // workspace.addStore(store);
-        // const criteria = createCriteriaForIndex(["bar"], [1, 2, 3]);
-        // console.log(criteria);
-        // workspace.addStore(new ObjectStore(new Schema({ name: "bar", key: "id", properties: {}, indexes: [{ name: "baz", path: ["khaz.mo", "foo", "khaz.dan"] }] })));
-        // const barCriteria = createCriteriaForIndex(
-        //     ["khaz.mo", "foo", "khaz.dan"],
-        //     [
-        //         [1337, 64, 1],
-        //         [42, 64, 2],
-        //         [1337, 128, 1],
-        //         [1337, 64, 2],
-        //         [42, 128, 1],
-        //         [42, 64, 2],
-        //         [1337, 64, 1],
-        //         [1337, 128, 1],
-        //     ]
-        // );
-        // console.log(barCriteria);
-    });
-
     it("should execute query w/ 1 simple index", () => {
         interface Foo {
-            id: number;
             bar: number;
+            id: number;
         }
 
-        const schema = new Schema({
-            name: "foo",
-            key: "id",
-            indexes: ["bar"],
-            properties: {},
-        });
+        const schema = new UnbakedEntitySchema("foo");
+        schema.setKey("id");
+        schema.addIndex("bar");
 
-        const catalog = new SchemaCatalog([schema]);
-        const workspace = new Workspace(catalog);
+        const workspace = new Workspace();
 
         const entities: Foo[] = [
             { id: 1, bar: 2 },
@@ -221,7 +28,7 @@ describe("playground: workspace", () => {
             { id: 3, bar: 2 },
         ];
 
-        workspace.add(schema.name, entities);
+        workspace.add(schema, entities);
 
         const query: Query = {
             model: "foo",
@@ -229,30 +36,24 @@ describe("playground: workspace", () => {
             expansion: {},
         };
 
-        const result = workspace.query(query);
+        const result = workspace.query(query, schema);
 
-        console.log(result);
-        // expect(result).toEqual(jasmine.arrayWithExactContents(expectedEntities));
         expect(result.length).toEqual(expectedEntities.length);
         expect(result).toEqual(expect.arrayContaining(expectedEntities));
     });
 
     it("should execute query w/ composite indexes", () => {
         interface Foo {
-            id: number;
             bar: number;
             baz: number;
+            id: number;
         }
 
-        const schema = new Schema({
-            name: "foo",
-            key: "id",
-            indexes: [{ name: "barAndBaz", path: ["bar", "baz"] }],
-            properties: {},
-        });
+        const schema = new UnbakedEntitySchema("foo");
+        schema.setKey("id");
+        schema.addIndex(["bar", "baz"], { name: "barAndBaz" });
 
-        const catalog = new SchemaCatalog([schema]);
-        const workspace = new Workspace(catalog);
+        const workspace = new Workspace();
 
         const entities: Foo[] = [
             { id: 1, bar: 2, baz: 1337 },
@@ -266,7 +67,7 @@ describe("playground: workspace", () => {
             { id: 2, bar: 3, baz: 1337 },
         ];
 
-        workspace.add(schema.name, entities);
+        workspace.add(schema, entities);
 
         const query: Query = {
             model: "foo",
@@ -274,30 +75,25 @@ describe("playground: workspace", () => {
             expansion: {},
         };
 
-        const result = workspace.query(query);
+        const result = workspace.query(query, schema);
 
-        console.log(result);
         expect(result.length).toEqual(expectedEntities.length);
         expect(result).toEqual(expect.arrayContaining(expectedEntities));
     });
 
     it("should execute query w/ 1 nested index", () => {
         interface Foo {
-            id: number;
             bar: {
                 baz: number;
             };
+            id: number;
         }
 
-        const schema = new Schema({
-            name: "foo",
-            key: "id",
-            indexes: [{ name: "bar", path: "bar.baz" }],
-            properties: {},
-        });
+        const schema = new UnbakedEntitySchema("foo");
+        schema.setKey("id");
+        schema.addIndex("bar.baz");
 
-        const catalog = new SchemaCatalog([schema]);
-        const workspace = new Workspace(catalog);
+        const workspace = new Workspace();
 
         const entities: Foo[] = [
             { id: 1, bar: { baz: 2 } },
@@ -312,7 +108,7 @@ describe("playground: workspace", () => {
             { id: 3, bar: { baz: 2 } },
         ];
 
-        workspace.add(schema.name, entities);
+        workspace.add(schema, entities);
 
         const query: Query = {
             model: "foo",
@@ -320,32 +116,26 @@ describe("playground: workspace", () => {
             expansion: {},
         };
 
-        const result = workspace.query(query);
+        const result = workspace.query(query, schema);
 
-        console.log(result);
-        // expect(result).toEqual(jasmine.arrayWithExactContents(expectedEntities));
         expect(result.length).toEqual(expectedEntities.length);
         expect(result).toEqual(expect.arrayContaining(expectedEntities));
     });
 
     it("should execute query w/ composite nested index", () => {
         interface Foo {
-            id: number;
             bar: {
                 baz: number;
                 moo: number;
             };
+            id: number;
         }
 
-        const schema = new Schema({
-            name: "foo",
-            key: "id",
-            properties: {},
-            indexes: [{ name: "bar", path: ["bar.baz", "bar.moo"] }],
-        });
+        const schema = new UnbakedEntitySchema("foo");
+        schema.setKey("id");
+        schema.addIndex(["bar.baz", "bar.moo"], { name: "bar" });
 
-        const catalog = new SchemaCatalog([schema]);
-        const workspace = new Workspace(catalog);
+        const workspace = new Workspace();
 
         const entities: Foo[] = [
             { id: 1, bar: { baz: 2, moo: 10 } },
@@ -359,7 +149,7 @@ describe("playground: workspace", () => {
             { id: 2, bar: { baz: 3, moo: 10 } },
         ];
 
-        workspace.add(schema.name, entities);
+        workspace.add(schema, entities);
 
         const query: Query = {
             model: "foo",
@@ -367,36 +157,30 @@ describe("playground: workspace", () => {
             expansion: {},
         };
 
-        const result = workspace.query(query);
+        const result = workspace.query(query, schema);
 
-        console.log(result);
-        // expect(result).toEqual(jasmine.arrayWithExactContents(expectedEntities));
         expect(result.length).toEqual(expectedEntities.length);
         expect(result).toEqual(expect.arrayContaining(expectedEntities));
     });
 
     it("should execute query w/ composite distributed nested index", () => {
         interface Foo {
-            id: number;
             bar: {
                 baz: number;
                 moo: number;
             };
+            id: number;
             khaz: {
                 mo: number;
                 dan: number;
             };
         }
 
-        const schema = new Schema({
-            name: "foo",
-            key: "id",
-            properties: {},
-            indexes: [{ name: "bar", path: ["bar.baz", "bar.moo", "khaz.mo", "khaz.dan"] }],
-        });
+        const schema = new UnbakedEntitySchema("foo");
+        schema.setKey("id");
+        schema.addIndex(["bar.baz", "bar.moo", "khaz.mo", "khaz.dan"], { name: "bar" });
 
-        const catalog = new SchemaCatalog([schema]);
-        const workspace = new Workspace(catalog);
+        const workspace = new Workspace();
 
         const entities: Foo[] = [
             { id: 1, bar: { baz: 2, moo: 10 }, khaz: { mo: 1, dan: 2 } },
@@ -407,7 +191,7 @@ describe("playground: workspace", () => {
 
         const expectedEntities = [{ id: 1, bar: { baz: 2, moo: 10 }, khaz: { mo: 1, dan: 2 } }];
 
-        workspace.add(schema.name, entities);
+        workspace.add(schema, entities);
 
         const query: Query = {
             model: "foo",
@@ -418,25 +202,140 @@ describe("playground: workspace", () => {
             expansion: {},
         };
 
-        const result = workspace.query(query);
+        const result = workspace.query(query, schema);
 
-        console.log(result);
-        // expect(result).toEqual(jasmine.arrayWithExactContents(expectedEntities));
         expect(result.length).toEqual(expectedEntities.length);
         expect(result).toEqual(expect.arrayContaining(expectedEntities));
     });
 
-    xit("indexeddb interface looky looky stuff", () => {
-        const db: IDBDatabase = {} as any;
-        // db.transaction().
-        const myStore = db.createObjectStore("foo", {});
-        const myIndex = myStore.createIndex("", "", { multiEntry: true });
+    it("expanding", () => {
+        const fooSchema = new UnbakedEntitySchema("foo");
+        fooSchema.setKey(["id", "secondaryId"]);
 
-        myIndex.get(["foo", 1, [[3]]]);
-        myStore.openCursor();
-        myStore.delete;
+        const barSchema = new UnbakedEntitySchema("bar");
+        barSchema.setKey("id");
+        barSchema.addIndex(["fooId", "secondaryId"], { name: "fooId" });
 
-        // myStore.index("foo").k
-        // myStore.indexNames
+        fooSchema.addProperty("bar", barSchema);
+        // [todo] unintuitive usage of auto computed index name
+        fooSchema.addRelation("bar", "id,secondaryId", "fooId");
+
+        const workspace = new Workspace();
+
+        workspace.add(fooSchema, [{ id: 1337, secondaryId: 128, name: "i am foo" }]);
+        workspace.add(barSchema, [{ id: 64, fooId: 1337, secondaryId: 128, name: "i belong to foo" }]);
+
+        const query: Query = {
+            model: "foo",
+            expansion: { bar: true },
+            criteria: matches({ id: inSet([1337]), secondaryId: inSet([128]) }),
+        };
+
+        const fooItems = workspace.query(query, fooSchema);
+
+        expect(fooItems).toEqual([
+            {
+                id: 1337,
+                secondaryId: 128,
+                name: "i am foo",
+                bar: { id: 64, fooId: 1337, secondaryId: 128, name: "i belong to foo" },
+            },
+        ]);
+    });
+
+    it("expanding #2", () => {
+        const fooSchema = new UnbakedEntitySchema("foo");
+        fooSchema.setKey("id");
+
+        const barSchema = new UnbakedEntitySchema("bar");
+        barSchema.addIndex("bazId");
+
+        const bazSchema = new UnbakedEntitySchema("baz");
+        bazSchema.setKey("id");
+
+        barSchema.addProperty("baz", bazSchema);
+        barSchema.addRelation("baz", "bazId", "id");
+        fooSchema.addProperty("bar", barSchema);
+
+        const workspace = new Workspace();
+        workspace.add(fooSchema, [{ id: 1337, name: "i am foo", bar: { bazId: 128 } }]);
+        workspace.add(bazSchema, [{ id: 128, name: "i am baz" }]);
+
+        const query: Query = {
+            model: "foo",
+            expansion: { bar: { baz: true } },
+            criteria: matches({ id: inSet([1337]) }),
+        };
+
+        const fooItems = workspace.query(query, fooSchema);
+
+        expect(fooItems).toEqual([
+            { id: 1337, name: "i am foo", bar: { bazId: 128, baz: { id: 128, name: "i am baz" } } },
+        ]);
+    });
+
+    it("normalize items, add them to store, then query", () => {
+        // arrange
+        interface Foo {
+            bar: Bar;
+            barId: number;
+            id: number;
+        }
+
+        interface Bar {
+            baz?: Baz;
+            bazId: number;
+            id: number;
+        }
+
+        interface Baz {
+            id: number;
+        }
+
+        const fooSchema = new UnbakedEntitySchema("foo");
+        fooSchema.setKey("id");
+        fooSchema.addIndex("barId");
+        fooSchema.addRelation("bar", "barId", "id");
+
+        const barSchema = new UnbakedEntitySchema("bar");
+        barSchema.setKey("id");
+        barSchema.addIndex("bazId");
+        barSchema.addRelation("baz", "bazId", "id");
+        fooSchema.addProperty("bar", barSchema);
+
+        const bazSchema = new UnbakedEntitySchema("baz");
+        bazSchema.setKey("id");
+
+        barSchema.addProperty("baz", bazSchema);
+
+        const workspace = new Workspace();
+
+        const addedItems: Foo[] = [
+            {
+                id: 1337,
+                barId: 64,
+                bar: {
+                    id: 64,
+                    bazId: 128,
+                    baz: {
+                        id: 128,
+                    },
+                },
+            },
+        ];
+
+        // act
+        workspace.add(fooSchema, addedItems);
+
+        const query: Query = {
+            model: "foo",
+            expansion: { bar: { baz: true } },
+            criteria: matches({ id: inSet([1337]) }),
+        };
+
+        const queriedItems = workspace.query(query, fooSchema);
+
+        // assert
+        expect(queriedItems).toEqual(addedItems);
     });
 });

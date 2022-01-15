@@ -1,26 +1,22 @@
-import { SchemaCatalog } from "./metadata/schema-catalog";
-import { SchemaProperty } from "./metadata/schema-property";
+import { EntitySchema } from "../public";
+import { Entity } from "./entity";
+import { NormalizedEntities } from "./normalized-entities";
 
-// [todo] not a fan of having the "shouldAddSelf" flag
 export function normalizeEntities(
-    model: string,
-    items: any[],
-    catalog: SchemaCatalog,
-    shouldAddSelf = true
-): Record<string, any[]> {
-    const schema = catalog.getSchema(model);
-    const navigable = schema.getProperties().filter(SchemaProperty.isNavigable);
-    const normalized: Record<string, any[]> = {};
+    schema: EntitySchema,
+    entities: Entity[],
+    normalized?: NormalizedEntities
+): NormalizedEntities {
+    normalized = normalized ?? new NormalizedEntities();
+    normalized.add(schema, entities);
 
-    if (shouldAddSelf) {
-        normalized[model] = items;
-    }
+    for (const relation of schema.getRelations()) {
+        const navigated: Entity[] = [];
 
-    for (const property of navigable) {
-        const navigated: any[] = [];
-
-        for (const item of items) {
-            const value = item[property.name];
+        for (const entity of entities) {
+            // [todo] support nested path. use EntityReader?
+            const value = entity[relation.getPropertyName()];
+            
             if (value == null) continue;
 
             if (Array.isArray(value)) {
@@ -29,16 +25,10 @@ export function normalizeEntities(
                 navigated.push(value);
             }
 
-            if (property.isExpandable()) {
-                delete item[property.name];
-            }
+            delete entity[relation.getPropertyName()];
         }
 
-        const deeperNormalized = normalizeEntities(property.model, navigated, catalog, property.isExpandable());
-
-        for (const key in deeperNormalized) {
-            normalized[key] = [...(normalized[key] ?? []), ...deeperNormalized[key]];
-        }
+        normalizeEntities(relation.getRelatedEntitySchema(), navigated, normalized);
     }
 
     return normalized;

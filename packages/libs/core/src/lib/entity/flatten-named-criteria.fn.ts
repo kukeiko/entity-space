@@ -1,5 +1,6 @@
 import { InSetCriterion, NamedCriteria } from "../criteria/public";
 
+// [todo] move to criteria folder :?
 function flattenNamedCriteriaInternal(
     criterion: NamedCriteria,
     bagWithPrimitives: Record<string, any>,

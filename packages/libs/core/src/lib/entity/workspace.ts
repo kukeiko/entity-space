@@ -1,49 +1,41 @@
 import { permutateEntries } from "@entity-space/utils";
-import { Query } from "../query/public";
-import { ObjectStore } from "./object-store";
-import { Schema } from "./metadata/schema";
-import { createCriteriaForIndex } from "./create-criteria-for-index.fn";
 import { Expansion } from "../expansion/public";
-import { SchemaCatalog } from "./metadata/schema-catalog";
-import { normalizeEntities } from "./normalize-entities.fn";
+import { Query } from "../query/public";
+import { EntitySchema } from "../schema/schema";
 import { createCriteriaTemplateForIndex } from "./create-criteria-template-for-index.fn";
-import { namedCriteriaToKeyPaths } from "./named-criteria-to-key-path.fn";
+import { Entity } from "./entity";
+import { EntityStore } from "./entity-store";
+import { expandEntities } from "./expand-entities.fn";
 import { flattenNamedCriteria } from "./flatten-named-criteria.fn";
+import { namedCriteriaToKeyPaths } from "./named-criteria-to-key-path.fn";
+import { normalizeEntities } from "./normalize-entities.fn";
 
 export class Workspace {
-    constructor(catalog: SchemaCatalog) {
-        this.catalog = catalog;
+    private readonly stores = new Map<string, EntityStore>();
 
-        for (const schema of catalog.getSchemas().filter(Schema.hasKey)) {
-            this.stores.set(schema.name, new ObjectStore(schema));
+    add(schema: EntitySchema, items: any[]): void {
+        const normalized = normalizeEntities(schema, items);
+
+        for (const schema of normalized.getSchemas()) {
+            this.getOrCreateStore(schema).add(normalized.get(schema));
         }
     }
 
-    private readonly catalog: SchemaCatalog;
-    private readonly stores = new Map<string, ObjectStore>();
-
-    add(model: string, items: any[]): void {
-        const normalized = normalizeEntities(model, items, this.catalog);
-
-        for (const model in normalized) {
-            this.getStore(model).add(normalized[model]);
-        }
-    }
-
-    query(query: Query) {
-        const indexes = this.getSchema(query.model)
-            .getIndexes()
+    query(query: Query, schema: EntitySchema) {
+        const indexes = schema
+            .getIndexesIncludingKey()
             .slice()
-            .sort((a, b) => b.path.length - a.path.length);
+            .sort((a, b) => b.getPath().length - a.getPath().length);
 
         const criteriaTemplates = indexes.map(index => createCriteriaTemplateForIndex(index));
         const [remappedCriteria] = query.criteria.remap(criteriaTemplates);
 
-        let items: any[] = [];
-        const store = this.getStore(query.model);
+        // [todo] remove "any" - but will result in compile error @ 02-loading-data.spec.ts
+        let entities: any[] = [];
+        const store = this.getOrCreateStore(schema);
 
         if (remappedCriteria === false) {
-            items = store.getAll();
+            entities = store.getAll();
         } else {
             // load items from store using index
             for (const remappedCriterion of remappedCriteria) {
@@ -51,112 +43,74 @@ export class Workspace {
                 const index = store.getIndexMatchingKeyPaths(bagKeyPaths);
                 const bagWithPrimitives = flattenNamedCriteria(remappedCriterion);
                 const permutatedBags = permutateEntries(bagWithPrimitives);
-                const indexValues: any[][] = [];
+                const indexValues: (number | string)[][] = [];
 
                 for (const permutatedBag of permutatedBags) {
-                    const indexValue: any[] = [];
+                    const indexValue: (number | string)[] = [];
 
-                    for (const key of index.path) {
+                    for (const key of index.getPath()) {
                         indexValue.push(permutatedBag[key]);
                     }
 
                     indexValues.push(indexValue);
                 }
 
-                items = [...items, ...store.getByIndex(index.name, indexValues)];
+                entities = [...entities, ...store.getByIndexOrKey(index.getName(), indexValues)];
             }
         }
 
         if (Object.keys(query.expansion).length > 0) {
-            this.expand(query.model, query.expansion, items);
+            this.expand(schema, query.expansion, entities);
         }
 
-        return query.criteria.filter(items);
+        return query.criteria.filter(entities);
     }
 
-    expand(model: string, expansion: Expansion, items: any[]): any {
-        const schema = this.getSchema(model);
-
+    expand(schema: EntitySchema, expansion: Expansion, entities: Entity[]): void {
         for (const propertyKey in expansion) {
             const expansionValue = expansion[propertyKey];
-            const property = schema.getProperty(propertyKey);
 
-            if (property.isExpandable()) {
-                this.expandOne(model, propertyKey, items, expansionValue === true ? void 0 : expansionValue);
-            } else if (property.isNavigable()) {
-                if (expansionValue === true) {
-                    // [todo] not yet sure if this should be considered a user error.
-                    // so for now we'll just throw so i definitely notice it in case it happens.
-                    throw new Error(
-                        `trying to expand a value that has no link; and no deeper expansion was provided: ${model}.${propertyKey}`
-                    );
-                } else if (expansionValue !== void 0) {
-                    const referencedItems: any[] = [];
+            if (expansionValue === void 0) {
+                continue;
+            }
 
-                    for (const item of items) {
-                        const reference = item[propertyKey];
+            const relation = schema.findRelation(propertyKey);
 
-                        if (Array.isArray(reference)) {
-                            referencedItems.push(...reference);
-                        } else {
-                            referencedItems.push(reference);
-                        }
+            if (relation !== void 0) {
+                expandEntities(
+                    entities,
+                    relation,
+                    q => this.query(q, relation.getRelatedEntitySchema()),
+                    expansionValue === true ? void 0 : expansionValue
+                );
+            } else if (expansionValue !== true) {
+                const property = schema.getProperty(propertyKey);
+                const referencedItems: Entity[] = [];
+
+                for (const entity of entities) {
+                    const reference = entity[propertyKey];
+
+                    if (Array.isArray(reference)) {
+                        referencedItems.push(...reference);
+                    } else {
+                        referencedItems.push(reference);
                     }
-
-                    this.expand(property.model, expansionValue, referencedItems);
                 }
-            } else {
-                throw new Error(`can't expand ${model}.${propertyKey}: not a navigable/expandable property`);
+
+                const entitySchema = property.getUnboxedEntitySchema();
+                this.expand(entitySchema, expansionValue, referencedItems);
             }
         }
     }
 
-    private expandOne(model: string, propertyKey: string, items: any[], expansion?: Expansion): any {
-        const schema = this.getSchema(model);
-        const propertySchema = schema.getProperty(propertyKey);
-        const link = propertySchema.link;
-
-        if (link === void 0) {
-            throw new Error(`can't expand property ${model}.${propertyKey}: no link`);
-        }
-
-        const linkedModel = propertySchema.model;
-
-        if (linkedModel === void 0) {
-            throw new Error(`can't expand property ${model}.${propertyKey}: no model`);
-        }
-
-        const toIndex = this.getSchema(linkedModel).getIndex(link.to);
-        const fromIndex = this.getSchema(model).getIndex(link.from);
-        const criteria = createCriteriaForIndex(toIndex.path.slice(), fromIndex.read(items));
-        const referencedItems = this.query({ criteria, expansion: expansion ?? {}, model: linkedModel });
-        const referencedIndex = this.getSchema(linkedModel).getIndex(link.to);
-
-        for (const item of items) {
-            const indexValue = this.getSchema(model).getIndex(link.from).readOne(item);
-            const matchingReferencedItems = referencedItems.filter(
-                item => JSON.stringify(indexValue) === JSON.stringify(referencedIndex.readOne(item))
-            );
-
-            if (propertySchema.array) {
-                item[propertyKey] = matchingReferencedItems;
-            } else {
-                item[propertyKey] = matchingReferencedItems[0] ?? null;
-            }
-        }
-    }
-
-    private getStore(model: string): ObjectStore {
-        const store = this.stores.get(model);
+    private getOrCreateStore(schema: EntitySchema): EntityStore {
+        let store = this.stores.get(schema.getId());
 
         if (store === void 0) {
-            throw new Error(`store not found: ${model}`);
+            store = new EntityStore(schema);
+            this.stores.set(schema.getId(), store);
         }
 
         return store;
-    }
-
-    private getSchema(model: string): Schema {
-        return this.catalog.getSchema(model);
     }
 }
