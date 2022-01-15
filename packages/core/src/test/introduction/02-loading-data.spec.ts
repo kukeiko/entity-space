@@ -64,17 +64,18 @@ async function loadFromApi(query: Query): Promise<Product[]> {
 
 describe("how do we actually load data?", () => {
     it("simple resolve of a query", async () => {
+        const schema = new EntitySchema("product");
+        schema.setKey("id");
+
         // we want all products priced between 100 and 200 with a rating of 3 to 5
         const price_100_to_200_rating_3_to_5: Query = {
-            model: "product",
+            entitySchema: schema,
             criteria: matches<Product>({
                 price: inRange(100, 200),
                 rating: inRange(3, 5),
             }),
             expansion: {},
         };
-        const schema = new EntitySchema("product");
-        schema.setKey("id");
 
         const workspace = new Workspace();
 
@@ -98,7 +99,7 @@ describe("how do we actually load data?", () => {
                 workspace.add(schema, productsLoadedFromApi);
             }
 
-            return workspace.query(query, schema);
+            return workspace.query(query);
         }
 
         const products = await executeQuery(price_100_to_200_rating_3_to_5, schema);
@@ -106,7 +107,7 @@ describe("how do we actually load data?", () => {
         console.log("products:", products);
 
         const price_100_to_300_rating_2_to_5: Query = {
-            model: "product",
+            entitySchema: schema,
             criteria: or([
                 matches<Product>({
                     price: inRange(100, 300),

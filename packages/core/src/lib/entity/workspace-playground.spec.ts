@@ -31,12 +31,12 @@ describe("playground: workspace", () => {
         workspace.add(schema, entities);
 
         const query: Query = {
-            model: "foo",
+            entitySchema: schema,
             criteria: matches<Foo>({ bar: inSet([2, 3]) }),
             expansion: {},
         };
 
-        const result = workspace.query(query, schema);
+        const result = workspace.query(query);
 
         expect(result.length).toEqual(expectedEntities.length);
         expect(result).toEqual(expect.arrayContaining(expectedEntities));
@@ -70,12 +70,12 @@ describe("playground: workspace", () => {
         workspace.add(schema, entities);
 
         const query: Query = {
-            model: "foo",
+            entitySchema: schema,
             criteria: matches<Foo>({ bar: inSet([2, 3]), baz: inSet([1337]) }),
             expansion: {},
         };
 
-        const result = workspace.query(query, schema);
+        const result = workspace.query(query);
 
         expect(result.length).toEqual(expectedEntities.length);
         expect(result).toEqual(expect.arrayContaining(expectedEntities));
@@ -111,12 +111,12 @@ describe("playground: workspace", () => {
         workspace.add(schema, entities);
 
         const query: Query = {
-            model: "foo",
+            entitySchema: schema,
             criteria: matches<Foo>({ bar: matches({ baz: inSet([2, 3]) }) }),
             expansion: {},
         };
 
-        const result = workspace.query(query, schema);
+        const result = workspace.query(query);
 
         expect(result.length).toEqual(expectedEntities.length);
         expect(result).toEqual(expect.arrayContaining(expectedEntities));
@@ -152,12 +152,12 @@ describe("playground: workspace", () => {
         workspace.add(schema, entities);
 
         const query: Query = {
-            model: "foo",
+            entitySchema: schema,
             criteria: matches<Foo>({ bar: matches({ baz: inSet([2, 3]), moo: inSet([10]) }) }),
             expansion: {},
         };
 
-        const result = workspace.query(query, schema);
+        const result = workspace.query(query);
 
         expect(result.length).toEqual(expectedEntities.length);
         expect(result).toEqual(expect.arrayContaining(expectedEntities));
@@ -194,7 +194,7 @@ describe("playground: workspace", () => {
         workspace.add(schema, entities);
 
         const query: Query = {
-            model: "foo",
+            entitySchema: schema,
             criteria: matches<Foo>({
                 bar: matches({ baz: inSet([2, 3]), moo: inSet([10]) }),
                 khaz: matches({ mo: inSet([1]), dan: inSet([2]) }),
@@ -202,7 +202,7 @@ describe("playground: workspace", () => {
             expansion: {},
         };
 
-        const result = workspace.query(query, schema);
+        const result = workspace.query(query);
 
         expect(result.length).toEqual(expectedEntities.length);
         expect(result).toEqual(expect.arrayContaining(expectedEntities));
@@ -226,12 +226,12 @@ describe("playground: workspace", () => {
         workspace.add(barSchema, [{ id: 64, fooId: 1337, secondaryId: 128, name: "i belong to foo" }]);
 
         const query: Query = {
-            model: "foo",
+            entitySchema: fooSchema,
             expansion: { bar: true },
             criteria: matches({ id: inSet([1337]), secondaryId: inSet([128]) }),
         };
 
-        const fooItems = workspace.query(query, fooSchema);
+        const fooItems = workspace.query(query);
 
         expect(fooItems).toEqual([
             {
@@ -262,12 +262,12 @@ describe("playground: workspace", () => {
         workspace.add(bazSchema, [{ id: 128, name: "i am baz" }]);
 
         const query: Query = {
-            model: "foo",
+            entitySchema: fooSchema,
             expansion: { bar: { baz: true } },
             criteria: matches({ id: inSet([1337]) }),
         };
 
-        const fooItems = workspace.query(query, fooSchema);
+        const fooItems = workspace.query(query);
 
         expect(fooItems).toEqual([
             { id: 1337, name: "i am foo", bar: { bazId: 128, baz: { id: 128, name: "i am baz" } } },
@@ -328,12 +328,12 @@ describe("playground: workspace", () => {
         workspace.add(fooSchema, addedItems);
 
         const query: Query = {
-            model: "foo",
+            entitySchema: fooSchema,
             expansion: { bar: { baz: true } },
             criteria: matches({ id: inSet([1337]) }),
         };
 
-        const queriedItems = workspace.query(query, fooSchema);
+        const queriedItems = workspace.query(query);
 
         // assert
         expect(queriedItems).toEqual(addedItems);

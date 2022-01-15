@@ -18,7 +18,7 @@ export function expandEntities(
     const fromIndex = relation.getFromIndex();
     const toIndex = relation.getToIndex();
     const criteria = createCriteriaForIndex(toIndex.getPath(), entityReader.readIndex(fromIndex, entities));
-    const referencedItems = query({ criteria, expansion: expansion ?? {}, model: relatedSchema.getId() });
+    const referencedItems = query({ criteria, expansion: expansion ?? {}, entitySchema: relatedSchema });
 
     for (const entity of entities) {
         const indexValue = entityReader.readIndexFromOne(fromIndex, entity);

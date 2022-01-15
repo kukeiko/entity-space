@@ -12,13 +12,13 @@ export function reduceQuery(a: Query, b: Query): Query[] | false {
             return [];
         }
 
-        return [{ model: a.model, criteria: a.criteria, expansion }];
+        return [{ entitySchema: a.entitySchema, criteria: a.criteria, expansion }];
     } else if (Object.keys(expansion).length == 0) {
-        return [{ model: a.model, criteria, expansion: a.expansion }];
+        return [{ entitySchema: a.entitySchema, criteria, expansion: a.expansion }];
     } else {
         return [
-            { model: a.model, criteria, expansion: a.expansion },
-            { model: a.model, criteria: b.criteria, expansion },
+            { entitySchema: a.entitySchema, criteria, expansion: a.expansion },
+            { entitySchema: a.entitySchema, criteria: b.criteria, expansion },
         ];
     }
 }

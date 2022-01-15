@@ -21,7 +21,8 @@ export class Workspace {
         }
     }
 
-    query(query: Query, schema: IEntitySchema) {
+    query(query: Query) {
+        const schema = query.entitySchema;
         const indexes = schema
             .getIndexesIncludingKey()
             .slice()
@@ -80,7 +81,7 @@ export class Workspace {
                 expandEntities(
                     entities,
                     relation,
-                    q => this.query(q, relation.getRelatedEntitySchema()),
+                    q => this.query(q),
                     expansionValue === true ? void 0 : expansionValue
                 );
             } else if (expansionValue !== true) {
