@@ -1,8 +1,6 @@
 {
     "version": 2,
     "projects": {
-        "apps-sandbox-api": "packages/apps/sandbox-api",
-        "apps-sandbox-ui": "packages/apps/sandbox-ui",
         "libs-core": "packages/libs/core",
         "libs-utils": "packages/libs/utils"
     }
