@@ -1,5 +1,5 @@
 import { buildDefaultIndexName } from "./build-default-index-name.fn";
-import { EntitySchema, EntitySchemaIndex } from "./schema";
+import { IEntitySchema, IEntitySchemaIndex } from "./schema.interface";
 
 // [todo] there isn't really anything to bake here.
 // so what do i name it do not conflict w/ the "EntitySchemaIndex" interface :?
@@ -9,9 +9,9 @@ import { EntitySchema, EntitySchemaIndex } from "./schema";
 //
 // [update] not completely true, we could add a convenient "getProperties()" method,
 // forcefully finding a place where it could be useful if one doesn't naturally pop up.
-export class UnbakedEntitySchemaIndex implements EntitySchemaIndex {
+export class EntitySchemaIndex implements IEntitySchemaIndex {
     constructor(
-        entitySchema: EntitySchema,
+        entitySchema: IEntitySchema,
         path: string | string[],
         options?: { name?: string; unique?: boolean; multiEntry?: boolean }
     ) {
@@ -22,7 +22,7 @@ export class UnbakedEntitySchemaIndex implements EntitySchemaIndex {
         this.multiEntry = options?.multiEntry ?? false;
     }
 
-    private readonly entitySchema: EntitySchema;
+    private readonly entitySchema: IEntitySchema;
     private readonly name?: string;
     private readonly unique: boolean;
     private readonly multiEntry: boolean;

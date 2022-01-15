@@ -1,7 +1,7 @@
-import { EntitySchema, EntitySchemaProperty, PrimitiveSchema, PropertyValueSchema } from "./schema";
+import { IEntitySchema, IEntitySchemaProperty, IPrimitiveSchema, PropertyValueSchema } from "./schema.interface";
 
-export class UnbakedEntitySchemaProperty implements EntitySchemaProperty {
-    constructor(entitySchema: EntitySchema, name: string, valueSchema: PropertyValueSchema) {
+export class EntitySchemaProperty implements IEntitySchemaProperty {
+    constructor(entitySchema: IEntitySchema, name: string, valueSchema: PropertyValueSchema) {
         this.name = name;
         this.valueSchema = valueSchema;
         this.entitySchema = entitySchema;
@@ -10,7 +10,7 @@ export class UnbakedEntitySchemaProperty implements EntitySchemaProperty {
     private readOnly = false;
     private writeOnly = false;
 
-    private readonly entitySchema: EntitySchema;
+    private readonly entitySchema: IEntitySchema;
     private readonly name: string;
     private readonly valueSchema: PropertyValueSchema;
 
@@ -20,7 +20,7 @@ export class UnbakedEntitySchemaProperty implements EntitySchemaProperty {
         return this.name;
     }
 
-    getUnboxedEntitySchema(): EntitySchema {
+    getUnboxedEntitySchema(): IEntitySchema {
         const unboxedSchema = this.getUnboxedValueSchema();
 
         if (unboxedSchema.schemaType !== "entity") {
@@ -30,7 +30,7 @@ export class UnbakedEntitySchemaProperty implements EntitySchemaProperty {
         return unboxedSchema;
     }
 
-    getUnboxedValueSchema(): EntitySchema | PrimitiveSchema {
+    getUnboxedValueSchema(): IEntitySchema | IPrimitiveSchema {
         const valueSchema = this.getValueSchema();
 
         switch (valueSchema.schemaType) {

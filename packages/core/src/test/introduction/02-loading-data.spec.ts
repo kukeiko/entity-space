@@ -1,6 +1,6 @@
 import {
     Criterion,
-    EntitySchema,
+    IEntitySchema,
     InNumberRangeCriterion,
     inRange,
     matches,
@@ -10,7 +10,7 @@ import {
     reduceQueries,
 } from "@entity-space/core";
 import { Workspace } from "../../lib/entity/workspace";
-import { UnbakedEntitySchema } from "../../lib/schema/unbaked-entity-schema";
+import { EntitySchema } from "../../lib/schema/entity-schema";
 import { Product, ProductFilter } from "./model";
 import { ProductRepository } from "./repositories";
 
@@ -73,14 +73,14 @@ describe("how do we actually load data?", () => {
             }),
             expansion: {},
         };
-        const schema = new UnbakedEntitySchema("product");
+        const schema = new EntitySchema("product");
         schema.setKey("id");
 
         const workspace = new Workspace();
 
         const executedQueries: Query[] = [];
 
-        async function executeQuery(query: Query, schema: EntitySchema): Promise<Product[]> {
+        async function executeQuery(query: Query, schema: IEntitySchema): Promise<Product[]> {
             const reduced = reduceQueries([query], executedQueries);
             const productsLoadedFromApi: Product[] = [];
 

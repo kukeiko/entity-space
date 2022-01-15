@@ -1,9 +1,9 @@
 import { splitOne } from "@entity-space/utils";
 import { InNumberSetCriterion, NamedCriteriaTemplate } from "../criteria/public";
-import { EntitySchemaIndex } from "../schema/public";
+import { IEntitySchemaIndex } from "../schema/public";
 
 export function createCriteriaTemplateForIndex(
-    index: EntitySchemaIndex
+    index: IEntitySchemaIndex
 ): NamedCriteriaTemplate<{ [key: string]: typeof InNumberSetCriterion[] }> {
     const keyPath = index.getPath();
 

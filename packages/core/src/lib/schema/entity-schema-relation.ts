@@ -1,19 +1,19 @@
-import { EntitySchema, EntitySchemaIndex, EntitySchemaProperty, EntitySchemaRelation } from "./schema";
+import { IEntitySchema, IEntitySchemaIndex, IEntitySchemaProperty, IEntitySchemaRelation } from "./schema.interface";
 
-export class UnbakedEntitySchemaRelation implements EntitySchemaRelation {
-    constructor(entitySchema: EntitySchema, propertyKey: string, from: string, to: string) {
+export class EntitySchemaRelation implements IEntitySchemaRelation {
+    constructor(entitySchema: IEntitySchema, propertyKey: string, from: string, to: string) {
         this.entitySchema = entitySchema;
         this.propertyKey = propertyKey;
         this.from = from;
         this.to = to;
     }
 
-    private readonly entitySchema: EntitySchema;
+    private readonly entitySchema: IEntitySchema;
     private readonly from: string;
     private readonly propertyKey: string;
     private readonly to: string;
 
-    getFromIndex(): EntitySchemaIndex {
+    getFromIndex(): IEntitySchemaIndex {
         return this.entitySchema.getIndexOrKey(this.from);
     }
 
@@ -21,15 +21,15 @@ export class UnbakedEntitySchemaRelation implements EntitySchemaRelation {
         return this.propertyKey;
     }
 
-    getProperty(): EntitySchemaProperty {
+    getProperty(): IEntitySchemaProperty {
         return this.entitySchema.getProperty(this.propertyKey);
     }
 
-    getRelatedEntitySchema(): EntitySchema {
+    getRelatedEntitySchema(): IEntitySchema {
         return this.getProperty().getUnboxedEntitySchema();
     }
 
-    getToIndex(): EntitySchemaIndex {
+    getToIndex(): IEntitySchemaIndex {
         return this.getRelatedEntitySchema().getIndexOrKey(this.to);
     }
 }

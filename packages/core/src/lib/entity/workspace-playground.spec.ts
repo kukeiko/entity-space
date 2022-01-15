@@ -1,5 +1,5 @@
 import { inSet, matches, Query } from "../public";
-import { UnbakedEntitySchema } from "../schema/unbaked-entity-schema";
+import { EntitySchema } from "../schema/entity-schema";
 import { Workspace } from "./workspace";
 
 describe("playground: workspace", () => {
@@ -9,7 +9,7 @@ describe("playground: workspace", () => {
             id: number;
         }
 
-        const schema = new UnbakedEntitySchema("foo");
+        const schema = new EntitySchema("foo");
         schema.setKey("id");
         schema.addIndex("bar");
 
@@ -49,7 +49,7 @@ describe("playground: workspace", () => {
             id: number;
         }
 
-        const schema = new UnbakedEntitySchema("foo");
+        const schema = new EntitySchema("foo");
         schema.setKey("id");
         schema.addIndex(["bar", "baz"], { name: "barAndBaz" });
 
@@ -89,7 +89,7 @@ describe("playground: workspace", () => {
             id: number;
         }
 
-        const schema = new UnbakedEntitySchema("foo");
+        const schema = new EntitySchema("foo");
         schema.setKey("id");
         schema.addIndex("bar.baz");
 
@@ -131,7 +131,7 @@ describe("playground: workspace", () => {
             id: number;
         }
 
-        const schema = new UnbakedEntitySchema("foo");
+        const schema = new EntitySchema("foo");
         schema.setKey("id");
         schema.addIndex(["bar.baz", "bar.moo"], { name: "bar" });
 
@@ -176,7 +176,7 @@ describe("playground: workspace", () => {
             };
         }
 
-        const schema = new UnbakedEntitySchema("foo");
+        const schema = new EntitySchema("foo");
         schema.setKey("id");
         schema.addIndex(["bar.baz", "bar.moo", "khaz.mo", "khaz.dan"], { name: "bar" });
 
@@ -209,10 +209,10 @@ describe("playground: workspace", () => {
     });
 
     it("expanding", () => {
-        const fooSchema = new UnbakedEntitySchema("foo");
+        const fooSchema = new EntitySchema("foo");
         fooSchema.setKey(["id", "secondaryId"]);
 
-        const barSchema = new UnbakedEntitySchema("bar");
+        const barSchema = new EntitySchema("bar");
         barSchema.setKey("id");
         barSchema.addIndex(["fooId", "secondaryId"], { name: "fooId" });
 
@@ -244,13 +244,13 @@ describe("playground: workspace", () => {
     });
 
     it("expanding #2", () => {
-        const fooSchema = new UnbakedEntitySchema("foo");
+        const fooSchema = new EntitySchema("foo");
         fooSchema.setKey("id");
 
-        const barSchema = new UnbakedEntitySchema("bar");
+        const barSchema = new EntitySchema("bar");
         barSchema.addIndex("bazId");
 
-        const bazSchema = new UnbakedEntitySchema("baz");
+        const bazSchema = new EntitySchema("baz");
         bazSchema.setKey("id");
 
         barSchema.addProperty("baz", bazSchema);
@@ -292,18 +292,18 @@ describe("playground: workspace", () => {
             id: number;
         }
 
-        const fooSchema = new UnbakedEntitySchema("foo");
+        const fooSchema = new EntitySchema("foo");
         fooSchema.setKey("id");
         fooSchema.addIndex("barId");
         fooSchema.addRelation("bar", "barId", "id");
 
-        const barSchema = new UnbakedEntitySchema("bar");
+        const barSchema = new EntitySchema("bar");
         barSchema.setKey("id");
         barSchema.addIndex("bazId");
         barSchema.addRelation("baz", "bazId", "id");
         fooSchema.addProperty("bar", barSchema);
 
-        const bazSchema = new UnbakedEntitySchema("baz");
+        const bazSchema = new EntitySchema("baz");
         bazSchema.setKey("id");
 
         barSchema.addProperty("baz", bazSchema);

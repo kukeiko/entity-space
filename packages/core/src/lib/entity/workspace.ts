@@ -1,7 +1,7 @@
 import { permutateEntries } from "@entity-space/utils";
 import { Expansion } from "../expansion/public";
 import { Query } from "../query/public";
-import { EntitySchema } from "../schema/schema";
+import { IEntitySchema } from "../schema/schema.interface";
 import { createCriteriaTemplateForIndex } from "./create-criteria-template-for-index.fn";
 import { Entity } from "./entity";
 import { EntityStore } from "./entity-store";
@@ -13,7 +13,7 @@ import { normalizeEntities } from "./normalize-entities.fn";
 export class Workspace {
     private readonly stores = new Map<string, EntityStore>();
 
-    add(schema: EntitySchema, items: any[]): void {
+    add(schema: IEntitySchema, items: any[]): void {
         const normalized = normalizeEntities(schema, items);
 
         for (const schema of normalized.getSchemas()) {
@@ -21,7 +21,7 @@ export class Workspace {
         }
     }
 
-    query(query: Query, schema: EntitySchema) {
+    query(query: Query, schema: IEntitySchema) {
         const indexes = schema
             .getIndexesIncludingKey()
             .slice()
@@ -66,7 +66,7 @@ export class Workspace {
         return query.criteria.filter(entities);
     }
 
-    expand(schema: EntitySchema, expansion: Expansion, entities: Entity[]): void {
+    expand(schema: IEntitySchema, expansion: Expansion, entities: Entity[]): void {
         for (const propertyKey in expansion) {
             const expansionValue = expansion[propertyKey];
 
@@ -103,7 +103,7 @@ export class Workspace {
         }
     }
 
-    private getOrCreateStore(schema: EntitySchema): EntityStore {
+    private getOrCreateStore(schema: IEntitySchema): EntityStore {
         let store = this.stores.get(schema.getId());
 
         if (store === void 0) {

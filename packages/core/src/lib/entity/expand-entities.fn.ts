@@ -1,17 +1,17 @@
 import { Expansion } from "../expansion/public";
 import { Query } from "../query/public";
-import { EntitySchemaRelation } from "../schema/public";
+import { IEntitySchemaRelation } from "../schema/public";
 import { createCriteriaForIndex } from "./create-criteria-for-index.fn";
 import { Entity } from "./entity";
-import { UnbakedEntityReader } from "./unbaked-entity-reader";
+import { EntityReader } from "./entity-reader";
 
 export function expandEntities(
     entities: Entity[],
-    relation: EntitySchemaRelation,
+    relation: IEntitySchemaRelation,
     query: (query: Query) => Entity[],
     expansion?: Expansion
 ): void {
-    const entityReader = new UnbakedEntityReader();
+    const entityReader = new EntityReader();
     const relatedSchema = relation.getRelatedEntitySchema();
     // [todo] what about dictionaries?
     const isArray = relation.getProperty().getValueSchema().schemaType === "array";

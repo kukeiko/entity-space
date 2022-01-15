@@ -1,18 +1,18 @@
-import { EntitySchemaIndex } from "../schema/public";
+import { IEntitySchemaIndex } from "../schema/public";
 import { Entity } from "./entity";
-import { EntityReader } from "./entity-reader";
+import { IEntityReader } from "./entity-reader.interface";
 
 type IndexSingleValue = string | number;
 export type IndexValue = IndexSingleValue | IndexSingleValue[];
 
-export class EntityStoreIndex implements EntitySchemaIndex {
-    constructor(schemaIndex: EntitySchemaIndex, entityReader: EntityReader) {
+export class EntityStoreIndex implements IEntitySchemaIndex {
+    constructor(schemaIndex: IEntitySchemaIndex, entityReader: IEntityReader) {
         this.schemaIndex = schemaIndex;
         this.entityReader = entityReader;
     }
 
-    private readonly entityReader: EntityReader;
-    private readonly schemaIndex: EntitySchemaIndex;
+    private readonly entityReader: IEntityReader;
+    private readonly schemaIndex: IEntitySchemaIndex;
     private store = new Map();
 
     // [todo] instead have "insert()", "update()" and "upsert()"

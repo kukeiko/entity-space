@@ -1,12 +1,12 @@
 import { buildDefaultIndexName } from "../schema/build-default-index-name.fn";
-import { EntitySchema } from "../schema/schema";
-import { UnbakedEntitySchema } from "../schema/unbaked-entity-schema";
+import { IEntitySchema } from "../schema/schema.interface";
+import { EntitySchema } from "../schema/entity-schema";
 import { EntityStore } from "./entity-store";
 
 type SchemaIndexArgumentV1 = string | string[] | { name?: string; path: string | string[]; unique?: boolean };
 
-function createSchema(name: string, key: string | string[], indexes_oldStyle?: SchemaIndexArgumentV1[]): EntitySchema {
-    const schema = new UnbakedEntitySchema(name);
+function createSchema(name: string, key: string | string[], indexes_oldStyle?: SchemaIndexArgumentV1[]): IEntitySchema {
+    const schema = new EntitySchema(name);
     schema.setKey(key);
 
     for (const indexArgs of indexes_oldStyle ?? []) {

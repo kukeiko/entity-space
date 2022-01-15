@@ -1,9 +1,9 @@
-import { EntitySchema } from "../public";
+import { IEntitySchema } from "../public";
 import { Entity } from "./entity";
 import { NormalizedEntities } from "./normalized-entities";
 
 export function normalizeEntities(
-    schema: EntitySchema,
+    schema: IEntitySchema,
     entities: Entity[],
     normalized?: NormalizedEntities
 ): NormalizedEntities {
