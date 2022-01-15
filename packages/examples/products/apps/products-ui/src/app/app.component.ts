@@ -49,29 +49,16 @@ export class AppComponent {
     }
 
     uiFilterToCriteria(): Criterion {
-        let minPrice: number | undefined = parseInt(this.minPrice);
+        const toIntOrUndefined = (value: string): number | undefined => {
+            const parsed = parseInt(value);
 
-        if (isNaN(minPrice)) {
-            minPrice = void 0;
-        }
+            return isNaN(parsed) ? void 0 : parsed;
+        };
 
-        let maxPrice: number | undefined = parseInt(this.maxPrice);
-
-        if (isNaN(maxPrice)) {
-            maxPrice = void 0;
-        }
-
-        let minRating: number | undefined = parseInt(this.minRating);
-
-        if (isNaN(minRating)) {
-            minRating = void 0;
-        }
-
-        let maxRating: number | undefined = parseInt(this.maxRating);
-
-        if (isNaN(maxRating)) {
-            maxRating = void 0;
-        }
+        const minPrice = toIntOrUndefined(this.minPrice);
+        const maxPrice = toIntOrUndefined(this.maxPrice);
+        const minRating = toIntOrUndefined(this.minRating);
+        const maxRating = toIntOrUndefined(this.maxRating);
 
         return matches<Product>({
             price: inRange(minPrice, maxPrice),
