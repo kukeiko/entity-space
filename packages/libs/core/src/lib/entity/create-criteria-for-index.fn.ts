@@ -1,5 +1,5 @@
 import { Criterion, fromDeepBag, inSet, NamedCriteriaBag, or } from "../criteria/public";
-import { IndexValue } from "./object-store-index";
+import { IndexValue } from "./entity-store-index";
 
 export function createCriteriaForIndex(indexKeyPath: string[], indexValues: IndexValue[]): Criterion {
     const criteria: Criterion[] = [];

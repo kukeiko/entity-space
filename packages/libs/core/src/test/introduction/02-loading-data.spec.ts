@@ -1,17 +1,16 @@
 import {
-    matches,
-    inRange,
-    InNumberRangeCriterion,
-    Query,
-    Expansion,
-    or,
     Criterion,
+    EntitySchema,
+    InNumberRangeCriterion,
+    inRange,
+    matches,
     NamedCriteriaTemplate,
+    or,
+    Query,
     reduceQueries,
-    SchemaV1,
-    SchemaCatalog,
-    Workspace,
 } from "@entity-space/core";
+import { Workspace } from "../../lib/entity/workspace";
+import { UnbakedEntitySchema } from "../../lib/schema/unbaked-entity-schema";
 import { Product, ProductFilter } from "./model";
 import { ProductRepository } from "./repositories";
 
@@ -74,25 +73,14 @@ describe("how do we actually load data?", () => {
             }),
             expansion: {},
         };
+        const schema = new UnbakedEntitySchema("product");
+        schema.setKey("id");
 
-        const workspace = new Workspace(
-            new SchemaCatalog([
-                new SchemaV1({
-                    name: "product",
-                    key: "id",
-                    properties: {
-                        id: { type: "number" },
-                        name: { type: "string" },
-                        price: { type: "number" },
-                        rating: { type: "number" },
-                    },
-                }),
-            ])
-        );
+        const workspace = new Workspace();
 
         const executedQueries: Query[] = [];
 
-        async function executeQuery(query: Query): Promise<Product[]> {
+        async function executeQuery(query: Query, schema: EntitySchema): Promise<Product[]> {
             const reduced = reduceQueries([query], executedQueries);
             const productsLoadedFromApi: Product[] = [];
 
@@ -107,13 +95,13 @@ describe("how do we actually load data?", () => {
             }
 
             if (productsLoadedFromApi.length > 0) {
-                workspace.add(query.model, productsLoadedFromApi);
+                workspace.add(schema, productsLoadedFromApi);
             }
 
-            return workspace.query(query);
+            return workspace.query(query, schema);
         }
 
-        const products = await executeQuery(price_100_to_200_rating_3_to_5);
+        const products = await executeQuery(price_100_to_200_rating_3_to_5, schema);
 
         console.log("products:", products);
 
@@ -128,7 +116,7 @@ describe("how do we actually load data?", () => {
             expansion: {},
         };
 
-        const moreProducts = await executeQuery(price_100_to_300_rating_2_to_5);
+        const moreProducts = await executeQuery(price_100_to_300_rating_2_to_5, schema);
 
         // [todo] returns duplicate results, need to fix what happens when adding same item twice to workspace
         console.log("[more products]:", moreProducts);

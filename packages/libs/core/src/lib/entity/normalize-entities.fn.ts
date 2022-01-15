@@ -1,24 +1,22 @@
-import { SchemaCatalog } from "./metadata/schema-catalog";
+import { EntitySchema } from "../public";
+import { Entity } from "./entity";
+import { NormalizedEntities } from "./normalized-entities";
 
-// [todo] not a fan of having the "shouldAddSelf" flag
 export function normalizeEntities(
-    model: string,
-    items: any[],
-    catalog: SchemaCatalog,
-    shouldAddSelf = true
-): Record<string, any[]> {
-    const schema = catalog.getSchema(model);
-    const normalized: Record<string, any[]> = {};
-
-    if (shouldAddSelf) {
-        normalized[model] = items;
-    }
+    schema: EntitySchema,
+    entities: Entity[],
+    normalized?: NormalizedEntities
+): NormalizedEntities {
+    normalized = normalized ?? new NormalizedEntities();
+    normalized.add(schema, entities);
 
     for (const relation of schema.getRelations()) {
-        const navigated: any[] = [];
+        const navigated: Entity[] = [];
 
-        for (const item of items) {
-            const value = item[relation.path];
+        for (const entity of entities) {
+            // [todo] support nested path. use EntityReader?
+            const value = entity[relation.getPropertyName()];
+            
             if (value == null) continue;
 
             if (Array.isArray(value)) {
@@ -27,21 +25,10 @@ export function normalizeEntities(
                 navigated.push(value);
             }
 
-            // if (property.isExpandable()) {
-            // delete item[property.name];
-            delete item[relation.path];
-            // }
+            delete entity[relation.getPropertyName()];
         }
 
-        const deeperNormalized = normalizeEntities(
-            schema.getPropertyByPath(relation.path).getSchemaName(),
-            navigated,
-            catalog
-        );
-
-        for (const key in deeperNormalized) {
-            normalized[key] = [...(normalized[key] ?? []), ...deeperNormalized[key]];
-        }
+        normalizeEntities(relation.getRelatedEntitySchema(), navigated, normalized);
     }
 
     return normalized;

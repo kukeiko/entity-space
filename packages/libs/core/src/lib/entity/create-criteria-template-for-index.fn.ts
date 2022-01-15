@@ -1,12 +1,13 @@
+import { splitOne } from "@entity-space/utils";
 import { InNumberSetCriterion, NamedCriteriaTemplate } from "../criteria/public";
-import { SchemaIndexV1 } from "./metadata/schema-v1-index";
+import { EntitySchemaIndex } from "../schema/public";
 
 export function createCriteriaTemplateForIndex(
-    index: SchemaIndexV1
+    index: EntitySchemaIndex
 ): NamedCriteriaTemplate<{ [key: string]: typeof InNumberSetCriterion[] }> {
-    const keyPath = index.path;
+    const keyPath = index.getPath();
 
-    if (index.path.some(key => key.split(".").length > 2)) {
+    if (index.getPath().some(key => key.split(".").length > 2)) {
         // [todo] support arbitrary depth
         throw new Error(`arbitrary depth of nested index paths not yet supported`);
     }
@@ -20,13 +21,15 @@ export function createCriteriaTemplateForIndex(
     for (const key of keyPath) {
         if (key.includes(".")) {
             // [todo] support more than 1 level of nesting
-            const [first, second] = key.split(".");
+            const [first, second] = splitOne(key, ".");
 
             if (!namedBagTemplate[first]) {
                 namedBagTemplate[first] = [new NamedCriteriaTemplate({})] as any;
             }
 
-            (namedBagTemplate[first][0] as any).items[second] = [InNumberSetCriterion];
+            if (second !== void 0) {
+                (namedBagTemplate[first][0] as any).items[second] = [InNumberSetCriterion];
+            }
         } else {
             // [todo] i was a bit suprised that i have to supply an array; was a bit unintuitive
             namedBagTemplate[key] = [InNumberSetCriterion];
