@@ -1,3 +1,5 @@
+[![Node.js CI🚀](https://github.com/kukeiko/entity-space/actions/workflows/entity-space.ci.yml/badge.svg)](https://github.com/kukeiko/entity-space/actions/workflows/entity-space.ci.yml)
+
 # entity-space
 
 Not yet usable library that is supposed to help a frontend / fullstack developer load & persist data.
