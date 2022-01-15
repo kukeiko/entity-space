@@ -1,4 +1,4 @@
-[![Node.js CI🚀](https://github.com/kukeiko/entity-space/actions/workflows/entity-space.ci.yml/badge.svg)](https://github.com/kukeiko/entity-space/actions/workflows/entity-space.ci.yml)
+[![Node.js CI](https://github.com/kukeiko/entity-space/actions/workflows/entity-space.ci.yml/badge.svg)](https://github.com/kukeiko/entity-space/actions/workflows/entity-space.ci.yml)
 
 # entity-space
 
