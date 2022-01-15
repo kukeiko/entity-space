@@ -26,10 +26,10 @@ export class AppComponent {
     queriesIssuedAgainstApi: Query[] = [];
     products: Product[] = [];
 
-    minRating: string = "";
-    maxRating: string = "";
-    minPrice: string = "";
-    maxPrice: string = "";
+    minRating: string = "3";
+    maxRating: string = "5";
+    minPrice: string = "100";
+    maxPrice: string = "200";
 
     async ngOnInit(): Promise<void> {
         this.productEntitySource.onQueryIssued().subscribe(query => this.queriesIssuedAgainstApi.push(query));
@@ -70,7 +70,7 @@ export class AppComponent {
         let maxRating: number | undefined = parseInt(this.maxRating);
 
         if (isNaN(maxRating)) {
-            maxPrice = void 0;
+            maxRating = void 0;
         }
 
         return matches<Product>({
