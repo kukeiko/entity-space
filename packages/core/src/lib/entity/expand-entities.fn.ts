@@ -5,12 +5,12 @@ import { createCriteriaForIndex } from "./create-criteria-for-index.fn";
 import { Entity } from "./entity";
 import { EntityReader } from "./entity-reader";
 
-export function expandEntities(
+export async function expandEntities(
     entities: Entity[],
     relation: IEntitySchemaRelation,
-    query: (query: Query) => Entity[],
+    query: (query: Query) => Promise<Entity[]>,
     expansion?: Expansion
-): void {
+): Promise<void> {
     const entityReader = new EntityReader();
     const relatedSchema = relation.getRelatedEntitySchema();
     // [todo] what about dictionaries?
@@ -18,7 +18,7 @@ export function expandEntities(
     const fromIndex = relation.getFromIndex();
     const toIndex = relation.getToIndex();
     const criteria = createCriteriaForIndex(toIndex.getPath(), entityReader.readIndex(fromIndex, entities));
-    const referencedItems = query({ criteria, expansion: expansion ?? {}, entitySchema: relatedSchema });
+    const referencedItems = await query({ criteria, expansion: expansion ?? {}, entitySchema: relatedSchema });
 
     for (const entity of entities) {
         const indexValue = entityReader.readIndexFromOne(fromIndex, entity);

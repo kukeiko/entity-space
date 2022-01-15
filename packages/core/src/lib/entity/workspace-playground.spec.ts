@@ -3,7 +3,7 @@ import { EntitySchema } from "../schema/entity-schema";
 import { Workspace } from "./workspace";
 
 describe("playground: workspace", () => {
-    it("should execute query w/ 1 simple index", () => {
+    it("should execute query w/ 1 simple index", async () => {
         interface Foo {
             bar: number;
             id: number;
@@ -28,7 +28,7 @@ describe("playground: workspace", () => {
             { id: 3, bar: 2 },
         ];
 
-        workspace.add(schema, entities);
+        workspace.addEntities(schema, entities);
 
         const query: Query = {
             entitySchema: schema,
@@ -36,13 +36,13 @@ describe("playground: workspace", () => {
             expansion: {},
         };
 
-        const result = workspace.query(query);
+        const result = await workspace.queryAgainstCache(query);
 
         expect(result.length).toEqual(expectedEntities.length);
         expect(result).toEqual(expect.arrayContaining(expectedEntities));
     });
 
-    it("should execute query w/ composite indexes", () => {
+    it("should execute query w/ composite indexes", async () => {
         interface Foo {
             bar: number;
             baz: number;
@@ -67,7 +67,7 @@ describe("playground: workspace", () => {
             { id: 2, bar: 3, baz: 1337 },
         ];
 
-        workspace.add(schema, entities);
+        workspace.addEntities(schema, entities);
 
         const query: Query = {
             entitySchema: schema,
@@ -75,13 +75,13 @@ describe("playground: workspace", () => {
             expansion: {},
         };
 
-        const result = workspace.query(query);
+        const result = await workspace.queryAgainstCache(query);
 
         expect(result.length).toEqual(expectedEntities.length);
         expect(result).toEqual(expect.arrayContaining(expectedEntities));
     });
 
-    it("should execute query w/ 1 nested index", () => {
+    it("should execute query w/ 1 nested index", async () => {
         interface Foo {
             bar: {
                 baz: number;
@@ -108,7 +108,7 @@ describe("playground: workspace", () => {
             { id: 3, bar: { baz: 2 } },
         ];
 
-        workspace.add(schema, entities);
+        workspace.addEntities(schema, entities);
 
         const query: Query = {
             entitySchema: schema,
@@ -116,13 +116,13 @@ describe("playground: workspace", () => {
             expansion: {},
         };
 
-        const result = workspace.query(query);
+        const result = await workspace.queryAgainstCache(query);
 
         expect(result.length).toEqual(expectedEntities.length);
         expect(result).toEqual(expect.arrayContaining(expectedEntities));
     });
 
-    it("should execute query w/ composite nested index", () => {
+    it("should execute query w/ composite nested index", async () => {
         interface Foo {
             bar: {
                 baz: number;
@@ -149,7 +149,7 @@ describe("playground: workspace", () => {
             { id: 2, bar: { baz: 3, moo: 10 } },
         ];
 
-        workspace.add(schema, entities);
+        workspace.addEntities(schema, entities);
 
         const query: Query = {
             entitySchema: schema,
@@ -157,13 +157,13 @@ describe("playground: workspace", () => {
             expansion: {},
         };
 
-        const result = workspace.query(query);
+        const result = await workspace.queryAgainstCache(query);
 
         expect(result.length).toEqual(expectedEntities.length);
         expect(result).toEqual(expect.arrayContaining(expectedEntities));
     });
 
-    it("should execute query w/ composite distributed nested index", () => {
+    it("should execute query w/ composite distributed nested index", async () => {
         interface Foo {
             bar: {
                 baz: number;
@@ -191,7 +191,7 @@ describe("playground: workspace", () => {
 
         const expectedEntities = [{ id: 1, bar: { baz: 2, moo: 10 }, khaz: { mo: 1, dan: 2 } }];
 
-        workspace.add(schema, entities);
+        workspace.addEntities(schema, entities);
 
         const query: Query = {
             entitySchema: schema,
@@ -202,13 +202,13 @@ describe("playground: workspace", () => {
             expansion: {},
         };
 
-        const result = workspace.query(query);
+        const result = await workspace.queryAgainstCache(query);
 
         expect(result.length).toEqual(expectedEntities.length);
         expect(result).toEqual(expect.arrayContaining(expectedEntities));
     });
 
-    it("expanding", () => {
+    it("expanding", async () => {
         const fooSchema = new EntitySchema("foo");
         fooSchema.setKey(["id", "secondaryId"]);
 
@@ -222,8 +222,8 @@ describe("playground: workspace", () => {
 
         const workspace = new Workspace();
 
-        workspace.add(fooSchema, [{ id: 1337, secondaryId: 128, name: "i am foo" }]);
-        workspace.add(barSchema, [{ id: 64, fooId: 1337, secondaryId: 128, name: "i belong to foo" }]);
+        workspace.addEntities(fooSchema, [{ id: 1337, secondaryId: 128, name: "i am foo" }]);
+        workspace.addEntities(barSchema, [{ id: 64, fooId: 1337, secondaryId: 128, name: "i belong to foo" }]);
 
         const query: Query = {
             entitySchema: fooSchema,
@@ -231,7 +231,7 @@ describe("playground: workspace", () => {
             criteria: matches({ id: inSet([1337]), secondaryId: inSet([128]) }),
         };
 
-        const fooItems = workspace.query(query);
+        const fooItems = await workspace.queryAgainstCache(query);
 
         expect(fooItems).toEqual([
             {
@@ -243,7 +243,7 @@ describe("playground: workspace", () => {
         ]);
     });
 
-    it("expanding #2", () => {
+    it("expanding #2", async () => {
         const fooSchema = new EntitySchema("foo");
         fooSchema.setKey("id");
 
@@ -258,8 +258,8 @@ describe("playground: workspace", () => {
         fooSchema.addProperty("bar", barSchema);
 
         const workspace = new Workspace();
-        workspace.add(fooSchema, [{ id: 1337, name: "i am foo", bar: { bazId: 128 } }]);
-        workspace.add(bazSchema, [{ id: 128, name: "i am baz" }]);
+        workspace.addEntities(fooSchema, [{ id: 1337, name: "i am foo", bar: { bazId: 128 } }]);
+        workspace.addEntities(bazSchema, [{ id: 128, name: "i am baz" }]);
 
         const query: Query = {
             entitySchema: fooSchema,
@@ -267,14 +267,14 @@ describe("playground: workspace", () => {
             criteria: matches({ id: inSet([1337]) }),
         };
 
-        const fooItems = workspace.query(query);
+        const fooItems = await workspace.queryAgainstCache(query);
 
         expect(fooItems).toEqual([
             { id: 1337, name: "i am foo", bar: { bazId: 128, baz: { id: 128, name: "i am baz" } } },
         ]);
     });
 
-    it("normalize items, add them to store, then query", () => {
+    it("normalize items, add them to store, then query", async () => {
         // arrange
         interface Foo {
             bar: Bar;
@@ -325,7 +325,7 @@ describe("playground: workspace", () => {
         ];
 
         // act
-        workspace.add(fooSchema, addedItems);
+        workspace.addEntities(fooSchema, addedItems);
 
         const query: Query = {
             entitySchema: fooSchema,
@@ -333,7 +333,7 @@ describe("playground: workspace", () => {
             criteria: matches({ id: inSet([1337]) }),
         };
 
-        const queriedItems = workspace.query(query);
+        const queriedItems = await workspace.queryAgainstCache(query);
 
         // assert
         expect(queriedItems).toEqual(addedItems);
