@@ -2,6 +2,6 @@
     "version": 2,
     "projects": {
         "libs-core": "packages/libs/core",
-        "libs-utils": "packages/libs/utils"
+        "utils": "packages/utils"
     }
 }
