@@ -1,61 +1,61 @@
+import { EntitySchemaIndex } from "./entity-schema-index";
+import { EntitySchemaKey } from "./entity-schema-key";
+import { EntitySchemaProperty } from "./entity-schema-property";
+import { EntitySchemaRelation } from "./entity-schema-relation";
 import {
-    EntitySchema,
-    EntitySchemaIndex,
-    EntitySchemaKey,
-    EntitySchemaProperty,
-    EntitySchemaRelation,
+    IEntitySchema,
+    IEntitySchemaIndex,
+    IEntitySchemaKey,
+    IEntitySchemaProperty,
+    IEntitySchemaRelation,
     PropertyValueSchema,
-} from "./schema";
-import { UnbakedEntitySchemaIndex } from "./unbaked-entity-schema-index";
-import { UnbakedEntitySchemaKey } from "./unbaked-entity-schema-key";
-import { UnbakedEntitySchemaProperty } from "./unbaked-entity-schema-property";
-import { UnbakedEntitySchemaRelation } from "./unbaked-entity-schema-relation";
+} from "./schema.interface";
 
-export class UnbakedEntitySchema implements EntitySchema {
+export class EntitySchema implements IEntitySchema {
     constructor(id: string) {
         this.id = id;
     }
 
-    private key?: EntitySchemaKey;
+    private key?: IEntitySchemaKey;
 
-    private readonly allOf: EntitySchema[] = [];
-    private readonly anyOf: EntitySchema[] = [];
+    private readonly allOf: IEntitySchema[] = [];
+    private readonly anyOf: IEntitySchema[] = [];
     private readonly id: string;
-    private readonly indexes: EntitySchemaIndex[] = [];
-    private readonly oneOf: EntitySchema[] = [];
-    private readonly properties: EntitySchemaProperty[] = [];
-    private readonly relations: EntitySchemaRelation[] = [];
+    private readonly indexes: IEntitySchemaIndex[] = [];
+    private readonly oneOf: IEntitySchema[] = [];
+    private readonly properties: IEntitySchemaProperty[] = [];
+    private readonly relations: IEntitySchemaRelation[] = [];
 
     readonly schemaType = "entity";
 
-    addAllOf(schema: EntitySchema): void {
+    addAllOf(schema: IEntitySchema): void {
         this.allOf.push(schema);
     }
 
     addIndex(path: string | string[], options?: { name?: string; unique?: boolean; multiEntry?: boolean }): void {
-        const index = new UnbakedEntitySchemaIndex(this, path, options);
+        const index = new EntitySchemaIndex(this, path, options);
         this.indexes.push(index);
     }
 
     addProperty(name: string, valueSchema: PropertyValueSchema): void {
-        const property = new UnbakedEntitySchemaProperty(this, name, valueSchema);
+        const property = new EntitySchemaProperty(this, name, valueSchema);
         this.properties.push(property);
     }
 
     addRelation(propertyKey: string, from: string, to: string): void {
-        const relation = new UnbakedEntitySchemaRelation(this, propertyKey, from, to);
+        const relation = new EntitySchemaRelation(this, propertyKey, from, to);
         this.relations.push(relation);
     }
 
-    findRelation(propertyName: string): EntitySchemaRelation | undefined {
+    findRelation(propertyName: string): IEntitySchemaRelation | undefined {
         return this.getRelations().find(relation => relation.getPropertyName() === propertyName);
     }
 
-    getAllOf(): EntitySchema[] {
+    getAllOf(): IEntitySchema[] {
         return this.allOf.slice();
     }
 
-    getAnyOf(): EntitySchema[] {
+    getAnyOf(): IEntitySchema[] {
         return this.anyOf.slice();
     }
 
@@ -63,7 +63,7 @@ export class UnbakedEntitySchema implements EntitySchema {
         return this.id;
     }
 
-    getIndex(name: string): EntitySchemaIndex {
+    getIndex(name: string): IEntitySchemaIndex {
         const index = this.indexes.find(index => index.getName() === name);
 
         if (index === void 0) {
@@ -73,7 +73,7 @@ export class UnbakedEntitySchema implements EntitySchema {
         return index;
     }
 
-    getIndexOrKey(name: string): EntitySchemaIndex {
+    getIndexOrKey(name: string): IEntitySchemaIndex {
         if (this.hasKey() && this.getKey().getName() === name) {
             return this.getKey();
         }
@@ -81,15 +81,15 @@ export class UnbakedEntitySchema implements EntitySchema {
         return this.getIndex(name);
     }
 
-    getIndexes(): EntitySchemaIndex[] {
+    getIndexes(): IEntitySchemaIndex[] {
         return this.indexes.slice();
     }
 
-    getIndexesIncludingKey(): EntitySchemaIndex[] {
+    getIndexesIncludingKey(): IEntitySchemaIndex[] {
         return [this.getKey(), ...this.getIndexes()];
     }
 
-    getKey(): EntitySchemaKey {
+    getKey(): IEntitySchemaKey {
         if (this.key === void 0) {
             throw new Error(`there is no key defined on schema ${this.getId()}`);
         }
@@ -97,16 +97,16 @@ export class UnbakedEntitySchema implements EntitySchema {
         return this.key;
     }
 
-    getOneOf(): EntitySchema[] {
+    getOneOf(): IEntitySchema[] {
         return this.oneOf.slice();
     }
 
-    getProperties(): EntitySchemaProperty[] {
+    getProperties(): IEntitySchemaProperty[] {
         // [todo] include those from allOf & merge duplicates
         return this.properties.slice();
     }
 
-    getProperty(name: string): EntitySchemaProperty {
+    getProperty(name: string): IEntitySchemaProperty {
         const property = this.getProperties().find(property => property.getName() === name);
 
         if (property === void 0) {
@@ -116,7 +116,7 @@ export class UnbakedEntitySchema implements EntitySchema {
         return property;
     }
 
-    getRelation(propertyKey: string): EntitySchemaRelation {
+    getRelation(propertyKey: string): IEntitySchemaRelation {
         const relation = this.findRelation(propertyKey);
 
         if (relation === void 0) {
@@ -126,7 +126,7 @@ export class UnbakedEntitySchema implements EntitySchema {
         return relation;
     }
 
-    getRelations(): EntitySchemaRelation[] {
+    getRelations(): IEntitySchemaRelation[] {
         // [todo] add relations inherited from allOf
         return this.relations.slice();
     }
@@ -136,6 +136,6 @@ export class UnbakedEntitySchema implements EntitySchema {
     }
 
     setKey(path: string | string[]): void {
-        this.key = new UnbakedEntitySchemaKey(this, path);
+        this.key = new EntitySchemaKey(this, path);
     }
 }

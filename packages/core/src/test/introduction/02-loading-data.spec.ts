@@ -1,16 +1,15 @@
 import {
     Criterion,
-    EntitySchema,
     InNumberRangeCriterion,
     inRange,
     matches,
     NamedCriteriaTemplate,
     or,
     Query,
-    reduceQueries,
 } from "@entity-space/core";
+import { IEntitySource } from "../../lib/entity/entity-source.interface";
 import { Workspace } from "../../lib/entity/workspace";
-import { UnbakedEntitySchema } from "../../lib/schema/unbaked-entity-schema";
+import { EntitySchema } from "../../lib/schema/entity-schema";
 import { Product, ProductFilter } from "./model";
 import { ProductRepository } from "./repositories";
 
@@ -64,49 +63,35 @@ async function loadFromApi(query: Query): Promise<Product[]> {
 
 describe("how do we actually load data?", () => {
     it("simple resolve of a query", async () => {
+        const productSchema = new EntitySchema("product");
+        productSchema.setKey("id");
+
         // we want all products priced between 100 and 200 with a rating of 3 to 5
         const price_100_to_200_rating_3_to_5: Query = {
-            model: "product",
+            entitySchema: productSchema,
             criteria: matches<Product>({
                 price: inRange(100, 200),
                 rating: inRange(3, 5),
             }),
             expansion: {},
         };
-        const schema = new UnbakedEntitySchema("product");
-        schema.setKey("id");
+
+        const productSource: IEntitySource = {
+            async query(query: Query): Promise<Product[]> {
+                const products = await loadFromApi(query);
+
+                return products;
+            },
+        };
 
         const workspace = new Workspace();
+        workspace.addEntitySource(productSchema, productSource);
 
-        const executedQueries: Query[] = [];
-
-        async function executeQuery(query: Query, schema: EntitySchema): Promise<Product[]> {
-            const reduced = reduceQueries([query], executedQueries);
-            const productsLoadedFromApi: Product[] = [];
-
-            if (reduced === false) {
-                productsLoadedFromApi.push(...(await loadFromApi(query)));
-                executedQueries.push(query);
-            } else {
-                for (const reducedQuery of reduced) {
-                    productsLoadedFromApi.push(...(await loadFromApi(reducedQuery)));
-                    executedQueries.push(reducedQuery);
-                }
-            }
-
-            if (productsLoadedFromApi.length > 0) {
-                workspace.add(schema, productsLoadedFromApi);
-            }
-
-            return workspace.query(query, schema);
-        }
-
-        const products = await executeQuery(price_100_to_200_rating_3_to_5, schema);
-
-        console.log("products:", products);
+        const products = await workspace.query(price_100_to_200_rating_3_to_5);
+        console.log("[products]:", products);
 
         const price_100_to_300_rating_2_to_5: Query = {
-            model: "product",
+            entitySchema: productSchema,
             criteria: or([
                 matches<Product>({
                     price: inRange(100, 300),
@@ -116,7 +101,7 @@ describe("how do we actually load data?", () => {
             expansion: {},
         };
 
-        const moreProducts = await executeQuery(price_100_to_300_rating_2_to_5, schema);
+        const moreProducts = await workspace.query(price_100_to_300_rating_2_to_5);
 
         // [todo] returns duplicate results, need to fix what happens when adding same item twice to workspace
         console.log("[more products]:", moreProducts);

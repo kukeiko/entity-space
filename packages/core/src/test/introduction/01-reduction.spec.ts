@@ -1,4 +1,5 @@
 import { Expansion, inRange, matches, or, Query, reduceExpansion, reduceQuery } from "@entity-space/core";
+import { EntitySchema } from "../../lib/schema/entity-schema";
 
 /**
  * This file serves as an introduction via code for anyone new and interested in this library.
@@ -186,8 +187,10 @@ describe("what's reduction for?", () => {
             reviews: true,
         };
 
+        const productSchema = new EntitySchema("product");
+
         const price_100_to_200_rating_3_to_5_no_reviews: Query = {
-            model: "TODO",
+            entitySchema: productSchema,
             criteria: matches({
                 price: inRange(100, 200),
                 rating: inRange(3, 5),
@@ -198,7 +201,7 @@ describe("what's reduction for?", () => {
         };
 
         const price_100_to_300_rating_2_to_5_with_reviews: Query = {
-            model: "TODO",
+            entitySchema: productSchema,
             criteria: matches({
                 price: inRange(100, 300),
                 rating: inRange(2, 5),
@@ -215,7 +218,7 @@ describe("what's reduction for?", () => {
         const expected: Query[] = [
             // one for loading the missing entities
             {
-                model: "TODO",
+                entitySchema: productSchema,
                 criteria: or([
                     matches({
                         price: inRange(200, 300, [false, true]),
@@ -233,7 +236,7 @@ describe("what's reduction for?", () => {
             },
             // and one for loading the missing properties (i.e. the reviews) of the entities we already have
             {
-                model: "TODO",
+                entitySchema: productSchema,
                 criteria: matches({
                     price: inRange(100, 200),
                     rating: inRange(3, 5),

@@ -1,12 +1,12 @@
 import { isDefined } from "@entity-space/utils";
-import { EntitySchema } from "../schema/public";
+import { IEntitySchema } from "../schema/public";
 import { Entity } from "./entity";
-import { EntityReader } from "./entity-reader";
+import { IEntityReader } from "./entity-reader.interface";
 import { EntityStoreIndex, IndexValue } from "./entity-store-index";
-import { UnbakedEntityReader } from "./unbaked-entity-reader";
+import { EntityReader } from "./entity-reader";
 
 export class EntityStore {
-    constructor(schema: EntitySchema, entityReader: EntityReader = new UnbakedEntityReader()) {
+    constructor(schema: IEntitySchema, entityReader: IEntityReader = new EntityReader()) {
         if (!schema.hasKey()) {
             throw new Error(`can't create entity-store for a schema that has no key defined`);
         }
@@ -22,7 +22,7 @@ export class EntityStore {
         this.indexes = indexes;
     }
 
-    private readonly schema: EntitySchema;
+    private readonly schema: IEntitySchema;
     private readonly key: EntityStoreIndex;
     private readonly indexes: Record<string, EntityStoreIndex>;
     private items: (Entity | undefined)[] = [];

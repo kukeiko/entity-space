@@ -1,9 +1,10 @@
 import { permutateEntries } from "@entity-space/utils";
 import { Expansion } from "../expansion/public";
-import { Query } from "../query/public";
-import { EntitySchema } from "../schema/schema";
+import { Query, reduceQueries } from "../query/public";
+import { IEntitySchema } from "../schema/schema.interface";
 import { createCriteriaTemplateForIndex } from "./create-criteria-template-for-index.fn";
 import { Entity } from "./entity";
+import { IEntitySource } from "./entity-source.interface";
 import { EntityStore } from "./entity-store";
 import { expandEntities } from "./expand-entities.fn";
 import { flattenNamedCriteria } from "./flatten-named-criteria.fn";
@@ -12,16 +13,61 @@ import { normalizeEntities } from "./normalize-entities.fn";
 
 export class Workspace {
     private readonly stores = new Map<string, EntityStore>();
+    private readonly sources = new Map<string, IEntitySource>();
+    private readonly queryCaches = new Map<string, Query[]>();
 
-    add(schema: EntitySchema, items: any[]): void {
-        const normalized = normalizeEntities(schema, items);
+    addEntities(schema: IEntitySchema, entities: Entity[]): void {
+        const normalized = normalizeEntities(schema, entities);
 
         for (const schema of normalized.getSchemas()) {
             this.getOrCreateStore(schema).add(normalized.get(schema));
         }
     }
 
-    query(query: Query, schema: EntitySchema) {
+    addEntitySource(schema: IEntitySchema, source: IEntitySource): void {
+        this.sources.set(schema.getId(), source);
+    }
+
+    private async loadUncachedIntoCache(query: Query): Promise<void> {
+        const executedQueries = this.getOrCreateQueryCache(query.entitySchema);
+        const reduced = reduceQueries([query], executedQueries);
+        const entitiesLoadedFromSource: Entity[] = [];
+
+        if (reduced === false) {
+            entitiesLoadedFromSource.push(...(await this.loadFromSource(query)));
+            executedQueries.push(query);
+        } else {
+            for (const reducedQuery of reduced) {
+                entitiesLoadedFromSource.push(...(await this.loadFromSource(reducedQuery)));
+                executedQueries.push(reducedQuery);
+            }
+        }
+
+        if (entitiesLoadedFromSource.length > 0) {
+            this.addEntities(query.entitySchema, entitiesLoadedFromSource);
+        }
+    }
+
+    private async loadFromSource(query: Query): Promise<Entity[]> {
+        const source = this.getSource(query.entitySchema);
+        const entities = await source.query(query);
+
+        return entities;
+    }
+
+    // [todo] remove any
+    async query(query: Query): Promise<any[]> {
+        await this.loadUncachedIntoCache(query);
+
+        return this.queryAgainstCache(query);
+    }
+
+    // [todo] remove any
+    // [todo] should stay async because at one point i want to make use of service-workers
+    async queryAgainstCache(query: Query): Promise<any[]> {
+        // await this.loadUncachedIntoStores(query);
+
+        const schema = query.entitySchema;
         const indexes = schema
             .getIndexesIncludingKey()
             .slice()
@@ -66,7 +112,7 @@ export class Workspace {
         return query.criteria.filter(entities);
     }
 
-    expand(schema: EntitySchema, expansion: Expansion, entities: Entity[]): void {
+    expand(schema: IEntitySchema, expansion: Expansion, entities: Entity[]): void {
         for (const propertyKey in expansion) {
             const expansionValue = expansion[propertyKey];
 
@@ -80,7 +126,7 @@ export class Workspace {
                 expandEntities(
                     entities,
                     relation,
-                    q => this.query(q, relation.getRelatedEntitySchema()),
+                    q => this.queryAgainstCache(q),
                     expansionValue === true ? void 0 : expansionValue
                 );
             } else if (expansionValue !== true) {
@@ -103,7 +149,7 @@ export class Workspace {
         }
     }
 
-    private getOrCreateStore(schema: EntitySchema): EntityStore {
+    private getOrCreateStore(schema: IEntitySchema): EntityStore {
         let store = this.stores.get(schema.getId());
 
         if (store === void 0) {
@@ -112,5 +158,26 @@ export class Workspace {
         }
 
         return store;
+    }
+
+    private getSource(schema: IEntitySchema): IEntitySource {
+        const source = this.sources.get(schema.getId());
+
+        if (source === void 0) {
+            throw new Error(`no source for entity-schema ${schema.getId()} found`);
+        }
+
+        return source;
+    }
+
+    private getOrCreateQueryCache(schema: IEntitySchema): Query[] {
+        let cache = this.queryCaches.get(schema.getId());
+
+        if (cache === void 0) {
+            cache = [];
+            this.queryCaches.set(schema.getId(), cache);
+        }
+
+        return cache;
     }
 }

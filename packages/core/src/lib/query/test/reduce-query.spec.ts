@@ -1,11 +1,12 @@
 import { Criterion, inRange, inSet, matches, or } from "../../criteria/criterion";
 import { Expansion } from "../../expansion/expansion";
+import { EntitySchema } from "../../schema/entity-schema";
 import { Query } from "../query";
 import { reduceQuery } from "../reduce-query.fn";
 
 describe("reduceQuery()", () => {
     function createQuery(criteria: Criterion, expansion: Expansion = {}): Query {
-        return { model: "", criteria, expansion };
+        return { entitySchema: new EntitySchema("foo"), criteria, expansion };
     }
 
     describe("full reduction", () => {
