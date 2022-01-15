@@ -23,5 +23,13 @@
         "**/.DS_Store": true,
         "**/Thumbs.db": true,
         "**/node_modules": true
-    }
+    },
+    "tsco.addPublicModifierIfMissing": false,
+    "tsco.useRegions": false,
+    "tsco.accessorsBeforeCtor": false,
+    "tsco.memberOrder": [
+        {
+            "memberTypes": ["constructors", "publicProperties", "protectedProperties", "privateProperties"]
+        }
+    ]
 }
