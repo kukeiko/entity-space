@@ -1,5 +1,14 @@
 import { Component } from "@angular/core";
-import { Criterion, EntitySchema, IEntitySchema, inRange, matches, Query, Workspace } from "@entity-space/core";
+import {
+    Criterion,
+    EntitySchema,
+    Expansion,
+    IEntitySchema,
+    inRange,
+    matches,
+    Query,
+    Workspace,
+} from "@entity-space/core";
 import { Product } from "@entity-space/examples/products/libs/products-model";
 import { ProductEntitySource } from "./entity-sources/product.entity-source";
 
@@ -10,18 +19,25 @@ import { ProductEntitySource } from "./entity-sources/product.entity-source";
 })
 export class AppComponent {
     constructor(private readonly productEntitySource: ProductEntitySource) {
+        const brandSchema = new EntitySchema("brand");
+        brandSchema.setKey("id");
+
         const productSchema = new EntitySchema("product");
         productSchema.setKey("id");
+        productSchema.addIndex("brandId");
+        productSchema.addProperty("brand", brandSchema);
+        productSchema.addRelation("brand", "brandId", "id");
 
         this.productSchema = productSchema;
+        this.brandSchema = brandSchema;
 
         const workspace = new Workspace();
         workspace.addEntitySource(this.productSchema, this.productEntitySource);
-
         this.workspace = workspace;
     }
 
     productSchema: IEntitySchema;
+    brandSchema: IEntitySchema;
     workspace: Workspace;
     queriesIssuedAgainstApi: Query[] = [];
     queriesInWorkspaceCache: Query[] = [];
@@ -34,6 +50,8 @@ export class AppComponent {
     minPrice: string = "100";
     maxPrice: string = "200";
 
+    includeBrand = false;
+
     async ngOnInit(): Promise<void> {
         this.productEntitySource
             .onQueryIssued()
@@ -44,10 +62,18 @@ export class AppComponent {
     async search(): Promise<void> {
         try {
             const criteria = this.uiFilterToCriteria();
+            // [todo] consider allowing "false" as an expansion value
+            const expansion: Expansion<Product> = { brand: this.includeBrand || void 0 };
+
+            // [todo] dirty, but for now necessary
+            if (expansion.brand === void 0) {
+                delete expansion.brand;
+            }
+
             this.products = await this.workspace.query({
                 entitySchema: this.productSchema,
                 criteria,
-                expansion: {},
+                expansion,
             });
         } catch (error) {
             alert((error as any).message ?? error);

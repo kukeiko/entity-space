@@ -2,6 +2,18 @@ import { Expansion } from "../expansion";
 import { reduceExpansion } from "../reduce-expansion.fn";
 
 describe("reduceExpansion()", () => {
+    it("{ } reduced by { foo } should be { }", () => {
+        // arrange
+        const a: Expansion = {};
+        const b: Expansion = { foo: true };
+
+        // act
+        const reduced = reduceExpansion(a, b);
+
+        // assert
+        expect(reduced).toEqual({});
+    });
+
     describe("full reduction", () => {
         it("{ foo, bar } should be completely reduced by { foo, bar }", () => {
             // arrange
@@ -47,6 +59,18 @@ describe("reduceExpansion()", () => {
             // arrange
             const a: Expansion = { foo: true, bar: true };
             const b: Expansion = { baz: true };
+
+            // act
+            const reduced = reduceExpansion(a, b);
+
+            // assert
+            expect(reduced).toEqual(false);
+        });
+
+        it("{ foo } should not be reduced by { }", () => {
+            // arrange
+            const a: Expansion = { foo: true };
+            const b: Expansion = {};
 
             // act
             const reduced = reduceExpansion(a, b);

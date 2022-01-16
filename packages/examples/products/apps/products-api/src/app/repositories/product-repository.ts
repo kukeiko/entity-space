@@ -1,23 +1,40 @@
+import { Expansion } from "@entity-space/core";
 import { Product, ProductFilter } from "@entity-space/examples/products/libs/products-model";
-import { cloneJson } from "@entity-space/utils";
+import { cloneJson, toMapById } from "@entity-space/utils";
+import { Injectable } from "@nestjs/common";
+import { BrandRepository } from "./brand-repository";
 import data from "./normalized-product-data";
 
+@Injectable()
 export class ProductRepository {
-    async all(): Promise<Product[]> {
-        return cloneJson(data.products);
+    constructor(private readonly brandRepository: BrandRepository) {}
+
+    async all(expand?: Expansion): Promise<Product[]> {
+        const products = cloneJson(data.products);
+
+        if (expand !== void 0) {
+            await this.expand(products, expand);
+        }
+
+        return products;
     }
 
-    async byIds(ids: number[]): Promise<Product[]> {
+    async byIds(ids: number[], expand?: Expansion): Promise<Product[]> {
         const idSet = new Set(ids);
         const all = await this.all();
+        const filtered = all.filter(item => idSet.has(item.id));
 
-        return all.filter(item => idSet.has(item.id));
+        if (expand !== void 0) {
+            await this.expand(filtered, expand);
+        }
+
+        return filtered;
     }
 
-    async search(filter: ProductFilter): Promise<Product[]> {
+    async search(filter: ProductFilter, expand?: Expansion<Product>): Promise<Product[]> {
         const all = await this.all();
 
-        return all.filter(item => {
+        const filtered = all.filter(item => {
             if (filter.minPrice !== void 0 && item.price < filter.minPrice) return false;
             if (filter.maxPrice !== void 0 && item.price > filter.maxPrice) return false;
             if (filter.minRating !== void 0 && item.rating < filter.minRating) return false;
@@ -25,5 +42,26 @@ export class ProductRepository {
 
             return true;
         });
+
+        if (expand !== void 0) {
+            await this.expand(filtered, expand);
+        }
+
+        return filtered;
+    }
+
+    async expand(products: Product[], expand: Expansion<Product>): Promise<void> {
+        if (expand.brand !== void 0) {
+            const brandIds = products.map(product => product.brandId);
+            const brands = toMapById(await this.brandRepository.byIds(brandIds));
+
+            for (const product of products) {
+                product.brand = brands.get(product.brandId);
+            }
+        }
+
+        if (expand.reviews !== void 0) {
+            // [todo]
+        }
     }
 }

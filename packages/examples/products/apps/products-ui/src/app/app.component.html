@@ -24,6 +24,10 @@
         </mat-form-field>
         <br />
 
+        <mat-checkbox [(ngModel)]="includeBrand">incl. Brand</mat-checkbox>
+        <br />
+        <br />
+
         <button mat-raised-button (click)="search()">Search</button>
     </div>
     <div class="products-list-column">

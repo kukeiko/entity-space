@@ -8,5 +8,6 @@ export * from "./is-string.fn";
 export * from "./permutate-entries.fn";
 export * from "./split-one.fn";
 export * from "./subtract-sets.fn";
+export * from "./to-map-by-id.fn";
 export * from "./to-map.fn";
 export * from "./types";

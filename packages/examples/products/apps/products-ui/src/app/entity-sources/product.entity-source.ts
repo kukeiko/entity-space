@@ -24,9 +24,12 @@ export class ProductEntitySource implements IEntitySource {
     async query(query: Query): Promise<Entity[]> {
         this.queryIssued.next(query);
         const productFilters = this.mapCriteriaToProductFilter(query.criteria);
+        const expand = query.expansion;
 
         const responses = await Promise.all(
-            productFilters.map(filter => firstValueFrom(this.http.post<Product[]>("api/products/search", filter)))
+            productFilters.map(filter =>
+                firstValueFrom(this.http.post<Product[]>("api/products/search", { filter, expand }))
+            )
         );
 
         const flattenedResponses = responses.reduce((acc, value) => [...acc, ...value], []);

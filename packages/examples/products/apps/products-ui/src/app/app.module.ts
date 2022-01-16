@@ -2,6 +2,7 @@ import { HttpClientModule } from "@angular/common/http";
 import { NgModule } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { MatButtonModule } from "@angular/material/button";
+import { MatCheckboxModule } from "@angular/material/checkbox";
 import { MatFormFieldModule } from "@angular/material/form-field";
 import { MatInputModule } from "@angular/material/input";
 import { MatTableModule } from "@angular/material/table";
@@ -18,6 +19,7 @@ import { ProductEntitySource } from "./entity-sources/product.entity-source";
         FormsModule,
         HttpClientModule,
         MatButtonModule,
+        MatCheckboxModule,
         MatFormFieldModule,
         MatInputModule,
         MatTableModule,
