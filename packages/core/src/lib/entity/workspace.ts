@@ -24,6 +24,8 @@ export class Workspace {
     }
 
     addEntities(schema: IEntitySchema, entities: Entity[]): void {
+        // [todo] dirty!
+        entities = cloneJson(entities);
         const normalized = normalizeEntities(schema, entities);
 
         for (const schema of normalized.getSchemas()) {
