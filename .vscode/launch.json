@@ -9,7 +9,7 @@
             "type": "node",
             "request": "launch",
             "program": "${workspaceFolder}/node_modules/@nrwl/cli/bin/nx",
-            "args": ["test", "libs-core", "--codeCoverage=false", "--skip-nx-cache"]
+            "args": ["test", "core", "--codeCoverage=false", "--skip-nx-cache"]
         },
         {
             "name": "debug serve sandbox-api",

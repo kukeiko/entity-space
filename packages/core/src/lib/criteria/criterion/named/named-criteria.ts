@@ -44,6 +44,7 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag> extend
                     continue;
                 }
 
+                // [todo] is any? seems like i broke it without realizing during implementation of criterion templates
                 const otherCriterion = otherBag[key];
 
                 if (otherCriterion === void 0) {
@@ -175,5 +176,42 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag> extend
         }
 
         return true;
+    }
+
+    merge(other: Criterion): false | Criterion {
+        if (other instanceof Criteria) {
+            return other.merge(this);
+        } else if (other instanceof NamedCriteria) {
+            const mergedBag: Record<string, Criterion> = {};
+            const otherBag = other.getBag();
+
+            for (const key in this.bag) {
+                const myBagCriterion = this.bag[key];
+                // [todo] is any? seems like i broke it without realizing during implementation of criterion templates
+                const otherBagCriterion = otherBag[key];
+
+                if (myBagCriterion === void 0) {
+                    if (otherBagCriterion !== void 0) {
+                        return false;
+                    }
+
+                    continue;
+                } else if (otherBagCriterion === void 0) {
+                    return false;
+                } else {
+                    const mergedResult = myBagCriterion.merge(otherBagCriterion);
+
+                    if (mergedResult === false) {
+                        return false;
+                    }
+
+                    mergedBag[key] = mergedResult;
+                }
+            }
+
+            return new NamedCriteria(mergedBag);
+        } else {
+            return false;
+        }
     }
 }

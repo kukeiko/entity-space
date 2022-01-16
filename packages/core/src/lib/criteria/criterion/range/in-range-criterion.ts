@@ -176,6 +176,7 @@ export abstract class InRangeCriterion<T> extends Criterion {
             const otherToInsideMe = InRangeCriterion.isToInsideRange(other.getTo(), this);
 
             if (otherFromInsideMe && otherToInsideMe) {
+                // copy self
                 return new this.selfClass(
                     [selfFrom?.value, selfTo?.value],
                     [selfFrom?.op === ">=", selfTo?.op === "<="]
@@ -202,6 +203,7 @@ export abstract class InRangeCriterion<T> extends Criterion {
                 InRangeCriterion.isFromInsideRange(selfFrom, other) &&
                 InRangeCriterion.isToInsideRange(selfTo, other)
             ) {
+                // copy other
                 return new this.selfClass(
                     [otherFrom?.value, otherTo?.value],
                     [otherFrom?.op === ">=", otherTo?.op === "<="]
