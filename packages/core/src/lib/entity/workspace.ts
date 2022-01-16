@@ -1,4 +1,4 @@
-import { permutateEntries } from "@entity-space/utils";
+import { cloneJson, permutateEntries } from "@entity-space/utils";
 import { Observable, Subject } from "rxjs";
 import { Expansion } from "../expansion/public";
 import { mergeQueries, Query, reduceQueries } from "../query/public";
@@ -124,6 +124,7 @@ export class Workspace {
         }
 
         if (Object.keys(query.expansion).length > 0) {
+            entities = cloneJson(entities); // [todo] dirty to do it here
             this.expand(schema, query.expansion, entities);
         }
 

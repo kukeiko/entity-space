@@ -1,5 +1,6 @@
 import { Component } from "@angular/core";
 import {
+    ArraySchema,
     Criterion,
     EntitySchema,
     Expansion,
@@ -22,11 +23,20 @@ export class AppComponent {
         const brandSchema = new EntitySchema("brand");
         brandSchema.setKey("id");
 
+        const productReviewSchema = new EntitySchema("product-review");
+
         const productSchema = new EntitySchema("product");
         productSchema.setKey("id");
         productSchema.addIndex("brandId");
         productSchema.addProperty("brand", brandSchema);
+        // [todo] should be array
+        productSchema.addProperty("reviews", new ArraySchema(productReviewSchema));
         productSchema.addRelation("brand", "brandId", "id");
+
+        productReviewSchema.setKey("id");
+        productReviewSchema.addIndex("productId");
+
+        productSchema.addRelation("reviews", "id", "productId");
 
         this.productSchema = productSchema;
         this.brandSchema = brandSchema;
@@ -51,6 +61,7 @@ export class AppComponent {
     maxPrice: string = "200";
 
     includeBrand = false;
+    includeReviews = false;
 
     async ngOnInit(): Promise<void> {
         this.productEntitySource
@@ -63,9 +74,17 @@ export class AppComponent {
         try {
             const criteria = this.uiFilterToCriteria();
             // [todo] consider allowing "false" as an expansion value
-            const expansion: Expansion<Product> = { brand: this.includeBrand || void 0 };
+            const expansion: Expansion<Product> = {
+                brand: this.includeBrand || void 0,
+                reviews: this.includeReviews || void 0,
+            };
 
             // [todo] dirty, but for now necessary
+
+            if (expansion.reviews === void 0) {
+                delete expansion.reviews;
+            }
+
             if (expansion.brand === void 0) {
                 delete expansion.brand;
             }
