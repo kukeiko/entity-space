@@ -34,10 +34,17 @@ describe("merging criteria", () => {
     merging("[1, 7]").with("[7, 10] | [20, 30]").shouldBe("[1, 10] | [20, 30]");
     merging("[1, 7] | [10, 20]").with("[7, 10] | [20, 30]").shouldBe("[1, 30]");
 
-    // nameed-criteria
+    // named-criteria
     merging("{ foo: [1, 7] }").with("{ foo: [3, 13] }").shouldBe("{ foo: [1, 13] }");
     merging("{ foo: [1, 7] }").with("{ foo: [8, 13] }").shouldBe(false);
+
     merging("{ foo: [1, 7], bar: [3, 5] }")
-        .with("{ foo: [2, 6], bar: [5, 7] }")
+        .with("{ foo: [1, 7], bar: [5, 7] }")
         .shouldBe("{ foo: [1, 7], bar: [3, 7] }");
+
+    merging("{ foo: [1, 7], bar: [3, 5] }")
+        .with("{ foo: [7, 13], bar: [3, 5] }")
+        .shouldBe("{ foo: [1, 13], bar: [3, 5] }");
+
+    merging("{ foo: [1, 7], bar: [3, 5] }").with("{ foo: [2, 6], bar: [5, 7] }").shouldBe(false);
 });

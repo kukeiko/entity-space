@@ -184,6 +184,7 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag> extend
         } else if (other instanceof NamedCriteria) {
             const mergedBag: Record<string, Criterion> = {};
             const otherBag = other.getBag();
+            let mergedOne = false;
 
             for (const key in this.bag) {
                 const myBagCriterion = this.bag[key];
@@ -203,6 +204,17 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag> extend
 
                     if (mergedResult === false) {
                         return false;
+                    }
+
+                    const isMineSubsetOfOther = myBagCriterion.reduce(otherBagCriterion) === true;
+                    const isOtherSubsetOfMine = otherBagCriterion.reduce(myBagCriterion) === true;
+
+                    if (!(isMineSubsetOfOther && isOtherSubsetOfMine)) {
+                        if (mergedOne) {
+                            return false;
+                        }
+
+                        mergedOne = true;
                     }
 
                     mergedBag[key] = mergedResult;
