@@ -34,6 +34,10 @@ describe("merging criteria", () => {
     merging("[1, 7]").with("[7, 10] | [20, 30]").shouldBe("[1, 10] | [20, 30]");
     merging("[1, 7] | [10, 20]").with("[7, 10] | [20, 30]").shouldBe("[1, 30]");
 
+    merging("{ price: [100, 200], rating: [3, 5] } | { price: [100, 300], rating: [5, 7] }")
+        .with("{ price: [0, 1000], rating: [0, 8] }")
+        .shouldBe("{ price: [0, 1000], rating: [0, 8] }");
+
     // named-criteria
     merging("{ foo: [1, 7] }").with("{ foo: [3, 13] }").shouldBe("{ foo: [1, 13] }");
     merging("{ foo: [1, 7] }").with("{ foo: [8, 13] }").shouldBe(false);
