@@ -61,10 +61,6 @@ export class OrCriteria<T extends Criterion = Criterion> extends Criteria<T> {
             }
         }
 
-        if (merged === other) {
-            return false;
-        }
-
         const items = [merged, ...unmerged];
 
         return items.length === 1 ? items[0] : new OrCriteria(items);

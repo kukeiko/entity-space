@@ -179,7 +179,11 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag> extend
     }
 
     merge(other: Criterion): false | Criterion {
-        if (other instanceof Criteria) {
+        if (other.reduce(this) === true) {
+            return other;
+        } else if (this.reduce(other) === true) {
+            return this;
+        } else if (other instanceof Criteria) {
             return other.merge(this);
         } else if (other instanceof NamedCriteria) {
             const mergedBag: Record<string, Criterion> = {};
