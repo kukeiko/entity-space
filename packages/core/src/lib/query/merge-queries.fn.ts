@@ -2,24 +2,24 @@ import { mergeQuery } from "./merge-query.fn";
 import { Query } from "./query";
 
 export function mergeQueries(...queries: Query[]): Query[] {
-    let merged: Query[] = [];
+    const [first, ...others] = [...queries];
 
-    for (const query of queries) {
+    if (first === void 0) {
+        return [];
+    }
+
+    let merged: Query[] = [first];
+
+    for (const query of others) {
         let nextMerged: Query[] = [];
 
-        if (nextMerged.length === 0) {
-            nextMerged = [query];
-            merged = nextMerged;
-            continue;
-        }
-
         for (const mergedQuery of merged) {
-            const mergedResult = mergeQuery(query, mergedQuery);
+            const mergedResult = mergeQuery(mergedQuery, query);
 
             if (mergedResult !== false) {
                 nextMerged.push(...mergedResult);
             } else {
-                nextMerged.push(query);
+                nextMerged.push(mergedQuery, query);
             }
         }
 
