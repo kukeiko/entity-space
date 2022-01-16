@@ -1,7 +1,7 @@
 {
     "extends": "@nrwl/workspace/presets/core.json",
     "npmScope": "entity-space",
-    "defaultProject": "apps-sandbox-ui",
+    "defaultProject": "examples-products-apps-products-ui",
     "affected": {
         "defaultBase": "master"
     },

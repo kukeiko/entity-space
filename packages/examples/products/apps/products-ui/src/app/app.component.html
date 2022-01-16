@@ -1,32 +1,47 @@
 <h1>Products</h1>
-<div>
-    <label>Min. Price:</label>
-    <input type="text" [(ngModel)]="minPrice" placeholder="min price" />
-    <br />
-    <label>Max. Price:</label>
-    <input type="text" [(ngModel)]="maxPrice" placeholder="max price" />
-    <br />
-    <label>Min. Rating:</label>
-    <input type="text" [(ngModel)]="minRating" placeholder="min rating" />
-    <br />
-    <label>Max. Rating:</label>
-    <input type="text" [(ngModel)]="maxRating" placeholder="max rating" />
-    <br />
-    <button (click)="search()">Search</button>
+<div class="products-columns">
+    <div class="products-filter-column">
+        <mat-form-field appearance="fill">
+            <mat-label>Min. Price:</mat-label>
+            <input matInput type="number" [(ngModel)]="minPrice" />
+        </mat-form-field>
+        <br />
+        <mat-form-field appearance="fill">
+            <mat-label>Max. Price:</mat-label>
+            <input matInput type="number" [(ngModel)]="maxPrice" />
+        </mat-form-field>
+        <br />
+
+        <mat-form-field appearance="fill">
+            <mat-label>Min. Rating:</mat-label>
+            <input matInput type="number" [(ngModel)]="minRating" />
+        </mat-form-field>
+        <br />
+
+        <mat-form-field appearance="fill">
+            <mat-label>Min. Rating:</mat-label>
+            <input matInput type="number" [(ngModel)]="maxRating" />
+        </mat-form-field>
+        <br />
+
+        <button mat-raised-button (click)="search()">Search</button>
+    </div>
+    <div class="products-list-column">
+        <h2>Queries in workspace Cache:</h2>
+        <ul>
+            <li *ngFor="let query of queriesInWorkspaceCache">
+                {{ query.criteria }}
+            </li>
+        </ul>
+        <h2>Queries issued against API:</h2>
+        <ol>
+            <li *ngFor="let query of queriesIssuedAgainstApi">
+                {{ query.criteria }}
+            </li>
+        </ol>
+        <h2>Products:</h2>
+        <ul>
+            <li *ngFor="let product of products">{{ product | json }}</li>
+        </ul>
+    </div>
 </div>
-<h2>Queries in workspace Cache:</h2>
-<ul>
-    <li *ngFor="let query of queriesInWorkspaceCache">
-        {{ query.criteria }}
-    </li>
-</ul>
-<h2>Queries issued against API:</h2>
-<ol>
-    <li *ngFor="let query of queriesIssuedAgainstApi">
-        {{ query.criteria }}
-    </li>
-</ol>
-<h2>Products:</h2>
-<ul>
-    <li *ngFor="let product of products">{{ product | json }}</li>
-</ul>
