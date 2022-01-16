@@ -1,6 +1,7 @@
 import { permutateEntries } from "@entity-space/utils";
+import { Observable, Subject } from "rxjs";
 import { Expansion } from "../expansion/public";
-import { Query, reduceQueries } from "../query/public";
+import { mergeQueries, Query, reduceQueries } from "../query/public";
 import { IEntitySchema } from "../schema/schema.interface";
 import { createCriteriaTemplateForIndex } from "./create-criteria-template-for-index.fn";
 import { Entity } from "./entity";
@@ -16,6 +17,12 @@ export class Workspace {
     private readonly sources = new Map<string, IEntitySource>();
     private readonly queryCaches = new Map<string, Query[]>();
 
+    private readonly queryCacheChanged = new Subject<Query[]>();
+
+    onQueryCacheChanged(): Observable<Query[]> {
+        return this.queryCacheChanged.asObservable();
+    }
+
     addEntities(schema: IEntitySchema, entities: Entity[]): void {
         const normalized = normalizeEntities(schema, entities);
 
@@ -28,6 +35,13 @@ export class Workspace {
         this.sources.set(schema.getId(), source);
     }
 
+    private addExecutedQuery(query: Query): void {
+        const executedQueries = this.getOrCreateQueryCache(query.entitySchema);
+        const merged = mergeQueries(...executedQueries, query);
+        this.queryCaches.set(query.entitySchema.getId(), merged);
+        this.queryCacheChanged.next(merged);
+    }
+
     private async loadUncachedIntoCache(query: Query): Promise<void> {
         const executedQueries = this.getOrCreateQueryCache(query.entitySchema);
         const reduced = reduceQueries([query], executedQueries);
@@ -35,11 +49,13 @@ export class Workspace {
 
         if (reduced === false) {
             entitiesLoadedFromSource.push(...(await this.loadFromSource(query)));
-            executedQueries.push(query);
+            this.addExecutedQuery(query);
+            // executedQueries.push(query);
         } else {
             for (const reducedQuery of reduced) {
                 entitiesLoadedFromSource.push(...(await this.loadFromSource(reducedQuery)));
-                executedQueries.push(reducedQuery);
+                this.addExecutedQuery(query);
+                // executedQueries.push(reducedQuery);
             }
         }
 

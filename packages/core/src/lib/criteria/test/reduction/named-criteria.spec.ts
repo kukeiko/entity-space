@@ -70,6 +70,11 @@ describe("reducing: named-criteria", () => {
                 "({ foo:([1, 3) | (4, 7]), bar:[100, 200] } | { foo:[3, 4], bar:([100, 150) | (175, 200]) } | { foo:[3, 4], bar:[150, 175], baz:([..., 50) | (70, ...]) })"
             );
 
+        // or-criteria does not optimize during reduction
+        reducing("{ price: [100, 300], rating: [3, 7] }")
+            .by("({ price: [100, 200], rating:[3, 5] } | { price: (200, 300], rating: [3, 5] })")
+            .shouldBe("({ price: (200, 300], rating: (5, 7] } | { price: [100, 200], rating: (5, 7] })");
+
         it("changing order of criteria properties should still result in an equivalent outcome", (): void => {
             // arrange
             const a1 = matches<FooBarBaz>({

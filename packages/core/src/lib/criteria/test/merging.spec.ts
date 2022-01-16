@@ -16,6 +16,8 @@ describe("merging criteria", () => {
     merging("[1, ...]").with("[3, 5]").shouldBe("[1, ...]");
     merging("[..., 7]").with("[3, 5]").shouldBe("[..., 7]");
     merging("[1, 3]").with("[5, 7]").shouldBe(false);
+    merging("[1, 7]").with("(7, 13]").shouldBe("[1, 13]");
+    merging("[1, 7]").with("[-7, 1)").shouldBe("[-7, 7]");
 
     // [todo] left as a reminder to myself
     xmerging("(7, ...]").with("[..., 10)").shouldBe("[..., ...]");
@@ -31,4 +33,11 @@ describe("merging criteria", () => {
     merging("[7, 10]").with("[1, 7] | [10, 20]").shouldBe("[1, 20]");
     merging("[1, 7]").with("[7, 10] | [20, 30]").shouldBe("[1, 10] | [20, 30]");
     merging("[1, 7] | [10, 20]").with("[7, 10] | [20, 30]").shouldBe("[1, 30]");
+
+    // nameed-criteria
+    merging("{ foo: [1, 7] }").with("{ foo: [3, 13] }").shouldBe("{ foo: [1, 13] }");
+    merging("{ foo: [1, 7] }").with("{ foo: [8, 13] }").shouldBe(false);
+    merging("{ foo: [1, 7], bar: [3, 5] }")
+        .with("{ foo: [2, 6], bar: [5, 7] }")
+        .shouldBe("{ foo: [1, 7], bar: [3, 7] }");
 });

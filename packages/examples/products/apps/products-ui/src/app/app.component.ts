@@ -24,6 +24,7 @@ export class AppComponent {
     productSchema: IEntitySchema;
     workspace: Workspace;
     queriesIssuedAgainstApi: Query[] = [];
+    queriesInWorkspaceCache: Query[] = [];
     products: Product[] = [];
 
     minRating: string = "3";
@@ -33,6 +34,9 @@ export class AppComponent {
 
     async ngOnInit(): Promise<void> {
         this.productEntitySource.onQueryIssued().subscribe(query => this.queriesIssuedAgainstApi.push(query));
+        this.workspace
+            .onQueryCacheChanged()
+            .subscribe(queries => (this.queriesInWorkspaceCache = queries));
     }
 
     async search(): Promise<void> {

@@ -233,6 +233,53 @@ describe("reduceQuery()", () => {
             expect((reduced as []).length).toEqual(expected.length);
             expect(reduced).toEqual(expect.arrayContaining(expected));
         });
+
+        // reduce-query does not optimize during reduction
+        it("{ price:[100,300], rating:[3,7] } reduced by ({ price:[100,200], rating:[3,5] } | { price:(200,300], rating:[3,5] }) should be ({ price: (200, 300], rating: (5, 7] } | { price: [100, 200], rating: (5, 7] })", () => {
+            // arrange
+            const a = createQuery(
+                matches({
+                    price: inRange(100, 300),
+                    rating: inRange(3, 7),
+                })
+            );
+
+            const b = createQuery(
+                or(
+                    matches({
+                        price: inRange(100, 200),
+                        rating: inRange(3, 5),
+                    }),
+                    matches({
+                        price: inRange(200, 300, [false, true]),
+                        rating: inRange(3, 5),
+                    })
+                )
+            );
+
+            const expected = [
+                createQuery(
+                    or(
+                        matches({
+                            price: inRange(200, 300, [false, true]),
+                            rating: inRange(5, 7, [false, true]),
+                        }),
+                        matches({
+                            price: inRange(100, 200),
+                            rating: inRange(5, 7, [false, true]),
+                        })
+                    )
+                ),
+            ];
+
+            // act
+            const reduced = reduceQuery(a, b);
+            console.log((reduced as any)[0].criteria.toString());
+
+            // assert
+            expect((reduced as []).length).toEqual(expected.length);
+            expect(reduced).toEqual(expect.arrayContaining(expected));
+        });
     });
 
     describe("no reduction", () => {
