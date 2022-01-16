@@ -27,16 +27,18 @@ export class AppComponent {
     queriesInWorkspaceCache: Query[] = [];
     products: Product[] = [];
 
+    displayedQueryColumns: string[] = ["criteria", "expansion"];
+
     minRating: string = "3";
     maxRating: string = "5";
     minPrice: string = "100";
     maxPrice: string = "200";
 
     async ngOnInit(): Promise<void> {
-        this.productEntitySource.onQueryIssued().subscribe(query => this.queriesIssuedAgainstApi.push(query));
-        this.workspace
-            .onQueryCacheChanged()
-            .subscribe(queries => (this.queriesInWorkspaceCache = queries));
+        this.productEntitySource
+            .onQueryIssued()
+            .subscribe(query => (this.queriesIssuedAgainstApi = [...this.queriesIssuedAgainstApi, query]));
+        this.workspace.onQueryCacheChanged().subscribe(queries => (this.queriesInWorkspaceCache = queries));
     }
 
     async search(): Promise<void> {
