@@ -40,7 +40,7 @@ export class Workspace {
     private addExecutedQuery(query: Query): void {
         const executedQueries = this.getOrCreateQueryCache(query.entitySchema);
         let merged = mergeQueries(...executedQueries, query);
-        // [todo] hacky workaround
+        // [todo] hacky workaround, see #144
         merged = mergeQueries(...merged);
         this.queryCaches.set(query.entitySchema.getId(), merged);
         this.queryCacheChanged.next(merged);
@@ -49,22 +49,20 @@ export class Workspace {
     private async loadUncachedIntoCache(query: Query): Promise<void> {
         const executedQueries = this.getOrCreateQueryCache(query.entitySchema);
         const reduced = reduceQueries([query], executedQueries);
-        const entitiesLoadedFromSource: Entity[] = [];
+        const entities: Entity[] = [];
 
         if (reduced === false) {
-            entitiesLoadedFromSource.push(...(await this.loadFromSource(query)));
+            entities.push(...(await this.loadFromSource(query)));
             this.addExecutedQuery(query);
-            // executedQueries.push(query);
         } else {
             for (const reducedQuery of reduced) {
-                entitiesLoadedFromSource.push(...(await this.loadFromSource(reducedQuery)));
+                entities.push(...(await this.loadFromSource(reducedQuery)));
                 this.addExecutedQuery(query);
-                // executedQueries.push(reducedQuery);
             }
         }
 
-        if (entitiesLoadedFromSource.length > 0) {
-            this.addEntities(query.entitySchema, entitiesLoadedFromSource);
+        if (entities.length > 0) {
+            this.addEntities(query.entitySchema, entities);
         }
     }
 
@@ -85,8 +83,6 @@ export class Workspace {
     // [todo] remove any
     // [todo] should stay async because at one point i want to make use of service-workers
     async queryAgainstCache(query: Query): Promise<any[]> {
-        // await this.loadUncachedIntoStores(query);
-
         const schema = query.entitySchema;
         const indexes = schema
             .getIndexesIncludingKey()

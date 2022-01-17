@@ -28,6 +28,7 @@ export function createCriteriaTemplateForIndex(
             }
 
             if (second !== void 0) {
+                // [todo] support more than just InNumberSet
                 (namedBagTemplate[first][0] as any).items[second] = [InNumberSetCriterion];
             }
         } else {
