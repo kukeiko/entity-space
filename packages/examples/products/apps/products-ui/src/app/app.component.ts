@@ -24,18 +24,15 @@ export class AppComponent {
         brandSchema.setKey("id");
 
         const productReviewSchema = new EntitySchema("product-review");
+        productReviewSchema.setKey("id");
+        productReviewSchema.addIndex("productId");
 
         const productSchema = new EntitySchema("product");
         productSchema.setKey("id");
         productSchema.addIndex("brandId");
         productSchema.addProperty("brand", brandSchema);
-        // [todo] should be array
-        productSchema.addProperty("reviews", new ArraySchema(productReviewSchema));
         productSchema.addRelation("brand", "brandId", "id");
-
-        productReviewSchema.setKey("id");
-        productReviewSchema.addIndex("productId");
-
+        productSchema.addProperty("reviews", new ArraySchema(productReviewSchema));
         productSchema.addRelation("reviews", "id", "productId");
 
         this.productSchema = productSchema;
