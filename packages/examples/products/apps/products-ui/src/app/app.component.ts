@@ -44,7 +44,7 @@ export class AppComponent {
         this.gateway = entitySourceGateway;
 
         const workspace = new Workspace();
-        workspace.addEntitySource(this.productSchema, this.productEntitySource);
+        workspace.setSource(entitySourceGateway);
         this.workspace = workspace;
 
         productEntitySource.schema_TMP = productSchema;
@@ -98,7 +98,11 @@ export class AppComponent {
                 criteria,
                 expansion,
             });
-            
+
+            if (result === false) {
+                throw new Error(`query result from workspace unexpectedly is "false"`);
+            }
+
             // [todo] get rid of cast
             this.products = result as Product[];
         } catch (error) {

@@ -17,7 +17,6 @@ import { QueriedEntities } from "./queried-entities";
 export class Workspace {
     private source?: IEntitySource;
     private readonly stores = new Map<string, EntityStore>();
-    private readonly sources = new Map<string, IEntitySource>();
     private readonly queryCaches = new Map<string, Query[]>();
     private readonly queryCacheChanged = new Subject<Query[]>();
 
@@ -32,11 +31,20 @@ export class Workspace {
         for (const schema of normalized.getSchemas()) {
             const normalizedEntities = normalized.get(schema);
             this.getOrCreateStore(schema).add(normalizedEntities);
+
+            // [todo] can not use until we implemented invert() @ named-criteria
+            // if (normalizedEntities.length > 0) {
+            //     const indexQueries = createQueriesFromEntities(schema, normalizedEntities);
+
+            //     for (const indexQuery of indexQueries) {
+            //         this.addExecutedQuery(indexQuery);
+            //     }
+            // }
         }
     }
 
-    addEntitySource(schema: IEntitySchema, source: IEntitySource): void {
-        this.sources.set(schema.getId(), source);
+    setSource(source: IEntitySource): void {
+        this.source = source;
     }
 
     private addExecutedQuery(query: Query): void {
@@ -76,8 +84,11 @@ export class Workspace {
     }
 
     private async loadFromSource(query: Query): Promise<false | QueriedEntities> {
-        const source = this.source ?? this.getSource(query.entitySchema);
-        const result = await source.query(query);
+        if (this.source === void 0) {
+            return false;
+        }
+
+        const result = await this.source.query(query);
 
         if (result !== false) {
             console.log("[effective-query]", result.getQuery().criteria.toString());
@@ -174,16 +185,6 @@ export class Workspace {
         }
 
         return store;
-    }
-
-    private getSource(schema: IEntitySchema): IEntitySource {
-        const source = this.sources.get(schema.getId());
-
-        if (source === void 0) {
-            throw new Error(`no source for entity-schema ${schema.getId()} found`);
-        }
-
-        return source;
     }
 
     private getOrCreateQueryCache(schema: IEntitySchema): Query[] {
