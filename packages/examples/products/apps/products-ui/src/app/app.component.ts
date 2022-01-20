@@ -12,6 +12,7 @@ import {
     Workspace,
 } from "@entity-space/core";
 import { Product } from "@entity-space/examples/products/libs/products-model";
+import { BrandEntitySource } from "./entity-sources/brand.entity-source";
 import { ProductEntitySource } from "./entity-sources/product.entity-source";
 
 @Component({
@@ -20,7 +21,10 @@ import { ProductEntitySource } from "./entity-sources/product.entity-source";
     styleUrls: ["./app.component.scss"],
 })
 export class AppComponent {
-    constructor(private readonly productEntitySource: ProductEntitySource) {
+    constructor(
+        private readonly productEntitySource: ProductEntitySource,
+        private readonly brandEntitySource: BrandEntitySource
+    ) {
         const brandSchema = new EntitySchema("brand");
         brandSchema.setKey("id");
 
@@ -41,6 +45,7 @@ export class AppComponent {
 
         const entitySourceGateway = new EntitySourceGateway();
         entitySourceGateway.addSource(this.productSchema, productEntitySource);
+        entitySourceGateway.addSource(this.brandSchema, brandEntitySource);
         this.gateway = entitySourceGateway;
 
         const workspace = new Workspace();
@@ -48,6 +53,7 @@ export class AppComponent {
         this.workspace = workspace;
 
         productEntitySource.schema_TMP = productSchema;
+        brandEntitySource.schema_TMP = brandSchema;
     }
 
     gateway: EntitySourceGateway;
@@ -70,6 +76,9 @@ export class AppComponent {
 
     async ngOnInit(): Promise<void> {
         this.productEntitySource
+            .onQueryIssued()
+            .subscribe(query => (this.queriesIssuedAgainstApi = [...this.queriesIssuedAgainstApi, query]));
+        this.brandEntitySource
             .onQueryIssued()
             .subscribe(query => (this.queriesIssuedAgainstApi = [...this.queriesIssuedAgainstApi, query]));
         this.workspace.onQueryCacheChanged().subscribe(queries => (this.queriesInWorkspaceCache = queries));

@@ -8,11 +8,11 @@ import {
     InNumberRangeCriterion,
     NamedCriteriaTemplate,
     or,
+    QueriedEntities,
     Query,
     reduceExpansion,
 } from "@entity-space/core";
 import { Product, ProductFilter } from "@entity-space/examples/products/libs/products-model";
-import { QueriedEntities } from "packages/core/src/lib/entity/queried-entities";
 import { firstValueFrom, Observable, Subject } from "rxjs";
 
 @Injectable()
@@ -40,7 +40,7 @@ export class ProductEntitySource implements IEntitySource {
         const missingExpansion = reduceExpansion(query.expansion, supportedExpansion);
         const effectiveExpansion = missingExpansion === false ? {} : reduceExpansion(query.expansion, missingExpansion);
 
-        console.log("[missing-expansion]", missingExpansion);
+        console.log("[missing-expansion]", missingExpansion || query.expansion);
         console.log("[effective-expansion]", effectiveExpansion);
 
         const responses = await Promise.all(
@@ -54,7 +54,7 @@ export class ProductEntitySource implements IEntitySource {
         const effectiveQuery: Query = {
             entitySchema: query.entitySchema,
             criteria: effectiveCriterion,
-            expansion: query.expansion,
+            expansion: effectiveExpansion || {},
         };
 
         return new QueriedEntities(effectiveQuery, entities);

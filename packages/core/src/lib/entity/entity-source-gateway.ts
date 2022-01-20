@@ -1,4 +1,4 @@
-import { Expansion, reduceExpansion } from "../expansion/public";
+import { reduceExpansion } from "../expansion/public";
 import { Query } from "../query/query";
 import { IEntitySchema } from "../schema/public";
 import { IEntitySource } from "./entity-source.interface";
@@ -29,9 +29,9 @@ export class EntitySourceGateway implements IEntitySource {
         const effectiveQuery = result.getQuery();
         // [todo] we could add this to the QueriedEntities class, which would then just need the original query as a ctor arg
         const missingExpansion = reduceExpansion(query.expansion, effectiveQuery.expansion) || query.expansion;
-        let successfulExpansion: Expansion = {};
+        let successfulExpansion = effectiveQuery.expansion;
 
-        if (Object.keys(missingExpansion).length > 0) {
+        if (Object.keys(missingExpansion).length > 0 && entities.length > 0) {
             const result = await expandEntities(query.entitySchema, missingExpansion, entities, this);
 
             if (result !== false) {

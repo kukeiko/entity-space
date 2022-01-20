@@ -9,6 +9,7 @@ import { MatTableModule } from "@angular/material/table";
 import { BrowserModule } from "@angular/platform-browser";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import { AppComponent } from "./app.component";
+import { BrandEntitySource } from "./entity-sources/brand.entity-source";
 import { ProductEntitySource } from "./entity-sources/product.entity-source";
 
 @NgModule({
@@ -24,7 +25,7 @@ import { ProductEntitySource } from "./entity-sources/product.entity-source";
         MatInputModule,
         MatTableModule,
     ],
-    providers: [ProductEntitySource],
+    providers: [ProductEntitySource, BrandEntitySource],
     bootstrap: [AppComponent],
 })
 export class AppModule {}
