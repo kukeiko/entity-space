@@ -1,16 +1,16 @@
 import { Expansion } from "../expansion/public";
-import { Query } from "../query/public";
 import { IEntitySchemaRelation } from "../schema/public";
 import { createCriteriaForIndex } from "./create-criteria-for-index.fn";
 import { Entity } from "./entity";
 import { EntityReader } from "./entity-reader";
+import { IEntitySource } from "./entity-source.interface";
 
 export async function expandRelation(
     entities: Entity[],
     relation: IEntitySchemaRelation,
-    query: (query: Query) => Promise<Entity[]>,
+    source: IEntitySource,
     expansion?: Expansion
-): Promise<void> {
+): Promise<false | Expansion> {
     const entityReader = new EntityReader();
     const relatedSchema = relation.getRelatedEntitySchema();
     // [todo] what about dictionaries?
@@ -18,7 +18,13 @@ export async function expandRelation(
     const fromIndex = relation.getFromIndex();
     const toIndex = relation.getToIndex();
     const criteria = createCriteriaForIndex(toIndex.getPath(), entityReader.readIndex(fromIndex, entities));
-    const referencedItems = await query({ criteria, expansion: expansion ?? {}, entitySchema: relatedSchema });
+    const result = await source.query({ criteria, expansion: expansion ?? {}, entitySchema: relatedSchema });
+
+    if (result === false) {
+        return false;
+    }
+
+    const referencedItems = result.getEntities();
 
     for (const entity of entities) {
         const indexValue = entityReader.readIndexFromOne(fromIndex, entity);
@@ -32,4 +38,6 @@ export async function expandRelation(
             entity[relation.getPropertyName()] = matchingReferencedItems[0] ?? null;
         }
     }
+
+    return result.getQuery().expansion;
 }

@@ -3,10 +3,8 @@ import { Observable, Subject } from "rxjs";
 import { NamedCriteria } from "../criteria/public";
 import { mergeQueries, Query, reduceQueries } from "../query/public";
 import { IEntitySchema } from "../schema/schema.interface";
-import { createCriteriaForIndex } from "./create-criteria-for-index.fn";
 import { createCriteriaTemplateForIndex } from "./create-criteria-template-for-index.fn";
 import { Entity } from "./entity";
-import { EntityReader } from "./entity-reader";
 import { IEntitySource } from "./entity-source.interface";
 import { EntityStore } from "./entity-store";
 import { expandEntities } from "./expand-entities.fn";
@@ -15,7 +13,9 @@ import { namedCriteriaToKeyPaths } from "./named-criteria-to-key-path.fn";
 import { normalizeEntities } from "./normalize-entities.fn";
 import { QueriedEntities } from "./queried-entities";
 
+// [todo] should implement IEntitySource
 export class Workspace {
+    private source?: IEntitySource;
     private readonly stores = new Map<string, EntityStore>();
     private readonly sources = new Map<string, IEntitySource>();
     private readonly queryCaches = new Map<string, Query[]>();
@@ -57,17 +57,17 @@ export class Workspace {
         const executedQueries = this.getOrCreateQueryCache(query.entitySchema);
         const reduced = reduceQueries([query], executedQueries);
         const entities: Entity[] = [];
+        const queriesAgainstSource = reduced === false ? [query] : reduced;
 
-        if (reduced === false) {
-            const result = await this.loadFromSource(query);
+        for (const queryAgainstSource of queriesAgainstSource) {
+            const result = await this.loadFromSource(queryAgainstSource);
+
+            if (result === false) {
+                continue;
+            }
+
             entities.push(...result.getEntities());
             this.addExecutedQuery(query);
-        } else {
-            for (const reducedQuery of reduced) {
-                const result = await this.loadFromSource(reducedQuery);
-                entities.push(...result.getEntities());
-                this.addExecutedQuery(query);
-            }
         }
 
         if (entities.length > 0) {
@@ -75,16 +75,19 @@ export class Workspace {
         }
     }
 
-    private async loadFromSource(query: Query): Promise<QueriedEntities> {
-        const source = this.getSource(query.entitySchema);
+    private async loadFromSource(query: Query): Promise<false | QueriedEntities> {
+        const source = this.source ?? this.getSource(query.entitySchema);
         const result = await source.query(query);
 
-        console.log("[effective-query]", result.getQuery().criteria.toString());
+        if (result !== false) {
+            console.log("[effective-query]", result.getQuery().criteria.toString());
+        }
+
         return result;
     }
 
     // [todo] remove any
-    async query(query: Query): Promise<any[]> {
+    async query(query: Query): Promise<false | Entity[]> {
         await this.loadUncachedIntoCache(query);
 
         return this.queryAgainstCache(query);
@@ -117,7 +120,20 @@ export class Workspace {
 
         if (Object.keys(query.expansion).length > 0) {
             entities = cloneJson(entities); // [todo] dirty to do it here?
-            expandEntities(schema, query.expansion, entities, q => this.queryAgainstCache(q));
+
+            const self = this;
+
+            // [todo] hackity-hack. need instead an entity-source that always only goes against cache i guess?
+            // that would make workspace class a lot smaller maybe.
+            const expansionResult = await expandEntities(schema, query.expansion, entities, {
+                async query(q: Query) {
+                    const result = await self.queryAgainstCache(q);
+
+                    return new QueriedEntities(q, result);
+                },
+            });
+
+            console.log("[expansion-result]", expansionResult);
         }
 
         return query.criteria.filter(entities);

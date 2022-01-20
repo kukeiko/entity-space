@@ -3,6 +3,7 @@ import { Injectable } from "@angular/core";
 import {
     Criterion,
     Expansion,
+    IEntitySchema,
     IEntitySource,
     InNumberRangeCriterion,
     NamedCriteriaTemplate,
@@ -20,11 +21,18 @@ export class ProductEntitySource implements IEntitySource {
 
     private queryIssued = new Subject<Query>();
 
+    // [todo] workaround that needs to be resolved at some time
+    schema_TMP!: IEntitySchema;
+
     onQueryIssued(): Observable<Query> {
         return this.queryIssued.asObservable();
     }
 
-    async query(query: Query): Promise<QueriedEntities> {
+    async query(query: Query): Promise<false | QueriedEntities> {
+        if (query.entitySchema.getId() !== this.schema_TMP.getId()) {
+            return false;
+        }
+
         this.queryIssued.next(query);
         const [productFilters, effectiveCriterion] = this.mapCriteriaToProductFilter(query.criteria);
         const expand = query.expansion;

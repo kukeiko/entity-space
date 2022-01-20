@@ -3,6 +3,7 @@ import {
     ArraySchema,
     Criterion,
     EntitySchema,
+    EntitySourceGateway,
     Expansion,
     IEntitySchema,
     inRange,
@@ -38,11 +39,18 @@ export class AppComponent {
         this.productSchema = productSchema;
         this.brandSchema = brandSchema;
 
+        const entitySourceGateway = new EntitySourceGateway();
+        entitySourceGateway.addSource(this.productSchema, productEntitySource);
+        this.gateway = entitySourceGateway;
+
         const workspace = new Workspace();
         workspace.addEntitySource(this.productSchema, this.productEntitySource);
         this.workspace = workspace;
+
+        productEntitySource.schema_TMP = productSchema;
     }
 
+    gateway: EntitySourceGateway;
     productSchema: IEntitySchema;
     brandSchema: IEntitySchema;
     workspace: Workspace;
@@ -50,7 +58,7 @@ export class AppComponent {
     queriesInWorkspaceCache: Query[] = [];
     products: Product[] = [];
 
-    displayedQueryColumns: string[] = ["criteria", "expansion"];
+    displayedQueryColumns: string[] = ["schema", "criteria", "expansion"];
 
     minRating: string = "3";
     maxRating: string = "5";
@@ -77,7 +85,6 @@ export class AppComponent {
             };
 
             // [todo] dirty, but for now necessary
-
             if (expansion.reviews === void 0) {
                 delete expansion.reviews;
             }
@@ -86,14 +93,24 @@ export class AppComponent {
                 delete expansion.brand;
             }
 
-            this.products = await this.workspace.query({
+            const result = await this.workspace.query({
                 entitySchema: this.productSchema,
                 criteria,
                 expansion,
             });
+            
+            // [todo] get rid of cast
+            this.products = result as Product[];
         } catch (error) {
             alert((error as any).message ?? error);
         }
+    }
+
+    clear(): void {
+        this.queriesInWorkspaceCache = [];
+        this.queriesIssuedAgainstApi = [];
+        this.products = [];
+        this.workspace.clearCache();
     }
 
     uiFilterToCriteria(): Criterion {

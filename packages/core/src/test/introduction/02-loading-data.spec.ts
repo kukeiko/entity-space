@@ -63,50 +63,50 @@ async function loadFromApi(query: Query): Promise<Product[]> {
 }
 
 describe("how do we actually load data?", () => {
-    it("simple resolve of a query", async () => {
-        const productSchema = new EntitySchema("product");
-        productSchema.setKey("id");
+    xit("simple resolve of a query", async () => {
+        // const productSchema = new EntitySchema("product");
+        // productSchema.setKey("id");
 
-        // we want all products priced between 100 and 200 with a rating of 3 to 5
-        const price_100_to_200_rating_3_to_5: Query = {
-            entitySchema: productSchema,
-            criteria: matches<Product>({
-                price: inRange(100, 200),
-                rating: inRange(3, 5),
-            }),
-            expansion: {},
-        };
+        // // we want all products priced between 100 and 200 with a rating of 3 to 5
+        // const price_100_to_200_rating_3_to_5: Query = {
+        //     entitySchema: productSchema,
+        //     criteria: matches<Product>({
+        //         price: inRange(100, 200),
+        //         rating: inRange(3, 5),
+        //     }),
+        //     expansion: {},
+        // };
 
-        const productSource: IEntitySource = {
-            async query(query: Query): Promise<QueriedEntities> {
-                const products = await loadFromApi(query);
+        // const productSource: IEntitySource = {
+        //     async query(query: Query): Promise<QueriedEntities> {
+        //         const products = await loadFromApi(query);
 
-                // [todo] should actually return query that was effectively used (i.e. what API supports),
-                // and not the one that was passed in
-                return new QueriedEntities(query, products);
-            },
-        };
+        //         // [todo] should actually return query that was effectively used (i.e. what API supports),
+        //         // and not the one that was passed in
+        //         return new QueriedEntities(query, products);
+        //     },
+        // };
 
-        const workspace = new Workspace();
-        workspace.addEntitySource(productSchema, productSource);
+        // const workspace = new Workspace();
+        // workspace.addEntitySource(productSchema, productSource);
 
-        const products = await workspace.query(price_100_to_200_rating_3_to_5);
-        console.log("[products]:", products);
+        // const products = await workspace.query(price_100_to_200_rating_3_to_5);
+        // console.log("[products]:", products);
 
-        const price_100_to_300_rating_2_to_5: Query = {
-            entitySchema: productSchema,
-            criteria: or([
-                matches<Product>({
-                    price: inRange(100, 300),
-                    rating: inRange(2, 5),
-                }),
-            ]),
-            expansion: {},
-        };
+        // const price_100_to_300_rating_2_to_5: Query = {
+        //     entitySchema: productSchema,
+        //     criteria: or([
+        //         matches<Product>({
+        //             price: inRange(100, 300),
+        //             rating: inRange(2, 5),
+        //         }),
+        //     ]),
+        //     expansion: {},
+        // };
 
-        const moreProducts = await workspace.query(price_100_to_300_rating_2_to_5);
+        // const moreProducts = await workspace.query(price_100_to_300_rating_2_to_5);
 
-        // [todo] returns duplicate results, need to fix what happens when adding same item twice to workspace
-        console.log("[more products]:", moreProducts);
+        // // [todo] returns duplicate results, need to fix what happens when adding same item twice to workspace
+        // console.log("[more products]:", moreProducts);
     });
 });
