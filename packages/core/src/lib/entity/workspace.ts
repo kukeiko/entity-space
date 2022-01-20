@@ -1,22 +1,24 @@
 import { cloneJson, permutateEntries } from "@entity-space/utils";
 import { Observable, Subject } from "rxjs";
-import { Expansion } from "../expansion/public";
+import { NamedCriteria } from "../criteria/public";
 import { mergeQueries, Query, reduceQueries } from "../query/public";
 import { IEntitySchema } from "../schema/schema.interface";
+import { createCriteriaForIndex } from "./create-criteria-for-index.fn";
 import { createCriteriaTemplateForIndex } from "./create-criteria-template-for-index.fn";
 import { Entity } from "./entity";
+import { EntityReader } from "./entity-reader";
 import { IEntitySource } from "./entity-source.interface";
 import { EntityStore } from "./entity-store";
 import { expandEntities } from "./expand-entities.fn";
 import { flattenNamedCriteria } from "./flatten-named-criteria.fn";
 import { namedCriteriaToKeyPaths } from "./named-criteria-to-key-path.fn";
 import { normalizeEntities } from "./normalize-entities.fn";
+import { QueriedEntities } from "./queried-entities";
 
 export class Workspace {
     private readonly stores = new Map<string, EntityStore>();
     private readonly sources = new Map<string, IEntitySource>();
     private readonly queryCaches = new Map<string, Query[]>();
-
     private readonly queryCacheChanged = new Subject<Query[]>();
 
     onQueryCacheChanged(): Observable<Query[]> {
@@ -24,12 +26,12 @@ export class Workspace {
     }
 
     addEntities(schema: IEntitySchema, entities: Entity[]): void {
-        // [todo] dirty!
         entities = cloneJson(entities);
         const normalized = normalizeEntities(schema, entities);
 
         for (const schema of normalized.getSchemas()) {
-            this.getOrCreateStore(schema).add(normalized.get(schema));
+            const normalizedEntities = normalized.get(schema);
+            this.getOrCreateStore(schema).add(normalizedEntities);
         }
     }
 
@@ -40,10 +42,15 @@ export class Workspace {
     private addExecutedQuery(query: Query): void {
         const executedQueries = this.getOrCreateQueryCache(query.entitySchema);
         let merged = mergeQueries(query, ...executedQueries);
-        // [todo] hacky workaround, see #144
-        merged = mergeQueries(...merged);
         this.queryCaches.set(query.entitySchema.getId(), merged);
-        this.queryCacheChanged.next(merged);
+
+        const allQueriesInCache: Query[] = [];
+
+        for (const [_, queries] of this.queryCaches) {
+            allQueriesInCache.push(...queries);
+        }
+
+        this.queryCacheChanged.next(allQueriesInCache);
     }
 
     private async loadUncachedIntoCache(query: Query): Promise<void> {
@@ -52,11 +59,13 @@ export class Workspace {
         const entities: Entity[] = [];
 
         if (reduced === false) {
-            entities.push(...(await this.loadFromSource(query)));
+            const result = await this.loadFromSource(query);
+            entities.push(...result.getEntities());
             this.addExecutedQuery(query);
         } else {
             for (const reducedQuery of reduced) {
-                entities.push(...(await this.loadFromSource(reducedQuery)));
+                const result = await this.loadFromSource(reducedQuery);
+                entities.push(...result.getEntities());
                 this.addExecutedQuery(query);
             }
         }
@@ -66,11 +75,12 @@ export class Workspace {
         }
     }
 
-    private async loadFromSource(query: Query): Promise<Entity[]> {
+    private async loadFromSource(query: Query): Promise<QueriedEntities> {
         const source = this.getSource(query.entitySchema);
-        const entities = await source.query(query);
+        const result = await source.query(query);
 
-        return entities;
+        console.log("[effective-query]", result.getQuery().criteria.toString());
+        return result;
     }
 
     // [todo] remove any
@@ -99,71 +109,44 @@ export class Workspace {
         if (remappedCriteria === false) {
             entities = store.getAll();
         } else {
-            // load items from store using index
             for (const remappedCriterion of remappedCriteria) {
-                const bagKeyPaths = namedCriteriaToKeyPaths(remappedCriterion);
-                const index = store.getIndexMatchingKeyPaths(bagKeyPaths);
-                const bagWithPrimitives = flattenNamedCriteria(remappedCriterion);
-                const permutatedBags = permutateEntries(bagWithPrimitives);
-                const indexValues: (number | string)[][] = [];
-
-                for (const permutatedBag of permutatedBags) {
-                    const indexValue: (number | string)[] = [];
-
-                    for (const key of index.getPath()) {
-                        indexValue.push(permutatedBag[key]);
-                    }
-
-                    indexValues.push(indexValue);
-                }
-
-                entities = [...entities, ...store.getByIndexOrKey(index.getName(), indexValues)];
+                // [todo] we probably need to check for duplicates?
+                entities.push(...this.readFromStoreUsingIndexCriteria(store, remappedCriterion));
             }
         }
 
         if (Object.keys(query.expansion).length > 0) {
-            entities = cloneJson(entities); // [todo] dirty to do it here
-            this.expand(schema, query.expansion, entities);
+            entities = cloneJson(entities); // [todo] dirty to do it here?
+            expandEntities(schema, query.expansion, entities, q => this.queryAgainstCache(q));
         }
 
         return query.criteria.filter(entities);
     }
 
-    expand(schema: IEntitySchema, expansion: Expansion, entities: Entity[]): void {
-        for (const propertyKey in expansion) {
-            const expansionValue = expansion[propertyKey];
+    private readFromStoreUsingIndexCriteria(store: EntityStore, indexCriteria: NamedCriteria): Entity[] {
+        const bagKeyPaths = namedCriteriaToKeyPaths(indexCriteria);
+        const index = store.getIndexMatchingKeyPaths(bagKeyPaths);
+        const bagWithPrimitives = flattenNamedCriteria(indexCriteria);
+        const permutatedBags = permutateEntries(bagWithPrimitives);
+        const indexValues: (number | string)[][] = [];
 
-            if (expansionValue === void 0) {
-                continue;
+        for (const permutatedBag of permutatedBags) {
+            const indexValue: (number | string)[] = [];
+
+            for (const key of index.getPath()) {
+                indexValue.push(permutatedBag[key]);
             }
 
-            const relation = schema.findRelation(propertyKey);
-
-            if (relation !== void 0) {
-                expandEntities(
-                    entities,
-                    relation,
-                    q => this.queryAgainstCache(q),
-                    expansionValue === true ? void 0 : expansionValue
-                );
-            } else if (expansionValue !== true) {
-                const property = schema.getProperty(propertyKey);
-                const referencedItems: Entity[] = [];
-
-                for (const entity of entities) {
-                    const reference = entity[propertyKey];
-
-                    if (Array.isArray(reference)) {
-                        referencedItems.push(...reference);
-                    } else {
-                        referencedItems.push(reference);
-                    }
-                }
-
-                const entitySchema = property.getUnboxedEntitySchema();
-                this.expand(entitySchema, expansionValue, referencedItems);
-            }
+            indexValues.push(indexValue);
         }
+
+        return store.getByIndexOrKey(index.getName(), indexValues);
+    }
+
+    clearCache(): void {
+        this.queryCaches.clear();
+        this.stores.clear();
+        this.queryCacheChanged.next([]);
     }
 
     private getOrCreateStore(schema: IEntitySchema): EntityStore {

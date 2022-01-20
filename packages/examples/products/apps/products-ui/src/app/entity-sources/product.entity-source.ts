@@ -2,13 +2,16 @@ import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import {
     Criterion,
-    Entity,
+    Expansion,
     IEntitySource,
     InNumberRangeCriterion,
     NamedCriteriaTemplate,
+    or,
     Query,
+    reduceExpansion,
 } from "@entity-space/core";
 import { Product, ProductFilter } from "@entity-space/examples/products/libs/products-model";
+import { QueriedEntities } from "packages/core/src/lib/entity/queried-entities";
 import { firstValueFrom, Observable, Subject } from "rxjs";
 
 @Injectable()
@@ -21,10 +24,16 @@ export class ProductEntitySource implements IEntitySource {
         return this.queryIssued.asObservable();
     }
 
-    async query(query: Query): Promise<Entity[]> {
+    async query(query: Query): Promise<QueriedEntities> {
         this.queryIssued.next(query);
-        const productFilters = this.mapCriteriaToProductFilter(query.criteria);
+        const [productFilters, effectiveCriterion] = this.mapCriteriaToProductFilter(query.criteria);
         const expand = query.expansion;
+        const supportedExpansion: Expansion<Product> = { reviews: true };
+        const missingExpansion = reduceExpansion(query.expansion, supportedExpansion);
+        const effectiveExpansion = missingExpansion === false ? {} : reduceExpansion(query.expansion, missingExpansion);
+
+        console.log("[missing-expansion]", missingExpansion);
+        console.log("[effective-expansion]", effectiveExpansion);
 
         const responses = await Promise.all(
             productFilters.map(filter =>
@@ -32,12 +41,18 @@ export class ProductEntitySource implements IEntitySource {
             )
         );
 
-        const flattenedResponses = responses.reduce((acc, value) => [...acc, ...value], []);
+        const entities = responses.reduce((acc, value) => [...acc, ...value], []);
 
-        return flattenedResponses;
+        const effectiveQuery: Query = {
+            entitySchema: query.entitySchema,
+            criteria: effectiveCriterion,
+            expansion: query.expansion,
+        };
+
+        return new QueriedEntities(effectiveQuery, entities);
     }
 
-    private mapCriteriaToProductFilter(productCriteria: Criterion): ProductFilter[] {
+    private mapCriteriaToProductFilter(productCriteria: Criterion): [ProductFilter[], Criterion] {
         const template = new NamedCriteriaTemplate({
             price: [InNumberRangeCriterion],
             rating: [InNumberRangeCriterion],
@@ -68,6 +83,6 @@ export class ProductEntitySource implements IEntitySource {
             filters.push(filter);
         }
 
-        return filters;
+        return [filters, or(remapped)];
     }
 }

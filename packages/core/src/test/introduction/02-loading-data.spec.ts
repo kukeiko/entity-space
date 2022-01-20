@@ -8,6 +8,7 @@ import {
     Query,
 } from "@entity-space/core";
 import { IEntitySource } from "../../lib/entity/entity-source.interface";
+import { QueriedEntities } from "../../lib/entity/queried-entities";
 import { Workspace } from "../../lib/entity/workspace";
 import { EntitySchema } from "../../lib/schema/entity-schema";
 import { Product, ProductFilter } from "./model";
@@ -77,10 +78,12 @@ describe("how do we actually load data?", () => {
         };
 
         const productSource: IEntitySource = {
-            async query(query: Query): Promise<Product[]> {
+            async query(query: Query): Promise<QueriedEntities> {
                 const products = await loadFromApi(query);
 
-                return products;
+                // [todo] should actually return query that was effectively used (i.e. what API supports),
+                // and not the one that was passed in
+                return new QueriedEntities(query, products);
             },
         };
 
