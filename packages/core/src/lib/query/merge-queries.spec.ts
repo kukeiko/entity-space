@@ -98,7 +98,7 @@ describe("mergeQueries()", () => {
     });
 
     // [todo] excluded until #144 is done. as a workaround, workspace.ts merges twice.
-    xit(`marging [
+    it(`merging [
             { price: [100, 200], rating: [3, 5] } / { foo },
             { price: [100, 200], rating: [3, 8] } / { },
             { price: [100, 200], rating: [3, 8] } / { foo }

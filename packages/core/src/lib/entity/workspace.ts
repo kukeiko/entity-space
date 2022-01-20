@@ -39,7 +39,7 @@ export class Workspace {
 
     private addExecutedQuery(query: Query): void {
         const executedQueries = this.getOrCreateQueryCache(query.entitySchema);
-        let merged = mergeQueries(...executedQueries, query);
+        let merged = mergeQueries(query, ...executedQueries);
         // [todo] hacky workaround, see #144
         merged = mergeQueries(...merged);
         this.queryCaches.set(query.entitySchema.getId(), merged);
