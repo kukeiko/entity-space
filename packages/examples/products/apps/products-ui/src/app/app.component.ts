@@ -12,6 +12,7 @@ import {
     Workspace,
 } from "@entity-space/core";
 import { Product } from "@entity-space/examples/products/libs/products-model";
+import { merge } from "rxjs";
 import { BrandEntitySource } from "./entity-sources/brand.entity-source";
 import { ProductEntitySource } from "./entity-sources/product.entity-source";
 
@@ -75,12 +76,10 @@ export class AppComponent {
     includeReviews = false;
 
     async ngOnInit(): Promise<void> {
-        this.productEntitySource
-            .onQueryIssued()
-            .subscribe(query => (this.queriesIssuedAgainstApi = [...this.queriesIssuedAgainstApi, query]));
-        this.brandEntitySource
-            .onQueryIssued()
-            .subscribe(query => (this.queriesIssuedAgainstApi = [...this.queriesIssuedAgainstApi, query]));
+        merge(this.productEntitySource.onQueryIssued(), this.brandEntitySource.onQueryIssued()).subscribe(
+            query => (this.queriesIssuedAgainstApi = [...this.queriesIssuedAgainstApi, query])
+        );
+
         this.workspace.onQueryCacheChanged().subscribe(queries => (this.queriesInWorkspaceCache = queries));
     }
 
@@ -113,7 +112,7 @@ export class AppComponent {
             }
 
             // [todo] get rid of cast
-            this.products = result as Product[];
+            this.products = result.getEntities() as Product[];
         } catch (error) {
             alert((error as any).message ?? error);
         }
@@ -123,7 +122,7 @@ export class AppComponent {
         this.queriesInWorkspaceCache = [];
         this.queriesIssuedAgainstApi = [];
         this.products = [];
-        this.workspace.clearCache();
+        this.workspace.clear();
     }
 
     uiFilterToCriteria(): Criterion {
