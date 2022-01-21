@@ -21,7 +21,7 @@ export class ProductEntitySource implements IEntitySource {
 
     private queryIssued = new Subject<Query>();
 
-    // [todo] workaround that needs to be resolved at some time
+    // [todo] workaround that needs to be resolved at some point
     schema_TMP!: IEntitySchema;
 
     onQueryIssued(): Observable<Query> {
@@ -35,7 +35,6 @@ export class ProductEntitySource implements IEntitySource {
 
         this.queryIssued.next(query);
         const [productFilters, effectiveCriterion] = this.mapCriteriaToProductFilter(query.criteria);
-        const expand = query.expansion;
         const supportedExpansion: Expansion<Product> = { reviews: true };
         const missingExpansion = reduceExpansion(query.expansion, supportedExpansion);
         const effectiveExpansion = missingExpansion === false ? {} : reduceExpansion(query.expansion, missingExpansion);
@@ -45,7 +44,9 @@ export class ProductEntitySource implements IEntitySource {
 
         const responses = await Promise.all(
             productFilters.map(filter =>
-                firstValueFrom(this.http.post<Product[]>("api/products/search", { filter, expand }))
+                firstValueFrom(
+                    this.http.post<Product[]>("api/products/search", { filter, expand: effectiveExpansion || void 0 })
+                )
             )
         );
 

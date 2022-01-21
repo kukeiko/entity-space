@@ -12,6 +12,15 @@ export async function expandEntities(
 ): Promise<false | Expansion> {
     const tasks: Promise<false | Expansion>[] = [];
 
+    // [todo] dirty
+    const isExpanded = (propertyKey: string): boolean => {
+        const first = entities[0];
+
+        if (first === void 0) return false;
+
+        return first[propertyKey] !== void 0;
+    };
+
     for (const propertyKey in expansion) {
         const expansionValue = expansion[propertyKey];
 
@@ -21,7 +30,7 @@ export async function expandEntities(
 
         const relation = schema.findRelation(propertyKey);
 
-        if (relation !== void 0) {
+        if (relation !== void 0 && !isExpanded(relation.getPropertyName())) {
             const task = (async (propertyKey: string) => {
                 const result = await expandRelation(
                     entities,

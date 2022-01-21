@@ -15,6 +15,7 @@ import { Product } from "@entity-space/examples/products/libs/products-model";
 import { merge } from "rxjs";
 import { BrandEntitySource } from "./entity-sources/brand.entity-source";
 import { ProductEntitySource } from "./entity-sources/product.entity-source";
+import { UserEntitySource } from "./entity-sources/user.entity-source";
 
 @Component({
     selector: "entity-space-root",
@@ -24,10 +25,24 @@ import { ProductEntitySource } from "./entity-sources/product.entity-source";
 export class AppComponent {
     constructor(
         private readonly productEntitySource: ProductEntitySource,
-        private readonly brandEntitySource: BrandEntitySource
+        private readonly brandEntitySource: BrandEntitySource,
+        private readonly userEntitySource: UserEntitySource
     ) {
+        const userSchema = new EntitySchema("user");
+        userSchema.setKey("id");
+
         const brandSchema = new EntitySchema("brand");
         brandSchema.setKey("id");
+
+        const brandReviewSchema = new EntitySchema("brand-review");
+        brandReviewSchema.setKey("id");
+        brandReviewSchema.addIndex("brandId");
+        brandReviewSchema.addIndex("authorId");
+        brandReviewSchema.addProperty("author", userSchema);
+        brandReviewSchema.addRelation("author", "authorId", "id");
+
+        brandSchema.addProperty("reviews", new ArraySchema(brandReviewSchema));
+        brandSchema.addRelation("reviews", "id", "brandId");
 
         const productReviewSchema = new EntitySchema("product-review");
         productReviewSchema.setKey("id");
@@ -47,6 +62,7 @@ export class AppComponent {
         const entitySourceGateway = new EntitySourceGateway();
         entitySourceGateway.addSource(this.productSchema, productEntitySource);
         entitySourceGateway.addSource(this.brandSchema, brandEntitySource);
+        entitySourceGateway.addSource(userSchema, userEntitySource);
         this.gateway = entitySourceGateway;
 
         const workspace = new Workspace();
@@ -55,6 +71,7 @@ export class AppComponent {
 
         productEntitySource.schema_TMP = productSchema;
         brandEntitySource.schema_TMP = brandSchema;
+        userEntitySource.schema_TMP = userSchema;
     }
 
     gateway: EntitySourceGateway;
@@ -74,6 +91,8 @@ export class AppComponent {
 
     includeBrand = false;
     includeReviews = false;
+    includeBrandReviews = false;
+    includeBrandReviewAuthors = false;
 
     async ngOnInit(): Promise<void> {
         merge(this.productEntitySource.onQueryIssued(), this.brandEntitySource.onQueryIssued()).subscribe(
@@ -88,7 +107,11 @@ export class AppComponent {
             const criteria = this.uiFilterToCriteria();
             // [todo] consider allowing "false" as an expansion value
             const expansion: Expansion<Product> = {
-                brand: this.includeBrand || void 0,
+                brand: this.includeBrand
+                    ? this.includeBrandReviews
+                        ? { reviews: this.includeBrandReviewAuthors ? { author: true } : true }
+                        : true
+                    : void 0,
                 reviews: this.includeReviews || void 0,
             };
 

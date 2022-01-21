@@ -12,11 +12,11 @@ import {
     Query,
     reduceExpansion,
 } from "@entity-space/core";
-import { Brand } from "@entity-space/examples/products/libs/products-model";
+import { User } from "@entity-space/examples/products/libs/products-model";
 import { firstValueFrom, Observable, Subject } from "rxjs";
 
 @Injectable()
-export class BrandEntitySource implements IEntitySource {
+export class UserEntitySource implements IEntitySource {
     constructor(private readonly http: HttpClient) {}
 
     private queryIssued = new Subject<Query>();
@@ -35,34 +35,21 @@ export class BrandEntitySource implements IEntitySource {
 
         this.queryIssued.next(query);
         const [filters, effectiveCriterion] = this.mapCriteriaToByIdFilter(query.criteria);
-        // [todo] whoops! brand source can expand reviews, but not reviews.author. what to do?
-        const supportedExpansion: Expansion<Brand> = { reviews: true };
+        const supportedExpansion: Expansion<User> = {};
+        const missingExpansion = reduceExpansion(query.expansion, supportedExpansion);
+        const effectiveExpansion =
+            (missingExpansion === false ? {} : reduceExpansion(query.expansion, missingExpansion)) ||
+            supportedExpansion;
 
-        let missingExpansion = reduceExpansion(query.expansion, supportedExpansion) || query.expansion;
-        let effectiveExpansion = reduceExpansion(query.expansion, missingExpansion) || supportedExpansion;
+        console.log("[missing-expansion]", missingExpansion || query.expansion);
+        console.log("[effective-expansion]", effectiveExpansion);
 
-        if (Object.keys(effectiveExpansion).length === 0) {
-            effectiveExpansion = supportedExpansion;
-        }
-        // if ((query.expansion as any).reviews.author) {
-        //     missingExpansion = {
-        //         reviews: { author: true },
-        //     };
-        // }
-
-        console.log("[brand-missing-expansion]", missingExpansion || query.expansion);
-        console.log("[brand-effective-expansion]", effectiveExpansion);
-
-        const responses = await Promise.all(
-            filters.map(id =>
-                firstValueFrom(this.http.post<Brand>(`api/brands/${id}`, { expand: effectiveExpansion || void 0 }))
-            )
-        );
+        const responses = await Promise.all(filters.map(id => firstValueFrom(this.http.get<User>(`api/users/${id}`))));
 
         const effectiveQuery: Query = {
             entitySchema: query.entitySchema,
             criteria: effectiveCriterion,
-            expansion: effectiveExpansion || {},
+            expansion: {},
         };
 
         return new QueriedEntities(effectiveQuery, responses);

@@ -1,4 +1,9 @@
-import { Brand, Product, ProductReview, User } from "@entity-space/examples/products/libs/products-model";
+import { Brand, BrandReview, Product, ProductReview, User } from "@entity-space/examples/products/libs/products-model";
+
+const users: User[] = [
+    { id: 1, name: "Susi Sonne" },
+    { id: 2, name: "Karli Karotte" },
+];
 
 const brands: Brand[] = [
     {
@@ -8,6 +13,27 @@ const brands: Brand[] = [
     {
         id: 2,
         name: "Rat-Stick INC.",
+    },
+];
+
+const brandReviews: BrandReview[] = [
+    {
+        authorId: 1,
+        brandId: 1,
+        id: 1,
+        review: "They make good Shirts!",
+    },
+    {
+        authorId: 1,
+        brandId: 2,
+        id: 2,
+        review: "They are my first choice whenever I have to deal with rats eating my stock!",
+    },
+    {
+        authorId: 2,
+        brandId: 2,
+        id: 3,
+        review: "Nothing they make resembles carrots. 1/5",
     },
 ];
 
@@ -42,11 +68,6 @@ const products: Product[] = [
     },
 ];
 
-const users: User[] = [
-    { id: 1, name: "Susi Sonne" },
-    { id: 2, name: "Karli Karotte" },
-];
-
 const reviews: ProductReview[] = [
     {
         id: 1,
@@ -76,4 +97,5 @@ export default {
     users,
     products,
     reviews,
+    brandReviews,
 };

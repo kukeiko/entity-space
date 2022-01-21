@@ -19,7 +19,7 @@ export class ProductsController {
     }
 
     @Post("search")
-    searchProducts(@Body("filter") filter: ProductFilter, @Body("expand") expand?: Expansion): Observable<Product[]> {
+    searchProducts(@Body("filter") filter: ProductFilter, @Body("expand") expand?: Expansion<Product>): Observable<Product[]> {
         return from(this.repository.search(filter, expand));
     }
 }

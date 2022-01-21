@@ -1,5 +1,6 @@
+import { Expansion } from "@entity-space/core";
 import { Brand } from "@entity-space/examples/products/libs/products-model";
-import { Controller, Get, NotFoundException, Param, ParseIntPipe } from "@nestjs/common";
+import { Body, Controller, Get, NotFoundException, Param, ParseIntPipe, Post } from "@nestjs/common";
 import { from, Observable } from "rxjs";
 import { BrandRepository } from "../repositories/brand-repository";
 
@@ -19,6 +20,25 @@ export class BrandsController {
 
         if (brand === void 0) {
             throw new NotFoundException();
+        }
+
+        return brand;
+    }
+
+    @Post(":id")
+    async byIdExpanded(
+        @Param("id", ParseIntPipe) id: number,
+        @Body("expand") expand?: Expansion<Brand>
+    ): Promise<Brand> {
+        const brands = await this.repository.byIds([id]);
+        const brand = brands.find(brand => brand.id === id);
+
+        if (brand === void 0) {
+            throw new NotFoundException();
+        }
+
+        if (expand !== void 0) {
+            await this.repository.expand([brand], expand);
         }
 
         return brand;
