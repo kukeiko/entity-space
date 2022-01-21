@@ -1,3 +1,4 @@
+import { Expansion } from "@entity-space/core";
 import { Product, ProductFilter } from "@entity-space/examples/products/libs/products-model";
 import { Body, Controller, Get, Post } from "@nestjs/common";
 import { from, Observable } from "rxjs";
@@ -12,8 +13,13 @@ export class ProductsController {
         return from(this.repository.all());
     }
 
+    @Post()
+    getProductsExpanded(@Body() expand?: Expansion): Observable<Product[]> {
+        return from(this.repository.all(expand));
+    }
+
     @Post("search")
-    searchProducts(@Body() filter: ProductFilter): Observable<Product[]> {
-        return from(this.repository.search(filter));
+    searchProducts(@Body("filter") filter: ProductFilter, @Body("expand") expand?: Expansion<Product>): Observable<Product[]> {
+        return from(this.repository.search(filter, expand));
     }
 }

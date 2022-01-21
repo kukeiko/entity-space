@@ -1,9 +1,13 @@
-.products-columns {
-    display: flex;
-}
-
 h1 {
     padding: 1em;
+}
+
+table {
+    width: 100%;
+}
+
+.products-columns {
+    display: flex;
 }
 
 .products-filter-column {
@@ -12,4 +16,5 @@ h1 {
 
 .products-list-column {
     padding: 1em;
+    flex-grow: 1;
 }

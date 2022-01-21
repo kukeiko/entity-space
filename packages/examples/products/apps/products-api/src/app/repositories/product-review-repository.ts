@@ -1,7 +1,9 @@
 import { ProductReview } from "@entity-space/examples/products/libs/products-model";
 import { cloneJson } from "@entity-space/utils";
+import { Injectable } from "@nestjs/common";
 import data from "./normalized-product-data";
 
+@Injectable()
 export class ProductReviewRepository {
     async all(): Promise<ProductReview[]> {
         return cloneJson(data.reviews);

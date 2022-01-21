@@ -4,6 +4,7 @@ import { IndexValue } from "./entity-store-index";
 export function createCriteriaForIndex(indexKeyPath: string[], indexValues: IndexValue[]): Criterion {
     const criteria: Criterion[] = [];
 
+    // [todo] created criteria need to be merged to prevent creating too many queries unnecessarily.
     for (let indexValue of indexValues) {
         if (!Array.isArray(indexValue)) {
             indexValue = [indexValue];

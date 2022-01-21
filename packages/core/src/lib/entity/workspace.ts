@@ -1,189 +1,104 @@
-import { permutateEntries } from "@entity-space/utils";
 import { Observable, Subject } from "rxjs";
-import { Expansion } from "../expansion/public";
 import { mergeQueries, Query, reduceQueries } from "../query/public";
 import { IEntitySchema } from "../schema/schema.interface";
-import { createCriteriaTemplateForIndex } from "./create-criteria-template-for-index.fn";
 import { Entity } from "./entity";
+import { EntityCache } from "./entity-cache";
 import { IEntitySource } from "./entity-source.interface";
-import { EntityStore } from "./entity-store";
-import { expandEntities } from "./expand-entities.fn";
-import { flattenNamedCriteria } from "./flatten-named-criteria.fn";
-import { namedCriteriaToKeyPaths } from "./named-criteria-to-key-path.fn";
-import { normalizeEntities } from "./normalize-entities.fn";
+import { QueriedEntities } from "./queried-entities";
 
-export class Workspace {
-    private readonly stores = new Map<string, EntityStore>();
-    private readonly sources = new Map<string, IEntitySource>();
+// [todo] should implement IEntitySource
+export class Workspace implements IEntitySource {
+    private source?: IEntitySource;
     private readonly queryCaches = new Map<string, Query[]>();
-
     private readonly queryCacheChanged = new Subject<Query[]>();
+    private readonly entityCache = new EntityCache();
 
     onQueryCacheChanged(): Observable<Query[]> {
         return this.queryCacheChanged.asObservable();
     }
 
-    addEntities(schema: IEntitySchema, entities: Entity[]): void {
-        const normalized = normalizeEntities(schema, entities);
-
-        for (const schema of normalized.getSchemas()) {
-            this.getOrCreateStore(schema).add(normalized.get(schema));
-        }
+    add(schema: IEntitySchema, entities: Entity[]): void {
+        this.entityCache.addEntities(schema, entities);
     }
 
-    addEntitySource(schema: IEntitySchema, source: IEntitySource): void {
-        this.sources.set(schema.getId(), source);
+    setSource(source: IEntitySource): void {
+        this.source = source;
     }
 
     private addExecutedQuery(query: Query): void {
         const executedQueries = this.getOrCreateQueryCache(query.entitySchema);
-        const merged = mergeQueries(...executedQueries, query);
+        let merged = mergeQueries(query, ...executedQueries);
         this.queryCaches.set(query.entitySchema.getId(), merged);
-        this.queryCacheChanged.next(merged);
+
+        const allQueriesInCache: Query[] = [];
+
+        for (const [_, queries] of this.queryCaches) {
+            allQueriesInCache.push(...queries);
+        }
+
+        this.queryCacheChanged.next(allQueriesInCache);
     }
 
     private async loadUncachedIntoCache(query: Query): Promise<void> {
         const executedQueries = this.getOrCreateQueryCache(query.entitySchema);
         const reduced = reduceQueries([query], executedQueries);
-        const entitiesLoadedFromSource: Entity[] = [];
+        const entities: Entity[] = [];
+        const queriesAgainstSource = reduced === false ? [query] : reduced;
 
-        if (reduced === false) {
-            entitiesLoadedFromSource.push(...(await this.loadFromSource(query)));
-            this.addExecutedQuery(query);
-            // executedQueries.push(query);
-        } else {
-            for (const reducedQuery of reduced) {
-                entitiesLoadedFromSource.push(...(await this.loadFromSource(reducedQuery)));
-                this.addExecutedQuery(query);
-                // executedQueries.push(reducedQuery);
+        for (const queryAgainstSource of queriesAgainstSource) {
+            const result = await this.loadFromSource(queryAgainstSource);
+
+            if (result === false) {
+                continue;
             }
+
+            entities.push(...result.getEntities());
+            this.addExecutedQuery(query);
         }
 
-        if (entitiesLoadedFromSource.length > 0) {
-            this.addEntities(query.entitySchema, entitiesLoadedFromSource);
+        if (entities.length > 0) {
+            this.add(query.entitySchema, entities);
         }
     }
 
-    private async loadFromSource(query: Query): Promise<Entity[]> {
-        const source = this.getSource(query.entitySchema);
-        const entities = await source.query(query);
+    private async loadFromSource(query: Query): Promise<false | QueriedEntities> {
+        if (this.source === void 0) {
+            return false;
+        }
 
-        return entities;
+        const result = await this.source.query(query);
+
+        if (result !== false) {
+            console.log("[effective-query]", result.getQuery().criteria.toString());
+        }
+
+        return result;
     }
 
-    // [todo] remove any
-    async query(query: Query): Promise<any[]> {
+    async query(query: Query): Promise<false | QueriedEntities> {
         await this.loadUncachedIntoCache(query);
+        const entities = await this.queryAgainstCache(query);
 
-        return this.queryAgainstCache(query);
+        return new QueriedEntities(query, entities);
     }
 
     // [todo] remove any
     // [todo] should stay async because at one point i want to make use of service-workers
+    // [todo] should not exist at all? (or be private)
     async queryAgainstCache(query: Query): Promise<any[]> {
-        // await this.loadUncachedIntoStores(query);
+        const result = await this.entityCache.query(query);
 
-        const schema = query.entitySchema;
-        const indexes = schema
-            .getIndexesIncludingKey()
-            .slice()
-            .sort((a, b) => b.getPath().length - a.getPath().length);
-
-        const criteriaTemplates = indexes.map(index => createCriteriaTemplateForIndex(index));
-        const [remappedCriteria] = query.criteria.remap(criteriaTemplates);
-
-        // [todo] remove "any" - but will result in compile error @ 02-loading-data.spec.ts
-        let entities: any[] = [];
-        const store = this.getOrCreateStore(schema);
-
-        if (remappedCriteria === false) {
-            entities = store.getAll();
-        } else {
-            // load items from store using index
-            for (const remappedCriterion of remappedCriteria) {
-                const bagKeyPaths = namedCriteriaToKeyPaths(remappedCriterion);
-                const index = store.getIndexMatchingKeyPaths(bagKeyPaths);
-                const bagWithPrimitives = flattenNamedCriteria(remappedCriterion);
-                const permutatedBags = permutateEntries(bagWithPrimitives);
-                const indexValues: (number | string)[][] = [];
-
-                for (const permutatedBag of permutatedBags) {
-                    const indexValue: (number | string)[] = [];
-
-                    for (const key of index.getPath()) {
-                        indexValue.push(permutatedBag[key]);
-                    }
-
-                    indexValues.push(indexValue);
-                }
-
-                entities = [...entities, ...store.getByIndexOrKey(index.getName(), indexValues)];
-            }
+        if (result === false) {
+            return [];
         }
 
-        if (Object.keys(query.expansion).length > 0) {
-            this.expand(schema, query.expansion, entities);
-        }
-
-        return query.criteria.filter(entities);
+        return result.getEntities();
     }
 
-    expand(schema: IEntitySchema, expansion: Expansion, entities: Entity[]): void {
-        for (const propertyKey in expansion) {
-            const expansionValue = expansion[propertyKey];
-
-            if (expansionValue === void 0) {
-                continue;
-            }
-
-            const relation = schema.findRelation(propertyKey);
-
-            if (relation !== void 0) {
-                expandEntities(
-                    entities,
-                    relation,
-                    q => this.queryAgainstCache(q),
-                    expansionValue === true ? void 0 : expansionValue
-                );
-            } else if (expansionValue !== true) {
-                const property = schema.getProperty(propertyKey);
-                const referencedItems: Entity[] = [];
-
-                for (const entity of entities) {
-                    const reference = entity[propertyKey];
-
-                    if (Array.isArray(reference)) {
-                        referencedItems.push(...reference);
-                    } else {
-                        referencedItems.push(reference);
-                    }
-                }
-
-                const entitySchema = property.getUnboxedEntitySchema();
-                this.expand(entitySchema, expansionValue, referencedItems);
-            }
-        }
-    }
-
-    private getOrCreateStore(schema: IEntitySchema): EntityStore {
-        let store = this.stores.get(schema.getId());
-
-        if (store === void 0) {
-            store = new EntityStore(schema);
-            this.stores.set(schema.getId(), store);
-        }
-
-        return store;
-    }
-
-    private getSource(schema: IEntitySchema): IEntitySource {
-        const source = this.sources.get(schema.getId());
-
-        if (source === void 0) {
-            throw new Error(`no source for entity-schema ${schema.getId()} found`);
-        }
-
-        return source;
+    clear(): void {
+        this.queryCaches.clear();
+        this.entityCache.clear();
+        this.queryCacheChanged.next([]);
     }
 
     private getOrCreateQueryCache(schema: IEntitySchema): Query[] {
