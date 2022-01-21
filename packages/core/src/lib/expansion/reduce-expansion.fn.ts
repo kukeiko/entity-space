@@ -13,8 +13,10 @@ export function reduceExpansion(a: Expansion, b: Expansion): Expansion | false {
         if (a[key] === void 0) {
             continue;
         } else if (b[key] === true) {
-            delete reduced[key];
-            didReduce = true;
+            if (a[key] === true || Object.keys(a[key] ?? {}).length === 0) {
+                delete reduced[key];
+                didReduce = true;
+            }
         } else if (b[key] instanceof Object) {
             const subReduced = reduceExpansion(reduced[key] as Expansion, b[key] as Expansion);
 

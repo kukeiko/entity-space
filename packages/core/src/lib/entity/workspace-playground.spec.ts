@@ -28,7 +28,7 @@ describe("playground: workspace", () => {
             { id: 3, bar: 2 },
         ];
 
-        workspace.addEntities(schema, entities);
+        workspace.add(schema, entities);
 
         const query: Query = {
             entitySchema: schema,
@@ -67,7 +67,7 @@ describe("playground: workspace", () => {
             { id: 2, bar: 3, baz: 1337 },
         ];
 
-        workspace.addEntities(schema, entities);
+        workspace.add(schema, entities);
 
         const query: Query = {
             entitySchema: schema,
@@ -108,7 +108,7 @@ describe("playground: workspace", () => {
             { id: 3, bar: { baz: 2 } },
         ];
 
-        workspace.addEntities(schema, entities);
+        workspace.add(schema, entities);
 
         const query: Query = {
             entitySchema: schema,
@@ -149,7 +149,7 @@ describe("playground: workspace", () => {
             { id: 2, bar: { baz: 3, moo: 10 } },
         ];
 
-        workspace.addEntities(schema, entities);
+        workspace.add(schema, entities);
 
         const query: Query = {
             entitySchema: schema,
@@ -191,7 +191,7 @@ describe("playground: workspace", () => {
 
         const expectedEntities = [{ id: 1, bar: { baz: 2, moo: 10 }, khaz: { mo: 1, dan: 2 } }];
 
-        workspace.addEntities(schema, entities);
+        workspace.add(schema, entities);
 
         const query: Query = {
             entitySchema: schema,
@@ -222,8 +222,8 @@ describe("playground: workspace", () => {
 
         const workspace = new Workspace();
 
-        workspace.addEntities(fooSchema, [{ id: 1337, secondaryId: 128, name: "i am foo" }]);
-        workspace.addEntities(barSchema, [{ id: 64, fooId: 1337, secondaryId: 128, name: "i belong to foo" }]);
+        workspace.add(fooSchema, [{ id: 1337, secondaryId: 128, name: "i am foo" }]);
+        workspace.add(barSchema, [{ id: 64, fooId: 1337, secondaryId: 128, name: "i belong to foo" }]);
 
         const query: Query = {
             entitySchema: fooSchema,
@@ -258,8 +258,8 @@ describe("playground: workspace", () => {
         fooSchema.addProperty("bar", barSchema);
 
         const workspace = new Workspace();
-        workspace.addEntities(fooSchema, [{ id: 1337, name: "i am foo", bar: { bazId: 128 } }]);
-        workspace.addEntities(bazSchema, [{ id: 128, name: "i am baz" }]);
+        workspace.add(fooSchema, [{ id: 1337, name: "i am foo", bar: { bazId: 128 } }]);
+        workspace.add(bazSchema, [{ id: 128, name: "i am baz" }]);
 
         const query: Query = {
             entitySchema: fooSchema,
@@ -325,7 +325,7 @@ describe("playground: workspace", () => {
         ];
 
         // act
-        workspace.addEntities(fooSchema, addedItems);
+        workspace.add(fooSchema, addedItems);
 
         const query: Query = {
             entitySchema: fooSchema,

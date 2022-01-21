@@ -10,6 +10,8 @@ export function normalizeEntities(
     normalized = normalized ?? new NormalizedEntities();
     normalized.add(schema, entities);
 
+    // [todo] not dealing with relations on non-related entities yet - i.e. entities that themselves
+    // are not to be normalized, but have references to entities that do need to be normalized
     for (const relation of schema.getRelations()) {
         const navigated: Entity[] = [];
 

@@ -1,35 +1,90 @@
-import { Expansion } from "../expansion/public";
-import { Query } from "../query/public";
-import { IEntitySchemaRelation } from "../schema/public";
-import { createCriteriaForIndex } from "./create-criteria-for-index.fn";
+import { Expansion, mergeExpansions } from "../expansion/public";
+import { IEntitySchema } from "../schema/public";
 import { Entity } from "./entity";
-import { EntityReader } from "./entity-reader";
+import { IEntitySource } from "./entity-source.interface";
+import { expandRelation } from "./expand-relation.fn";
 
 export async function expandEntities(
+    schema: IEntitySchema,
+    expansion: Expansion,
     entities: Entity[],
-    relation: IEntitySchemaRelation,
-    query: (query: Query) => Promise<Entity[]>,
-    expansion?: Expansion
-): Promise<void> {
-    const entityReader = new EntityReader();
-    const relatedSchema = relation.getRelatedEntitySchema();
-    // [todo] what about dictionaries?
-    const isArray = relation.getProperty().getValueSchema().schemaType === "array";
-    const fromIndex = relation.getFromIndex();
-    const toIndex = relation.getToIndex();
-    const criteria = createCriteriaForIndex(toIndex.getPath(), entityReader.readIndex(fromIndex, entities));
-    const referencedItems = await query({ criteria, expansion: expansion ?? {}, entitySchema: relatedSchema });
+    source: IEntitySource
+): Promise<false | Expansion> {
+    const tasks: Promise<false | Expansion>[] = [];
 
-    for (const entity of entities) {
-        const indexValue = entityReader.readIndexFromOne(fromIndex, entity);
-        const matchingReferencedItems = referencedItems.filter(
-            entity => JSON.stringify(indexValue) === JSON.stringify(entityReader.readIndexFromOne(toIndex, entity))
-        );
+    // [todo] dirty
+    const isExpanded = (propertyKey: string): boolean => {
+        const first = entities[0];
 
-        if (isArray) {
-            entity[relation.getPropertyName()] = matchingReferencedItems;
-        } else {
-            entity[relation.getPropertyName()] = matchingReferencedItems[0] ?? null;
+        if (first === void 0) return false;
+
+        return first[propertyKey] !== void 0;
+    };
+
+    for (const propertyKey in expansion) {
+        const expansionValue = expansion[propertyKey];
+
+        if (expansionValue === void 0) {
+            continue;
+        }
+
+        const relation = schema.findRelation(propertyKey);
+
+        if (relation !== void 0 && !isExpanded(relation.getPropertyName())) {
+            const task = (async (propertyKey: string) => {
+                const result = await expandRelation(
+                    entities,
+                    relation,
+                    source,
+                    expansionValue === true ? void 0 : expansionValue
+                );
+
+                if (result === false) {
+                    return false;
+                }
+
+                return { [propertyKey]: Object.keys(result).length === 0 ? true : result };
+            })(propertyKey);
+
+            tasks.push(task);
+        } else if (expansionValue !== true) {
+            const property = schema.getProperty(propertyKey);
+            const referencedItems: Entity[] = [];
+
+            for (const entity of entities) {
+                const reference = entity[propertyKey];
+
+                if (Array.isArray(reference)) {
+                    referencedItems.push(...reference);
+                } else {
+                    referencedItems.push(reference);
+                }
+            }
+
+            const entitySchema = property.getUnboxedEntitySchema();
+            const task = (async (propertyKey: string) => {
+                const result = await expandEntities(entitySchema, expansionValue, referencedItems, source);
+
+                if (result === false) {
+                    return false;
+                }
+
+                return { [propertyKey]: Object.keys(result).length === 0 ? true : result };
+            })(propertyKey);
+
+            tasks.push(task);
         }
     }
+
+    const results = await Promise.all(tasks);
+
+    // [todo] move somewhere else
+    function isNotFalse<T extends false | any>(value: T): value is Exclude<T, false> {
+        return value !== false;
+    }
+
+    const successfulExpansion = mergeExpansions(...results.filter(isNotFalse));
+
+    // [todo] i think returning false if all in results are false is correct - but not 100% sure
+    return results.every(result => result === false) ? false : successfulExpansion;
 }

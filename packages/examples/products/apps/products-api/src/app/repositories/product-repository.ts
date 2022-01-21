@@ -1,17 +1,13 @@
 import { Expansion } from "@entity-space/core";
 import { Product, ProductFilter } from "@entity-space/examples/products/libs/products-model";
-import { cloneJson, groupBy, toMapById } from "@entity-space/utils";
+import { cloneJson, groupBy } from "@entity-space/utils";
 import { Injectable } from "@nestjs/common";
-import { BrandRepository } from "./brand-repository";
 import data from "./normalized-product-data";
 import { ProductReviewRepository } from "./product-review-repository";
 
 @Injectable()
 export class ProductRepository {
-    constructor(
-        private readonly brandRepository: BrandRepository,
-        private readonly productReviewRepository: ProductReviewRepository
-    ) {}
+    constructor(private readonly productReviewRepository: ProductReviewRepository) {}
 
     async all(expand?: Expansion): Promise<Product[]> {
         const products = cloneJson(data.products);
@@ -55,15 +51,6 @@ export class ProductRepository {
     }
 
     async expand(products: Product[], expand: Expansion<Product>): Promise<void> {
-        if (expand.brand !== void 0) {
-            const brandIds = products.map(product => product.brandId);
-            const brands = toMapById(await this.brandRepository.byIds(brandIds));
-
-            for (const product of products) {
-                product.brand = brands.get(product.brandId);
-            }
-        }
-
         if (expand.reviews !== void 0) {
             const productIds = products.map(product => product.id);
             const reviews = await this.productReviewRepository.byProductIds(productIds);

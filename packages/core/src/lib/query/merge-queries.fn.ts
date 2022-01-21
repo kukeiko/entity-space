@@ -8,23 +8,21 @@ export function mergeQueries(...queries: Query[]): Query[] {
         return [];
     }
 
-    let merged: Query[] = [first];
+    let didMerge = false;
+    let merged = others.map(other => {
+        const result = mergeQuery(first, other);
 
-    for (const query of others) {
-        let nextMerged: Query[] = [];
-
-        for (const mergedQuery of merged) {
-            const mergedResult = mergeQuery(mergedQuery, query);
-
-            if (mergedResult !== false) {
-                nextMerged.push(...mergedResult);
-            } else {
-                nextMerged.push(mergedQuery, query);
-            }
+        if (result !== false) {
+            didMerge = true;
+            return result;
+        } else {
+            return other;
         }
+    });
 
-        merged = nextMerged;
+    if (didMerge) {
+        return mergeQueries(...merged);
     }
 
-    return merged;
+    return queries;
 }

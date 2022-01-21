@@ -32,15 +32,12 @@ describe("mergeQuery()", () => {
             {}
         );
 
-        const expected = [
-            createQuery(
-                matches<Product>({
-                    rating: inRange(3, 5),
-                }),
-                { foo: true }
-            ),
-        ];
-
+        const expected = createQuery(
+            matches<Product>({
+                rating: inRange(3, 5),
+            }),
+            { foo: true }
+        );
         // act
         const actual = mergeQuery(a, b);
 
@@ -71,16 +68,13 @@ describe("mergeQuery()", () => {
             { foo: true }
         );
 
-        const expected = [
-            createQuery(
-                matches<Product>({
-                    price: inRange(100, 200),
-                    rating: inRange(3, 5),
-                }),
-                { foo: true }
-            ),
-        ];
-
+        const expected = createQuery(
+            matches<Product>({
+                price: inRange(100, 200),
+                rating: inRange(3, 5),
+            }),
+            { foo: true }
+        );
         // act
         const actual = mergeQuery(a, b);
 

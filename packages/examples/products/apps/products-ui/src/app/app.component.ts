@@ -3,6 +3,7 @@ import {
     ArraySchema,
     Criterion,
     EntitySchema,
+    EntitySourceGateway,
     Expansion,
     IEntitySchema,
     inRange,
@@ -11,7 +12,10 @@ import {
     Workspace,
 } from "@entity-space/core";
 import { Product } from "@entity-space/examples/products/libs/products-model";
+import { merge } from "rxjs";
+import { BrandEntitySource } from "./entity-sources/brand.entity-source";
 import { ProductEntitySource } from "./entity-sources/product.entity-source";
+import { UserEntitySource } from "./entity-sources/user.entity-source";
 
 @Component({
     selector: "entity-space-root",
@@ -19,9 +23,26 @@ import { ProductEntitySource } from "./entity-sources/product.entity-source";
     styleUrls: ["./app.component.scss"],
 })
 export class AppComponent {
-    constructor(private readonly productEntitySource: ProductEntitySource) {
+    constructor(
+        private readonly productEntitySource: ProductEntitySource,
+        private readonly brandEntitySource: BrandEntitySource,
+        private readonly userEntitySource: UserEntitySource
+    ) {
+        const userSchema = new EntitySchema("user");
+        userSchema.setKey("id");
+
         const brandSchema = new EntitySchema("brand");
         brandSchema.setKey("id");
+
+        const brandReviewSchema = new EntitySchema("brand-review");
+        brandReviewSchema.setKey("id");
+        brandReviewSchema.addIndex("brandId");
+        brandReviewSchema.addIndex("authorId");
+        brandReviewSchema.addProperty("author", userSchema);
+        brandReviewSchema.addRelation("author", "authorId", "id");
+
+        brandSchema.addProperty("reviews", new ArraySchema(brandReviewSchema));
+        brandSchema.addRelation("reviews", "id", "brandId");
 
         const productReviewSchema = new EntitySchema("product-review");
         productReviewSchema.setKey("id");
@@ -38,11 +59,22 @@ export class AppComponent {
         this.productSchema = productSchema;
         this.brandSchema = brandSchema;
 
+        const entitySourceGateway = new EntitySourceGateway();
+        entitySourceGateway.addSource(this.productSchema, productEntitySource);
+        entitySourceGateway.addSource(this.brandSchema, brandEntitySource);
+        entitySourceGateway.addSource(userSchema, userEntitySource);
+        this.gateway = entitySourceGateway;
+
         const workspace = new Workspace();
-        workspace.addEntitySource(this.productSchema, this.productEntitySource);
+        workspace.setSource(entitySourceGateway);
         this.workspace = workspace;
+
+        productEntitySource.schema_TMP = productSchema;
+        brandEntitySource.schema_TMP = brandSchema;
+        userEntitySource.schema_TMP = userSchema;
     }
 
+    gateway: EntitySourceGateway;
     productSchema: IEntitySchema;
     brandSchema: IEntitySchema;
     workspace: Workspace;
@@ -50,7 +82,7 @@ export class AppComponent {
     queriesInWorkspaceCache: Query[] = [];
     products: Product[] = [];
 
-    displayedQueryColumns: string[] = ["criteria", "expansion"];
+    displayedQueryColumns: string[] = ["schema", "criteria", "expansion"];
 
     minRating: string = "3";
     maxRating: string = "5";
@@ -59,11 +91,14 @@ export class AppComponent {
 
     includeBrand = false;
     includeReviews = false;
+    includeBrandReviews = false;
+    includeBrandReviewAuthors = false;
 
     async ngOnInit(): Promise<void> {
-        this.productEntitySource
-            .onQueryIssued()
-            .subscribe(query => (this.queriesIssuedAgainstApi = [...this.queriesIssuedAgainstApi, query]));
+        merge(this.productEntitySource.onQueryIssued(), this.brandEntitySource.onQueryIssued()).subscribe(
+            query => (this.queriesIssuedAgainstApi = [...this.queriesIssuedAgainstApi, query])
+        );
+
         this.workspace.onQueryCacheChanged().subscribe(queries => (this.queriesInWorkspaceCache = queries));
     }
 
@@ -72,12 +107,15 @@ export class AppComponent {
             const criteria = this.uiFilterToCriteria();
             // [todo] consider allowing "false" as an expansion value
             const expansion: Expansion<Product> = {
-                brand: this.includeBrand || void 0,
+                brand: this.includeBrand
+                    ? this.includeBrandReviews
+                        ? { reviews: this.includeBrandReviewAuthors ? { author: true } : true }
+                        : true
+                    : void 0,
                 reviews: this.includeReviews || void 0,
             };
 
             // [todo] dirty, but for now necessary
-
             if (expansion.reviews === void 0) {
                 delete expansion.reviews;
             }
@@ -86,14 +124,28 @@ export class AppComponent {
                 delete expansion.brand;
             }
 
-            this.products = await this.workspace.query({
+            const result = await this.workspace.query({
                 entitySchema: this.productSchema,
                 criteria,
                 expansion,
             });
+
+            if (result === false) {
+                throw new Error(`query result from workspace unexpectedly is "false"`);
+            }
+
+            // [todo] get rid of cast
+            this.products = result.getEntities() as Product[];
         } catch (error) {
             alert((error as any).message ?? error);
         }
+    }
+
+    clear(): void {
+        this.queriesInWorkspaceCache = [];
+        this.queriesIssuedAgainstApi = [];
+        this.products = [];
+        this.workspace.clear();
     }
 
     uiFilterToCriteria(): Criterion {
