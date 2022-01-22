@@ -10,7 +10,7 @@ export class InNumberSetCriterion extends InSetCriterion<number> {
     inRangeClass = InNumberRangeCriterion;
     notInClass = NotInNumberSetCriterion;
 
-    remapOne(template: CriterionTemplate): [false, undefined] | [Criterion[], Criterion?] {
+    override remapOne(template: CriterionTemplate): [false, undefined] | [Criterion[], Criterion?] {
         if (template === InNumberSetCriterion) {
             return [[this]];
         } else if (template === IsNumberValueCriterion) {

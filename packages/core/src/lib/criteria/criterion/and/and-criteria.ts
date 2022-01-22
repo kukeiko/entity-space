@@ -77,7 +77,7 @@ export class AndCriteria<T extends Criterion = Criterion> extends Criteria<T> {
         return items.length === 1 ? items[0] : new AndCriteria(items);
     }
 
-    invert(): false | Criterion {
+    override invert(): false | Criterion {
         const inverted = this.items.map(item => item.invert());
 
         if (inverted.every(isInstanceOf(Criterion))) {

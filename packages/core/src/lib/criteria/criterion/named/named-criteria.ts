@@ -109,7 +109,7 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag> extend
         return false;
     }
 
-    invert(): Criterion {
+    override invert(): Criterion {
         // [todo] implement
         throw new Error("not implemented yet");
     }
@@ -127,7 +127,7 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag> extend
         return `{ ${shards.join(", ")} }`;
     }
 
-    remapOne(template: CriterionTemplate): [false, undefined] | [Criterion[], Criterion?] {
+    override remapOne(template: CriterionTemplate): [false, undefined] | [Criterion[], Criterion?] {
         if (template instanceof NamedCriteriaTemplate) {
             const openBag = { ...this.getBag() } as NamedCriteriaBag;
             const otherBag = template.items;
@@ -178,7 +178,7 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag> extend
         return true;
     }
 
-    merge(other: Criterion): false | Criterion {
+    override merge(other: Criterion): false | Criterion {
         if (other.reduce(this) === true) {
             return other;
         } else if (this.reduce(other) === true) {

@@ -47,7 +47,7 @@ export class OrCriteria<T extends Criterion = Criterion> extends Criteria<T> {
         return items.length === 0 ? true : items.length === 1 ? items[0] : new OrCriteria(items);
     }
 
-    merge(other: Criterion): false | Criterion {
+    override merge(other: Criterion): false | Criterion {
         const unmerged: Criterion[] = [];
         let merged = other;
 
@@ -66,7 +66,7 @@ export class OrCriteria<T extends Criterion = Criterion> extends Criteria<T> {
         return items.length === 1 ? items[0] : new OrCriteria(items);
     }
 
-    intersect(other: Criterion): false | Criterion {
+    override intersect(other: Criterion): false | Criterion {
         const intersected: Criterion[] = [];
 
         for (const mine of this.getItems()) {
@@ -89,7 +89,7 @@ export class OrCriteria<T extends Criterion = Criterion> extends Criteria<T> {
         return intersected.length === 1 ? intersected[0] : new OrCriteria(intersected);
     }
 
-    invert(): false | Criterion {
+    override invert(): false | Criterion {
         const inverted = this.items.map(criterion => criterion.invert());
 
         if (inverted.every(isInstanceOf(Criterion))) {
@@ -107,7 +107,7 @@ export class OrCriteria<T extends Criterion = Criterion> extends Criteria<T> {
         return `(${this.items.map(item => item.toString()).join(" | ")})`;
     }
 
-    remapOne(template: CriterionTemplate): [false, undefined] | [Criterion[], Criterion?] {
+    override remapOne(template: CriterionTemplate): [false, undefined] | [Criterion[], Criterion?] {
         if (template instanceof OrCriteriaTemplate) {
             let openItems = this.items.slice() as Criterion[];
             const remappedItems: Criterion[][] = [];

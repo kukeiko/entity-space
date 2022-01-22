@@ -161,7 +161,7 @@ export abstract class InRangeCriterion<T> extends Criterion {
         return false;
     }
 
-    merge(other: Criterion): false | Criterion {
+    override merge(other: Criterion): false | Criterion {
         if (other instanceof Criteria) {
             return other.merge(this);
         } else if (other instanceof this.selfClass) {
@@ -212,7 +212,7 @@ export abstract class InRangeCriterion<T> extends Criterion {
         return false;
     }
 
-    intersect(other: Criterion): false | Criterion {
+    override intersect(other: Criterion): false | Criterion {
         if (other instanceof Criteria) {
             return other.intersect(this);
         } else if (other instanceof this.selfClass) {
@@ -262,7 +262,7 @@ export abstract class InRangeCriterion<T> extends Criterion {
         return false;
     }
 
-    invert(): Criterion {
+    override invert(): Criterion {
         const inverted: Criterion[] = [];
 
         if (this.from?.op !== void 0) {
@@ -298,7 +298,7 @@ export abstract class InRangeCriterion<T> extends Criterion {
         return shards.join(", ");
     }
 
-    remapOne(template: CriterionTemplate): [false, undefined] | [Criterion[], Criterion?] {
+    override remapOne(template: CriterionTemplate): [false, undefined] | [Criterion[], Criterion?] {
         const thisClass = getInstanceClass(this);
 
         if (template === thisClass) {

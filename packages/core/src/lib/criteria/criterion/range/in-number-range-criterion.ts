@@ -2,7 +2,7 @@ import { Criterion } from "../criterion";
 import { InRangeCriterion } from "./in-range-criterion";
 
 export class InNumberRangeCriterion extends InRangeCriterion<number> {
-    merge(other: Criterion): false | Criterion {
+    override merge(other: Criterion): false | Criterion {
         const result = super.merge(other);
 
         if (result === false && other instanceof InNumberRangeCriterion) {
