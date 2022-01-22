@@ -1,5 +1,6 @@
+import { token, TokenType } from "@entity-space/lexer";
 import { isValue, notValue } from "../../criterion/value";
-import { token, TokenType, valueCriterionTokenParser } from "../../parser";
+import { valueCriterionTokenParser } from "../../parser";
 import { itShouldParseTokens } from "./utils";
 
 describe("parse-tokens: is <value> / not <value>", () => {

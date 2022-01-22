@@ -1,5 +1,6 @@
+import { token, TokenType } from "@entity-space/lexer";
 import { inSet, notInSet } from "../../criterion";
-import { insetCriterionTokenParser, token, TokenType } from "../../parser";
+import { insetCriterionTokenParser } from "../../parser";
 import { itShouldParseTokens } from "./utils";
 
 describe("parse-tokens: in-set / not-in-set", () => {

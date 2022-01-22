@@ -1,5 +1,6 @@
+import { Token } from "@entity-space/lexer";
 import { Criterion } from "../../criterion";
-import { Token, TokenParser } from "../../parser";
+import { TokenParser } from "../../parser";
 
 export function itShouldParseTokens(
     makeGenerator: () => TokenParser,

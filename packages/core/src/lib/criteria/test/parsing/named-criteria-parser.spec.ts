@@ -1,5 +1,6 @@
+import { token, TokenType } from "@entity-space/lexer";
 import { inRange, matches, or } from "../../criterion";
-import { namedCriteriaTokenParser, token, TokenType } from "../../parser";
+import { namedCriteriaTokenParser } from "../../parser";
 import { itShouldParseTokens } from "./utils";
 
 describe("parse-tokens: named-criteria", () => {

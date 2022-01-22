@@ -1,5 +1,5 @@
+import { TokenType } from "@entity-space/lexer";
 import { Criterion, NamedCriteria } from "../../criterion";
-import { TokenType } from "../token-type.enum";
 import { notBracketedCriteriaTokenParser } from "./not-bracketed-criteria.token-parser";
 import { TokenParser } from "./token-parser.type";
 

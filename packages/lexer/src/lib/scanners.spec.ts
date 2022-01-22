@@ -1,6 +1,8 @@
-import { scanNumber, scanString, scanSymbol } from "../../parser";
+import { scanNumber } from "./scan-number.fn";
+import { scanString } from "./scan-string.fn";
+import { scanSymbol } from "./scan-symbol.fn";
 
-describe("criteria-lexer-scanners", () => {
+describe("scanners", () => {
     function shouldScan(
         input: string,
         type: string,

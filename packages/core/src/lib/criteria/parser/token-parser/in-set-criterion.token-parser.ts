@@ -1,5 +1,5 @@
+import { TokenType } from "@entity-space/lexer";
 import { inSet, notInSet } from "../../criterion";
-import { TokenType } from "../token-type.enum";
 import { TokenParser } from "./token-parser.type";
 
 export function* insetCriterionTokenParser(): TokenParser {

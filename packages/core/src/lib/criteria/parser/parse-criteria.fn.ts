@@ -1,8 +1,6 @@
+import { lex, token, TokenType } from "@entity-space/lexer";
 import { Criteria, Criterion } from "../criterion";
-import { lex } from "./lex.fn";
 import { notBracketedCriteriaTokenParser } from "./token-parser";
-import { TokenType } from "./token-type.enum";
-import { token } from "./token.fn";
 
 export function parseCriteria(input: string): Criterion {
     let tokens = lex(input);

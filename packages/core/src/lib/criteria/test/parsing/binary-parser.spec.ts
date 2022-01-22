@@ -1,5 +1,6 @@
+import { token, TokenType } from "@entity-space/lexer";
 import { isEven, isNull, isTrue } from "../../criterion";
-import { binaryCriterionTokenParser, token, TokenType } from "../../parser";
+import { binaryCriterionTokenParser } from "../../parser";
 import { itShouldParseTokens } from "./utils";
 
 describe("parse-tokens: binary", () => {

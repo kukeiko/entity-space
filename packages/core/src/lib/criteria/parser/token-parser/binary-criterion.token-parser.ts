@@ -1,3 +1,4 @@
+import { TokenType } from "@entity-space/lexer";
 import {
     BinaryCriterion,
     IsEvenCriterion,
@@ -7,7 +8,6 @@ import {
     IsOddCriterion,
     IsTrueCriterion,
 } from "../../criterion";
-import { TokenType } from "../token-type.enum";
 import { TokenParser } from "./token-parser.type";
 
 const mappings: Record<string, () => BinaryCriterion<any>> = {

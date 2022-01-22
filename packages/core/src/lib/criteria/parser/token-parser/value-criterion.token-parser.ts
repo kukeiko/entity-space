@@ -1,8 +1,8 @@
+import { TokenType } from "@entity-space/lexer";
 import { IsNumberValueCriterion } from "../../criterion/value/is-number-value-criterion";
 import { IsStringValueCriterion } from "../../criterion/value/is-string-value-criterion";
 import { NotNumberValueCriterion } from "../../criterion/value/not-number-value-criterion";
 import { NotStringValueCriterion } from "../../criterion/value/not-string-value-criterion";
-import { TokenType } from "../token-type.enum";
 import { TokenParser } from "./token-parser.type";
 
 export function* valueCriterionTokenParser(): TokenParser {

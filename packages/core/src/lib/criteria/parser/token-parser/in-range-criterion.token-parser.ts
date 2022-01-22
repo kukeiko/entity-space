@@ -1,6 +1,5 @@
+import { Token, TokenType } from "@entity-space/lexer";
 import { inRange } from "../../criterion";
-import { TokenType } from "../token-type.enum";
-import { Token } from "../token.contract";
 import { TokenParser } from "./token-parser.type";
 
 function* valueParser(): Generator<
