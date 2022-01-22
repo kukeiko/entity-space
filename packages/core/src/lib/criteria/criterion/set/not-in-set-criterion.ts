@@ -16,9 +16,6 @@ export abstract class NotInSetCriterion<T> extends Criterion {
         return this.values;
     }
 
-    reduce(other: this): boolean | InstanceType<this["inSetClass"]>;
-    reduce(other: InstanceType<this["inSetClass"]>): boolean | InstanceType<this["inSetClass"]>;
-    reduce(other: Criterion): boolean | Criterion;
     reduce(other: Criterion): boolean | Criterion {
         if (other instanceof Criteria) {
             return other.reduceBy(this);

@@ -18,10 +18,6 @@ export abstract class InSetCriterion<T> extends Criterion {
         return this.values;
     }
 
-    reduce(other: this): boolean | this;
-    reduce(other: InstanceType<this["notInClass"]>): boolean | InstanceType<this["notInClass"]>;
-    reduce(other: InstanceType<this["inRangeClass"]>): boolean | InstanceType<this["inRangeClass"]>;
-    reduce(other: Criterion): boolean | Criterion;
     reduce(other: Criterion): boolean | Criterion {
         if (other instanceof Criteria) {
             return other.reduceBy(this);
