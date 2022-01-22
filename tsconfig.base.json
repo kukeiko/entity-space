@@ -16,6 +16,7 @@
         "baseUrl": ".",
         "paths": {
             "@entity-space/core": ["packages/core/src/index.ts"],
+            "@entity-space/criteria": ["packages/criteria/src/index.ts"],
             "@entity-space/examples/products/libs/products-model": [
                 "packages/examples/products/libs/products-model/src/index.ts"
             ],
