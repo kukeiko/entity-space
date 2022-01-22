@@ -6,6 +6,7 @@
         "examples-products-apps-products-api": "packages/examples/products/apps/products-api",
         "examples-products-apps-products-ui": "packages/examples/products/apps/products-ui",
         "examples-products-libs-products-model": "packages/examples/products/libs/products-model",
+        "lexer": "packages/lexer",
         "utils": "packages/utils"
     }
 }

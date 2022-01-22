@@ -20,6 +20,7 @@
             "@entity-space/examples/products/libs/products-model": [
                 "packages/examples/products/libs/products-model/src/index.ts"
             ],
+            "@entity-space/lexer": ["packages/lexer/src/index.ts"],
             "@entity-space/utils": ["packages/utils/src/index.ts"]
         }
     },
