@@ -1,4 +1,4 @@
-import { Criterion, inRange, matches } from "../criteria/public";
+import { Criterion, inRange, matches } from "@entity-space/criteria";
 import { Expansion } from "../expansion/public";
 import { EntitySchema } from "../schema/public";
 import { mergeQuery } from "./merge-query.fn";

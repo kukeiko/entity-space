@@ -1,4 +1,4 @@
-import { Criterion, inRange, inSet, matches, or } from "../../criteria/criterion";
+import { Criterion, inRange, inSet, matches, or } from "@entity-space/criteria";
 import { Expansion } from "../../expansion/expansion";
 import { EntitySchema } from "../../schema/entity-schema";
 import { Query } from "../query";

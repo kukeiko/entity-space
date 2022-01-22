@@ -1,5 +1,5 @@
 import { cloneJson, permutateEntries } from "@entity-space/utils";
-import { NamedCriteria } from "../criteria/public";
+import { NamedCriteria } from "@entity-space/criteria";
 import { Query } from "../query/query";
 import { IEntitySchema } from "../schema/public";
 import { createCriteriaTemplateForIndex } from "./create-criteria-template-for-index.fn";

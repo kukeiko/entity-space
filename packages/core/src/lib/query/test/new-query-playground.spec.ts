@@ -1,5 +1,5 @@
 import { Class } from "@entity-space/utils";
-import { Criterion, NamedCriteriaBag } from "../../criteria/public";
+import { Criterion, NamedCriteriaBag } from "@entity-space/criteria";
 import { Instance } from "../../entity/blueprint/instance";
 import { define } from "../../entity/blueprint/property";
 import { Expand, Expansion } from "../../expansion/public";

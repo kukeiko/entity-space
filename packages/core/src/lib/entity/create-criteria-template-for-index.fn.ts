@@ -1,5 +1,5 @@
 import { splitOne } from "@entity-space/utils";
-import { InNumberSetCriterion, NamedCriteriaTemplate } from "../criteria/public";
+import { InNumberSetCriterion, NamedCriteriaTemplate } from "@entity-space/criteria";
 import { IEntitySchemaIndex } from "../schema/public";
 
 export function createCriteriaTemplateForIndex(
