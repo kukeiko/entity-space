@@ -1,17 +1,7 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import {
-    Criterion,
-    Expansion,
-    IEntitySchema,
-    IEntitySource,
-    InNumberSetCriterion,
-    NamedCriteriaTemplate,
-    or,
-    QueriedEntities,
-    Query,
-    reduceExpansion,
-} from "@entity-space/core";
+import { Expansion, IEntitySchema, IEntitySource, QueriedEntities, Query, reduceExpansion } from "@entity-space/core";
+import { Criterion, InNumberSetCriterion, NamedCriteriaTemplate, or } from "@entity-space/criteria";
 import { User } from "@entity-space/examples/products/libs/products-model";
 import { firstValueFrom, Observable, Subject } from "rxjs";
 

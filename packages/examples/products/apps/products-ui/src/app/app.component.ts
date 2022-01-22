@@ -1,16 +1,14 @@
 import { Component } from "@angular/core";
 import {
     ArraySchema,
-    Criterion,
     EntitySchema,
     EntitySourceGateway,
     Expansion,
     IEntitySchema,
-    inRange,
-    matches,
     Query,
     Workspace,
 } from "@entity-space/core";
+import { Criterion, inRange, matches } from "@entity-space/criteria";
 import { Product } from "@entity-space/examples/products/libs/products-model";
 import { merge } from "rxjs";
 import { BrandEntitySource } from "./entity-sources/brand.entity-source";

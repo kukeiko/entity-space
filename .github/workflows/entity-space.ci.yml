@@ -33,4 +33,4 @@ jobs:
       run: npm i
     
     - name: 🕵️run tests
-      run: npx nx test core
+      run: npx nx run-many --parallel --target=test --projects=utils,lexer,criteria,core

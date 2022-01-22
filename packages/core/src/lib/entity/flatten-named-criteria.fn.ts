@@ -1,4 +1,4 @@
-import { InSetCriterion, NamedCriteria } from "../criteria/public";
+import { InSetCriterion, NamedCriteria } from "@entity-space/criteria";
 
 // [todo] move to criteria folder :?
 function flattenNamedCriteriaInternal(

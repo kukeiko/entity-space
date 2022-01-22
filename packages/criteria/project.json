@@ -1,0 +1,33 @@
+{
+    "root": "packages/criteria",
+    "sourceRoot": "packages/criteria/src",
+    "projectType": "library",
+    "targets": {
+        "build": {
+            "executor": "@nrwl/js:tsc",
+            "outputs": ["{options.outputPath}"],
+            "options": {
+                "outputPath": "dist/packages/criteria",
+                "main": "packages/criteria/src/index.ts",
+                "tsConfig": "packages/criteria/tsconfig.lib.json",
+                "assets": ["packages/criteria/*.md"]
+            }
+        },
+        "lint": {
+            "executor": "@nrwl/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": ["packages/criteria/**/*.ts"]
+            }
+        },
+        "test": {
+            "executor": "@nrwl/jest:jest",
+            "outputs": ["coverage/packages/criteria"],
+            "options": {
+                "jestConfig": "packages/criteria/jest.config.js",
+                "passWithNoTests": true
+            }
+        }
+    },
+    "tags": []
+}

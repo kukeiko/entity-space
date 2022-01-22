@@ -1,15 +1,15 @@
 import {
     AndCriteriaTemplate,
     CriterionTemplate,
-    Expansion,
     InNumberRangeCriterion,
     InNumberSetCriterion,
-    Instance,
     InstancedCriterionTemplate,
     InStringRangeCriterion,
     NamedCriteriaTemplate,
     OrCriteriaTemplate,
-} from "@entity-space/core";
+} from "@entity-space/criteria";
+import { Instance } from "../../lib/entity/blueprint/public";
+import { Expansion } from "../../lib/expansion/public";
 import { TreeNodeRepository } from "../facade/data";
 import { CanvasModel, UserModel } from "../facade/model";
 
