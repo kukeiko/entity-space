@@ -11,6 +11,8 @@ export class InNumberRangeCriterion extends InRangeCriterion<number> {
             const selfFrom = this.getFrom();
             const selfTo = this.getTo();
 
+            // [todo] do the "otherFrom?.op !== selfTo?.op" & "otherTo?.op !== selfFrom?.op" checks even make sense?
+            // busy with other stuff right now, so i'll look into it later™.
             if (otherFrom?.value === selfTo?.value && otherFrom?.op !== selfTo?.op) {
                 return new InNumberRangeCriterion(
                     [selfFrom?.value, otherTo?.value],
