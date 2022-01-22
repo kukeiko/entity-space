@@ -8,7 +8,7 @@ describe("parse-tokens: named-criteria", () => {
         namedCriteriaTokenParser,
         [
             token(TokenType.Special, "{"),
-            token(TokenType.Symbol, "foo"),
+            token(TokenType.Literal, "foo"),
             token(TokenType.Special, ":"),
             token(TokenType.Special, "("),
             token(TokenType.Number, "13"),
@@ -30,7 +30,7 @@ describe("parse-tokens: named-criteria", () => {
         namedCriteriaTokenParser,
         [
             token(TokenType.Special, "{"),
-            token(TokenType.Symbol, "foo"),
+            token(TokenType.Literal, "foo"),
             token(TokenType.Special, ":"),
             token(TokenType.Special, "("),
             token(TokenType.Number, "13"),
@@ -44,7 +44,7 @@ describe("parse-tokens: named-criteria", () => {
             token(TokenType.Number, "200"),
             token(TokenType.Special, ")"),
             token(TokenType.Special, ","),
-            token(TokenType.Symbol, "bar"),
+            token(TokenType.Literal, "bar"),
             token(TokenType.Special, ":"),
             token(TokenType.Special, "["),
             token(TokenType.Number, "100"),

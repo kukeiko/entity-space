@@ -8,7 +8,7 @@ import { TokenParser } from "./token-parser.type";
 export function* valueCriterionTokenParser(): TokenParser {
     let token = yield;
 
-    if (token.type !== TokenType.Symbol || !["is", "not"].includes(token.value)) {
+    if (token.type !== TokenType.Literal || !["is", "not"].includes(token.value)) {
         return false;
     }
 

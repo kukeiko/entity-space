@@ -1,6 +1,6 @@
 const regex = /[-_a-zA-Z]/;
 
-export function scanSymbol(char: string, iterator: IterableIterator<string>): [string, IteratorResult<string>] {
+export function scanLiteral(char: string, iterator: IterableIterator<string>): [string, IteratorResult<string>] {
     let buffer = char;
     let next = iterator.next();
 

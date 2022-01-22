@@ -48,11 +48,11 @@ describe("lexer", () => {
         token(TokenType.Special, ")"),
     ]);
 
-    shouldLex(".7 foo-bar", [token(TokenType.Number, ".7"), token(TokenType.Symbol, "foo-bar")]);
+    shouldLex(".7 foo-bar", [token(TokenType.Number, ".7"), token(TokenType.Literal, "foo-bar")]);
 
     shouldLex(".7 foo-bar: [123, 789)", [
         token(TokenType.Number, ".7"),
-        token(TokenType.Symbol, "foo-bar"),
+        token(TokenType.Literal, "foo-bar"),
         token(TokenType.Special, ":"),
         token(TokenType.Special, "["),
         token(TokenType.Number, "123"),

@@ -15,7 +15,7 @@ export function* namedCriteriaTokenParser(): TokenParser {
     while (true) {
         token = yield;
 
-        if (token.type !== TokenType.Symbol) {
+        if (token.type !== TokenType.Literal) {
             return false;
         }
 

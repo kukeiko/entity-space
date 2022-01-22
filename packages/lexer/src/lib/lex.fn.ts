@@ -1,11 +1,11 @@
 import { scanNumber } from "./scan-number.fn";
 import { scanString } from "./scan-string.fn";
-import { scanSymbol } from "./scan-symbol.fn";
+import { scanLiteral } from "./scan-literal.fn";
 import { TokenType } from "./token-type.enum";
 import { Token } from "./token.contract";
 import { token } from "./token.fn";
 
-const symbolStartRegex = /[a-zA-Z]/;
+const literalStartRegex = /[a-zA-Z]/;
 
 /**
  * big credits to andy balaam for providing nice info for lexing + parsing newbies such as myself
@@ -41,9 +41,9 @@ export function lex(input: string): Token[] {
         } else if ("|&".includes(char)) {
             tokens.push(token(TokenType.Combinator, char));
             next = iterator.next();
-        } else if (symbolStartRegex.test(char)) {
-            const [value, _next] = scanSymbol(char, iterator);
-            tokens.push(token(TokenType.Symbol, value));
+        } else if (literalStartRegex.test(char)) {
+            const [value, _next] = scanLiteral(char, iterator);
+            tokens.push(token(TokenType.Literal, value));
             next = _next;
         } else if ("\n\t ".includes(char)) {
             // ignore

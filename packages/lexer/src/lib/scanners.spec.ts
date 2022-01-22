@@ -1,6 +1,6 @@
+import { scanLiteral } from "./scan-literal.fn";
 import { scanNumber } from "./scan-number.fn";
 import { scanString } from "./scan-string.fn";
-import { scanSymbol } from "./scan-symbol.fn";
 
 describe("scanners", () => {
     function shouldScan(
@@ -23,8 +23,8 @@ describe("scanners", () => {
         });
     }
 
-    function shouldScanSymbol(input: string, expected?: string): void {
-        shouldScan(input, "symbol", scanSymbol, expected);
+    function shouldScanLiteral(input: string, expected?: string): void {
+        shouldScan(input, "literal", scanLiteral, expected);
     }
 
     function shouldScanNumber(input: string, expected?: string): void {
@@ -61,10 +61,10 @@ describe("scanners", () => {
         expect(scan).toThrow();
     });
 
-    // symbols
-    shouldScanSymbol("abc123", "abc");
-    shouldScanSymbol("a-b_c123", "a-b_c");
-    shouldScanSymbol("a-b_c.", "a-b_c");
-    shouldScanSymbol("_foo", "_foo");
-    shouldScanSymbol("-foo", "-foo");
+    // literals
+    shouldScanLiteral("abc123", "abc");
+    shouldScanLiteral("a-b_c123", "a-b_c");
+    shouldScanLiteral("a-b_c.", "a-b_c");
+    shouldScanLiteral("_foo", "_foo");
+    shouldScanLiteral("-foo", "-foo");
 });

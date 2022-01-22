@@ -21,7 +21,7 @@ const mappings: Record<string, () => BinaryCriterion<any>> = {
 
 export function* binaryCriterionTokenParser(): TokenParser {
     let token = yield;
-    if (token.type !== TokenType.Symbol) return false;
+    if (token.type !== TokenType.Literal) return false;
     const mapping = mappings[token.value];
     if (mapping === void 0) return false;
 
