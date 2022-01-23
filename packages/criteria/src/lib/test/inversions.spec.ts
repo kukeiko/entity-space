@@ -2,7 +2,7 @@ import { inverting, xinverting } from "./inverting.fn";
 
 describe("inverting criteria", () => {
     // binary
-    inverting("is-even").shouldBe("is-odd");
+    inverting("even").shouldBe("odd");
 
     // in-set
     inverting("{1, 2, 3}").shouldBe("!{1, 2, 3}");
@@ -25,5 +25,5 @@ describe("inverting criteria", () => {
     xinverting("[1, 7] | [10, 13]").shouldBe("[..., 1) | (7, 10) | (13, ...]");
 
     // and-criteria
-    xinverting("[1, 7] & is-even").shouldBe("([..., 1) | (7, ...]) | ([1, 7] & is-odd)");
+    xinverting("[1, 7] & even").shouldBe("([..., 1) | (7, ...]) | ([1, 7] & odd)");
 });

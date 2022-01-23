@@ -1,4 +1,3 @@
-import { binaryCriterionTokenParser } from "./binary-criterion.token-parser";
 import { criteriaTokenParser } from "./criteria.token-parser";
 import { inRangeCriterionTokenParser } from "./in-range-criterion.token-parser";
 import { insetCriterionTokenParser } from "./in-set-criterion.token-parser";
@@ -13,7 +12,6 @@ export function criterionTokenParser(): TokenParser {
         inRangeCriterionTokenParser,
         insetCriterionTokenParser,
         namedCriteriaTokenParser,
-        binaryCriterionTokenParser,
         valueCriterionTokenParser,
     ]);
 }

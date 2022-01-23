@@ -35,8 +35,8 @@ describe("parse-criteria", () => {
     shouldParse("!7", notValue(7));
     shouldParse('"foo"', isValue("foo"));
     shouldParse('!"foo"', notValue("foo"));
-    shouldParse("is-true", isTrue(true));
-    shouldParse("is-true & is-odd", and<any>([isTrue(true), isEven(false)]));
+    shouldParse("true", isTrue(true));
+    shouldParse("true & odd", and<any>([isTrue(true), isEven(false)]));
     shouldParse("7 | 8", or(isValue(7), isValue(8)));
     shouldParse("7 & 8", and(isValue(7), isValue(8)));
     shouldParse("[1, 7]", inRange(1, 7));
@@ -71,7 +71,7 @@ describe("parse-criteria", () => {
         and(or(inRange(1, 7), inRange(3, 4)), or(inSet([123]), notInSet([456])))
     );
     shouldParse(
-        "(([1, 7] | [3, 4]) & ({123} | !{456} | is-odd | is-null)) | ({1,2,3} & [-0.9, ...])",
+        "(([1, 7] | [3, 4]) & ({123} | !{456} | odd | null)) | ({1,2,3} & [-0.9, ...])",
         or([
             and([or([inRange(1, 7), inRange(3, 4)]), or([inSet([123]), notInSet([456]), isEven(false), isNull(true)])]),
             and([inSet([1, 2, 3]), inRange(-0.9, void 0)]),
@@ -96,12 +96,12 @@ describe("parse-criteria", () => {
     );
 
     shouldParse(
-        '{ foo: (7 | 64 | -7), bar: "baz" } | is-false',
+        '{ foo: (7 | 64 | -7), bar: "baz" } | false',
         or(matches({ foo: or(isValue(7), isValue(64), isValue(-7)), bar: isValue("baz") }), isTrue(false))
     );
 
     shouldParse(
-        '{ foo: (7 | ((13, 37) & (100, 200)) | -7), bar: "baz" } | is-false',
+        '{ foo: (7 | ((13, 37) & (100, 200)) | -7), bar: "baz" } | false',
         or(
             matches({
                 foo: or(isValue(7), and(inRange(13, 37, false), inRange(100, 200, false)), isValue(-7)),
@@ -112,7 +112,7 @@ describe("parse-criteria", () => {
     );
 
     shouldParse(
-        'is-true & ({ foo: 7, bar: "baz" } | 64)',
+        'true & ({ foo: 7, bar: "baz" } | 64)',
         and(isTrue(true), or(matches({ foo: isValue(7), bar: isValue("baz") }), isValue(64)))
     );
 });

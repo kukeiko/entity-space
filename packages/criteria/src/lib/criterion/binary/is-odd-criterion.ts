@@ -5,7 +5,7 @@ export class IsOddCriterion extends BinaryCriterion<number> {
     inverseClass = IsEvenCriterion;
 
     toString(): string {
-        return "is-odd";
+        return "odd";
     }
 
     matches(value: any): boolean {

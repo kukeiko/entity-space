@@ -1,4 +1,16 @@
-import { and, Criterion, inRange, inSet, isValue, notInSet, notValue, or } from "../../criterion";
+import {
+    and,
+    Criterion,
+    inRange,
+    inSet,
+    isEven,
+    isNull,
+    isTrue,
+    isValue,
+    notInSet,
+    notValue,
+    or,
+} from "../../criterion";
 import { parseCriteria } from "../../parser";
 
 describe("to-string-then-parse", () => {
@@ -16,8 +28,19 @@ describe("to-string-then-parse", () => {
     ]);
 
     shouldParse(toStringAndParse.toString(), toStringAndParse);
+
     shouldParse(isValue(7).toString(), isValue(7));
     shouldParse(notValue(7).toString(), notValue(7));
+
     shouldParse(isValue("foo").toString(), isValue("foo"));
     shouldParse(notValue("foo").toString(), notValue("foo"));
+
+    shouldParse(isTrue(true).toString(), isTrue(true));
+    shouldParse(isTrue(false).toString(), isTrue(false));
+
+    shouldParse(isNull(true).toString(), isNull(true));
+    shouldParse(isNull(false).toString(), isNull(false));
+
+    shouldParse(isEven(true).toString(), isEven(true));
+    shouldParse(isEven(false).toString(), isEven(false));
 });

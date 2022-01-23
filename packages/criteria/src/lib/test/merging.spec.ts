@@ -2,12 +2,12 @@ import { merging, xmerging } from "./merging.fn";
 
 describe("merging criteria", () => {
     // binary
-    merging("is-true").with("is-true").shouldBe("is-true");
-    merging("is-false").with("is-false").shouldBe("is-false");
-    merging("is-even").with("is-even").shouldBe("is-even");
-    merging("is-odd").with("is-odd").shouldBe("is-odd");
-    merging("is-null").with("is-null").shouldBe("is-null");
-    merging("is-not-null").with("is-not-null").shouldBe("is-not-null");
+    merging("true").with("true").shouldBe("true");
+    merging("false").with("false").shouldBe("false");
+    merging("even").with("even").shouldBe("even");
+    merging("odd").with("odd").shouldBe("odd");
+    merging("null").with("null").shouldBe("null");
+    merging("!null").with("!null").shouldBe("!null");
 
     // range
     merging("[1, 7]").with("[3, 5]").shouldBe("[1, 7]");

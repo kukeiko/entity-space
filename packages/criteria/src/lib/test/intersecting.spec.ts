@@ -2,8 +2,8 @@ import { intersecting } from "./intersecting.fn";
 
 describe("intersecting criteria", () => {
     // binary
-    intersecting("is-true").with("is-true").shouldBe("is-true");
-    intersecting("is-true").with("is-false").shouldBe(false);
+    intersecting("true").with("true").shouldBe("true");
+    intersecting("true").with("false").shouldBe(false);
 
     // set
     intersecting("{1, 2, 3}").with("{2}").shouldBe("{2}");
