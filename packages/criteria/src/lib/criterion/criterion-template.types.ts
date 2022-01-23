@@ -5,6 +5,7 @@ import { NamedCriteria, NamedCriteriaTemplate } from "./named";
 import { OrCriteria, OrCriteriaTemplate } from "./or";
 
 export type NamedCriteriaBagTemplate = { [key: string]: CriterionTemplate[] };
+
 export type InstancedNamedCriteriaBagTemplate<T extends NamedCriteriaBagTemplate> = {
     [K in keyof T]: InstancedCriterionTemplate<T[K][number]>;
 };
