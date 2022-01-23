@@ -1,4 +1,4 @@
-import { or } from "../criteria/public";
+import { or } from "@entity-space/criteria";
 import { reduceExpansion } from "../expansion/public";
 import { Query } from "./query";
 

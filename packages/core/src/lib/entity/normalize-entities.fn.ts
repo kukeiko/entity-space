@@ -1,4 +1,4 @@
-import { IEntitySchema } from "../public";
+import { IEntitySchema } from "../schema/public";
 import { Entity } from "./entity";
 import { NormalizedEntities } from "./normalized-entities";
 

@@ -1,4 +1,4 @@
-import { Criterion } from "../criteria/criterion";
+import { Criterion } from "@entity-space/criteria";
 import { Expansion } from "../expansion/expansion";
 import { IEntitySchema } from "../schema/public";
 

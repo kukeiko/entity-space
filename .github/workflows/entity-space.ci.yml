@@ -32,5 +32,5 @@ jobs:
     - name: 📦Node.js ${{ matrix.node-version }}    
       run: npm i
     
-    - name: 🕵️run tests
-      run: npx nx test core
+    - name: 🧪 run tests
+      run: npm test

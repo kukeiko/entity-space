@@ -1,4 +1,5 @@
-import { inSet, matches, Query } from "../public";
+import { inSet, matches } from "@entity-space/criteria";
+import { Query } from "../query/public";
 import { EntitySchema } from "../schema/entity-schema";
 import { Workspace } from "./workspace";
 

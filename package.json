@@ -4,7 +4,12 @@
     "license": "MIT",
     "private": true,
     "scripts": {
-        "postinstall": "ngcc --properties es2015 browser module main"
+        "postinstall": "ngcc --properties es2015 browser module main",
+        "test": "npm run test:types && npm run test:libs",
+        "test:libs": "npx nx run-many --parallel --target=test --projects=utils,lexer,criteria,core --silent",
+        "test:types": "npm run test:types:criteria && npm run test:types:core",
+        "test:types:criteria": "dtslint --localTs node_modules/typescript/lib packages/criteria/src/test/types",
+        "test:types:core": "dtslint --localTs node_modules/typescript/lib packages/core/src/test/types"
     },
     "repository": {
         "type": "git",
@@ -56,6 +61,7 @@
         "commitizen": "4.2.4",
         "conditional-type-checks": "1.0.5",
         "cz-customizable": "6.3.0",
+        "dtslint": "4.2.1",
         "eslint": "8.2.0",
         "eslint-config-prettier": "8.1.0",
         "eslint-plugin-cypress": "^2.10.3",
@@ -64,6 +70,7 @@
         "prettier": "^2.3.1",
         "prettier-plugin-organize-imports": "^2.3.4",
         "ts-jest": "27.0.5",
+        "tslint": "6.1.3",
         "typescript": "~4.4.3"
     },
     "config": {

@@ -1,4 +1,4 @@
-import { Criterion, fromDeepBag, inSet, NamedCriteriaBag, or } from "../criteria/public";
+import { Criterion, fromDeepBag, inSet, NamedCriteriaBag, or } from "@entity-space/criteria";
 import { IndexValue } from "./entity-store-index";
 
 export function createCriteriaForIndex(indexKeyPath: string[], indexValues: IndexValue[]): Criterion {
