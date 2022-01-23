@@ -16,13 +16,13 @@ export function itShouldParseTokens(
             const result = generator.next(token);
 
             if (result.value === false) {
-                return fail(`parser did not accept token ${JSON.stringify(token)}`);
+                throw new Error(`parser did not accept token ${JSON.stringify(token)}`);
             } else if (result.value !== undefined && result.done) {
                 return expect(result.value()).toEqual(expected);
             }
         }
 
-        fail("nothing parsed");
+        throw new Error("nothing parsed");
     });
 }
 

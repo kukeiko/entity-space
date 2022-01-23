@@ -6,6 +6,6 @@ export class IsNumberValueCriterion extends IsValueCriterion<number> {
     }
 
     toString(): string {
-        return `is ${this.value}`;
+        return `${this.value}`;
     }
 }
