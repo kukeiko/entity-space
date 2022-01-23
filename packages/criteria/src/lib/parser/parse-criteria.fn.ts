@@ -9,6 +9,7 @@ export function parseCriteria(input: string): Criterion {
         throw new Error("no tokens provided");
     }
 
+    // [todo] this seems like a fishy workaround. try to get rid of it
     const terminator = token(TokenType.Special, ";");
     tokens.push(terminator);
 

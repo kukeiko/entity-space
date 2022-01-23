@@ -1,40 +1,35 @@
 import { TokenType } from "@entity-space/lexer";
-import { IsNumberValueCriterion } from "../../criterion/value/is-number-value-criterion";
-import { IsStringValueCriterion } from "../../criterion/value/is-string-value-criterion";
-import { NotNumberValueCriterion } from "../../criterion/value/not-number-value-criterion";
-import { NotStringValueCriterion } from "../../criterion/value/not-string-value-criterion";
+import { Criterion, isEven, isNull, isTrue, isValue, notValue } from "../../criterion";
 import { TokenParser } from "./token-parser.type";
+
+const binaryCriterionMapping: Record<string, (truthy: boolean) => Criterion> = {
+    true: (truthy: boolean) => isTrue(truthy),
+    false: (truthy: boolean) => isTrue(!truthy),
+    null: (truthy: boolean) => isNull(truthy),
+    even: (truthy: boolean) => isEven(truthy),
+    odd: (truthy: boolean) => isEven(!truthy),
+};
 
 export function* valueCriterionTokenParser(): TokenParser {
     let token = yield;
+    let not = false;
 
-    if (token.type !== TokenType.Literal || !["is", "not"].includes(token.value)) {
-        return false;
+    if (token.type === TokenType.Special && token.value === "!") {
+        not = true;
+        token = yield;
     }
 
-    let isTruthy = token.value === "is";
-    token = yield;
+    if (token.type === TokenType.String) {
+        return () => (not ? notValue(token.value) : isValue(token.value));
+    } else if (token.type === TokenType.Number) {
+        return () => (not ? notValue(parseFloat(token.value)) : isValue(parseFloat(token.value)));
+    } else if (token.type === TokenType.Literal) {
+        const mapping = binaryCriterionMapping[token.value];
 
-    if (token.type === TokenType.Number) {
-        return () =>
-            isTruthy
-                ? new IsNumberValueCriterion(parseFloat(token.value))
-                : new NotNumberValueCriterion(parseFloat(token.value));
-    } else if (token.type === TokenType.String) {
-        return () => (isTruthy ? new IsStringValueCriterion(token.value) : new NotStringValueCriterion(token.value));
+        if (mapping !== void 0) {
+            return () => mapping(!not);
+        }
     }
 
     return false;
 }
-
-// export function* valueCriterionTokenParser(): TokenParser {
-//     let token = yield;
-
-//     if (token.type === TokenType.String) {
-//         return () => new IsStringValueCriterion(token.value);
-//     } else if (token.type === TokenType.Number) {
-//         return () => new IsNumberValueCriterion(parseFloat(token.value));
-//     }
-
-//     return false;
-// }

@@ -6,6 +6,6 @@ export class IsStringValueCriterion extends IsValueCriterion<string> {
     }
 
     toString(): string {
-        return `is "${this.value}""`;
+        return `"${this.value}"`;
     }
 }

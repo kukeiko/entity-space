@@ -6,6 +6,6 @@ export class NotNumberValueCriterion extends NotValueCriterion<number> {
     }
 
     toString(): string {
-        return `not ${this.value}`;
+        return `!${this.value}`;
     }
 }

@@ -5,7 +5,7 @@ export class IsTrueCriterion extends BinaryCriterion<boolean> {
     inverseClass = IsFalseCriterion;
 
     toString(): string {
-        return "is-true";
+        return "true";
     }
 
     matches(value: any): boolean {

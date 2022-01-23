@@ -5,7 +5,7 @@ export class IsNotNullCriterion extends BinaryCriterion<null> {
     inverseClass = IsNullCriterion;
 
     toString(): string {
-        return "is-not-null";
+        return "!null";
     }
 
     matches(value: any): boolean {
