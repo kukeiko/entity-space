@@ -28,6 +28,8 @@ export function* criteriaTokenParser(): TokenParser {
             return () => (items.length === 1 ? items[0] : combinator === "|" ? or(items) : and(items));
         } else if (token.type === TokenType.Combinator) {
             combinator = token.value;
+        } else {
+            return false;
         }
     }
 }
