@@ -6,4 +6,6 @@ export class OrCriteriaTemplate<T extends CriterionTemplate[] = CriterionTemplat
     }
 
     readonly items: T;
+    readonly combinator: "|" = "|"; // otherwise typeof OrCriteriaTemplate === typeof AndCriteriaTemplate
+
 }
