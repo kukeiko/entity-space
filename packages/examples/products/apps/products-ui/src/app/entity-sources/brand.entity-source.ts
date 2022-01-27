@@ -1,7 +1,7 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { Expansion, IEntitySchema, IEntitySource, QueriedEntities, Query, reduceExpansion } from "@entity-space/core";
-import { Criterion, inSetTemplate, NamedCriteriaTemplate, or } from "@entity-space/criteria";
+import { Criterion, inSetTemplate, matchesTemplate, or } from "@entity-space/criteria";
 import { Brand } from "@entity-space/examples/products/libs/products-model";
 import { firstValueFrom, Observable, Subject } from "rxjs";
 
@@ -59,7 +59,7 @@ export class BrandEntitySource implements IEntitySource {
     }
 
     private mapCriteriaToByIdFilter(criteria: Criterion): [number[], Criterion] {
-        const template = new NamedCriteriaTemplate({
+        const template = matchesTemplate({
             id: [inSetTemplate([Number])],
         });
 

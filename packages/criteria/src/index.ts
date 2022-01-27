@@ -2,6 +2,8 @@ export * from "./lib/criterion/and/and-template.fn";
 export * from "./lib/criterion/and/and.fn";
 export * from "./lib/criterion/binary/is-even.fn";
 export * from "./lib/criterion/criterion";
+export * from "./lib/criterion/named/from-deep-bag.fn";
+export * from "./lib/criterion/named/matches-template.fn";
 export * from "./lib/criterion/named/matches.fn";
 export * from "./lib/criterion/named/named-criteria";
 export * from "./lib/criterion/named/named-criteria-template";
