@@ -1,9 +1,9 @@
 import { Token } from "@entity-space/lexer";
-import { Criterion } from "../../criterion/criterion";
-import { TokenParser } from "../../parser";
+import { Criterion } from "../../lib/criterion/criterion";
+import { CriterionTokenParser } from "../../lib/parser/criterion-token-parser.type";
 
 export function itShouldParseTokens(
-    makeGenerator: () => TokenParser,
+    makeGenerator: () => CriterionTokenParser,
     tokens: Token[],
     expected: Criterion,
     specFn = it
@@ -26,10 +26,10 @@ export function itShouldParseTokens(
     });
 }
 
-export function fitShouldParseTokens(makeGenerator: () => TokenParser, tokens: Token[], expected: Criterion) {
+export function fitShouldParseTokens(makeGenerator: () => CriterionTokenParser, tokens: Token[], expected: Criterion) {
     itShouldParseTokens(makeGenerator, tokens, expected, fit);
 }
 
-export function xitShouldParseTokens(makeGenerator: () => TokenParser, tokens: Token[], expected: Criterion) {
+export function xitShouldParseTokens(makeGenerator: () => CriterionTokenParser, tokens: Token[], expected: Criterion) {
     itShouldParseTokens(makeGenerator, tokens, expected, xit);
 }

@@ -1,14 +1,14 @@
-import { Criterion } from "../../criterion/criterion";
-import { matches } from "../../criterion/named/matches.fn";
-import { NamedCriteriaTemplate } from "../../criterion/named/named-criteria-template";
-import { OrCriteriaTemplate } from "../../criterion/or/or-criteria-template";
-import { or } from "../../criterion/or/or.fn";
-import { InNumberRangeCriterion } from "../../criterion/range/in-number-range-criterion";
-import { inRange } from "../../criterion/range/in-range.fn";
-import { inSetTemplate } from "../../criterion/set/in-set-template.fn";
-import { inSet } from "../../criterion/set/in-set.fn";
-import { isValueTemplate } from "../../criterion/value/is-value-template.fn";
-import { isValue } from "../../criterion/value/is-value.fn";
+import { Criterion } from "../lib/criterion/criterion";
+import { matches } from "../lib/criterion/named/matches.fn";
+import { NamedCriteriaTemplate } from "../lib/criterion/named/named-criteria-template";
+import { OrCriteriaTemplate } from "../lib/criterion/or/or-criteria-template";
+import { or } from "../lib/criterion/or/or.fn";
+import { InNumberRangeCriterion } from "../lib/criterion/range/in-number-range-criterion";
+import { inRange } from "../lib/criterion/range/in-range.fn";
+import { inSetTemplate } from "../lib/criterion/set/in-set-template.fn";
+import { inSet } from "../lib/criterion/set/in-set.fn";
+import { isValueTemplate } from "../lib/criterion/value/is-value-template.fn";
+import { isValue } from "../lib/criterion/value/is-value.fn";
 
 type RemapOneResult = ReturnType<Criterion["remapOne"]>;
 

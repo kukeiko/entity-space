@@ -1,12 +1,12 @@
 import { token, TokenType } from "@entity-space/lexer";
-import { inSet } from "../../criterion/set/in-set.fn";
-import { notInSet } from "../../criterion/set/not-in-set.fn";
-import { insetCriterionTokenParser } from "../../parser";
+import { inSet } from "../../lib/criterion/set/in-set.fn";
+import { notInSet } from "../../lib/criterion/set/not-in-set.fn";
+import { setCriterionTokenParser } from "../../lib/parser/set-criterion.token-parser";
 import { itShouldParseTokens } from "./utils";
 
 describe("parse-tokens: in-set / not-in-set", () => {
     itShouldParseTokens(
-        insetCriterionTokenParser,
+        setCriterionTokenParser,
         [
             token(TokenType.Special, "{"),
             token(TokenType.Number, "1"),
@@ -20,7 +20,7 @@ describe("parse-tokens: in-set / not-in-set", () => {
     );
 
     itShouldParseTokens(
-        insetCriterionTokenParser,
+        setCriterionTokenParser,
         [
             token(TokenType.Special, "!"),
             token(TokenType.Special, "{"),

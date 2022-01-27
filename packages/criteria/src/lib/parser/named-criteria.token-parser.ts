@@ -1,10 +1,10 @@
 import { TokenType } from "@entity-space/lexer";
-import { Criterion } from "../../criterion/criterion";
-import { matches } from "../../criterion/named/matches.fn";
-import { notBracketedCriteriaTokenParser } from "./not-bracketed-criteria.token-parser";
-import { TokenParser } from "./token-parser.type";
+import { Criterion } from "../criterion/criterion";
+import { matches } from "../criterion/named/matches.fn";
+import { CriterionTokenParser } from "./criterion-token-parser.type";
+import { noBracketsCriteriaTokenParser } from "./no-brackets-criteria.token-parser";
 
-export function* namedCriteriaTokenParser(): TokenParser {
+export function* namedCriteriaTokenParser(): CriterionTokenParser {
     let token = yield;
 
     if (!(token.type === TokenType.Special && token.value === "{")) {
@@ -28,13 +28,13 @@ export function* namedCriteriaTokenParser(): TokenParser {
             return false;
         }
 
-        const orCombinedCriteriaGenerator = notBracketedCriteriaTokenParser();
-        orCombinedCriteriaGenerator.next();
+        const criterionTokenParser = noBracketsCriteriaTokenParser();
+        criterionTokenParser.next();
 
         while (true) {
             token = yield;
 
-            const result = orCombinedCriteriaGenerator.next(token);
+            const result = criterionTokenParser.next(token);
 
             if (result.value === false) {
                 return false;

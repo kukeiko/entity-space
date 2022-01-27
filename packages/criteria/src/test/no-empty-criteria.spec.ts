@@ -1,8 +1,8 @@
-import { and } from "../criterion/and/and.fn";
-import { matches } from "../criterion/named/matches.fn";
-import { NamedCriteria } from "../criterion/named/named-criteria";
-import { or } from "../criterion/or/or.fn";
-import { inRange } from "../criterion/range/in-range.fn";
+import { and } from "../lib/criterion/and/and.fn";
+import { matches } from "../lib/criterion/named/matches.fn";
+import { NamedCriteria } from "../lib/criterion/named/named-criteria";
+import { or } from "../lib/criterion/or/or.fn";
+import { inRange } from "../lib/criterion/range/in-range.fn";
 
 describe("a criterion can't be empty", () => {
     it("should be true for NamedCriteria", () => {

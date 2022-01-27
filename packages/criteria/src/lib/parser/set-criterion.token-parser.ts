@@ -1,9 +1,9 @@
 import { TokenType } from "@entity-space/lexer";
-import { inSet } from "../../criterion/set/in-set.fn";
-import { notInSet } from "../../criterion/set/not-in-set.fn";
-import { TokenParser } from "./token-parser.type";
+import { inSet } from "../criterion/set/in-set.fn";
+import { notInSet } from "../criterion/set/not-in-set.fn";
+import { CriterionTokenParser } from "./criterion-token-parser.type";
 
-export function* insetCriterionTokenParser(): TokenParser {
+export function* setCriterionTokenParser(): CriterionTokenParser {
     let token = yield;
     let isNegated = false;
 

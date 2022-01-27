@@ -1,6 +1,6 @@
 import { Token, TokenType } from "@entity-space/lexer";
-import { inRange } from "../../criterion/range/in-range.fn";
-import { TokenParser } from "./token-parser.type";
+import { inRange } from "../criterion/range/in-range.fn";
+import { CriterionTokenParser } from "./criterion-token-parser.type";
 
 function* valueParser(): Generator<
     undefined,
@@ -27,7 +27,7 @@ function* valueParser(): Generator<
     }
 }
 
-export function* inRangeCriterionTokenParser(): TokenParser {
+export function* inRangeCriterionTokenParser(): CriterionTokenParser {
     let token = yield;
 
     // in-range has to start with either an inclusive "[" or exclusive "(" bracket

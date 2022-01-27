@@ -1,8 +1,9 @@
 import { token, TokenType } from "@entity-space/lexer";
-import { or } from "../../criterion/or/or.fn";
-import { inRange } from "../../criterion/range/in-range.fn";
-import { inSet } from "../../criterion/set/in-set.fn";
-import { criteriaTokenParser, notBracketedCriteriaTokenParser } from "../../parser";
+import { or } from "../../lib/criterion/or/or.fn";
+import { inRange } from "../../lib/criterion/range/in-range.fn";
+import { inSet } from "../../lib/criterion/set/in-set.fn";
+import { criteriaTokenParser } from "../../lib/parser/criteria.token-parser";
+import { noBracketsCriteriaTokenParser } from "../../lib/parser/no-brackets-criteria.token-parser";
 import { itShouldParseTokens } from "./utils";
 
 describe("token-parser: value-criteria", () => {
@@ -45,7 +46,7 @@ describe("token-parser: value-criteria", () => {
     );
 
     itShouldParseTokens(
-        notBracketedCriteriaTokenParser,
+        noBracketsCriteriaTokenParser,
         [
             token(TokenType.Special, "("),
             token(TokenType.Number, "13"),
@@ -64,7 +65,7 @@ describe("token-parser: value-criteria", () => {
     );
 
     itShouldParseTokens(
-        notBracketedCriteriaTokenParser,
+        noBracketsCriteriaTokenParser,
         [
             token(TokenType.Special, "("),
             token(TokenType.Special, "("),

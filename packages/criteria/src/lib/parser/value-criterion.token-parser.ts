@@ -1,9 +1,9 @@
 import { TokenType } from "@entity-space/lexer";
-import { isEven } from "../../criterion/binary/is-even.fn";
-import { Criterion } from "../../criterion/criterion";
-import { isValue } from "../../criterion/value/is-value.fn";
-import { notValue } from "../../criterion/value/not-value.fn";
-import { TokenParser } from "./token-parser.type";
+import { isEven } from "../criterion/binary/is-even.fn";
+import { Criterion } from "../criterion/criterion";
+import { isValue } from "../criterion/value/is-value.fn";
+import { notValue } from "../criterion/value/not-value.fn";
+import { CriterionTokenParser } from "./criterion-token-parser.type";
 
 const binaryCriterionMapping: Record<string, (truthy: boolean) => Criterion> = {
     true: (truthy: boolean) => (truthy ? isValue(true) : notValue(true)),
@@ -13,7 +13,7 @@ const binaryCriterionMapping: Record<string, (truthy: boolean) => Criterion> = {
     odd: (truthy: boolean) => isEven(!truthy),
 };
 
-export function* valueCriterionTokenParser(): TokenParser {
+export function* valueCriterionTokenParser(): CriterionTokenParser {
     let token = yield;
     let not = false;
 

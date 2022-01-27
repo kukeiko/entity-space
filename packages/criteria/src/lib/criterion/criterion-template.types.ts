@@ -20,13 +20,13 @@ export type InstancedNamedCriteriaBagTemplate<T extends NamedCriteriaBagTemplate
 };
 
 export type CriterionTemplate =
-    | Class<Criterion>
     | AndCriteriaTemplate
-    | OrCriteriaTemplate
-    | NamedCriteriaTemplate
+    | Class<Criterion>
+    | InSetCriterionTemplate
     | IsValueCriterionTemplate
+    | NamedCriteriaTemplate
     | NotValueCriterionTemplate
-    | InSetCriterionTemplate;
+    | OrCriteriaTemplate;
 // |NotInVa;
 
 export type InstancedCriterionTemplate<T extends CriterionTemplate> = T extends Class<Criterion>

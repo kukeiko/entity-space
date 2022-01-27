@@ -1,8 +1,8 @@
-import { matches } from "../criterion/named/matches.fn";
-import { or } from "../criterion/or/or.fn";
-import { inRange } from "../criterion/range/in-range.fn";
-import { inSet } from "../criterion/set/in-set.fn";
-import { notInSet } from "../criterion/set/not-in-set.fn";
+import { matches } from "../lib/criterion/named/matches.fn";
+import { or } from "../lib/criterion/or/or.fn";
+import { inRange } from "../lib/criterion/range/in-range.fn";
+import { inSet } from "../lib/criterion/set/in-set.fn";
+import { notInSet } from "../lib/criterion/set/not-in-set.fn";
 
 describe("render: in-set", () => {
     it("should render correctly", () => {

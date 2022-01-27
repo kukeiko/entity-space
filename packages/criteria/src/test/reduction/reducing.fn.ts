@@ -1,5 +1,5 @@
-import { Criterion } from "../../criterion/criterion";
-import { parseCriteria } from "../../parser";
+import { Criterion } from "../../lib/criterion/criterion";
+import { parseCriteria } from "../../lib/parser/parse-criteria.fn";
 
 function parse<T extends Criterion | string>(item: T): Criterion {
     if (typeof item === "string") {

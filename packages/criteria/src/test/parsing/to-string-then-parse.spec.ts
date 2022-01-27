@@ -1,13 +1,13 @@
-import { and } from "../../criterion/and/and.fn";
-import { isEven } from "../../criterion/binary/is-even.fn";
-import { Criterion } from "../../criterion/criterion";
-import { or } from "../../criterion/or/or.fn";
-import { inRange } from "../../criterion/range/in-range.fn";
-import { inSet } from "../../criterion/set/in-set.fn";
-import { notInSet } from "../../criterion/set/not-in-set.fn";
-import { isValue } from "../../criterion/value/is-value.fn";
-import { notValue } from "../../criterion/value/not-value.fn";
-import { parseCriteria } from "../../parser";
+import { and } from "../../lib/criterion/and/and.fn";
+import { isEven } from "../../lib/criterion/binary/is-even.fn";
+import { Criterion } from "../../lib/criterion/criterion";
+import { or } from "../../lib/criterion/or/or.fn";
+import { inRange } from "../../lib/criterion/range/in-range.fn";
+import { inSet } from "../../lib/criterion/set/in-set.fn";
+import { notInSet } from "../../lib/criterion/set/not-in-set.fn";
+import { isValue } from "../../lib/criterion/value/is-value.fn";
+import { notValue } from "../../lib/criterion/value/not-value.fn";
+import { parseCriteria } from "../../lib/parser/parse-criteria.fn";
 
 describe("to-string-then-parse", () => {
     function shouldParse(stringified: string, expected: Criterion): void {
