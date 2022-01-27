@@ -1,13 +1,16 @@
-import { NotNumberValueCriterion } from "./not-number-value-criterion";
-import { NotStringValueCriterion } from "./not-string-value-criterion";
+import { Null } from "@entity-space/utils";
+import { Criterion } from "../criterion";
+import { NotValueCriterion } from "./not-value-criterion";
 
-export function notValue(value: number): NotNumberValueCriterion;
-export function notValue(value: string): NotStringValueCriterion;
-export function notValue(value: number | string): NotNumberValueCriterion | NotStringValueCriterion {
+export function notValue(value: number | string | boolean | null): Criterion {
     if (typeof value == "number") {
-        return new NotNumberValueCriterion(value);
+        return new NotValueCriterion([Number], value);
     } else if (typeof value == "string") {
-        return new NotStringValueCriterion(value);
+        return new NotValueCriterion([String], value);
+    } else if (typeof value === "boolean") {
+        return new NotValueCriterion([Boolean], value);
+    } else if (value === null) {
+        return new NotValueCriterion([Null], value);
     }
 
     throw new Error(`invalid arguments`);

@@ -1,4 +1,8 @@
-import { and, inRange, matches, NamedCriteria, or } from "../criterion";
+import { and } from "../criterion/and/and.fn";
+import { matches } from "../criterion/named/matches.fn";
+import { NamedCriteria } from "../criterion/named/named-criteria";
+import { or } from "../criterion/or/or.fn";
+import { inRange } from "../criterion/range/in-range.fn";
 
 describe("a criterion can't be empty", () => {
     it("should be true for NamedCriteria", () => {

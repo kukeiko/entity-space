@@ -1,8 +1,8 @@
 import { isInstanceOf } from "@entity-space/utils";
-import { OrCriteriaTemplate } from ".";
 import { Criteria } from "../criteria";
 import { Criterion } from "../criterion";
 import { CriterionTemplate } from "../criterion-template.types";
+import { OrCriteriaTemplate } from "./or-criteria-template";
 
 export class OrCriteria<T extends Criterion = Criterion> extends Criteria<T> {
     readonly combinator: "|" = "|"; // otherwise typeof OrCriteria === typeof AndCriteria

@@ -1,5 +1,4 @@
-import { InstancedCriterionTemplate } from ".";
-import { CriterionTemplate } from "./criterion-template.types";
+import { CriterionTemplate, InstancedCriterionTemplate } from "./criterion-template.types";
 
 export abstract class Criterion {
     invert(): false | Criterion {
@@ -55,7 +54,7 @@ export abstract class Criterion {
 
     abstract reduce(other: Criterion): boolean | Criterion;
     abstract toString(): string;
-    abstract matches<T>(item: T): boolean;
+    abstract matches(value: any): boolean;
 
     filter<T>(items: T[]): T[] {
         return items.filter(item => this.matches(item));

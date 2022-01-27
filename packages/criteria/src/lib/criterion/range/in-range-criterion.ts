@@ -1,9 +1,11 @@
 import { Class, getInstanceClass } from "@entity-space/utils";
-import { AndCriteria, AndCriteriaTemplate } from "../and";
+import { AndCriteria } from "../and/and-criteria";
+import { AndCriteriaTemplate } from "../and/and-criteria-template";
 import { Criteria } from "../criteria";
 import { Criterion } from "../criterion";
 import { CriterionTemplate } from "../criterion-template.types";
-import { OrCriteria, OrCriteriaTemplate } from "../or";
+import { OrCriteria } from "../or/or-criteria";
+import { OrCriteriaTemplate } from "../or/or-criteria-template";
 
 export type FromCriterion<T> = {
     op: ">=" | ">";

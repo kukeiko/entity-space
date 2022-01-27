@@ -6,6 +6,7 @@ export * from "./is-instance-of.fn";
 export * from "./is-not-null.fn";
 export * from "./is-primitive.fn";
 export * from "./is-string.fn";
+export * from "./null";
 export * from "./permutate-entries.fn";
 export * from "./split-one.fn";
 export * from "./subtract-sets.fn";

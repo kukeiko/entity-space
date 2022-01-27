@@ -1,15 +1,14 @@
-import {
-    Criterion,
-    InNumberRangeCriterion,
-    InNumberSetCriterion,
-    inRange,
-    inSet,
-    matches,
-    NamedCriteriaTemplate,
-    or,
-    OrCriteriaTemplate,
-} from "../../criterion";
-import { IsNumberValueCriterion, isValue } from "../../criterion/value";
+import { Criterion } from "../../criterion/criterion";
+import { matches } from "../../criterion/named/matches.fn";
+import { NamedCriteriaTemplate } from "../../criterion/named/named-criteria-template";
+import { OrCriteriaTemplate } from "../../criterion/or/or-criteria-template";
+import { or } from "../../criterion/or/or.fn";
+import { InNumberRangeCriterion } from "../../criterion/range/in-number-range-criterion";
+import { inRange } from "../../criterion/range/in-range.fn";
+import { inSetTemplate } from "../../criterion/set/in-set-template.fn";
+import { inSet } from "../../criterion/set/in-set.fn";
+import { isValueTemplate } from "../../criterion/value/is-value-template.fn";
+import { isValue } from "../../criterion/value/is-value.fn";
 
 type RemapOneResult = ReturnType<Criterion["remapOne"]>;
 
@@ -35,7 +34,7 @@ describe("remapping", () => {
     it("in-number-range #2", () => {
         // arrange
         const criterion = inRange(1, 7);
-        const template = new OrCriteriaTemplate([InNumberSetCriterion, InNumberRangeCriterion]);
+        const template = new OrCriteriaTemplate([inSetTemplate([Number]), InNumberRangeCriterion]);
         const expected: RemapOneResult = [[or(criterion)]];
 
         // act
@@ -78,7 +77,7 @@ describe("remapping", () => {
     it("in-number-set to is-number-value #1", () => {
         // arrange
         const criterion = inSet([1, 2, 3]);
-        const template = IsNumberValueCriterion;
+        const template = isValueTemplate([Number]);
         const expected: RemapOneResult = [[isValue(1), isValue(2), isValue(3)]];
 
         // act
@@ -91,7 +90,7 @@ describe("remapping", () => {
     it("in-number-set to is-number-value #2", () => {
         // arrange
         const criterion = inSet([1, 2, 3]);
-        const template = new OrCriteriaTemplate([IsNumberValueCriterion]);
+        const template = new OrCriteriaTemplate([isValueTemplate([Number])]);
         const expected: RemapOneResult = [[or([isValue(1), isValue(2), isValue(3)])]];
 
         // act
@@ -107,7 +106,7 @@ describe("remapping", () => {
          */
         // arrange
         const criterion = matches({ foo: inSet([1, 2, 3]) });
-        const template = new NamedCriteriaTemplate({ foo: [IsNumberValueCriterion] });
+        const template = new NamedCriteriaTemplate({ foo: [isValueTemplate([Number])] });
         const expected: RemapOneResult = [
             [matches({ foo: isValue(1) }), matches({ foo: isValue(2) }), matches({ foo: isValue(3) })],
         ];
@@ -125,7 +124,10 @@ describe("remapping", () => {
          */
         // arrange
         const criterion = matches({ foo: inSet([1, 2]), bar: inSet([4, 5]) });
-        const template = new NamedCriteriaTemplate({ foo: [IsNumberValueCriterion], bar: [IsNumberValueCriterion] });
+        const template = new NamedCriteriaTemplate({
+            foo: [isValueTemplate([Number])],
+            bar: [isValueTemplate([Number])],
+        });
 
         const expected: RemapOneResult = [
             [
@@ -155,8 +157,8 @@ describe("remapping", () => {
         // arrange
         const criterion = matches({ foo: inSet([1, 2]), bar: matches({ baz: inSet([4, 5]) }) });
         const template = new NamedCriteriaTemplate({
-            foo: [IsNumberValueCriterion],
-            bar: [new NamedCriteriaTemplate({ baz: [IsNumberValueCriterion] })],
+            foo: [isValueTemplate([Number])],
+            bar: [new NamedCriteriaTemplate({ baz: [isValueTemplate([Number])] })],
         });
 
         const expected: RemapOneResult = [

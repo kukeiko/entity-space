@@ -1,16 +1,12 @@
-import {
-    and,
-    Criterion,
-    inRange,
-    inSet,
-    isEven,
-    isNull,
-    isTrue,
-    isValue,
-    notInSet,
-    notValue,
-    or,
-} from "../../criterion";
+import { and } from "../../criterion/and/and.fn";
+import { isEven } from "../../criterion/binary/is-even.fn";
+import { Criterion } from "../../criterion/criterion";
+import { or } from "../../criterion/or/or.fn";
+import { inRange } from "../../criterion/range/in-range.fn";
+import { inSet } from "../../criterion/set/in-set.fn";
+import { notInSet } from "../../criterion/set/not-in-set.fn";
+import { isValue } from "../../criterion/value/is-value.fn";
+import { notValue } from "../../criterion/value/not-value.fn";
 import { parseCriteria } from "../../parser";
 
 describe("to-string-then-parse", () => {
@@ -35,11 +31,11 @@ describe("to-string-then-parse", () => {
     shouldParse(isValue("foo").toString(), isValue("foo"));
     shouldParse(notValue("foo").toString(), notValue("foo"));
 
-    shouldParse(isTrue(true).toString(), isTrue(true));
-    shouldParse(isTrue(false).toString(), isTrue(false));
+    shouldParse(isValue(true).toString(), isValue(true));
+    shouldParse(isValue(false).toString(), isValue(false));
 
-    shouldParse(isNull(true).toString(), isNull(true));
-    shouldParse(isNull(false).toString(), isNull(false));
+    shouldParse(isValue(null).toString(), isValue(null));
+    shouldParse(notValue(null).toString(), notValue(null));
 
     shouldParse(isEven(true).toString(), isEven(true));
     shouldParse(isEven(false).toString(), isEven(false));

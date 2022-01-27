@@ -1,22 +1,19 @@
-import { InNumberSetCriterion } from "./in-number-set-criterion";
-import { InStringSetCriterion } from "./in-string-set-criterion";
+import { Null } from "@entity-space/utils";
+import { Criterion } from "../criterion";
+import { InSetCriterion } from "./in-set-criterion";
 
-function firstValueIsString(set: Iterable<unknown>): set is Iterable<string> {
-    return typeof set[Symbol.iterator]().next().value === "string";
-}
+const valueTypeMap = {
+    string: String,
+    number: Number,
+    boolean: Boolean,
+    null: Null,
+};
 
-function firstValueIsNumber(set: Iterable<unknown>): set is Iterable<number> {
-    return typeof set[Symbol.iterator]().next().value === "number";
-}
+// [todo] handle empty values
+export function inSet<T>(values: Iterable<T>): Criterion {
+    const typeOfs = new Set(Array.from(values).map(value => (value === null ? "null" : typeof value)));
+    // [todo] get rid of any
+    const valueTypes = Array.from(typeOfs.values()).map(typeOf => (valueTypeMap as any)[typeOf]);
 
-export function inSet(values: Iterable<number>): InNumberSetCriterion;
-export function inSet(values: Iterable<string>): InStringSetCriterion;
-export function inSet<T>(values: Iterable<T>): InNumberSetCriterion | InStringSetCriterion {
-    if (firstValueIsString(values)) {
-        return new InStringSetCriterion(values);
-    } else if (firstValueIsNumber(values)) {
-        return new InNumberSetCriterion(values);
-    } else {
-        throw new Error(`values empty or contain unsupported type`);
-    }
+    return new InSetCriterion(valueTypes, values);
 }

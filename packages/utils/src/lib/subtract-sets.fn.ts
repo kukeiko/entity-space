@@ -1,4 +1,4 @@
-export function subtractSets<T>(a: Set<T>, b: Set<T>): Set<T> {
+export function subtractSets<T>(a: ReadonlySet<T>, b: ReadonlySet<T>): Set<T> {
     const copy = new Set(a);
 
     a.forEach(value => {

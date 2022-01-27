@@ -1,5 +1,5 @@
 import { Token, TokenType } from "@entity-space/lexer";
-import { inRange } from "../../criterion";
+import { inRange } from "../../criterion/range/in-range.fn";
 import { TokenParser } from "./token-parser.type";
 
 function* valueParser(): Generator<

@@ -6,5 +6,6 @@ export class AndCriteriaTemplate<T extends CriterionTemplate[] = CriterionTempla
     }
 
     readonly items: T;
+    // [todo] get rid of this hack
     readonly combinator: "&" = "&"; // otherwise typeof OrCriteriaTemplate === typeof AndCriteriaTemplate
 }

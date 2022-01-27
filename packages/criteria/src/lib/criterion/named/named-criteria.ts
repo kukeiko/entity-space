@@ -1,9 +1,10 @@
 import { permutateEntries } from "@entity-space/utils";
-import { NamedCriteriaTemplate } from ".";
-import { CriterionTemplate } from "..";
 import { Criteria } from "../criteria";
 import { Criterion } from "../criterion";
-import { OrCriteria, OrCriteriaTemplate } from "../or";
+import { CriterionTemplate } from "../criterion-template.types";
+import { OrCriteria } from "../or/or-criteria";
+import { OrCriteriaTemplate } from "../or/or-criteria-template";
+import { NamedCriteriaTemplate } from "./named-criteria-template";
 
 export type NamedCriteriaBag = Record<string, Criterion>;
 

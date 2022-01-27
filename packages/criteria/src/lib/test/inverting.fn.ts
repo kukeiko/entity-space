@@ -1,4 +1,4 @@
-import { Criterion } from "../criterion";
+import { Criterion } from "../criterion/criterion";
 import { parseCriteria } from "../parser";
 
 function parse<T extends Criterion | string>(item: T): Criterion {

@@ -1,22 +1,19 @@
-import { NotInNumberSetCriterion } from "./not-in-number-set-criterion";
-import { NotInStringSetCriterion } from "./not-in-string-set-criterion";
+import { Null } from "@entity-space/utils";
+import { Criterion } from "../criterion";
+import { NotInValueSetCriterion_V2 } from "./not-in-set-criterion";
 
-function firstValueIsString(set: Iterable<unknown>): set is Iterable<string> {
-    return typeof set[Symbol.iterator]().next().value === "string";
-}
+const valueTypeMap = {
+    string: String,
+    number: Number,
+    boolean: Boolean,
+    null: Null,
+};
 
-function firstValueIsNumber(set: Iterable<unknown>): set is Iterable<number> {
-    return typeof set[Symbol.iterator]().next().value === "number";
-}
+// [todo] handle empty values
+export function notInSet<T>(values: Iterable<T>): Criterion {
+    const typeOfs = new Set(Array.from(values).map(value => (value === null ? "null" : typeof value)));
+    // [todo] get rid of any
+    const valueTypes = Array.from(typeOfs.values()).map(typeOf => (valueTypeMap as any)[typeOf]);
 
-export function notInSet(values: Iterable<number>): NotInNumberSetCriterion;
-export function notInSet(values: Iterable<string>): NotInStringSetCriterion;
-export function notInSet<T>(values: Iterable<T>): NotInNumberSetCriterion | NotInStringSetCriterion {
-    if (firstValueIsString(values)) {
-        return new NotInStringSetCriterion(values);
-    } else if (firstValueIsNumber(values)) {
-        return new NotInNumberSetCriterion(values);
-    } else {
-        throw new Error(`values empty or contain unsupported type`);
-    }
+    return new NotInValueSetCriterion_V2(valueTypes, values);
 }

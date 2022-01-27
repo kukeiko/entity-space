@@ -1,4 +1,8 @@
-import { and, AndCriteria, inRange, or, OrCriteria } from "../criterion";
+import { AndCriteria } from "../criterion/and/and-criteria";
+import { and } from "../criterion/and/and.fn";
+import { OrCriteria } from "../criterion/or/or-criteria";
+import { or } from "../criterion/or/or.fn";
+import { inRange } from "../criterion/range/in-range.fn";
 
 describe("collapsing-behaviour", () => {
     it("or() should return OrCriteria, even if only given 1 element", () => {

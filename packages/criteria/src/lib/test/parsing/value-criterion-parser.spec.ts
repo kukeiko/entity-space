@@ -1,6 +1,7 @@
 import { token, TokenType } from "@entity-space/lexer";
-import { isEven, isNull, isTrue } from "../../criterion";
-import { isValue, notValue } from "../../criterion/value";
+import { isEven } from "../../criterion/binary/is-even.fn";
+import { isValue } from "../../criterion/value/is-value.fn";
+import { notValue } from "../../criterion/value/not-value.fn";
 import { valueCriterionTokenParser } from "../../parser";
 import { itShouldParseTokens } from "./utils";
 
@@ -20,15 +21,15 @@ describe("parse-tokens: <value> / !<value>", () => {
         notValue("foo")
     );
 
-    itShouldParseTokens(valueCriterionTokenParser, [token(TokenType.Literal, "true")], isTrue(true));
-    itShouldParseTokens(valueCriterionTokenParser, [token(TokenType.Literal, "false")], isTrue(false));
+    itShouldParseTokens(valueCriterionTokenParser, [token(TokenType.Literal, "true")], isValue(true));
+    itShouldParseTokens(valueCriterionTokenParser, [token(TokenType.Literal, "false")], isValue(false));
     itShouldParseTokens(valueCriterionTokenParser, [token(TokenType.Literal, "even")], isEven(true));
     itShouldParseTokens(valueCriterionTokenParser, [token(TokenType.Literal, "odd")], isEven(false));
-    itShouldParseTokens(valueCriterionTokenParser, [token(TokenType.Literal, "null")], isNull(true));
+    itShouldParseTokens(valueCriterionTokenParser, [token(TokenType.Literal, "null")], isValue(null));
 
     itShouldParseTokens(
         valueCriterionTokenParser,
         [token(TokenType.Special, "!"), token(TokenType.Literal, "null")],
-        isNull(false)
+        notValue(null)
     );
 });

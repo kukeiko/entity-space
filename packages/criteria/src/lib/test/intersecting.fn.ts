@@ -1,4 +1,4 @@
-import { Criterion } from "../criterion";
+import { Criterion } from "../criterion/criterion";
 import { parseCriteria } from "../parser";
 
 function parse<T extends Criterion | string>(item: T): Criterion {
@@ -29,21 +29,13 @@ export function intersecting(
                 shouldBe(expected: Criterion | string | false) {
                     if (expected === false) {
                         specFn(`${criterion} should not intersect with ${other}`, () => {
-                            try {
-                                expect(parse(criterion).intersect(parse(other)).toString()).toEqual("false");
-                            } catch (error) {
-                                fail(error);
-                            }
+                            expect(parse(criterion).intersect(parse(other)).toString()).toEqual("false");
                         });
                     } else {
                         specFn(`${criterion} intersected with ${other} should be ${expected}`, () => {
-                            try {
-                                expect(parse(criterion).intersect(parse(other)).toString()).toEqual(
-                                    parse(expected).toString()
-                                );
-                            } catch (error) {
-                                fail(error);
-                            }
+                            expect(parse(criterion).intersect(parse(other)).toString()).toEqual(
+                                parse(expected).toString()
+                            );
                         });
                     }
                 },

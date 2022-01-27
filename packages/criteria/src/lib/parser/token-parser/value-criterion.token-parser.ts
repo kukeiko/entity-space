@@ -1,11 +1,14 @@
 import { TokenType } from "@entity-space/lexer";
-import { Criterion, isEven, isNull, isTrue, isValue, notValue } from "../../criterion";
+import { isEven } from "../../criterion/binary/is-even.fn";
+import { Criterion } from "../../criterion/criterion";
+import { isValue } from "../../criterion/value/is-value.fn";
+import { notValue } from "../../criterion/value/not-value.fn";
 import { TokenParser } from "./token-parser.type";
 
 const binaryCriterionMapping: Record<string, (truthy: boolean) => Criterion> = {
-    true: (truthy: boolean) => isTrue(truthy),
-    false: (truthy: boolean) => isTrue(!truthy),
-    null: (truthy: boolean) => isNull(truthy),
+    true: (truthy: boolean) => (truthy ? isValue(true) : notValue(true)),
+    false: (truthy: boolean) => (truthy ? isValue(false) : notValue(false)),
+    null: (truthy: boolean) => (truthy ? isValue(null) : notValue(null)),
     even: (truthy: boolean) => isEven(truthy),
     odd: (truthy: boolean) => isEven(!truthy),
 };

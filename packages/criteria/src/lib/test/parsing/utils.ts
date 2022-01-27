@@ -1,5 +1,5 @@
 import { Token } from "@entity-space/lexer";
-import { Criterion } from "../../criterion";
+import { Criterion } from "../../criterion/criterion";
 import { TokenParser } from "../../parser";
 
 export function itShouldParseTokens(

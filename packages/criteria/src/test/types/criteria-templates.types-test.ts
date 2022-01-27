@@ -1,9 +1,9 @@
+import { InSetCriterionTemplate, InSetCriterion } from "@entity-space/criteria";
 import { IsExact } from "conditional-type-checks";
 import {
     AndCriteria,
     AndCriteriaTemplate,
     InNumberRangeCriterion,
-    InNumberSetCriterion,
     InstancedCriterionTemplate,
     NamedCriteria,
     NamedCriteriaTemplate,
@@ -19,8 +19,10 @@ type OrCriteria_OneItem = IsExact<
 
 // $ExpectType true
 type OrCriteria_TwoItems = IsExact<
-    InstancedCriterionTemplate<OrCriteriaTemplate<[typeof InNumberRangeCriterion, typeof InNumberSetCriterion]>>,
-    OrCriteria<InNumberRangeCriterion | InNumberSetCriterion>
+    InstancedCriterionTemplate<
+        OrCriteriaTemplate<[typeof InNumberRangeCriterion, InSetCriterionTemplate<typeof Number>]>
+    >,
+    OrCriteria<InNumberRangeCriterion | InSetCriterion<typeof Number>>
 >;
 
 // $ExpectType true
@@ -31,8 +33,10 @@ type AndCriteria_OneItem = IsExact<
 
 // $ExpectType true
 type AndCriteria_TwoItems = IsExact<
-    InstancedCriterionTemplate<AndCriteriaTemplate<[typeof InNumberRangeCriterion, typeof InNumberSetCriterion]>>,
-    AndCriteria<InNumberRangeCriterion | InNumberSetCriterion>
+    InstancedCriterionTemplate<
+        AndCriteriaTemplate<[typeof InNumberRangeCriterion, InSetCriterionTemplate<typeof Number>]>
+    >,
+    AndCriteria<InNumberRangeCriterion | InSetCriterion<typeof Number>>
 >;
 
 // $ExpectType false
@@ -56,9 +60,12 @@ type NamedCriteria_OneItem = IsExact<
 // $ExpectType true
 type NamedCriteria_TwoItems = IsExact<
     InstancedCriterionTemplate<
-        NamedCriteriaTemplate<{ foo: [typeof InNumberRangeCriterion]; bar: [typeof InNumberSetCriterion] }>
+        NamedCriteriaTemplate<{
+            foo: [typeof InNumberRangeCriterion];
+            bar: [InSetCriterionTemplate<typeof Number>];
+        }>
     >,
-    NamedCriteria<{ foo: InNumberRangeCriterion; bar: InNumberSetCriterion }>
+    NamedCriteria<{ foo: InNumberRangeCriterion; bar: InSetCriterion<typeof Number> }>
 >;
 
 // $ExpectType true
@@ -66,8 +73,11 @@ type NamedCriteria_TwoItems_Nested = IsExact<
     InstancedCriterionTemplate<
         NamedCriteriaTemplate<{
             foo: [typeof InNumberRangeCriterion, OrCriteriaTemplate<[typeof InNumberRangeCriterion]>];
-            bar: [typeof InNumberSetCriterion];
+            bar: [InSetCriterionTemplate<typeof Number>];
         }>
     >,
-    NamedCriteria<{ foo: InNumberRangeCriterion | OrCriteria<InNumberRangeCriterion>; bar: InNumberSetCriterion }>
+    NamedCriteria<{
+        foo: InNumberRangeCriterion | OrCriteria<InNumberRangeCriterion>;
+        bar: InSetCriterion<typeof Number>;
+    }>
 >;

@@ -1,4 +1,5 @@
-import { inRange, matches } from "../../criterion";
+import { matches } from "../../criterion/named/matches.fn";
+import { inRange } from "../../criterion/range/in-range.fn";
 import { reducing } from "./reducing.fn";
 
 describe("reducing: named-criteria", () => {

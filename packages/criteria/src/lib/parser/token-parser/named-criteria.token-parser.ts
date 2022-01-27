@@ -1,5 +1,6 @@
 import { TokenType } from "@entity-space/lexer";
-import { Criterion, NamedCriteria } from "../../criterion";
+import { Criterion } from "../../criterion/criterion";
+import { matches } from "../../criterion/named/matches.fn";
 import { notBracketedCriteriaTokenParser } from "./not-bracketed-criteria.token-parser";
 import { TokenParser } from "./token-parser.type";
 
@@ -41,7 +42,7 @@ export function* namedCriteriaTokenParser(): TokenParser {
                 bag[propertyName] = result.value();
 
                 if (token.type === TokenType.Special && token.value === "}") {
-                    return () => new NamedCriteria(bag);
+                    return () => matches(bag);
                 } else if (!(token.type === TokenType.Special && token.value === ",")) {
                     return false;
                 } else {

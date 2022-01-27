@@ -1,5 +1,7 @@
 import { TokenType } from "@entity-space/lexer";
-import { and, Criterion, or } from "../../criterion";
+import { and } from "../../criterion/and/and.fn";
+import { Criterion } from "../../criterion/criterion";
+import { or } from "../../criterion/or/or.fn";
 import { criterionTokenParser } from "./criterion.token-parser";
 import { TokenParser } from "./token-parser.type";
 

@@ -1,5 +1,5 @@
 import { token, TokenType } from "@entity-space/lexer";
-import { inRange } from "../../criterion";
+import { inRange } from "../../criterion/range/in-range.fn";
 import { inRangeCriterionTokenParser } from "../../parser";
 import { itShouldParseTokens } from "./utils";
 

@@ -1,5 +1,7 @@
 import { token, TokenType } from "@entity-space/lexer";
-import { inRange, matches, or } from "../../criterion";
+import { matches } from "../../criterion/named/matches.fn";
+import { or } from "../../criterion/or/or.fn";
+import { inRange } from "../../criterion/range/in-range.fn";
 import { namedCriteriaTokenParser } from "../../parser";
 import { itShouldParseTokens } from "./utils";
 
