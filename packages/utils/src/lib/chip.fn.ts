@@ -1,4 +1,4 @@
-export function splitOne(subject: string, separator: string): [string, string | undefined] {
+export function chip(subject: string, separator: string): [string, string | undefined] {
     const index = subject.indexOf(separator);
 
     if (index < 0) {

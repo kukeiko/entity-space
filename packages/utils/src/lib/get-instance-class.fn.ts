@@ -1,4 +1,4 @@
-import { Class } from "./types";
+import { Class } from "./types/class";
 
 export function getInstanceClass<T>(instance: T): Class<T> {
     const ctor = (instance as any).constructor;

@@ -1,5 +1,5 @@
 import { Criterion } from "../criterion";
-import { NamedCriteria, NamedCriteriaBag } from "./named-criteria";
+import { NamedCriteria } from "./named-criteria";
 
 /**
  * [todo] name is a bit unintuitive. it doesn't really reflect that we're creating named-criteria here.

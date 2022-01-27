@@ -1,5 +1,5 @@
 import { InSetCriterionTemplate, inSetTemplate, NamedCriteriaTemplate } from "@entity-space/criteria";
-import { splitOne } from "@entity-space/utils";
+import { chip } from "@entity-space/utils";
 import { IEntitySchemaIndex } from "../schema/public";
 
 export function createCriteriaTemplateForIndex(
@@ -21,7 +21,7 @@ export function createCriteriaTemplateForIndex(
     for (const key of keyPath) {
         if (key.includes(".")) {
             // [todo] support more than 1 level of nesting
-            const [first, second] = splitOne(key, ".");
+            const [first, second] = chip(key, ".");
 
             if (!namedBagTemplate[first]) {
                 namedBagTemplate[first] = [new NamedCriteriaTemplate({})] as any;

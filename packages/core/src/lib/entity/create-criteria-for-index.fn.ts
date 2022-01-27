@@ -28,7 +28,7 @@ export function createCriteriaForIndex(indexKeyPath: string[], indexValues: Inde
 
                     bag = bag[part];
                 } else {
-                    bag[part] = inSet([indexValue[i] as number]);
+                    bag[part] = inSet([indexValue[i]]);
                 }
             }
         }
