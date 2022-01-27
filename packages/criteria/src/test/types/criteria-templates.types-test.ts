@@ -1,15 +1,14 @@
-import { InSetCriterionTemplate, InSetCriterion } from "@entity-space/criteria";
 import { IsExact } from "conditional-type-checks";
-import {
-    AndCriteria,
-    AndCriteriaTemplate,
-    InNumberRangeCriterion,
-    InstancedCriterionTemplate,
-    NamedCriteria,
-    NamedCriteriaTemplate,
-    OrCriteria,
-    OrCriteriaTemplate,
-} from "../../lib/criterion";
+import { AndCriteria } from "../../lib/criterion/and/and-criteria";
+import { AndCriteriaTemplate } from "../../lib/criterion/and/and-criteria-template";
+import { InstancedCriterionTemplate } from "../../lib/criterion/criterion-template.types";
+import { NamedCriteria } from "../../lib/criterion/named/named-criteria";
+import { NamedCriteriaTemplate } from "../../lib/criterion/named/named-criteria-template";
+import { OrCriteria } from "../../lib/criterion/or/or-criteria";
+import { OrCriteriaTemplate } from "../../lib/criterion/or/or-criteria-template";
+import { InNumberRangeCriterion } from "../../lib/criterion/range/in-number-range-criterion";
+import { InSetCriterion } from "../../lib/criterion/set/in-set-criterion";
+import { InSetCriterionTemplate } from "../../lib/criterion/set/in-set-criterion-template";
 
 // $ExpectType true
 type OrCriteria_OneItem = IsExact<

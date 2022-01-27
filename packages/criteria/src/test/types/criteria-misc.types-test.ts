@@ -1,4 +1,5 @@
-import { AndCriteria, OrCriteria } from "../../lib/criterion";
+import { AndCriteria } from "../../lib/criterion/and/and-criteria";
+import { OrCriteria } from "../../lib/criterion/or/or-criteria";
 
 {
     /**
