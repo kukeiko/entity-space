@@ -5,6 +5,7 @@ export * from "./lib/group-by.fn";
 export * from "./lib/is-defined.fn";
 export * from "./lib/is-instance-of.fn";
 export * from "./lib/is-not-null.fn";
+export * from "./lib/is-primitive-or-null-value.fn";
 export * from "./lib/is-primitive.fn";
 export * from "./lib/is-string.fn";
 export * from "./lib/null";

@@ -5,17 +5,15 @@ import { InSetCriterion } from "./in-set-criterion";
 import { inSet } from "./in-set.fn";
 import { notInSet } from "./not-in-set.fn";
 
-export class NotInValueSetCriterion_V2<T extends PrimitiveIncludingNull = PrimitiveIncludingNull> extends Criterion {
-    constructor(valueTypes: T[], values: Iterable<ReturnType<T>>) {
+export class NotInSetCriterion<T extends ReturnType<PrimitiveIncludingNull>> extends Criterion {
+    constructor(values: Iterable<T>) {
         super();
-        this.valueTypes = Object.freeze(valueTypes.slice());
         this.values = Object.freeze(new Set(values));
     }
 
-    private readonly valueTypes: readonly T[];
-    private readonly values: ReadonlySet<ReturnType<T>>;
+    private readonly values: ReadonlySet<T>;
 
-    getValues(): ReadonlySet<ReturnType<T>> {
+    getValues(): ReadonlySet<T> {
         return this.values;
     }
 
@@ -32,10 +30,6 @@ export class NotInValueSetCriterion_V2<T extends PrimitiveIncludingNull = Primit
         }
 
         return values;
-    }
-
-    getValueTypes(): readonly T[] {
-        return this.valueTypes;
     }
 
     reduce(other: Criterion): boolean | Criterion {
@@ -57,7 +51,7 @@ export class NotInValueSetCriterion_V2<T extends PrimitiveIncludingNull = Primit
             } else {
                 return inSet(copy);
             }
-        } else if (other instanceof NotInValueSetCriterion_V2) {
+        } else if (other instanceof NotInSetCriterion) {
             const remaining = subtractSets(this.values, other.values);
             if (remaining.size === 0) {
                 return true;
@@ -70,7 +64,7 @@ export class NotInValueSetCriterion_V2<T extends PrimitiveIncludingNull = Primit
     }
 
     override merge(other: Criterion): false | Criterion {
-        if (other instanceof NotInValueSetCriterion_V2) {
+        if (other instanceof NotInSetCriterion) {
             return notInSet([...this.values, ...other.values]);
         }
 

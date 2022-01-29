@@ -1,23 +1,23 @@
-import { getInstanceClass, PrimitiveIncludingNull } from "@entity-space/utils";
+import { getInstanceClass, Null, Primitive } from "@entity-space/utils";
 import { Criterion } from "../criterion";
 import { notValue } from "./not-value.fn";
 
-export class IsValueCriterion<T extends PrimitiveIncludingNull = PrimitiveIncludingNull> extends Criterion {
-    constructor(valueTypes: T[], value: ReturnType<T>) {
+export class IsValueCriterion<
+    T extends ReturnType<Primitive | typeof Null> = ReturnType<Primitive | typeof Null>
+> extends Criterion {
+    constructor(value: T) {
         super();
-        this.valueTypes = Object.freeze(valueTypes.slice());
         this.value = value;
     }
 
-    private readonly valueTypes: readonly T[];
-    private readonly value: ReturnType<T>;
+    private readonly value: T;
 
-    getValue(): ReturnType<T> {
+    getValue(): T {
         return this.value;
     }
 
-    matches<T>(item: T): boolean {
-        return item === this.value;
+    matches(value: unknown): boolean {
+        return value === this.value;
     }
 
     reduce(other: Criterion): boolean | Criterion {

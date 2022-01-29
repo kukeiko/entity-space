@@ -1,8 +1,6 @@
 import { isInstanceOf } from "@entity-space/utils";
 import { Criteria } from "../criteria";
 import { Criterion } from "../criterion";
-import { CriterionTemplate } from "../criterion-template.types";
-import { OrCriteriaTemplate } from "./or-criteria-template";
 
 export class OrCriteria<T extends Criterion = Criterion> extends Criteria<T> {
     readonly combinator: "|" = "|"; // otherwise typeof OrCriteria === typeof AndCriteria
@@ -105,60 +103,6 @@ export class OrCriteria<T extends Criterion = Criterion> extends Criteria<T> {
 
     toString(): string {
         return `(${this.items.map(item => item.toString()).join(" | ")})`;
-    }
-
-    override remapOne(template: CriterionTemplate): [false, undefined] | [Criterion[], Criterion?] {
-        if (template instanceof OrCriteriaTemplate) {
-            let openItems = this.items.slice() as Criterion[];
-            const remappedItems: Criterion[][] = [];
-
-            for (const criterion of this.items) {
-                const [remapped, open] = criterion.remap(template.items);
-
-                if (remapped !== false) {
-                    openItems = openItems.filter(openItem => openItem !== criterion);
-
-                    if (open !== void 0) {
-                        openItems.push(open);
-                    }
-
-                    remappedItems.push(remapped);
-                }
-            }
-
-            if (remappedItems.length > 0) {
-                const flattenedRemappedItems = remappedItems.reduce((acc, value) => [...acc, ...value], []);
-                return [
-                    [new OrCriteria(flattenedRemappedItems)],
-                    openItems.length > 0 ? new OrCriteria(openItems) : void 0,
-                ];
-            }
-        } else {
-            const allRemapped: Criterion[] = [];
-            const allOpen: Criterion[] = [];
-
-            for (const criterion of this.items) {
-                const [remapped, open] = criterion.remapOne(template);
-
-                if (remapped !== false) {
-                    allRemapped.push(...remapped);
-
-                    if (open !== void 0) {
-                        allOpen.push(open);
-                    }
-                } else {
-                    allOpen.push(criterion);
-                }
-            }
-
-            if (allRemapped.length === 0) {
-                return [false, void 0];
-            }
-
-            return [allRemapped, allOpen.length > 0 ? new OrCriteria(allOpen) : void 0];
-        }
-
-        return [false, void 0];
     }
 
     matches(item: any): boolean {

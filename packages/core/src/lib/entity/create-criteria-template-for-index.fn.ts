@@ -1,10 +1,10 @@
-import { InSetCriterionTemplate, inSetTemplate, NamedCriteriaTemplate } from "@entity-space/criteria";
+import { InSetCriterionTemplate, inSetTemplate, matchesTemplate, NamedCriteriaTemplate } from "@entity-space/criteria";
 import { chip } from "@entity-space/utils";
 import { IEntitySchemaIndex } from "../schema/public";
 
 export function createCriteriaTemplateForIndex(
     index: IEntitySchemaIndex
-): NamedCriteriaTemplate<{ [key: string]: InSetCriterionTemplate[] }> {
+): NamedCriteriaTemplate<{ [key: string]: InSetCriterionTemplate }> {
     const keyPath = index.getPath();
 
     if (index.getPath().some(key => key.split(".").length > 2)) {
@@ -16,7 +16,7 @@ export function createCriteriaTemplateForIndex(
     // don't wanna do now cause i need to thoroughly check places for "infinitely deep" stuff,
     // and right now im too lazy.
     // const namedBagTemplate: NamedCriteriaBagTemplate = {} ;
-    const namedBagTemplate: { [key: string]: InSetCriterionTemplate[] } = {};
+    const namedBagTemplate: { [key: string]: any } = {};
 
     for (const key of keyPath) {
         if (key.includes(".")) {
@@ -24,18 +24,19 @@ export function createCriteriaTemplateForIndex(
             const [first, second] = chip(key, ".");
 
             if (!namedBagTemplate[first]) {
-                namedBagTemplate[first] = [new NamedCriteriaTemplate({})] as any;
+                namedBagTemplate[first] = matchesTemplate({}) as any;
             }
 
             if (second !== void 0) {
                 // [todo] support more than just InNumberSet
-                (namedBagTemplate[first][0] as any).items[second] = [inSetTemplate([Number])];
+                // [todo] cast to any
+                (namedBagTemplate[first] as any).items[second] = inSetTemplate(Number);
             }
         } else {
             // [todo] i was a bit suprised that i have to supply an array; was a bit unintuitive
-            namedBagTemplate[key] = [inSetTemplate([Number])];
+            namedBagTemplate[key] = inSetTemplate(Number);
         }
     }
 
-    return new NamedCriteriaTemplate(namedBagTemplate);
+    return matchesTemplate(namedBagTemplate);
 }

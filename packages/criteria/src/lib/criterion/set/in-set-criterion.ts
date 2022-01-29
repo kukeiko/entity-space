@@ -1,33 +1,25 @@
-import { PrimitiveIncludingNull } from "@entity-space/utils";
+import { Null, Primitive } from "@entity-space/utils";
 import { Criteria } from "../criteria";
 import { Criterion } from "../criterion";
-import { CriterionTemplate } from "../criterion-template.types";
-import { OrCriteriaTemplate } from "../or/or-criteria-template";
-import { or } from "../or/or.fn";
 import { InNumberRangeCriterion } from "../range/in-number-range-criterion";
 import { inRange } from "../range/in-range.fn";
-import { IsValueCriterionTemplate } from "../value/is-value-criterion-template";
-import { isValue } from "../value/is-value.fn";
-import { InSetCriterionTemplate } from "./in-set-criterion-template";
 import { inSet } from "./in-set.fn";
-import { NotInValueSetCriterion_V2 } from "./not-in-set-criterion";
+import { NotInSetCriterion } from "./not-in-set-criterion";
 import { notInSet } from "./not-in-set.fn";
 
-export class InSetCriterion<T extends PrimitiveIncludingNull = PrimitiveIncludingNull> extends Criterion {
-    constructor(valueTypes: T[], values: Iterable<ReturnType<T>>) {
+export class InSetCriterion<T extends ReturnType<Primitive | typeof Null>> extends Criterion {
+    constructor(values: Iterable<T>) {
         super();
-        this.valueTypes = Object.freeze(valueTypes.slice());
         this.values = Object.freeze(new Set(values));
     }
 
-    private readonly valueTypes: readonly T[];
-    private readonly values: ReadonlySet<ReturnType<T>>;
+    private readonly values: ReadonlySet<T>;
 
-    getValues(): ReadonlySet<ReturnType<T>> {
+    getValues(): ReadonlySet<T> {
         return this.values;
     }
 
-    getValuesOfType<U extends PrimitiveIncludingNull>(type: U[]): ReturnType<U>[] {
+    getValuesOfType<U extends Primitive | typeof Null>(type: U[]): ReturnType<U>[] {
         const values: ReturnType<U>[] = [];
         const valueTypes = new Set(type.map(type => typeof type()));
 
@@ -42,16 +34,8 @@ export class InSetCriterion<T extends PrimitiveIncludingNull = PrimitiveIncludin
         return values;
     }
 
-    getValueTypes(): readonly T[] {
-        return this.valueTypes;
-    }
-
     matches(item: any): boolean {
         return this.values.has(item);
-    }
-
-    hasNumber(): this is InSetCriterion<typeof Number> {
-        return true;
     }
 
     reduce(other: Criterion): boolean | Criterion {
@@ -71,7 +55,7 @@ export class InSetCriterion<T extends PrimitiveIncludingNull = PrimitiveIncludin
             } else {
                 return inSet(copy);
             }
-        } else if (other instanceof NotInValueSetCriterion_V2) {
+        } else if (other instanceof NotInSetCriterion) {
             const merged = new Set([...other.getValues(), ...this.values]);
 
             return notInSet(merged);
@@ -129,24 +113,6 @@ export class InSetCriterion<T extends PrimitiveIncludingNull = PrimitiveIncludin
     override invert(): Criterion {
         // [todo] get rid of any
         return notInSet(this.getValues() as any);
-    }
-
-    override remapOne(template: CriterionTemplate): [false, undefined] | [Criterion[], Criterion?] {
-        // [todo] the slices are a bit annoying
-        if (template instanceof InSetCriterionTemplate) {
-            return [[inSet(this.getValuesOfType(template.getValueTypes().slice()))]];
-        } else if (template instanceof IsValueCriterionTemplate) {
-            return [this.getValuesOfType(template.getValueTypes().slice()).map(value => isValue(value))];
-        } else if (
-            // [todo] shouldn't this be handled by doing OrCriteria.reduceBy() ?
-            template instanceof OrCriteriaTemplate &&
-            template.items.some(item => item instanceof IsValueCriterionTemplate)
-        ) {
-            // [todo] this doesn't look right
-            return [[or(Array.from(this.values).map(value => isValue(value)))]];
-        }
-
-        return [false, void 0];
     }
 
     toString(): string {

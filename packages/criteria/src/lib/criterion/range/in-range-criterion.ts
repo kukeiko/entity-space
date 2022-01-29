@@ -1,11 +1,7 @@
 import { Class, getInstanceClass } from "@entity-space/utils";
-import { AndCriteria } from "../and/and-criteria";
-import { AndCriteriaTemplate } from "../and/and-criteria-template";
 import { Criteria } from "../criteria";
 import { Criterion } from "../criterion";
-import { CriterionTemplate } from "../criterion-template.types";
 import { OrCriteria } from "../or/or-criteria";
-import { OrCriteriaTemplate } from "../or/or-criteria-template";
 
 export type FromCriterion<T> = {
     op: ">=" | ">";
@@ -298,20 +294,6 @@ export abstract class InRangeCriterion<T> extends Criterion {
         }
 
         return shards.join(", ");
-    }
-
-    override remapOne(template: CriterionTemplate): [false, undefined] | [Criterion[], Criterion?] {
-        const thisClass = getInstanceClass(this);
-
-        if (template === thisClass) {
-            return [[this]];
-        } else if (template instanceof OrCriteriaTemplate && template.items.some(item => item === thisClass)) {
-            return [[new OrCriteria([this])]];
-        } else if (template instanceof AndCriteriaTemplate && template.items.some(item => item === thisClass)) {
-            return [[new AndCriteria([this])]];
-        }
-
-        return [false, void 0];
     }
 
     matches(value: any): boolean {

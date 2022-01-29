@@ -47,18 +47,18 @@ export class UserEntitySource implements IEntitySource {
 
     private mapCriteriaToByIdFilter(criteria: Criterion): [number[], Criterion] {
         const template = matchesTemplate({
-            id: [inSetTemplate([Number])],
+            id: inSetTemplate(Number),
         });
 
-        const [remapped, open] = criteria.remap([template]);
+        const result = template.remap(criteria);
 
-        if (remapped === false) {
+        if (result === false) {
             throw new Error(`failed to remap criterion`);
         }
 
         const filters: number[] = [];
 
-        for (const criterion of remapped) {
+        for (const criterion of result.getCriteria()) {
             const bag = criterion.getBag();
 
             if (bag.id !== void 0) {
@@ -66,6 +66,6 @@ export class UserEntitySource implements IEntitySource {
             }
         }
 
-        return [Array.from(new Set(filters)), or(remapped)];
+        return [Array.from(new Set(filters)), or(result.getCriteria())];
     }
 }

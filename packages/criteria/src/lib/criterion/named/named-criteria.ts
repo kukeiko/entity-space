@@ -1,15 +1,11 @@
-import { permutateEntries } from "@entity-space/utils";
 import { Criteria } from "../criteria";
 import { Criterion } from "../criterion";
-import { CriterionTemplate } from "../criterion-template.types";
 import { OrCriteria } from "../or/or-criteria";
-import { OrCriteriaTemplate } from "../or/or-criteria-template";
-import { NamedCriteriaTemplate } from "./named-criteria-template";
 
-export type NamedCriteriaBag = Record<string, Criterion>;
+export type NamedCriteriaBag = Record<string, Criterion | undefined>;
 
 export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag> extends Criterion {
-    constructor(items: Partial<T>) {
+    constructor(items: T) {
         super();
 
         if (Object.keys(items).length === 0) {
@@ -126,45 +122,6 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag> extend
         }
 
         return `{ ${shards.join(", ")} }`;
-    }
-
-    override remapOne(template: CriterionTemplate): [false, undefined] | [Criterion[], Criterion?] {
-        if (template instanceof NamedCriteriaTemplate) {
-            const openBag = { ...this.getBag() } as NamedCriteriaBag;
-            const otherBag = template.items;
-            const theBagToPermutate: Record<string, Criterion[]> = {};
-
-            for (const key in otherBag) {
-                const criterion = openBag[key];
-
-                if (criterion == void 0) {
-                    continue;
-                }
-
-                const templates = otherBag[key];
-
-                // [todo] what to do with "open"?
-                const [remapped, open] = criterion.remap(templates);
-
-                if (remapped === false) {
-                    continue;
-                }
-
-                theBagToPermutate[key] = remapped;
-            }
-
-            if (Object.keys(theBagToPermutate).length > 0) {
-                const permutations = permutateEntries(theBagToPermutate);
-                return [permutations.map(bag => new NamedCriteria(bag))];
-            }
-        } else if (
-            template instanceof OrCriteriaTemplate &&
-            template.items.some(item => item instanceof NamedCriteriaTemplate)
-        ) {
-            // [todo] i was clearly having some plan here
-        }
-
-        return [false, void 0];
     }
 
     matches(item: any): boolean {
