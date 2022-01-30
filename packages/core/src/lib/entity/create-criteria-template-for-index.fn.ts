@@ -30,7 +30,7 @@ export function createCriteriaTemplateForIndex(
             if (second !== void 0) {
                 // [todo] support more than just InNumberSet
                 // [todo] cast to any
-                (namedBagTemplate[first] as any).items[second] = inSetTemplate(Number);
+                (namedBagTemplate[first] as any).requiredItems[second] = inSetTemplate(Number);
             }
         } else {
             // [todo] i was a bit suprised that i have to supply an array; was a bit unintuitive
