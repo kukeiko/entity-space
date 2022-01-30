@@ -4,7 +4,8 @@ import { OrCriteria } from "../or/or-criteria";
 
 export type NamedCriteriaBag = Record<string, Criterion | undefined>;
 
-export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag> extends Criterion {
+// [todo] the way i added ability to specify required items was a quick fix, revisit if we can make it cleaner/nicer.
+export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag, R extends keyof T = never> extends Criterion {
     constructor(items: T) {
         super();
 
@@ -15,10 +16,14 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag> extend
         this.bag = Object.freeze(items);
     }
 
+    // [todo] rename to "items", as "bag" in programming terms would be a collection where order doesn't matter,
+    // and (at least for now, and i currently don't see how else) order does have an effect in the order of criteria
+    // returned when reducing.
     readonly bag: Readonly<Partial<T>>;
 
-    getBag(): Readonly<Partial<T>> {
-        return this.bag;
+    // [todo] rename to "getItems()"
+    getBag(): Readonly<Partial<T> & Required<Pick<T, R>>> {
+        return this.bag as any;
     }
 
     reduce(other: Criterion): boolean | Criterion {

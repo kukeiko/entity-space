@@ -13,38 +13,46 @@ export type InstancedNamedCriteriaTemplateItems<T extends NamedCriteriaTemplateI
     [K in keyof T]?: InstancedCriterionTemplate<T[K]>;
 };
 
-export class NamedCriteriaTemplate<T extends NamedCriteriaTemplateItems>
-    implements ICriterionTemplate<NamedCriteria<InstancedNamedCriteriaTemplateItems<T>>>
+export class NamedCriteriaTemplate<T extends NamedCriteriaTemplateItems, U extends NamedCriteriaTemplateItems = {}>
+    implements ICriterionTemplate<NamedCriteria<InstancedNamedCriteriaTemplateItems<T & U>, keyof T>>
 {
-    constructor(items: T) {
-        this.items = items;
+    constructor(items: T, optionalItems?: U) {
+        this.requiredItems = items;
+        this.optionalItems = optionalItems ?? ({} as U);
     }
 
-    private readonly items: T;
+    private readonly requiredItems: T;
+    private readonly optionalItems: U;
 
-    getItems(): T {
-        return this.items;
+    getRequiredItems(): T {
+        return this.requiredItems;
+    }
+
+    getOptionalitems(): U {
+        return this.optionalItems;
     }
 
     // [todo] have a look if we can get rid of any & other casts
-    remap(criterion: Criterion): false | RemapCriterionResult<NamedCriteria<InstancedNamedCriteriaTemplateItems<T>>> {
+    remap(
+        criterion: Criterion
+    ): false | RemapCriterionResult<NamedCriteria<InstancedNamedCriteriaTemplateItems<T & U>, keyof T>> {
         if (criterion instanceof NamedCriteria) {
             const criterionItems = criterion.getBag();
             const itemsToPermutate: Record<string, any> = {};
             const openItems: Record<string, Criterion[]> = {};
 
-            for (const key in this.items) {
+            for (const key in this.requiredItems) {
                 const criterionItem = criterionItems[key];
 
                 if (criterionItem === void 0) {
-                    continue;
+                    return false;
                 }
 
-                const itemTemplate = this.items[key];
+                const itemTemplate = this.requiredItems[key];
                 const result = itemTemplate.remap(criterionItem);
 
                 if (result === false) {
-                    continue;
+                    return false;
                 }
 
                 itemsToPermutate[key] = result.getCriteria();
@@ -54,9 +62,29 @@ export class NamedCriteriaTemplate<T extends NamedCriteriaTemplateItems>
                 }
             }
 
+            for (const key in this.optionalItems) {
+                const criterionItem = criterionItems[key];
+
+                if (criterionItem === void 0) {
+                    continue;
+                }
+
+                const itemTemplate = this.optionalItems[key];
+                const result = itemTemplate.remap(criterionItem);
+
+                if (result === false || result.getOpen().length > 0) {
+                    continue;
+                }
+
+                itemsToPermutate[key] = result.getCriteria();
+            }
+
             if (Object.keys(itemsToPermutate).length > 0) {
-                const permutations = permutateEntries(itemsToPermutate) as InstancedNamedCriteriaTemplateItems<T>[];
-                const namedCriteria = permutations.map(items => new NamedCriteria(items));
+                const permutations = permutateEntries(itemsToPermutate) as InstancedNamedCriteriaTemplateItems<T & U>[];
+                const namedCriteria = permutations.map(
+                    items =>
+                        new NamedCriteria(items) as NamedCriteria<InstancedNamedCriteriaTemplateItems<T & U>, keyof T>
+                );
 
                 const open: Criterion[] = [];
 
