@@ -1,4 +1,5 @@
 import { Expansion } from "../expansion/public";
+import { Query } from "../query/query";
 import { IEntitySchemaRelation } from "../schema/public";
 import { createCriteriaForIndex } from "./create-criteria-for-index.fn";
 import { Entity } from "./entity";
@@ -18,7 +19,8 @@ export async function expandRelation(
     const fromIndex = relation.getFromIndex();
     const toIndex = relation.getToIndex();
     const criteria = createCriteriaForIndex(toIndex.getPath(), entityReader.readIndex(fromIndex, entities));
-    const result = await source.query({ criteria, expansion: expansion ?? {}, entitySchema: relatedSchema });
+    const query = new Query(relatedSchema, criteria, expansion ?? {})
+    const result = await source.query(query);
 
     if (result === false) {
         return false;
@@ -42,5 +44,5 @@ export async function expandRelation(
         }
     }
 
-    return queried.getQuery().expansion;
+    return queried.getQuery().getExpansion();
 }

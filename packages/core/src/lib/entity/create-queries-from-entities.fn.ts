@@ -11,13 +11,7 @@ export function createQueriesFromEntities(schema: IEntitySchema, entities: Entit
     for (const index of schema.getIndexesIncludingKey()) {
         const indexValues = reader.readIndex(index, entities);
         const indexCriteria = createCriteriaForIndex(index.getPath(), indexValues);
-
-        const query: Query = {
-            criteria: indexCriteria,
-            entitySchema: schema,
-            expansion: {},
-        };
-
+        const query = new Query(schema, indexCriteria);
         queries.push(query);
     }
 

@@ -26,9 +26,9 @@ export class Workspace implements IEntitySource {
     }
 
     private addExecutedQuery(query: Query): void {
-        const executedQueries = this.getOrCreateQueryCache(query.entitySchema);
+        const executedQueries = this.getOrCreateQueryCache(query.getEntitySchema());
         let merged = mergeQueries(query, ...executedQueries);
-        this.queryCaches.set(query.entitySchema.getId(), merged);
+        this.queryCaches.set(query.getEntitySchema().getId(), merged);
 
         const allQueriesInCache: Query[] = [];
 
@@ -40,7 +40,7 @@ export class Workspace implements IEntitySource {
     }
 
     private async loadUncachedIntoCache(query: Query): Promise<void> {
-        const executedQueries = this.getOrCreateQueryCache(query.entitySchema);
+        const executedQueries = this.getOrCreateQueryCache(query.getEntitySchema());
         const reduced = reduceQueries([query], executedQueries);
         const entities: Entity[] = [];
         const queriesAgainstSource = reduced === false ? [query] : reduced;
@@ -62,7 +62,7 @@ export class Workspace implements IEntitySource {
         }
 
         if (entities.length > 0) {
-            this.add(query.entitySchema, entities);
+            this.add(query.getEntitySchema(), entities);
         }
     }
 
@@ -75,7 +75,7 @@ export class Workspace implements IEntitySource {
 
         if (result !== false) {
             for (const queried of result) {
-                console.log("[effective-query]", queried.getQuery().criteria.toString());
+                console.log("[effective-query]", queried.getQuery().getCriteria().toString());
             }
         }
 
