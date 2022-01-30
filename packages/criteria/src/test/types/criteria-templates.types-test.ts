@@ -61,7 +61,7 @@ type OrCriteria_IsNot_AndCriteria = IsExact<
     // $ExpectType true
     type NamedCriteria_OneItem = IsExact<
         InstancedCriterionTemplate<NamedCriteriaTemplate<{ foo: InRangeCriterionTemplate<typeof Number> }>>,
-        NamedCriteria<{ foo: InNumberRangeCriterion }>
+        NamedCriteria<{ foo: InNumberRangeCriterion }, "foo">
     >;
 
     // $ExpectType true
@@ -72,7 +72,7 @@ type OrCriteria_IsNot_AndCriteria = IsExact<
                 bar: InSetCriterionTemplate<typeof Number>;
             }>
         >,
-        NamedCriteria<{ foo: InNumberRangeCriterion; bar: InSetCriterion<number> }>
+        NamedCriteria<{ foo: InNumberRangeCriterion; bar: InSetCriterion<number> }, "foo" | "bar">
     >;
 
     // $ExpectType_ true
