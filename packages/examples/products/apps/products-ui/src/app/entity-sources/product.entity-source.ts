@@ -24,13 +24,14 @@ export class ProductEntitySource extends QueryDispatcher<Product> implements IEn
                 .supportsFields({ price: inRangeTemplate(Number), rating: inRangeTemplate(Number) })
                 .supportsExpansion({ reviews: true })
                 .isLoadedBy(async query => {
-                    const filter: ProductFilter = {};
                     const bag = query.criteria.getBag();
 
-                    filter.minPrice = bag.price?.getFrom()?.value ?? void 0;
-                    filter.maxPrice = bag.price?.getTo()?.value ?? void 0;
-                    filter.minRating = bag.rating?.getFrom()?.value ?? void 0;
-                    filter.maxRating = bag.rating?.getTo()?.value ?? void 0;
+                    const filter: ProductFilter = {
+                        minPrice: bag.price?.getFrom()?.value ?? void 0,
+                        maxPrice: bag.price?.getTo()?.value ?? void 0,
+                        minRating: bag.rating?.getFrom()?.value ?? void 0,
+                        maxRating: bag.rating?.getTo()?.value ?? void 0,
+                    };
 
                     return firstValueFrom(
                         this.http.post<Product[]>("api/products/search", {
