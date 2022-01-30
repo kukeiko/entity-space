@@ -10,21 +10,23 @@ export class ProductEntitySource extends QueryDispatcher<Product> implements IEn
     constructor(private readonly http: HttpClient, private readonly schemaCatalog: ProductsSchemaCatalog) {
         super(schemaCatalog.getProductSchema());
 
+        // maps queries to API calls loading products by id
         this.addMapping(builder =>
             builder.requiresFields({ id: isValueTemplate(Number) }).isLoadedBy(async query => {
-                const id = query.criteria.getBag().id.getValue();
+                const id = query.getCriteria().getBag().id.getValue();
                 const product = await firstValueFrom(this.http.get<Product>(`api/products/${id}`));
 
                 return [product];
             })
         );
 
+        // maps queries to API calls searching products by min/max price, min/max rating
         this.addMapping(builder =>
             builder
                 .supportsFields({ price: inRangeTemplate(Number), rating: inRangeTemplate(Number) })
                 .supportsExpansion({ reviews: true })
                 .isLoadedBy(async query => {
-                    const bag = query.criteria.getBag();
+                    const bag = query.getCriteria().getBag();
 
                     const filter: ProductFilter = {
                         minPrice: bag.price?.getFrom()?.value ?? void 0,
@@ -36,7 +38,7 @@ export class ProductEntitySource extends QueryDispatcher<Product> implements IEn
                     return firstValueFrom(
                         this.http.post<Product[]>("api/products/search", {
                             filter,
-                            expand: query.expansion,
+                            expand: query.getExpansion(),
                         })
                     );
                 })

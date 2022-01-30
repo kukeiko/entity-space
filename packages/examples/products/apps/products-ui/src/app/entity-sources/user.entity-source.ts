@@ -12,7 +12,7 @@ export class UserEntitySource extends QueryDispatcher<User> implements IEntitySo
 
         this.addMapping(builder =>
             builder.requiresFields({ id: isValueTemplate(Number) }).isLoadedBy(async query => {
-                const id = query.criteria.getBag().id;
+                const id = query.getCriteria().getBag().id;
                 const user = await firstValueFrom(this.http.get<User>(`api/users/${id}`));
 
                 return [user];

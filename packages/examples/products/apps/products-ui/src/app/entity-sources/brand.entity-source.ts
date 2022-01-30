@@ -15,9 +15,9 @@ export class BrandEntitySource extends QueryDispatcher<Brand> implements IEntity
                 .requiresFields({ id: isValueTemplate(Number) })
                 .supportsExpansion({ reviews: true })
                 .isLoadedBy(async query => {
-                    const id = query.criteria.getBag().id.getValue();
+                    const id = query.getCriteria().getBag().id.getValue();
                     const brand = await firstValueFrom(
-                        this.http.post<Brand>(`api/brands/${id}`, { expand: query.expansion })
+                        this.http.post<Brand>(`api/brands/${id}`, { expand: query.getExpansion() })
                     );
 
                     return [brand];

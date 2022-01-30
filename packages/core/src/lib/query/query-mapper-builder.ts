@@ -43,7 +43,9 @@ export class QueryMapperBuilder<
         return this as any;
     }
 
-    isLoadedBy<Q extends Query & { criteria: InstancedCriterionTemplate<NamedCriteriaTemplate<R, O>>; expansion: E }>(
+    // [todo] E type not correct; should be deeply partial.
+    // either do here or - probably better - when specifying supported expansion.
+    isLoadedBy<Q extends Query<T, InstancedCriterionTemplate<NamedCriteriaTemplate<R, O>>, E>>(
         load: (query: Q) => Promise<Entity[]>
     ): this {
         this.loadEntities = load as (query: Query) => Promise<Entity[]>;

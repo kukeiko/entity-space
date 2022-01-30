@@ -13,7 +13,7 @@ export class EntitySourceGateway implements IEntitySource {
     }
 
     async query(query: Query): Promise<false | QueriedEntities[]> {
-        const source = this.findSource(query.entitySchema);
+        const source = this.findSource(query.getEntitySchema());
 
         if (source === void 0) {
             return false;
@@ -32,11 +32,12 @@ export class EntitySourceGateway implements IEntitySource {
             const effectiveQuery = queried.getQuery();
 
             // [todo] we could add this to the QueriedEntities class, which would then just need the original query as a ctor arg
-            const missingExpansion = reduceExpansion(query.expansion, effectiveQuery.expansion) || query.expansion;
-            let successfulExpansion = effectiveQuery.expansion;
+            const missingExpansion =
+                reduceExpansion(query.getExpansion(), effectiveQuery.getExpansion()) || query.getExpansion();
+            let successfulExpansion = effectiveQuery.getExpansion();
 
             if (Object.keys(missingExpansion).length > 0 && entities.length > 0) {
-                const result = await expandEntities(query.entitySchema, missingExpansion, entities, this);
+                const result = await expandEntities(query.getEntitySchema(), missingExpansion, entities, this);
 
                 if (result !== false) {
                     successfulExpansion = successfulExpansion;
@@ -45,14 +46,11 @@ export class EntitySourceGateway implements IEntitySource {
 
             results.push(
                 new QueriedEntities(
-                    {
-                        criteria: effectiveQuery.criteria,
-                        entitySchema: query.entitySchema,
-                        expansion: successfulExpansion,
-                        // [todo] not correct; we somehow need to fish out unresolved expansions from expandEntities() call
-                        // for now we just assume that all expansions could be resolved within this entity-source
-                        // expansion: query.expansion,
-                    },
+                    // [todo] not correct; we somehow need to fish out unresolved expansions from expandEntities() call
+                    // for now we just assume that all expansions could be resolved within this entity-source
+                    // expansion: query.expansion,
+                    new Query(query.getEntitySchema(), effectiveQuery.getCriteria(), successfulExpansion),
+
                     entities
                 )
             );

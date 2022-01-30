@@ -6,7 +6,7 @@ import { reduceQuery } from "../reduce-query.fn";
 
 describe("reduceQuery()", () => {
     function createQuery(criteria: Criterion, expansion: Expansion = {}): Query {
-        return { entitySchema: new EntitySchema("foo"), criteria, expansion };
+        return new Query(new EntitySchema("foo"), criteria, expansion);
     }
 
     describe("full reduction", () => {

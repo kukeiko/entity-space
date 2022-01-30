@@ -35,7 +35,7 @@ export class QueryDispatcher<T = Record<string, any>> implements IEntitySource {
     }
 
     async query(query: Query): Promise<false | QueriedEntities[]> {
-        if (query.entitySchema.getId() !== this.entitySchema.getId()) {
+        if (query.getEntitySchema().getId() !== this.entitySchema.getId()) {
             return false;
         }
 
@@ -50,7 +50,7 @@ export class QueryDispatcher<T = Record<string, any>> implements IEntitySource {
         }
 
         const template = orTemplate(Array.from(criterionTemplatesOfMappers.values()));
-        const remapped = template.remap(query.criteria);
+        const remapped = template.remap(query.getCriteria());
 
         if (remapped === false) {
             console.log(`failed to remap query criteria`);
@@ -68,18 +68,16 @@ export class QueryDispatcher<T = Record<string, any>> implements IEntitySource {
 
                     // [todo] clean up this madness
                     const supportedExpansion: Expansion = mapper.getSupportedExpansion();
-                    const missingExpansion = reduceExpansion(query.expansion, supportedExpansion) || query.expansion;
-                    let effectiveExpansion = reduceExpansion(query.expansion, missingExpansion) || supportedExpansion;
+                    const missingExpansion =
+                        reduceExpansion(query.getExpansion(), supportedExpansion) || query.getExpansion();
+                    let effectiveExpansion =
+                        reduceExpansion(query.getExpansion(), missingExpansion) || supportedExpansion;
 
                     if (Object.keys(effectiveExpansion).length === 0) {
                         effectiveExpansion = supportedExpansion;
                     }
 
-                    const effectiveQuery: Query = {
-                        criteria: criterion,
-                        entitySchema: this.entitySchema,
-                        expansion: effectiveExpansion || {},
-                    };
+                    const effectiveQuery = new Query(this.entitySchema, criterion, effectiveExpansion || {});
 
                     loadEntities.push(
                         mapper.load(effectiveQuery).then(entities => new QueriedEntities(effectiveQuery, entities))

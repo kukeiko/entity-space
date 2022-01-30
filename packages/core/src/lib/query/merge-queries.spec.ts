@@ -5,7 +5,7 @@ import { mergeQueries } from "./merge-queries.fn";
 import { Query } from "./query";
 
 function createQuery(criteria: Criterion, expansion: Expansion = {}): Query {
-    return { entitySchema: new EntitySchema("foo"), criteria, expansion };
+    return new Query(new EntitySchema("foo"), criteria, expansion);
 }
 
 interface Product {

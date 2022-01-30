@@ -16,7 +16,7 @@ export class EntityCache implements IEntitySource {
     private readonly stores = new Map<string, EntityStore>();
 
     async query(query: Query): Promise<false | QueriedEntities[]> {
-        const schema = query.entitySchema;
+        const schema = query.getEntitySchema();
         const indexes = schema
             .getIndexesIncludingKey()
             .slice()
@@ -24,7 +24,7 @@ export class EntityCache implements IEntitySource {
 
         const criteriaTemplates = indexes.map(index => createCriteriaTemplateForIndex(index));
         // [todo] need to properly think about mapping against multiple templates and finding the best one
-        const results = criteriaTemplates.map(template => template.remap(query.criteria));
+        const results = criteriaTemplates.map(template => template.remap(query.getCriteria()));
         const firstResult = results.find(result => result !== false);
         // const [remappedCriteria] = query.criteria.remap(criteriaTemplates);
 
@@ -41,14 +41,14 @@ export class EntityCache implements IEntitySource {
             }
         }
 
-        if (Object.keys(query.expansion).length > 0) {
+        if (Object.keys(query.getExpansion()).length > 0) {
             entities = cloneJson(entities); // [todo] dirty to do it here?
 
-            const expansionResult = await expandEntities(schema, query.expansion, entities, this);
+            const expansionResult = await expandEntities(schema, query.getExpansion(), entities, this);
             console.log("[expansion-result]", expansionResult);
         }
 
-        entities = query.criteria.filter(entities);
+        entities = query.getCriteria().filter(entities);
 
         return [new QueriedEntities(query, entities)];
     }
