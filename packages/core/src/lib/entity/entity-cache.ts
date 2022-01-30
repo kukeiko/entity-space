@@ -15,7 +15,7 @@ import { QueriedEntities } from "./queried-entities";
 export class EntityCache implements IEntitySource {
     private readonly stores = new Map<string, EntityStore>();
 
-    async query(query: Query): Promise<false | QueriedEntities> {
+    async query(query: Query): Promise<false | QueriedEntities[]> {
         const schema = query.entitySchema;
         const indexes = schema
             .getIndexesIncludingKey()
@@ -50,7 +50,7 @@ export class EntityCache implements IEntitySource {
 
         entities = query.criteria.filter(entities);
 
-        return new QueriedEntities(query, entities);
+        return [new QueriedEntities(query, entities)];
     }
 
     addEntities(schema: IEntitySchema, entities: Entity[]): void {

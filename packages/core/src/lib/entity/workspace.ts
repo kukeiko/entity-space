@@ -52,7 +52,12 @@ export class Workspace implements IEntitySource {
                 continue;
             }
 
-            entities.push(...result.getEntities());
+            for (const queried of result) {
+                entities.push(...queried.getEntities());
+            }
+
+            // [todo] should it not be queryAgainstSource?
+            // if not, move out of loop
             this.addExecutedQuery(query);
         }
 
@@ -61,7 +66,7 @@ export class Workspace implements IEntitySource {
         }
     }
 
-    private async loadFromSource(query: Query): Promise<false | QueriedEntities> {
+    private async loadFromSource(query: Query): Promise<false | QueriedEntities[]> {
         if (this.source === void 0) {
             return false;
         }
@@ -69,30 +74,32 @@ export class Workspace implements IEntitySource {
         const result = await this.source.query(query);
 
         if (result !== false) {
-            console.log("[effective-query]", result.getQuery().criteria.toString());
+            for (const queried of result) {
+                console.log("[effective-query]", queried.getQuery().criteria.toString());
+            }
         }
 
         return result;
     }
 
-    async query(query: Query): Promise<false | QueriedEntities> {
+    async query(query: Query): Promise<false | QueriedEntities[]> {
         await this.loadUncachedIntoCache(query);
         const entities = await this.queryAgainstCache(query);
 
-        return new QueriedEntities(query, entities);
+        return [new QueriedEntities(query, entities)];
     }
 
     // [todo] remove any
     // [todo] should stay async because at one point i want to make use of service-workers
     // [todo] should not exist at all? (or be private)
-    async queryAgainstCache(query: Query): Promise<any[]> {
+    async queryAgainstCache(query: Query): Promise<Entity[]> {
         const result = await this.entityCache.query(query);
 
         if (result === false) {
             return [];
         }
 
-        return result.getEntities();
+        return result.map(queried => queried.getEntities()).reduce((acc, value) => [...acc, ...value], []);
     }
 
     clear(): void {

@@ -24,16 +24,18 @@
         </mat-form-field>
         <br />
 
-        <mat-checkbox [(ngModel)]="includeBrand">incl. Brand</mat-checkbox>
-        <br />
-
         <mat-checkbox [(ngModel)]="includeReviews">incl. Reviews</mat-checkbox>
         <br />
 
-        <mat-checkbox [(ngModel)]="includeBrandReviews">incl. Brand Reviews</mat-checkbox>
+        <mat-checkbox [(ngModel)]="includeBrand">incl. Brand</mat-checkbox>
         <br />
 
-        <mat-checkbox [(ngModel)]="includeBrandReviewAuthors">incl. Brand Review Authors</mat-checkbox>
+        <mat-checkbox [(ngModel)]="includeBrandReviews" [disabled]="!includeBrand">incl. Brand Reviews</mat-checkbox>
+        <br />
+
+        <mat-checkbox [(ngModel)]="includeBrandReviewAuthors" [disabled]="!includeBrandReviews || !includeBrand"
+            >incl. Brand Review Authors</mat-checkbox
+        >
         <br />
         <br />
 

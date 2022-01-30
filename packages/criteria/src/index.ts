@@ -17,6 +17,7 @@ export * from "./lib/templates/in-range-template.fn";
 export * from "./lib/templates/in-set-criterion-template";
 export * from "./lib/templates/in-set-template.fn";
 export * from "./lib/templates/instanced-criterion-template.type";
-export * from "./lib/templates/named-template.fn";
+export * from "./lib/templates/is-value-template.fn";
 export * from "./lib/templates/named-criteria-template";
+export * from "./lib/templates/named-template.fn";
 export * from "./lib/templates/or-template.fn";
