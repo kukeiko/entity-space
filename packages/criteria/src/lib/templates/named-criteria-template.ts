@@ -111,4 +111,38 @@ export class NamedCriteriaTemplate<T extends NamedCriteriaTemplateItems, U exten
 
         return false;
     }
+
+    matches(criterion: Criterion): criterion is NamedCriteria<InstancedNamedCriteriaTemplateItems<T & U>, keyof T> {
+        if (!(criterion instanceof NamedCriteria)) {
+            return false;
+        }
+
+        const criterionItems = criterion.getBag();
+
+        for (const key in this.requiredItems) {
+            if (criterionItems[key] === void 0) {
+                return false;
+            }
+
+            const itemTemplate = this.requiredItems[key];
+
+            if (!itemTemplate.matches(criterionItems[key])) {
+                return false;
+            }
+        }
+
+        for (const key in this.optionalItems) {
+            if (criterionItems[key] === void 0) {
+                continue;
+            }
+
+            const itemTemplate = this.optionalItems[key];
+
+            if (!itemTemplate.matches(criterionItems[key])) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }

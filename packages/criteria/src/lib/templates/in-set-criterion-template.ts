@@ -55,4 +55,12 @@ export class InSetCriterionTemplate<T extends PrimitiveIncludingNull = Primitive
 
         return false;
     }
+
+    matches(criterion: Criterion): criterion is InSetCriterion<ReturnType<T>> {
+        if (!(criterion instanceof InSetCriterion)) {
+            return false;
+        }
+
+        return Array.from(criterion.getValues()).every(this.valueMatches);
+    }
 }

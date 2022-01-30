@@ -48,4 +48,12 @@ export class IsValueCriterionTemplate<T extends Primitive | typeof Null = Primit
 
         return false;
     }
+
+    matches(criterion: Criterion): criterion is IsValueCriterion<ReturnType<T>> {
+        if (!(criterion instanceof IsValueCriterion)) {
+            return false;
+        }
+
+        return this.valueMatches(criterion.getValue());
+    }
 }

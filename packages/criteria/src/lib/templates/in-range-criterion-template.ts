@@ -31,4 +31,14 @@ export class InRangeCriterionTemplate<T extends typeof String | typeof Number>
 
         return false;
     }
+
+    matches(criterion: Criterion): criterion is InRangeCriterion<ReturnType<T>> {
+        if (this.valueType === Number) {
+            return criterion instanceof InNumberRangeCriterion;
+        } else if (this.valueType === String) {
+            return criterion instanceof InStringRangeCriterion;
+        }
+
+        return false;
+    }
 }

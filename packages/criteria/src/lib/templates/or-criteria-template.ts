@@ -10,7 +10,7 @@ export class OrCriteriaTemplate<T extends ICriterionTemplate>
     constructor(items: T[]) {
         this.items = items;
     }
-
+    
     private readonly items: T[];
 
     getItems(): T[] {
@@ -48,5 +48,13 @@ export class OrCriteriaTemplate<T extends ICriterionTemplate>
         }
 
         return false;
+    }
+
+    matches(criterion: Criterion): criterion is OrCriteria<InstancedCriterionTemplate<T>> {
+        if (!(criterion instanceof OrCriteria)) {
+            return false;
+        }
+
+        return criterion.getItems().every(item => this.getItems().some(template => template.matches(item)));
     }
 }
