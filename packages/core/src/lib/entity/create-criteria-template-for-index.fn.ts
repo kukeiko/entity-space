@@ -1,4 +1,4 @@
-import { InSetCriterionTemplate, inSetTemplate, matchesTemplate, NamedCriteriaTemplate } from "@entity-space/criteria";
+import { InSetCriterionTemplate, inSetTemplate, namedTemplate, NamedCriteriaTemplate } from "@entity-space/criteria";
 import { chip } from "@entity-space/utils";
 import { IEntitySchemaIndex } from "../schema/public";
 
@@ -24,7 +24,7 @@ export function createCriteriaTemplateForIndex(
             const [first, second] = chip(key, ".");
 
             if (!namedBagTemplate[first]) {
-                namedBagTemplate[first] = matchesTemplate({}) as any;
+                namedBagTemplate[first] = namedTemplate({}) as any;
             }
 
             if (second !== void 0) {
@@ -38,5 +38,5 @@ export function createCriteriaTemplateForIndex(
         }
     }
 
-    return matchesTemplate(namedBagTemplate);
+    return namedTemplate(namedBagTemplate);
 }

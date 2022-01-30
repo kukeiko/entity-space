@@ -1,7 +1,7 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { Expansion, IEntitySchema, IEntitySource, QueriedEntities, Query, reduceExpansion } from "@entity-space/core";
-import { Criterion, inSetTemplate, matchesTemplate, or } from "@entity-space/criteria";
+import { Criterion, inSetTemplate, namedTemplate, or } from "@entity-space/criteria";
 import { User } from "@entity-space/examples/products/libs/products-model";
 import { firstValueFrom, Observable, Subject } from "rxjs";
 
@@ -46,7 +46,7 @@ export class UserEntitySource implements IEntitySource {
     }
 
     private mapCriteriaToByIdFilter(criteria: Criterion): [number[], Criterion] {
-        const template = matchesTemplate({
+        const template = namedTemplate({
             id: inSetTemplate(Number),
         });
 
