@@ -1,15 +1,7 @@
 import { Component } from "@angular/core";
-import {
-    ArraySchema,
-    EntitySchema,
-    EntitySourceGateway,
-    Expansion,
-    IEntitySchema,
-    Query,
-    Workspace,
-} from "@entity-space/core";
-import { Criterion, inRange, matches } from "@entity-space/criteria";
-import { Product } from "@entity-space/examples/products/libs/products-model";
+import { EntitySourceGateway, Expansion, Query, Workspace } from "@entity-space/core";
+import { Criterion, inRange, inSet, matches, or } from "@entity-space/criteria";
+import { Product, ProductsSchemaCatalog } from "@entity-space/examples/products/libs/products-model";
 import { merge } from "rxjs";
 import { BrandEntitySource } from "./entity-sources/brand.entity-source";
 import { ProductEntitySource } from "./entity-sources/product.entity-source";
@@ -24,57 +16,19 @@ export class AppComponent {
     constructor(
         private readonly productEntitySource: ProductEntitySource,
         private readonly brandEntitySource: BrandEntitySource,
-        private readonly userEntitySource: UserEntitySource
+        private readonly userEntitySource: UserEntitySource,
+        private readonly schemaCatalog: ProductsSchemaCatalog
     ) {
-        const userSchema = new EntitySchema("user");
-        userSchema.setKey("id");
+        this.gateway = new EntitySourceGateway();
+        this.gateway.addSource(productEntitySource.getEntitySchema(), productEntitySource);
+        this.gateway.addSource(brandEntitySource.getEntitySchema(), brandEntitySource);
+        this.gateway.addSource(userEntitySource.getEntitySchema(), userEntitySource);
 
-        const brandSchema = new EntitySchema("brand");
-        brandSchema.setKey("id");
-
-        const brandReviewSchema = new EntitySchema("brand-review");
-        brandReviewSchema.setKey("id");
-        brandReviewSchema.addIndex("brandId");
-        brandReviewSchema.addIndex("authorId");
-        brandReviewSchema.addProperty("author", userSchema);
-        brandReviewSchema.addRelation("author", "authorId", "id");
-
-        brandSchema.addProperty("reviews", new ArraySchema(brandReviewSchema));
-        brandSchema.addRelation("reviews", "id", "brandId");
-
-        const productReviewSchema = new EntitySchema("product-review");
-        productReviewSchema.setKey("id");
-        productReviewSchema.addIndex("productId");
-
-        const productSchema = new EntitySchema("product");
-        productSchema.setKey("id");
-        productSchema.addIndex("brandId");
-        productSchema.addProperty("brand", brandSchema);
-        productSchema.addRelation("brand", "brandId", "id");
-        productSchema.addProperty("reviews", new ArraySchema(productReviewSchema));
-        productSchema.addRelation("reviews", "id", "productId");
-
-        this.productSchema = productSchema;
-        this.brandSchema = brandSchema;
-
-        const entitySourceGateway = new EntitySourceGateway();
-        entitySourceGateway.addSource(this.productSchema, productEntitySource);
-        entitySourceGateway.addSource(this.brandSchema, brandEntitySource);
-        entitySourceGateway.addSource(userSchema, userEntitySource);
-        this.gateway = entitySourceGateway;
-
-        const workspace = new Workspace();
-        workspace.setSource(entitySourceGateway);
-        this.workspace = workspace;
-
-        productEntitySource.schema_TMP = productSchema;
-        brandEntitySource.schema_TMP = brandSchema;
-        userEntitySource.schema_TMP = userSchema;
+        this.workspace = new Workspace();
+        this.workspace.setSource(this.gateway);
     }
 
     gateway: EntitySourceGateway;
-    productSchema: IEntitySchema;
-    brandSchema: IEntitySchema;
     workspace: Workspace;
     queriesIssuedAgainstApi: Query[] = [];
     queriesInWorkspaceCache: Query[] = [];
@@ -93,9 +47,11 @@ export class AppComponent {
     includeBrandReviewAuthors = false;
 
     async ngOnInit(): Promise<void> {
-        merge(this.productEntitySource.onQueryIssued(), this.brandEntitySource.onQueryIssued()).subscribe(
-            query => (this.queriesIssuedAgainstApi = [...this.queriesIssuedAgainstApi, query])
-        );
+        merge(
+            this.productEntitySource.onQueryIssued(),
+            this.brandEntitySource.onQueryIssued(),
+            this.userEntitySource.onQueryIssued()
+        ).subscribe(query => (this.queriesIssuedAgainstApi = [...this.queriesIssuedAgainstApi, query]));
 
         this.workspace.onQueryCacheChanged().subscribe(queries => (this.queriesInWorkspaceCache = queries));
     }
@@ -123,8 +79,10 @@ export class AppComponent {
             }
 
             const result = await this.workspace.query({
-                entitySchema: this.productSchema,
-                criteria,
+                entitySchema: this.schemaCatalog.getProductSchema(),
+                // [todo] i added the matches({ id: inSet([1, 2, 3]) }) to test remapping criteria
+                // resulting in multiple API calls, remove it and add as filter option to UI
+                criteria: or(criteria, matches({ id: inSet([1, 2, 3]) })),
                 expansion,
             });
 
@@ -133,7 +91,9 @@ export class AppComponent {
             }
 
             // [todo] get rid of cast
-            this.products = result.getEntities() as Product[];
+            this.products = result
+                .map(queried => queried.getEntities())
+                .reduce((acc, value) => [...acc, ...value], []) as Product[];
         } catch (error) {
             alert((error as any).message ?? error);
         }

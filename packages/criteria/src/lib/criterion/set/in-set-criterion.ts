@@ -1,27 +1,47 @@
-import { Class, getInstanceClass } from "@entity-space/utils";
+import { Null, Primitive } from "@entity-space/utils";
 import { Criteria } from "../criteria";
 import { Criterion } from "../criterion";
-import { InRangeCriterion } from "../range";
+import { InNumberRangeCriterion } from "../range/in-number-range-criterion";
+import { inRange } from "../range/in-range.fn";
+import { inSet } from "./in-set.fn";
 import { NotInSetCriterion } from "./not-in-set-criterion";
+import { notInSet } from "./not-in-set.fn";
 
-export abstract class InSetCriterion<T> extends Criterion {
+export class InSetCriterion<T extends ReturnType<Primitive | typeof Null>> extends Criterion {
     constructor(values: Iterable<T>) {
         super();
         this.values = Object.freeze(new Set(values));
     }
 
-    protected readonly values: ReadonlySet<T>;
-    abstract readonly notInClass: Class<NotInSetCriterion<T>>;
-    abstract readonly inRangeClass: Class<InRangeCriterion<T>>;
+    private readonly values: ReadonlySet<T>;
 
     getValues(): ReadonlySet<T> {
         return this.values;
     }
 
+    getValuesOfType<U extends Primitive | typeof Null>(type: U[]): ReturnType<U>[] {
+        const values: ReturnType<U>[] = [];
+        const valueTypes = new Set(type.map(type => typeof type()));
+
+        for (const value of this.values) {
+            // [todo] doesn't work w/ null
+            if (valueTypes.has(typeof value)) {
+                // [todo] get rid of any
+                values.push(value as any);
+            }
+        }
+
+        return values;
+    }
+
+    matches(item: any): boolean {
+        return this.values.has(item);
+    }
+
     reduce(other: Criterion): boolean | Criterion {
         if (other instanceof Criteria) {
             return other.reduceBy(this);
-        } else if (other instanceof getInstanceClass(this)) {
+        } else if (other instanceof InSetCriterion) {
             const copy = new Set(other.getValues());
 
             for (const value of this.values) {
@@ -33,33 +53,32 @@ export abstract class InSetCriterion<T> extends Criterion {
             } else if (copy.size === 0) {
                 return true;
             } else {
-                return new (getInstanceClass(this))(copy);
+                return inSet(copy);
             }
-        } else if (other instanceof this.notInClass) {
+        } else if (other instanceof NotInSetCriterion) {
             const merged = new Set([...other.getValues(), ...this.values]);
 
-            return new this.notInClass(merged);
-        } else if (other instanceof this.inRangeClass) {
+            return notInSet(merged);
+        } else if (other instanceof InNumberRangeCriterion) {
             const selfValues = this.getValues();
             let otherFrom = other.getFrom();
             let otherTo = other.getTo();
             let didReduce = false;
 
-            if (otherFrom?.op === ">=" && selfValues.has(otherFrom.value)) {
+            // [todo] get rid of any
+            if (otherFrom?.op === ">=" && selfValues.has(otherFrom.value as any)) {
                 otherFrom = { op: ">", value: otherFrom.value };
                 didReduce = true;
             }
 
-            if (otherTo?.op === "<=" && selfValues.has(otherTo.value)) {
+            // [todo] get rid of any
+            if (otherTo?.op === "<=" && selfValues.has(otherTo.value as any)) {
                 otherTo = { op: "<", value: otherTo.value };
                 didReduce = true;
             }
 
             if (didReduce) {
-                return new this.inRangeClass(
-                    [otherFrom?.value, otherTo?.value],
-                    [otherFrom?.op === ">=", otherTo?.op === "<="]
-                );
+                return inRange(otherFrom?.value, otherTo?.value, [otherFrom?.op === ">=", otherTo?.op === "<="]);
             }
         }
 
@@ -67,20 +86,17 @@ export abstract class InSetCriterion<T> extends Criterion {
     }
 
     override merge(other: Criterion): false | Criterion {
-        const selfClass = getInstanceClass(this);
-
-        if (other instanceof selfClass) {
-            return new selfClass([...this.values, ...other.values]);
+        if (other instanceof InSetCriterion) {
+            return inSet([...this.getValues(), ...other.getValues()]);
         }
 
         return false;
     }
 
     override intersect(other: Criterion): false | Criterion {
-        const selfClass = getInstanceClass(this);
-
-        if (other instanceof selfClass) {
-            const intersection = new Set();
+        if (other instanceof InSetCriterion) {
+            // [todo] get rid of any
+            const intersection = new Set<any>();
 
             for (const value of other.getValues()) {
                 if (this.values.has(value)) {
@@ -88,21 +104,25 @@ export abstract class InSetCriterion<T> extends Criterion {
                 }
             }
 
-            return new selfClass(intersection);
+            return inSet(intersection);
         }
 
         return false;
     }
 
     override invert(): Criterion {
-        return new this.notInClass(this.values);
+        // [todo] get rid of any
+        return notInSet(this.getValues() as any);
     }
 
     toString(): string {
-        return `{${Array.from(this.values).join(", ")}}`;
-    }
+        return `{${Array.from(this.values)
+            .map(value => {
+                if (value === null) return "null";
+                if (typeof value === "string") return `"${value}"`;
 
-    matches(value: any): boolean {
-        return this.values.has(value);
+                return value.toString();
+            })
+            .join(", ")}}`;
     }
 }

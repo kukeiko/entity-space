@@ -1,55 +1,50 @@
-import { Query } from "@entity-space/core";
-import { Criterion, InNumberRangeCriterion, NamedCriteriaTemplate } from "@entity-space/criteria";
-import { Product, ProductFilter } from "./model";
-import { ProductRepository } from "./repositories";
+// function mapCriteriaToProductFilters(productCriteria: Criterion): ProductFilter[] {
+//     const template = new NamedCriteriaTemplate({
+//         price: [InNumberRangeCriterion],
+//         rating: [InNumberRangeCriterion],
+//     });
 
-function mapCriteriaToProductFilters(productCriteria: Criterion): ProductFilter[] {
-    const template = new NamedCriteriaTemplate({
-        price: [InNumberRangeCriterion],
-        rating: [InNumberRangeCriterion],
-    });
+//     const [remapped, open] = productCriteria.remap([template]);
 
-    const [remapped, open] = productCriteria.remap([template]);
+//     if (remapped === false) {
+//         throw new Error(`failed to remap criterion`);
+//     }
 
-    if (remapped === false) {
-        throw new Error(`failed to remap criterion`);
-    }
+//     const filters: ProductFilter[] = [];
 
-    const filters: ProductFilter[] = [];
+//     for (const criterion of remapped) {
+//         const bag = criterion.getBag();
+//         const filter: ProductFilter = {};
 
-    for (const criterion of remapped) {
-        const bag = criterion.getBag();
-        const filter: ProductFilter = {};
+//         if (bag.price !== void 0) {
+//             filter.minPrice = bag.price.getFrom()?.value ?? void 0;
+//             filter.maxPrice = bag.price.getTo()?.value ?? void 0;
+//         }
 
-        if (bag.price !== void 0) {
-            filter.minPrice = bag.price.getFrom()?.value ?? void 0;
-            filter.maxPrice = bag.price.getTo()?.value ?? void 0;
-        }
+//         if (bag.rating !== void 0) {
+//             filter.minRating = bag.rating.getFrom()?.value ?? void 0;
+//             filter.maxRating = bag.rating.getTo()?.value ?? void 0;
+//         }
 
-        if (bag.rating !== void 0) {
-            filter.minRating = bag.rating.getFrom()?.value ?? void 0;
-            filter.maxRating = bag.rating.getTo()?.value ?? void 0;
-        }
+//         filters.push(filter);
+//     }
 
-        filters.push(filter);
-    }
+//     return filters;
+// }
 
-    return filters;
-}
+// async function loadFromApi(query: Query): Promise<Product[]> {
+//     console.log("[query-against-api]", query);
+//     // [todo] query.criteria should probably already be properly typed so that this "cast" is not necessary
+//     const productCriteria = query.criteria as any; //ObjectCriteria<Product>;
+//     const productFilters = mapCriteriaToProductFilters(productCriteria);
+//     console.log("[product filters]", productFilters);
+//     const repository = new ProductRepository();
+//     const allProducts = await Promise.all(productFilters.map(filter => repository.filter(filter)));
+//     const allProductsFlattened = allProducts.reduce((acc, value) => [...acc, ...value], []);
+//     console.log("[repository returned]", allProductsFlattened);
 
-async function loadFromApi(query: Query): Promise<Product[]> {
-    console.log("[query-against-api]", query);
-    // [todo] query.criteria should probably already be properly typed so that this "cast" is not necessary
-    const productCriteria = query.criteria as any; //ObjectCriteria<Product>;
-    const productFilters = mapCriteriaToProductFilters(productCriteria);
-    console.log("[product filters]", productFilters);
-    const repository = new ProductRepository();
-    const allProducts = await Promise.all(productFilters.map(filter => repository.filter(filter)));
-    const allProductsFlattened = allProducts.reduce((acc, value) => [...acc, ...value], []);
-    console.log("[repository returned]", allProductsFlattened);
-
-    return allProductsFlattened;
-}
+//     return allProductsFlattened;
+// }
 
 describe("how do we actually load data?", () => {
     xit("simple resolve of a query", async () => {

@@ -24,7 +24,10 @@ export async function expandRelation(
         return false;
     }
 
-    const referencedItems = result.getEntities();
+    // [todo] fix
+    const queried = result[0];
+
+    const referencedItems = queried.getEntities();
 
     for (const entity of entities) {
         const indexValue = entityReader.readIndexFromOne(fromIndex, entity);
@@ -39,5 +42,5 @@ export async function expandRelation(
         }
     }
 
-    return result.getQuery().expansion;
+    return queried.getQuery().expansion;
 }

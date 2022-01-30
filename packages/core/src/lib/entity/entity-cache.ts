@@ -1,5 +1,5 @@
-import { cloneJson, permutateEntries } from "@entity-space/utils";
 import { NamedCriteria } from "@entity-space/criteria";
+import { cloneJson, permutateEntries } from "@entity-space/utils";
 import { Query } from "../query/query";
 import { IEntitySchema } from "../schema/public";
 import { createCriteriaTemplateForIndex } from "./create-criteria-template-for-index.fn";
@@ -15,7 +15,7 @@ import { QueriedEntities } from "./queried-entities";
 export class EntityCache implements IEntitySource {
     private readonly stores = new Map<string, EntityStore>();
 
-    async query(query: Query): Promise<false | QueriedEntities> {
+    async query(query: Query): Promise<false | QueriedEntities[]> {
         const schema = query.entitySchema;
         const indexes = schema
             .getIndexesIncludingKey()
@@ -23,16 +23,19 @@ export class EntityCache implements IEntitySource {
             .sort((a, b) => b.getPath().length - a.getPath().length);
 
         const criteriaTemplates = indexes.map(index => createCriteriaTemplateForIndex(index));
-        const [remappedCriteria] = query.criteria.remap(criteriaTemplates);
+        // [todo] need to properly think about mapping against multiple templates and finding the best one
+        const results = criteriaTemplates.map(template => template.remap(query.criteria));
+        const firstResult = results.find(result => result !== false);
+        // const [remappedCriteria] = query.criteria.remap(criteriaTemplates);
 
         // [todo] remove "any" - but will result in compile error @ 02-loading-data.spec.ts
         let entities: any[] = [];
         const store = this.getOrCreateStore(schema);
 
-        if (remappedCriteria === false) {
+        if (firstResult === void 0 || firstResult === false) {
             entities = store.getAll();
         } else {
-            for (const remappedCriterion of remappedCriteria) {
+            for (const remappedCriterion of firstResult.getCriteria()) {
                 // [todo] we probably need to check for duplicates?
                 entities.push(...this.readFromStoreUsingIndexCriteria(store, remappedCriterion));
             }
@@ -47,7 +50,7 @@ export class EntityCache implements IEntitySource {
 
         entities = query.criteria.filter(entities);
 
-        return new QueriedEntities(query, entities);
+        return [new QueriedEntities(query, entities)];
     }
 
     addEntities(schema: IEntitySchema, entities: Entity[]): void {

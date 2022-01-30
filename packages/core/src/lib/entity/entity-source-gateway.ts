@@ -12,7 +12,7 @@ export class EntitySourceGateway implements IEntitySource {
         this.sources.set(schema.getId(), source);
     }
 
-    async query(query: Query): Promise<false | QueriedEntities> {
+    async query(query: Query): Promise<false | QueriedEntities[]> {
         const source = this.findSource(query.entitySchema);
 
         if (source === void 0) {
@@ -25,31 +25,40 @@ export class EntitySourceGateway implements IEntitySource {
             return false;
         }
 
-        const entities = result.getEntities();
-        const effectiveQuery = result.getQuery();
-        // [todo] we could add this to the QueriedEntities class, which would then just need the original query as a ctor arg
-        const missingExpansion = reduceExpansion(query.expansion, effectiveQuery.expansion) || query.expansion;
-        let successfulExpansion = effectiveQuery.expansion;
+        const results: QueriedEntities[] = [];
 
-        if (Object.keys(missingExpansion).length > 0 && entities.length > 0) {
-            const result = await expandEntities(query.entitySchema, missingExpansion, entities, this);
+        for (const queried of result) {
+            const entities = queried.getEntities();
+            const effectiveQuery = queried.getQuery();
 
-            if (result !== false) {
-                successfulExpansion = successfulExpansion;
+            // [todo] we could add this to the QueriedEntities class, which would then just need the original query as a ctor arg
+            const missingExpansion = reduceExpansion(query.expansion, effectiveQuery.expansion) || query.expansion;
+            let successfulExpansion = effectiveQuery.expansion;
+
+            if (Object.keys(missingExpansion).length > 0 && entities.length > 0) {
+                const result = await expandEntities(query.entitySchema, missingExpansion, entities, this);
+
+                if (result !== false) {
+                    successfulExpansion = successfulExpansion;
+                }
             }
+
+            results.push(
+                new QueriedEntities(
+                    {
+                        criteria: effectiveQuery.criteria,
+                        entitySchema: query.entitySchema,
+                        expansion: successfulExpansion,
+                        // [todo] not correct; we somehow need to fish out unresolved expansions from expandEntities() call
+                        // for now we just assume that all expansions could be resolved within this entity-source
+                        // expansion: query.expansion,
+                    },
+                    entities
+                )
+            );
         }
 
-        return new QueriedEntities(
-            {
-                criteria: effectiveQuery.criteria,
-                entitySchema: query.entitySchema,
-                expansion: successfulExpansion,
-                // [todo] not correct; we somehow need to fish out unresolved expansions from expandEntities() call
-                // for now we just assume that all expansions could be resolved within this entity-source
-                // expansion: query.expansion,
-            },
-            entities
-        );
+        return results;
     }
 
     private findSource(schema: IEntitySchema): IEntitySource | undefined {
