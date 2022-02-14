@@ -1,4 +1,5 @@
 import { Entity } from "../entity/entity";
+import { Expansion } from "../expansion/expansion";
 import { Query } from "./query";
 
 // [todo] T is unused
@@ -11,13 +12,13 @@ export class QueryMapper<T = Record<string, any>, R = {}, O = {}, E = {}> {
     ) {
         this.requiredFields = requiredFields;
         this.optionalFields = optionalFields;
-        this.supportedExpansion = supportedExpansion;
+        this.supportedExpansion = new Expansion(supportedExpansion);
         this.loadEntities = load;
     }
 
     private readonly requiredFields: R;
     private readonly optionalFields: O;
-    private readonly supportedExpansion: E;
+    private readonly supportedExpansion: Expansion<E>;
     private readonly loadEntities: (query: Query) => Promise<Entity[]>;
 
     getRequiredFields(): R {
@@ -28,7 +29,7 @@ export class QueryMapper<T = Record<string, any>, R = {}, O = {}, E = {}> {
         return this.optionalFields;
     }
 
-    getSupportedExpansion(): E {
+    getSupportedExpansion(): Expansion {
         return this.supportedExpansion;
     }
 

@@ -1,11 +1,15 @@
 import { Expansion } from "../expansion";
-import { mergeExpansions } from "../merge-expansions.fn";
+import { ExpansionObject } from "../expansion-object";
+
+function mergeExpansions(...objects: ExpansionObject[]): boolean | ExpansionObject {
+    return Expansion.mergeObjects(...objects);
+}
 
 describe("mergeExpansions()", () => {
     it("should merge { foo } and { bar } to create { foo, bar }", () => {
         // arrange
-        const a: Expansion = { foo: true };
-        const b: Expansion = { bar: true };
+        const a: ExpansionObject = { foo: true };
+        const b: ExpansionObject = { bar: true };
 
         // act
         const merged = mergeExpansions(a, b);
@@ -16,8 +20,8 @@ describe("mergeExpansions()", () => {
 
     it("should merge { foo: { bar } } and { foo: { baz } } to create { foo: { bar, baz } }", () => {
         // arrange
-        const a: Expansion = { foo: { bar: true } };
-        const b: Expansion = { foo: { baz: true } };
+        const a: ExpansionObject = { foo: { bar: true } };
+        const b: ExpansionObject = { foo: { baz: true } };
 
         // act
         const merged = mergeExpansions(a, b);
@@ -28,8 +32,8 @@ describe("mergeExpansions()", () => {
 
     it("should merge { foo } and { foo: { bar } } to create { foo: { bar } }", () => {
         // arrange
-        const a: Expansion = { foo: true };
-        const b: Expansion = { foo: { bar: true } };
+        const a: ExpansionObject = { foo: true };
+        const b: ExpansionObject = { foo: { bar: true } };
 
         // act
         const merged = mergeExpansions(a, b);

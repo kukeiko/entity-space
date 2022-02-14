@@ -1,11 +1,11 @@
 import { IsExact } from "conditional-type-checks";
-import { Expansion } from "../../lib/expansion/public";
+import { ExpansionObject } from "../../lib/expansion/public";
 
 /**
  * A default expansion is just "{}".
  */
 // $ExpectType true
-type DefaultIsEmpty = IsExact<Expansion, {}>;
+type DefaultIsEmpty = IsExact<ExpansionObject, {}>;
 
 interface SomeEntity {
     id: number;
@@ -17,7 +17,7 @@ interface SomeEntity {
  * Only true | undefined is a valid value when expanding primitives.
  */
 // $ExpectType true
-type OnlyTrueIsValidForPrimitives = IsExact<Expansion<SomeEntity>["id"], true | undefined>;
+type OnlyTrueIsValidForPrimitives = IsExact<ExpansionObject<SomeEntity>["id"], true | undefined>;
 
 interface Square {
     id: number;
@@ -42,4 +42,4 @@ type DistributedKeyOf<T> = T extends any ? keyof T : never;
  * "radius" for Circle, "length" for Square
  */
 // $ExpectType true
-type MergesUnions = "radius" | "length" extends DistributedKeyOf<Expansion<Shape>> ? true : false;
+type MergesUnions = "radius" | "length" extends DistributedKeyOf<ExpansionObject<Shape>> ? true : false;

@@ -38,7 +38,7 @@ export class ProductEntitySource extends QueryDispatcher<Product> implements IEn
                     return firstValueFrom(
                         this.http.post<Product[]>("api/products/search", {
                             filter,
-                            expand: query.getExpansion(),
+                            expand: query.getExpansionObject(),
                         })
                     );
                 })

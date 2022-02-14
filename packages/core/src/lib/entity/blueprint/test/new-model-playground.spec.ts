@@ -1,4 +1,4 @@
-import { Expand, Expansion } from "../../../expansion/public";
+import { Expand, ExpansionObject } from "../../../expansion/public";
 import { Instance, Metadata, MetadataReference } from "../instance";
 import { define } from "../property";
 
@@ -95,7 +95,7 @@ xdescribe("new model playground", () => {
         },
     };
 
-    function takesExpansion<E extends Expansion<UserInstance>>(expansion: E): typeof expansion {
+    function takesExpansion<E extends ExpansionObject<UserInstance>>(expansion: E): typeof expansion {
         return {} as any;
     }
 

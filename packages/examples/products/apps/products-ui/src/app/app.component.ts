@@ -1,5 +1,5 @@
 import { Component } from "@angular/core";
-import { EntitySourceGateway, Expansion, Query, Workspace } from "@entity-space/core";
+import { EntitySourceGateway, ExpansionObject, Query, Workspace } from "@entity-space/core";
 import { Criterion, inRange, inSet, matches, or } from "@entity-space/criteria";
 import { Product, ProductsSchemaCatalog } from "@entity-space/examples/products/libs/products-model";
 import { merge } from "rxjs";
@@ -60,7 +60,7 @@ export class AppComponent {
         try {
             const criteria = this.uiFilterToCriteria();
             // [todo] consider allowing "false" as an expansion value
-            const expansion: Expansion<Product> = {
+            const expansion: ExpansionObject<Product> = {
                 brand: this.includeBrand
                     ? this.includeBrandReviews
                         ? { reviews: this.includeBrandReviewAuthors ? { author: true } : true }
