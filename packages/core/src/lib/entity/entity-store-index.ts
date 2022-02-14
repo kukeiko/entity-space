@@ -114,7 +114,10 @@ export class EntityStoreIndex implements IEntitySchemaIndex {
                         map.set(value, []);
                     }
 
-                    map.get(value).push(itemsIndex);
+                    // [todo] linear lookup is slow
+                    if (!(map.get(value) as any[]).includes(itemsIndex)) {
+                        map.get(value).push(itemsIndex);
+                    }
                 }
             } else {
                 if (!map.has(value)) {

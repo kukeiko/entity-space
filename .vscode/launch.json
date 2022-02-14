@@ -12,6 +12,13 @@
             "args": ["test", "core", "--codeCoverage=false", "--skip-nx-cache"]
         },
         {
+            "name": "debug test criteria",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/node_modules/@nrwl/cli/bin/nx",
+            "args": ["test", "criteria", "--test-file", "\"${relativeFile}\""]
+        },
+        {
             "name": "debug serve sandbox-api",
             "type": "node",
             "request": "launch",

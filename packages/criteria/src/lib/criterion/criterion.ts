@@ -20,4 +20,9 @@ export abstract class Criterion {
     filter<T>(items: T[]): T[] {
         return items.filter(item => this.matches(item));
     }
+
+    // [todo] test this
+    equivalent(other: Criterion): boolean {
+        return this.reduce(other) === true && other.reduce(this) === true;
+    }
 }
