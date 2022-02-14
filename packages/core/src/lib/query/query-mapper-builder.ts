@@ -5,7 +5,7 @@ import {
     NamedCriteriaTemplateItems,
 } from "@entity-space/criteria";
 import { Entity } from "../entity/entity";
-import { Expansion } from "../expansion/expansion";
+import { ExpansionObject } from "../expansion/expansion-object";
 import { Query } from "./query";
 import { QueryMapper } from "./query-mapper";
 
@@ -37,7 +37,7 @@ export class QueryMapperBuilder<
         return this as any;
     }
 
-    supportsExpansion<X extends Expansion<T>>(expansion: X): QueryMapperBuilder<T, R, O, E & X> {
+    supportsExpansion<X extends ExpansionObject<T>>(expansion: X): QueryMapperBuilder<T, R, O, E & X> {
         // [todo] support merging nested expansions
         this.supportedExpansion = { ...this.supportedExpansion, ...expansion };
         return this as any;

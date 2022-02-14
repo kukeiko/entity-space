@@ -1,5 +1,5 @@
 import { Instance } from "../../lib/entity/blueprint/public";
-import { Expansion } from "../../lib/expansion/public";
+import { ExpansionObject } from "../../lib/expansion/public";
 import { TreeNodeRepository } from "../facade/data";
 import { CanvasModel, UserModel } from "../facade/model";
 
@@ -58,7 +58,7 @@ describe("prototyping-playground", () => {
             shapes?: (Square | Circle)[];
         }
 
-        function takesExpansion<E = Expansion<Instance<CanvasModel>>>(expansion: E): typeof expansion {
+        function takesExpansion<E = ExpansionObject<Instance<CanvasModel>>>(expansion: E): typeof expansion {
             return {} as any;
         }
 

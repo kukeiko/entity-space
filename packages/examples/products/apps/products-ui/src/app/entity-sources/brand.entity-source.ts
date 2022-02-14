@@ -17,7 +17,7 @@ export class BrandEntitySource extends QueryDispatcher<Brand> implements IEntity
                 .isLoadedBy(async query => {
                     const id = query.getCriteria().getBag().id.getValue();
                     const brand = await firstValueFrom(
-                        this.http.post<Brand>(`api/brands/${id}`, { expand: query.getExpansion() })
+                        this.http.post<Brand>(`api/brands/${id}`, { expand: query.getExpansionObject() })
                     );
 
                     return [brand];

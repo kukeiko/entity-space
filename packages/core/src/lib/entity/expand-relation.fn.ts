@@ -1,4 +1,4 @@
-import { Expansion } from "../expansion/public";
+import { ExpansionObject } from "../expansion/public";
 import { Query } from "../query/query";
 import { IEntitySchemaRelation } from "../schema/public";
 import { createCriteriaForIndex } from "./create-criteria-for-index.fn";
@@ -10,8 +10,8 @@ export async function expandRelation(
     entities: Entity[],
     relation: IEntitySchemaRelation,
     source: IEntitySource,
-    expansion?: Expansion
-): Promise<false | Expansion> {
+    expansion?: ExpansionObject
+): Promise<false | ExpansionObject> {
     const entityReader = new EntityReader();
     const relatedSchema = relation.getRelatedEntitySchema();
     // [todo] what about dictionaries?
@@ -44,5 +44,5 @@ export async function expandRelation(
         }
     }
 
-    return queried.getQuery().getExpansion();
+    return queried.getQuery().getExpansionObject();
 }

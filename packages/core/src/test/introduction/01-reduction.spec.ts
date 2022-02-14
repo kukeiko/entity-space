@@ -1,4 +1,4 @@
-import { Expansion, Query, reduceExpansion, reduceQuery } from "@entity-space/core";
+import { Expansion, ExpansionObject, Query, reduceQuery } from "@entity-space/core";
 import { inRange, matches, or } from "@entity-space/criteria";
 import { EntitySchema } from "../../lib/schema/entity-schema";
 
@@ -143,7 +143,7 @@ describe("what's reduction for?", () => {
          * We call an object that tells us which properties to load a "Expansion". Our initial selection of our products will contain
          * the id, the name, the price and the rating.
          */
-        const basic_properties: Expansion = {
+        const basic_properties: ExpansionObject = {
             id: true,
             name: true,
             price: true,
@@ -153,7 +153,7 @@ describe("what's reduction for?", () => {
         /**
          * Later on we also want to load the customer reviews of the product:
          */
-        const basic_properties_with_reviews: Expansion = {
+        const basic_properties_with_reviews: ExpansionObject = {
             ...basic_properties,
             reviews: true,
         };
@@ -161,11 +161,11 @@ describe("what's reduction for?", () => {
         /**
          * Since we've loaded the basic_properties_only already, the difference should just be the reviews:
          */
-        const expected: Expansion = {
+        const expected: ExpansionObject = {
             reviews: true,
         };
 
-        const actual = reduceExpansion(basic_properties_with_reviews, basic_properties);
+        const actual = new Expansion(basic_properties).reduce_alt(new Expansion(basic_properties_with_reviews)).getObject();
 
         expect(actual).toEqual(expected);
     });
@@ -177,14 +177,14 @@ describe("what's reduction for?", () => {
          * We're going to load products with a price range of 100 to 200, rating range of 3 to 5, without reviews.
          * We then load products with price range of 100 to 300, rating range of 2 to 5, including the reviews.
          */
-        const basic_properties: Expansion = {
+        const basic_properties: ExpansionObject = {
             id: true,
             name: true,
             price: true,
             rating: true,
         };
 
-        const review_property: Expansion = {
+        const review_property: ExpansionObject = {
             reviews: true,
         };
 

@@ -41,10 +41,12 @@ export class EntityCache implements IEntitySource {
             }
         }
 
-        if (Object.keys(query.getExpansion()).length > 0) {
-            entities = cloneJson(entities); // [todo] dirty to do it here?
+        if (!query.getExpansion().isEmpty() && entities.length > 0) {
+            // [todo] dirty to do it here?
+            // [todo] this way of cloning is quite slow.
+            entities = cloneJson(entities);
 
-            const expansionResult = await expandEntities(schema, query.getExpansion(), entities, this);
+            const expansionResult = await expandEntities(schema, query.getExpansionObject(), entities, this);
             console.log("[expansion-result]", expansionResult);
         }
 

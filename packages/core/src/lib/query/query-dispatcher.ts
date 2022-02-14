@@ -2,8 +2,6 @@ import { ICriterionTemplate, namedTemplate, orTemplate } from "@entity-space/cri
 import { Observable, Subject } from "rxjs";
 import { IEntitySource } from "../entity/entity-source.interface";
 import { QueriedEntities } from "../entity/queried-entities";
-import { Expansion } from "../expansion/expansion";
-import { reduceExpansion } from "../expansion/reduce-expansion.fn";
 import { EntitySchema } from "../schema/entity-schema";
 import { Query } from "./query";
 import { QueryMapper } from "./query-mapper";
@@ -66,18 +64,8 @@ export class QueryDispatcher<T = Record<string, any>> implements IEntitySource {
                         continue;
                     }
 
-                    // [todo] clean up this madness
-                    const supportedExpansion: Expansion = mapper.getSupportedExpansion();
-                    const missingExpansion =
-                        reduceExpansion(query.getExpansion(), supportedExpansion) || query.getExpansion();
-                    let effectiveExpansion =
-                        reduceExpansion(query.getExpansion(), missingExpansion) || supportedExpansion;
-
-                    if (Object.keys(effectiveExpansion).length === 0) {
-                        effectiveExpansion = supportedExpansion;
-                    }
-
-                    const effectiveQuery = new Query(this.entitySchema, criterion, effectiveExpansion || {});
+                    const effectiveExpansion = query.getExpansion().intersect(mapper.getSupportedExpansion());
+                    const effectiveQuery = new Query(this.entitySchema, criterion, effectiveExpansion.getObject());
 
                     loadEntities.push(
                         mapper.load(effectiveQuery).then(entities => new QueriedEntities(effectiveQuery, entities))

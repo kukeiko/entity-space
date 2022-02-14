@@ -1,4 +1,5 @@
-import { Expansion, mergeExpansions } from "../expansion/public";
+import { ExpansionObject } from "../expansion/public";
+import { Expansion } from "../public";
 import { IEntitySchema } from "../schema/public";
 import { Entity } from "./entity";
 import { IEntitySource } from "./entity-source.interface";
@@ -6,11 +7,11 @@ import { expandRelation } from "./expand-relation.fn";
 
 export async function expandEntities(
     schema: IEntitySchema,
-    expansion: Expansion,
+    expansion: ExpansionObject,
     entities: Entity[],
     source: IEntitySource
-): Promise<false | Expansion> {
-    const tasks: Promise<false | Expansion>[] = [];
+): Promise<false | ExpansionObject> {
+    const tasks: Promise<false | ExpansionObject>[] = [];
 
     // [todo] dirty
     const isExpanded = (propertyKey: string): boolean => {
@@ -83,7 +84,7 @@ export async function expandEntities(
         return value !== false;
     }
 
-    const successfulExpansion = mergeExpansions(...results.filter(isNotFalse));
+    const successfulExpansion = Expansion.mergeObjects(...results.filter(isNotFalse));
 
     // [todo] i think returning false if all in results are false is correct - but not 100% sure
     return results.every(result => result === false) ? false : successfulExpansion;

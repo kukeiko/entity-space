@@ -1,4 +1,3 @@
-import { reduceExpansion } from "../expansion/public";
 import { Query } from "../query/query";
 import { IEntitySchema } from "../schema/public";
 import { IEntitySource } from "./entity-source.interface";
@@ -28,29 +27,22 @@ export class EntitySourceGateway implements IEntitySource {
         const results: QueriedEntities[] = [];
 
         for (const queried of result) {
-            const entities = queried.getEntities();
             const effectiveQuery = queried.getQuery();
+            const openExpansion = effectiveQuery.getExpansion().reduce_alt(query.getExpansion());
+            let successfulExpansion = effectiveQuery.getExpansionObject();
+            const entities = queried.getEntities();
 
-            // [todo] we could add this to the QueriedEntities class, which would then just need the original query as a ctor arg
-            const missingExpansion =
-                reduceExpansion(query.getExpansion(), effectiveQuery.getExpansion()) || query.getExpansion();
-            let successfulExpansion = effectiveQuery.getExpansion();
-
-            if (Object.keys(missingExpansion).length > 0 && entities.length > 0) {
-                const result = await expandEntities(query.getEntitySchema(), missingExpansion, entities, this);
+            if (entities.length > 0 && !openExpansion.isEmpty()) {
+                const result = await expandEntities(query.getEntitySchema(), openExpansion.getObject(), entities, this);
 
                 if (result !== false) {
-                    successfulExpansion = successfulExpansion;
+                    successfulExpansion = result;
                 }
             }
 
             results.push(
                 new QueriedEntities(
-                    // [todo] not correct; we somehow need to fish out unresolved expansions from expandEntities() call
-                    // for now we just assume that all expansions could be resolved within this entity-source
-                    // expansion: query.expansion,
                     new Query(query.getEntitySchema(), effectiveQuery.getCriteria(), successfulExpansion),
-
                     entities
                 )
             );

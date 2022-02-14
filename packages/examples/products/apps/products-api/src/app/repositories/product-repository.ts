@@ -1,4 +1,4 @@
-import { Expansion } from "@entity-space/core";
+import { ExpansionObject } from "@entity-space/core";
 import { Product, ProductFilter } from "@entity-space/examples/products/libs/products-model";
 import { cloneJson, groupBy } from "@entity-space/utils";
 import { Injectable } from "@nestjs/common";
@@ -9,7 +9,7 @@ import { ProductReviewRepository } from "./product-review-repository";
 export class ProductRepository {
     constructor(private readonly productReviewRepository: ProductReviewRepository) {}
 
-    async all(expand?: Expansion): Promise<Product[]> {
+    async all(expand?: ExpansionObject): Promise<Product[]> {
         const products = cloneJson(data.products);
 
         if (expand !== void 0) {
@@ -19,7 +19,7 @@ export class ProductRepository {
         return products;
     }
 
-    async byIds(ids: number[], expand?: Expansion): Promise<Product[]> {
+    async byIds(ids: number[], expand?: ExpansionObject): Promise<Product[]> {
         const idSet = new Set(ids);
         const all = await this.all();
         const filtered = all.filter(item => idSet.has(item.id));
@@ -31,7 +31,7 @@ export class ProductRepository {
         return filtered;
     }
 
-    async search(filter: ProductFilter, expand?: Expansion<Product>): Promise<Product[]> {
+    async search(filter: ProductFilter, expand?: ExpansionObject<Product>): Promise<Product[]> {
         const all = await this.all();
 
         const filtered = all.filter(item => {
@@ -50,7 +50,7 @@ export class ProductRepository {
         return filtered;
     }
 
-    async expand(products: Product[], expand: Expansion<Product>): Promise<void> {
+    async expand(products: Product[], expand: ExpansionObject<Product>): Promise<void> {
         if (expand.reviews !== void 0) {
             const productIds = products.map(product => product.id);
             const reviews = await this.productReviewRepository.byProductIds(productIds);
