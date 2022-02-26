@@ -14,6 +14,7 @@ export * from "./lib/subtract-sets.fn";
 export * from "./lib/to-map-by-id.fn";
 export * from "./lib/to-map.fn";
 export * from "./lib/types/class";
+export * from "./lib/types/deep-partial";
 export * from "./lib/types/json";
 export * from "./lib/types/primitive";
 export * from "./lib/types/primitive-including-null";

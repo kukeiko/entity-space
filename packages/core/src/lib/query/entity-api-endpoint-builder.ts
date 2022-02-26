@@ -4,8 +4,10 @@ import {
     NamedCriteriaTemplate,
     NamedCriteriaTemplateItems,
 } from "@entity-space/criteria";
+import { DeepPartial } from "@entity-space/utils";
 import { Entity } from "../entity/entity";
 import { ExpansionObject } from "../expansion/expansion-object";
+import { Expansion } from "../public";
 import { EntityApiEndpoint } from "./entity-api-endpoint";
 import { Query } from "./query";
 
@@ -26,7 +28,6 @@ export class EntityApiEndpointBuilder<
     private supportedExpansion: E = {} as E;
     private loadEntities?: (query: Query) => Promise<Entity[]>;
 
-    // requiresFields<F extends Partial<Record<keyof T, ICriterionTemplate>>>(
     requiresFields<F extends AddFieldsArgument<T>>(fields: F): EntityApiEndpointBuilder<T, R & F, O, E> {
         this.requiredFields = { ...this.requiredFields, ...fields };
         return this as any;
@@ -37,14 +38,13 @@ export class EntityApiEndpointBuilder<
         return this as any;
     }
 
-    supportsExpansion<X extends ExpansionObject<T>>(expansion: X): EntityApiEndpointBuilder<T, R, O, E & X> {
-        // [todo] support merging nested expansions
-        this.supportedExpansion = { ...this.supportedExpansion, ...expansion };
+    supportsExpansion<X extends ExpansionObject<T>>(
+        expansion: X
+    ): EntityApiEndpointBuilder<T, R, O, E & DeepPartial<X>> {
+        this.supportedExpansion = Expansion.mergeObjects(this.supportedExpansion, expansion) as any;
         return this as any;
     }
 
-    // [todo] E type not correct; should be deeply partial.
-    // either do here or - probably better - when specifying supported expansion.
     isLoadedBy<Q extends Query<T, InstancedCriterionTemplate<NamedCriteriaTemplate<R, O>>, E>>(
         load: (query: Q) => Promise<Entity[]>
     ): this {
