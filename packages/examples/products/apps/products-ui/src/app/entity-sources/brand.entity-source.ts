@@ -1,16 +1,16 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import { IEntitySource, QueryDispatcher } from "@entity-space/core";
+import { IEntitySource, EntityApi } from "@entity-space/core";
 import { isValueTemplate } from "@entity-space/criteria";
 import { Brand, ProductsSchemaCatalog } from "@entity-space/examples/products/libs/products-model";
 import { firstValueFrom } from "rxjs";
 
 @Injectable()
-export class BrandEntitySource extends QueryDispatcher<Brand> implements IEntitySource {
+export class BrandEntitySource extends EntityApi<Brand> implements IEntitySource {
     constructor(private readonly http: HttpClient, private readonly schemaCatalog: ProductsSchemaCatalog) {
         super(schemaCatalog.getBrandSchema());
 
-        this.addMapping(builder =>
+        this.addEndpoint(builder =>
             builder
                 .requiresFields({ id: isValueTemplate(Number) })
                 .supportsExpansion({ reviews: true })

@@ -12,12 +12,13 @@ export class EntityStoreIndex implements IEntitySchemaIndex {
     }
 
     private readonly entityReader: IEntityReader;
+    // [todo] consider renaming to "indexSchema" (and rename type to IEntityIndexSchema)
     private readonly schemaIndex: IEntitySchemaIndex;
     private store = new Map();
 
     // [todo] instead have "insert()", "update()" and "upsert()"
-    add(item: Record<string, any>, recordIndex: number): void {
-        const indexValue = this.readOne(item);
+    add(entity: Entity, recordIndex: number): void {
+        const indexValue = this.readOne(entity);
 
         this.addToIndex(indexValue, recordIndex);
     }

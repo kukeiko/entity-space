@@ -6,14 +6,14 @@ import {
 } from "@entity-space/criteria";
 import { Entity } from "../entity/entity";
 import { ExpansionObject } from "../expansion/expansion-object";
+import { EntityApiEndpoint } from "./entity-api-endpoint";
 import { Query } from "./query";
-import { QueryMapper } from "./query-mapper";
 
-type AddFieldsArg<T> = {
+type AddFieldsArgument<T> = {
     [K in keyof T]?: ICriterionTemplate;
 };
 
-export class QueryMapperBuilder<
+export class EntityApiEndpointBuilder<
     T = Record<string, any>,
     R extends NamedCriteriaTemplateItems = {},
     O extends NamedCriteriaTemplateItems = {},
@@ -27,17 +27,17 @@ export class QueryMapperBuilder<
     private loadEntities?: (query: Query) => Promise<Entity[]>;
 
     // requiresFields<F extends Partial<Record<keyof T, ICriterionTemplate>>>(
-    requiresFields<F extends AddFieldsArg<T>>(fields: F): QueryMapperBuilder<T, R & F, O, E> {
+    requiresFields<F extends AddFieldsArgument<T>>(fields: F): EntityApiEndpointBuilder<T, R & F, O, E> {
         this.requiredFields = { ...this.requiredFields, ...fields };
         return this as any;
     }
 
-    supportsFields<F extends AddFieldsArg<T>>(fields: F): QueryMapperBuilder<T, R, O & Partial<F>, E> {
+    supportsFields<F extends AddFieldsArgument<T>>(fields: F): EntityApiEndpointBuilder<T, R, O & Partial<F>, E> {
         this.optionalFields = { ...this.optionalFields, ...fields };
         return this as any;
     }
 
-    supportsExpansion<X extends ExpansionObject<T>>(expansion: X): QueryMapperBuilder<T, R, O, E & X> {
+    supportsExpansion<X extends ExpansionObject<T>>(expansion: X): EntityApiEndpointBuilder<T, R, O, E & X> {
         // [todo] support merging nested expansions
         this.supportedExpansion = { ...this.supportedExpansion, ...expansion };
         return this as any;
@@ -52,11 +52,16 @@ export class QueryMapperBuilder<
         return this;
     }
 
-    build(): QueryMapper<T, R, O, E> {
+    build(): EntityApiEndpoint<T, R, O, E> {
         if (this.loadEntities === void 0) {
             throw new Error("isLoadedBy() hasn't been called yet");
         }
 
-        return new QueryMapper(this.requiredFields, this.optionalFields, this.supportedExpansion, this.loadEntities);
+        return new EntityApiEndpoint(
+            this.requiredFields,
+            this.optionalFields,
+            this.supportedExpansion,
+            this.loadEntities
+        );
     }
 }

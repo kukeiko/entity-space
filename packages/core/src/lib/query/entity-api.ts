@@ -3,17 +3,17 @@ import { Observable, Subject } from "rxjs";
 import { IEntitySource } from "../entity/entity-source.interface";
 import { QueriedEntities } from "../entity/queried-entities";
 import { EntitySchema } from "../schema/entity-schema";
+import { EntityApiEndpoint } from "./entity-api-endpoint";
+import { EntityApiEndpointBuilder } from "./entity-api-endpoint-builder";
 import { Query } from "./query";
-import { QueryMapper } from "./query-mapper";
-import { QueryMapperBuilder } from "./query-mapper-builder";
 
-export class QueryDispatcher<T = Record<string, any>> implements IEntitySource {
+export class EntityApi<T = Record<string, any>> implements IEntitySource {
     constructor(entitySchema: EntitySchema) {
         this.entitySchema = entitySchema;
     }
 
     private readonly entitySchema: EntitySchema;
-    private readonly mappers: QueryMapper[] = [];
+    private readonly endpoints: EntityApiEndpoint[] = [];
 
     private queryIssued = new Subject<Query>();
 
@@ -25,9 +25,9 @@ export class QueryDispatcher<T = Record<string, any>> implements IEntitySource {
         return this.entitySchema;
     }
 
-    addMapping(mapping: (builder: QueryMapperBuilder<T>) => QueryMapperBuilder): this {
-        const mapper = mapping(new QueryMapperBuilder()).build();
-        this.mappers.push(mapper);
+    addEndpoint(mapping: (builder: EntityApiEndpointBuilder<T>) => EntityApiEndpointBuilder): this {
+        const mapper = mapping(new EntityApiEndpointBuilder()).build();
+        this.endpoints.push(mapper);
 
         return this;
     }
@@ -37,17 +37,17 @@ export class QueryDispatcher<T = Record<string, any>> implements IEntitySource {
             return false;
         }
 
-        const criterionTemplatesOfMappers = new Map<QueryMapper, ICriterionTemplate>();
         this.queryIssued.next(query);
+        const endpointCriteriaTemplates = new Map<EntityApiEndpoint, ICriterionTemplate>();
 
-        for (const mapper of this.mappers) {
-            criterionTemplatesOfMappers.set(
-                mapper,
-                namedTemplate(mapper.getRequiredFields(), mapper.getOptionalFields())
+        for (const endpoint of this.endpoints) {
+            endpointCriteriaTemplates.set(
+                endpoint,
+                namedTemplate(endpoint.getRequiredFields(), endpoint.getOptionalFields())
             );
         }
 
-        const template = orTemplate(Array.from(criterionTemplatesOfMappers.values()));
+        const template = orTemplate(Array.from(endpointCriteriaTemplates.values()));
         const remapped = template.remap(query.getCriteria());
 
         if (remapped === false) {
@@ -59,7 +59,7 @@ export class QueryDispatcher<T = Record<string, any>> implements IEntitySource {
 
         for (const orCriteria of remapped.getCriteria()) {
             for (const criterion of orCriteria.getItems()) {
-                for (const [mapper, template] of criterionTemplatesOfMappers) {
+                for (const [mapper, template] of endpointCriteriaTemplates) {
                     if (!template.matches(criterion)) {
                         continue;
                     }
