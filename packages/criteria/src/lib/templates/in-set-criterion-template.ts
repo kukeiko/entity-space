@@ -16,7 +16,9 @@ export class InSetCriterionTemplate<T extends PrimitiveIncludingNull = Primitive
     }
 
     // [todo] get rid of this hack
-    // otherwise typeof IsValueSetCriterionTemplate === typeof IsValueCriterionTemplate
+    // otherwise typeof IsSetCriterionTemplate === typeof IsValueCriterionTemplate
+    // [todo] being able to distinguish between "typeof IsSetCriterionTemplate" and "typeof IsValueCriterionTemplate"
+    // might no longer be necessary, as "instanced-criterion-template" has been simplified
     private readonly op: "in-set" = "in-set";
     private readonly valueMatches: (value: unknown) => value is ReturnType<T>;
     private readonly valueTypes: readonly T[];

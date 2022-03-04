@@ -6,8 +6,6 @@ export interface IPrimitiveSchema {
     getDataType(): "boolean" | "integer" | "number" | "string";
 }
 
-export interface IEntitySchemaKey extends IEntitySchemaIndex {}
-
 export interface IEntitySchemaIndex {
     getName(): string;
     getPath(): string[];
@@ -32,7 +30,7 @@ export interface IEntitySchema {
     getIndexOrKey(name: string): IEntitySchemaIndex;
     getIndexes(): IEntitySchemaIndex[];
     getIndexesIncludingKey(): IEntitySchemaIndex[];
-    getKey(): IEntitySchemaKey;
+    getKey(): IEntitySchemaIndex;
     getOneOf(): IEntitySchema[];
     getProperties(): IEntitySchemaProperty[];
     getProperty(path: string): IEntitySchemaProperty;

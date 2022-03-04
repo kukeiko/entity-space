@@ -2,6 +2,7 @@ import { InSetCriterionTemplate, inSetTemplate, namedTemplate, NamedCriteriaTemp
 import { chip } from "@entity-space/utils";
 import { IEntitySchemaIndex } from "../schema/public";
 
+// [todo] mvoe to entity-index itself
 export function createCriteriaTemplateForIndex(
     index: IEntitySchemaIndex
 ): NamedCriteriaTemplate<{ [key: string]: InSetCriterionTemplate }> {

@@ -6,7 +6,6 @@ import { EntityCache } from "./entity-cache";
 import { IEntitySource } from "./entity-source.interface";
 import { QueriedEntities } from "./queried-entities";
 
-// [todo] should implement IEntitySource
 export class Workspace implements IEntitySource {
     private source?: IEntitySource;
     private readonly queryCaches = new Map<string, Query[]>();

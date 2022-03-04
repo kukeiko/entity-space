@@ -5,7 +5,6 @@ import { EntitySchemaRelation } from "./entity-schema-relation";
 import {
     IEntitySchema,
     IEntitySchemaIndex,
-    IEntitySchemaKey,
     IEntitySchemaProperty,
     IEntitySchemaRelation,
     PropertyValueSchema,
@@ -16,7 +15,7 @@ export class EntitySchema implements IEntitySchema {
         this.id = id;
     }
 
-    private key?: IEntitySchemaKey;
+    private key?: IEntitySchemaIndex;
 
     private readonly allOf: IEntitySchema[] = [];
     private readonly anyOf: IEntitySchema[] = [];
@@ -89,7 +88,7 @@ export class EntitySchema implements IEntitySchema {
         return [this.getKey(), ...this.getIndexes()];
     }
 
-    getKey(): IEntitySchemaKey {
+    getKey(): IEntitySchemaIndex {
         if (this.key === void 0) {
             throw new Error(`there is no key defined on schema ${this.getId()}`);
         }
@@ -135,7 +134,7 @@ export class EntitySchema implements IEntitySchema {
         return this.key !== void 0;
     }
 
-    setKey(path: string | string[]): void {
-        this.key = new EntitySchemaKey(this, path);
+    setKey(path: string | string[], options?: { name?: string }): void {
+        this.key = new EntitySchemaKey(this, path, options);
     }
 }

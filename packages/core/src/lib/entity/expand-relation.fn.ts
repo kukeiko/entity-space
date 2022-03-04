@@ -28,7 +28,6 @@ export async function expandRelation(
 
     // [todo] fix
     const queried = result[0];
-
     const referencedItems = queried.getEntities();
 
     for (const entity of entities) {

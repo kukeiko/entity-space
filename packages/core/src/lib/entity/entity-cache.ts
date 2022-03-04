@@ -22,6 +22,8 @@ export class EntityCache implements IEntitySource {
             .slice()
             .sort((a, b) => b.getPath().length - a.getPath().length);
 
+        // [todo] does not cover { foo: > 3 } | { bar: {1,2,3} } as it will only take { bar: {1,2,3} }
+        // and ignore { foo: > 3 } since no index accepts that criteria
         const criteriaTemplates = indexes.map(index => createCriteriaTemplateForIndex(index));
         // [todo] need to properly think about mapping against multiple templates and finding the best one
         const results = criteriaTemplates.map(template => template.remap(query.getCriteria()));
