@@ -34,8 +34,5 @@
         {
             "memberTypes": ["constructors", "publicProperties", "protectedProperties", "privateProperties"]
         }
-    ],
-    "thunder-client.loadFromProject": true,
-    "thunder-client.workspaceRelativePath": ".vscode/thunder-client",
-    "jest.autoRun": "null"
+    ]
 }
