@@ -4,6 +4,62 @@ import { Entity } from "../entity/entity";
 export class EntityCompositeValueIndex {
     paths: string[] = [];
 
+    joinEntities(
+        what: Entity[],
+        onto: Entity[],
+        isArray = false,
+        mapPath: (path: string) => string = path => path,
+        joinedProperty: string
+    ): void {
+        const readMappedPathValues = (entity: Entity): any[] =>
+            this.paths.map(path => this.walkPath(mapPath(path), entity));
+        const ontoMap = new Map();
+
+        for (const entity of onto) {
+            const values = readMappedPathValues(entity);
+            let map = ontoMap;
+
+            for (let i = 0; i < values.length - 1; ++i) {
+                const value = values[i];
+                map = map.get(value) ?? map.set(value, new Map()).get(value);
+            }
+
+            const lastValue = values[values.length - 1];
+            const array = map.get(lastValue) ?? map.set(lastValue, []).get(lastValue)!;
+            array.push(entity);
+        }
+
+        const readValues = (entity: Entity): any[] => this.paths.map(path => this.walkPath(path, entity));
+
+        for (const entity of what) {
+            const values = readValues(entity);
+            let map = ontoMap;
+
+            for (const value of values) {
+                map = map.get(value);
+
+                if (map === void 0) {
+                    break;
+                }
+            }
+
+            if (map === void 0) {
+                continue;
+            }
+
+            const ontoEntities: Entity[] = map as any;
+
+            for (const ontoEntity of ontoEntities) {
+                if (isArray) {
+                    const array = (ontoEntity[joinedProperty] ??= []) as Entity[];
+                    array.push(entity);
+                } else {
+                    ontoEntity[joinedProperty] = entity;
+                }
+            }
+        }
+    }
+
     getCriterion(entities: Entity[], mapPath: (path: string) => string = path => path): Criterion {
         const readValues = (entity: Entity): any[] => this.paths.map(path => this.walkPath(mapPath(path), entity));
         const rootMap = new Map();

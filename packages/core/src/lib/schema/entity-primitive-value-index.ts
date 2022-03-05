@@ -26,7 +26,6 @@ export class EntityPrimitiveValueIndex {
         mapPath: (path: string) => string = path => path,
         joinedProperty: string
     ): void {
-        const readValue = (entity: Entity): any => this.walkPath(this.path, entity);
         const readMappedPathValue = (entity: Entity): any => this.walkPath(mapPath(this.path), entity);
         const ontoMap = new Map<any, Entity[]>();
 
@@ -35,6 +34,8 @@ export class EntityPrimitiveValueIndex {
             const array = ontoMap.get(value) ?? ontoMap.set(value, []).get(value)!;
             array.push(entity);
         }
+        
+        const readValue = (entity: Entity): any => this.walkPath(this.path, entity);
 
         for (const entity of what) {
             const value = readValue(entity);
