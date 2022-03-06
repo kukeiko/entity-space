@@ -1,12 +1,21 @@
 import { Criterion, fromDeepBag, inSet } from "@entity-space/criteria";
-import { Entity } from "../entity/entity";
+import { IEntitySchemaIndex } from "../schema/schema.interface";
+import { Entity } from "./entity";
+import { IEntityIndex, MapPathFn } from "./entity-index.interface";
 
-export class EntityPrimitiveValueIndex {
-    paths: string[] = [];
-    path: string = "";
+export class EntityPrimitiveValueIndex implements IEntityIndex {
+    constructor(private readonly schema: IEntitySchemaIndex) {}
 
-    getCriterion(entities: Entity[], mapPath: (path: string) => string = path => path): Criterion {
-        const readValue = (entity: Entity): any => this.walkPath(mapPath(this.path), entity);
+    getSchema(): IEntitySchemaIndex {
+        return this.schema;
+    }
+
+    getPath() : string {
+        return this.schema.getPath()[0];
+    }
+
+    createCriterion(entities: Entity[], mapPath: MapPathFn = path => path): Criterion {
+        const readValue = (entity: Entity): any => this.walkPath(mapPath(this.getPath()), entity);
         const set = new Set<any>();
 
         for (const entity of entities) {
@@ -14,19 +23,21 @@ export class EntityPrimitiveValueIndex {
         }
 
         const bag: Record<string, any> = {};
-        this.writePath(this.path, bag, inSet(set));
+        this.writePath(this.getPath(), bag, inSet(set));
 
         return fromDeepBag(bag);
     }
 
-    joinEntities(
-        what: Entity[],
-        onto: Entity[],
-        isArray = false,
-        mapPath: (path: string) => string = path => path,
-        joinedProperty: string
-    ): void {
-        const readMappedPathValue = (entity: Entity): any => this.walkPath(mapPath(this.path), entity);
+    joinEntities(args: {
+        fromEntities: Entity[];
+        property: string;
+        toEntities: Entity[];
+        isArray: boolean;
+        mapPath?: MapPathFn;
+    }): void {
+        const { fromEntities: onto, property: joinedProperty, toEntities: what, isArray } = args;
+        let mapPath = args.mapPath ?? ((path: string) => path);
+        const readMappedPathValue = (entity: Entity): any => this.walkPath(mapPath(this.getPath()), entity);
         const ontoMap = new Map<any, Entity[]>();
 
         for (const entity of onto) {
@@ -34,8 +45,8 @@ export class EntityPrimitiveValueIndex {
             const array = ontoMap.get(value) ?? ontoMap.set(value, []).get(value)!;
             array.push(entity);
         }
-        
-        const readValue = (entity: Entity): any => this.walkPath(this.path, entity);
+
+        const readValue = (entity: Entity): any => this.walkPath(this.getPath(), entity);
 
         for (const entity of what) {
             const value = readValue(entity);
@@ -52,6 +63,16 @@ export class EntityPrimitiveValueIndex {
         }
     }
 
+    readValues(entities: Entity[], mapPath: MapPathFn = path => path): (number | string | null)[][] {
+        const values: (number | string | null)[][] = [];
+
+        for (const entity of entities) {
+            values.push([this.walkPath(mapPath(this.getPath()), entity)]);
+        }
+
+        return values;
+    }
+
     private walkPath(path: string, object: Record<string, any>): any {
         for (const segment of path.split(".")) {
             object = object[segment];
@@ -66,19 +87,6 @@ export class EntityPrimitiveValueIndex {
         for (let i = 0; i < segments.length - 1; ++i) {
             const segment = segments[i];
             object = object[segment] = {};
-        }
-
-        object[segments[segments.length - 1]] = value;
-
-        return value;
-    }
-
-    private treadPath<T>(path: string, object: Record<string, any>, value: T): T {
-        const segments = path.split(".");
-
-        for (let i = 0; i < segments.length - 1; ++i) {
-            const segment = segments[i];
-            object = object[segment] ?? (object[segment] = {});
         }
 
         object[segments[segments.length - 1]] = value;

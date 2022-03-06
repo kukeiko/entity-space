@@ -1,4 +1,7 @@
+import { EntitySchema } from "../schema/entity-schema";
+import { EntitySchemaIndex } from "../schema/entity-schema-index";
 import { EntityCompositeValueIndex } from "./entity-composite-value-index";
+import { MapPathFn } from "./entity-index.interface";
 import { EntityPrimitiveValueIndex } from "./entity-primitive-value-index";
 
 describe("playground: index", () => {
@@ -14,9 +17,12 @@ describe("playground: index", () => {
             { foo: { bar: { baz: 1 } } },
             { foo: { bar: { baz: "2" } } },
         ];
-        const index = new EntityPrimitiveValueIndex();
-        index.path = "foo.bar.baz";
-        const criterion = index.getCriterion(entities);
+
+        const entitySchema = new EntitySchema("foo");
+        const indexSchema = new EntitySchemaIndex(entitySchema, "foo.bar.baz");
+        const index = new EntityPrimitiveValueIndex(indexSchema);
+        const criterion = index.createCriterion(entities);
+
         expect(criterion.toString()).toEqual(`{ foo: { bar: { baz: {1, 2, -1, "2"} } } }`);
     });
 
@@ -41,9 +47,17 @@ describe("playground: index", () => {
             { id: 50, fooId: 2 },
         ];
 
-        const index = new EntityPrimitiveValueIndex();
-        index.path = "fooId";
-        index.joinEntities(barEntities, fooEntities, true, () => "id", "joined");
+        const entitySchema = new EntitySchema("foo");
+        const indexSchema = new EntitySchemaIndex(entitySchema, "fooId");
+        const index = new EntityPrimitiveValueIndex(indexSchema);
+
+        index.joinEntities({
+            fromEntities: fooEntities,
+            property: "joined",
+            toEntities: barEntities,
+            isArray: true,
+            mapPath: () => "id",
+        });
 
         expect(fooEntities).toEqual<Required<Foo>[]>([
             {
@@ -70,8 +84,10 @@ describe("playground: index", () => {
             khaz: { mo: number };
         }
 
-        const index = new EntityCompositeValueIndex();
-        index.paths = ["foo.bar.baz", "cheese", "khaz.mo"];
+        const entitySchema = new EntitySchema("foo");
+        const indexSchema = new EntitySchemaIndex(entitySchema, ["foo.bar.baz", "cheese", "khaz.mo"]);
+        const index = new EntityCompositeValueIndex(indexSchema);
+
         const entities: Entity[] = [
             {
                 foo: { bar: { baz: 1 } },
@@ -100,7 +116,7 @@ describe("playground: index", () => {
             },
         ];
 
-        const criterion = index.getCriterion(entities);
+        const criterion = index.createCriterion(entities);
 
         /**
          * [todo]
@@ -121,8 +137,9 @@ describe("playground: index", () => {
             "khaz-mo": number;
         }
 
-        const index = new EntityCompositeValueIndex();
-        index.paths = ["foo.bar.baz", "cheese", "khaz.mo"];
+        const entitySchema = new EntitySchema("foo");
+        const indexSchema = new EntitySchemaIndex(entitySchema, ["foo.bar.baz", "cheese", "khaz.mo"]);
+        const index = new EntityCompositeValueIndex(indexSchema);
 
         const entities: Entity[] = [
             {
@@ -165,7 +182,7 @@ describe("playground: index", () => {
             }
         };
 
-        const criterion = index.getCriterion(entities, mapPath);
+        const criterion = index.createCriterion(entities, mapPath);
 
         /**
          * [todo]
@@ -206,24 +223,28 @@ describe("playground: index", () => {
             { id: 50, fooId: 2, namespace: "cheese" },
         ];
 
-        const index = new EntityCompositeValueIndex();
-        index.paths = ["namespace", "fooId"];
-        index.joinEntities(
-            barEntities,
-            fooEntities,
-            true,
-            path => {
-                switch (path) {
-                    case "fooId":
-                        return "id";
-                    case "namespace":
-                        return "namespace";
-                    default:
-                        throw new Error(`unknown oath ${path}`);
-                }
-            },
-            "joined"
-        );
+        const entitySchema = new EntitySchema("foo");
+        const indexSchema = new EntitySchemaIndex(entitySchema, ["namespace", "fooId"]);
+        const index = new EntityCompositeValueIndex(indexSchema);
+
+        const mapPath: MapPathFn = path => {
+            switch (path) {
+                case "fooId":
+                    return "id";
+                case "namespace":
+                    return "namespace";
+                default:
+                    throw new Error(`unknown oath ${path}`);
+            }
+        };
+
+        index.joinEntities({
+            fromEntities: fooEntities,
+            property: "joined",
+            toEntities: barEntities,
+            isArray: true,
+            mapPath,
+        });
 
         expect(fooEntities).toEqual<Required<Foo>[]>([
             {
