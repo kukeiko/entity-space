@@ -1,26 +1,7 @@
+import { inSet, matches } from "@entity-space/criteria";
 import { EntitySchema } from "../schema/entity-schema";
-import { EntitySchemaIndex } from "../schema/entity-schema-index";
-import { EntityCompositeValueIndex } from "./entity-composite-value-index";
-import { IEntityIndex } from "./entity-index.interface";
-import { EntityPrimitiveValueIndex } from "./entity-primitive-value-index";
-import { EntityStoreIndexV2 } from "./entity-store-index-v2";
 import { EntityStoreV2 } from "./entity-store-v2";
 import { EntityType } from "./entity-type";
-
-function createIndex(path: string | string[], unique = false): EntityStoreIndexV2 {
-    const entitySchema = new EntitySchema("foo");
-    const indexSchema = new EntitySchemaIndex(entitySchema, path, { unique });
-
-    let index: IEntityIndex;
-
-    if (typeof path === "string" || path.length === 1) {
-        index = new EntityPrimitiveValueIndex(indexSchema);
-    } else {
-        index = new EntityCompositeValueIndex(indexSchema);
-    }
-
-    return new EntityStoreIndexV2(index);
-}
 
 describe("entity-store", () => {
     it("should work", () => {
@@ -44,7 +25,6 @@ describe("entity-store", () => {
         ];
 
         // act
-
         store.upsert(entities);
 
         // assert
@@ -64,6 +44,12 @@ describe("entity-store", () => {
                 ["3rd", new Set([2])],
             ])
         );
+
+        expect(store.getByCriterion(matches<Foo>({ name: inSet(["1st", "2nd"]) }))).toEqual([
+            { id: 1, name: "1st" },
+            { id: 4, name: "1st" },
+            { id: 2, name: "2nd" },
+        ]);
 
         // act
         store.upsert([{ id: 4, name: "2nd" }]);
@@ -85,5 +71,11 @@ describe("entity-store", () => {
                 ["3rd", new Set([2])],
             ])
         );
+
+        expect(store.getByCriterion(matches<Foo>({ name: inSet(["1st", "2nd"]) }))).toEqual([
+            { id: 1, name: "1st" },
+            { id: 2, name: "2nd" },
+            { id: 4, name: "2nd" },
+        ]);
     });
 });

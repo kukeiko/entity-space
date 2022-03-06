@@ -21,6 +21,10 @@ export class EntityStoreIndexV2 {
     private readonly index: IEntityIndex;
     private readonly indexed = new Map();
 
+    getIndex(): IEntityIndex {
+        return this.index;
+    }
+
     getIndexed(): Map<any, any> {
         return this.indexed;
     }
