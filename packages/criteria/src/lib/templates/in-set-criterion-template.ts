@@ -12,7 +12,13 @@ export class InSetCriterionTemplate<T extends PrimitiveIncludingNull = Primitive
 {
     constructor(valueTypes: T[]) {
         this.valueTypes = valueTypes;
-        this.valueMatches = (value: unknown): value is ReturnType<T> => isPrimitiveOrNull(value, valueTypes.slice());
+
+        if (valueTypes.length > 0) {
+            this.valueMatches = (value: unknown): value is ReturnType<T> =>
+                isPrimitiveOrNull(value, valueTypes.slice());
+        } else {
+            this.valueMatches = (value: unknown): value is ReturnType<T> => isPrimitiveOrNull(value);
+        }
     }
 
     // [todo] get rid of this hack
