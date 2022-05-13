@@ -1,8 +1,8 @@
 import { Entity } from "../entity/entity";
 import { IEntityType } from "../entity/entity-type.interface";
-import { createEntityIndexKeyMap } from "./maps/create-entity-index-key-map.fn";
-import { CommonEntityStoreIndexV3 } from "./store-indexes/common-entity-store-index-v3";
-import { UniqueEntityStoreIndexV3 } from "./store-indexes/unique-entity-store-index-v3";
+import { CommonEntityStoreIndexV3 } from "./common-entity-store-index-v3";
+import { ComplexKeyMap } from "./complex-key-map";
+import { UniqueEntityStoreIndexV3 } from "./unique-entity-store-index-v3";
 
 export class EntityStoreV3 {
     constructor(entityType: IEntityType) {
@@ -22,10 +22,11 @@ export class EntityStoreV3 {
     private readonly commonIndexes = new Map<string, CommonEntityStoreIndexV3>();
     private entities: (Entity | undefined)[] = [];
 
+    // [todo] indexing needs to be crash safe
     add(entities: Entity[]): void {
         if (this.entityType.getSchema().hasKey()) {
             const key = this.entityType.getSchema().getKey();
-            entities = this.dedupe(entities, key.getPath());
+            entities = this.dedupeEntities(entities, key.getPath());
             const keyIndex = this.uniqueIndexes.get(key.getName())!;
 
             for (const entity of entities) {
@@ -33,21 +34,26 @@ export class EntityStoreV3 {
 
                 if (slot === void 0) {
                     this.uniqueIndexes.forEach(index => index.set(entity, this.entities.length));
-                    this.commonIndexes.forEach(index => index.set(entity, this.entities.length));
+                    this.commonIndexes.forEach(index => index.add(entity, this.entities.length));
+                    this.entities.push(entity);
                 } else {
                     const previous = this.entities[slot]!;
                     this.uniqueIndexes.forEach(index => index.delete(previous).set(entity, slot));
-                    this.commonIndexes.forEach(index => index.delete(previous, slot).set(entity, slot));
+                    this.commonIndexes.forEach(index => index.delete(previous, slot).add(entity, slot));
                 }
             }
         } else {
-            throw new Error("Case not implemented.");
+            for (const entity of entities) {
+                this.uniqueIndexes.forEach(index => index.set(entity, this.entities.length));
+                this.commonIndexes.forEach(index => index.add(entity, this.entities.length));
+                this.entities.push(entity);
+            }
         }
     }
 
-    private dedupe(entities: Entity[], keyPaths: string[]): Entity[] {
+    private dedupeEntities(entities: Entity[], keyPaths: string[]): Entity[] {
         const deduped: Entity[] = [];
-        const keyMap = createEntityIndexKeyMap(keyPaths);
+        const keyMap = new ComplexKeyMap(keyPaths);
 
         for (const entity of entities) {
             keyMap.set(entity, entity, (previous, current) => this.mergeEntities([previous, current]));
