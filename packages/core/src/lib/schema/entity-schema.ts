@@ -10,6 +10,7 @@ import {
     PropertyValueSchema,
 } from "./schema.interface";
 
+// [todo] rename to "EntityTypeSchema"
 export class EntitySchema implements IEntitySchema {
     constructor(id: string) {
         this.id = id;

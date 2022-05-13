@@ -8,6 +8,7 @@ export interface IPrimitiveSchema {
 
 export interface IEntitySchemaIndex {
     getName(): string;
+    // [todo] consider renaming to "getPaths()". i was surprised it is not already named this way.
     getPath(): string[];
     isUnique(): boolean;
 }
@@ -27,6 +28,8 @@ export interface IEntitySchema {
     getAnyOf(): IEntitySchema[];
     getId(): string;
     getIndex(name: string): IEntitySchemaIndex;
+    // [todo] every time i come back to working on the project again, i wonder why this method exists
+    // and we don't just have getIndex() also return key if found.
     getIndexOrKey(name: string): IEntitySchemaIndex;
     getIndexes(): IEntitySchemaIndex[];
     getIndexesIncludingKey(): IEntitySchemaIndex[];
