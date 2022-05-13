@@ -32,12 +32,7 @@ export class EntityApi<T = Record<string, any>> implements IEntitySource {
         return this;
     }
 
-    async query(query: Query): Promise<false | QueriedEntities[]> {
-        if (query.getEntitySchema().getId() !== this.entitySchema.getId()) {
-            return false;
-        }
-
-        this.queryIssued.next(query);
+    getEndpointCriteriaTemplates(): Map<EntityApiEndpoint, ICriterionTemplate> {
         const endpointCriteriaTemplates = new Map<EntityApiEndpoint, ICriterionTemplate>();
 
         for (const endpoint of this.endpoints) {
@@ -47,6 +42,16 @@ export class EntityApi<T = Record<string, any>> implements IEntitySource {
             );
         }
 
+        return endpointCriteriaTemplates;
+    }
+
+    async query(query: Query): Promise<false | QueriedEntities[]> {
+        if (query.getEntitySchema().getId() !== this.entitySchema.getId()) {
+            return false;
+        }
+
+        this.queryIssued.next(query);
+        const endpointCriteriaTemplates = this.getEndpointCriteriaTemplates();
         const template = orTemplate(Array.from(endpointCriteriaTemplates.values()));
         const remapped = template.remap(query.getCriteria());
 
@@ -55,26 +60,26 @@ export class EntityApi<T = Record<string, any>> implements IEntitySource {
             return false;
         }
 
-        const loadEntities: Promise<QueriedEntities>[] = [];
+        const operations: Promise<QueriedEntities>[] = [];
 
         for (const orCriteria of remapped.getCriteria()) {
             for (const criterion of orCriteria.getItems()) {
-                for (const [mapper, template] of endpointCriteriaTemplates) {
+                for (const [endpoint, template] of endpointCriteriaTemplates) {
                     if (!template.matches(criterion)) {
                         continue;
                     }
 
-                    const effectiveExpansion = query.getExpansion().intersect(mapper.getSupportedExpansion());
+                    const effectiveExpansion = query.getExpansion().intersect(endpoint.getSupportedExpansion());
                     const effectiveQuery = new Query(this.entitySchema, criterion, effectiveExpansion.getObject());
 
-                    loadEntities.push(
-                        mapper.load(effectiveQuery).then(entities => new QueriedEntities(effectiveQuery, entities))
+                    operations.push(
+                        endpoint.load(effectiveQuery).then(entities => new QueriedEntities(effectiveQuery, entities))
                     );
                 }
             }
         }
 
-        const queriedEntities = await Promise.all(loadEntities);
+        const queriedEntities = await Promise.all(operations);
 
         return queriedEntities;
     }
