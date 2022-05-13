@@ -8,7 +8,9 @@ export function isValueTemplate<T extends Primitive | typeof Null>(valueTypes: T
 export function isValueTemplate<T extends Primitive | typeof Null>(...args: any): IsValueCriterionTemplate<T> {
     if (Array.isArray(args[0])) {
         return new IsValueCriterionTemplate(args[0]);
-    } else {
+    } else if (Array.isArray(args) && args.length > 0) {
         return new IsValueCriterionTemplate(args);
+    } else {
+        return new IsValueCriterionTemplate();
     }
 }
