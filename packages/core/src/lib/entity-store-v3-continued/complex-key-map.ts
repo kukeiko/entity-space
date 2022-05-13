@@ -1,24 +1,47 @@
-import { Criterion, RemapCriterionResult } from "@entity-space/criteria";
-import { walkPath } from "@entity-space/utils";
+import {
+    Criterion,
+    InSetCriterion,
+    inSetTemplate,
+    IsValueCriterion,
+    isValueTemplate,
+    NamedCriteriaTemplate,
+    RemapCriterionResult,
+} from "@entity-space/criteria";
+import { tramplePath, walkPath } from "@entity-space/utils";
 import { Entity } from "../entity/entity";
 
 // [todo] EntityStoreIndexV3 returns "this" at get() and set(). should this class too?
 export class ComplexKeyMap<E extends Entity = Entity, V = unknown> {
     constructor(paths: string[]) {
+        let leadingPaths: string[], lastPath: string;
+
         if (paths.length === 0) {
             throw new Error("paths is empty");
         } else if (paths.length === 1) {
-            this.leadingPaths = [];
-            this.lastPath = paths[0];
+            leadingPaths = [];
+            lastPath = paths[0];
         } else {
-            this.leadingPaths = paths.slice(0, 1);
-            this.lastPath = paths[paths.length - 1];
+            leadingPaths = paths.slice(0, 1);
+            lastPath = paths[paths.length - 1];
         }
+
+        this.leadingPaths = leadingPaths;
+        this.lastPath = lastPath;
+
+        const bag: Record<string, any> = {};
+
+        for (const path of leadingPaths) {
+            tramplePath(path, bag, isValueTemplate());
+        }
+
+        tramplePath(lastPath, bag, inSetTemplate());
+        this.criterionTemplate = NamedCriteriaTemplate.fromDeepBag(bag);
     }
 
     private readonly map = new Map<unknown, unknown>();
     private readonly leadingPaths: string[];
     private readonly lastPath: string;
+    private readonly criterionTemplate: NamedCriteriaTemplate;
 
     get(entity: E): V | undefined {
         let map = this.map;
@@ -38,14 +61,6 @@ export class ComplexKeyMap<E extends Entity = Entity, V = unknown> {
 
     getMany(entities: E[]): (V | undefined)[] {
         return entities.map(entity => this.get(entity));
-    }
-
-    getByCriterion(criterion: Criterion): V | undefined {
-        throw new Error("Method not implemented.");
-    }
-
-    getManyByCriterion(criterion: Criterion): false | { values: V[]; remapped: RemapCriterionResult<Criterion> } {
-        throw new Error("Method not implemented.");
     }
 
     set(entity: E, value: V, update?: (previous: V, current: V) => V): void {
@@ -74,7 +89,49 @@ export class ComplexKeyMap<E extends Entity = Entity, V = unknown> {
     }
 
     delete(entity: E): void {
-        throw new Error("Method not implemented.");
+        let map = this.map;
+
+        for (const path of this.leadingPaths) {
+            map = this.map.get(walkPath(path, entity)) as Map<unknown, unknown>;
+        }
+
+        map.delete(walkPath(this.lastPath, entity));
+    }
+
+    getByCriterion(criterion: Criterion): false | { values: V[]; remapped: RemapCriterionResult } {
+        const remapped = this.criterionTemplate.remap(criterion);
+
+        if (remapped === false) {
+            return false;
+        }
+
+        const values: V[] = [];
+
+        for (const criterion of remapped.getCriteria()) {
+            let map = this.map;
+
+            if (this.leadingPaths.length > 0) {
+                const key: Record<string, any> = {};
+
+                for (const path of this.leadingPaths) {
+                    // [todo] shouldn't have to split (to provide string[]), but instead just supply arg of type string
+                    const isValueCriterion = criterion.getByPath(path.split(".")) as IsValueCriterion;
+                    tramplePath(path, key, isValueCriterion.getValue());
+                }
+
+                map = this.map.get(key) as Map<unknown, unknown>;
+            }
+
+            const inSetCriterion = criterion.getByPath(this.lastPath.split(".")) as InSetCriterion;
+
+            for (const criterionValue of inSetCriterion.getValues().values()) {
+                if (map.has(criterionValue)) {
+                    values.push(map.get(criterionValue) as V);
+                }
+            }
+        }
+
+        return { values, remapped };
     }
 
     private getOrSet<K, V>(map: Map<K, any>, key: K, createValue: () => V): V {

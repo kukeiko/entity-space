@@ -7,7 +7,9 @@ import { inSet } from "./in-set.fn";
 import { NotInSetCriterion } from "./not-in-set-criterion";
 import { notInSet } from "./not-in-set.fn";
 
-export class InSetCriterion<T extends ReturnType<Primitive | typeof Null>> extends Criterion {
+export class InSetCriterion<
+    T extends ReturnType<Primitive | typeof Null> = ReturnType<Primitive | typeof Null>
+> extends Criterion {
     constructor(values: Iterable<T>) {
         super();
         this.values = Object.freeze(new Set(values));

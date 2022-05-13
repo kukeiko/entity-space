@@ -13,6 +13,7 @@ export * from "./lib/permutate-entries.fn";
 export * from "./lib/subtract-sets.fn";
 export * from "./lib/to-map-by-id.fn";
 export * from "./lib/to-map.fn";
+export * from "./lib/trample-path.fn";
 export * from "./lib/types/class";
 export * from "./lib/types/deep-partial";
 export * from "./lib/types/json";
