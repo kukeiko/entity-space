@@ -21,7 +21,7 @@ export class ComplexKeyMap<E extends Entity = Entity, V = unknown> {
             leadingPaths = [];
             lastPath = paths[0];
         } else {
-            leadingPaths = paths.slice(0, 1);
+            leadingPaths = paths.slice(0, -1);
             lastPath = paths[paths.length - 1];
         }
 
@@ -116,10 +116,13 @@ export class ComplexKeyMap<E extends Entity = Entity, V = unknown> {
                 for (const path of this.leadingPaths) {
                     // [todo] shouldn't have to split (to provide string[]), but instead just supply arg of type string
                     const isValueCriterion = criterion.getByPath(path.split(".")) as IsValueCriterion;
-                    tramplePath(path, key, isValueCriterion.getValue());
-                }
 
-                map = this.map.get(key) as Map<unknown, unknown>;
+                    if (!map.has(isValueCriterion.getValue())) {
+                        continue;
+                    }
+
+                    map = map.get(isValueCriterion.getValue()) as Map<unknown, unknown>;
+                }
             }
 
             const inSetCriterion = criterion.getByPath(this.lastPath.split(".")) as InSetCriterion;
