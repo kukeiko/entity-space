@@ -19,3 +19,4 @@ export * from "./lib/types/json";
 export * from "./lib/types/primitive";
 export * from "./lib/types/primitive-including-null";
 export * from "./lib/types/unbox";
+export * from "./lib/walk-path.fn";
