@@ -51,7 +51,7 @@ export class EntityStore {
         const index = this.indexes[name];
 
         if (index === void 0) {
-            throw new Error(`index ${name} not found in object-store ${this.getId()}`);
+            throw new Error(`index ${name} not found in entity-store for type ${this.getId()}`);
         }
 
         return index;
@@ -88,6 +88,7 @@ export class EntityStore {
         return this.getByIndex(name, values);
     }
 
+    // [todo] no usage of this yet other than @ getByIndexOrKey() of this class
     getByIndex(name: string, values: IndexValue[]): Entity[] {
         const index = this.indexes[name];
 
