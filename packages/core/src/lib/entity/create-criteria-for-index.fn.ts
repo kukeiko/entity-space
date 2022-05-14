@@ -1,5 +1,7 @@
 import { Criterion, fromDeepBag, inSet, NamedCriteriaBag, or } from "@entity-space/criteria";
-import { IndexValue } from "./entity-store-index";
+
+type IndexSingleValue = string | number;
+type IndexValue = IndexSingleValue | IndexSingleValue[];
 
 export function createCriteriaForIndex(indexKeyPath: string[], indexValues: IndexValue[]): Criterion {
     const criteria: Criterion[] = [];

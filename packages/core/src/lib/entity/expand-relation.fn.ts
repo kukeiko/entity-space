@@ -19,7 +19,7 @@ export async function expandRelation(
     const fromIndex = relation.getFromIndex();
     const toIndex = relation.getToIndex();
     const criteria = createCriteriaForIndex(toIndex.getPath(), entityReader.readIndex(fromIndex, entities));
-    const query = new Query(relatedSchema, criteria, expansion ?? {})
+    const query = new Query(relatedSchema, criteria, expansion ?? {});
     const result = await source.query(query);
 
     if (result === false) {
@@ -31,6 +31,7 @@ export async function expandRelation(
     const referencedItems = queried.getEntities();
 
     for (const entity of entities) {
+        // [todo] use ComplexKeyMap
         const indexValue = entityReader.readIndexFromOne(fromIndex, entity);
         const matchingReferencedItems = referencedItems.filter(
             entity => JSON.stringify(indexValue) === JSON.stringify(entityReader.readIndexFromOne(toIndex, entity))

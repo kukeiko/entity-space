@@ -2,7 +2,6 @@ import { Observable, Subject } from "rxjs";
 import { mergeQueries, Query, reduceQueries } from "../query/public";
 import { IEntitySchema } from "../schema/schema.interface";
 import { Entity } from "./entity";
-import { EntityCache } from "./entity-cache";
 import { EntityCacheV2 } from "./entity-cache-v2";
 import { IEntitySource } from "./entity-source.interface";
 import { QueriedEntities } from "./queried-entities";
@@ -27,8 +26,8 @@ export class Workspace implements IEntitySource {
     }
 
     private addExecutedQuery(query: Query): void {
-        const executedQueries = this.getOrCreateQueryCache(query.getEntitySchema());
-        let merged = mergeQueries(query, ...executedQueries);
+        const executedQueries = this.getCachedQueries(query.getEntitySchema());
+        const merged = mergeQueries(query, ...executedQueries);
         this.queryCaches.set(query.getEntitySchema().getId(), merged);
 
         const allQueriesInCache: Query[] = [];
@@ -41,15 +40,17 @@ export class Workspace implements IEntitySource {
     }
 
     private async loadUncachedIntoCache(query: Query): Promise<void> {
-        const executedQueries = this.getOrCreateQueryCache(query.getEntitySchema());
-        const reduced = reduceQueries([query], executedQueries);
+        const cachedQueries = this.getCachedQueries(query.getEntitySchema());
+        const reduced = reduceQueries([query], cachedQueries);
         const entities: Entity[] = [];
         const queriesAgainstSource = reduced === false ? [query] : reduced;
 
+        // [todo] call in parallel
         for (const queryAgainstSource of queriesAgainstSource) {
             const result = await this.loadFromSource(queryAgainstSource);
 
             if (result === false) {
+                console.warn("encountered a query that could not be executed against source", queriesAgainstSource);
                 continue;
             }
 
@@ -109,7 +110,7 @@ export class Workspace implements IEntitySource {
         this.queryCacheChanged.next([]);
     }
 
-    private getOrCreateQueryCache(schema: IEntitySchema): Query[] {
+    private getCachedQueries(schema: IEntitySchema): Query[] {
         let cache = this.queryCaches.get(schema.getId());
 
         if (cache === void 0) {
