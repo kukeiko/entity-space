@@ -34,12 +34,14 @@ export class EntityStoreV3 {
                 const slot = keyIndex.get(entity);
 
                 if (slot === void 0) {
+                    console.log(`[entity-store] add new entity`, entity);
                     this.uniqueIndexes.forEach(index => index.set(entity, this.entities.length));
                     this.commonIndexes.forEach(index => index.add(entity, this.entities.length));
                     this.entities.push(this.mergeEntities(entity));
                 } else {
+                    console.log(`[entity-store] update entity`, entity);
                     const previous = this.entities[slot]!;
-                    entity = this.mergeEntities([previous, entity]);
+                    entity = this.mergeEntities(previous, entity);
                     this.uniqueIndexes.forEach(index => index.delete(previous).set(entity, slot));
                     this.commonIndexes.forEach(index => index.delete(previous, slot).add(entity, slot));
                 }
