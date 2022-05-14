@@ -69,18 +69,14 @@ export class EntityStoreV3 {
         const entities: Entity[] = [];
         const result = this.getSlotsByCriterion(criterion);
 
-        for (const slot of result.values.values()) {
+        for (const slot of result.values()) {
             entities.push(this.entities[slot]!);
-        }
-
-        if (result.open.length > 0) {
-            // [todo] do a full scan
         }
 
         return entities;
     }
 
-    private getSlotsByCriterion(criterion: Criterion): { values: Set<number>; open: Criterion[] } {
+    private getSlotsByCriterion(criterion: Criterion): Set<number> {
         const uniqueIndexes = [...this.uniqueIndexes.values()].sort(
             (a, b) => b.getPaths().length - a.getPaths().length
         );
@@ -95,11 +91,16 @@ export class EntityStoreV3 {
             }
 
             result.values.forEach(slot => slots.add(slot));
+            const open = result.remapped.getOpen();
 
-            if (result.remapped.getOpen().length > 0) {
-                criterion = or(result.remapped.getOpen());
+            if (open.length > 0) {
+                if (open.length === 1) {
+                    criterion = open[0];
+                } else {
+                    criterion = or(open);
+                }
             } else {
-                return { values: slots, open: [] };
+                return slots;
             }
         }
 
@@ -115,15 +116,30 @@ export class EntityStoreV3 {
             }
 
             result.values.forEach(slotSet => slotSet.forEach(slot => slots.add(slot)));
+            const open = result.remapped.getOpen();
 
-            if (result.remapped.getOpen().length > 0) {
-                criterion = or(result.remapped.getOpen());
+            if (open.length > 0) {
+                if (open.length === 1) {
+                    criterion = open[0];
+                } else {
+                    criterion = or(open);
+                }
             } else {
-                return { values: slots, open: [] };
+                return slots;
             }
         }
 
-        return { values: slots, open: [criterion] };
+        // if we are here, we couldn't fully rely on using indexes alone.
+        // have to make a full scan for the criteria that are still open.
+        for (let slot = 0; slot < this.entities.length; ++slot) {
+            if (!criterion.matches(this.entities[slot])) {
+                continue;
+            }
+
+            slots.add(slot);
+        }
+
+        return slots;
     }
 
     private dedupeEntities(entities: Entity[], keyPaths: string[]): Entity[] {
