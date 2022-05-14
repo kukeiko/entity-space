@@ -5,8 +5,8 @@ import { IEntitySchema } from "../schema/schema.interface";
 import { Entity } from "./entity";
 import { IEntitySource } from "./entity-source.interface";
 import { EntityType } from "./entity-type";
-import { expandEntities } from "./expand-entities.fn";
-import { normalizeEntities } from "./normalize-entities.fn";
+import { expandEntities } from "./functions/expand-entities.fn";
+import { normalizeEntities } from "./functions/normalize-entities.fn";
 import { QueriedEntities } from "./queried-entities";
 
 export class EntityCacheV2 implements IEntitySource {

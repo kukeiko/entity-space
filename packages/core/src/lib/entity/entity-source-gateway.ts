@@ -1,7 +1,7 @@
 import { Query } from "../query/query";
 import { IEntitySchema } from "../schema/public";
 import { IEntitySource } from "./entity-source.interface";
-import { expandEntities } from "./expand-entities.fn";
+import { expandEntities } from "./functions/expand-entities.fn";
 import { QueriedEntities } from "./queried-entities";
 
 export class EntitySourceGateway implements IEntitySource {

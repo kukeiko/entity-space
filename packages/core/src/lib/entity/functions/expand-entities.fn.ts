@@ -1,8 +1,8 @@
-import { ExpansionObject } from "../expansion/public";
-import { Expansion } from "../public";
-import { IEntitySchema } from "../schema/public";
-import { Entity } from "./entity";
-import { IEntitySource } from "./entity-source.interface";
+import { Expansion } from "../../expansion/expansion";
+import { ExpansionObject } from "../../expansion/expansion-object";
+import { IEntitySchema } from "../../schema/public";
+import { Entity } from "../entity";
+import { IEntitySource } from "../entity-source.interface";
 import { expandRelation } from "./expand-relation.fn";
 
 export async function expandEntities(

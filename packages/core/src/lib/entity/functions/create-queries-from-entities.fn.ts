@@ -1,8 +1,8 @@
-import { Query } from "../query/public";
-import { IEntitySchema } from "../schema/public";
+import { Query } from "../../query/query";
+import { IEntitySchema } from "../../schema/schema.interface";
 import { createCriteriaForIndex } from "./create-criteria-for-index.fn";
-import { Entity } from "./entity";
-import { EntityReader } from "./entity-reader";
+import { Entity } from "../entity";
+import { EntityReader } from "../entity-reader";
 
 export function createQueriesFromEntities(schema: IEntitySchema, entities: Entity[]): Query[] {
     const reader = new EntityReader();

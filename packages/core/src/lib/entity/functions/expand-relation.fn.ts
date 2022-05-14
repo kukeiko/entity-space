@@ -1,10 +1,10 @@
-import { ExpansionObject } from "../expansion/public";
-import { Query } from "../query/query";
-import { IEntitySchemaRelation } from "../schema/public";
+import { ExpansionObject } from "../../expansion/public";
+import { Query } from "../../query/query";
+import { IEntitySchemaRelation } from "../../schema/public";
+import { Entity } from "../entity";
+import { EntityReader } from "../entity-reader";
+import { IEntitySource } from "../entity-source.interface";
 import { createCriteriaForIndex } from "./create-criteria-for-index.fn";
-import { Entity } from "./entity";
-import { EntityReader } from "./entity-reader";
-import { IEntitySource } from "./entity-source.interface";
 
 export async function expandRelation(
     entities: Entity[],
