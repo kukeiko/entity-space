@@ -1,11 +1,14 @@
+import { Criterion, RemapCriterionResult } from "@entity-space/criteria";
 import { Entity } from "../entity/entity";
 import { ComplexKeyMap } from "./complex-key-map";
 
 export class EntityStoreUniqueIndexV3<E extends Entity = Entity> {
     constructor(paths: string[]) {
+        this.paths = paths;
         this.map = new ComplexKeyMap<E, number>(paths);
     }
 
+    private readonly paths: string[];
     private readonly map: ComplexKeyMap<E, number>;
 
     get(entity: E): number | undefined {
@@ -20,5 +23,13 @@ export class EntityStoreUniqueIndexV3<E extends Entity = Entity> {
         this.map.delete(entity);
 
         return this;
+    }
+
+    getByCriterion(criterion: Criterion): false | { values: number[]; remapped: RemapCriterionResult<Criterion> } {
+        return this.map.getByCriterion(criterion);
+    }
+
+    getPaths(): string[] {
+        return this.paths.slice();
     }
 }

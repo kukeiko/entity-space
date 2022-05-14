@@ -1,3 +1,4 @@
+import { Criterion, or } from "@entity-space/criteria";
 import { Entity } from "../entity/entity";
 import { IEntityType } from "../entity/entity-type.interface";
 import { ComplexKeyMap } from "./complex-key-map";
@@ -62,6 +63,67 @@ export class EntityStoreV3 {
         }
 
         return this.entities[slot];
+    }
+
+    getByCriterion(criterion: Criterion): Entity[] {
+        const entities: Entity[] = [];
+        const result = this.getSlotsByCriterion(criterion);
+
+        for (const slot of result.values.values()) {
+            entities.push(this.entities[slot]!);
+        }
+
+        if (result.open.length > 0) {
+            // [todo] do a full scan
+        }
+
+        return entities;
+    }
+
+    private getSlotsByCriterion(criterion: Criterion): { values: Set<number>; open: Criterion[] } {
+        const uniqueIndexes = [...this.uniqueIndexes.values()].sort(
+            (a, b) => b.getPaths().length - a.getPaths().length
+        );
+
+        const slots = new Set<number>();
+
+        for (const index of uniqueIndexes) {
+            const result = index.getByCriterion(criterion);
+
+            if (result === false) {
+                continue;
+            }
+
+            result.values.forEach(slot => slots.add(slot));
+
+            if (result.remapped.getOpen().length > 0) {
+                criterion = or(result.remapped.getOpen());
+            } else {
+                return { values: slots, open: [] };
+            }
+        }
+
+        const commonIndexes = [...this.commonIndexes.values()].sort(
+            (a, b) => b.getPaths().length - a.getPaths().length
+        );
+
+        for (const index of commonIndexes) {
+            const result = index.getByCriterion(criterion);
+
+            if (result === false) {
+                continue;
+            }
+
+            result.values.forEach(slotSet => slotSet.forEach(slot => slots.add(slot)));
+
+            if (result.remapped.getOpen().length > 0) {
+                criterion = or(result.remapped.getOpen());
+            } else {
+                return { values: slots, open: [] };
+            }
+        }
+
+        return { values: slots, open: [criterion] };
     }
 
     private dedupeEntities(entities: Entity[], keyPaths: string[]): Entity[] {
