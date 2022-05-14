@@ -1,4 +1,4 @@
-import { inSet, matches } from "@entity-space/criteria";
+import { inRange, inSet, matches, or } from "@entity-space/criteria";
 import { EntitySchema } from "../schema/entity-schema";
 import { EntityStoreV2 } from "./entity-store-v2";
 import { EntityType } from "./entity-type";
@@ -77,5 +77,12 @@ describe("entity-store", () => {
             { id: 2, name: "2nd" },
             { id: 4, name: "2nd" },
         ]);
+
+        expect(store.getByCriterion(or(matches<Foo>({ id: inSet([1]) }), matches<Foo>({ id: inRange(1, 2) })))).toEqual(
+            [
+                { id: 1, name: "1st" },
+                { id: 2, name: "2nd" },
+            ]
+        );
     });
 });

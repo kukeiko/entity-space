@@ -8,7 +8,6 @@ export class EntityStoreV2 {
         this.entityType = entityType;
 
         for (const index of entityType.getIndexes()) {
-            console.log("create", index.getSchema().getName());
             this.indexStores.set(index.getSchema().getName(), new EntityStoreIndexV2(index));
         }
     }
@@ -66,27 +65,53 @@ export class EntityStoreV2 {
         return [];
     }
 
+    /**
+     * [todo] deal with potential duplicates in given entities array.
+     * currently happens w/ product example because sloppy implementation,
+     * but nevertheless a good thing to have happened because checking for duplicates
+     * here and correctly applying them makes entity-space more robust to user error.
+     * so basically make a user error into a feature.
+     */
     upsert(entities: Entity[]): void {
         const keyIndexName = this.entityType.getSchema().getKey().getName();
         const keyIndexStore = this.getIndex(keyIndexName);
-        const keyIndexValues = keyIndexStore.read(entities);
+        const slotsValues = keyIndexStore.getIndex().readValues(entities);
+        const slots = keyIndexStore.readByValues(slotsValues);
         const addedEntities: Entity[] = [];
-        const addedEntitiesKeyIndexValues: number[] = [];
+        const addedEntitiesSlots: number[] = [];
         const updatedEntities: Entity[] = [];
         const updatedOldEntities: Entity[] = [];
-        const updatedEntitiesKeyIndexValues: number[] = [];
+        const updatedEntitiesSlots: number[] = [];
+        const duplicatesMap = new Map();
 
-        for (let i = 0; i < keyIndexValues.length; ++i) {
-            const slot = keyIndexValues[i];
+        for (let i = 0; i < slots.length; ++i) {
+            let slot = slots[i];
 
             if (slot === void 0) {
-                addedEntities.push(entities[i]);
-                addedEntitiesKeyIndexValues.push(this.entities.length);
-                this.entities.push(entities[i]);
+                const slotValues = slotsValues[i];
+                let map = duplicatesMap;
+
+                for (let e = 0; e < slotValues.length - 1; ++e) {
+                    const slotValue = slotValues[e];
+                    map = map.get(slotValue) ?? map.set(slotValue, new Map()).get(slotValue);
+                }
+
+                if (!map.has(slotValues[slotValues.length - 1])) {
+                    addedEntities.push(entities[i]);
+                    addedEntitiesSlots.push(this.entities.length);
+                    map.set(slotValues[slotsValues.length - 1], this.entities.length);
+                    this.entities.push(entities[i]);
+                } else {
+                    slot = map.get(slotValues[slotValues.length - 1]) as number;
+                    updatedEntities.push(entities[i]);
+                    updatedOldEntities.push(this.entities[slot]!); // [todo] assertion
+                    updatedEntitiesSlots.push(slot);
+                    this.entities[slot] = entities[i];
+                }
             } else {
                 updatedEntities.push(entities[i]);
                 updatedOldEntities.push(this.entities[slot]!); // [todo] assertion
-                updatedEntitiesKeyIndexValues.push(slot);
+                updatedEntitiesSlots.push(slot);
                 this.entities[slot] = entities[i];
             }
         }
@@ -95,13 +120,17 @@ export class EntityStoreV2 {
 
         for (const indexStore of indexStores) {
             if (indexStore === keyIndexStore) {
-                indexStore.insert(addedEntities, addedEntitiesKeyIndexValues);
+                indexStore.insert(addedEntities, addedEntitiesSlots);
             } else {
-                indexStore.insert(addedEntities, addedEntitiesKeyIndexValues);
-                indexStore.remove(updatedOldEntities, updatedEntitiesKeyIndexValues);
-                indexStore.insert(updatedEntities, updatedEntitiesKeyIndexValues);
+                indexStore.insert(addedEntities, addedEntitiesSlots);
+                indexStore.remove(updatedOldEntities, updatedEntitiesSlots);
+                indexStore.insert(updatedEntities, updatedEntitiesSlots);
             }
         }
+    }
+
+    upsert_v2(entities: Entity[]) : void {
+
     }
 
     getIndex(name: string): EntityStoreIndexV2 {
@@ -116,5 +145,33 @@ export class EntityStoreV2 {
 
     getIndexes(): EntityStoreIndexV2[] {
         return Array.from(this.indexStores.values());
+    }
+
+    private copyEntity(entity: Entity): Entity {
+        return this.mergeEntities([entity]);
+    }
+
+    private mergeEntities(...entities: Entity[]): Entity {
+        const merged: Entity = {};
+
+        for (const entity of entities) {
+            for (const key in entity) {
+                const value = entity[key];
+
+                if (value === void 0) {
+                    delete merged[key];
+                } else if (value !== null && typeof value === "object") {
+                    if (typeof merged[key] === "object") {
+                        merged[key] = this.mergeEntities(value, merged[key]);
+                    } else {
+                        merged[key] = value;
+                    }
+                } else {
+                    merged[key] = value;
+                }
+            }
+        }
+
+        return merged;
     }
 }

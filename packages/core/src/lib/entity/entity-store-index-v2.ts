@@ -29,12 +29,11 @@ export class EntityStoreIndexV2 {
         return this.indexed;
     }
 
-    read(entities: Entity[]): (number | undefined)[] {
-        const allIndexValues = this.index.readValues(entities);
+    readByValues(indexValues: (number | string | null)[][]): (number | undefined)[] {
         const indexedValues: (number | undefined)[] = [];
 
-        for (let i = 0; i < entities.length; ++i) {
-            const set = this.readByIndexValues(allIndexValues[i]);
+        for (let i = 0; i < indexValues.length; ++i) {
+            const set = this.readByIndexValues(indexValues[i]);
 
             if (set === void 0) {
                 indexedValues.push(void 0);
@@ -45,6 +44,10 @@ export class EntityStoreIndexV2 {
         }
 
         return indexedValues;
+    }
+
+    read(entities: Entity[]): (number | undefined)[] {
+        return this.readByValues(this.index.readValues(entities));
     }
 
     private readByIndexValues(indexValues: (string | number | null)[]): Set<number> | undefined {
@@ -62,11 +65,11 @@ export class EntityStoreIndexV2 {
         return value as any as Set<number>;
     }
 
-    insert(entities: Entity[], values: number[]): void {
+    insert(entities: Entity[], slots: number[]): void {
         const allIndexValues = this.index.readValues(entities);
 
         for (let i = 0; i < entities.length; ++i) {
-            const [indexedValue, indexValues] = [values[i], allIndexValues[i]];
+            const [indexedValue, indexValues] = [slots[i], allIndexValues[i]];
             let map = this.indexed;
 
             for (let e = 0; e < indexValues.length - 1; ++e) {
@@ -76,15 +79,21 @@ export class EntityStoreIndexV2 {
 
             const lastIndexValue = indexValues[indexValues.length - 1];
             const set: Set<any> = map.get(lastIndexValue) ?? map.set(lastIndexValue, new Set()).get(lastIndexValue);
+
+            // [todo] hacky
+            if (this.getIndex().getSchema().isUnique()) {
+                set.clear();
+            }
+
             set.add(indexedValue);
         }
     }
 
-    remove(entities: Entity[], values: number[]): void {
+    remove(entities: Entity[], slots: number[]): void {
         const allIndexValues = this.index.readValues(entities);
 
         for (let i = 0; i < entities.length; ++i) {
-            const [indexedValue, indexValues] = [values[i], allIndexValues[i]];
+            const [indexedValue, indexValues] = [slots[i], allIndexValues[i]];
             let map = this.indexed;
 
             for (let e = 0; e < indexValues.length - 1; ++e) {
@@ -162,7 +171,7 @@ export class EntityStoreIndexV2 {
             }
         }
 
-        return { values, remapped };
+        return { values: values, remapped };
     }
 
     createCriterionTemplate(): NamedCriteriaTemplate<any, any> {
