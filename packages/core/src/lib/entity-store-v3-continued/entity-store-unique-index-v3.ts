@@ -1,7 +1,7 @@
 import { Entity } from "../entity/entity";
 import { ComplexKeyMap } from "./complex-key-map";
 
-export class UniqueEntityStoreIndexV3<E extends Entity = Entity> {
+export class EntityStoreUniqueIndexV3<E extends Entity = Entity> {
     constructor(paths: string[]) {
         this.map = new ComplexKeyMap<E, number>(paths);
     }

@@ -59,6 +59,32 @@ export class ComplexKeyMap<E extends Entity = Entity, V = unknown> {
         return map.get(walkPath(this.lastPath, entity)) as V | undefined;
     }
 
+    getAll(): V[] {
+        let maps = [this.map];
+
+        for (let i = 0; i < this.leadingPaths.length; ++i) {
+            let nextMaps: Map<unknown, unknown>[] = [];
+
+            for (const map of maps) {
+                for (const value of map.values()) {
+                    nextMaps.push(value as Map<unknown, unknown>);
+                }
+            }
+
+            maps = nextMaps;
+        }
+
+        const values: V[] = [];
+
+        for (const map of maps) {
+            for (const value of map.values()) {
+                values.push(value as V);
+            }
+        }
+
+        return values;
+    }
+
     getMany(entities: E[]): (V | undefined)[] {
         return entities.map(entity => this.get(entity));
     }
@@ -74,9 +100,9 @@ export class ComplexKeyMap<E extends Entity = Entity, V = unknown> {
         const key = walkPath(this.lastPath, entity);
 
         if (update && map.has(key)) {
-            value = update(map.get(key) as V, value);
+            const updated = update(map.get(key) as V, value);
 
-            if (value === value) {
+            if (updated === value) {
                 return;
             }
         }

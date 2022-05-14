@@ -7,6 +7,7 @@ interface Vector {
     y: number;
     z: number;
 }
+
 interface Block {
     pos: Vector;
 }
@@ -41,7 +42,7 @@ describe("complex-key-map", () => {
         expect(actual).toBeUndefined();
     });
 
-    fit("should return by criterion", () => {
+    it("should return by criterion", () => {
         // arrange
         const map = new ComplexKeyMap(["pos.x", "pos.y", "pos.z"]);
         const block = { pos: { x: 1, y: 0, z: -1 } };
