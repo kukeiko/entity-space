@@ -1,16 +1,16 @@
 import { cloneJson } from "@entity-space/utils";
+import { EntityStoreV3 } from "../entity-store-v3-continued/entity-store-v3";
 import { Query } from "../query/query";
 import { IEntitySchema } from "../schema/schema.interface";
 import { Entity } from "./entity";
 import { IEntitySource } from "./entity-source.interface";
-import { EntityStoreV2 } from "./entity-store-v2";
 import { EntityType } from "./entity-type";
 import { expandEntities } from "./expand-entities.fn";
 import { normalizeEntities } from "./normalize-entities.fn";
 import { QueriedEntities } from "./queried-entities";
 
 export class EntityCacheV2 implements IEntitySource {
-    private readonly stores = new Map<string, EntityStoreV2>();
+    private readonly stores = new Map<string, EntityStoreV3>();
 
     async query(query: Query): Promise<false | QueriedEntities[]> {
         const store = this.getOrCreateStore(query.getEntitySchema());
@@ -34,23 +34,22 @@ export class EntityCacheV2 implements IEntitySource {
         return [new QueriedEntities(query, entities)];
     }
 
-    
     addEntities(schema: IEntitySchema, entities: Entity[]): void {
         entities = cloneJson(entities);
         const normalized = normalizeEntities(schema, entities);
 
         for (const schema of normalized.getSchemas()) {
             const normalizedEntities = normalized.get(schema);
-            this.getOrCreateStore(schema).upsert(normalizedEntities);
+            this.getOrCreateStore(schema).add(normalizedEntities);
 
-            //     // [todo] can not use until we implemented invert() @ named-criteria
-            //     // if (normalizedEntities.length > 0) {
-            //     //     const indexQueries = createQueriesFromEntities(schema, normalizedEntities);
+            // [todo] can not use until we implemented invert() @ named-criteria
+            // if (normalizedEntities.length > 0) {
+            //     const indexQueries = createQueriesFromEntities(schema, normalizedEntities);
 
-            //     //     for (const indexQuery of indexQueries) {
-            //     //         this.addExecutedQuery(indexQuery);
-            //     //     }
-            //     // }
+            //     for (const indexQuery of indexQueries) {
+            //         this.addExecutedQuery(indexQuery);
+            //     }
+            // }
         }
     }
 
@@ -58,12 +57,13 @@ export class EntityCacheV2 implements IEntitySource {
         this.stores.clear();
     }
 
-    private getOrCreateStore(schema: IEntitySchema): EntityStoreV2 {
+    private getOrCreateStore(schema: IEntitySchema): EntityStoreV3 {
         let store = this.stores.get(schema.getId());
 
         if (store === void 0) {
+            console.log("new store!", schema);
             const entityType = new EntityType(schema);
-            store = new EntityStoreV2(entityType);
+            store = new EntityStoreV3(entityType);
             this.stores.set(schema.getId(), store);
         }
 

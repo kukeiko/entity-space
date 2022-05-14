@@ -82,8 +82,8 @@ export class AppComponent {
             // resulting in multiple API calls, remove it and add as filter option to UI
             const query = new Query(
                 this.schemaCatalog.getProductSchema(),
-                or(criteria, matches({ id: inSet([1, 2, 3]) })),
-                // criteria,
+                // or(criteria, matches({ id: inSet([1, 2, 3]) })),
+                criteria,
                 expansion
             );
 

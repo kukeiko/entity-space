@@ -19,7 +19,7 @@
         <br />
 
         <mat-form-field appearance="fill">
-            <mat-label>Min. Rating:</mat-label>
+            <mat-label>Max. Rating:</mat-label>
             <input matInput type="number" [(ngModel)]="maxRating" />
         </mat-form-field>
         <br />
@@ -43,6 +43,11 @@
         <button mat-raised-button (click)="clear()">Clear</button>
     </div>
     <div class="products-list-column">
+        <h3>Products:</h3>
+        <ul>
+            <li *ngFor="let product of products">{{ product | json }}</li>
+        </ul>
+
         <section>
             <h4>Queries in workspace Cache:</h4>
             <table mat-table [dataSource]="queriesInWorkspaceCache" class="mat-elevation-z1">
@@ -94,10 +99,5 @@
                 <tr mat-row *matRowDef="let row; columns: displayedQueryColumns"></tr>
             </table>
         </section>
-
-        <h3>Products:</h3>
-        <ul>
-            <li *ngFor="let product of products">{{ product | json }}</li>
-        </ul>
     </div>
 </div>
