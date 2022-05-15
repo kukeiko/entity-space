@@ -1,5 +1,4 @@
 {
-    "root": "packages/lexer",
     "sourceRoot": "packages/lexer/src",
     "projectType": "library",
     "targets": {
@@ -24,7 +23,7 @@
             "executor": "@nrwl/jest:jest",
             "outputs": ["coverage/packages/lexer"],
             "options": {
-                "jestConfig": "packages/lexer/jest.config.js",
+                "jestConfig": "packages/lexer/jest.config.ts",
                 "passWithNoTests": true
             }
         }

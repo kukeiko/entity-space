@@ -1,5 +1,4 @@
 {
-    "root": "packages/criteria",
     "sourceRoot": "packages/criteria/src",
     "projectType": "library",
     "targets": {
@@ -24,7 +23,7 @@
             "executor": "@nrwl/jest:jest",
             "outputs": ["coverage/packages/criteria"],
             "options": {
-                "jestConfig": "packages/criteria/jest.config.js",
+                "jestConfig": "packages/criteria/jest.config.ts",
                 "passWithNoTests": true
             }
         }
