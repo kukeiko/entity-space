@@ -1,5 +1,5 @@
 import { cloneJson } from "@entity-space/utils";
-import { EntityStoreV3 } from "../entity-store-v3-continued/entity-store-v3";
+import { EntityStoreV3 } from "./store/entity-store-v3";
 import { Query } from "../query/query";
 import { IEntitySchema } from "../schema/schema.interface";
 import { Entity } from "./entity";

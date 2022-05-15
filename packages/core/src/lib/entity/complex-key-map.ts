@@ -8,9 +8,12 @@ import {
     RemapCriterionResult,
 } from "@entity-space/criteria";
 import { tramplePath, walkPath } from "@entity-space/utils";
-import { Entity } from "../entity/entity";
+import { Entity } from "./entity";
 
 // [todo] EntityStoreIndexV3 returns "this" at get() and set(). should this class too?
+// [todo] wanted to move this to utils, and then i noticed we have a dependency to criteria package,
+// so we can't really do that. maybe we should have a map implementing getting items by criteria
+// as an extending class?
 export class ComplexKeyMap<E extends Entity = Entity, V = unknown> {
     constructor(paths: string[]) {
         let leadingPaths: string[], lastPath: string;

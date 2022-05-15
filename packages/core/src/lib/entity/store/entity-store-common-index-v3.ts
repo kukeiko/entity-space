@@ -1,6 +1,6 @@
 import { Criterion, RemapCriterionResult } from "@entity-space/criteria";
-import { Entity } from "../entity/entity";
-import { ComplexKeyMap } from "./complex-key-map";
+import { ComplexKeyMap } from "../complex-key-map";
+import { Entity } from "../entity";
 
 export class EntityStoreCommonIndexV3<E extends Entity = Entity> {
     constructor(paths: string[]) {
