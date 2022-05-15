@@ -38,10 +38,10 @@ export class ProductEntitySource extends EntityApi<Product> implements IEntitySo
                     const bag = query.getCriteria().getBag();
 
                     const filter: ProductFilter = {
-                        minPrice: bag.price?.getFrom()?.value ?? void 0,
-                        maxPrice: bag.price?.getTo()?.value ?? void 0,
-                        minRating: bag.rating?.getFrom()?.value ?? void 0,
-                        maxRating: bag.rating?.getTo()?.value ?? void 0,
+                        minPrice: bag.price?.getFrom()?.value,
+                        maxPrice: bag.price?.getTo()?.value,
+                        minRating: bag.rating?.getFrom()?.value,
+                        maxRating: bag.rating?.getTo()?.value,
                     };
 
                     return firstValueFrom(
