@@ -1,7 +1,7 @@
 {
     "extends": "nx/presets/core.json",
     "npmScope": "entity-space",
-    "defaultProject": "examples-products-apps-products-ui",
+    "defaultProject": "examples-apps-products-ui",
     "affected": {
         "defaultBase": "master"
     },

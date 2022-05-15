@@ -3,9 +3,10 @@
     "projects": {
         "core": "packages/core",
         "criteria": "packages/criteria",
-        "examples-products-apps-products-api": "packages/examples/products/apps/products-api",
-        "examples-products-apps-products-ui": "packages/examples/products/apps/products-ui",
-        "examples-products-libs-products-model": "packages/examples/products/libs/products-model",
+        "examples-apps-music-box-ui": "packages/examples/apps/music-box-ui",
+        "examples-apps-products-api": "packages/examples/apps/products-api",
+        "examples-apps-products-ui": "packages/examples/apps/products-ui",
+        "examples-libs-products-model": "packages/examples/libs/products-model",
         "lexer": "packages/lexer",
         "utils": "packages/utils"
     }
