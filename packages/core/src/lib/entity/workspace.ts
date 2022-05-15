@@ -2,7 +2,7 @@ import { Observable, Subject } from "rxjs";
 import { mergeQueries, Query, reduceQueries } from "../query/public";
 import { IEntitySchema } from "../schema/schema.interface";
 import { Entity } from "./entity";
-import { EntityCacheV2 } from "./entity-cache-v2";
+import { EntityCache } from "./entity-cache";
 import { IEntitySource } from "./entity-source.interface";
 import { QueriedEntities } from "./data-structures/queried-entities";
 
@@ -11,7 +11,7 @@ export class Workspace implements IEntitySource {
     private readonly queryCaches = new Map<string, Query[]>();
     private readonly queryCacheChanged = new Subject<Query[]>();
     // private readonly entityCache = new EntityCache();
-    private readonly entityCache = new EntityCacheV2();
+    private readonly entityCache = new EntityCache();
 
     onQueryCacheChanged(): Observable<Query[]> {
         return this.queryCacheChanged.asObservable();

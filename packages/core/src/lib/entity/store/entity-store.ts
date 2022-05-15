@@ -1,32 +1,32 @@
 import { Criterion, or } from "@entity-space/criteria";
+import { IEntitySchema } from "../../schema/schema.interface";
 import { ComplexKeyMap } from "../data-structures/complex-key-map";
 import { Entity } from "../entity";
-import { IEntityType } from "../entity-type.interface";
-import { EntityStoreCommonIndexV3 } from "./entity-store-common-index-v3";
-import { EntityStoreUniqueIndexV3 } from "./entity-store-unique-index-v3";
+import { EntityStoreCommonIndex } from "./entity-store-common-index";
+import { EntityStoreUniqueIndex } from "./entity-store-unique-index";
 
-export class EntityStoreV3 {
-    constructor(entityType: IEntityType) {
-        this.entityType = entityType;
+export class EntityStore {
+    constructor(entitySchema: IEntitySchema) {
+        this.entitySchema = entitySchema;
 
-        for (const index of entityType.getSchema().getIndexesIncludingKey()) {
+        for (const index of entitySchema.getIndexesIncludingKey()) {
             if (index.isUnique()) {
-                this.uniqueIndexes.set(index.getName(), new EntityStoreUniqueIndexV3(index.getPath()));
+                this.uniqueIndexes.set(index.getName(), new EntityStoreUniqueIndex(index.getPath()));
             } else {
-                this.commonIndexes.set(index.getName(), new EntityStoreCommonIndexV3(index.getPath()));
+                this.commonIndexes.set(index.getName(), new EntityStoreCommonIndex(index.getPath()));
             }
         }
     }
 
-    private readonly entityType: IEntityType;
-    private readonly uniqueIndexes = new Map<string, EntityStoreUniqueIndexV3>();
-    private readonly commonIndexes = new Map<string, EntityStoreCommonIndexV3>();
+    private readonly entitySchema: IEntitySchema;
+    private readonly uniqueIndexes = new Map<string, EntityStoreUniqueIndex>();
+    private readonly commonIndexes = new Map<string, EntityStoreCommonIndex>();
     private entities: (Entity | undefined)[] = [];
 
     // [todo] indexing needs to be crash safe
     add(entities: Entity[]): void {
-        if (this.entityType.getSchema().hasKey()) {
-            const key = this.entityType.getSchema().getKey();
+        if (this.entitySchema.hasKey()) {
+            const key = this.entitySchema.getKey();
             entities = this.dedupeEntities(entities, key.getPath());
             const keyIndex = this.uniqueIndexes.get(key.getName())!;
 
@@ -56,7 +56,7 @@ export class EntityStoreV3 {
     }
 
     get(entity: Entity): Entity | undefined {
-        const key = this.entityType.getSchema().getKey();
+        const key = this.entitySchema.getKey();
         const keyIndex = this.uniqueIndexes.get(key.getName())!;
         const slot = keyIndex.get(entity);
 

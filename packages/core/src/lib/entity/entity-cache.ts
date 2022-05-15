@@ -1,16 +1,15 @@
 import { cloneJson } from "@entity-space/utils";
-import { EntityStoreV3 } from "./store/entity-store-v3";
 import { Query } from "../query/query";
 import { IEntitySchema } from "../schema/schema.interface";
+import { QueriedEntities } from "./data-structures/queried-entities";
 import { Entity } from "./entity";
 import { IEntitySource } from "./entity-source.interface";
-import { EntityType } from "./entity-type";
 import { expandEntities } from "./functions/expand-entities.fn";
 import { normalizeEntities } from "./functions/normalize-entities.fn";
-import { QueriedEntities } from "./data-structures/queried-entities";
+import { EntityStore } from "./store/entity-store";
 
-export class EntityCacheV2 implements IEntitySource {
-    private readonly stores = new Map<string, EntityStoreV3>();
+export class EntityCache implements IEntitySource {
+    private readonly stores = new Map<string, EntityStore>();
 
     async query(query: Query): Promise<false | QueriedEntities[]> {
         const store = this.getOrCreateStore(query.getEntitySchema());
@@ -57,13 +56,12 @@ export class EntityCacheV2 implements IEntitySource {
         this.stores.clear();
     }
 
-    private getOrCreateStore(schema: IEntitySchema): EntityStoreV3 {
+    private getOrCreateStore(schema: IEntitySchema): EntityStore {
         let store = this.stores.get(schema.getId());
 
         if (store === void 0) {
             console.log("new store!", schema);
-            const entityType = new EntityType(schema);
-            store = new EntityStoreV3(entityType);
+            store = new EntityStore(schema);
             this.stores.set(schema.getId(), store);
         }
 

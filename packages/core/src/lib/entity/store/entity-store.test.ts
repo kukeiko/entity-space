@@ -1,7 +1,6 @@
 import { isValue, matches, or } from "@entity-space/criteria";
 import { EntitySchema } from "../../schema/entity-schema";
-import { EntityType } from "../entity-type";
-import { EntityStoreV3 } from "./entity-store-v3";
+import { EntityStore } from "./entity-store";
 
 interface Vector {
     x: number;
@@ -14,7 +13,7 @@ interface Block {
     typeId: string;
 }
 
-describe("entity-store-v3", () => {
+describe("entity-store", () => {
     it("should work", () => {
         // arrange
         const entitySchema = new EntitySchema("block");
@@ -24,8 +23,7 @@ describe("entity-store-v3", () => {
         entitySchema.addIndex("position.y");
         entitySchema.addIndex("position.z");
         entitySchema.addIndex("typeId");
-        const entityType = new EntityType(entitySchema);
-        const entityStore = new EntityStoreV3(entityType);
+        const entityStore = new EntityStore(entitySchema);
 
         const blocks: Block[] = [
             { position: { x: 0, y: 0, z: 0 }, typeId: "minecraft:grass_block" },
@@ -50,8 +48,7 @@ describe("entity-store-v3", () => {
         entitySchema.addIndex("position.y");
         entitySchema.addIndex("position.z");
         entitySchema.addIndex("typeId");
-        const entityType = new EntityType(entitySchema);
-        const entityStore = new EntityStoreV3(entityType);
+        const entityStore = new EntityStore(entitySchema);
 
         const blocks: Block[] = [
             { position: { x: 0, y: 0, z: 0 }, typeId: "minecraft:grass_block" },
@@ -81,8 +78,7 @@ describe("entity-store-v3", () => {
         entitySchema.addIndex("position.y");
         entitySchema.addIndex("position.z");
         entitySchema.addIndex("typeId");
-        const entityType = new EntityType(entitySchema);
-        const entityStore = new EntityStoreV3(entityType);
+        const entityStore = new EntityStore(entitySchema);
 
         const blocks: Block[] = [
             { position: { x: 0, y: 0, z: 0 }, typeId: "minecraft:grass_block" },

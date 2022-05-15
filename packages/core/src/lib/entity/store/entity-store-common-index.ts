@@ -2,7 +2,7 @@ import { Criterion, RemapCriterionResult } from "@entity-space/criteria";
 import { ComplexKeyMap } from "../data-structures/complex-key-map";
 import { Entity } from "../entity";
 
-export class EntityStoreCommonIndexV3<E extends Entity = Entity> {
+export class EntityStoreCommonIndex<E extends Entity = Entity> {
     constructor(paths: string[]) {
         this.paths = paths;
         this.map = new ComplexKeyMap<E, Set<number>>(paths);
