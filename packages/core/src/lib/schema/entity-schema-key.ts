@@ -1,7 +1,7 @@
 import { buildDefaultIndexName } from "./build-default-index-name.fn";
-import { IEntitySchema, IEntitySchemaKey } from "./schema.interface";
+import { IEntitySchema, IEntitySchemaIndex } from "./schema.interface";
 
-export class EntitySchemaKey implements IEntitySchemaKey {
+export class EntitySchemaKey implements IEntitySchemaIndex {
     constructor(entitySchema: IEntitySchema, path: string | string[], options?: { name?: string }) {
         this.entitySchema = entitySchema;
         this.path = Array.isArray(path) ? path.slice() : [path];

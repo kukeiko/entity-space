@@ -1,9 +1,15 @@
+import { ICriterionTemplate, NamedCriteriaTemplateItems, namedTemplate } from "@entity-space/criteria";
 import { Entity } from "../entity/entity";
 import { Expansion } from "../expansion/expansion";
 import { Query } from "./query";
 
 // [todo] T is unused
-export class QueryMapper<T = Record<string, any>, R = {}, O = {}, E = {}> {
+export class EntityApiEndpoint<
+    T = Record<string, any>,
+    R extends NamedCriteriaTemplateItems = {},
+    O extends NamedCriteriaTemplateItems = {},
+    E = {}
+> {
     constructor(
         requiredFields: R,
         optionalFields: O,
@@ -35,5 +41,9 @@ export class QueryMapper<T = Record<string, any>, R = {}, O = {}, E = {}> {
 
     load(query: Query): Promise<Entity[]> {
         return this.loadEntities(query);
+    }
+
+    toCriteriaTemplate(): ICriterionTemplate {
+        return namedTemplate(this.getRequiredFields(), this.getOptionalFields());
     }
 }

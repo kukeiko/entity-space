@@ -7,14 +7,20 @@ import { InstancedCriterionTemplate } from "./instanced-criterion-template.type"
 import { RemapCriterionResult } from "./remap-criterion-result";
 import { remapOrCriteria } from "./remap-or-criteria.fn";
 
+function looksLikeTemplate(value: any): value is ICriterionTemplate {
+    return (value as any as ICriterionTemplate)?.remap instanceof Function;
+}
+
 export type NamedCriteriaTemplateItems = { [key: string]: ICriterionTemplate };
 
 export type InstancedNamedCriteriaTemplateItems<T extends NamedCriteriaTemplateItems> = {
     [K in keyof T]?: InstancedCriterionTemplate<T[K]>;
 };
 
-export class NamedCriteriaTemplate<T extends NamedCriteriaTemplateItems, U extends NamedCriteriaTemplateItems = {}>
-    implements ICriterionTemplate<NamedCriteria<InstancedNamedCriteriaTemplateItems<T & U>, keyof T>>
+export class NamedCriteriaTemplate<
+    T extends NamedCriteriaTemplateItems = NamedCriteriaTemplateItems,
+    U extends NamedCriteriaTemplateItems = {}
+> implements ICriterionTemplate<NamedCriteria<InstancedNamedCriteriaTemplateItems<T & U>, keyof T>>
 {
     constructor(items: T, optionalItems?: U) {
         this.requiredItems = items;
@@ -144,5 +150,21 @@ export class NamedCriteriaTemplate<T extends NamedCriteriaTemplateItems, U exten
         }
 
         return true;
+    }
+
+    static fromDeepBag(deepBag: Record<string, any>): NamedCriteriaTemplate {
+        const bag: NamedCriteriaTemplateItems = {};
+
+        for (const key in deepBag) {
+            const value = deepBag[key];
+
+            if (looksLikeTemplate(value)) {
+                bag[key] = value;
+            } else {
+                bag[key] = this.fromDeepBag(value);
+            }
+        }
+
+        return new NamedCriteriaTemplate(bag);
     }
 }

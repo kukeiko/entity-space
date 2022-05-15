@@ -1,6 +1,6 @@
-import { IEntitySchema } from "../schema/public";
-import { Entity } from "./entity";
-import { NormalizedEntities } from "./normalized-entities";
+import { IEntitySchema } from "../../schema/schema.interface";
+import { Entity } from "../entity";
+import { NormalizedEntities } from "../data-structures/normalized-entities";
 
 export function normalizeEntities(
     schema: IEntitySchema,

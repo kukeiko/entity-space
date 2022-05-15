@@ -10,7 +10,7 @@ export class OrCriteriaTemplate<T extends ICriterionTemplate>
     constructor(items: T[]) {
         this.items = items;
     }
-    
+
     private readonly items: T[];
 
     getItems(): T[] {
@@ -44,6 +44,8 @@ export class OrCriteriaTemplate<T extends ICriterionTemplate>
         }
 
         if (remapped.length > 0) {
+            // [todo] can we replace Criterion[] w/ just Criterion @ RemapCriterionResult?
+            // in this case, a single OrCriteria() which is not nested in a 1-element array
             return new RemapCriterionResult([new OrCriteria(remapped)], [criterion]);
         }
 

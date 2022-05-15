@@ -11,6 +11,7 @@ function flattenNamedCriteriaInternal(
         const criterionInBag = bag[property] as any;
         const propertyFullPath = [...path, property].join(".");
 
+        // [todo] support more than in-set
         if (criterionInBag instanceof InSetCriterion) {
             bagWithPrimitives[propertyFullPath] = Array.from(criterionInBag.getValues());
         } else if (criterionInBag instanceof NamedCriteria) {

@@ -26,6 +26,24 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag, R exte
         return this.bag as any;
     }
 
+    getByPath(path: string[]): Criterion | undefined {
+        if (path.length === 0) {
+            throw new Error("empty path");
+        }
+
+        const criterion = this.bag[path[0]];
+
+        if (path.length === 1) {
+            return criterion;
+        }
+
+        if (criterion instanceof NamedCriteria) {
+            return criterion.getByPath(path.slice(1));
+        } else {
+            throw new Error("not named-criteria");
+        }
+    }
+
     reduce(other: Criterion): boolean | Criterion {
         if (other instanceof Criteria) {
             return other.reduceBy(this);

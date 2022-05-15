@@ -10,9 +10,9 @@ import { remapOrCriteria } from "./remap-or-criteria.fn";
 export class IsValueCriterionTemplate<T extends Primitive | typeof Null = Primitive | typeof Null>
     implements ICriterionTemplate<IsValueCriterion<ReturnType<T>>>
 {
-    constructor(valueTypes: T[]) {
-        this.valueTypes = valueTypes;
-        this.valueMatches = (value: unknown): value is ReturnType<T> => isPrimitiveOrNull(value, valueTypes.slice());
+    constructor(valueTypes?: T[]) {
+        this.valueTypes = valueTypes ?? [Number, String, Boolean, Null] as T[];
+        this.valueMatches = (value: unknown): value is ReturnType<T> => isPrimitiveOrNull(value, this.valueTypes.slice());
     }
 
     private readonly valueTypes: readonly T[];
