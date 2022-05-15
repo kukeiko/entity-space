@@ -1,9 +1,8 @@
-import { reduceExpansion } from "../expansion/public";
 import { Query } from "../query/query";
 import { IEntitySchema } from "../schema/public";
 import { IEntitySource } from "./entity-source.interface";
-import { expandEntities } from "./expand-entities.fn";
-import { QueriedEntities } from "./queried-entities";
+import { expandEntities } from "./functions/expand-entities.fn";
+import { QueriedEntities } from "./data-structures/queried-entities";
 
 export class EntitySourceGateway implements IEntitySource {
     private readonly sources = new Map<string, IEntitySource>();
@@ -12,8 +11,8 @@ export class EntitySourceGateway implements IEntitySource {
         this.sources.set(schema.getId(), source);
     }
 
-    async query(query: Query): Promise<false | QueriedEntities> {
-        const source = this.findSource(query.entitySchema);
+    async query(query: Query): Promise<false | QueriedEntities[]> {
+        const source = this.findSource(query.getEntitySchema());
 
         if (source === void 0) {
             return false;
@@ -25,31 +24,31 @@ export class EntitySourceGateway implements IEntitySource {
             return false;
         }
 
-        const entities = result.getEntities();
-        const effectiveQuery = result.getQuery();
-        // [todo] we could add this to the QueriedEntities class, which would then just need the original query as a ctor arg
-        const missingExpansion = reduceExpansion(query.expansion, effectiveQuery.expansion) || query.expansion;
-        let successfulExpansion = effectiveQuery.expansion;
+        const results: QueriedEntities[] = [];
 
-        if (Object.keys(missingExpansion).length > 0 && entities.length > 0) {
-            const result = await expandEntities(query.entitySchema, missingExpansion, entities, this);
+        for (const queried of result) {
+            const effectiveQuery = queried.getQuery();
+            const openExpansion = effectiveQuery.getExpansion().reduce_alt(query.getExpansion());
+            let successfulExpansion = effectiveQuery.getExpansionObject();
+            const entities = queried.getEntities();
 
-            if (result !== false) {
-                successfulExpansion = successfulExpansion;
+            if (entities.length > 0 && !openExpansion.isEmpty()) {
+                const result = await expandEntities(query.getEntitySchema(), openExpansion.getObject(), entities, this);
+
+                if (result !== false) {
+                    successfulExpansion = result;
+                }
             }
+
+            results.push(
+                new QueriedEntities(
+                    new Query(query.getEntitySchema(), effectiveQuery.getCriteria(), successfulExpansion),
+                    entities
+                )
+            );
         }
 
-        return new QueriedEntities(
-            {
-                criteria: effectiveQuery.criteria,
-                entitySchema: query.entitySchema,
-                expansion: successfulExpansion,
-                // [todo] not correct; we somehow need to fish out unresolved expansions from expandEntities() call
-                // for now we just assume that all expansions could be resolved within this entity-source
-                // expansion: query.expansion,
-            },
-            entities
-        );
+        return results;
     }
 
     private findSource(schema: IEntitySchema): IEntitySource | undefined {

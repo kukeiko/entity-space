@@ -1,14 +1,12 @@
-import { permutateEntries } from "@entity-space/utils";
-import { NamedCriteriaTemplate } from ".";
-import { CriterionTemplate } from "..";
 import { Criteria } from "../criteria";
 import { Criterion } from "../criterion";
-import { OrCriteria, OrCriteriaTemplate } from "../or";
+import { OrCriteria } from "../or/or-criteria";
 
-export type NamedCriteriaBag = Record<string, Criterion>;
+export type NamedCriteriaBag = Record<string, Criterion | undefined>;
 
-export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag> extends Criterion {
-    constructor(items: Partial<T>) {
+// [todo] the way i added ability to specify required items was a quick fix, revisit if we can make it cleaner/nicer.
+export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag, R extends keyof T = never> extends Criterion {
+    constructor(items: T) {
         super();
 
         if (Object.keys(items).length === 0) {
@@ -18,10 +16,32 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag> extend
         this.bag = Object.freeze(items);
     }
 
+    // [todo] rename to "items", as "bag" in programming terms would be a collection where order doesn't matter,
+    // and (at least for now, and i currently don't see how else) order does have an effect in the order of criteria
+    // returned when reducing.
     readonly bag: Readonly<Partial<T>>;
 
-    getBag(): Readonly<Partial<T>> {
-        return this.bag;
+    // [todo] rename to "getItems()"
+    getBag(): Readonly<Partial<T> & Required<Pick<T, R>>> {
+        return this.bag as any;
+    }
+
+    getByPath(path: string[]): Criterion | undefined {
+        if (path.length === 0) {
+            throw new Error("empty path");
+        }
+
+        const criterion = this.bag[path[0]];
+
+        if (path.length === 1) {
+            return criterion;
+        }
+
+        if (criterion instanceof NamedCriteria) {
+            return criterion.getByPath(path.slice(1));
+        } else {
+            throw new Error("not named-criteria");
+        }
     }
 
     reduce(other: Criterion): boolean | Criterion {
@@ -125,45 +145,6 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag> extend
         }
 
         return `{ ${shards.join(", ")} }`;
-    }
-
-    override remapOne(template: CriterionTemplate): [false, undefined] | [Criterion[], Criterion?] {
-        if (template instanceof NamedCriteriaTemplate) {
-            const openBag = { ...this.getBag() } as NamedCriteriaBag;
-            const otherBag = template.items;
-            const theBagToPermutate: Record<string, Criterion[]> = {};
-
-            for (const key in otherBag) {
-                const criterion = openBag[key];
-
-                if (criterion == void 0) {
-                    continue;
-                }
-
-                const templates = otherBag[key];
-
-                // [todo] what to do with "open"?
-                const [remapped, open] = criterion.remap(templates);
-
-                if (remapped === false) {
-                    continue;
-                }
-
-                theBagToPermutate[key] = remapped;
-            }
-
-            if (Object.keys(theBagToPermutate).length > 0) {
-                const permutations = permutateEntries(theBagToPermutate);
-                return [permutations.map(bag => new NamedCriteria(bag))];
-            }
-        } else if (
-            template instanceof OrCriteriaTemplate &&
-            template.items.some(item => item instanceof NamedCriteriaTemplate)
-        ) {
-            // [todo] i was clearly having some plan here
-        }
-
-        return [false, void 0];
     }
 
     matches(item: any): boolean {

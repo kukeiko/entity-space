@@ -1,53 +1,36 @@
-import { cloneJson, permutateEntries } from "@entity-space/utils";
-import { NamedCriteria } from "@entity-space/criteria";
+import { cloneJson } from "@entity-space/utils";
 import { Query } from "../query/query";
-import { IEntitySchema } from "../schema/public";
-import { createCriteriaTemplateForIndex } from "./create-criteria-template-for-index.fn";
+import { IEntitySchema } from "../schema/schema.interface";
+import { QueriedEntities } from "./data-structures/queried-entities";
 import { Entity } from "./entity";
 import { IEntitySource } from "./entity-source.interface";
-import { EntityStore } from "./entity-store";
-import { expandEntities } from "./expand-entities.fn";
-import { flattenNamedCriteria } from "./flatten-named-criteria.fn";
-import { namedCriteriaToKeyPaths } from "./named-criteria-to-key-path.fn";
-import { normalizeEntities } from "./normalize-entities.fn";
-import { QueriedEntities } from "./queried-entities";
+import { expandEntities } from "./functions/expand-entities.fn";
+import { normalizeEntities } from "./functions/normalize-entities.fn";
+import { EntityStore } from "./store/entity-store";
 
 export class EntityCache implements IEntitySource {
     private readonly stores = new Map<string, EntityStore>();
 
-    async query(query: Query): Promise<false | QueriedEntities> {
-        const schema = query.entitySchema;
-        const indexes = schema
-            .getIndexesIncludingKey()
-            .slice()
-            .sort((a, b) => b.getPath().length - a.getPath().length);
+    async query(query: Query): Promise<false | QueriedEntities[]> {
+        const store = this.getOrCreateStore(query.getEntitySchema());
+        let entities = store.getByCriterion(query.getCriteria());
 
-        const criteriaTemplates = indexes.map(index => createCriteriaTemplateForIndex(index));
-        const [remappedCriteria] = query.criteria.remap(criteriaTemplates);
+        if (!query.getExpansion().isEmpty() && entities.length > 0) {
+            // [todo] dirty to do it here?
+            // [todo] this way of cloning is quite slow.
+            entities = cloneJson(entities);
 
-        // [todo] remove "any" - but will result in compile error @ 02-loading-data.spec.ts
-        let entities: any[] = [];
-        const store = this.getOrCreateStore(schema);
+            const expansionResult = await expandEntities(
+                query.getEntitySchema(),
+                query.getExpansionObject(),
+                entities,
+                this
+            );
 
-        if (remappedCriteria === false) {
-            entities = store.getAll();
-        } else {
-            for (const remappedCriterion of remappedCriteria) {
-                // [todo] we probably need to check for duplicates?
-                entities.push(...this.readFromStoreUsingIndexCriteria(store, remappedCriterion));
-            }
-        }
-
-        if (Object.keys(query.expansion).length > 0) {
-            entities = cloneJson(entities); // [todo] dirty to do it here?
-
-            const expansionResult = await expandEntities(schema, query.expansion, entities, this);
             console.log("[expansion-result]", expansionResult);
         }
 
-        entities = query.criteria.filter(entities);
-
-        return new QueriedEntities(query, entities);
+        return [new QueriedEntities(query, entities)];
     }
 
     addEntities(schema: IEntitySchema, entities: Entity[]): void {
@@ -58,14 +41,14 @@ export class EntityCache implements IEntitySource {
             const normalizedEntities = normalized.get(schema);
             this.getOrCreateStore(schema).add(normalizedEntities);
 
-            //     // [todo] can not use until we implemented invert() @ named-criteria
-            //     // if (normalizedEntities.length > 0) {
-            //     //     const indexQueries = createQueriesFromEntities(schema, normalizedEntities);
+            // [todo] can not use until we implemented invert() @ named-criteria
+            // if (normalizedEntities.length > 0) {
+            //     const indexQueries = createQueriesFromEntities(schema, normalizedEntities);
 
-            //     //     for (const indexQuery of indexQueries) {
-            //     //         this.addExecutedQuery(indexQuery);
-            //     //     }
-            //     // }
+            //     for (const indexQuery of indexQueries) {
+            //         this.addExecutedQuery(indexQuery);
+            //     }
+            // }
         }
     }
 
@@ -73,30 +56,11 @@ export class EntityCache implements IEntitySource {
         this.stores.clear();
     }
 
-    private readFromStoreUsingIndexCriteria(store: EntityStore, indexCriteria: NamedCriteria): Entity[] {
-        const bagKeyPaths = namedCriteriaToKeyPaths(indexCriteria);
-        const index = store.getIndexMatchingKeyPaths(bagKeyPaths);
-        const bagWithPrimitives = flattenNamedCriteria(indexCriteria);
-        const permutatedBags = permutateEntries(bagWithPrimitives);
-        const indexValues: (number | string)[][] = [];
-
-        for (const permutatedBag of permutatedBags) {
-            const indexValue: (number | string)[] = [];
-
-            for (const key of index.getPath()) {
-                indexValue.push(permutatedBag[key]);
-            }
-
-            indexValues.push(indexValue);
-        }
-
-        return store.getByIndexOrKey(index.getName(), indexValues);
-    }
-
     private getOrCreateStore(schema: IEntitySchema): EntityStore {
         let store = this.stores.get(schema.getId());
 
         if (store === void 0) {
+            console.log("new store!", schema);
             store = new EntityStore(schema);
             this.stores.set(schema.getId(), store);
         }

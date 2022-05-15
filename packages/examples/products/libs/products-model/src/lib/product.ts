@@ -1,4 +1,4 @@
-import { Brand } from ".";
+import { Brand } from "./brand";
 import { ProductReview } from "./product-review";
 
 export interface Product {

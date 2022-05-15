@@ -1,11 +1,11 @@
 import { Criterion, inRange, matches, or } from "@entity-space/criteria";
-import { Expansion } from "../expansion/public";
+import { ExpansionObject } from "../expansion/public";
 import { EntitySchema } from "../schema/public";
 import { mergeQueries } from "./merge-queries.fn";
 import { Query } from "./query";
 
-function createQuery(criteria: Criterion, expansion: Expansion = {}): Query {
-    return { entitySchema: new EntitySchema("foo"), criteria, expansion };
+function createQuery(criteria: Criterion, expansion: ExpansionObject = {}): Query {
+    return new Query(new EntitySchema("foo"), criteria, expansion);
 }
 
 interface Product {

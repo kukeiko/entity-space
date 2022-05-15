@@ -1,6 +1,6 @@
 import { Query } from "../query/query";
-import { QueriedEntities } from "./queried-entities";
+import { QueriedEntities } from "./data-structures/queried-entities";
 
 export interface IEntitySource {
-    query(query: Query): Promise<false | QueriedEntities>;
+    query(query: Query): Promise<false | QueriedEntities[]>;
 }

@@ -1,5 +1,5 @@
 import { Criterion } from "../criterion";
-import { NamedCriteria, NamedCriteriaBag } from "./named-criteria";
+import { NamedCriteria } from "./named-criteria";
 
 /**
  * [todo] name is a bit unintuitive. it doesn't really reflect that we're creating named-criteria here.
@@ -8,21 +8,4 @@ import { NamedCriteria, NamedCriteriaBag } from "./named-criteria";
  */
 export function matches<T>(bag: Partial<Record<keyof T, Criterion>>): NamedCriteria {
     return new NamedCriteria(bag);
-}
-
-// [todo] any
-export function fromDeepBag(deepBag: any): NamedCriteria {
-    const bag: NamedCriteriaBag = {};
-
-    for (const property in deepBag) {
-        const bagOrCriterion = deepBag[property];
-
-        if (bagOrCriterion instanceof Criterion) {
-            bag[property] = bagOrCriterion;
-        } else {
-            bag[property] = fromDeepBag(bagOrCriterion);
-        }
-    }
-
-    return matches(bag);
 }

@@ -1,12 +1,12 @@
 import { Criterion, inRange, inSet, matches, or } from "@entity-space/criteria";
-import { Expansion } from "../../expansion/expansion";
+import { ExpansionObject } from "../../expansion/expansion-object";
 import { EntitySchema } from "../../schema/entity-schema";
 import { Query } from "../query";
 import { reduceQuery } from "../reduce-query.fn";
 
 describe("reduceQuery()", () => {
-    function createQuery(criteria: Criterion, expansion: Expansion = {}): Query {
-        return { entitySchema: new EntitySchema("foo"), criteria, expansion };
+    function createQuery(criteria: Criterion, expansion: ExpansionObject = {}): Query {
+        return new Query(new EntitySchema("foo"), criteria, expansion);
     }
 
     describe("full reduction", () => {

@@ -1,25 +1,33 @@
-import { reduceExpansion } from "../expansion/reduce-expansion.fn";
 import { Query } from "./query";
 
 // [todo] shouldn't be able to reduce queries w/ different entity-schemas
 export function reduceQuery(a: Query, b: Query): Query[] | false {
-    const criteria = b.criteria === void 0 ? true : a.criteria === void 0 ? false : b.criteria.reduce(a.criteria);
-    const expansion = reduceExpansion(a.expansion, b.expansion);
+    // [todo] not sure why i'm checking against undefined
+    const reducedCriteria =
+        b.getCriteria() === void 0
+            ? true
+            : a.getCriteria() === void 0
+            ? false
+            : b.getCriteria().reduce(a.getCriteria());
 
-    if (!criteria || !expansion) {
+    const reducedExpansion = b.getExpansion().reduce(a.getExpansion());
+
+    if (!reducedCriteria || !reducedExpansion) {
         return false;
-    } else if (criteria === true) {
-        if (Object.keys(expansion).length == 0) {
+    } else if (reducedCriteria === true) {
+        if (reducedExpansion === true) {
             return [];
         }
 
-        return [{ entitySchema: a.entitySchema, criteria: a.criteria, expansion }];
-    } else if (Object.keys(expansion).length == 0) {
-        return [{ entitySchema: a.entitySchema, criteria, expansion: a.expansion }];
+        const query = new Query(a.getEntitySchema(), a.getCriteria(), reducedExpansion.getObject());
+        return [query];
+    } else if (reducedExpansion === true) {
+        const query = new Query(a.getEntitySchema(), reducedCriteria, a.getExpansionObject());
+        return [query];
     } else {
         return [
-            { entitySchema: a.entitySchema, criteria, expansion: a.expansion },
-            { entitySchema: a.entitySchema, criteria: b.criteria, expansion },
+            new Query(a.getEntitySchema(), reducedCriteria, a.getExpansionObject()),
+            new Query(a.getEntitySchema(), b.getCriteria(), reducedExpansion.getObject()),
         ];
     }
 }

@@ -1,6 +1,7 @@
 import { lex, token, TokenType } from "@entity-space/lexer";
-import { Criteria, Criterion } from "../criterion";
-import { notBracketedCriteriaTokenParser } from "./token-parser";
+import { Criteria } from "../criterion/criteria";
+import { Criterion } from "../criterion/criterion";
+import { noBracketsCriteriaTokenParser } from "./no-brackets-criteria.token-parser";
 
 export function parseCriteria(input: string): Criterion {
     let tokens = lex(input);
@@ -13,7 +14,7 @@ export function parseCriteria(input: string): Criterion {
     const terminator = token(TokenType.Special, ";");
     tokens.push(terminator);
 
-    const generator = notBracketedCriteriaTokenParser();
+    const generator = noBracketsCriteriaTokenParser();
     generator.next();
 
     for (const token of tokens) {
