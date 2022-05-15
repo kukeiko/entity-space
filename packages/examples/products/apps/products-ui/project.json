@@ -1,6 +1,5 @@
 {
     "projectType": "application",
-    "root": "packages/examples/products/apps/products-ui",
     "sourceRoot": "packages/examples/products/apps/products-ui/src",
     "prefix": "entity-space",
     "targets": {
@@ -88,7 +87,7 @@
             "executor": "@nrwl/jest:jest",
             "outputs": ["coverage/packages/examples/products/apps/products-ui"],
             "options": {
-                "jestConfig": "packages/examples/products/apps/products-ui/jest.config.js",
+                "jestConfig": "packages/examples/products/apps/products-ui/jest.config.ts",
                 "passWithNoTests": true
             }
         }
