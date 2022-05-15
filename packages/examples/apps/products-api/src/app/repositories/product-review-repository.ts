@@ -1,0 +1,18 @@
+import { ProductReview } from "@entity-space/examples/libs/products-model";
+import { cloneJson } from "@entity-space/utils";
+import { Injectable } from "@nestjs/common";
+import data from "./normalized-product-data";
+
+@Injectable()
+export class ProductReviewRepository {
+    async all(): Promise<ProductReview[]> {
+        return cloneJson(data.reviews);
+    }
+
+    async byProductIds(ids: number[]): Promise<ProductReview[]> {
+        const idSet = new Set(ids);
+        const all = await this.all();
+
+        return all.filter(item => idSet.has(item.productId));
+    }
+}
