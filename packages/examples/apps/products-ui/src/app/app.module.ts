@@ -8,7 +8,7 @@ import { MatInputModule } from "@angular/material/input";
 import { MatTableModule } from "@angular/material/table";
 import { BrowserModule } from "@angular/platform-browser";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
-import { ProductsSchemaCatalog } from "@entity-space/examples/products/libs/products-model";
+import { ProductsSchemaCatalog } from "@entity-space/examples/libs/products-model";
 import { AppComponent } from "./app.component";
 import { BrandEntitySource } from "./entity-sources/brand.entity-source";
 import { ProductEntitySource } from "./entity-sources/product.entity-source";

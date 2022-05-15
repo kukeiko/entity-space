@@ -17,9 +17,7 @@
         "paths": {
             "@entity-space/core": ["packages/core/src/index.ts"],
             "@entity-space/criteria": ["packages/criteria/src/index.ts"],
-            "@entity-space/examples/products/libs/products-model": [
-                "packages/examples/products/libs/products-model/src/index.ts"
-            ],
+            "@entity-space/examples/libs/products-model": ["packages/examples/libs/products-model/src/index.ts"],
             "@entity-space/lexer": ["packages/lexer/src/index.ts"],
             "@entity-space/utils": ["packages/utils/src/index.ts"]
         }

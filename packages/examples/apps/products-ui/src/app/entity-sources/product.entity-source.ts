@@ -2,7 +2,7 @@ import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { EntityApi, IEntitySource } from "@entity-space/core";
 import { inRangeTemplate, isValueTemplate } from "@entity-space/criteria";
-import { Product, ProductFilter, ProductsSchemaCatalog } from "@entity-space/examples/products/libs/products-model";
+import { Product, ProductFilter, ProductsSchemaCatalog } from "@entity-space/examples/libs/products-model";
 import { firstValueFrom } from "rxjs";
 
 @Injectable()

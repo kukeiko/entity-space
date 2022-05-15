@@ -1,7 +1,7 @@
 import { Component } from "@angular/core";
 import { EntitySourceGateway, ExpansionObject, Query, Workspace } from "@entity-space/core";
 import { Criterion, inRange, matches } from "@entity-space/criteria";
-import { Product, ProductsSchemaCatalog } from "@entity-space/examples/products/libs/products-model";
+import { Product, ProductsSchemaCatalog } from "@entity-space/examples/libs/products-model";
 import { merge } from "rxjs";
 import { BrandEntitySource } from "./entity-sources/brand.entity-source";
 import { ProductEntitySource } from "./entity-sources/product.entity-source";
