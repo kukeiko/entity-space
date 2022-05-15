@@ -3,6 +3,7 @@
     "projects": {
         "core": "packages/core",
         "criteria": "packages/criteria",
+        "examples-apps-music-box-ui": "packages/examples/apps/music-box-ui",
         "examples-products-apps-products-api": "packages/examples/products/apps/products-api",
         "examples-products-apps-products-ui": "packages/examples/products/apps/products-ui",
         "examples-products-libs-products-model": "packages/examples/products/libs/products-model",
