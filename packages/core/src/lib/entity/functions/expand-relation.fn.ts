@@ -4,7 +4,7 @@ import { IEntitySchemaRelation } from "../../schema/public";
 import { Entity } from "../entity";
 import { EntityReader } from "../entity-reader";
 import { IEntitySource } from "../entity-source.interface";
-import { createCriteriaForIndex } from "./create-criteria-for-index.fn";
+import { createCriterionFromEntities } from "./create-criterion-from-entities.fn";
 
 export async function expandRelation(
     entities: Entity[],
@@ -18,7 +18,8 @@ export async function expandRelation(
     const isArray = relation.getProperty().getValueSchema().schemaType === "array";
     const fromIndex = relation.getFromIndex();
     const toIndex = relation.getToIndex();
-    const criteria = createCriteriaForIndex(toIndex.getPath(), entityReader.readIndex(fromIndex, entities));
+    const criteria = createCriterionFromEntities(entities, fromIndex.getPath(), toIndex.getPath());
+
     const query = new Query(relatedSchema, criteria, expansion ?? {});
     const result = await source.query(query);
 

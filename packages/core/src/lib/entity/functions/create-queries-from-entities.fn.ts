@@ -1,16 +1,13 @@
 import { Query } from "../../query/query";
 import { IEntitySchema } from "../../schema/schema.interface";
-import { createCriteriaForIndex } from "./create-criteria-for-index.fn";
 import { Entity } from "../entity";
-import { EntityReader } from "../entity-reader";
+import { createCriterionFromEntities } from "./create-criterion-from-entities.fn";
 
 export function createQueriesFromEntities(schema: IEntitySchema, entities: Entity[]): Query[] {
-    const reader = new EntityReader();
     const queries: Query[] = [];
 
     for (const index of schema.getIndexesIncludingKey()) {
-        const indexValues = reader.readIndex(index, entities);
-        const indexCriteria = createCriteriaForIndex(index.getPath(), indexValues);
+        const indexCriteria = createCriterionFromEntities(entities, index.getPath());
         const query = new Query(schema, indexCriteria);
         queries.push(query);
     }
