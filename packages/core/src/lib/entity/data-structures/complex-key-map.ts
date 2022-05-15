@@ -8,7 +8,7 @@ import {
     RemapCriterionResult,
 } from "@entity-space/criteria";
 import { tramplePath, walkPath } from "@entity-space/utils";
-import { Entity } from "./entity";
+import { Entity } from "../entity";
 
 // [todo] EntityStoreIndexV3 returns "this" at get() and set(). should this class too?
 // [todo] wanted to move this to utils, and then i noticed we have a dependency to criteria package,
@@ -46,10 +46,18 @@ export class ComplexKeyMap<E extends Entity = Entity, V = unknown> {
     private readonly lastPath: string;
     private readonly criterionTemplate: NamedCriteriaTemplate;
 
-    get(entity: E): V | undefined {
+    get(entity: E, paths?: string[]): V | undefined {
         let map = this.map;
 
-        for (const path of this.leadingPaths) {
+        let leadingPaths = this.leadingPaths;
+        let lastPath = this.lastPath;
+
+        if (paths) {
+            leadingPaths = paths.slice(0, -1);
+            lastPath = paths[paths.length - 1];
+        }
+
+        for (const path of leadingPaths) {
             const key = walkPath(path, entity);
 
             if (!map.has(key)) {
@@ -59,7 +67,7 @@ export class ComplexKeyMap<E extends Entity = Entity, V = unknown> {
             map = map.get(key) as Map<unknown, unknown>;
         }
 
-        return map.get(walkPath(this.lastPath, entity)) as V | undefined;
+        return map.get(walkPath(lastPath, entity)) as V | undefined;
     }
 
     getAll(): V[] {

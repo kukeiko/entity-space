@@ -1,5 +1,5 @@
 import { Criterion, or } from "@entity-space/criteria";
-import { ComplexKeyMap } from "../complex-key-map";
+import { ComplexKeyMap } from "../data-structures/complex-key-map";
 import { Entity } from "../entity";
 import { IEntityType } from "../entity-type.interface";
 import { EntityStoreCommonIndexV3 } from "./entity-store-common-index-v3";

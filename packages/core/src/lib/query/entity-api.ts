@@ -1,7 +1,7 @@
 import { ICriterionTemplate, namedTemplate, orTemplate } from "@entity-space/criteria";
 import { Observable, Subject } from "rxjs";
 import { IEntitySource } from "../entity/entity-source.interface";
-import { QueriedEntities } from "../entity/queried-entities";
+import { QueriedEntities } from "../entity/data-structures/queried-entities";
 import { EntitySchema } from "../schema/entity-schema";
 import { EntityApiEndpoint } from "./entity-api-endpoint";
 import { EntityApiEndpointBuilder } from "./entity-api-endpoint-builder";

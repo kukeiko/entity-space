@@ -1,6 +1,6 @@
 import { Criterion, fromDeepBag, inSet, InSetCriterion, isValue, or } from "@entity-space/criteria";
 import { tramplePath, walkPath } from "@entity-space/utils";
-import { ComplexKeyMap } from "../complex-key-map";
+import { ComplexKeyMap } from "../data-structures/complex-key-map";
 import { Entity } from "../entity";
 
 function createCriterionOnePath(entities: Entity[], path: string, writtenPath = path): Criterion {

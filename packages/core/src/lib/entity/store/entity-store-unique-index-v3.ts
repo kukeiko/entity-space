@@ -1,5 +1,5 @@
 import { Criterion, RemapCriterionResult } from "@entity-space/criteria";
-import { ComplexKeyMap } from "../complex-key-map";
+import { ComplexKeyMap } from "../data-structures/complex-key-map";
 import { Entity } from "../entity";
 
 export class EntityStoreUniqueIndexV3<E extends Entity = Entity> {

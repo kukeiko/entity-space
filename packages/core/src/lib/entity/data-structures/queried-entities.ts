@@ -1,5 +1,5 @@
-import { Query } from "../query/public";
-import { Entity } from "./entity";
+import { Query } from "../../query/public";
+import { Entity } from "../entity";
 
 export class QueriedEntities {
     constructor(query: Query, entities: Entity[]) {

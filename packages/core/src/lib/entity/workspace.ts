@@ -4,7 +4,7 @@ import { IEntitySchema } from "../schema/schema.interface";
 import { Entity } from "./entity";
 import { EntityCacheV2 } from "./entity-cache-v2";
 import { IEntitySource } from "./entity-source.interface";
-import { QueriedEntities } from "./queried-entities";
+import { QueriedEntities } from "./data-structures/queried-entities";
 
 export class Workspace implements IEntitySource {
     private source?: IEntitySource;

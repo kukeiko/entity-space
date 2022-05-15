@@ -2,7 +2,7 @@ import { Query } from "../query/query";
 import { IEntitySchema } from "../schema/public";
 import { IEntitySource } from "./entity-source.interface";
 import { expandEntities } from "./functions/expand-entities.fn";
-import { QueriedEntities } from "./queried-entities";
+import { QueriedEntities } from "./data-structures/queried-entities";
 
 export class EntitySourceGateway implements IEntitySource {
     private readonly sources = new Map<string, IEntitySource>();

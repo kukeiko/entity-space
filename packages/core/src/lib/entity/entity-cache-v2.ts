@@ -7,7 +7,7 @@ import { IEntitySource } from "./entity-source.interface";
 import { EntityType } from "./entity-type";
 import { expandEntities } from "./functions/expand-entities.fn";
 import { normalizeEntities } from "./functions/normalize-entities.fn";
-import { QueriedEntities } from "./queried-entities";
+import { QueriedEntities } from "./data-structures/queried-entities";
 
 export class EntityCacheV2 implements IEntitySource {
     private readonly stores = new Map<string, EntityStoreV3>();
