@@ -1,7 +1,7 @@
 /* eslint-disable */
 export default {
     displayName: "examples-products-apps-products-ui",
-    preset: "../../../../../jest.preset.js",
+    preset: "../../../../jest.preset.js",
     setupFilesAfterEnv: ["<rootDir>/src/test-setup.ts"],
     globals: {
         "ts-jest": {
@@ -9,7 +9,7 @@ export default {
             stringifyContentPathRegex: "\\.(html|svg)$",
         },
     },
-    coverageDirectory: "../../../../../coverage/packages/examples/products/apps/products-ui",
+    coverageDirectory: "../../../../coverage/packages/examples/apps/products-ui",
     transform: {
         "^.+\\.(ts|mjs|js|html)$": "jest-preset-angular",
     },
