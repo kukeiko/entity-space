@@ -103,7 +103,7 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag, R exte
                 }
             });
 
-            const accumulator = { ...other.getBag() };
+            const accumulator: Record<string, Criterion> = { ...other.getBag() };
             const built: Record<string, Criterion>[] = [];
 
             for (const { criterion, key, result, inverted } of reductions) {
@@ -118,7 +118,7 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag, R exte
                 }
 
                 built.push({ ...accumulator, [key]: reduced });
-                accumulator[key] = this.bag[key];
+                accumulator[key] = this.bag[key]!;
             }
 
             return built.length === 1
@@ -129,9 +129,37 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag, R exte
         return false;
     }
 
-    override invert(): Criterion {
-        // [todo] implement
-        throw new Error("not implemented yet");
+    override invert(): false | Criterion {
+        const invertedItems: Record<string, Criterion> = {};
+
+        for (const key in this.bag) {
+            const criterion = this.bag[key];
+
+            if (criterion === void 0) {
+                return false;
+            }
+
+            const inverted = criterion.invert();
+
+            if (inverted === false) {
+                return false;
+            }
+
+            invertedItems[key] = inverted;
+        }
+
+        const accumulator: Record<string, Criterion> = {};
+        const built: Record<string, Criterion>[] = [];
+
+        for (const key in invertedItems) {
+            const inverted = invertedItems[key];
+            built.push({ ...accumulator, [key]: inverted });
+            accumulator[key] = this.bag[key]!;
+        }
+
+        return built.length === 1
+            ? new NamedCriteria(built[0])
+            : new OrCriteria(built.map(bag => new NamedCriteria(bag)));
     }
 
     toString(): string {
