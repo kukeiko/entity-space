@@ -6,8 +6,8 @@ import { createCriterionFromEntities } from "./create-criterion-from-entities.fn
 export function createQueriesFromEntities(schema: IEntitySchema, entities: Entity[]): Query[] {
     const queries: Query[] = [];
 
-    for (const index of schema.getIndexesIncludingKey()) {
-        const indexCriteria = createCriterionFromEntities(entities, index.getPath());
+    if (schema.hasKey()) {
+        const indexCriteria = createCriterionFromEntities(entities, schema.getKey().getPath());
         const query = new Query(schema, indexCriteria);
         queries.push(query);
     }

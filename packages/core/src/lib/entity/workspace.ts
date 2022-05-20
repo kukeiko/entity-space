@@ -1,10 +1,10 @@
 import { Observable, Subject } from "rxjs";
 import { mergeQueries, Query, reduceQueries } from "../query/public";
 import { IEntitySchema } from "../schema/schema.interface";
+import { QueriedEntities } from "./data-structures/queried-entities";
 import { Entity } from "./entity";
 import { EntityCache } from "./entity-cache";
 import { IEntitySource } from "./entity-source.interface";
-import { QueriedEntities } from "./data-structures/queried-entities";
 
 export class Workspace implements IEntitySource {
     private source?: IEntitySource;
@@ -18,7 +18,11 @@ export class Workspace implements IEntitySource {
     }
 
     add(schema: IEntitySchema, entities: Entity[]): void {
-        this.entityCache.addEntities(schema, entities);
+        const queries = this.entityCache.addEntities(schema, entities);
+
+        for (const query of queries) {
+            this.addExecutedQuery(query);
+        }
     }
 
     setSource(source: IEntitySource): void {
@@ -60,6 +64,7 @@ export class Workspace implements IEntitySource {
 
             // [todo] should it not be queryAgainstSource?
             // if not, move out of loop
+            // [todo] actually, maybe it should be result[i].getQuery()?
             this.addExecutedQuery(query);
         }
 

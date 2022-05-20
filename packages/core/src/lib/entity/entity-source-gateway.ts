@@ -1,8 +1,8 @@
 import { Query } from "../query/query";
 import { IEntitySchema } from "../schema/public";
+import { QueriedEntities } from "./data-structures/queried-entities";
 import { IEntitySource } from "./entity-source.interface";
 import { expandEntities } from "./functions/expand-entities.fn";
-import { QueriedEntities } from "./data-structures/queried-entities";
 
 export class EntitySourceGateway implements IEntitySource {
     private readonly sources = new Map<string, IEntitySource>();
@@ -29,20 +29,15 @@ export class EntitySourceGateway implements IEntitySource {
         for (const queried of result) {
             const effectiveQuery = queried.getQuery();
             const openExpansion = effectiveQuery.getExpansion().reduce_alt(query.getExpansion());
-            let successfulExpansion = effectiveQuery.getExpansionObject();
             const entities = queried.getEntities();
 
             if (entities.length > 0 && !openExpansion.isEmpty()) {
-                const result = await expandEntities(query.getEntitySchema(), openExpansion.getObject(), entities, this);
-
-                if (result !== false) {
-                    successfulExpansion = result;
-                }
+                await expandEntities(query.getEntitySchema(), openExpansion.getObject(), entities, this);
             }
 
             results.push(
                 new QueriedEntities(
-                    new Query(query.getEntitySchema(), effectiveQuery.getCriteria(), successfulExpansion),
+                    new Query(query.getEntitySchema(), effectiveQuery.getCriteria(), query.getExpansion()),
                     entities
                 )
             );

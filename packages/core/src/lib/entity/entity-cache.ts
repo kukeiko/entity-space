@@ -4,6 +4,7 @@ import { IEntitySchema } from "../schema/schema.interface";
 import { QueriedEntities } from "./data-structures/queried-entities";
 import { Entity } from "./entity";
 import { IEntitySource } from "./entity-source.interface";
+import { createQueriesFromEntities } from "./functions/create-queries-from-entities.fn";
 import { expandEntities } from "./functions/expand-entities.fn";
 import { normalizeEntities } from "./functions/normalize-entities.fn";
 import { EntityStore } from "./store/entity-store";
@@ -19,37 +20,35 @@ export class EntityCache implements IEntitySource {
             // [todo] dirty to do it here?
             // [todo] this way of cloning is quite slow.
             entities = cloneJson(entities);
-
-            const expansionResult = await expandEntities(
-                query.getEntitySchema(),
-                query.getExpansionObject(),
-                entities,
-                this
-            );
-
-            console.log("[expansion-result]", expansionResult);
+            await expandEntities(query.getEntitySchema(), query.getExpansionObject(), entities, this);
         }
 
         return [new QueriedEntities(query, entities)];
     }
 
-    addEntities(schema: IEntitySchema, entities: Entity[]): void {
+    // [todo] not totally happy with this method also creating the queries from the entities,
+    // but i wanted to prevent normalizing twice when adding entities, so that is why it is here
+    // instead of in the workspace.
+    addEntities(schema: IEntitySchema, entities: Entity[]): Query[] {
         entities = cloneJson(entities);
         const normalized = normalizeEntities(schema, entities);
+        const createdQueries: Query[] = [];
 
         for (const schema of normalized.getSchemas()) {
             const normalizedEntities = normalized.get(schema);
             this.getOrCreateStore(schema).add(normalizedEntities);
 
             // [todo] can not use until we implemented invert() @ named-criteria
-            // if (normalizedEntities.length > 0) {
-            //     const indexQueries = createQueriesFromEntities(schema, normalizedEntities);
+            if (normalizedEntities.length > 0) {
+                const indexQueries = createQueriesFromEntities(schema, normalizedEntities);
 
-            //     for (const indexQuery of indexQueries) {
-            //         this.addExecutedQuery(indexQuery);
-            //     }
-            // }
+                for (const indexQuery of indexQueries) {
+                    createdQueries.push(indexQuery);
+                }
+            }
         }
+
+        return createdQueries;
     }
 
     clear(): void {
@@ -60,7 +59,6 @@ export class EntityCache implements IEntitySource {
         let store = this.stores.get(schema.getId());
 
         if (store === void 0) {
-            console.log("new store!", schema);
             store = new EntityStore(schema);
             this.stores.set(schema.getId(), store);
         }
