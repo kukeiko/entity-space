@@ -1,0 +1,52 @@
+{
+    "$schema": "..\\..\\..\\..\\node_modules\\nx\\schemas\\project-schema.json",
+    "sourceRoot": "packages/examples/apps/music-box-api/src",
+    "projectType": "application",
+    "targets": {
+        "build": {
+            "executor": "@nrwl/node:webpack",
+            "outputs": ["{options.outputPath}"],
+            "options": {
+                "outputPath": "dist/packages/examples/apps/music-box-api",
+                "main": "packages/examples/apps/music-box-api/src/main.ts",
+                "tsConfig": "packages/examples/apps/music-box-api/tsconfig.app.json",
+                "assets": ["packages/examples/apps/music-box-api/src/assets"]
+            },
+            "configurations": {
+                "production": {
+                    "optimization": true,
+                    "extractLicenses": true,
+                    "inspect": false,
+                    "fileReplacements": [
+                        {
+                            "replace": "packages/examples/apps/music-box-api/src/environments/environment.ts",
+                            "with": "packages/examples/apps/music-box-api/src/environments/environment.prod.ts"
+                        }
+                    ]
+                }
+            }
+        },
+        "serve": {
+            "executor": "@nrwl/node:node",
+            "options": {
+                "buildTarget": "examples-apps-music-box-api:build"
+            }
+        },
+        "lint": {
+            "executor": "@nrwl/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": ["packages/examples/apps/music-box-api/**/*.ts"]
+            }
+        },
+        "test": {
+            "executor": "@nrwl/jest:jest",
+            "outputs": ["coverage/packages/examples/apps/music-box-api"],
+            "options": {
+                "jestConfig": "packages/examples/apps/music-box-api/jest.config.ts",
+                "passWithNoTests": true
+            }
+        }
+    },
+    "tags": []
+}

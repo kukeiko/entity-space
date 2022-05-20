@@ -67,7 +67,8 @@
             },
             "defaultConfiguration": "development",
             "options": {
-                "port": 4201
+                "port": 4201,
+                "proxyConfig": "packages/examples/apps/music-box-ui/proxy.conf.json"
             }
         },
         "extract-i18n": {
