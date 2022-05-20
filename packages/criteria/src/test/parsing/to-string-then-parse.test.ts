@@ -1,4 +1,5 @@
 import { and } from "../../lib/criterion/and/and.fn";
+import { any } from "../../lib/criterion/any/any.fn";
 import { isEven } from "../../lib/criterion/binary/is-even.fn";
 import { Criterion } from "../../lib/criterion/criterion";
 import { or } from "../../lib/criterion/or/or.fn";
@@ -39,4 +40,6 @@ describe("to-string-then-parse", () => {
 
     shouldParse(isEven(true).toString(), isEven(true));
     shouldParse(isEven(false).toString(), isEven(false));
+
+    shouldParse(any().toString(), any());
 });

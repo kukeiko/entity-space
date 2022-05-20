@@ -1,9 +1,9 @@
 import { Criterion } from "../criterion";
 import { matches } from "./matches.fn";
-import { NamedCriteria, NamedCriteriaBag } from "./named-criteria";
+import { NamedCriteriaBag } from "./named-criteria";
 
 // [todo] any
-export function fromDeepBag(deepBag: any): NamedCriteria {
+export function fromDeepBag(deepBag: any): Criterion {
     const bag: NamedCriteriaBag = {};
 
     for (const property in deepBag) {

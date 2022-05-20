@@ -36,10 +36,10 @@ export class AppComponent {
 
     displayedQueryColumns: string[] = ["schema", "criteria", "expansion"];
 
-    minRating: string = "3";
-    maxRating: string = "5";
-    minPrice: string = "100";
-    maxPrice: string = "200";
+    minRating: string = "";
+    maxRating: string = "";
+    minPrice: string = "";
+    maxPrice: string = "";
 
     includeBrand = false;
     includeReviews = false;

@@ -13,6 +13,8 @@ export * from "./lib/criterion/set/not-in-set.fn";
 export * from "./lib/criterion/value/is-value-criterion";
 export * from "./lib/criterion/value/is-value.fn";
 export * from "./lib/criterion/value/not-value.fn";
+export * from "./lib/templates/any-criterion.template";
+export * from "./lib/templates/any-template.fn";
 export * from "./lib/templates/criterion-template.interface";
 export * from "./lib/templates/in-range-template.fn";
 export * from "./lib/templates/in-set-criterion-template";

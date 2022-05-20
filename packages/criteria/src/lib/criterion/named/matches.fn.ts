@@ -1,3 +1,4 @@
+import { any } from "../any/any.fn";
 import { Criterion } from "../criterion";
 import { NamedCriteria } from "./named-criteria";
 
@@ -6,6 +7,10 @@ import { NamedCriteria } from "./named-criteria";
  * however, named-criteria are an integral part for filtering entities, so it does have a reason to use
  * a very generic word. if we keep it, we just expect it to be part of the learning curve.
  */
-export function matches<T>(bag: Partial<Record<keyof T, Criterion>>): NamedCriteria {
+export function matches<T>(bag: Partial<Record<keyof T, Criterion>>): Criterion {
+    if (Object.keys(bag).length === 0) {
+        return any();
+    }
+
     return new NamedCriteria(bag);
 }
