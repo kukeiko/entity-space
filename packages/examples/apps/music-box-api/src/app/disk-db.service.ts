@@ -1,39 +1,38 @@
+import { Entity, EntitySchema, IEntitySource, IEntityStore, Query } from "@entity-space/core";
+import { inRange, matches } from "@entity-space/criteria";
 import { Song } from "@entity-space/examples/libs/music-model";
+import { FileOnDiskBasedEntitySource } from "@entity-space/node";
 import { Injectable } from "@nestjs/common";
-import { constants } from "fs";
-import { access, readFile, writeFile } from "fs/promises";
 
 @Injectable()
 export class DiskDbService {
-    private readonly songFilePath = "./assets/songs.json";
+    constructor() {
+        this.entitySource = new FileOnDiskBasedEntitySource(this.filePath);
+    }
+
+    private readonly entitySource: IEntitySource & IEntityStore;
+    private readonly filePath = "./assets/entities.json";
 
     async loadSongs(): Promise<Song[]> {
-        const filePath = this.songFilePath;
+        const results = await this.entitySource.query(
+            new Query(
+                new EntitySchema("song"),
+                // [todo] hack: can not create empty criteria yet
+                matches({ id: inRange(0, 1000) })
+            )
+        );
 
-        try {
-            await access(filePath, constants.F_OK);
-        } catch {
-            await writeFile(filePath, "[]");
+        if (!results) {
+            return [];
         }
 
-        const fileContents = await readFile(filePath);
-        const songs = JSON.parse(fileContents.toString()) as Song[];
-
-        return songs;
+        return results.reduce((acc, value) => [...acc, ...value.getEntities()], [] as Entity[]) as Song[];
     }
 
     async createSong(song: Song): Promise<Song> {
-        const songs = await this.loadSongs();
-        song.id = (songs.sort((a, b) => b.id - a.id)[0]?.id ?? 0) + 1;
-        songs.push(song);
-        await this.saveSongs(songs);
+        const schema = new EntitySchema("song");
+        const created = await this.entitySource.create([song], schema);
 
-        return song;
-    }
-
-    async saveSongs(songs: Song[]): Promise<void> {
-        const filePath = this.songFilePath;
-
-        await writeFile(filePath, JSON.stringify(songs));
+        return created[0] as Song;
     }
 }

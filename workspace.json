@@ -11,6 +11,7 @@
         "examples-libs-music-model": "packages/examples/libs/music-model",
         "examples-libs-products-model": "packages/examples/libs/products-model",
         "lexer": "packages/lexer",
+        "node": "packages/node",
         "utils": "packages/utils"
     }
 }
