@@ -1,20 +1,19 @@
 import { Song } from "@entity-space/examples/libs/music-model";
-import { Body, Controller, Get, Post } from "@nestjs/common";
-import { AppService } from "./app.service";
+import { Body, Controller, Get, Param, ParseIntPipe, Post } from "@nestjs/common";
 import { DiskDbService } from "./disk-db.service";
 
 @Controller()
 export class AppController {
-    constructor(private readonly appService: AppService, private readonly diskDbService: DiskDbService) {}
-
-    @Get()
-    getData() {
-        return this.appService.getData();
-    }
+    constructor(private readonly diskDbService: DiskDbService) {}
 
     @Get("songs")
     getSongs(): Promise<Song[]> {
-        return this.diskDbService.loadSongs();
+        return this.diskDbService.getSongs();
+    }
+
+    @Get("songs/:id")
+    getSong(@Param("id", ParseIntPipe) id: number): Promise<Song | undefined> {
+        return this.diskDbService.getSong(id);
     }
 
     @Post("songs")

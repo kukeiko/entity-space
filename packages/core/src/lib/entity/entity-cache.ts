@@ -1,3 +1,4 @@
+import { any, anyTemplate, Criterion, NamedCriteriaTemplate, or, orTemplate } from "@entity-space/criteria";
 import { cloneJson } from "@entity-space/utils";
 import { Query } from "../query/query";
 import { IEntitySchema } from "../schema/schema.interface";
@@ -14,16 +15,35 @@ export class EntityCache implements IEntitySource {
 
     async query(query: Query): Promise<false | QueriedEntities[]> {
         const store = this.getOrCreateStore(query.getEntitySchema());
-        let entities = store.getByCriterion(query.getCriteria());
+        const criterion = this.withoutRetlationalCriteria(query.getCriteria(), query.getEntitySchema());
+        let entities = store.getByCriterion(criterion);
 
         if (!query.getExpansion().isEmpty() && entities.length > 0) {
             // [todo] dirty to do it here?
             // [todo] this way of cloning is quite slow.
             entities = cloneJson(entities);
             await expandEntities(query.getEntitySchema(), query.getExpansionObject(), entities, this);
+            entities = query.getCriteria().filter(entities);
         }
 
         return [new QueriedEntities(query, entities)];
+    }
+
+    private withoutRetlationalCriteria(criterion: Criterion, schema: IEntitySchema): Criterion {
+        const optionalDeepBag: Record<string, any> = {};
+
+        schema.getIndexes().forEach(index => {
+            index.getPath().forEach(path => (optionalDeepBag[path] = anyTemplate()));
+        });
+
+        const template = orTemplate(NamedCriteriaTemplate.fromDeepBags({}, optionalDeepBag));
+        const remapped = template.remap(criterion);
+
+        if (remapped === false) {
+            return any();
+        }
+
+        return remapped.getCriteria().length === 1 ? remapped.getCriteria()[0] : or(remapped.getCriteria());
     }
 
     // [todo] not totally happy with this method also creating the queries from the entities,

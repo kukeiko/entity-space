@@ -1,0 +1,27 @@
+<p-table [columns]="columns" [value]="songs" [reorderableColumns]="true">
+    <ng-template pTemplate="header" let-columns>
+        <tr>
+            <th *ngFor="let column of columns" pReorderableColumn>
+                {{ column.header }}
+            </th>
+            <th></th>
+        </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-song let-columns="columns">
+        <tr>
+            <td *ngFor="let column of columns">
+                {{ song[column.field] }}
+            </td>
+            <td>
+                <button
+                    pButton
+                    pRipple
+                    type="button"
+                    icon="pi pi-pencil"
+                    class="p-button-rounded p-button-text"
+                    (click)="onEditSongClicked(song)"
+                ></button>
+            </td>
+        </tr>
+    </ng-template>
+</p-table>

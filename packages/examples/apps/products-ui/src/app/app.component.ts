@@ -1,4 +1,4 @@
-import { Component } from "@angular/core";
+import { Component, OnInit } from "@angular/core";
 import { EntitySourceGateway, ExpansionObject, Query, Workspace } from "@entity-space/core";
 import { Criterion, inRange, matches } from "@entity-space/criteria";
 import { Product, ProductsSchemaCatalog } from "@entity-space/examples/libs/products-model";
@@ -12,7 +12,7 @@ import { UserEntitySource } from "./entity-sources/user.entity-source";
     templateUrl: "./app.component.html",
     styleUrls: ["./app.component.scss"],
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
     constructor(
         private readonly productEntitySource: ProductEntitySource,
         private readonly brandEntitySource: BrandEntitySource,

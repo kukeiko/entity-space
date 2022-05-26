@@ -1,7 +1,7 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { EntityApi, IEntitySource } from "@entity-space/core";
-import { anyTemplate, inRangeTemplate, isValueTemplate } from "@entity-space/criteria";
+import { inRangeTemplate, isValueTemplate } from "@entity-space/criteria";
 import { Product, ProductFilter, ProductsSchemaCatalog } from "@entity-space/examples/libs/products-model";
 import { firstValueFrom } from "rxjs";
 
@@ -9,19 +9,6 @@ import { firstValueFrom } from "rxjs";
 export class ProductEntitySource extends EntityApi<Product> implements IEntitySource {
     constructor(private readonly http: HttpClient, private readonly schemaCatalog: ProductsSchemaCatalog) {
         super(schemaCatalog.getProductSchema());
-
-        this.addEndpoint(builder =>
-            builder
-                .supportsFields({
-                    price: anyTemplate(),
-                    rating: anyTemplate(),
-                })
-                .isLoadedBy(async () => {
-                    const products = await firstValueFrom(this.http.get<Product[]>(`api/products`));
-
-                    return products;
-                })
-        );
 
         // maps queries to API calls loading products by id
         this.addEndpoint(builder =>
@@ -64,6 +51,14 @@ export class ProductEntitySource extends EntityApi<Product> implements IEntitySo
                         })
                     );
                 })
+        );
+
+        this.addEndpoint(builder =>
+            builder.isLoadedBy(async () => {
+                const products = await firstValueFrom(this.http.get<Product[]>(`api/products`));
+
+                return products;
+            })
         );
     }
 }

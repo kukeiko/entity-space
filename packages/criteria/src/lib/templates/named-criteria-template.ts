@@ -167,4 +167,35 @@ export class NamedCriteriaTemplate<
 
         return new NamedCriteriaTemplate(bag);
     }
+
+    static fromDeepBags(
+        requiredDeepBag: Record<string, any>,
+        optionalDeepBag: Record<string, any>
+    ): NamedCriteriaTemplate {
+        const requiredBag: NamedCriteriaTemplateItems = {};
+
+        for (const key in requiredDeepBag) {
+            const value = requiredDeepBag[key];
+
+            if (looksLikeTemplate(value)) {
+                requiredBag[key] = value;
+            } else {
+                requiredBag[key] = this.fromDeepBag(value);
+            }
+        }
+
+        const optionalBag: NamedCriteriaTemplateItems = {};
+
+        for (const key in optionalDeepBag) {
+            const value = optionalDeepBag[key];
+
+            if (looksLikeTemplate(value)) {
+                optionalBag[key] = value;
+            } else {
+                optionalBag[key] = this.fromDeepBag(value);
+            }
+        }
+
+        return new NamedCriteriaTemplate(requiredBag, optionalBag);
+    }
 }

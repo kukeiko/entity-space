@@ -77,6 +77,7 @@ xdescribe("new model playground", () => {
                 price: 4982,
             },
         ],
+        children: [{ id: 8445 }],
         createdBy: {
             id: 913123,
             createdBy: {

@@ -29,11 +29,16 @@ export class ProductsSchemaCatalog {
         const productSchema = new EntitySchema("product");
         productSchema.setKey("id");
         productSchema.addIndex("brandId");
+
         productSchema.addProperty("brand", brandSchema);
         productSchema.addRelation("brand", "brandId", "id");
         productSchema.addProperty("reviews", new ArraySchema(productReviewSchema));
         productSchema.addRelation("reviews", "id", "productId");
         this.productSchema = productSchema;
+
+        // [todo] had to add these as indexes so withoutRetlationalCriteria() @ entity-cache picks them up for filtering
+        productSchema.addIndex("rating");
+        productSchema.addIndex("price");
     }
 
     private readonly productSchema: EntitySchema;

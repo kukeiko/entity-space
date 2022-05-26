@@ -1,1 +1,10 @@
-{"song":[{"name":"Sacralicious","id":13},{"name":"Entrudo","id":14}]}
+{
+    "song": [
+        { "name": "Entrudo", "id": 14 },
+        { "name": "Sacralicious", "id": 13 },
+        { "name": "Plein Ciel", "id": 15 }
+    ],
+    "song-location": [
+        { "songId": 13, "songLocationType": "web", "url": "https://www.youtube.com/watch?v=WGST_ci4jWc", "id": 1 }
+    ]
+}

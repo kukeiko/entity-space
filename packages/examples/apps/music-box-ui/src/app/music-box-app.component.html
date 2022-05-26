@@ -1,0 +1,17 @@
+<p-slider [(ngModel)]="sliderValue"></p-slider>
+<p>{{ sliderValue | json }}</p>
+
+<div class="grid">
+    <p-multiSelect
+        class="col-1"
+        [options]="locationTypes"
+        [(ngModel)]="selectedLocationType"
+        optionLabel="name"
+        styleClass="w-full"
+        panelStyleClass="min-w-max"
+    ></p-multiSelect>
+    <div class="col">
+        <p-button [loading]="isLoadingSongs" (click)="load()" label="Search" icon="pi pi-search"></p-button>
+    </div>
+</div>
+<song-table [songs]="songs"></song-table>

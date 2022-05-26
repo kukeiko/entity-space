@@ -1,4 +1,6 @@
-import { ICriterionTemplate, NamedCriteriaTemplateItems, namedTemplate } from "@entity-space/criteria";
+import { anyTemplate, ICriterionTemplate, NamedCriteriaTemplateItems, namedTemplate } from "@entity-space/criteria";
+import { isNotNullsy } from "@entity-space/utils";
+import { size } from "lodash";
 import { Entity } from "../entity/entity";
 import { Expansion } from "../expansion/expansion";
 import { Query } from "./query";
@@ -14,7 +16,7 @@ export class EntityApiEndpoint<
         requiredFields: R,
         optionalFields: O,
         supportedExpansion: E,
-        load: (query: Query) => Promise<Entity[]>
+        load: (query: Query) => Promise<Entity[] | Entity>
     ) {
         this.requiredFields = requiredFields;
         this.optionalFields = optionalFields;
@@ -25,7 +27,7 @@ export class EntityApiEndpoint<
     private readonly requiredFields: R;
     private readonly optionalFields: O;
     private readonly supportedExpansion: Expansion<E>;
-    private readonly loadEntities: (query: Query) => Promise<Entity[]>;
+    private readonly loadEntities: (query: Query) => Promise<Entity[] | Entity>;
 
     getRequiredFields(): R {
         return this.requiredFields;
@@ -39,11 +41,17 @@ export class EntityApiEndpoint<
         return this.supportedExpansion;
     }
 
-    load(query: Query): Promise<Entity[]> {
-        return this.loadEntities(query);
+    async load(query: Query): Promise<Entity[]> {
+        const entities = await this.loadEntities(query);
+
+        return Array.isArray(entities) ? entities : [entities].filter(isNotNullsy);
     }
 
     toCriteriaTemplate(): ICriterionTemplate {
+        if (size(this.getRequiredFields()) == 0 && size(this.getOptionalFields()) == 0) {
+            return anyTemplate();
+        }
+
         return namedTemplate(this.getRequiredFields(), this.getOptionalFields());
     }
 }
