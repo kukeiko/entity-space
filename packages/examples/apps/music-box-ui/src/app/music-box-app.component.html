@@ -1,17 +1,41 @@
-<p-slider [(ngModel)]="sliderValue"></p-slider>
-<p>{{ sliderValue | json }}</p>
-
-<div class="grid">
-    <p-multiSelect
-        class="col-1"
-        [options]="locationTypes"
-        [(ngModel)]="selectedLocationType"
-        optionLabel="name"
-        styleClass="w-full"
-        panelStyleClass="min-w-max"
-    ></p-multiSelect>
-    <div class="col">
-        <p-button [loading]="isLoadingSongs" (click)="load()" label="Search" icon="pi pi-search"></p-button>
-    </div>
-</div>
-<song-table [songs]="songs"></song-table>
+<!-- <p-slider [(ngModel)]="sliderValue"></p-slider>
+<p>{{ sliderValue | json }}</p> -->
+<p-tabView>
+    <p-tabPanel header="Songs">
+        <ng-template pTemplate="content">
+            <div class="grid p-fluid">
+                <div class="field col-1">
+                    <label for="locationType">Location Type</label>
+                    <p-multiSelect
+                        [options]="locationTypes"
+                        [ngModel]="selectedLocationType"
+                        (ngModelChange)="onSelectedLocationTypeChanged($event)"
+                        optionLabel="name"
+                        inputId="locationType"
+                        panelStyleClass="min-w-max"
+                    ></p-multiSelect>
+                </div>
+                <div class="field col-1">
+                    <label for="artist">Artist</label>
+                    <p-multiSelect
+                        [options]="(artists$ | async) ?? []"
+                        [ngModel]="selectedArtists"
+                        (ngModelChange)="onSelectedArtistsChanged($event)"
+                        optionLabel="name"
+                        inputId="artist"
+                        panelStyleClass="min-w-max"
+                    ></p-multiSelect>
+                </div>
+                <!-- <div class="col">
+                    <p-button [loading]="isLoadingSongs" (click)="load()" label="Search" icon="pi pi-search"></p-button>
+                </div> -->
+            </div>
+            <song-table [songs]="songs"></song-table>
+        </ng-template>
+    </p-tabPanel>
+    <p-tabPanel header="Artists">
+        <ng-template pTemplate="content">
+            {{ getStuff() }}
+        </ng-template>
+    </p-tabPanel>
+</p-tabView>

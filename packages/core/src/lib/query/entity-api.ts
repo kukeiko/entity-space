@@ -1,14 +1,16 @@
 import { ICriterionTemplate, namedTemplate, or, orTemplate, RemapCriterionResult } from "@entity-space/criteria";
 import { size } from "lodash";
 import { Observable, Subject } from "rxjs";
+import { IEntityStore } from "../entity";
 import { QueriedEntities } from "../entity/data-structures/queried-entities";
+import { Entity } from "../entity/entity";
 import { IEntitySource } from "../entity/entity-source.interface";
 import { IEntitySchema } from "../schema/schema.interface";
 import { EntityApiEndpoint } from "./entity-api-endpoint";
 import { EntityApiEndpointBuilder } from "./entity-api-endpoint-builder";
 import { Query } from "./query";
 
-export class EntityApi<T = Record<string, any>> implements IEntitySource {
+export class EntityApi<T = Record<string, any>> implements IEntitySource, IEntityStore {
     constructor(entitySchema: IEntitySchema) {
         this.entitySchema = entitySchema;
     }
@@ -121,5 +123,17 @@ export class EntityApi<T = Record<string, any>> implements IEntitySource {
         const queriedEntities = await Promise.all(operations);
 
         return queriedEntities;
+    }
+
+    async create(entities: Entity[], schema: IEntitySchema): Promise<false | Entity[]> {
+        return false;
+    }
+
+    async update(entities: Entity[], schema: IEntitySchema): Promise<false | Entity[]> {
+        return false;
+    }
+
+    async delete(entities: Entity[], schema: IEntitySchema): Promise<boolean> {
+        return false;
     }
 }

@@ -1,13 +1,13 @@
 import { MusicSchemaCatalog } from "@entity-space/examples/libs/music-model";
 import { Module } from "@nestjs/common";
-import { AppController } from "./app.controller";
-import { AppService } from "./app.service";
+import { ArtistsController } from "./controllers/artists.controller";
 import { SongLocationsController } from "./controllers/song-locations.controller";
+import { SongsController } from "./controllers/songs.controller";
 import { DiskDbService } from "./disk-db.service";
 
 @Module({
     imports: [],
-    controllers: [AppController, SongLocationsController],
-    providers: [AppService, DiskDbService, { provide: MusicSchemaCatalog, useClass: MusicSchemaCatalog }],
+    controllers: [ArtistsController, SongsController, SongLocationsController],
+    providers: [DiskDbService, { provide: MusicSchemaCatalog, useClass: MusicSchemaCatalog }],
 })
 export class AppModule {}

@@ -40,6 +40,12 @@ export class DiskDbService {
     async createSong(song: Song): Promise<Song> {
         const created = await this.entitySource.create([song], this.schemaCatalog.getSongSchema());
 
+        if (created === false) {
+            // [todo] was too laze to make return type of this method include "false",
+            // and generally not interested in figuring out proper error handling now
+            throw new Error("failed to create song");
+        }
+
         return created[0] as Song;
     }
 
@@ -66,6 +72,24 @@ export class DiskDbService {
     async createEntity<T>(entity: T, schema: IEntitySchema): Promise<T> {
         const created = await this.entitySource.create([entity], schema);
 
+        if (created === false) {
+            // [todo] was too laze to make return type of this method include "false",
+            // and generally not interested in figuring out proper error handling now
+            throw new Error(`failed to create entity of type "${schema.getId()}"`);
+        }
+
         return created[0] as T;
+    }
+
+    async patchEntity<T>(entity: Partial<T>, schema: IEntitySchema): Promise<T> {
+        const patched = await this.entitySource.update([entity], schema);
+
+        if (patched === false) {
+            // [todo] was too laze to make return type of this method include "false",
+            // and generally not interested in figuring out proper error handling now
+            throw new Error(`failed to create entity of type "${schema.getId()}"`);
+        }
+
+        return patched[0] as T;
     }
 }

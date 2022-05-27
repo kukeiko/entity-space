@@ -40,6 +40,7 @@ export class EntityStore {
                 } else {
                     const previous = this.entities[slot]!;
                     entity = this.mergeEntities(previous, entity);
+                    this.entities[slot] = entity;
                     this.uniqueIndexes.forEach(index => index.delete(previous).set(entity, slot));
                     this.commonIndexes.forEach(index => index.delete(previous, slot).add(entity, slot));
                 }
@@ -162,7 +163,7 @@ export class EntityStore {
                 if (value === void 0) {
                     delete merged[key];
                 } else if (value !== null && typeof value === "object" && !(value instanceof Date)) {
-                    if (typeof merged[key] === "object" && !(value instanceof Date)) {
+                    if (typeof merged[key] === "object" && !Array.isArray(value) && !(value instanceof Date)) {
                         merged[key] = this.mergeEntities(value, merged[key]);
                     } else {
                         merged[key] = value;

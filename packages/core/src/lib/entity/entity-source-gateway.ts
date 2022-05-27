@@ -1,14 +1,21 @@
 import { Query } from "../query/query";
 import { IEntitySchema } from "../schema/public";
 import { QueriedEntities } from "./data-structures/queried-entities";
+import { Entity } from "./entity";
 import { IEntitySource } from "./entity-source.interface";
 import { expandEntities } from "./functions/expand-entities.fn";
+import { IEntityStore } from "./i-entity-store";
 
-export class EntitySourceGateway implements IEntitySource {
+export class EntitySourceGateway implements IEntitySource, IEntityStore {
     private readonly sources = new Map<string, IEntitySource>();
+    private readonly stores = new Map<string, IEntityStore>();
 
     addSource(schema: IEntitySchema, source: IEntitySource): void {
         this.sources.set(schema.getId(), source);
+    }
+
+    addStore(schema: IEntitySchema, store: IEntityStore): void {
+        this.stores.set(schema.getId(), store);
     }
 
     async query(query: Query): Promise<false | QueriedEntities[]> {
@@ -46,7 +53,23 @@ export class EntitySourceGateway implements IEntitySource {
         return results;
     }
 
+    async create(entities: Entity[], schema: IEntitySchema): Promise<false | Entity[]> {
+        return this.findStore(schema)?.create(entities, schema) ?? false;
+    }
+
+    async update(entities: Entity[], schema: IEntitySchema): Promise<false | Entity[]> {
+        return this.findStore(schema)?.update(entities, schema) ?? false;
+    }
+
+    async delete(entities: Entity[], schema: IEntitySchema): Promise<boolean> {
+        return this.findStore(schema)?.delete(entities, schema) ?? false;
+    }
+
     private findSource(schema: IEntitySchema): IEntitySource | undefined {
         return this.sources.get(schema.getId());
+    }
+
+    private findStore(schema: IEntitySchema): IEntityStore | undefined {
+        return this.stores.get(schema.getId());
     }
 }
