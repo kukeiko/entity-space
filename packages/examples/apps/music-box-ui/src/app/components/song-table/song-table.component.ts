@@ -1,6 +1,6 @@
 import { Component, Input } from "@angular/core";
-import { Query, Workspace } from "@entity-space/core";
-import { Artist, MusicSchemaCatalog, Song } from "@entity-space/examples/libs/music-model";
+import { Workspace } from "@entity-space/core";
+import { Artist, MusicSchemaCatalog, Song, WebSongLocation } from "@entity-space/examples/libs/music-model";
 
 @Component({
     selector: "song-table",
@@ -12,22 +12,29 @@ export class SongTableComponent {
 
     @Input() songs: Song[] = [];
 
-    columns: { field: keyof Song; header: string }[] = [
+    columns: { field: string; header: string }[] = [
         { field: "id", header: "Id" },
         { field: "name", header: "Name" },
         { field: "artist", header: "Artist" },
         { field: "duration", header: "Duration" },
+        { field: "url", header: "Url" },
     ];
 
     editDialogVisible = false;
     editedSong?: Song;
-    artists$ = this.workspace.query$<Artist>(new Query(this.schemas.getArtistSchema()));
+    artists$ = this.workspace.query$<Artist>(this.schemas.getArtistSchema());
 
     editSong(song: Song): void {
         // [todo] use some copying mechanism from entity-space instead
         this.editedSong = { ...song };
         console.log("✍ edit song", this.editedSong);
         this.editDialogVisible = true;
+    }
+
+    getUrl(song: Song): string | undefined {
+        const webLocation = song.locations?.find(loc => loc.songLocationType === "web") as WebSongLocation | undefined;
+
+        return webLocation?.url;
     }
 
     async saveSong(): Promise<void> {

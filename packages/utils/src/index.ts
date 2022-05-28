@@ -11,6 +11,7 @@ export * from "./lib/is-primitive.fn";
 export * from "./lib/is-string.fn";
 export * from "./lib/null";
 export * from "./lib/permutate-entries.fn";
+export * from "./lib/pluck-id.fn";
 export * from "./lib/subtract-sets.fn";
 export * from "./lib/to-map-by-id.fn";
 export * from "./lib/to-map.fn";

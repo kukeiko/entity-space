@@ -23,7 +23,7 @@ export class EntityStore {
     private readonly commonIndexes = new Map<string, EntityStoreCommonIndex>();
     private entities: (Entity | undefined)[] = [];
 
-    // [todo] indexing needs to be crash safe
+    // [todo] indexing needs to be crash safe (transactional safety)
     add(entities: Entity[]): void {
         if (this.entitySchema.hasKey()) {
             const key = this.entitySchema.getKey();
@@ -164,7 +164,7 @@ export class EntityStore {
                     delete merged[key];
                 } else if (value !== null && typeof value === "object" && !(value instanceof Date)) {
                     if (typeof merged[key] === "object" && !Array.isArray(value) && !(value instanceof Date)) {
-                        merged[key] = this.mergeEntities(value, merged[key]);
+                        merged[key] = this.mergeEntities(merged[key], value);
                     } else {
                         merged[key] = value;
                     }

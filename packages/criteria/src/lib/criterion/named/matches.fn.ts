@@ -1,3 +1,4 @@
+import { AnyCriterion } from "../any/any";
 import { any } from "../any/any.fn";
 import { Criterion } from "../criterion";
 import { NamedCriteria } from "./named-criteria";
@@ -9,6 +10,8 @@ import { NamedCriteria } from "./named-criteria";
  */
 export function matches<T>(bag: Partial<Record<keyof T, Criterion>>): Criterion {
     if (Object.keys(bag).length === 0) {
+        return any();
+    } else if (Object.values(bag).every(value => value instanceof AnyCriterion)) {
         return any();
     }
 

@@ -58,7 +58,6 @@ export class EntityCache implements IEntitySource {
             const normalizedEntities = normalized.get(schema);
             this.getOrCreateStore(schema).add(normalizedEntities);
 
-            // [todo] can not use until we implemented invert() @ named-criteria
             if (normalizedEntities.length > 0) {
                 const indexQueries = createQueriesFromEntities(schema, normalizedEntities);
 

@@ -40,4 +40,8 @@ export class Query<
     getExpansionObject(): E {
         return this.expansion.getObject();
     }
+
+    toString(): string {
+        return `${this.entitySchema.getId()}/${this.criteria}/${JSON.stringify(this.expansion.getObject())}`;
+    }
 }

@@ -11,6 +11,7 @@
         <tr>
             <td *ngFor="let column of columns" [ngSwitch]="column.field">
                 <span *ngSwitchCase="'artist'">{{ song.artist?.name }}</span>
+                <span *ngSwitchCase="'url'">{{ getUrl(song) }}</span>
                 <span *ngSwitchDefault>{{ song[column.field] }}</span>
             </td>
             <td>

@@ -1,10 +1,10 @@
-import { Component, OnInit } from "@angular/core";
-import { EntitySchema, ExpansionObject, IEntitySchema, Query, Workspace } from "@entity-space/core";
-import { any, Criterion, inSet, isValue, matches, some } from "@entity-space/criteria";
+import { Component, OnDestroy, OnInit } from "@angular/core";
+import { EntitySchema, Query, Workspace } from "@entity-space/core";
+import { inSet, matches, some } from "@entity-space/criteria";
 import { Artist, MusicSchemaCatalog, Song, SongLocation } from "@entity-space/examples/libs/music-model";
-import { flatMap } from "lodash";
+import { pluckId, tramplePath } from "@entity-space/utils";
 import { PrimeNGConfig } from "primeng/api";
-import { merge } from "rxjs";
+import { combineLatest, map, merge, Observable, of, Subject, switchMap } from "rxjs";
 import { SongLocationEntitySource } from "./entity-sources/song-location.entity-source";
 import { SongEntitySource } from "./entity-sources/song.entity-source";
 
@@ -13,10 +13,23 @@ interface IdNameRecord<K, V = string> {
     name: V;
 }
 
-interface MusicBoxAppState {
+type SongLocationType = IdNameRecord<string>;
+
+interface MusicBoxUiState {
     id: number;
-    selectedLocationType: IdNameRecord<string>[];
-    selectedArtists: Artist[];
+    filter: {
+        locationTypes: IdNameRecord<string>[];
+        artists: Artist[];
+    };
+}
+
+interface MusicBoxAppState {
+    data: {
+        artists: Artist[];
+        songs: Song[];
+        songLocationTypes: SongLocationType[];
+    };
+    ui: MusicBoxUiState;
 }
 
 @Component({
@@ -24,114 +37,101 @@ interface MusicBoxAppState {
     templateUrl: "./music-box-app.component.html",
     styleUrls: ["./music-box-app.component.scss"],
 })
-export class MusicAppComponent implements OnInit {
+export class MusicAppComponent implements OnInit, OnDestroy {
     constructor(
         private primengConfig: PrimeNGConfig,
         private readonly schemaCatalog: MusicSchemaCatalog,
         private readonly songSource: SongEntitySource,
         private readonly songLocationSource: SongLocationEntitySource,
         private readonly workspace: Workspace
-    ) {
-        const appStateSchema = new EntitySchema("music-box-app-state");
-        appStateSchema.setKey("id");
-        this.appStateSchema = appStateSchema;
-    }
+    ) {}
 
-    private readonly appStateSchema: IEntitySchema;
-
-    artists$ = this.workspace.query$_v2(this.schemaCatalog.getArtistSchema());
+    private readonly uiStateSchema = new EntitySchema("music-box-ui-state").setKey("id");
+    private readonly songLocationTypeSchema = new EntitySchema("song-location-type").setKey("id");
+    private readonly destroyed$ = new Subject<void>();
 
     stateId = 1;
-    songs: Song[] = [];
-    locationTypes: IdNameRecord<string>[] = [
-        { id: "web", name: "Web" },
-        { id: "local", name: "Local" },
-    ];
-    selectedLocationType: IdNameRecord<string>[] = [];
-    selectedArtists: Artist[] = [];
-    isLoadingSongs = false;
 
-    ngOnInit(): void {
-        this.workspace.add<MusicBoxAppState>(this.appStateSchema, [
-            { id: this.stateId, selectedLocationType: [], selectedArtists: [] },
-        ]);
-        this.workspace
-            .query$<MusicBoxAppState>(
-                new Query(this.appStateSchema, matches<MusicBoxAppState>({ id: isValue(this.stateId) }))
-            )
-            .subscribe(appStates => {
-                const appState = appStates[0]!;
-                console.log("🧙‍♂️ app state changed!", appState);
-                this.load();
-            });
+    state$ = this.workspace.queryOneByKey$<MusicBoxUiState>(this.uiStateSchema, this.stateId).pipe(
+        switchMap(ui =>
+            combineLatest([of(ui), this.getSongs$(ui.filter), this.getArtists$(), this.getSongLocationTypes$()])
+        ),
+        map(([ui, songs, artists, songLocationTypes]) => this.toAppState(ui, songs, artists, songLocationTypes))
+    );
 
-        this.primengConfig.ripple = true;
+    getArtists$(): Observable<Artist[]> {
+        return this.workspace.query$<Artist>(this.schemaCatalog.getArtistSchema());
+    }
 
-        merge(this.songSource.onQueryIssued(), this.songLocationSource.onQueryIssued()).subscribe(
-            query => (this.queriesIssuedAgainstApi = [...this.queriesIssuedAgainstApi, query])
+    getSongs$(filter: MusicBoxUiState["filter"]): Observable<Song[]> {
+        return this.workspace.query$<Song>(
+            this.schemaCatalog.getSongSchema(),
+            matches<Song>({
+                artistId: inSet(pluckId(filter.artists)),
+                locations: some(
+                    matches<SongLocation>({
+                        songLocationType: inSet(pluckId(filter.locationTypes)),
+                    })
+                ),
+            }),
+            { artist: true, locations: true }
         );
-
-        this.workspace.onQueryCacheChanged().subscribe(queries => (this.queriesInWorkspaceCache = queries));
-
-        this.workspace.query$_v2<Song>(this.schemaCatalog.getSongSchema()).subscribe(songs => {
-            console.log("🔥 hot songs!", songs);
-            this.load();
-            // this.songs = songs;
-        });
-    }
-    getStuff() {
-        console.log("getting stuff!");
-        return "stuff";
-    }
-    async load(): Promise<void> {
-        this.isLoadingSongs = true;
-        const expansion: ExpansionObject<Song> = { locations: true, artist: true };
-        const criterion = this.uiFilterToCriterion();
-        const result = await this.workspace.query(new Query(this.schemaCatalog.getSongSchema(), criterion, expansion));
-        // await new Promise(resolve => setTimeout(resolve, 500));
-
-        if (!result) {
-            this.songs = [];
-        } else {
-            this.songs = flatMap(result, x => x.getEntities()) as Song[];
-        }
-
-        this.isLoadingSongs = false;
     }
 
-    private uiFilterToCriterion(): Criterion | undefined {
-        return matches<Song>({
-            artistId: this.selectedArtists.length > 0 ? inSet(this.selectedArtists.map(artist => artist.id)) : any(),
-            locations:
-                this.selectedLocationType.length > 0
-                    ? some(matches<SongLocation>({ songLocationType: inSet(this.selectedLocationType.map(x => x.id)) }))
-                    : any(),
-        });
-
-        // if (this.selectedLocationType.length > 0) {
-        //     return matches<Song>({
-        //         locations: some(
-        //             matches<SongLocation>({ songLocationType: inSet(this.selectedLocationType.map(x => x.id)) })
-        //         ),
-        //     });
-        // }
-
-        // return void 0;
+    getSongLocationTypes$(): Observable<SongLocationType[]> {
+        return this.workspace.query$<SongLocationType>(this.songLocationTypeSchema);
     }
 
-    sliderValue = 7;
+    toAppState(
+        ui: MusicBoxUiState,
+        songs: Song[],
+        artists: Artist[],
+        songLocationTypes: SongLocationType[]
+    ): MusicBoxAppState {
+        songs.sort((a, b) => a.name.localeCompare(b.name));
+        artists.sort((a, b) => a.name.localeCompare(b.name));
+
+        const state: MusicBoxAppState = {
+            ui,
+            data: { songs, artists, songLocationTypes },
+        };
+
+        console.log("🧙‍♂️ app state changed", state);
+        return state;
+    }
+
     queriesIssuedAgainstApi: Query[] = [];
     queriesInWorkspaceCache: Query[] = [];
 
-    onSelectedLocationTypeChanged(selectedLocationType: IdNameRecord<string>[]): void {
-        this.selectedLocationType = selectedLocationType;
-        this.workspace.add<Partial<MusicBoxAppState>>(this.appStateSchema, [
-            { id: this.stateId, selectedLocationType },
+    ngOnInit(): void {
+        this.workspace.add<MusicBoxUiState>(this.uiStateSchema, {
+            id: this.stateId,
+            filter: { artists: [], locationTypes: [] },
+        });
+
+        this.workspace.add<IdNameRecord<string>[]>(this.songLocationTypeSchema, [
+            { id: "web", name: "Web" },
+            { id: "local", name: "Local" },
         ]);
+
+        this.primengConfig.ripple = true;
+        this.workspace.onQueryCacheChanged().subscribe(queries => (this.queriesInWorkspaceCache = queries));
+        merge(this.songSource.onQueryIssued(), this.songLocationSource.onQueryIssued()).subscribe(
+            query => (this.queriesIssuedAgainstApi = [...this.queriesIssuedAgainstApi, query])
+        );
     }
 
-    onSelectedArtistsChanged(selectedArtists: Artist[]): void {
-        this.selectedArtists = selectedArtists;
-        this.workspace.add<Partial<MusicBoxAppState>>(this.appStateSchema, [{ id: this.stateId, selectedArtists }]);
+    ngOnDestroy(): void {
+        this.destroyed$.next();
+        this.destroyed$.complete();
+    }
+
+    changeUiState(property: string, value: any): void {
+        const change = {};
+        tramplePath(property, change, value);
+        this.workspace.add<MusicBoxUiState>(this.uiStateSchema, {
+            id: this.stateId,
+            ...change,
+        });
     }
 }

@@ -1,6 +1,7 @@
-import { any } from "@entity-space/criteria";
-import { flatMap } from "lodash";
-import { from, Observable, of, startWith, Subject, switchMap } from "rxjs";
+import { any, fromDeepBag, isValue } from "@entity-space/criteria";
+import { DeepPartial, isDefined, tramplePath } from "@entity-space/utils";
+import { flatMap, isEqual } from "lodash";
+import { distinctUntilChanged, filter, finalize, from, map, Observable, of, startWith, Subject, switchMap } from "rxjs";
 import { ExpansionObject } from "../public";
 import { mergeQueries, Query, reduceQueries } from "../query/public";
 import { IEntitySchema } from "../schema/schema.interface";
@@ -8,7 +9,6 @@ import { QueriedEntities } from "./data-structures/queried-entities";
 import { Entity } from "./entity";
 import { EntityCache } from "./entity-cache";
 import { IEntitySource } from "./entity-source.interface";
-import { createCriterionFromEntities } from "./functions/create-criterion-from-entities.fn";
 import { IEntityStore } from "./i-entity-store";
 
 export class Workspace implements IEntitySource, IEntityStore {
@@ -24,7 +24,15 @@ export class Workspace implements IEntitySource, IEntityStore {
         return this.queryCacheChanged.asObservable();
     }
 
-    add<T extends Entity = Entity>(schema: IEntitySchema, entities: T[]): void {
+    // [todo] rename to upsert()?
+    // [todo] we allow partials, but types don't reflect that (same @ cache and store)
+    add<T extends Entity = Entity>(schema: IEntitySchema, entities: DeepPartial<T>[] | DeepPartial<T>): void {
+        console.log("🆕 add entities", schema.getId(), JSON.stringify(entities));
+
+        if (!Array.isArray(entities)) {
+            entities = [entities];
+        }
+
         const queries = this.entityCache.addEntities(schema, entities);
 
         for (const query of queries) {
@@ -32,15 +40,22 @@ export class Workspace implements IEntitySource, IEntityStore {
         }
 
         for (const [watchedQuery, subject] of this.watchedQueries) {
-            if (
-                watchedQuery.getEntitySchema().getId() === schema.getId() &&
-                watchedQuery.getCriteria().filter(entities).length > 0
-            ) {
-                this.query(watchedQuery).then(value => {
-                    if (value === false) return;
-                    subject.next(flatMap(value, x => x.getEntities()));
+            // [todo] disabling any checks to have fully working reactivity,
+            // need to introduce smarter ones at a later time so we don't run into performance issues.
+            // if (
+            //     watchedQuery.getEntitySchema().getId() === schema.getId() &&
+            //     // [todo] not really correct
+            //     watchedQuery.getCriteria().filter(entities).length > 0
+            // ) {
+
+            new Promise(resolve => setTimeout(resolve, 0))
+                .then(() => this.queryAgainstCache(watchedQuery))
+                .then(value => {
+                    subject.next(value);
+                    // if (value === false) return;
+                    // subject.next(flatMap(value, x => x.getEntities()));
                 });
-            }
+            // }
         }
     }
 
@@ -77,7 +92,10 @@ export class Workspace implements IEntitySource, IEntityStore {
             const result = await this.loadFromSource(queryAgainstSource);
 
             if (result === false) {
-                console.warn("encountered a query that could not be executed against source", queriesAgainstSource);
+                console.warn(
+                    "encountered a query that could not be executed against source",
+                    queriesAgainstSource.join(",")
+                );
                 continue;
             }
 
@@ -108,11 +126,11 @@ export class Workspace implements IEntitySource, IEntityStore {
 
         const result = await this.source.query(query);
 
-        if (result !== false) {
-            for (const queried of result) {
-                console.log("[effective-query]", queried.getQuery().getCriteria().toString());
-            }
-        }
+        // if (result !== false) {
+        //     for (const queried of result) {
+        //         console.log("[effective-query]", queried.getQuery().getCriteria().toString());
+        //     }
+        // }
 
         return result;
     }
@@ -124,7 +142,12 @@ export class Workspace implements IEntitySource, IEntityStore {
         return [new QueriedEntities(query, entities)];
     }
 
-    query$<T extends Entity>(query: Query): Observable<T[]> {
+    query$<T extends Entity>(
+        schema: IEntitySchema,
+        criterion = any(),
+        expansion: ExpansionObject<T> = {}
+    ): Observable<T[]> {
+        const query = new Query(schema, criterion, expansion);
         const subject = new Subject<Entity[]>();
 
         return from(this.query(query)).pipe(
@@ -133,26 +156,48 @@ export class Workspace implements IEntitySource, IEntityStore {
                     return of([]);
                 }
 
-                const keySchema = query.getEntitySchema().getKey();
+                // const keySchema = query.getEntitySchema().getKey();
                 const entities = flatMap(result, x => x.getEntities());
-                // [todo] also track related entities
-                const trackedCriterion = createCriterionFromEntities(entities, keySchema.getPath());
+
+                // [todo] also track:
+                // - related entities
+                // - newly added entities that fit the criteria
+                // const trackedCriterion = createCriterionFromEntities(entities, keySchema.getPath());
+
+                // [todo] remove subject once no longer subscribed to
                 this.watchedQueries.set(
-                    new Query(query.getEntitySchema(), trackedCriterion, query.getExpansionObject()),
+                    query,
+                    // new Query(query.getEntitySchema(), trackedCriterion, query.getExpansionObject()),
                     subject
                 );
 
-                return subject.asObservable().pipe(startWith(entities)) as any as Observable<T[]>;
+                return subject.asObservable().pipe(
+                    startWith(entities),
+                    distinctUntilChanged((a, b) => isEqual(a, b)),
+                    finalize(() => this.watchedQueries.delete(query))
+                ) as any as Observable<T[]>;
             })
         );
     }
 
-    query$_v2<T extends Entity>(
+    queryOneByKey$<T extends Entity>(
         schema: IEntitySchema,
-        criterion = any(),
+        key: number | string,
         expansion: ExpansionObject<T> = {}
-    ): Observable<T[]> {
-        return this.query$(new Query(schema, criterion, expansion));
+    ): Observable<T> {
+        const keyPath = schema.getKey().getPath();
+
+        if (keyPath.length > 1) {
+            throw new Error("composite keys not yet supported");
+        }
+
+        const bag: Record<string, any> = {};
+        tramplePath(keyPath[0], bag, isValue(key));
+
+        return this.query$(schema, fromDeepBag(bag), expansion).pipe(
+            map(result => result[0]),
+            filter(isDefined)
+        );
     }
 
     // [todo] remove any

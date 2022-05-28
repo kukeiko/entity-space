@@ -74,9 +74,8 @@ export class EntityApi<T = Record<string, any>> implements IEntitySource, IEntit
             if (anyEndpoint) {
                 remapped = orTemplate(anyEndpoint.toCriteriaTemplate()).remap(query.getCriteria());
                 endpointCriteriaTemplates.set(anyEndpoint, anyEndpoint.toCriteriaTemplate());
-                console.log("could not remap to specific but found 'any' endpoint", remapped);
             } else {
-                console.log("could not remap to specific and found no 'any' endpoint");
+                console.warn("could not remap to specific and found no 'any' endpoint");
             }
         } else if (remapped.getOpen().length > 0) {
             const anyEndpoint = this.endpoints.find(
