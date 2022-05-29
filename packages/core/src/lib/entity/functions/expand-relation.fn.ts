@@ -1,6 +1,6 @@
 import { ExpansionObject } from "../../expansion/public";
 import { Query } from "../../query/query";
-import { IEntitySchemaRelation } from "../../schema/public";
+import { IEntitySchemaRelation } from "../../schema";
 import { Entity } from "../entity";
 import { IEntitySource } from "../entity-source.interface";
 import { createCriterionFromEntities } from "./create-criterion-from-entities.fn";

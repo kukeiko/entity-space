@@ -1,6 +1,6 @@
 import { Component, Input } from "@angular/core";
-import { Workspace } from "@entity-space/core";
-import { Artist, MusicSchemaCatalog, Song, WebSongLocation } from "@entity-space/examples/libs/music-model";
+import { BlueprintResolver, Workspace } from "@entity-space/core";
+import { ArtistBlueprint, Song, SongBlueprint, WebSongLocation } from "@entity-space/examples/libs/music-model";
 
 @Component({
     selector: "song-table",
@@ -8,7 +8,7 @@ import { Artist, MusicSchemaCatalog, Song, WebSongLocation } from "@entity-space
     styleUrls: ["./song-table.component.scss"],
 })
 export class SongTableComponent {
-    constructor(private readonly workspace: Workspace, private readonly schemas: MusicSchemaCatalog) {}
+    constructor(private readonly workspace: Workspace, private readonly blueprintResolver: BlueprintResolver) {}
 
     @Input() songs: Song[] = [];
 
@@ -22,7 +22,7 @@ export class SongTableComponent {
 
     editDialogVisible = false;
     editedSong?: Song;
-    artists$ = this.workspace.query$<Artist>(this.schemas.getArtistSchema());
+    artists$ = this.workspace.query$(ArtistBlueprint);
 
     editSong(song: Song): void {
         // [todo] use some copying mechanism from entity-space instead
@@ -39,7 +39,8 @@ export class SongTableComponent {
 
     async saveSong(): Promise<void> {
         console.log("💾 save song", this.editedSong);
-        await this.workspace.update([this.editedSong!], this.schemas.getSongSchema());
+        // [todo] make workspace.update() better to use w/ blueprints
+        await this.workspace.update([this.editedSong!], this.blueprintResolver.resolve(SongBlueprint));
         this.hideDialog();
     }
 

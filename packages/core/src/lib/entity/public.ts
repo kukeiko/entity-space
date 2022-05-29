@@ -1,4 +1,3 @@
-export * from "./blueprint/public";
 export * from "./data-structures/queried-entities";
 export * from "./entity";
 export * from "./entity-source-gateway";

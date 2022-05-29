@@ -1,10 +1,11 @@
-import { any, fromDeepBag, isValue } from "@entity-space/criteria";
-import { DeepPartial, isDefined, tramplePath } from "@entity-space/utils";
+import { any, Criterion, fromDeepBag, isValue, matches } from "@entity-space/criteria";
+import { Class, DeepPartial, isDefined, tramplePath } from "@entity-space/utils";
 import { flatMap, isEqual } from "lodash";
 import { distinctUntilChanged, filter, finalize, from, map, Observable, of, startWith, Subject, switchMap } from "rxjs";
 import { ExpansionObject } from "../public";
 import { mergeQueries, Query, reduceQueries } from "../query/public";
 import { IEntitySchema } from "../schema/schema.interface";
+import { BlueprintResolver, Instance } from "./blueprint";
 import { QueriedEntities } from "./data-structures/queried-entities";
 import { Entity } from "./entity";
 import { EntityCache } from "./entity-cache";
@@ -14,6 +15,7 @@ import { IEntityStore } from "./i-entity-store";
 export class Workspace implements IEntitySource, IEntityStore {
     private source?: IEntitySource;
     private store?: IEntityStore;
+    private blueprintResolver?: BlueprintResolver;
     private readonly queryCaches = new Map<string, Query[]>();
     private readonly queryCacheChanged = new Subject<Query[]>();
     // private readonly entityCache = new EntityCache();
@@ -26,14 +28,18 @@ export class Workspace implements IEntitySource, IEntityStore {
 
     // [todo] rename to upsert()?
     // [todo] we allow partials, but types don't reflect that (same @ cache and store)
-    add<T extends Entity = Entity>(schema: IEntitySchema, entities: DeepPartial<T>[] | DeepPartial<T>): void {
+    add<T>(schema: Class<T>, entities: DeepPartial<Instance<T>>[] | DeepPartial<Instance<T>>): void;
+    add<T extends Entity = Entity>(schema: IEntitySchema, entities: DeepPartial<T>[] | DeepPartial<T>): void;
+    add(schema: IEntitySchema | Class, entities: Entity[] | Entity): void {
+        schema = this.toSchema(schema);
         console.log("🆕 add entities", schema.getId(), JSON.stringify(entities));
 
         if (!Array.isArray(entities)) {
             entities = [entities];
         }
 
-        const queries = this.entityCache.addEntities(schema, entities);
+        // [todo] adding the overloads to support both schemas & blueprints caused having to add this "as Entity[]" assertion, no idea why
+        const queries = this.entityCache.addEntities(schema, entities as Entity[]);
 
         for (const query of queries) {
             this.addExecutedQuery(query);
@@ -65,6 +71,10 @@ export class Workspace implements IEntitySource, IEntityStore {
 
     setStore(store: IEntityStore): void {
         this.store = store;
+    }
+
+    setBlueprintResolver(resolver: BlueprintResolver): void {
+        this.blueprintResolver = resolver;
     }
 
     private addExecutedQuery(query: Query): void {
@@ -144,9 +154,33 @@ export class Workspace implements IEntitySource, IEntityStore {
 
     query$<T extends Entity>(
         schema: IEntitySchema,
-        criterion = any(),
+        criterion?: Criterion,
+        expansion?: ExpansionObject<T>
+    ): Observable<T[]>;
+    query$<T extends Entity>(
+        schema: Class<T>,
+        criterion?: Partial<Record<keyof T, Criterion | string | number | (string | number)[]>>,
+        expansion?: ExpansionObject<Instance<T>>
+    ): Observable<Instance<T>[]>;
+    query$<T extends Entity>(
+        schema: IEntitySchema | Class<T>,
+        criterion: any = any(),
         expansion: ExpansionObject<T> = {}
     ): Observable<T[]> {
+        if (!("getId" in schema)) {
+            const resolvedSchema = this.blueprintResolver?.resolve(schema);
+
+            if (!resolvedSchema) {
+                throw new Error(`failed to resolve blueprint to schema for type ${schema.name}`);
+            }
+
+            schema = resolvedSchema;
+        }
+
+        if (!(criterion instanceof Criterion)) {
+            criterion = matches(criterion);
+        }
+
         const query = new Query(schema, criterion, expansion);
         const subject = new Subject<Entity[]>();
 
@@ -179,12 +213,31 @@ export class Workspace implements IEntitySource, IEntityStore {
             })
         );
     }
-
     queryOneByKey$<T extends Entity>(
         schema: IEntitySchema,
         key: number | string,
+        expansion?: ExpansionObject<T>
+    ): Observable<T>;
+    queryOneByKey$<T>(
+        schema: Class<T>,
+        key: number | string,
+        expansion?: ExpansionObject<Instance<T>>
+    ): Observable<Instance<T>>;
+    queryOneByKey$<T extends Entity>(
+        schema: IEntitySchema | Class<T>,
+        key: number | string,
         expansion: ExpansionObject<T> = {}
     ): Observable<T> {
+        if (!("getId" in schema)) {
+            const resolvedSchema = this.blueprintResolver?.resolve(schema);
+
+            if (!resolvedSchema) {
+                throw new Error(`failed to resolve blueprint to schema for type ${schema.name}`);
+            }
+
+            schema = resolvedSchema;
+        }
+
         const keyPath = schema.getKey().getPath();
 
         if (keyPath.length > 1) {
@@ -256,5 +309,19 @@ export class Workspace implements IEntitySource, IEntityStore {
         }
 
         return cache;
+    }
+
+    private toSchema(schema: IEntitySchema | Class): IEntitySchema {
+        if (!("getId" in schema)) {
+            const resolvedSchema = this.blueprintResolver?.resolve(schema);
+
+            if (!resolvedSchema) {
+                throw new Error(`failed to resolve blueprint to schema for type ${schema.name}`);
+            }
+
+            return resolvedSchema;
+        }
+
+        return schema;
     }
 }

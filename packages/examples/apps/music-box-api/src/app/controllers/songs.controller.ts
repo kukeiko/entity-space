@@ -1,13 +1,15 @@
-import { MusicSchemaCatalog, Song } from "@entity-space/examples/libs/music-model";
+import { BlueprintResolver, IEntitySchema } from "@entity-space/core";
+import { Song, SongBlueprint } from "@entity-space/examples/libs/music-model";
 import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post } from "@nestjs/common";
 import { DiskDbService } from "../disk-db.service";
 
 @Controller("songs")
 export class SongsController {
-    constructor(
-        private readonly diskDbService: DiskDbService,
-        private readonly musicSchemaCatalog: MusicSchemaCatalog
-    ) {}
+    constructor(private readonly diskDbService: DiskDbService, private readonly blueprintResolver: BlueprintResolver) {
+        this.schema = this.blueprintResolver.resolve(SongBlueprint);
+    }
+
+    private readonly schema: IEntitySchema;
 
     @Get()
     getSongs(): Promise<Song[]> {
@@ -26,6 +28,6 @@ export class SongsController {
 
     @Patch(":id")
     async patchSong(@Param("id", ParseIntPipe) id: number, @Body() song: Partial<Song>): Promise<Song> {
-        return this.diskDbService.patchEntity({ id, ...song }, this.musicSchemaCatalog.getSongSchema());
+        return this.diskDbService.patchEntity({ id, ...song }, this.schema);
     }
 }

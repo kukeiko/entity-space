@@ -1,4 +1,4 @@
-import { Unbox } from "./types/unbox";
+import { Unbox } from "./types";
 
 function permutateEntriesInternal<T>(
     entries: [string, T[]][],

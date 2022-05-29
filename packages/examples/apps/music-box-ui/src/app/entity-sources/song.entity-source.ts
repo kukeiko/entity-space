@@ -1,14 +1,14 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import { EntityApi, IEntitySchema } from "@entity-space/core";
+import { BlueprintResolver, EntityApi, IEntitySchema } from "@entity-space/core";
 import { isValueTemplate } from "@entity-space/criteria";
-import { MusicSchemaCatalog, Song } from "@entity-space/examples/libs/music-model";
+import { Song, SongBlueprint } from "@entity-space/examples/libs/music-model";
 import { firstValueFrom } from "rxjs";
 
 @Injectable()
 export class SongEntitySource extends EntityApi<Song> {
-    constructor(private readonly http: HttpClient, private readonly schemaCatalog: MusicSchemaCatalog) {
-        super(schemaCatalog.getSongSchema());
+    constructor(private readonly http: HttpClient, blueprintResolver: BlueprintResolver) {
+        super(blueprintResolver.resolve(SongBlueprint));
 
         this.addEndpoint(builder =>
             builder

@@ -1,7 +1,8 @@
 import { IEntitySchema } from "../../schema/schema.interface";
-import { Entity } from "../entity";
 import { NormalizedEntities } from "../data-structures/normalized-entities";
+import { Entity } from "../entity";
 
+// [todo] protect against recursion. data read from entity-space is not cyclical, but user-provided entities might be.
 export function normalizeEntities(
     schema: IEntitySchema,
     entities: Entity[],
@@ -30,7 +31,9 @@ export function normalizeEntities(
             delete entity[relation.getPropertyName()];
         }
 
-        normalizeEntities(relation.getRelatedEntitySchema(), navigated, normalized);
+        if (navigated.length > 0) {
+            normalizeEntities(relation.getRelatedEntitySchema(), navigated, normalized);
+        }
     }
 
     return normalized;

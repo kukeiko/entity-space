@@ -3,35 +3,47 @@ import { Metadata, MetadataReference } from "./instance";
 
 export type Discriminant = string | number;
 export type MetadataToken = Class | Metadata | MetadataReference;
-export type PropertyValueType = Primitive | Discriminant | MetadataToken | MetadataToken[];
+// [todo] should we add "Primitive[]", so we support arrays of mixed primitive types?
+// that would also let us get rid of "nullable" attribute, as user could do define([Number, Null]) (where "Null" is not standard, but provided by entity-space)
+export type BlueprintPropertyValue = Primitive | Discriminant | MetadataToken | MetadataToken[];
 // export type PropertyValueType = Primitive | Discriminant | Class | Class[] | Metadata | Metadata[] | MetadataReference | MetadataReference[];
 
-export interface Property<V extends PropertyValueType = PropertyValueType> {
+export interface Property<V extends BlueprintPropertyValue = BlueprintPropertyValue> {
     valueType: V;
-}
-
-export interface DiscriminatorAttribute {
-    discriminator: true;
-}
-
-export interface NullableAttribute {
-    nullable: true;
-}
-
-export interface IdAttribute {
-    id: true;
 }
 
 export interface ArrayAttribute {
     array: true;
 }
 
-export interface RequiredAttribute {
-    required: true;
+export interface DiscriminatorAttribute {
+    discriminator: true;
+}
+
+export interface IdAttribute {
+    id: true;
+}
+
+export interface IndexAttribute {
+    index: true;
+}
+
+export interface NullableAttribute {
+    nullable: true;
 }
 
 export interface ReadOnlyAttribute {
     readOnly: true;
+}
+
+export interface RelationAttribute {
+    relation: true;
+    from: string;
+    to: string;
+}
+
+export interface RequiredAttribute {
+    required: true;
 }
 
 // [todo] sadly, we can't support writeOnly yet, as otherwise intellisense for Expansion<Instance<MyModel>> won't work :(
@@ -44,16 +56,40 @@ export interface ReadOnlyAttribute {
 // }
 
 export type AllAttributes =
-    | DiscriminatorAttribute
-    | NullableAttribute
-    | IdAttribute
     | ArrayAttribute
-    | RequiredAttribute
-    | ReadOnlyAttribute;
+    | DiscriminatorAttribute
+    | IdAttribute
+    | IndexAttribute
+    | NullableAttribute
+    | ReadOnlyAttribute
+    | RelationAttribute
+    | RequiredAttribute;
 
-export function define<V extends PropertyValueType, O extends Partial<AllAttributes>>(
+export function define<V extends BlueprintPropertyValue, O extends Partial<AllAttributes>>(
     valueType: V,
     options?: O
 ): Property<V> & O {
     return { valueType, ...(options ?? {}) } as Property<V> & O;
+}
+
+export function isProperty(value: unknown): value is Property {
+    return (value as Property | undefined | null)?.valueType != null;
+}
+
+type DistributedKeyOf<T> = T extends any ? keyof T : never;
+
+export function hasAttribute<P extends Property, K extends DistributedKeyOf<AllAttributes>>(
+    attribute: K,
+    property: P
+): property is P & Extract<AllAttributes, Record<K, true>>;
+// currying signature
+export function hasAttribute<K extends DistributedKeyOf<AllAttributes>>(
+    attribute: K
+): <P extends Property>(property: P) => property is P & Extract<AllAttributes, Record<K, true>>;
+export function hasAttribute(attribute: string, property?: Record<string, any>): any {
+    if (property === void 0) {
+        return (property: Record<string, any>) => property[attribute] === true;
+    }
+
+    return property[attribute] === true;
 }

@@ -1,4 +1,4 @@
-import { IArraySchema, IEntitySchema, IPrimitiveSchema } from "./schema.interface";
+import { IArraySchema, IEntitySchema, IPrimitiveSchema } from "../schema.interface";
 
 export class ArraySchema implements IArraySchema {
     constructor(itemSchema: IEntitySchema | IPrimitiveSchema) {

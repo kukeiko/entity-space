@@ -1,9 +1,11 @@
+export type PrimitiveSchemaDataType = "boolean" | "integer" | "number" | "string";
+
 // [todo] can we get rid of the "schemaType" discriminator somehow, and instead
 // find an analogue to c# "instance is ITheInterface"?
 export interface IPrimitiveSchema {
     readonly schemaType: "primitive";
 
-    getDataType(): "boolean" | "integer" | "number" | "string";
+    getDataType(): PrimitiveSchemaDataType;
 }
 
 export interface IEntitySchemaIndex {

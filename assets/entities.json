@@ -1,1 +1,15 @@
-{"song":[{"name":"Plein Ciel","id":15,"artistId":3,"artist":{"name":"Hedflux","id":1}},{"name":"Entrudo","id":14,"artistId":2,"artist":{"name":"Hedflux","id":1}},{"name":"Sacralicious","id":13,"locations":[{"songId":13,"songLocationType":"web","url":"https://www.youtube.com/watch?v=WGST_ci4jWc","id":1}],"artistId":1}],"song-location":[{"songId":13,"songLocationType":"web","url":"https://www.youtube.com/watch?v=WGST_ci4jWc","id":1}],"artist":[{"name":"Worakls","id":2},{"name":"Hedflux","id":1},{"name":"N'to","id":3}]}
+{
+    "song": [
+        { "name": "Plein Ciel", "id": 15, "artistId": 3 },
+        { "name": "Entrudo", "id": 14, "artistId": 2 },
+        { "name": "Sacralicious (update)", "id": 13, "artistId": 1 }
+    ],
+    "song-location": [
+        { "songId": 13, "songLocationType": "web", "url": "https://www.youtube.com/watch?v=WGST_ci4jWc", "id": 1 }
+    ],
+    "artist": [
+        { "name": "Worakls", "id": 2 },
+        { "name": "Hedflux", "id": 1 },
+        { "name": "N'to", "id": 3 }
+    ]
+}

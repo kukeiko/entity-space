@@ -1,6 +1,6 @@
 import { walkPath } from "@entity-space/utils";
 import { ExpansionObject } from "../../expansion/expansion-object";
-import { IEntitySchema } from "../../schema/public";
+import { IEntitySchema } from "../../schema";
 import { Entity } from "../entity";
 import { IEntitySource } from "../entity-source.interface";
 import { expandRelation } from "./expand-relation.fn";

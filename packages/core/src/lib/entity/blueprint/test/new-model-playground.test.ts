@@ -58,7 +58,7 @@ xdescribe("new model playground", () => {
         createdBy = define(UserModel);
         updatedBy = define(UserModel, { nullable: true });
         children = define(UserModel, { array: true });
-        // products = define(productMetadata, { array: true });
+        // metadata ref is for entities where the dev does not want to (or cannot) use blueprints
         products = define(productMetadataRef, { array: true });
         canvas = define(canvasMetadataRef);
         shapes = define([squareMetadataRef, circleMetadataRef] as MetadataReference<Shape>[], { array: true });

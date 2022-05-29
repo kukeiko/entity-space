@@ -3,8 +3,8 @@ import { NgModule } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { BrowserModule } from "@angular/platform-browser";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
-import { EntitySourceGateway, Workspace } from "@entity-space/core";
-import { MusicSchemaCatalog } from "@entity-space/examples/libs/music-model";
+import { BlueprintResolver, EntitySchema, EntitySourceGateway, SchemaCatalog, Workspace } from "@entity-space/core";
+import { SongBlueprint } from "@entity-space/examples/libs/music-model";
 import { ButtonModule } from "primeng/button";
 import { DialogModule } from "primeng/dialog";
 import { DropdownModule } from "primeng/dropdown";
@@ -36,9 +36,26 @@ import { MusicAppComponent } from "./music-box-app.component";
     ],
     declarations: [MusicAppComponent, SongTableComponent],
     providers: [
-        { provide: MusicSchemaCatalog, useClass: MusicSchemaCatalog },
         ArtistEntitySource,
         SongEntitySource,
+        { provide: SchemaCatalog },
+        {
+            // [todo] copy pasted to music-box-api
+            provide: BlueprintResolver,
+            deps: [SchemaCatalog],
+            useFactory: (schemaCatalog: SchemaCatalog) => {
+                const blueprintResolver = new BlueprintResolver(schemaCatalog);
+
+                const songLocationSchema = new EntitySchema("song-location");
+                songLocationSchema.setKey("id");
+                songLocationSchema.addIndex("songId");
+                schemaCatalog.addSchema(songLocationSchema);
+                songLocationSchema.addProperty("song", blueprintResolver.resolve(SongBlueprint));
+                songLocationSchema.addRelation("song", "songId", "id");
+
+                return blueprintResolver;
+            },
+        },
         SongLocationEntitySource,
         {
             provide: EntitySourceGateway,
@@ -60,12 +77,13 @@ import { MusicAppComponent } from "./music-box-app.component";
         },
         {
             provide: Workspace,
-            deps: [EntitySourceGateway],
-            useFactory: (gateway: EntitySourceGateway) => {
+            deps: [EntitySourceGateway, BlueprintResolver],
+            useFactory: (gateway: EntitySourceGateway, blueprintResolver: BlueprintResolver) => {
                 console.log("🏭 new workspace");
                 const workspace = new Workspace();
                 workspace.setSource(gateway);
                 workspace.setStore(gateway);
+                workspace.setBlueprintResolver(blueprintResolver);
 
                 return workspace;
             },

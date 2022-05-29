@@ -1,5 +1,5 @@
 import { Query } from "../query/query";
-import { IEntitySchema } from "../schema/public";
+import { IEntitySchema } from "../schema";
 import { QueriedEntities } from "./data-structures/queried-entities";
 import { Entity } from "./entity";
 import { IEntitySource } from "./entity-source.interface";

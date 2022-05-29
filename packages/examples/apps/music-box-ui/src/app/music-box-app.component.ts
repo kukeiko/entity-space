@@ -1,10 +1,17 @@
 import { Component, OnDestroy, OnInit } from "@angular/core";
-import { EntitySchema, Query, Workspace } from "@entity-space/core";
-import { inSet, matches, some } from "@entity-space/criteria";
-import { Artist, MusicSchemaCatalog, Song, SongLocation } from "@entity-space/examples/libs/music-model";
+import { Blueprint, BlueprintResolver, define, Instance, Query, Workspace } from "@entity-space/core";
+import { matches, some } from "@entity-space/criteria";
+import {
+    Artist,
+    ArtistBlueprint,
+    Song,
+    SongBlueprint,
+    SongLocation,
+    SongLocationTypeBlueprint,
+} from "@entity-space/examples/libs/music-model";
 import { pluckId, tramplePath } from "@entity-space/utils";
 import { PrimeNGConfig } from "primeng/api";
-import { combineLatest, map, merge, Observable, of, Subject, switchMap } from "rxjs";
+import { combineLatest, map, merge, of, Subject, switchMap, tap } from "rxjs";
 import { SongLocationEntitySource } from "./entity-sources/song-location.entity-source";
 import { SongEntitySource } from "./entity-sources/song.entity-source";
 
@@ -15,14 +22,6 @@ interface IdNameRecord<K, V = string> {
 
 type SongLocationType = IdNameRecord<string>;
 
-interface MusicBoxUiState {
-    id: number;
-    filter: {
-        locationTypes: IdNameRecord<string>[];
-        artists: Artist[];
-    };
-}
-
 interface MusicBoxAppState {
     data: {
         artists: Artist[];
@@ -32,6 +31,20 @@ interface MusicBoxAppState {
     ui: MusicBoxUiState;
 }
 
+@Blueprint({ id: "music-box-ui-filter" })
+class MusicBoxUiFilter {
+    artists = define(ArtistBlueprint, { array: true, required: true });
+    locationTypes = define(SongLocationTypeBlueprint, { array: true, required: true });
+}
+
+@Blueprint({ id: "music-box-ui-state" })
+class MusicBoxUiStateBlueprint {
+    id = define(Number, { id: true, required: true });
+    filter = define(MusicBoxUiFilter, { required: true });
+}
+
+type MusicBoxUiState = Instance<MusicBoxUiStateBlueprint>;
+
 @Component({
     selector: "music-box-app",
     templateUrl: "./music-box-app.component.html",
@@ -40,47 +53,35 @@ interface MusicBoxAppState {
 export class MusicAppComponent implements OnInit, OnDestroy {
     constructor(
         private primengConfig: PrimeNGConfig,
-        private readonly schemaCatalog: MusicSchemaCatalog,
         private readonly songSource: SongEntitySource,
         private readonly songLocationSource: SongLocationEntitySource,
-        private readonly workspace: Workspace
+        private readonly workspace: Workspace,
+        private readonly resolver: BlueprintResolver
     ) {}
 
-    private readonly uiStateSchema = new EntitySchema("music-box-ui-state").setKey("id");
-    private readonly songLocationTypeSchema = new EntitySchema("song-location-type").setKey("id");
     private readonly destroyed$ = new Subject<void>();
 
     stateId = 1;
 
-    state$ = this.workspace.queryOneByKey$<MusicBoxUiState>(this.uiStateSchema, this.stateId).pipe(
+    state$ = this.workspace.queryOneByKey$(MusicBoxUiStateBlueprint, this.stateId).pipe(
         switchMap(ui =>
-            combineLatest([of(ui), this.getSongs$(ui.filter), this.getArtists$(), this.getSongLocationTypes$()])
-        ),
-        map(([ui, songs, artists, songLocationTypes]) => this.toAppState(ui, songs, artists, songLocationTypes))
-    );
-
-    getArtists$(): Observable<Artist[]> {
-        return this.workspace.query$<Artist>(this.schemaCatalog.getArtistSchema());
-    }
-
-    getSongs$(filter: MusicBoxUiState["filter"]): Observable<Song[]> {
-        return this.workspace.query$<Song>(
-            this.schemaCatalog.getSongSchema(),
-            matches<Song>({
-                artistId: inSet(pluckId(filter.artists)),
-                locations: some(
-                    matches<SongLocation>({
-                        songLocationType: inSet(pluckId(filter.locationTypes)),
-                    })
+            combineLatest([
+                of(ui),
+                this.workspace.query$(ArtistBlueprint),
+                this.workspace.query$(SongLocationTypeBlueprint),
+                this.workspace.query$(
+                    SongBlueprint,
+                    {
+                        artistId: pluckId(ui.filter.artists),
+                        locations: some(matches<SongLocation>({ songLocationType: pluckId(ui.filter.locationTypes) })),
+                    },
+                    { artist: true, locations: { song: true } }
                 ),
-            }),
-            { artist: true, locations: true }
-        );
-    }
-
-    getSongLocationTypes$(): Observable<SongLocationType[]> {
-        return this.workspace.query$<SongLocationType>(this.songLocationTypeSchema);
-    }
+            ])
+        ),
+        map(([ui, artists, songLocationTypes, songs]) => this.toAppState(ui, songs, artists, songLocationTypes)),
+        tap(state => console.log("🧙‍♂️ app state changed", state))
+    );
 
     toAppState(
         ui: MusicBoxUiState,
@@ -91,25 +92,19 @@ export class MusicAppComponent implements OnInit, OnDestroy {
         songs.sort((a, b) => a.name.localeCompare(b.name));
         artists.sort((a, b) => a.name.localeCompare(b.name));
 
-        const state: MusicBoxAppState = {
-            ui,
-            data: { songs, artists, songLocationTypes },
-        };
-
-        console.log("🧙‍♂️ app state changed", state);
-        return state;
+        return { ui, data: { songs, artists, songLocationTypes } };
     }
 
     queriesIssuedAgainstApi: Query[] = [];
     queriesInWorkspaceCache: Query[] = [];
 
     ngOnInit(): void {
-        this.workspace.add<MusicBoxUiState>(this.uiStateSchema, {
+        this.workspace.add(MusicBoxUiStateBlueprint, {
             id: this.stateId,
             filter: { artists: [], locationTypes: [] },
         });
 
-        this.workspace.add<IdNameRecord<string>[]>(this.songLocationTypeSchema, [
+        this.workspace.add(SongLocationTypeBlueprint, [
             { id: "web", name: "Web" },
             { id: "local", name: "Local" },
         ]);
@@ -129,7 +124,7 @@ export class MusicAppComponent implements OnInit, OnDestroy {
     changeUiState(property: string, value: any): void {
         const change = {};
         tramplePath(property, change, value);
-        this.workspace.add<MusicBoxUiState>(this.uiStateSchema, {
+        this.workspace.add(this.resolver.resolve(MusicBoxUiStateBlueprint), {
             id: this.stateId,
             ...change,
         });

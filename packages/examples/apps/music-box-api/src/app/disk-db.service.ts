@@ -1,22 +1,33 @@
-import { Entity, IEntitySchema, IEntitySource, IEntityStore, Query } from "@entity-space/core";
+import {
+    BlueprintResolver,
+    Entity,
+    IEntitySchema,
+    IEntitySource,
+    IEntityStore,
+    normalizeEntities,
+    Query,
+    SchemaCatalog,
+} from "@entity-space/core";
 import { isValue, matches } from "@entity-space/criteria";
-import { MusicSchemaCatalog, Song, SongLocation } from "@entity-space/examples/libs/music-model";
+import { Song, SongBlueprint, SongLocation } from "@entity-space/examples/libs/music-model";
 import { FileOnDiskBasedEntitySource } from "@entity-space/node";
 import { Injectable } from "@nestjs/common";
 
 @Injectable()
 export class DiskDbService {
-    constructor(private readonly schemaCatalog: MusicSchemaCatalog) {
+    constructor(private readonly schemaCatalog: SchemaCatalog, private readonly blueprintResolver: BlueprintResolver) {
         this.entitySource = new FileOnDiskBasedEntitySource(this.filePath);
+        this.songSchema = blueprintResolver.resolve(SongBlueprint);
+        this.songLocationSchema = schemaCatalog.getSchema("song-location");
     }
 
+    private readonly songSchema: IEntitySchema;
+    private readonly songLocationSchema: IEntitySchema;
     private readonly entitySource: IEntitySource & IEntityStore;
     private readonly filePath = "./assets/entities.json";
 
     async getSong(id: number): Promise<Song | undefined> {
-        const results = await this.entitySource.query(
-            new Query(this.schemaCatalog.getSongSchema(), matches<Song>({ id: isValue(id) }))
-        );
+        const results = await this.entitySource.query(new Query(this.songSchema, matches<Song>({ id: isValue(id) })));
 
         if (!results) {
             return void 0;
@@ -28,7 +39,7 @@ export class DiskDbService {
     }
 
     async getSongs(): Promise<Song[]> {
-        const results = await this.entitySource.query(new Query(this.schemaCatalog.getSongSchema()));
+        const results = await this.entitySource.query(new Query(this.songSchema));
 
         if (!results) {
             return [];
@@ -38,7 +49,7 @@ export class DiskDbService {
     }
 
     async createSong(song: Song): Promise<Song> {
-        const created = await this.entitySource.create([song], this.schemaCatalog.getSongSchema());
+        const created = await this.entitySource.create([song], this.songSchema);
 
         if (created === false) {
             // [todo] was too laze to make return type of this method include "false",
@@ -50,7 +61,7 @@ export class DiskDbService {
     }
 
     async getSongLocations(): Promise<SongLocation[]> {
-        const results = await this.entitySource.query(new Query(this.schemaCatalog.getSongLocationSchema()));
+        const results = await this.entitySource.query(new Query(this.songLocationSchema));
 
         if (!results) {
             return [];
@@ -70,7 +81,14 @@ export class DiskDbService {
     }
 
     async createEntity<T>(entity: T, schema: IEntitySchema): Promise<T> {
-        const created = await this.entitySource.create([entity], schema);
+        const normalized = normalizeEntities(schema, [entity]);
+        const creatable = normalized.get(schema)[0];
+
+        if (!creatable) {
+            throw new Error("normalization failed");
+        }
+
+        const created = await this.entitySource.create([creatable], schema);
 
         if (created === false) {
             // [todo] was too laze to make return type of this method include "false",
@@ -82,7 +100,14 @@ export class DiskDbService {
     }
 
     async patchEntity<T>(entity: Partial<T>, schema: IEntitySchema): Promise<T> {
-        const patched = await this.entitySource.update([entity], schema);
+        const normalized = normalizeEntities(schema, [entity]);
+        const patch = normalized.get(schema)[0];
+
+        if (!patch) {
+            throw new Error("normalization failed");
+        }
+
+        const patched = await this.entitySource.update([patch], schema);
 
         if (patched === false) {
             // [todo] was too laze to make return type of this method include "false",
