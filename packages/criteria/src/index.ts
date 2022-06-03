@@ -1,4 +1,5 @@
 export * from "./lib/criterion/and/and.fn";
+export * from "./lib/criterion/any/any";
 export * from "./lib/criterion/any/any.fn";
 export * from "./lib/criterion/binary/is-even.fn";
 export * from "./lib/criterion/criterion";

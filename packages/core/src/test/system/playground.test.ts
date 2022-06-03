@@ -1,4 +1,4 @@
-import { Instance } from "../../lib/entity/blueprint/public";
+import { Instance } from "../../lib/entity";
 import { ExpansionObject } from "../../lib/expansion/public";
 import { TreeNodeRepository } from "../facade/data";
 import { CanvasModel, UserModel } from "../facade/model";
