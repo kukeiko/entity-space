@@ -1,8 +1,20 @@
 import { any, Criterion, fromDeepBag, isValue, matches } from "@entity-space/criteria";
 import { Class, DeepPartial, isDefined, tramplePath } from "@entity-space/utils";
-import { flatMap, isEqual } from "lodash";
-import { distinctUntilChanged, filter, finalize, from, map, Observable, of, startWith, Subject, switchMap } from "rxjs";
-import { ExpansionObject } from "../public";
+import { flatMap, isEqual, xor, xorWith } from "lodash";
+import {
+    distinctUntilChanged,
+    filter,
+    finalize,
+    from,
+    map,
+    Observable,
+    of,
+    ReplaySubject,
+    startWith,
+    Subject,
+    switchMap,
+} from "rxjs";
+import { Expand, ExpansionObject } from "../expansion/expansion-object";
 import { mergeQueries, Query, reduceQueries } from "../query/public";
 import { IEntitySchema } from "../schema/schema.interface";
 import { BlueprintResolver, Instance } from "./blueprint";
@@ -10,6 +22,8 @@ import { QueriedEntities } from "./data-structures/queried-entities";
 import { Entity } from "./entity";
 import { EntityCache } from "./entity-cache";
 import { IEntitySource } from "./entity-source.interface";
+import { normalizeEntities } from "./functions";
+import { expandEntities } from "./functions/expand-entities.fn";
 import { IEntityStore } from "./i-entity-store";
 
 export class Workspace implements IEntitySource, IEntityStore {
@@ -152,6 +166,16 @@ export class Workspace implements IEntitySource, IEntityStore {
         return [new QueriedEntities(query, entities)];
     }
 
+    // [todo] not reactive yet
+    hydrate$<T extends Entity, E extends ExpansionObject<Instance<T>>>(
+        blueprint: Class<T>,
+        entities: Instance<T>[],
+        expansion: ExpansionObject<Instance<T>>
+    ): Observable<Expand<Instance<T>, E>[]> {
+        const schema = this.toSchema(blueprint);
+        return from(expandEntities(schema, expansion, entities, this)).pipe(switchMap(() => of(entities))) as any;
+    }
+
     query$<T extends Entity>(
         schema: IEntitySchema,
         criterion?: Criterion,
@@ -182,7 +206,8 @@ export class Workspace implements IEntitySource, IEntityStore {
         }
 
         const query = new Query(schema, criterion, expansion);
-        const subject = new Subject<Entity[]>();
+        // const subject = new Subject<Entity[]>();
+        const subject = new ReplaySubject<Entity[]>(1);
 
         return from(this.query(query)).pipe(
             switchMap(result => {
@@ -207,8 +232,48 @@ export class Workspace implements IEntitySource, IEntityStore {
 
                 return subject.asObservable().pipe(
                     startWith(entities),
-                    distinctUntilChanged((a, b) => isEqual(a, b)),
-                    finalize(() => this.watchedQueries.delete(query))
+                    distinctUntilChanged((a, b) => {
+                        const normalizedA = normalizeEntities(query.getEntitySchema(), a);
+                        const normalizedB = normalizeEntities(query.getEntitySchema(), b);
+
+                        const differentFoundSchemas = xor(
+                            normalizedA
+                                .getSchemas()
+                                .filter(schema => normalizedA.get(schema).length > 0)
+                                .map(schema => schema.getId()),
+                            normalizedB
+                                .getSchemas()
+                                .filter(schema => normalizedA.get(schema).length > 0)
+                                .map(schema => schema.getId())
+                        );
+
+                        if (differentFoundSchemas.length > 0) {
+                            return false;
+                        }
+
+                        for (const schema of normalizedA.getSchemas()) {
+                            const diff = xorWith(normalizedA.get(schema), normalizedB.get(schema), isEqual);
+
+                            if (diff.length > 0) {
+                                return false;
+                            }
+                        }
+
+                        // debugger;
+
+                        // return isEqual(a, b);
+                        const equal = xorWith(a, b, isEqual);
+
+                        if (equal.length > 0) {
+                            console.log("not equal", a, b);
+                        }
+
+                        return equal.length == 0;
+                    }),
+                    finalize(() => {
+                        console.log(`🧹 clean up query ${query}`);
+                        this.watchedQueries.delete(query);
+                    })
                 ) as any as Observable<T[]>;
             })
         );
@@ -266,28 +331,28 @@ export class Workspace implements IEntitySource, IEntityStore {
         return result.map(queried => queried.getEntities()).reduce((acc, value) => [...acc, ...value], []);
     }
 
-    async create(entities: Entity[], schema: IEntitySchema): Promise<false | Entity[]> {
+    async create<T extends Entity>(entities: T[], schema: IEntitySchema): Promise<false | T[]> {
         const result = (await this.store?.create(entities, schema)) ?? false;
 
         if (result === false) {
             return false;
         }
 
-        this.add(schema, entities);
+        this.add(schema, result);
 
-        return entities;
+        return result as T[];
     }
 
-    async update(entities: Entity[], schema: IEntitySchema): Promise<false | Entity[]> {
+    async update<T extends Entity>(entities: DeepPartial<T>[], schema: IEntitySchema): Promise<false | T[]> {
         const result = (await this.store?.update(entities, schema)) ?? false;
 
         if (result === false) {
             return false;
         }
 
-        this.add(schema, entities);
+        this.add(schema, result);
 
-        return entities;
+        return result as T[];
     }
 
     delete(entities: Entity[], schema: IEntitySchema): Promise<boolean> {

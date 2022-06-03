@@ -7,6 +7,7 @@ import {
     Song,
     SongBlueprint,
     SongLocation,
+    SongLocationType,
     SongLocationTypeBlueprint,
 } from "@entity-space/examples/libs/music-model";
 import { pluckId, tramplePath } from "@entity-space/utils";
@@ -14,13 +15,6 @@ import { PrimeNGConfig } from "primeng/api";
 import { combineLatest, map, merge, of, Subject, switchMap, tap } from "rxjs";
 import { SongLocationEntitySource } from "./entity-sources/song-location.entity-source";
 import { SongEntitySource } from "./entity-sources/song.entity-source";
-
-interface IdNameRecord<K, V = string> {
-    id: K;
-    name: V;
-}
-
-type SongLocationType = IdNameRecord<string>;
 
 interface MusicBoxAppState {
     data: {
@@ -75,7 +69,7 @@ export class MusicAppComponent implements OnInit, OnDestroy {
                         artistId: pluckId(ui.filter.artists),
                         locations: some(matches<SongLocation>({ songLocationType: pluckId(ui.filter.locationTypes) })),
                     },
-                    { artist: true, locations: { song: true } }
+                    { locations: true }
                 ),
             ])
         ),

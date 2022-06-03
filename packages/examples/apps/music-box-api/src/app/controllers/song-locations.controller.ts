@@ -1,7 +1,7 @@
 import { IEntitySchema, Query as EntityQuery, SchemaCatalog } from "@entity-space/core";
 import { inSet, matches } from "@entity-space/criteria";
 import { SongLocation } from "@entity-space/examples/libs/music-model";
-import { Body, Controller, Get, Post, Query } from "@nestjs/common";
+import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Query } from "@nestjs/common";
 import { DiskDbService } from "../disk-db.service";
 import { ParseIntsPipe } from "../pipes/parse-ints.pipe";
 
@@ -29,6 +29,12 @@ export class SongLocationsController {
         } else {
             return this.diskDbService.query(new EntityQuery(this.schema));
         }
+    }
+
+    @Patch(":id")
+    pdate(@Param("id", ParseIntPipe) id: number, @Body() songLocation: Partial<SongLocation>): Promise<SongLocation> {
+        // [todo] cast to any
+        return this.diskDbService.patchEntity({ id, ...(songLocation as any) }, this.schema);
     }
 
     @Post()

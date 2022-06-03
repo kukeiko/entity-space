@@ -13,6 +13,7 @@ import { MultiSelectModule } from "primeng/multiselect";
 import { SliderModule } from "primeng/slider";
 import { TableModule } from "primeng/table";
 import { TabViewModule } from "primeng/tabview";
+import { ArtistTableComponent } from "./components/artist-table/artist-table.component";
 import { SongTableComponent } from "./components/song-table/song-table.component";
 import { ArtistEntitySource } from "./entity-sources/artist.entity-source";
 import { SongLocationEntitySource } from "./entity-sources/song-location.entity-source";
@@ -34,7 +35,7 @@ import { MusicAppComponent } from "./music-box-app.component";
         TableModule,
         TabViewModule,
     ],
-    declarations: [MusicAppComponent, SongTableComponent],
+    declarations: [MusicAppComponent, SongTableComponent, ArtistTableComponent],
     providers: [
         ArtistEntitySource,
         SongEntitySource,
@@ -71,6 +72,7 @@ import { MusicAppComponent } from "./music-box-app.component";
                 gateway.addSource(songSource.getEntitySchema(), songSource);
                 gateway.addStore(songSource.getEntitySchema(), songSource);
                 gateway.addSource(songLocationSource.getEntitySchema(), songLocationSource);
+                gateway.addStore(songLocationSource.getEntitySchema(), songLocationSource);
 
                 return gateway;
             },

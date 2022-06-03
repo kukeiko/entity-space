@@ -76,7 +76,7 @@ export class FileOnDiskBasedEntitySource implements IEntitySource, IEntityStore 
     private async writeEntitiesToFile(entities: Entity[], schema: IEntitySchema): Promise<void> {
         const file = await this.loadFile();
         file[schema.getId()] = entities;
-        await writeFile(this.filePath, JSON.stringify(file));
+        await writeFile(this.filePath, JSON.stringify(file, void 0, 4));
     }
 
     private async loadEntitiesFromFile(schema: IEntitySchema): Promise<Entity[]> {

@@ -1,4 +1,4 @@
-<p-table *ngIf="state$ | async; let state" [columns]="columns" [value]="state.data.songs" [reorderableColumns]="true">
+<p-table *ngIf="state$ | async; let state" [columns]="columns" [value]="state.data.artists" [reorderableColumns]="true">
     <ng-template pTemplate="header" let-columns>
         <tr>
             <th *ngFor="let column of columns" pReorderableColumn>
@@ -7,27 +7,25 @@
             <th></th>
         </tr>
     </ng-template>
-    <ng-template pTemplate="body" let-song let-columns="columns">
+    <ng-template pTemplate="body" let-artist let-columns="columns">
         <tr>
-            <td *ngFor="let column of columns" [ngSwitch]="column.field">
-                <span *ngSwitchCase="'artist'">{{ song.artist?.name }}</span>
-                <span *ngSwitchCase="'url'">{{ getUrl(song) }}</span>
-                <span *ngSwitchDefault>{{ song[column.field] }}</span>
+            <td *ngFor="let column of columns">
+                <span>{{ artist[column.field] }}</span>
             </td>
             <td>
-                <button
+                <!-- <button
                     pButton
                     pRipple
                     type="button"
                     icon="pi pi-pencil"
                     class="p-button-rounded p-button-text"
                     (click)="editSong(song)"
-                ></button>
+                ></button> -->
             </td>
         </tr>
     </ng-template>
 </p-table>
-<p-dialog *ngIf="editedSong" [(visible)]="editDialogVisible" header="Edit Song" styleClass="p-fluid">
+<!-- <p-dialog *ngIf="editedSong" [(visible)]="editDialogVisible" header="Edit Song" styleClass="p-fluid">
     <ng-template pTemplate="content">
         <div class="field">
             <label for="name">Name</label>
@@ -61,4 +59,4 @@
             (click)="saveSong()"
         ></button>
     </ng-template>
-</p-dialog>
+</p-dialog> -->

@@ -31,6 +31,8 @@
         </ng-template>
     </p-tabPanel>
     <p-tabPanel header="Artists">
-        <ng-template pTemplate="content"> Coming Soon™ </ng-template>
+        <ng-template pTemplate="content">
+            <artist-table [artists]="state.data.artists"></artist-table>
+        </ng-template>
     </p-tabPanel>
 </p-tabView>
