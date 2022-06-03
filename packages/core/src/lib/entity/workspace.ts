@@ -14,6 +14,7 @@ import {
     Subject,
     switchMap,
 } from "rxjs";
+import { Expansion } from "../expansion/expansion";
 import { Expand, ExpansionObject } from "../expansion/expansion-object";
 import { mergeQueries, Query, reduceQueries } from "../query/public";
 import { IEntitySchema } from "../schema/schema.interface";
@@ -173,7 +174,9 @@ export class Workspace implements IEntitySource, IEntityStore {
         expansion: ExpansionObject<Instance<T>>
     ): Observable<Expand<Instance<T>, E>[]> {
         const schema = this.toSchema(blueprint);
-        return from(expandEntities(schema, expansion, entities, this)).pipe(switchMap(() => of(entities))) as any;
+        return from(expandEntities(schema, new Expansion(expansion), entities, this)).pipe(
+            switchMap(() => of(entities))
+        ) as any;
     }
 
     query$<T extends Entity>(
@@ -278,6 +281,7 @@ export class Workspace implements IEntitySource, IEntityStore {
             })
         );
     }
+
     queryOneByKey$<T extends Entity>(
         schema: IEntitySchema,
         key: number | string,

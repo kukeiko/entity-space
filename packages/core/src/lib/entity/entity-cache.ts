@@ -22,7 +22,7 @@ export class EntityCache implements IEntitySource {
             // [todo] dirty to do it here?
             // [todo] this way of cloning is quite slow.
             entities = cloneJson(entities);
-            await expandEntities(query.getEntitySchema(), query.getExpansionObject(), entities, this);
+            await expandEntities(query.getEntitySchema(), query.getExpansion(), entities, this);
             entities = query.getCriteria().filter(entities);
         }
 

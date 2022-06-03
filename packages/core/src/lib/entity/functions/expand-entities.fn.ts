@@ -1,5 +1,5 @@
 import { walkPath } from "@entity-space/utils";
-import { ExpansionObject } from "../../expansion/expansion-object";
+import { Expansion } from "../../expansion/expansion";
 import { IEntitySchema } from "../../schema";
 import { Entity } from "../entity";
 import { IEntitySource } from "../entity-source.interface";
@@ -7,7 +7,7 @@ import { expandRelation } from "./expand-relation.fn";
 
 export async function expandEntities(
     schema: IEntitySchema,
-    expansion: ExpansionObject,
+    expansion: Expansion,
     entities: Entity[],
     source: IEntitySource
 ): Promise<boolean> {
@@ -22,8 +22,10 @@ export async function expandEntities(
         return first[propertyKey] !== void 0;
     };
 
-    for (const propertyKey in expansion) {
-        const expansionValue = expansion[propertyKey];
+    const expansionObject = expansion.getObject();
+
+    for (const propertyKey in expansionObject) {
+        const expansionValue = expansionObject[propertyKey];
 
         if (expansionValue === void 0) {
             continue;
@@ -60,7 +62,12 @@ export async function expandEntities(
 
             const entitySchema = property.getUnboxedEntitySchema();
             const task = (async () => {
-                const result = await expandEntities(entitySchema, expansionValue, referencedItems, source);
+                const result = await expandEntities(
+                    entitySchema,
+                    new Expansion(expansionValue),
+                    referencedItems,
+                    source
+                );
 
                 return result;
             })();

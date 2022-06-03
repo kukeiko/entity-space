@@ -39,7 +39,7 @@ export class EntitySourceGateway implements IEntitySource, IEntityStore {
             const entities = queried.getEntities();
 
             if (entities.length > 0 && !openExpansion.isEmpty()) {
-                await expandEntities(query.getEntitySchema(), openExpansion.getObject(), entities, this);
+                await expandEntities(query.getEntitySchema(), openExpansion, entities, this);
             }
 
             results.push(
