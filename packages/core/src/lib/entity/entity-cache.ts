@@ -1,4 +1,12 @@
-import { any, anyTemplate, Criterion, NamedCriteriaTemplate, or, orTemplate } from "@entity-space/criteria";
+import {
+    any,
+    AnyCriterion,
+    anyTemplate,
+    Criterion,
+    NamedCriteriaTemplate,
+    or,
+    orTemplate,
+} from "@entity-space/criteria";
 import { cloneJson } from "@entity-space/utils";
 import { Query } from "../query/query";
 import { IEntitySchema } from "../schema/schema.interface";
@@ -26,9 +34,15 @@ export class EntityCache implements IEntitySource {
             entities = query.getCriteria().filter(entities);
         }
 
+        if (criterion instanceof AnyCriterion && !(query.getCriteria() instanceof AnyCriterion)) {
+            // [todo] hotfix for non-related, but nested criteria
+            entities = query.getCriteria().filter(entities);
+        }
+
         return [new QueriedEntities(query, entities)];
     }
 
+    // [todo] i think introduction of this broke workspace playground tests
     private withoutRetlationalCriteria(criterion: Criterion, schema: IEntitySchema): Criterion {
         const optionalDeepBag: Record<string, any> = {};
 

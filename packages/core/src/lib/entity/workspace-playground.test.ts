@@ -170,7 +170,7 @@ describe("playground: workspace", () => {
             { id: 4, bar: { baz: 1, moo: 5 }, khaz: { mo: 1, dan: 2 } },
         ];
 
-        const expectedEntities = [{ id: 1, bar: { baz: 2, moo: 10 }, khaz: { mo: 1, dan: 2 } }];
+        const expectedEntities: Foo[] = [{ id: 1, bar: { baz: 2, moo: 10 }, khaz: { mo: 1, dan: 2 } }];
 
         workspace.add(schema, entities);
 
