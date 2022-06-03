@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, Input, OnInit } from "@angular/core";
 import { Blueprint, BlueprintResolver, define, Workspace } from "@entity-space/core";
 import { Artist, ArtistBlueprint } from "@entity-space/examples/libs/music-model";
-import { forkJoin, of } from "rxjs";
+import { combineLatest, of } from "rxjs";
 import { map, switchMap } from "rxjs/operators";
 
 @Blueprint({ id: "artist-table-input" })
@@ -28,7 +28,7 @@ export class ArtistTableComponent implements OnInit {
 
     state$ = this.workspace.queryOneByKey$(ArtistTableInputBlueprint, this.stateId).pipe(
         switchMap(input =>
-            forkJoin({
+            combineLatest({
                 artists: of(input.artists),
             })
         ),

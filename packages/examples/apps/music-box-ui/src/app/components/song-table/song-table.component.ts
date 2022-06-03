@@ -1,7 +1,7 @@
 import { Component, Input } from "@angular/core";
 import { Blueprint, BlueprintResolver, define, SchemaCatalog, Workspace } from "@entity-space/core";
 import { Artist, ArtistBlueprint, Song, SongBlueprint, WebSongLocation } from "@entity-space/examples/libs/music-model";
-import { forkJoin, map, switchMap } from "rxjs";
+import { combineLatest, map, switchMap } from "rxjs";
 
 @Blueprint({ id: "song-table-input" })
 class SongTableInputBlueprint {
@@ -37,7 +37,7 @@ export class SongTableComponent {
 
     state$ = this.workspace.queryOneByKey$(SongTableInputBlueprint, this.stateId).pipe(
         switchMap(input =>
-            forkJoin({
+            combineLatest({
                 artists: this.workspace.query$(ArtistBlueprint),
                 songs: this.workspace.hydrate$(SongBlueprint, input.songs, { artist: true, locations: true }),
             })
