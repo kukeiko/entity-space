@@ -1,4 +1,5 @@
 import { and } from "../../lib/criterion/and/and.fn";
+import { any } from "../../lib/criterion/any/any.fn";
 import { isEven } from "../../lib/criterion/binary/is-even.fn";
 import { Criterion } from "../../lib/criterion/criterion";
 import { matches } from "../../lib/criterion/named/matches.fn";
@@ -49,6 +50,7 @@ describe("parse-criteria", () => {
     shouldParse("[1, 7] | [3, 4]", or([inRange(1, 7), inRange(3, 4)]));
     shouldParse("{1, 2}", inSet([1, 2]));
     shouldParse("!{1, 2}", notInSet([1, 2]));
+    shouldParse("any", any());
 
     interface FooBar {
         foo: number;

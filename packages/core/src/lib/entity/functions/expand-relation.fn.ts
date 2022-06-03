@@ -1,6 +1,6 @@
 import { ExpansionObject } from "../../expansion/public";
 import { Query } from "../../query/query";
-import { IEntitySchemaRelation } from "../../schema/public";
+import { IEntitySchemaRelation } from "../../schema";
 import { Entity } from "../entity";
 import { IEntitySource } from "../entity-source.interface";
 import { createCriterionFromEntities } from "./create-criterion-from-entities.fn";
@@ -11,7 +11,7 @@ export async function expandRelation(
     relation: IEntitySchemaRelation,
     source: IEntitySource,
     expansion?: ExpansionObject
-): Promise<false | ExpansionObject> {
+): Promise<boolean> {
     const relatedSchema = relation.getRelatedEntitySchema();
     // [todo] what about dictionaries?
     const isArray = relation.getProperty().getValueSchema().schemaType === "array";
@@ -25,17 +25,16 @@ export async function expandRelation(
         return false;
     }
 
-    // [todo] fix
-    const queried = result[0];
+    const queriedEntities = result.reduce((acc, current) => [...acc, ...current.getEntities()], [] as Entity[]);
 
     joinEntities(
         entities,
-        queried.getEntities(),
+        queriedEntities,
         relation.getPropertyName(),
         fromIndex.getPath(),
         toIndex.getPath(),
         isArray
     );
 
-    return queried.getQuery().getExpansionObject();
+    return true;
 }

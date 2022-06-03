@@ -1,0 +1,38 @@
+<!-- <p-slider [(ngModel)]="sliderValue"></p-slider>
+<p>{{ sliderValue | json }}</p> -->
+<p-tabView *ngIf="state$ | async; let state">
+    <p-tabPanel header="Songs">
+        <ng-template pTemplate="content">
+            <div class="grid p-fluid">
+                <div class="field col-1">
+                    <label for="locationType">Location Type</label>
+                    <p-multiSelect
+                        [options]="state.data.songLocationTypes"
+                        [ngModel]="state.ui.filter.locationTypes"
+                        (ngModelChange)="changeUiState('filter.locationTypes', $event)"
+                        optionLabel="name"
+                        inputId="locationType"
+                        panelStyleClass="min-w-max"
+                    ></p-multiSelect>
+                </div>
+                <div class="field col-1">
+                    <label for="artist">Artist</label>
+                    <p-multiSelect
+                        [options]="state.data.artists"
+                        [ngModel]="state.ui.filter.artists"
+                        (ngModelChange)="changeUiState('filter.artists', $event)"
+                        optionLabel="name"
+                        inputId="artist"
+                        panelStyleClass="min-w-max"
+                    ></p-multiSelect>
+                </div>
+            </div>
+            <song-table [songs]="state.data.songs"></song-table>
+        </ng-template>
+    </p-tabPanel>
+    <p-tabPanel header="Artists">
+        <ng-template pTemplate="content">
+            <artist-table [artists]="state.data.artists"></artist-table>
+        </ng-template>
+    </p-tabPanel>
+</p-tabView>

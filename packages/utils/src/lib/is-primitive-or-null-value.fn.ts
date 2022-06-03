@@ -1,5 +1,5 @@
 import { Null } from "./null";
-import { Primitive } from "./types/primitive";
+import { Primitive, PrimitiveIncludingNull } from "./types";
 
 // [todo] there already is a method called "isPrimitive()" which takes value-type, not value, so this is confusing.
 export function isPrimitiveOrNull<T extends Primitive | typeof Null>(
@@ -11,10 +11,19 @@ export function isPrimitiveOrNull<T extends Primitive | typeof Null>(
     for (const valueType of valueTypes) {
         const typeValue = valueType();
 
-        if ((typeValue === null && value === null) || typeof typeValue === typeof value) {
+        if (typeValue === null) {
+            if (value === null) {
+                return true;
+            }
+        } else if (typeof typeValue === typeof value) {
             return true;
         }
     }
 
     return false;
+}
+
+// [todo] had to introduce so it can be passed to Array.every/filter/...
+export function isPrimitiveOrNullNoCustomArg(value: unknown): value is ReturnType<PrimitiveIncludingNull> {
+    return isPrimitiveOrNull(value);
 }

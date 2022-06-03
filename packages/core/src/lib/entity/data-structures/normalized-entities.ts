@@ -1,4 +1,4 @@
-import { IEntitySchema } from "../../schema/public";
+import { IEntitySchema } from "../../schema";
 import { Entity } from "../entity";
 
 // [todo] use Map instead?

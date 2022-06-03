@@ -1,4 +1,4 @@
-import { Criterion } from "@entity-space/criteria";
+import { any, Criterion } from "@entity-space/criteria";
 import { Entity } from "../entity/entity";
 import { Expansion } from "../expansion/expansion";
 import { ExpansionObject } from "../expansion/expansion-object";
@@ -10,8 +10,7 @@ export class Query<
     C extends Criterion = Criterion,
     E extends ExpansionObject = ExpansionObject
 > {
-    // [todo] make criteria optional; can be done once we have the "always" criterion
-    constructor(entitySchema: IEntitySchema, criteria: C, expansion?: E | Expansion<E>) {
+    constructor(entitySchema: IEntitySchema, criteria: C = any() as C, expansion?: E | Expansion<E>) {
         this.entitySchema = entitySchema;
         this.criteria = criteria;
         this.expansion =
@@ -40,5 +39,9 @@ export class Query<
 
     getExpansionObject(): E {
         return this.expansion.getObject();
+    }
+
+    toString(): string {
+        return `${this.entitySchema.getId()}/${this.criteria}/${JSON.stringify(this.expansion.getObject())}`;
     }
 }

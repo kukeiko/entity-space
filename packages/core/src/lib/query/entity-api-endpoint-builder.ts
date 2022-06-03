@@ -26,7 +26,7 @@ export class EntityApiEndpointBuilder<
     private requiredFields: R = {} as R;
     private optionalFields: O = {} as O;
     private supportedExpansion: E = {} as E;
-    private loadEntities?: (query: Query) => Promise<Entity[]>;
+    private loadEntities?: (query: Query) => Promise<Entity[] | Entity>;
 
     requiresFields<F extends AddFieldsArgument<T>>(fields: F): EntityApiEndpointBuilder<T, R & F, O, E> {
         this.requiredFields = { ...this.requiredFields, ...fields };
@@ -46,9 +46,9 @@ export class EntityApiEndpointBuilder<
     }
 
     isLoadedBy<Q extends Query<T, InstancedCriterionTemplate<NamedCriteriaTemplate<R, O>>, E>>(
-        load: (query: Q) => Promise<Entity[]>
+        load: (query: Q) => Promise<Entity[] | Entity>
     ): this {
-        this.loadEntities = load as (query: Query) => Promise<Entity[]>;
+        this.loadEntities = load as (query: Query) => Promise<Entity[] | Entity>;
         return this;
     }
 

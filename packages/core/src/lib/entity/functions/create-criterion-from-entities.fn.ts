@@ -51,7 +51,7 @@ function createCriterionManyPaths(entities: Entity[], paths: string[], writtenPa
     return or(map.getAll().map(bag => fromDeepBag(bag)));
 }
 
-export function createCriterionFromEntities(entities: Entity[], paths: string[], writtenPaths?: string[]) {
+export function createCriterionFromEntities(entities: Entity[], paths: string[], writtenPaths?: string[]): Criterion {
     if (paths.length === 1) {
         return createCriterionOnePath(entities, paths[0], writtenPaths ? writtenPaths[0] : void 0);
     } else {

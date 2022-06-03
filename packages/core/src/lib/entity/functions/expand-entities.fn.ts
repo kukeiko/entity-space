@@ -1,6 +1,6 @@
-import { Expansion } from "../../expansion/expansion";
+import { walkPath } from "@entity-space/utils";
 import { ExpansionObject } from "../../expansion/expansion-object";
-import { IEntitySchema } from "../../schema/public";
+import { IEntitySchema } from "../../schema";
 import { Entity } from "../entity";
 import { IEntitySource } from "../entity-source.interface";
 import { expandRelation } from "./expand-relation.fn";
@@ -10,8 +10,8 @@ export async function expandEntities(
     expansion: ExpansionObject,
     entities: Entity[],
     source: IEntitySource
-): Promise<false | ExpansionObject> {
-    const tasks: Promise<false | ExpansionObject>[] = [];
+): Promise<boolean> {
+    const tasks: Promise<boolean>[] = [];
 
     // [todo] dirty
     const isExpanded = (propertyKey: string): boolean => {
@@ -40,11 +40,7 @@ export async function expandEntities(
                     expansionValue === true ? void 0 : expansionValue
                 );
 
-                if (result === false) {
-                    return false;
-                }
-
-                return { [propertyKey]: Object.keys(result).length === 0 ? true : result };
+                return result;
             })(propertyKey);
 
             tasks.push(task);
@@ -53,25 +49,21 @@ export async function expandEntities(
             const referencedItems: Entity[] = [];
 
             for (const entity of entities) {
-                const reference = entity[propertyKey];
+                const reference = walkPath<Entity>(propertyKey, entity);
 
                 if (Array.isArray(reference)) {
                     referencedItems.push(...reference);
-                } else {
+                } else if (reference) {
                     referencedItems.push(reference);
                 }
             }
 
             const entitySchema = property.getUnboxedEntitySchema();
-            const task = (async (propertyKey: string) => {
+            const task = (async () => {
                 const result = await expandEntities(entitySchema, expansionValue, referencedItems, source);
 
-                if (result === false) {
-                    return false;
-                }
-
-                return { [propertyKey]: Object.keys(result).length === 0 ? true : result };
-            })(propertyKey);
+                return result;
+            })();
 
             tasks.push(task);
         }
@@ -79,13 +71,5 @@ export async function expandEntities(
 
     const results = await Promise.all(tasks);
 
-    // [todo] move somewhere else
-    function isNotFalse<T extends false | any>(value: T): value is Exclude<T, false> {
-        return value !== false;
-    }
-
-    const successfulExpansion = Expansion.mergeObjects(...results.filter(isNotFalse));
-
-    // [todo] i think returning false if all in results are false is correct - but not 100% sure
-    return results.every(result => result === false) ? false : successfulExpansion;
+    return !results.every(result => result === false);
 }

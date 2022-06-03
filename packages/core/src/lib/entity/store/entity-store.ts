@@ -23,7 +23,7 @@ export class EntityStore {
     private readonly commonIndexes = new Map<string, EntityStoreCommonIndex>();
     private entities: (Entity | undefined)[] = [];
 
-    // [todo] indexing needs to be crash safe
+    // [todo] indexing needs to be crash safe (transactional safety)
     add(entities: Entity[]): void {
         if (this.entitySchema.hasKey()) {
             const key = this.entitySchema.getKey();
@@ -34,14 +34,13 @@ export class EntityStore {
                 const slot = keyIndex.get(entity);
 
                 if (slot === void 0) {
-                    console.log(`[entity-store] add new entity`, entity);
                     this.uniqueIndexes.forEach(index => index.set(entity, this.entities.length));
                     this.commonIndexes.forEach(index => index.add(entity, this.entities.length));
                     this.entities.push(this.mergeEntities(entity));
                 } else {
-                    console.log(`[entity-store] update entity`, entity);
                     const previous = this.entities[slot]!;
                     entity = this.mergeEntities(previous, entity);
+                    this.entities[slot] = entity;
                     this.uniqueIndexes.forEach(index => index.delete(previous).set(entity, slot));
                     this.commonIndexes.forEach(index => index.delete(previous, slot).add(entity, slot));
                 }
@@ -164,8 +163,8 @@ export class EntityStore {
                 if (value === void 0) {
                     delete merged[key];
                 } else if (value !== null && typeof value === "object" && !(value instanceof Date)) {
-                    if (typeof merged[key] === "object" && !(value instanceof Date)) {
-                        merged[key] = this.mergeEntities(value, merged[key]);
+                    if (typeof merged[key] === "object" && !Array.isArray(value) && !(value instanceof Date)) {
+                        merged[key] = this.mergeEntities(merged[key], value);
                     } else {
                         merged[key] = value;
                     }

@@ -135,7 +135,8 @@ export class EntitySchema implements IEntitySchema {
         return this.key !== void 0;
     }
 
-    setKey(path: string | string[], options?: { name?: string }): void {
+    setKey(path: string | string[], options?: { name?: string }): this {
         this.key = new EntitySchemaKey(this, path, options);
+        return this;
     }
 }

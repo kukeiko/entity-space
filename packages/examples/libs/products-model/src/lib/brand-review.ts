@@ -1,5 +1,5 @@
+import { User } from "@entity-space/examples/libs/common-model";
 import { Brand } from "./brand";
-import { User } from "./user";
 
 export interface BrandReview {
     id: number;

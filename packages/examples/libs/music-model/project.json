@@ -1,0 +1,23 @@
+{
+    "$schema": "..\\..\\..\\..\\node_modules\\nx\\schemas\\project-schema.json",
+    "sourceRoot": "packages/examples/libs/music-model/src",
+    "projectType": "library",
+    "targets": {
+        "lint": {
+            "executor": "@nrwl/linter:eslint",
+            "outputs": ["{options.outputFile}"],
+            "options": {
+                "lintFilePatterns": ["packages/examples/libs/music-model/**/*.ts"]
+            }
+        },
+        "test": {
+            "executor": "@nrwl/jest:jest",
+            "outputs": ["coverage/packages/examples/libs/music-model"],
+            "options": {
+                "jestConfig": "packages/examples/libs/music-model/jest.config.ts",
+                "passWithNoTests": true
+            }
+        }
+    },
+    "tags": []
+}

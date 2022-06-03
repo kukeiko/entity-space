@@ -52,5 +52,13 @@ export class ProductEntitySource extends EntityApi<Product> implements IEntitySo
                     );
                 })
         );
+
+        this.addEndpoint(builder =>
+            builder.isLoadedBy(async () => {
+                const products = await firstValueFrom(this.http.get<Product[]>(`api/products`));
+
+                return products;
+            })
+        );
     }
 }

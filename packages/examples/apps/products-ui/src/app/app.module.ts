@@ -8,6 +8,7 @@ import { MatInputModule } from "@angular/material/input";
 import { MatTableModule } from "@angular/material/table";
 import { BrowserModule } from "@angular/platform-browser";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
+import { CommonModelSchemaCatalog } from "@entity-space/examples/libs/common-model";
 import { ProductsSchemaCatalog } from "@entity-space/examples/libs/products-model";
 import { AppComponent } from "./app.component";
 import { BrandEntitySource } from "./entity-sources/brand.entity-source";
@@ -33,6 +34,7 @@ import { UserEntitySource } from "./entity-sources/user.entity-source";
         UserEntitySource,
         // [todo] custom provider because we don't yet have @Injectable() in client/server shared model lib
         { provide: ProductsSchemaCatalog, useClass: ProductsSchemaCatalog },
+        { provide: CommonModelSchemaCatalog, useClass: CommonModelSchemaCatalog },
     ],
     bootstrap: [AppComponent],
 })
