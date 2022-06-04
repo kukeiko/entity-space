@@ -28,23 +28,27 @@ export class EntitySchema implements IEntitySchema {
 
     readonly schemaType = "entity";
 
-    addAllOf(schema: IEntitySchema): void {
+    addAllOf(schema: IEntitySchema): this {
         this.allOf.push(schema);
+        return this;
     }
 
-    addIndex(path: string | string[], options?: { name?: string; unique?: boolean; multiEntry?: boolean }): void {
+    addIndex(path: string | string[], options?: { name?: string; unique?: boolean; multiEntry?: boolean }): this {
         const index = new EntitySchemaIndex(this, path, options);
         this.indexes.push(index);
+        return this;
     }
 
-    addProperty(name: string, valueSchema: PropertyValueSchema): void {
+    addProperty(name: string, valueSchema: PropertyValueSchema): this {
         const property = new EntitySchemaProperty(this, name, valueSchema);
         this.properties.push(property);
+        return this;
     }
 
-    addRelation(propertyKey: string, from: string, to: string): void {
+    addRelation(propertyKey: string, from: string, to: string): this {
         const relation = new EntitySchemaRelation(this, propertyKey, from, to);
         this.relations.push(relation);
+        return this;
     }
 
     findRelation(propertyName: string): IEntitySchemaRelation | undefined {
