@@ -194,57 +194,61 @@ describe("workspace", () => {
         });
     });
 
-    it("expanding", async () => {
-        const fooSchema = new EntitySchema("foo");
-        fooSchema.setKey(["id", "secondaryId"]);
+    describe("expansions", () => {
+        it("expanding on 1x composite index", async () => {
+            const fooSchema = new EntitySchema("foo").setKey(["id", "secondaryId"]);
+            const barSchema = new EntitySchema("bar")
+                .setKey("id")
+                .addIndex(["fooId", "secondaryId"], { name: "fooId" });
 
-        const barSchema = new EntitySchema("bar");
-        barSchema.setKey("id");
-        barSchema.addIndex(["fooId", "secondaryId"], { name: "fooId" });
+            fooSchema.addProperty("bar", barSchema);
+            // [todo] unintuitive usage of auto computed index name
+            fooSchema.addRelation("bar", "id,secondaryId", "fooId");
 
-        fooSchema.addProperty("bar", barSchema);
-        // [todo] unintuitive usage of auto computed index name
-        fooSchema.addRelation("bar", "id,secondaryId", "fooId");
+            const workspace = new Workspace();
 
-        const workspace = new Workspace();
+            workspace.add(fooSchema, [{ id: 1337, secondaryId: 128, name: "i am foo" }]);
+            workspace.add(barSchema, [{ id: 64, fooId: 1337, secondaryId: 128, name: "i belong to foo" }]);
 
-        workspace.add(fooSchema, [{ id: 1337, secondaryId: 128, name: "i am foo" }]);
-        workspace.add(barSchema, [{ id: 64, fooId: 1337, secondaryId: 128, name: "i belong to foo" }]);
+            const query = new Query(fooSchema, matches({ id: inSet([1337]), secondaryId: inSet([128]) }), {
+                bar: true,
+            });
+            const fooItems = await workspace.queryAgainstCache(query);
 
-        const query = new Query(fooSchema, matches({ id: inSet([1337]), secondaryId: inSet([128]) }), { bar: true });
-        const fooItems = await workspace.queryAgainstCache(query);
+            expect(fooItems).toEqual([
+                {
+                    id: 1337,
+                    secondaryId: 128,
+                    name: "i am foo",
+                    bar: { id: 64, fooId: 1337, secondaryId: 128, name: "i belong to foo" },
+                },
+            ]);
+        });
 
-        expect(fooItems).toEqual([
-            {
-                id: 1337,
-                secondaryId: 128,
-                name: "i am foo",
-                bar: { id: 64, fooId: 1337, secondaryId: 128, name: "i belong to foo" },
-            },
-        ]);
-    });
+        // [todo] i need a less confusing name for entities that are contained in other entities,
+        // but are not part of a relation, i.e. not normalized/joinable/...
+        it("expanding on a relation of an entity which itself is not related", async () => {
+            // arrange
+            const fooSchema = new EntitySchema("foo").setKey("id");
+            const barSchema = new EntitySchema("bar").addIndex("bazId");
+            const bazSchema = new EntitySchema("baz").setKey("id");
+            barSchema.addProperty("baz", bazSchema);
+            barSchema.addRelation("baz", "bazId", "id");
+            fooSchema.addProperty("bar", barSchema);
 
-    it("expanding #2", async () => {
-        // arrange
-        const fooSchema = new EntitySchema("foo").setKey("id");
-        const barSchema = new EntitySchema("bar").addIndex("bazId");
-        const bazSchema = new EntitySchema("baz").setKey("id");
-        barSchema.addProperty("baz", bazSchema);
-        barSchema.addRelation("baz", "bazId", "id");
-        fooSchema.addProperty("bar", barSchema);
+            const workspace = new Workspace();
+            workspace.add(fooSchema, [{ id: 1337, name: "i am foo", bar: { bazId: 128 } }]);
+            workspace.add(bazSchema, [{ id: 128, name: "i am baz" }]);
 
-        const workspace = new Workspace();
-        workspace.add(fooSchema, [{ id: 1337, name: "i am foo", bar: { bazId: 128 } }]);
-        workspace.add(bazSchema, [{ id: 128, name: "i am baz" }]);
+            // act
+            const query = new Query(fooSchema, matches({ id: inSet([1337]) }), { bar: { baz: true } });
+            const fooItems = await workspace.queryAgainstCache(query);
 
-        // act
-        const query = new Query(fooSchema, matches({ id: inSet([1337]) }), { bar: { baz: true } });
-        const fooItems = await workspace.queryAgainstCache(query);
-
-        // assert
-        expect(fooItems).toEqual([
-            { id: 1337, name: "i am foo", bar: { bazId: 128, baz: { id: 128, name: "i am baz" } } },
-        ]);
+            // assert
+            expect(fooItems).toEqual([
+                { id: 1337, name: "i am foo", bar: { bazId: 128, baz: { id: 128, name: "i am baz" } } },
+            ]);
+        });
     });
 
     it("normalize items, add them to store, then query", async () => {
@@ -268,8 +272,7 @@ describe("workspace", () => {
         const fooSchema = new EntitySchema("foo").setKey("id").addIndex("barId").addRelation("bar", "barId", "id");
         const barSchema = new EntitySchema("bar").setKey("id").addIndex("bazId").addRelation("baz", "bazId", "id");
         fooSchema.addProperty("bar", barSchema);
-        const bazSchema = new EntitySchema("baz");
-        bazSchema.setKey("id");
+        const bazSchema = new EntitySchema("baz").setKey("id");
         barSchema.addProperty("baz", bazSchema);
 
         const workspace = new Workspace();
