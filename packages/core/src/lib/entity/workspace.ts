@@ -1,4 +1,4 @@
-import { any, Criterion, fromDeepBag, isValue, matches } from "@entity-space/criteria";
+import { any, Criterion, fromDeepBag, isValue, matches, MatchesBagArgument } from "@entity-space/criteria";
 import { Class, DeepPartial, isDefined, tramplePath } from "@entity-space/utils";
 import { flatMap, isEqual, xor, xorWith } from "lodash";
 import {
@@ -61,22 +61,9 @@ export class Workspace implements IEntitySource, IEntityStore {
         }
 
         for (const [watchedQuery, subject] of this.watchedQueries) {
-            // [todo] disabling any checks to have fully working reactivity,
-            // need to introduce smarter ones at a later time so we don't run into performance issues.
-            // if (
-            //     watchedQuery.getEntitySchema().getId() === schema.getId() &&
-            //     // [todo] not really correct
-            //     watchedQuery.getCriteria().filter(entities).length > 0
-            // ) {
-
             new Promise(resolve => setTimeout(resolve, 0))
                 .then(() => this.queryAgainstCache(watchedQuery))
-                .then(value => {
-                    subject.next(value);
-                    // if (value === false) return;
-                    // subject.next(flatMap(value, x => x.getEntities()));
-                });
-            // }
+                .then(value => subject.next(value));
         }
     }
 
@@ -160,9 +147,10 @@ export class Workspace implements IEntitySource, IEntityStore {
         return result;
     }
 
-    async query(query: Query): Promise<false | QueriedEntities[]> {
+    // [todo] T not used yet; need to add it to QueriedEntities
+    async query<T extends Entity = Entity>(query: Query): Promise<false | QueriedEntities<T>[]> {
         await this.loadUncachedIntoCache(query);
-        const entities = await this.queryAgainstCache(query);
+        const entities = (await this.queryAgainstCache(query)) as T[];
 
         return [new QueriedEntities(query, entities)];
     }
@@ -181,12 +169,12 @@ export class Workspace implements IEntitySource, IEntityStore {
 
     query$<T extends Entity>(
         schema: IEntitySchema,
-        criterion?: Criterion,
+        criterion?: Criterion | MatchesBagArgument<T>,
         expansion?: ExpansionObject<T>
     ): Observable<T[]>;
     query$<T extends Entity>(
         schema: Class<T>,
-        criterion?: Partial<Record<keyof T, Criterion | string | number | (string | number)[]>>,
+        criterion?: MatchesBagArgument<T>,
         expansion?: ExpansionObject<Instance<T>>
     ): Observable<Instance<T>[]>;
     query$<T extends Entity>(

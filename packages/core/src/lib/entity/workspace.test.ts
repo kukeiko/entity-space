@@ -1,4 +1,5 @@
 import { inSet, matches } from "@entity-space/criteria";
+import { firstValueFrom, take, tap, toArray } from "rxjs";
 import { Query } from "../query/public";
 import { EntitySchema } from "../schema/entity-schema";
 import { Workspace } from "./workspace";
@@ -299,5 +300,51 @@ describe("workspace", () => {
 
         // assert
         expect(queriedItems).toEqual(addedItems);
+    });
+
+    describe("reactive queries", () => {
+        const timeout = 100;
+
+        it(
+            "should work #1",
+            async () => {
+                // arrange
+                interface Entity {
+                    id: number;
+                    name: string;
+                }
+
+                const entitySchema = new EntitySchema("foo").setKey("id");
+                const workspace = new Workspace();
+                const entities: Entity[] = [
+                    { id: 1, name: "one" },
+                    { id: 2, name: "two" },
+                ];
+                const changes: Partial<Entity>[] = [
+                    {
+                        id: 1,
+                        name: "one (update)",
+                    },
+                ];
+                const expectedEntities: Entity[] = [
+                    { id: 1, name: "one (update)" },
+                    { id: 2, name: "two" },
+                ];
+                workspace.add<Entity>(entitySchema, entities);
+
+                // act / assert
+                let index = 0;
+                const actual = await firstValueFrom(
+                    workspace.query$<Entity>(entitySchema, { id: inSet([1, 2]) }).pipe(
+                        tap(() => workspace.add<Entity>(entitySchema, changes[index++] ?? [])),
+                        take(changes.length + 1),
+                        toArray()
+                    )
+                );
+
+                expect(actual).toEqual([entities, expectedEntities]);
+            },
+            timeout
+        );
     });
 });

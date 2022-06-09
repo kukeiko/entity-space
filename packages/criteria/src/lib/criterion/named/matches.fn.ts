@@ -6,14 +6,13 @@ import { inSet } from "../set/in-set.fn";
 import { isValue } from "../value/is-value.fn";
 import { NamedCriteria } from "./named-criteria";
 
+export type MatchesBagArgument<T> = Partial<Record<keyof T, Criterion | string | number | (string | number)[]>>;
 /**
  * [todo] name is a bit unintuitive. it doesn't really reflect that we're creating named-criteria here.
  * however, named-criteria are an integral part for filtering entities, so it does have a reason to use
  * a very generic word. if we keep it, we just expect it to be part of the learning curve.
  */
-export function matches<T>(
-    bag: Partial<Record<keyof T, Criterion | string | number | (string | number)[]>>
-): Criterion {
+export function matches<T>(bag: MatchesBagArgument<T>): Criterion {
     const criterionBag: Record<string, Criterion> = {};
 
     for (const key in bag) {

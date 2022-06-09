@@ -1,16 +1,16 @@
 import { Query } from "../../query/public";
 import { Entity } from "../entity";
 
-export class QueriedEntities {
-    constructor(query: Query, entities: Entity[]) {
+export class QueriedEntities<T extends Entity = Entity> {
+    constructor(query: Query, entities: T[]) {
         this.query = query;
         this.entities = entities;
     }
 
-    private readonly entities: Entity[];
+    private readonly entities: T[];
     private readonly query: Query;
 
-    getEntities(): Entity[] {
+    getEntities(): T[] {
         return this.entities.slice();
     }
 
