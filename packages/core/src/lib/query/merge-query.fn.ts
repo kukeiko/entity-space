@@ -1,4 +1,5 @@
 import { or } from "@entity-space/criteria";
+import { Expansion } from "../public";
 import { Query } from "./query";
 
 // [todo] clean up this method, it is really hard to read and hacked together.
@@ -8,6 +9,16 @@ export function mergeQuery(a: Query, b: Query): false | Query {
     }
 
     const entitySchema = a.getEntitySchema();
+
+    if (a.getCriteria().equivalent(b.getCriteria())) {
+        // same identity, just merge expansions
+        return new Query(
+            entitySchema,
+            a.getCriteria(),
+            Expansion.mergeObjects(a.getExpansionObject(), b.getExpansionObject())
+        );
+    }
+
     const mergedCriteria = a.getCriteria().merge(b.getCriteria());
     const expandReduced_A_by_B = b.getExpansion().reduce(a.getExpansion());
     const expandReduced_B_by_A = a.getExpansion().reduce(b.getExpansion());
