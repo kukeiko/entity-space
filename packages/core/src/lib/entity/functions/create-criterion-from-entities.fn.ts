@@ -21,10 +21,11 @@ function createCriterionManyPaths(entities: Entity[], paths: string[], writtenPa
     const leadingPaths = paths.slice(0, -1);
     const lastPath = paths[paths.length - 1];
     const writtenLastPath = writtenPaths ? writtenPaths[paths.length - 1] : lastPath;
-    const map = new ComplexKeyMap(leadingPaths);
+    type Bag = Record<string, unknown>;
+    const map = new ComplexKeyMap<Entity, Bag>(leadingPaths);
 
     for (const entity of entities) {
-        const bag: Record<string, unknown> = {};
+        const bag: Bag = {};
 
         for (let i = 0; i < leadingPaths.length; ++i) {
             const path = leadingPaths[i];
@@ -38,13 +39,11 @@ function createCriterionManyPaths(entities: Entity[], paths: string[], writtenPa
         tramplePath(writtenLastPath, bag, inSet([walkPath(lastPath, entity)!]));
 
         map.set(entity, bag, (previous, current) => {
-            const previousSet = walkPath(writtenLastPath, previous as any) as InSetCriterion;
-            const currentSet = walkPath(writtenLastPath, current as any) as InSetCriterion;
-            tramplePath(
-                writtenLastPath,
-                previous as any,
-                inSet([...previousSet.getValues(), ...currentSet.getValues()])
-            );
+            const previousSet = walkPath(writtenLastPath, previous) as InSetCriterion;
+            const currentSet = walkPath(writtenLastPath, current) as InSetCriterion;
+            tramplePath(writtenLastPath, previous, inSet([...previousSet.getValues(), ...currentSet.getValues()]));
+
+            return previous;
         });
     }
 
