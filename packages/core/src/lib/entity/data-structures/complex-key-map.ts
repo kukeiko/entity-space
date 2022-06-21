@@ -113,7 +113,7 @@ export class ComplexKeyMap<E extends Entity = Entity, V = unknown> {
         if (update && map.has(key)) {
             const updated = update(map.get(key) as V, value);
 
-            if (updated !== value) {
+            if (updated === value) {
                 return;
             }
 
