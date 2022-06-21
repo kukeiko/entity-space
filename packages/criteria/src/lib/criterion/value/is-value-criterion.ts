@@ -1,5 +1,8 @@
 import { getInstanceClass, Null, Primitive } from "@entity-space/utils";
+import { Criteria } from "../criteria";
 import { Criterion } from "../criterion";
+import { InSetCriterion } from "../set/in-set-criterion";
+import { inSet } from "../set/in-set.fn";
 import { notValue } from "./not-value.fn";
 
 export class IsValueCriterion<
@@ -20,16 +23,45 @@ export class IsValueCriterion<
         return value === this.value;
     }
 
+    // [todo] some reduction cases were missing - seems like i was sloppy? figure out if there are more,
+    // and not only here, but in all criterion implementations
     reduce(other: Criterion): boolean | Criterion {
-        if (other instanceof getInstanceClass(this) && other.getValue() === this.getValue()) {
+        if (other instanceof Criteria) {
+            // [todo] added this case - write test for it
+            return other.reduceBy(this);
+        } else if (other instanceof getInstanceClass(this) && other.getValue() === this.getValue()) {
             return true;
+        } else if (other instanceof InSetCriterion && other.getValues().has(this.getValue())) {
+            // [todo] added this case - write test for it
+            const withoutMyValue = new Set(other.getValues());
+            withoutMyValue.delete(this.getValue());
+
+            if (withoutMyValue.size === 0) {
+                return true;
+            }
+
+            return new InSetCriterion(withoutMyValue);
         }
 
         return false;
     }
 
     override intersect(other: Criterion): false | Criterion {
-        return this.merge(other);
+        if (other instanceof IsValueCriterion) {
+            if (this.value !== other.getValue()) {
+                return false;
+            }
+
+            return this;
+        } else if (other instanceof InSetCriterion) {
+            if (!other.hasValue(this.getValue())) {
+                return false;
+            }
+
+            return this;
+        }
+
+        return false;
     }
 
     override invert(): Criterion {
@@ -37,8 +69,14 @@ export class IsValueCriterion<
     }
 
     override merge(other: Criterion): false | Criterion {
-        if (other instanceof IsValueCriterion && this.value === other.value) {
-            return this;
+        if (other instanceof IsValueCriterion) {
+            if (this.value === other.value) {
+                return this;
+            } else {
+                return inSet([this.value, other.value]);
+            }
+        } else if (other instanceof InSetCriterion) {
+            return inSet([this.value, ...other.getValues()]);
         }
 
         return false;

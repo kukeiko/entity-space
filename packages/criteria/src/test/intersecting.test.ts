@@ -1,12 +1,14 @@
 import { intersecting } from "./intersecting.fn";
 
 describe("intersecting criteria", () => {
-    // binary
+    // is-value
     intersecting("true").with("true").shouldBe("true");
     intersecting("true").with("false").shouldBe(false);
+    intersecting("1").with("{-1, 0, 1}").shouldBe("1");
 
     // set
     intersecting("{1, 2, 3}").with("{2}").shouldBe("{2}");
+    intersecting("{1, 2, 3}").with("2").shouldBe("2");
 
     // not-in-set
     intersecting("!{2}").with("!{7}").shouldBe("!{2, 7}");

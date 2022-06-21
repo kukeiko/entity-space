@@ -2,11 +2,13 @@ import { EntitySchemaIndex } from "./entity-schema-index";
 import { EntitySchemaKey } from "./entity-schema-key";
 import { EntitySchemaProperty } from "./entity-schema-property";
 import { EntitySchemaRelation } from "./entity-schema-relation";
+import { ArraySchema, PrimitiveSchema } from "./property-value";
 import {
     IEntitySchema,
     IEntitySchemaIndex,
     IEntitySchemaProperty,
     IEntitySchemaRelation,
+    IPrimitiveSchema,
     PropertyValueSchema,
 } from "./schema.interface";
 
@@ -43,6 +45,14 @@ export class EntitySchema implements IEntitySchema {
         const property = new EntitySchemaProperty(this, name, valueSchema);
         this.properties.push(property);
         return this;
+    }
+
+    addArray(name: string, valueSchema: IEntitySchema | IPrimitiveSchema): this {
+        return this.addProperty(name, new ArraySchema(valueSchema));
+    }
+
+    addString(name: string): this {
+        return this.addProperty(name, new PrimitiveSchema("string"));
     }
 
     addRelation(propertyKey: string, from: string, to: string): this {
