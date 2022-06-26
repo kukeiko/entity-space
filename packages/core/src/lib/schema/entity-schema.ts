@@ -1,3 +1,4 @@
+import { Entity } from "../entity";
 import { EntitySchemaIndex } from "./entity-schema-index";
 import { EntitySchemaKey } from "./entity-schema-key";
 import { EntitySchemaProperty } from "./entity-schema-property";
@@ -13,7 +14,7 @@ import {
 } from "./schema.interface";
 
 // [todo] rename to "EntityTypeSchema"
-export class EntitySchema implements IEntitySchema {
+export class EntitySchema<T extends Entity = Entity> implements IEntitySchema<T> {
     constructor(id: string) {
         this.id = id;
     }

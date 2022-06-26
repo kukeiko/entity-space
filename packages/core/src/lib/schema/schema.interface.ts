@@ -1,3 +1,5 @@
+import { Entity } from "../entity";
+
 export type PrimitiveSchemaDataType = "boolean" | "integer" | "number" | "string";
 
 // [todo] can we get rid of the "schemaType" discriminator somehow, and instead
@@ -23,9 +25,8 @@ export interface IEntitySchemaRelation {
     getToIndex(): IEntitySchemaIndex;
 }
 
-export interface IEntitySchema {
+export interface IEntitySchema<T extends Entity = Entity> {
     readonly schemaType: "entity";
-
     getAllOf(): IEntitySchema[];
     getAnyOf(): IEntitySchema[];
     getId(): string;

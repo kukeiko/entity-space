@@ -1,8 +1,9 @@
-import { any, Criterion } from "@entity-space/criteria";
+import { any, AnyCriterion, Criterion } from "@entity-space/criteria";
 import { Entity } from "../entity/entity";
 import { Expansion } from "../expansion/expansion";
 import { ExpansionObject } from "../expansion/expansion-object";
 import { IEntitySchema } from "../schema/schema.interface";
+import { reduceQueries } from "./reduce-queries.fn";
 
 // [todo] T is unused
 export class Query<
@@ -41,7 +42,28 @@ export class Query<
         return this.expansion.getObject();
     }
 
+    withoutExpansion(): Query<T, C, ExpansionObject> {
+        return new Query(this.entitySchema, this.criteria);
+    }
+
+    withExpansion(expansion: E | Expansion<E>): Query<T, C, E> {
+        return new Query(this.entitySchema, this.criteria, expansion);
+    }
+
     toString(): string {
-        return `${this.entitySchema.getId()}/${this.criteria}/${JSON.stringify(this.expansion.getObject())}`;
+        const expansion = this.expansion.isEmpty() ? "" : "/" + JSON.stringify(this.expansion.getObject());
+        const criterion = this.criteria instanceof AnyCriterion ? "" : ":" + this.criteria.toString();
+
+        return `${this.entitySchema.getId()}${criterion}${expansion}`;
+    }
+
+    reduceBy(others: Query<T>[]): false | Query<T>[] {
+        return reduceQueries([this], others);
+    }
+
+    static equivalentCriteria(...queries: Query[]): boolean {
+        const [first, ...others] = queries;
+
+        return others.every(other => other.getCriteria().equivalent(first.getCriteria()));
     }
 }
