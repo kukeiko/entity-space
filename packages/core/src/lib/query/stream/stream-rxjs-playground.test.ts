@@ -179,7 +179,7 @@ describe("playground: stream", () => {
         const logEach = opts?.logEach ?? true;
         const logFinal = opts?.logFinal ?? true;
 
-        const stream = source.query([...queries]).pipe(
+        const stream = source.query_v2([...queries]).pipe(
             tap(packet => {
                 if (logEach) {
                     console.log(packet.toString());

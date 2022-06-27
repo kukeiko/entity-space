@@ -1,9 +1,11 @@
 import { flatMap, flatten } from "lodash";
 import {
     concatAll,
+    defaultIfEmpty,
     EMPTY,
     filter,
     finalize,
+    lastValueFrom,
     map,
     merge,
     mergeAll,
@@ -17,7 +19,8 @@ import {
     takeUntil,
     tap,
 } from "rxjs";
-import { Entity, QueriedEntities } from "../../entity";
+import { Entity, mergeEntities, QueriedEntities } from "../../entity";
+import { IEntitySource } from "../../entity/entity-source.interface";
 import { Query } from "../query";
 import { reduceQueries } from "../reduce-queries.fn";
 import { IEntityHydrator } from "./i-entity-hydrator";
@@ -25,7 +28,7 @@ import { IEntitySource_V2 } from "./i-entity-source-v2";
 import { QueryStream } from "./query-stream";
 import { QueryStreamPacket } from "./query-stream-packet";
 
-export class EntitySourceGateway_V2 implements IEntitySource_V2 {
+export class EntitySourceGateway_V2 implements IEntitySource_V2, IEntitySource {
     constructor(sources: IEntitySource_V2[] = [], hydrators: IEntityHydrator[] = []) {
         this.sources = sources.slice();
         this.hydrators = hydrators.slice();
@@ -34,7 +37,23 @@ export class EntitySourceGateway_V2 implements IEntitySource_V2 {
     private sources: IEntitySource_V2[];
     private hydrators: IEntityHydrator[];
 
-    query<T extends Entity = Entity>(queries: Query<T>[]): QueryStream<T> {
+    async query(query: Query): Promise<false | QueriedEntities<Entity>[]> {
+        const mergedPacket = await lastValueFrom(
+            this.query_v2([query]).pipe(scan(QueryStreamPacket.merge), defaultIfEmpty(new QueryStreamPacket()))
+        );
+
+        if (!mergedPacket.getAcceptedQueries().length) {
+            return false;
+        }
+
+        const entities = flatMap(mergedPacket.getPayload(), payload => payload.getEntities());
+        const clientSideFilteredEntities = query.getCriteria().filter(entities);
+        const merged = mergeEntities(query.getEntitySchema(), clientSideFilteredEntities);
+
+        return [new QueriedEntities(query, merged)];
+    }
+
+    query_v2<T extends Entity = Entity>(queries: Query<T>[]): QueryStream<T> {
         const sourceStreams = new ReplaySubject<QueryStream<T>>();
         const sources = this.sources.slice().reverse();
         const closed$ = new ReplaySubject<void>();
@@ -199,7 +218,7 @@ export class EntitySourceGateway_V2 implements IEntitySource_V2 {
             return;
         }
 
-        const sourceStream = nextSource.query(queries).pipe(takeUntil(closed$), shareReplay());
+        const sourceStream = nextSource.query_v2(queries).pipe(takeUntil(closed$), shareReplay());
         const listenerStream = this.listenToStreamToDispatchNext$(sourceStream, queries, (openQueries: Query<T>[]) => {
             this.startNextSourceStream(sources, openQueries, closed$, sourceStreams);
         });

@@ -1,10 +1,25 @@
-import { HttpClientModule } from "@angular/common/http";
+import { HttpClient, HttpClientModule } from "@angular/common/http";
 import { NgModule } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { BrowserModule } from "@angular/platform-browser";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
-import { BlueprintResolver, EntitySchema, EntitySourceGateway, SchemaCatalog, Workspace } from "@entity-space/core";
-import { SongBlueprint } from "@entity-space/examples/libs/music-model";
+import {
+    BlueprintResolver,
+    DefaultHydrator,
+    EntityController,
+    EntityControllerEndpoint,
+    EntitySchema,
+    EntitySourceGateway,
+    EntitySourceGateway_V2,
+    Expansion,
+    ExpansionObject,
+    QueriedEntities,
+    QueryStreamPacket,
+    SchemaCatalog,
+    Workspace,
+} from "@entity-space/core";
+import { anyTemplate } from "@entity-space/criteria";
+import { Artist, ArtistBlueprint, SongBlueprint } from "@entity-space/examples/libs/music-model";
 import { ButtonModule } from "primeng/button";
 import { DialogModule } from "primeng/dialog";
 import { DropdownModule } from "primeng/dropdown";
@@ -13,6 +28,7 @@ import { MultiSelectModule } from "primeng/multiselect";
 import { SliderModule } from "primeng/slider";
 import { TableModule } from "primeng/table";
 import { TabViewModule } from "primeng/tabview";
+import { map } from "rxjs";
 import { ArtistTableComponent } from "./components/artist-table/artist-table.component";
 import { SongTableComponent } from "./components/song-table/song-table.component";
 import { ArtistEntitySource } from "./entity-sources/artist.entity-source";
@@ -39,6 +55,7 @@ import { MusicAppComponent } from "./music-box-app.component";
     providers: [
         ArtistEntitySource,
         SongEntitySource,
+        SongLocationEntitySource,
         { provide: SchemaCatalog },
         {
             // [todo] copy pasted to music-box-api
@@ -57,18 +74,47 @@ import { MusicAppComponent } from "./music-box-app.component";
                 return blueprintResolver;
             },
         },
-        SongLocationEntitySource,
+        {
+            provide: EntitySourceGateway_V2,
+            deps: [HttpClient, BlueprintResolver],
+            useFactory: (httpClient: HttpClient, blueprintResolver: BlueprintResolver) => {
+                console.log("🏭 new entity gateway [V2]");
+
+                const controller = new EntityController();
+                // load all artists
+                controller.addEndpoint(
+                    new EntityControllerEndpoint({
+                        schema: blueprintResolver.resolve(ArtistBlueprint),
+                        template: anyTemplate(),
+                        expansion: new Expansion<ExpansionObject<Artist>>({ id: true, name: true }),
+                        invoke: query => {
+                            return httpClient.get<Artist[]>("api/artists").pipe(
+                                map(artists => {
+                                    return new QueryStreamPacket({ payload: [new QueriedEntities(query, artists)] });
+                                })
+                            );
+                        },
+                    })
+                );
+
+                const gateway = new EntitySourceGateway_V2([controller], [new DefaultHydrator()]);
+
+                return gateway;
+            },
+        },
         {
             provide: EntitySourceGateway,
-            deps: [ArtistEntitySource, SongEntitySource, SongLocationEntitySource],
+            deps: [ArtistEntitySource, SongEntitySource, SongLocationEntitySource, EntitySourceGateway_V2],
             useFactory: (
                 artistSource: ArtistEntitySource,
                 songSource: SongEntitySource,
-                songLocationSource: SongLocationEntitySource
+                songLocationSource: SongLocationEntitySource,
+                gateway_V2: EntitySourceGateway_V2
             ) => {
                 console.log("🏭 new entity gateway");
                 const gateway = new EntitySourceGateway();
-                gateway.addSource(artistSource.getEntitySchema(), artistSource);
+                gateway.addSource(artistSource.getEntitySchema(), gateway_V2);
+                // gateway.addSource(artistSource.getEntitySchema(), artistSource);
                 gateway.addSource(songSource.getEntitySchema(), songSource);
                 gateway.addStore(songSource.getEntitySchema(), songSource);
                 gateway.addSource(songLocationSource.getEntitySchema(), songLocationSource);

@@ -17,7 +17,7 @@ export class EntityController implements IEntitySource_V2 {
         return this;
     }
 
-    query<T extends Entity = Entity>(
+    query_v2<T extends Entity = Entity>(
         queries: Query<T, Criterion, ExpansionObject<Record<string, unknown>>>[]
     ): Observable<QueryStreamPacket<T>> {
         const streams = queries.map(query => {

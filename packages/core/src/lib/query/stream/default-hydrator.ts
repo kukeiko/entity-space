@@ -1,5 +1,5 @@
 import { and, fromDeepBag } from "@entity-space/criteria";
-import { tramplePath } from "@entity-space/utils";
+import { tramplePath, walkPath } from "@entity-space/utils";
 import { merge, Observable, ReplaySubject } from "rxjs";
 import { tap } from "rxjs/operators";
 import { Entity, QueriedEntities } from "../../entity";
@@ -36,7 +36,7 @@ export class DefaultHydrator implements IEntityHydrator {
         const streams: Observable<QueryStreamPacket<T>>[] = [];
         const expansionObject = queriedEntities.getQuery().getExpansionObject();
         const schema = queriedEntities.getQuery().getEntitySchema();
-        // const entities = queriedEntities.getEntities();
+        const entities = queriedEntities.getEntities();
 
         for (const propertyKey in expansionObject) {
             const expansionValue = expansionObject[propertyKey];
@@ -58,17 +58,20 @@ export class DefaultHydrator implements IEntityHydrator {
 
                 streams.push(expandRelationStream);
             } else if (expansionValue !== true) {
-                // const property = schema.getProperty(propertyKey);
-                // const referencedItems: Entity[] = [];
-                // for (const entity of entities) {
-                //     const reference = walkPath<Entity>(propertyKey, entity);
-                //     if (Array.isArray(reference)) {
-                //         referencedItems.push(...reference);
-                //     } else if (reference) {
-                //         referencedItems.push(reference);
-                //     }
-                // }
-                // const entitySchema = property.getUnboxedEntitySchema();
+                // [todo] implement
+                const property = schema.getProperty(propertyKey);
+                const referencedItems: Entity[] = [];
+                for (const entity of entities) {
+                    const reference = walkPath<Entity>(propertyKey, entity);
+                    if (Array.isArray(reference)) {
+                        referencedItems.push(...reference);
+                    } else if (reference) {
+                        referencedItems.push(reference);
+                    }
+                }
+
+                // const referencedQueriedEntities
+                const entitySchema = property.getUnboxedEntitySchema();
                 // const task = (async () => {
                 //     const result = await expandEntities(
                 //         entitySchema,
@@ -105,7 +108,7 @@ export class DefaultHydrator implements IEntityHydrator {
         const query = new Query(relatedSchema, criteria, expansion ?? {});
         const result: Entity[] = [];
         const accepted: Query<T>[] = [];
-        const stream = source.query([query]);
+        const stream = source.query_v2([query]);
 
         const foo$ = new ReplaySubject<any>();
         stream
