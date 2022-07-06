@@ -9,6 +9,7 @@ describe("intersecting criteria", () => {
     // set
     intersecting("{1, 2, 3}").with("{2}").shouldBe("{2}");
     intersecting("{1, 2, 3}").with("2").shouldBe("2");
+    intersecting("{1, 2, 3}").with("{4}").shouldBe(false);
 
     // not-in-set
     intersecting("!{2}").with("!{7}").shouldBe("!{2, 7}");

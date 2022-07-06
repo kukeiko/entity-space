@@ -115,6 +115,10 @@ export class InSetCriterion<
                 }
             }
 
+            if (intersection.size === 0) {
+                return false;
+            }
+
             return inSet(intersection);
         } else if (other instanceof IsValueCriterion) {
             if (!this.hasValue(other.getValue())) {
