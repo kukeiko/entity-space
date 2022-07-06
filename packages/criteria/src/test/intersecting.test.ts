@@ -29,4 +29,9 @@ describe("intersecting criteria", () => {
     intersecting("[1, 7] | [10, 13]").with("[3, 9]").shouldBe("[3, 7]");
     intersecting("[1, 7] | [10, 13]").with("[3, 11]").shouldBe("[3, 7] | [10, 11]");
     intersecting("[1, 7] | [10, 13]").with("[3, 11] | [13, 17]").shouldBe("[3, 7] | [10, 11] | [13, 13]");
+
+    // named-criteria
+    intersecting("{ foo:{1,2,3} }").with("{ foo:{2} }").shouldBe("{ foo:{2} }");
+    intersecting("{ foo:{1,2,3} }").with("{ bar:{2} }").shouldBe("{ foo:{1,2,3}, bar:{2} }");
+    intersecting("{ foo:{1,2,3} }").with("{ foo:{4,5,6} }").shouldBe(false);
 });

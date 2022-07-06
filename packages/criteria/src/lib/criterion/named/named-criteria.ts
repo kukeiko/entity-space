@@ -129,6 +129,36 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag, R exte
         return false;
     }
 
+    override intersect(other: Criterion): false | Criterion {
+        if (!(other instanceof NamedCriteria)) {
+            return false;
+        }
+
+        const keys = new Set([...Object.keys(this.bag), ...Object.keys(other.bag)]);
+        const bag: NamedCriteriaBag = {};
+
+        for (const key of keys) {
+            const left = this.bag[key];
+            const right = other.bag[key];
+
+            if (!left) {
+                bag[key] = right;
+            } else if (!right) {
+                bag[key] = left;
+            } else {
+                const intersection = left.intersect(right);
+
+                if (!intersection) {
+                    return false;
+                }
+
+                bag[key] = intersection;
+            }
+        }
+
+        return new NamedCriteria(bag);
+    }
+
     override invert(): false | Criterion {
         const invertedItems: Record<string, Criterion> = {};
 
