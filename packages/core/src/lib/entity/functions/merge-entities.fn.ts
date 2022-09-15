@@ -1,11 +1,13 @@
+import { uniq } from "lodash";
 import { IEntitySchema } from "../../schema";
 import { ComplexKeyMap } from "../data-structures";
 import { Entity } from "../entity";
 
 function mergeEntitiesInternal(schema: IEntitySchema, ...entities: Entity[]): Entity {
-    const merged: Entity = {};
+    // [todo] why did i do uniq()? if i find out, i should document it
+    const [merged, ...others] = uniq(entities);
 
-    for (const entity of entities) {
+    for (const entity of others) {
         for (const key in entity) {
             const value = entity[key];
 
@@ -30,11 +32,11 @@ function mergeEntitiesInternal(schema: IEntitySchema, ...entities: Entity[]): En
     return merged;
 }
 
-export function mergeEntities(schema: IEntitySchema, entities: Entity[]): Entity[] {
-    const keyMap = new ComplexKeyMap<Entity, Entity>(schema.getKey().getPath());
+export function mergeEntities<T = Entity>(schema: IEntitySchema, entities: T[]): T[] {
+    const keyMap = new ComplexKeyMap<T, T>(schema.getKey().getPath());
 
     for (const entity of entities) {
-        keyMap.set(entity, entity, (previous, current) => mergeEntitiesInternal(schema, previous, current));
+        keyMap.set(entity, entity, (previous, current) => mergeEntitiesInternal(schema, previous, current) as T);
     }
 
     return keyMap.getAll();
