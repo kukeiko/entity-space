@@ -2,7 +2,7 @@ import { Class } from "@entity-space/utils";
 import { Criterion, NamedCriteriaBag } from "@entity-space/criteria";
 import { Instance } from "../../entity/blueprint/instance";
 import { define } from "../../entity/blueprint/property";
-import { Expand, ExpansionObject } from "../../expansion/public";
+import { Expand, ExpansionObject } from "../../expansion";
 
 interface Brand {
     id: number;

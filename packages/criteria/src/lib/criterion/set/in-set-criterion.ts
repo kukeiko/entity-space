@@ -3,6 +3,7 @@ import { Criteria } from "../criteria";
 import { Criterion } from "../criterion";
 import { InNumberRangeCriterion } from "../range/in-number-range-criterion";
 import { inRange } from "../range/in-range.fn";
+import { IsValueCriterion } from "../value/is-value-criterion";
 import { inSet } from "./in-set.fn";
 import { NotInSetCriterion } from "./not-in-set-criterion";
 import { notInSet } from "./not-in-set.fn";
@@ -19,6 +20,10 @@ export class InSetCriterion<
 
     getValues(): ReadonlySet<T> {
         return this.values;
+    }
+
+    hasValue(value: T): boolean {
+        return this.values.has(value);
     }
 
     getValuesOfType<U extends Primitive | typeof Null>(type: U[]): ReturnType<U>[] {
@@ -82,6 +87,8 @@ export class InSetCriterion<
             if (didReduce) {
                 return inRange(otherFrom?.value, otherTo?.value, [otherFrom?.op === ">=", otherTo?.op === "<="]);
             }
+        } else if (other instanceof IsValueCriterion && this.values.has(other.getValue())) {
+            return true;
         }
 
         return false;
@@ -90,6 +97,8 @@ export class InSetCriterion<
     override merge(other: Criterion): false | Criterion {
         if (other instanceof InSetCriterion) {
             return inSet([...this.getValues(), ...other.getValues()]);
+        } else if (other instanceof IsValueCriterion) {
+            return inSet([...this.values, other.getValue()]);
         }
 
         return false;
@@ -106,7 +115,17 @@ export class InSetCriterion<
                 }
             }
 
+            if (intersection.size === 0) {
+                return false;
+            }
+
             return inSet(intersection);
+        } else if (other instanceof IsValueCriterion) {
+            if (!this.hasValue(other.getValue())) {
+                return false;
+            }
+
+            return other;
         }
 
         return false;

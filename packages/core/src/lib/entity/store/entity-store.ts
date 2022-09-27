@@ -154,6 +154,7 @@ export class EntityStore {
     }
 
     private mergeEntities(...entities: Entity[]): Entity {
+        // [todo] use global mergEntities() instead
         const merged: Entity = {};
 
         for (const entity of entities) {

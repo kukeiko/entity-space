@@ -4,6 +4,7 @@ export * from "./lib/get-instance-class.fn";
 export * from "./lib/group-by.fn";
 export * from "./lib/is-defined.fn";
 export * from "./lib/is-instance-of.fn";
+export * from "./lib/is-not-false.fn";
 export * from "./lib/is-not-null.fn";
 export * from "./lib/is-not-nullsy.fn";
 export * from "./lib/is-primitive-or-null-value.fn";

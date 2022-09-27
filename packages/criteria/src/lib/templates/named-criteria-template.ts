@@ -39,6 +39,7 @@ export class NamedCriteriaTemplate<
     }
 
     // [todo] have a look if we can get rid of any & other casts
+    // [todo] implement AndCriteria
     remap(
         criterion: Criterion
     ): false | RemapCriterionResult<NamedCriteria<InstancedNamedCriteriaTemplateItems<T & U>, keyof T>> {

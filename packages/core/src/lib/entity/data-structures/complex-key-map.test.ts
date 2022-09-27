@@ -15,28 +15,28 @@ interface Block {
 describe("complex-key-map", () => {
     it("should do its thing", () => {
         // arrange
-        const map = new ComplexKeyMap(["pos.x", "pos.y", "pos.z"]);
-        const block = { pos: { x: 1, y: 0, z: -1 } };
-        const expected = "near-origin";
+        const map = new ComplexKeyMap<Block, string>(["pos.x", "pos.y", "pos.z"]);
+        const key: Block = { pos: { x: 1, y: 0, z: -1 } };
+        const value = "near-origin";
 
         // act
-        map.set(block, expected);
-        const actual = map.get(cloneJson(block));
+        map.set(key, value);
+        const actual = map.get(cloneJson(key));
 
         // assert
-        expect(actual).toEqual(expected);
+        expect(actual).toEqual(value);
     });
 
     it("should not return", () => {
         // arrange
-        const map = new ComplexKeyMap(["pos.x", "pos.y", "pos.z"]);
-        const blockA = { pos: { x: 1, y: 0, z: -1 } };
-        const blockB = { pos: { x: 2, y: 0, z: -1 } };
-        const expected = "near-origin";
+        const map = new ComplexKeyMap<Block, string>(["pos.x", "pos.y", "pos.z"]);
+        const keyA: Block = { pos: { x: 1, y: 0, z: -1 } };
+        const keyB: Block = { pos: { x: 2, y: 0, z: -1 } };
+        const value = "near-origin";
 
         // act
-        map.set(blockA, expected);
-        const actual = map.get(blockB);
+        map.set(keyA, value);
+        const actual = map.get(keyB);
 
         // assert
         expect(actual).toBeUndefined();
@@ -44,21 +44,21 @@ describe("complex-key-map", () => {
 
     it("should return by criterion", () => {
         // arrange
-        const map = new ComplexKeyMap(["pos.x", "pos.y", "pos.z"]);
-        const block = { pos: { x: 1, y: 0, z: -1 } };
-        const expected = "near-origin";
+        const map = new ComplexKeyMap<Block, string>(["pos.x", "pos.y", "pos.z"]);
+        const key: Block = { pos: { x: 1, y: 0, z: -1 } };
+        const value = "near-origin";
         const criterion = matches<Block>({
             pos: matches<Block["pos"]>({ x: isValue(1), y: isValue(0), z: isValue(-1) }),
         });
 
         // act
-        map.set(block, expected);
+        map.set(key, value);
         const actual = map.getByCriterion(criterion);
 
         expect(actual).not.toBe(false);
 
         if (actual !== false) {
-            expect(actual.values).toEqual([expected]);
+            expect(actual.values).toEqual([value]);
             expect(actual.remapped.getOpen()).toEqual([]);
         }
     });

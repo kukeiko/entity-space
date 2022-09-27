@@ -14,9 +14,20 @@
             "name": "Sacralicious",
             "id": 13,
             "artistId": 1
+        },
+        {
+            "name": "Der Slaufkugel",
+            "id": 16,
+            "artistId": 4
         }
     ],
     "song-location": [
+        {
+            "id": 3,
+            "songId": 14,
+            "songLocationType": "web",
+            "url": "https://www.youtube.com/watch?v=aJrY_aNA9Yo"
+        },
         {
             "id": 2,
             "songId": 15,
@@ -30,10 +41,10 @@
             "id": 1
         },
         {
-            "id": 3,
-            "songId": 14,
+            "id": 4,
+            "songId": 16,
             "songLocationType": "web",
-            "url": "https://www.youtube.com/watch?v=aJrY_aNA9Yo"
+            "url": "https://www.youtube.com/watch?v=tTvIMhfUW1o"
         }
     ],
     "artist": [
@@ -48,6 +59,10 @@
         {
             "name": "N'to",
             "id": 3
+        },
+        {
+            "name": "Cliff De Zoete",
+            "id": 4
         }
     ]
 }

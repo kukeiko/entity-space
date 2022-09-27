@@ -1,4 +1,4 @@
-import { Entity, IEntitySchema, IEntitySource, IEntityStore, QueriedEntities, Query } from "@entity-space/core";
+import { Entity, EntitySet, IEntitySchema, IEntitySource, IEntityStore, Query } from "@entity-space/core";
 import { inSet, matches } from "@entity-space/criteria";
 import { toMap } from "@entity-space/utils";
 import { constants } from "node:fs";
@@ -12,11 +12,11 @@ export class FileOnDiskBasedEntitySource implements IEntitySource, IEntityStore 
 
     private readonly filePath: string;
 
-    async query(query: Query): Promise<false | QueriedEntities[]> {
+    async query(query: Query): Promise<false | EntitySet[]> {
         const entities = query.getCriteria().filter(await this.loadEntitiesFromFile(query.getEntitySchema()));
         const ids = entities.map(entity => entity["id"]);
         const actualQuery = new Query(query.getEntitySchema(), matches({ id: inSet(ids) }));
-        const result = new QueriedEntities(actualQuery, entities);
+        const result = new EntitySet({ query: actualQuery, entities });
 
         return [result];
     }

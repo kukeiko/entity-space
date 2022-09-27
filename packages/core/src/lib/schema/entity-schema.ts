@@ -1,17 +1,20 @@
+import { Entity } from "../entity";
 import { EntitySchemaIndex } from "./entity-schema-index";
 import { EntitySchemaKey } from "./entity-schema-key";
 import { EntitySchemaProperty } from "./entity-schema-property";
 import { EntitySchemaRelation } from "./entity-schema-relation";
+import { ArraySchema, PrimitiveSchema } from "./property-value";
 import {
     IEntitySchema,
     IEntitySchemaIndex,
     IEntitySchemaProperty,
     IEntitySchemaRelation,
-    PropertyValueSchema,
+    IPrimitiveSchema,
+    IPropertyValueSchema,
 } from "./schema.interface";
 
 // [todo] rename to "EntityTypeSchema"
-export class EntitySchema implements IEntitySchema {
+export class EntitySchema<T extends Entity = Entity> implements IEntitySchema<T> {
     constructor(id: string) {
         this.id = id;
     }
@@ -39,10 +42,22 @@ export class EntitySchema implements IEntitySchema {
         return this;
     }
 
-    addProperty(name: string, valueSchema: PropertyValueSchema): this {
+    addProperty(name: string, valueSchema: IPropertyValueSchema): this {
         const property = new EntitySchemaProperty(this, name, valueSchema);
         this.properties.push(property);
         return this;
+    }
+
+    addArray(name: string, valueSchema: IEntitySchema | IPrimitiveSchema): this {
+        return this.addProperty(name, new ArraySchema(valueSchema));
+    }
+
+    addString(name: string): this {
+        return this.addProperty(name, new PrimitiveSchema("string"));
+    }
+
+    addInteger(name: string): this {
+        return this.addProperty(name, new PrimitiveSchema("integer"));
     }
 
     addRelation(propertyKey: string, from: string, to: string): this {

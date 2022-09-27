@@ -3,6 +3,7 @@ import { Class, DeepPartial, isDefined, tramplePath } from "@entity-space/utils"
 import { flatMap, isEqual, xor, xorWith } from "lodash";
 import {
     distinctUntilChanged,
+    EMPTY,
     filter,
     finalize,
     from,
@@ -14,27 +15,28 @@ import {
     Subject,
     switchMap,
 } from "rxjs";
-import { Expansion } from "../expansion/expansion";
-import { Expand, ExpansionObject } from "../expansion/expansion-object";
-import { mergeQueries, Query, reduceQueries } from "../query/public";
+import { ExpansionObject } from "../expansion/expansion-object";
+import { IEntityHydrator, IEntitySource_V2, mergeQueries, Query, reduceQueries } from "../query";
 import { IEntitySchema } from "../schema/schema.interface";
 import { BlueprintResolver, Instance } from "./blueprint";
-import { QueriedEntities } from "./data-structures/queried-entities";
+import { EntityHydrationQuery, EntitySet } from "./data-structures";
 import { Entity } from "./entity";
-import { EntityCache } from "./entity-cache";
 import { IEntitySource } from "./entity-source.interface";
 import { normalizeEntities } from "./functions";
-import { expandEntities } from "./functions/expand-entities.fn";
+import { createCriterionFromEntities } from "./functions/create-criterion-from-entities.fn";
 import { IEntityStore } from "./i-entity-store";
+import { InMemoryEntityDatabase } from "./in-memory-entity-database";
 
 export class Workspace implements IEntitySource, IEntityStore {
     private source?: IEntitySource;
+    private source_v2?: IEntitySource_V2;
     private store?: IEntityStore;
+    private hydrator?: IEntityHydrator;
     private blueprintResolver?: BlueprintResolver;
     private readonly queryCaches = new Map<string, Query[]>();
     private readonly queryCacheChanged = new Subject<Query[]>();
     // private readonly entityCache = new EntityCache();
-    private readonly entityCache = new EntityCache();
+    private readonly entityCache = new InMemoryEntityDatabase();
     private readonly watchedQueries = new Map<Query, Subject<Entity[]>>();
 
     onQueryCacheChanged(): Observable<Query[]> {
@@ -69,6 +71,10 @@ export class Workspace implements IEntitySource, IEntityStore {
 
     setSource(source: IEntitySource): void {
         this.source = source;
+    }
+
+    setHydrator(hydrator: IEntityHydrator): void {
+        this.hydrator = hydrator;
     }
 
     setStore(store: IEntityStore): void {
@@ -131,7 +137,7 @@ export class Workspace implements IEntitySource, IEntityStore {
         }
     }
 
-    private async loadFromSource(query: Query): Promise<false | QueriedEntities[]> {
+    private async loadFromSource(query: Query): Promise<false | EntitySet[]> {
         if (this.source === void 0) {
             return false;
         }
@@ -148,23 +154,44 @@ export class Workspace implements IEntitySource, IEntityStore {
     }
 
     // [todo] T not used yet; need to add it to QueriedEntities
-    async query<T extends Entity = Entity>(query: Query): Promise<false | QueriedEntities<T>[]> {
+    async query<T extends Entity = Entity>(query: Query): Promise<false | EntitySet<T>[]> {
         await this.loadUncachedIntoCache(query);
         const entities = (await this.queryAgainstCache(query)) as T[];
 
-        return [new QueriedEntities(query, entities)];
+        return [new EntitySet({ query, entities })];
     }
 
     // [todo] not reactive yet
-    hydrate$<T extends Entity, E extends ExpansionObject<Instance<T>>>(
+    hydrate$<T>(
         blueprint: Class<T>,
         entities: Instance<T>[],
-        expansion: ExpansionObject<Instance<T>>
-    ): Observable<Expand<Instance<T>, E>[]> {
-        const schema = this.toSchema(blueprint);
-        return from(expandEntities(schema, new Expansion(expansion), entities, this)).pipe(
-            switchMap(() => of(entities))
-        ) as any;
+        expansion: ExpansionObject<T>
+    ): Observable<Instance<T>[]> {
+        if (!this.hydrator) {
+            return EMPTY;
+        }
+
+        const schema = this.blueprintResolver?.resolve(blueprint);
+
+        if (!schema) {
+            return EMPTY;
+        }
+
+        const criteria = createCriterionFromEntities(entities, schema.getKey().getPath());
+        const query = new Query(schema, criteria, expansion);
+        const database = new InMemoryEntityDatabase();
+        database.addEntities(schema, entities);
+
+        const hydrationQuery = new EntityHydrationQuery<Instance<T>>({
+            entitySet: new EntitySet({ query: new Query(schema, criteria), entities }),
+            query,
+        });
+
+        return this.hydrator.hydrate$(hydrationQuery, database).pipe(
+            map(() => {
+                return database.querySync(query).getEntities();
+            })
+        ) as Observable<Instance<T>[]>;
     }
 
     query$<T extends Entity>(

@@ -1,7 +1,7 @@
-import { IEntitySchema, IEntitySchemaProperty, IPrimitiveSchema, PropertyValueSchema } from "./schema.interface";
+import { IEntitySchema, IEntitySchemaProperty, IPrimitiveSchema, IPropertyValueSchema } from "./schema.interface";
 
 export class EntitySchemaProperty implements IEntitySchemaProperty {
-    constructor(entitySchema: IEntitySchema, name: string, valueSchema: PropertyValueSchema) {
+    constructor(entitySchema: IEntitySchema, name: string, valueSchema: IPropertyValueSchema) {
         this.name = name;
         this.valueSchema = valueSchema;
         this.entitySchema = entitySchema;
@@ -12,7 +12,7 @@ export class EntitySchemaProperty implements IEntitySchemaProperty {
 
     private readonly entitySchema: IEntitySchema;
     private readonly name: string;
-    private readonly valueSchema: PropertyValueSchema;
+    private readonly valueSchema: IPropertyValueSchema;
 
     readonly schemaType = "property";
 
@@ -51,7 +51,7 @@ export class EntitySchemaProperty implements IEntitySchemaProperty {
         }
     }
 
-    getValueSchema(): PropertyValueSchema {
+    getValueSchema(): IPropertyValueSchema {
         return this.valueSchema;
     }
 

@@ -1,8 +1,8 @@
-import { any, Criterion } from "@entity-space/criteria";
-import { Entity } from "../entity/entity";
-import { Expansion } from "../expansion/expansion";
-import { ExpansionObject } from "../expansion/expansion-object";
-import { IEntitySchema } from "../schema/schema.interface";
+import { any, AnyCriterion, Criterion } from "@entity-space/criteria";
+import { Entity } from "../entity";
+import { Expansion, ExpansionObject } from "../expansion";
+import { IEntitySchema } from "../schema";
+import { reduceQueries } from "./reduce-queries.fn";
 
 // [todo] T is unused
 export class Query<
@@ -33,6 +33,10 @@ export class Query<
         return this.criteria;
     }
 
+    withCriteria<C extends Criterion>(criteria: C): Query<T, C, E> {
+        return new Query(this.entitySchema, criteria, this.expansion);
+    }
+
     getExpansion(): Expansion<E> {
         return this.expansion;
     }
@@ -41,7 +45,44 @@ export class Query<
         return this.expansion.getObject();
     }
 
+    withoutExpansion(): Query<T, C, ExpansionObject> {
+        return new Query(this.entitySchema, this.criteria);
+    }
+
+    withExpansion(expansion: E | Expansion<E>): Query<T, C, E> {
+        return new Query(this.entitySchema, this.criteria, expansion);
+    }
+
     toString(): string {
-        return `${this.entitySchema.getId()}/${this.criteria}/${JSON.stringify(this.expansion.getObject())}`;
+        const expansion = this.expansion.isEmpty() ? "" : "/" + JSON.stringify(this.expansion.getObject());
+        const criterion = this.criteria instanceof AnyCriterion ? "" : ":" + this.criteria.toString();
+
+        return `${this.entitySchema.getId()}${criterion}${expansion}`;
+    }
+
+    reduceBy(others: Query<T>[]): false | Query<T>[] {
+        return reduceQueries([this], others);
+    }
+
+    intersect(other: Query<T>): false | Query<T> {
+        const intersectedCriterion = this.getCriteria().intersect(other.getCriteria());
+
+        if (intersectedCriterion === false) {
+            return false;
+        }
+
+        const intersectedExpansion = this.getExpansion().intersect(other.getExpansion());
+
+        if (intersectedExpansion === false) {
+            return false;
+        }
+
+        return new Query(this.entitySchema, intersectedCriterion, intersectedExpansion);
+    }
+
+    static equivalentCriteria(...queries: Query[]): boolean {
+        const [first, ...others] = queries;
+
+        return others.every(other => other.getCriteria().equivalent(first.getCriteria()));
     }
 }

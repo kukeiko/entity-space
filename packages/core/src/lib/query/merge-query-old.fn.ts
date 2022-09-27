@@ -1,5 +1,5 @@
 // import { or } from "@entity-space/criteria";
-// import { reduceExpansion } from "../expansion/public";
+// import { reduceExpansion } from "../expansion";
 // import { Query } from "./query";
 
 // // [todo] kept for reference for when i want to implement query widening

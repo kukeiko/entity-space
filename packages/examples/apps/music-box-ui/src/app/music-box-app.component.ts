@@ -12,9 +12,7 @@ import {
 } from "@entity-space/examples/libs/music-model";
 import { pluckId, tramplePath } from "@entity-space/utils";
 import { PrimeNGConfig } from "primeng/api";
-import { combineLatest, map, merge, of, Subject, switchMap, tap } from "rxjs";
-import { SongLocationEntitySource } from "./entity-sources/song-location.entity-source";
-import { SongEntitySource } from "./entity-sources/song.entity-source";
+import { combineLatest, map, of, Subject, switchMap, tap } from "rxjs";
 
 interface MusicBoxAppState {
     data: {
@@ -47,8 +45,6 @@ type MusicBoxUiState = Instance<MusicBoxUiStateBlueprint>;
 export class MusicAppComponent implements OnInit, OnDestroy {
     constructor(
         private primengConfig: PrimeNGConfig,
-        private readonly songSource: SongEntitySource,
-        private readonly songLocationSource: SongLocationEntitySource,
         private readonly workspace: Workspace,
         private readonly resolver: BlueprintResolver
     ) {}
@@ -61,7 +57,7 @@ export class MusicAppComponent implements OnInit, OnDestroy {
         switchMap(ui =>
             combineLatest([
                 of(ui),
-                this.workspace.query$(ArtistBlueprint),
+                this.workspace.query$(ArtistBlueprint, void 0, { id: true, name: true }),
                 this.workspace.query$(SongLocationTypeBlueprint),
                 this.workspace.query$(
                     SongBlueprint,
@@ -69,7 +65,7 @@ export class MusicAppComponent implements OnInit, OnDestroy {
                         artistId: pluckId(ui.filter.artists),
                         locations: some(matches<SongLocation>({ songLocationType: pluckId(ui.filter.locationTypes) })),
                     },
-                    { locations: true }
+                    { id: true, artistId: true, duration: true, name: true, locations: true }
                 ),
             ])
         ),
@@ -105,9 +101,6 @@ export class MusicAppComponent implements OnInit, OnDestroy {
 
         this.primengConfig.ripple = true;
         this.workspace.onQueryCacheChanged().subscribe(queries => (this.queriesInWorkspaceCache = queries));
-        merge(this.songSource.onQueryIssued(), this.songLocationSource.onQueryIssued()).subscribe(
-            query => (this.queriesIssuedAgainstApi = [...this.queriesIssuedAgainstApi, query])
-        );
     }
 
     ngOnDestroy(): void {

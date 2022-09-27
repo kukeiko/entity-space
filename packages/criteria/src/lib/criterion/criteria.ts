@@ -5,7 +5,7 @@ export abstract class Criteria<T extends Criterion = Criterion> extends Criterio
         super();
 
         if (items.length === 0) {
-            throw new Error(`can not create empty property criteria`);
+            throw new Error(`can not create empty criteria`);
         }
 
         this.items = items;
