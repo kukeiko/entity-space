@@ -97,7 +97,7 @@ export class BlueprintResolver {
                 schema.addRelation(relationProperty.name, relationProperty.from, relationProperty.to);
             }
 
-            // [todo] implement remaing relational value types
+            // [todo] implement remaining relational value types
         }
 
         for (const indexedProperty of properties.filter(hasAttribute("index"))) {

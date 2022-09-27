@@ -1,5 +1,6 @@
 import { Instance } from "../../lib/entity";
-import { ExpansionObject } from "../../lib/expansion/public";
+import { ExpansionObject } from "../../lib/expansion";
+import { Query } from "../../lib/query/query";
 import { TreeNodeRepository } from "../facade/data";
 import { CanvasModel, UserModel } from "../facade/model";
 
@@ -18,6 +19,14 @@ import { CanvasModel, UserModel } from "../facade/model";
 // }
 
 describe("prototyping-playground", () => {
+    function foo(foo: readonly number[]) {}
+
+    // [todo] investigate this idea - for each class that just wraps data (such as QueryResult), have a Struct/Json interface
+    // that is implemented by the class
+    interface QueryResult_Struct_or_Json_decide_later {
+        readonly queries: readonly Query[];
+    }
+
     const treeNodeRepo = new TreeNodeRepository();
     it("generic expand w/ union types", () => {
         // type Expansion<T> = T extends number | string

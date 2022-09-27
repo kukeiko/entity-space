@@ -1,6 +1,6 @@
 import { inSet, matches } from "@entity-space/criteria";
 import { firstValueFrom, take, tap, toArray } from "rxjs";
-import { Query } from "../query/public";
+import { Query } from "../query";
 import { EntitySchema } from "../schema/entity-schema";
 import { Workspace } from "./workspace";
 

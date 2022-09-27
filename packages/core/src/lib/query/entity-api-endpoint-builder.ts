@@ -5,9 +5,8 @@ import {
     NamedCriteriaTemplateItems,
 } from "@entity-space/criteria";
 import { DeepPartial } from "@entity-space/utils";
-import { Entity } from "../entity/entity";
-import { ExpansionObject } from "../expansion/expansion-object";
-import { Expansion } from "../public";
+import { Entity } from "../entity";
+import { Expansion, ExpansionObject } from "../expansion";
 import { EntityApiEndpoint } from "./entity-api-endpoint";
 import { Query } from "./query";
 

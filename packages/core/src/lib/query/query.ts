@@ -1,8 +1,7 @@
 import { any, AnyCriterion, Criterion } from "@entity-space/criteria";
-import { Entity } from "../entity/entity";
-import { Expansion } from "../expansion/expansion";
-import { ExpansionObject } from "../expansion/expansion-object";
-import { IEntitySchema } from "../schema/schema.interface";
+import { Entity } from "../entity";
+import { Expansion, ExpansionObject } from "../expansion";
+import { IEntitySchema } from "../schema";
 import { reduceQueries } from "./reduce-queries.fn";
 
 // [todo] T is unused
@@ -34,6 +33,10 @@ export class Query<
         return this.criteria;
     }
 
+    withCriteria<C extends Criterion>(criteria: C): Query<T, C, E> {
+        return new Query(this.entitySchema, criteria, this.expansion);
+    }
+
     getExpansion(): Expansion<E> {
         return this.expansion;
     }
@@ -59,6 +62,22 @@ export class Query<
 
     reduceBy(others: Query<T>[]): false | Query<T>[] {
         return reduceQueries([this], others);
+    }
+
+    intersect(other: Query<T>): false | Query<T> {
+        const intersectedCriterion = this.getCriteria().intersect(other.getCriteria());
+
+        if (intersectedCriterion === false) {
+            return false;
+        }
+
+        const intersectedExpansion = this.getExpansion().intersect(other.getExpansion());
+
+        if (intersectedExpansion === false) {
+            return false;
+        }
+
+        return new Query(this.entitySchema, intersectedCriterion, intersectedExpansion);
     }
 
     static equivalentCriteria(...queries: Query[]): boolean {

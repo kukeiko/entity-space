@@ -1,8 +1,8 @@
 import { anyTemplate, ICriterionTemplate, NamedCriteriaTemplateItems, namedTemplate } from "@entity-space/criteria";
 import { isNotNullsy } from "@entity-space/utils";
 import { size } from "lodash";
-import { Entity } from "../entity/entity";
-import { Expansion } from "../expansion/expansion";
+import { Entity } from "../entity";
+import { Expansion } from "../expansion";
 import { Query } from "./query";
 
 // [todo] T is unused

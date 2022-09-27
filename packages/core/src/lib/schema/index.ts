@@ -5,7 +5,6 @@ export * from "./entity-schema-key";
 export * from "./entity-schema-property";
 export * from "./entity-schema-relation";
 export * from "./property-value";
-export * from "./public";
 export * from "./schema-catalog";
 export * from "./schema.interface";
 export * from "./unused/entity-space-schema";

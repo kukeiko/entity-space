@@ -1,5 +1,6 @@
-import { cloneDeep, flatMap } from "lodash";
-import { Entity, QueriedEntities } from "../../entity";
+import { flatMap } from "lodash";
+import { Entity, EntitySet } from "../../entity";
+import { mergeQueries } from "../merge-queries.fn";
 import { Query } from "../query";
 import { reduceQueries } from "../reduce-queries.fn";
 
@@ -10,27 +11,29 @@ class QueryError<T extends Entity = Entity> {
 export class QueryStreamPacket<T extends Entity = Entity> {
     constructor({
         accepted,
+        delivered,
         rejected,
         errors,
         payload,
     }: {
         accepted?: Query<T>[];
+        delivered?: Query<T>[];
         rejected?: Query<T>[];
         errors?: QueryError<T>[];
-        payload?: QueriedEntities<T>[];
+        payload?: EntitySet<T>[];
     } = {}) {
         this.accepted = accepted ?? [];
+        this.delivered = delivered ?? [];
         this.rejected = rejected ?? [];
         this.errors = errors ?? [];
-        // this.payload = payload ?? [];
-        // [todo] only temporary cause too lazy to replicate at each IEntitySource_V2
-        this.payload = (payload ?? []).map(qe => new QueriedEntities(qe.getQuery(), cloneDeep(qe.getEntities())));
+        this.payload = payload ?? [];
     }
 
     private readonly accepted: Query<T>[];
+    private readonly delivered: Query<T>[];
     private readonly rejected: Query<T>[];
     private readonly errors: QueryError<T>[];
-    private readonly payload: QueriedEntities<T>[];
+    private readonly payload: EntitySet<T>[];
 
     getEntitiesFlat(): T[] {
         return flatMap(this.payload, queriedEntities => queriedEntities.getEntities());
@@ -40,11 +43,16 @@ export class QueryStreamPacket<T extends Entity = Entity> {
         return this.accepted.slice();
     }
 
+    // [todo] make use of this
+    getDeliveredQueries(): Query<T>[] {
+        return this.delivered.slice();
+    }
+
     getRejectedQueries(): Query<T>[] {
         return this.rejected.slice();
     }
 
-    getPayload(): QueriedEntities<T>[] {
+    getPayload(): EntitySet<T>[] {
         return this.payload.slice();
     }
 
@@ -64,8 +72,19 @@ export class QueryStreamPacket<T extends Entity = Entity> {
         return [accepted, rejected, entities].filter(str => str.length > 0).join(", ");
     }
 
+    concat(other: QueryStreamPacket<T>): QueryStreamPacket<T> {
+        return QueryStreamPacket.concat(this, other);
+    }
+
     merge(other: QueryStreamPacket<T>): QueryStreamPacket<T> {
-        return QueryStreamPacket.merge(this, other);
+        return new QueryStreamPacket<T>({
+            accepted: mergeQueries(...this.getAcceptedQueries(), ...other.getAcceptedQueries()),
+            // [todo] just concatenated, not actually merged
+            errors: [...this.getErrors(), ...other.getErrors()],
+            // [todo] just concatenated, not actually merged
+            payload: [...this.getPayload(), ...other.getPayload()],
+            rejected: mergeQueries(...this.getRejectedQueries(), ...other.getRejectedQueries()),
+        });
     }
 
     reduceQueries(queries: Query<T>[]): false | Query<T>[] {
@@ -80,11 +99,15 @@ export class QueryStreamPacket<T extends Entity = Entity> {
         return !packet.accepted.length && !packet.errors.length && !packet.payload.length && !packet.rejected.length;
     }
 
+    isEmpty(): boolean {
+        return QueryStreamPacket.isEmpty(this);
+    }
+
     static isNotEmpty<T>(packet: QueryStreamPacket<T>): boolean {
         return !QueryStreamPacket.isEmpty(packet);
     }
 
-    static merge<T>(a: QueryStreamPacket<T>, b: QueryStreamPacket<T>): QueryStreamPacket<T> {
+    static concat<T>(a: QueryStreamPacket<T>, b: QueryStreamPacket<T>): QueryStreamPacket<T> {
         return new QueryStreamPacket<T>({
             accepted: [...a.getAcceptedQueries(), ...b.getAcceptedQueries()],
             errors: [...a.getErrors(), ...b.getErrors()],

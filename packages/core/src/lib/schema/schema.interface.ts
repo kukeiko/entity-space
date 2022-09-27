@@ -52,7 +52,7 @@ export interface IEntitySchemaProperty {
     getName(): string;
     getUnboxedEntitySchema(): IEntitySchema;
     getUnboxedValueSchema(): IEntitySchema | IPrimitiveSchema;
-    getValueSchema(): PropertyValueSchema;
+    getValueSchema(): IPropertyValueSchema;
     isReadOnly(): boolean;
     isWriteOnly(): boolean;
 }
@@ -69,5 +69,4 @@ export interface IArraySchema {
     getItemSchema(): IEntitySchema | IPrimitiveSchema;
 }
 
-// [todo] should this be prefixed with "I" as well?
-export type PropertyValueSchema = IArraySchema | IDictionarySchema | IEntitySchema | IPrimitiveSchema;
+export type IPropertyValueSchema = IArraySchema | IDictionarySchema | IEntitySchema | IPrimitiveSchema;

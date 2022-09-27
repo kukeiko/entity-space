@@ -11,11 +11,11 @@ import {
 } from "@entity-space/criteria";
 import { tramplePath } from "@entity-space/utils";
 import { cloneDeep, flatMap, flatten } from "lodash";
-import { Entity, mergeEntities, QueriedEntities } from "../../entity";
+import { Entity, EntitySet, mergeEntities } from "../../entity";
 import { createCriterionFromEntities } from "../../entity/functions/create-criterion-from-entities.fn";
 import { joinEntities } from "../../entity/functions/join-entities.fn";
 import { ExpansionObject } from "../../expansion/expansion-object";
-import { Expansion } from "../../public";
+import { Expansion } from "../..";
 import { EntitySchema, IEntitySchemaRelation, PrimitiveSchema } from "../../schema";
 import { mergeQueries } from "../merge-queries.fn";
 import { Query } from "../query";
@@ -44,20 +44,22 @@ describe("playground: stream", () => {
             accepted?: Query<T>[];
             rejected?: Query<T>[];
             errors?: QueryError<T>[];
-            payload?: QueriedEntities<T>[];
+            payload?: EntitySet<T>[];
         }) {
             this.accepted = accepted ?? [];
             this.rejected = rejected ?? [];
             this.errors = errors ?? [];
             // this.payload = payload ?? [];
             // [todo] only temporary cause too lazy to replicate at each IEntitySource_V2
-            this.payload = (payload ?? []).map(qe => new QueriedEntities(qe.getQuery(), cloneDeep(qe.getEntities())));
+            this.payload = (payload ?? []).map(
+                qe => new EntitySet({ query: qe.getQuery(), entities: cloneDeep(qe.getEntities()) })
+            );
         }
 
         private readonly accepted: Query<T>[];
         private readonly rejected: Query<T>[];
         private readonly errors: QueryError<T>[];
-        private readonly payload: QueriedEntities<T>[];
+        private readonly payload: EntitySet<T>[];
 
         getEntitiesFlat(): T[] {
             return flatMap(this.payload, queriedEntities => queriedEntities.getEntities());
@@ -71,7 +73,7 @@ describe("playground: stream", () => {
             return this.rejected.slice();
         }
 
-        getPayload(): QueriedEntities<T>[] {
+        getPayload(): EntitySet<T>[] {
             return this.payload.slice();
         }
 
@@ -98,7 +100,7 @@ describe("playground: stream", () => {
 
     interface IEntityHydrator {
         hydrate<T extends Entity = Entity>(
-            queriedEntities: QueriedEntities<T>[],
+            queriedEntities: EntitySet<T>[],
             // schema: IEntitySchema,
             // entities: T[],
             // expansion: Expansion,
@@ -251,7 +253,7 @@ describe("playground: stream", () => {
                     return;
                 }
 
-                const payload = accepted.map(query => new QueriedEntities(query, matches));
+                const payload = accepted.map(query => new EntitySet({ query, entities: matches }));
                 yield new QueryStreamPacket<T>({ payload });
             }
         }
@@ -283,7 +285,7 @@ describe("playground: stream", () => {
                     return;
                 }
 
-                const payload = accepted.map(query => new QueriedEntities(query, matches));
+                const payload = accepted.map(query => new EntitySet({ query, entities: matches }));
                 yield new QueryStreamPacket<T>({ payload });
             }
         }
@@ -338,7 +340,7 @@ describe("playground: stream", () => {
                     return;
                 }
 
-                const payload = accepted.map(query => new QueriedEntities(query, matches));
+                const payload = accepted.map(query => new EntitySet({ query, entities: matches }));
                 yield new QueryStreamPacket<T>({ payload });
             }
         }
@@ -392,7 +394,7 @@ describe("playground: stream", () => {
                     return;
                 }
 
-                const payload = accepted.map(query => new QueriedEntities(query, matches));
+                const payload = accepted.map(query => new EntitySet({ query, entities: matches }));
                 yield new QueryStreamPacket<T>({ payload });
             }
         }
@@ -447,7 +449,7 @@ describe("playground: stream", () => {
                     return;
                 }
 
-                const payload = accepted.map(query => new QueriedEntities(query, matches));
+                const payload = accepted.map(query => new EntitySet({ query, entities: matches }));
                 yield new QueryStreamPacket<T>({ payload });
             }
         }
@@ -464,7 +466,7 @@ describe("playground: stream", () => {
             async *query<T>(queries: Query<T>[], cancel?: Promise<unknown>): QueryStream<T> {
                 const candidates = this.sources.slice();
                 const accepted: Query<T>[] = [];
-                const payload: QueriedEntities<T>[] = [];
+                const payload: EntitySet<T>[] = [];
 
                 for (const candidate of candidates) {
                     for await (const packet of candidate.query(queries, cancel)) {
@@ -513,7 +515,7 @@ describe("playground: stream", () => {
                     const entities = openExpansionQuery.getCriteria().filter(flatPayload);
 
                     for (const hydrator of this.hydrators) {
-                        const queriedEntities = new QueriedEntities(openExpansionQuery, entities);
+                        const queriedEntities = new EntitySet({ query: openExpansionQuery, entities });
 
                         for await (const packet of hydrator.hydrate([queriedEntities], this)) {
                             acceptedExpansionQueries.push(...packet.getAcceptedQueries());
@@ -534,7 +536,7 @@ describe("playground: stream", () => {
         }
 
         async function* expandRelation<T extends Entity = Entity>(
-            queriedEntities: QueriedEntities<T>,
+            queriedEntities: EntitySet<T>,
             relation: IEntitySchemaRelation,
             source: IEntitySource_V2,
             expansion?: ExpansionObject
@@ -617,7 +619,7 @@ describe("playground: stream", () => {
             }
 
             joinEntities(
-                // [todo] mutating entities within a QueriedEntities
+                // [todo] mutating entities within a EntitySet
                 queriedEntities.getEntities(),
                 result,
                 relation.getPropertyName(),
@@ -629,13 +631,15 @@ describe("playground: stream", () => {
             yield new QueryStreamPacket<T>({
                 accepted: finalAccepted,
                 rejected: finalRejected,
-                payload: [new QueriedEntities(queriedEntities.getQuery(), queriedEntities.getEntities())],
+                payload: [
+                    new EntitySet({ query: queriedEntities.getQuery(), entities: queriedEntities.getEntities() }),
+                ],
             });
         }
 
         class DefaultHydrator implements IEntityHydrator {
             async *hydrate<T extends Entity = Entity>(
-                entities: QueriedEntities<T>[],
+                entities: EntitySet<T>[],
                 source: IEntitySource_V2
             ): QueryStream<T> {
                 for (const queriedEntities of entities) {
@@ -670,7 +674,7 @@ describe("playground: stream", () => {
                             // });
 
                             // yield new QueryStreamPacket<T>({
-                            //     payload: [new QueriedEntities(queriedEntities.getQuery(), entities)],
+                            //     payload: [new EntitySet(queriedEntities.getQuery(), entities)],
                             // });
                         } else if (expansionValue !== true) {
                             // const property = schema.getProperty(propertyKey);

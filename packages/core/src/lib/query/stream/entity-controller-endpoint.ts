@@ -1,15 +1,16 @@
 import { ICriterionTemplate, InstancedCriterionTemplate } from "@entity-space/criteria";
 import { DeepPartial } from "@entity-space/utils";
 import { Observable } from "rxjs";
-import { Entity } from "../../entity";
+import { Entity, EntitySet } from "../../entity";
 import { Expansion } from "../../expansion/expansion";
 import { IEntitySchema } from "../../schema";
 import { Query } from "../query";
-import { QueryStreamPacket } from "./query-stream-packet";
+
+type Data<T> = T | T[] | EntitySet<T>;
 
 type EntityControllerEndpointInvoke<T, U, V> = (
     query: Query<T, InstancedCriterionTemplate<U>, V extends Expansion<infer E> ? DeepPartial<E> : never>
-) => Observable<QueryStreamPacket<T>>;
+) => Observable<Data<T>> | Promise<Data<T>> | Data<T>;
 
 export class EntityControllerEndpoint<
     T extends Entity = Entity,

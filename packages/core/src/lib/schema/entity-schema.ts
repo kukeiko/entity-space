@@ -10,7 +10,7 @@ import {
     IEntitySchemaProperty,
     IEntitySchemaRelation,
     IPrimitiveSchema,
-    PropertyValueSchema,
+    IPropertyValueSchema,
 } from "./schema.interface";
 
 // [todo] rename to "EntityTypeSchema"
@@ -42,7 +42,7 @@ export class EntitySchema<T extends Entity = Entity> implements IEntitySchema<T>
         return this;
     }
 
-    addProperty(name: string, valueSchema: PropertyValueSchema): this {
+    addProperty(name: string, valueSchema: IPropertyValueSchema): this {
         const property = new EntitySchemaProperty(this, name, valueSchema);
         this.properties.push(property);
         return this;
@@ -54,6 +54,10 @@ export class EntitySchema<T extends Entity = Entity> implements IEntitySchema<T>
 
     addString(name: string): this {
         return this.addProperty(name, new PrimitiveSchema("string"));
+    }
+
+    addInteger(name: string): this {
+        return this.addProperty(name, new PrimitiveSchema("integer"));
     }
 
     addRelation(propertyKey: string, from: string, to: string): this {

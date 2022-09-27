@@ -1,15 +1,13 @@
 import { ICriterionTemplate, namedTemplate, or, orTemplate, RemapCriterionResult } from "@entity-space/criteria";
 import { size } from "lodash";
 import { Observable, Subject } from "rxjs";
-import { IEntityStore } from "../entity";
-import { QueriedEntities } from "../entity/data-structures/queried-entities";
-import { Entity } from "../entity/entity";
-import { IEntitySource } from "../entity/entity-source.interface";
-import { IEntitySchema } from "../schema/schema.interface";
+import { Entity, EntitySet, IEntitySource, IEntityStore } from "../entity";
+import { IEntitySchema } from "../schema";
 import { EntityApiEndpoint } from "./entity-api-endpoint";
 import { EntityApiEndpointBuilder } from "./entity-api-endpoint-builder";
 import { Query } from "./query";
 
+// [todo] remove in favor of "EntityController"
 export class EntityApi<T = Record<string, any>> implements IEntitySource, IEntityStore {
     constructor(entitySchema: IEntitySchema) {
         this.entitySchema = entitySchema;
@@ -57,7 +55,7 @@ export class EntityApi<T = Record<string, any>> implements IEntitySource, IEntit
         return endpointCriteriaTemplates;
     }
 
-    async query(query: Query): Promise<false | QueriedEntities[]> {
+    async query(query: Query): Promise<false | EntitySet[]> {
         if (query.getEntitySchema().getId() !== this.entitySchema.getId()) {
             return false;
         }
@@ -97,7 +95,7 @@ export class EntityApi<T = Record<string, any>> implements IEntitySource, IEntit
             return false;
         }
 
-        const operations: Promise<QueriedEntities>[] = [];
+        const operations: Promise<EntitySet>[] = [];
 
         for (const orCriteria of remapped.getCriteria()) {
             for (const criterion of orCriteria.getItems()) {
@@ -107,11 +105,18 @@ export class EntityApi<T = Record<string, any>> implements IEntitySource, IEntit
                     }
 
                     const effectiveExpansion = query.getExpansion().intersect(endpoint.getSupportedExpansion());
-                    const effectiveQuery = new Query(this.entitySchema, criterion, effectiveExpansion.getObject());
+
+                    if (!effectiveExpansion) {
+                        continue;
+                    }
+
+                    const effectiveQuery = new Query(this.entitySchema, criterion, effectiveExpansion);
                     this.queryIssued.next(effectiveQuery);
 
                     operations.push(
-                        endpoint.load(effectiveQuery).then(entities => new QueriedEntities(effectiveQuery, entities))
+                        endpoint
+                            .load(effectiveQuery)
+                            .then(entities => new EntitySet({ query: effectiveQuery, entities }))
                     );
 
                     break;

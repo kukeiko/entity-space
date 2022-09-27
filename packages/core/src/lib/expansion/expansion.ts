@@ -46,12 +46,15 @@ export class Expansion<E extends ExpansionObject = ExpansionObject> {
         }
     }
 
-    intersect(other: Expansion): Expansion {
-        return new Expansion(Expansion.intersectObjects(this.getObject(), other.getObject()));
+    intersect(other: Expansion): false | Expansion {
+        const objectIntersection = Expansion.intersectObjects(this.getObject(), other.getObject());
+
+        return objectIntersection ? new Expansion(objectIntersection) : false;
     }
 
-    static intersectObjects(a: ExpansionObject, b: ExpansionObject): ExpansionObject {
+    static intersectObjects(a: ExpansionObject, b: ExpansionObject): false | ExpansionObject {
         const intersection: ExpansionObject = {};
+
         for (const key in a) {
             const myValue = a[key];
             const otherValue = b[key];
@@ -60,14 +63,22 @@ export class Expansion<E extends ExpansionObject = ExpansionObject> {
                 continue;
             }
 
-            if (myValue === true || otherValue === true) {
-                intersection[key] = true;
+            if (myValue === true) {
+                if (otherValue === true) {
+                    intersection[key] = true;
+                } else {
+                    intersection[key] = otherValue;
+                }
             } else {
-                intersection[key] = this.intersectObjects(myValue, otherValue);
+                if (otherValue === true) {
+                    intersection[key] = myValue;
+                } else {
+                    intersection[key] = this.intersectObjects(myValue, otherValue);
+                }
             }
         }
 
-        return intersection;
+        return Object.keys(intersection).length ? intersection : false;
     }
 
     merge(other: Expansion): Expansion {

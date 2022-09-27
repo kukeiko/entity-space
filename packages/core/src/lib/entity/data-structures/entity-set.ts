@@ -1,8 +1,8 @@
-import { Query } from "../../query/public";
+import { Query } from "../../query";
 import { Entity } from "../entity";
 
-export class QueriedEntities<T extends Entity = Entity> {
-    constructor(query: Query, entities: T[]) {
+export class EntitySet<T extends Entity = Entity> {
+    constructor({ query, entities }: { query: Query; entities: T[] }) {
         this.query = query;
         this.entities = entities;
     }

@@ -1,4 +1,4 @@
-import { Component, Input } from "@angular/core";
+import { ChangeDetectionStrategy, Component, Input } from "@angular/core";
 import { Blueprint, BlueprintResolver, define, SchemaCatalog, Workspace } from "@entity-space/core";
 import { Artist, ArtistBlueprint, Song, SongBlueprint, WebSongLocation } from "@entity-space/examples/libs/music-model";
 import { combineLatest, map, switchMap } from "rxjs";
@@ -20,7 +20,7 @@ interface SongTableState {
     selector: "song-table",
     templateUrl: "./song-table.component.html",
     styleUrls: ["./song-table.component.scss"],
-    // changeDetection: ChangeDetectionStrategy.OnPush,
+    changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SongTableComponent {
     constructor(

@@ -1,5 +1,5 @@
 import { or } from "@entity-space/criteria";
-import { Expansion } from "../public";
+import { Expansion } from "../expansion";
 import { Query } from "./query";
 
 // [todo] clean up this method, it is really hard to read and hacked together.

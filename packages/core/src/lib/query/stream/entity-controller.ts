@@ -1,12 +1,14 @@
 import { Criterion, or } from "@entity-space/criteria";
-import { merge, Observable, of, startWith } from "rxjs";
-import { Entity } from "../../entity";
+import { from, merge, Observable, of, startWith, switchMap } from "rxjs";
+import { Entity, EntitySet } from "../../entity";
+import { InMemoryEntityDatabase } from "../../entity/in-memory-entity-database";
 import { ExpansionObject } from "../../expansion/expansion-object";
 import { IEntitySchema } from "../../schema";
 import { mergeQueries } from "../merge-queries.fn";
 import { Query } from "../query";
 import { EntityControllerEndpoint } from "./entity-controller-endpoint";
 import { IEntitySource_V2 } from "./i-entity-source-v2";
+import { QueryStream } from "./query-stream";
 import { QueryStreamPacket } from "./query-stream-packet";
 
 export class EntityController implements IEntitySource_V2 {
@@ -18,31 +20,14 @@ export class EntityController implements IEntitySource_V2 {
     }
 
     query_v2<T extends Entity = Entity>(
-        queries: Query<T, Criterion, ExpansionObject<Record<string, unknown>>>[]
+        queries: Query<T, Criterion, ExpansionObject<Record<string, unknown>>>[],
+        cache: InMemoryEntityDatabase
     ): Observable<QueryStreamPacket<T>> {
         const streams = queries.map(query => {
-            const initialPackets: QueryStreamPacket[] = [];
-            const delegatedStreams: Observable<QueryStreamPacket>[] = [];
             const endpoints = this.getEndpointsAcceptingSchema(query.getEntitySchema());
-            let openCriteria: Criterion[] = [query.getCriteria()];
+            const [delegatedStreams, openCriteria] = this.dispatchToEndpoints(query, endpoints, cache);
 
-            for (const endpoint of endpoints) {
-                const dispatched = this.dispatchToEndpoint(
-                    endpoint,
-                    new Query(query.getEntitySchema(), or(openCriteria), query.getExpansion())
-                );
-
-                if (!dispatched) {
-                    continue;
-                }
-
-                delegatedStreams.push(dispatched[0]);
-                openCriteria = dispatched[1];
-
-                if (!openCriteria.length) {
-                    break;
-                }
-            }
+            const initialPackets: QueryStreamPacket[] = [];
 
             if (openCriteria.length) {
                 const rejected = [new Query(query.getEntitySchema(), or(openCriteria), query.getExpansion())];
@@ -55,10 +40,42 @@ export class EntityController implements IEntitySource_V2 {
         return merge(...streams) as Observable<QueryStreamPacket<T>>;
     }
 
+    private dispatchToEndpoints(
+        query: Query,
+        endpoints: EntityControllerEndpoint[],
+        cache: InMemoryEntityDatabase
+    ): [QueryStream[], Criterion[]] {
+        let openCriteria: Criterion[] = [query.getCriteria()];
+        const delegatedStreams: QueryStream[] = [];
+
+        for (const endpoint of endpoints) {
+            const dispatched = this.dispatchToEndpoint(
+                endpoint,
+                new Query(query.getEntitySchema(), or(openCriteria), query.getExpansion()),
+                cache
+            );
+
+            if (!dispatched) {
+                continue;
+            }
+
+            delegatedStreams.push(dispatched[0]);
+            openCriteria = dispatched[1];
+
+            if (!openCriteria.length) {
+                break;
+            }
+        }
+
+        return [delegatedStreams, openCriteria];
+    }
+
     private dispatchToEndpoint(
         endpoint: EntityControllerEndpoint,
-        query: Query
+        query: Query,
+        cache: InMemoryEntityDatabase
     ): false | [Observable<QueryStreamPacket>, Criterion[]] {
+        // [todo] why are the query criteria wrapped in an or()?
         const remapped = endpoint.getTemplate().remap(or(query.getCriteria()));
 
         if (!remapped) {
@@ -66,8 +83,11 @@ export class EntityController implements IEntitySource_V2 {
         }
 
         const supportedExpansion = endpoint.getExpansion();
-        // [todo] should be calculated instead
-        const effectiveExpansion = supportedExpansion;
+        const effectiveExpansion = supportedExpansion.intersect(query.getExpansion());
+
+        if (!effectiveExpansion) {
+            return false;
+        }
 
         const acceptedCriteria = remapped
             .getCriteria()
@@ -84,11 +104,52 @@ export class EntityController implements IEntitySource_V2 {
 
         const stream = merge(
             ...accepted.map(query => {
-                return endpoint.getInvoke()(query);
+                const invoked = endpoint.getInvoke()(query);
+                let stream$: Observable<Entity | Entity[] | EntitySet>;
+
+                // [todo] go truly different code paths instead of wrapping all to a stream$
+                // (mainly because I want to support synchronous execution)
+                if (invoked instanceof Promise) {
+                    stream$ = from(invoked);
+                } else if (Array.isArray(invoked) || invoked instanceof EntitySet || !(invoked instanceof Observable)) {
+                    stream$ = of(invoked);
+                } else {
+                    stream$ = invoked;
+                }
+
+                return stream$.pipe(
+                    switchMap(data => {
+                        if (data instanceof EntitySet) {
+                            cache.addEntities(data.getQuery().getEntitySchema(), data.getEntities());
+
+                            // if instead we have an EntitySet, the source told us exactly what has been delivered
+                            return of(
+                                new QueryStreamPacket({
+                                    delivered: [data.getQuery()], // [todo] remove
+                                    payload: [new EntitySet({ query, entities: data.getEntities() })],
+                                })
+                            );
+                        } else {
+                            const entities = Array.isArray(data) ? data : [data];
+                            cache.addEntities(query.getEntitySchema(), entities);
+
+                            // if all we have is just an array of entities, we assume that everything has been delivered
+                            return of(
+                                new QueryStreamPacket({
+                                    delivered: [query],
+                                    // [todo] remove
+                                    payload: [new EntitySet({ query, entities })],
+                                })
+                            );
+                        }
+                    })
+                );
             })
         ).pipe(startWith(new QueryStreamPacket({ accepted })));
 
-        return [stream, remapped.getOpen()];
+        const rejected = or(acceptedCriteria).reduce(or(remapped.getCriteria()));
+
+        return [stream, [...remapped.getOpen(), ...(rejected !== false && rejected !== true ? [rejected] : [])]];
     }
 
     private getEndpointsAcceptingSchema(schema: IEntitySchema): EntityControllerEndpoint[] {

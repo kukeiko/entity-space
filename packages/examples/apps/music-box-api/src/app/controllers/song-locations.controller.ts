@@ -32,7 +32,7 @@ export class SongLocationsController {
     }
 
     @Patch(":id")
-    pdate(@Param("id", ParseIntPipe) id: number, @Body() songLocation: Partial<SongLocation>): Promise<SongLocation> {
+    update(@Param("id", ParseIntPipe) id: number, @Body() songLocation: Partial<SongLocation>): Promise<SongLocation> {
         // [todo] cast to any
         return this.diskDbService.patchEntity({ id, ...(songLocation as any) }, this.schema);
     }
