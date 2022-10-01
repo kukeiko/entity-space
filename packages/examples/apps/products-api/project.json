@@ -29,7 +29,7 @@
         "serve": {
             "executor": "@nrwl/node:node",
             "options": {
-                "buildTarget": "examples-apps-products-api:build"
+                "buildTarget": "examples-products-api:build"
             }
         },
         "lint": {
