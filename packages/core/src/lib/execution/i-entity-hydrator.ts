@@ -1,6 +1,6 @@
-import { EntityHydrationQuery } from "../../entity/data-structures/entity-hydration-query";
-import { Entity } from "../../entity/entity";
-import { InMemoryEntityDatabase } from "../../entity/in-memory-entity-database";
+import { EntityHydrationQuery } from "../entity/data-structures/entity-hydration-query";
+import { Entity } from "../entity/entity";
+import { InMemoryEntityDatabase } from "../entity/in-memory-entity-database";
 import { QueryStream } from "./query-stream";
 
 export interface IEntityHydrator {

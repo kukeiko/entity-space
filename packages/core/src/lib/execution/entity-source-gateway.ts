@@ -15,17 +15,17 @@ import {
     takeLast,
     tap,
 } from "rxjs";
-import { EntityHydrationQuery } from "../../entity/data-structures/entity-hydration-query";
-import { EntitySet } from "../../entity/data-structures/entity-set";
-import { createCriterionFromEntities } from "../../entity/functions/create-criterion-from-entities.fn";
-import { createDefaultExpansion } from "../../entity/functions/create-default-expansion.fn";
-import { IEntityStore } from "../../entity/i-entity-store";
-import { InMemoryEntityDatabase } from "../../entity/in-memory-entity-database";
-import { Expansion } from "../../expansion/expansion";
-import { IEntitySchema, IEntitySchemaRelation } from "../../schema/schema.interface";
-import { mergeQueries } from "../merge-queries.fn";
-import { Query } from "../query";
-import { reduceQueries, reduceQueries_v2 } from "../reduce-queries.fn";
+import { EntityHydrationQuery } from "../entity/data-structures/entity-hydration-query";
+import { EntitySet } from "../entity/data-structures/entity-set";
+import { createCriterionFromEntities } from "../entity/functions/create-criterion-from-entities.fn";
+import { createDefaultExpansion } from "../entity/functions/create-default-expansion.fn";
+import { IEntityStore } from "../entity/i-entity-store";
+import { InMemoryEntityDatabase } from "../entity/in-memory-entity-database";
+import { Expansion } from "../expansion/expansion";
+import { mergeQueries } from "../query/merge-queries.fn";
+import { Query } from "../query/query";
+import { reduceQueries, reduceQueries_v2 } from "../query/reduce-queries.fn";
+import { IEntitySchema, IEntitySchemaRelation } from "../schema/schema.interface";
 import { IEntityHydrator } from "./i-entity-hydrator";
 import { IEntitySource } from "./i-entity-source";
 import { QueryExecution } from "./query-execution";

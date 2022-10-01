@@ -1,6 +1,6 @@
 import { Entity } from "@entity-space/common";
-import { InMemoryEntityDatabase } from "../../entity/in-memory-entity-database";
-import { Query } from "../query";
+import { InMemoryEntityDatabase } from "../entity/in-memory-entity-database";
+import { Query } from "../query/query";
 import { QueryStream } from "./query-stream";
 
 export interface IEntitySource {

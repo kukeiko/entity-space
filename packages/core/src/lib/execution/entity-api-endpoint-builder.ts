@@ -9,16 +9,16 @@ import {
     namedTemplate,
 } from "@entity-space/criteria";
 import { size } from "lodash";
-import { createDefaultExpansion } from "../../entity/functions/create-default-expansion.fn";
-import { Expansion } from "../../expansion/expansion";
-import { IEntitySchema } from "../../schema/schema.interface";
-import { EntityControllerEndpoint, EntityControllerEndpointInvoke } from "./entity-controller-endpoint";
+import { createDefaultExpansion } from "../entity/functions/create-default-expansion.fn";
+import { Expansion } from "../expansion/expansion";
+import { IEntitySchema } from "../schema/schema.interface";
+import { EntityApiEndpoint, EntityApiEndpointInvoke } from "./entity-api-endpoint";
 
 type AddFieldsArgument<T> = {
     [K in keyof T]?: ICriterionTemplate;
 };
 
-export class EntityControllerEndpointBuilder<
+export class EntityApiEndpointBuilder<
     T = Entity,
     R extends NamedCriteriaTemplateItems = {},
     O extends NamedCriteriaTemplateItems = {}
@@ -32,20 +32,20 @@ export class EntityControllerEndpointBuilder<
     private requiredFields: R = {} as R;
     private optionalFields: O = {} as O;
     private supportedExpansion: ExpansionValue;
-    private loadEntities?: EntityControllerEndpointInvoke;
+    private loadEntities?: EntityApiEndpointInvoke;
     private acceptCriterion: (criterion: Criterion) => boolean = () => true;
 
-    requiresFields<F extends AddFieldsArgument<T>>(fields: F): EntityControllerEndpointBuilder<T, R & F, O> {
+    requiresFields<F extends AddFieldsArgument<T>>(fields: F): EntityApiEndpointBuilder<T, R & F, O> {
         this.requiredFields = { ...this.requiredFields, ...fields };
         return this as any;
     }
 
-    supportsFields<F extends AddFieldsArgument<T>>(fields: F): EntityControllerEndpointBuilder<T, R, O & Partial<F>> {
+    supportsFields<F extends AddFieldsArgument<T>>(fields: F): EntityApiEndpointBuilder<T, R, O & Partial<F>> {
         this.optionalFields = { ...this.optionalFields, ...fields };
         return this as any;
     }
 
-    supportsExpansion(expansion: ExpansionValue<T>): EntityControllerEndpointBuilder<T, R, O> {
+    supportsExpansion(expansion: ExpansionValue<T>): EntityApiEndpointBuilder<T, R, O> {
         this.supportedExpansion = Expansion.mergeValues(this.supportedExpansion, expansion);
         return this;
     }
@@ -55,12 +55,12 @@ export class EntityControllerEndpointBuilder<
         return this;
     }
 
-    isLoadedBy(load: EntityControllerEndpointInvoke<T, NamedCriteriaTemplate<R, O>>): this {
+    isLoadedBy(load: EntityApiEndpointInvoke<T, NamedCriteriaTemplate<R, O>>): this {
         this.loadEntities = load as any;
         return this;
     }
 
-    build(): EntityControllerEndpoint {
+    build(): EntityApiEndpoint {
         if (this.loadEntities === void 0) {
             throw new Error("isLoadedBy() hasn't been called yet");
         }
@@ -73,7 +73,7 @@ export class EntityControllerEndpointBuilder<
             template = namedTemplate(this.requiredFields, this.optionalFields);
         }
 
-        return new EntityControllerEndpoint({
+        return new EntityApiEndpoint({
             expansion: new Expansion(this.supportedExpansion),
             invoke: this.loadEntities,
             schema: this.schema,

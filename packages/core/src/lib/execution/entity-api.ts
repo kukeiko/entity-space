@@ -1,22 +1,22 @@
 import { Entity } from "@entity-space/common";
 import { Criterion, or } from "@entity-space/criteria";
 import { from, merge, Observable, of, startWith, switchMap } from "rxjs";
-import { EntitySet } from "../../entity/data-structures/entity-set";
-import { InMemoryEntityDatabase } from "../../entity/in-memory-entity-database";
-import { IEntitySchema } from "../../schema/schema.interface";
-import { mergeQueries } from "../merge-queries.fn";
-import { Query } from "../query";
-import { EntityControllerEndpoint } from "./entity-controller-endpoint";
-import { EntityControllerEndpointBuilder } from "./entity-controller-endpoint-builder";
+import { EntitySet } from "../entity/data-structures/entity-set";
+import { InMemoryEntityDatabase } from "../entity/in-memory-entity-database";
+import { mergeQueries } from "../query/merge-queries.fn";
+import { Query } from "../query/query";
+import { EntityApiEndpoint } from "./entity-api-endpoint";
+import { EntityApiEndpointBuilder } from "./entity-api-endpoint-builder";
 import { IEntitySource } from "./i-entity-source";
 import { QueryStream } from "./query-stream";
 import { QueryStreamPacket } from "./query-stream-packet";
+import { IEntitySchema } from "../schema/schema.interface";
 
-export class EntityController implements IEntitySource {
-    protected endpoints: EntityControllerEndpoint[] = [];
+export class EntityApi implements IEntitySource {
+    protected endpoints: EntityApiEndpoint[] = [];
 
-    addEndpoint<T>(schema: IEntitySchema<T>, build: (builder: EntityControllerEndpointBuilder<T>) => unknown): this {
-        const builder = new EntityControllerEndpointBuilder<T>(schema);
+    addEndpoint<T>(schema: IEntitySchema<T>, build: (builder: EntityApiEndpointBuilder<T>) => unknown): this {
+        const builder = new EntityApiEndpointBuilder<T>(schema);
         build(builder);
         this.endpoints.push(builder.build());
 
@@ -46,7 +46,7 @@ export class EntityController implements IEntitySource {
 
     private dispatchToEndpoints(
         query: Query,
-        endpoints: EntityControllerEndpoint[],
+        endpoints: EntityApiEndpoint[],
         cache: InMemoryEntityDatabase
     ): [QueryStream[], Criterion[]] {
         let openCriteria: Criterion[] = [query.getCriteria()];
@@ -75,7 +75,7 @@ export class EntityController implements IEntitySource {
     }
 
     private dispatchToEndpoint(
-        endpoint: EntityControllerEndpoint,
+        endpoint: EntityApiEndpoint,
         query: Query,
         cache: InMemoryEntityDatabase
     ): false | [Observable<QueryStreamPacket>, Criterion[]] {
@@ -156,7 +156,7 @@ export class EntityController implements IEntitySource {
         return [stream, [...remapped.getOpen(), ...(rejected !== false && rejected !== true ? [rejected] : [])]];
     }
 
-    private getEndpointsAcceptingSchema(schema: IEntitySchema): EntityControllerEndpoint[] {
+    private getEndpointsAcceptingSchema(schema: IEntitySchema): EntityApiEndpoint[] {
         return this.endpoints.filter(endpoint => endpoint.getSchema().getId() === schema.getId());
     }
 }

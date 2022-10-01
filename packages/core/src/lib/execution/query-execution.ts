@@ -1,7 +1,7 @@
 import { flatMap } from "lodash";
-import { InMemoryEntityDatabase } from "../../entity/in-memory-entity-database";
-import { Query } from "../query";
-import { reduceQueries_v2 } from "../reduce-queries.fn";
+import { InMemoryEntityDatabase } from "../entity/in-memory-entity-database";
+import { Query } from "../query/query";
+import { reduceQueries_v2 } from "../query/reduce-queries.fn";
 import { IEntitySource } from "./i-entity-source";
 import { QueryStreamPacket } from "./query-stream-packet";
 

@@ -1,9 +1,9 @@
 import { Entity } from "@entity-space/common";
 import { flatMap } from "lodash";
-import { EntitySet } from "../../entity/data-structures/entity-set";
-import { mergeQueries } from "../merge-queries.fn";
-import { Query } from "../query";
-import { reduceQueries } from "../reduce-queries.fn";
+import { EntitySet } from "../entity/data-structures/entity-set";
+import { mergeQueries } from "../query/merge-queries.fn";
+import { Query } from "../query/query";
+import { reduceQueries } from "../query/reduce-queries.fn";
 
 // [todo] not used / implemented
 class QueryError<T extends Entity = Entity> {

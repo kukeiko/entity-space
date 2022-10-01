@@ -5,10 +5,10 @@ import { firstValueFrom, scan, takeLast, tap } from "rxjs";
 import { InMemoryEntityDatabase } from "../../lib/entity/in-memory-entity-database";
 import { mergeQueries } from "../../lib/query/merge-queries.fn";
 import { Query } from "../../lib/query/query";
-import { EntityController } from "../../lib/query/stream/entity-controller";
-import { EntitySourceGateway } from "../../lib/query/stream/entity-source-gateway";
-import { IEntitySource } from "../../lib/query/stream/i-entity-source";
-import { QueryStreamPacket } from "../../lib/query/stream/query-stream-packet";
+import { EntityApi } from "../../lib/execution/entity-api";
+import { EntitySourceGateway } from "../../lib/execution/entity-source-gateway";
+import { IEntitySource } from "../../lib/execution/i-entity-source";
+import { QueryStreamPacket } from "../../lib/execution/query-stream-packet";
 import { EntitySchema } from "../../lib/schema/entity-schema";
 import { PrimitiveSchema } from "../../lib/schema/property-value/primitive-schema";
 
@@ -106,7 +106,7 @@ describe("playground: stream", () => {
         return cloneDeep(criterion.filter(entities));
     };
 
-    class FooAndBarAndFooChildController extends EntityController {
+    class FooAndBarAndFooChildController extends EntityApi {
         withLoadFooChildByFooId(): this {
             return this.addEndpoint(fooChildSchema, builder =>
                 builder
