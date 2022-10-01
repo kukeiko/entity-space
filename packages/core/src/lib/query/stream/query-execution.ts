@@ -2,7 +2,7 @@ import { flatMap } from "lodash";
 import { InMemoryEntityDatabase } from "../../entity/in-memory-entity-database";
 import { Query } from "../query";
 import { reduceQueries_v2 } from "../reduce-queries.fn";
-import { IEntitySource_V2 } from "./i-entity-source-v2";
+import { IEntitySource } from "./i-entity-source";
 import { QueryStreamPacket } from "./query-stream-packet";
 
 export class QueryExecution {
@@ -11,7 +11,7 @@ export class QueryExecution {
         targets,
         database,
     }: {
-        sources: IEntitySource_V2[];
+        sources: IEntitySource[];
         targets: Query[];
         database: InMemoryEntityDatabase;
     }) {
@@ -25,23 +25,23 @@ export class QueryExecution {
     }
 
     private readonly targets: Query[];
-    private readonly openSources: IEntitySource_V2[];
-    private readonly mergedPacketPerSource = new Map<IEntitySource_V2, QueryStreamPacket>();
+    private readonly openSources: IEntitySource[];
+    private readonly mergedPacketPerSource = new Map<IEntitySource, QueryStreamPacket>();
     private readonly database: InMemoryEntityDatabase;
 
     getDatabase(): InMemoryEntityDatabase {
         return this.database;
     }
 
-    popSource(): IEntitySource_V2 | undefined {
+    popSource(): IEntitySource | undefined {
         return this.openSources.pop();
     }
 
-    mergePacket(packet: QueryStreamPacket, source: IEntitySource_V2): void {
+    mergePacket(packet: QueryStreamPacket, source: IEntitySource): void {
         this.mergedPacketPerSource.set(source, this.getMergedPacketOfSource(source).merge(packet));
     }
 
-    getMergedPacket(source: IEntitySource_V2): QueryStreamPacket {
+    getMergedPacket(source: IEntitySource): QueryStreamPacket {
         const packet = this.mergedPacketPerSource.get(source);
 
         if (!packet) {
@@ -51,7 +51,7 @@ export class QueryExecution {
         return packet;
     }
 
-    isSourceFullyPlanned(source: IEntitySource_V2): boolean {
+    isSourceFullyPlanned(source: IEntitySource): boolean {
         const packet = this.getMergedPacketOfSource(source);
         const reduced = reduceQueries_v2(this.targets, [
             ...packet.getAcceptedQueries(),
@@ -85,7 +85,7 @@ export class QueryExecution {
         return Array.from(this.mergedPacketPerSource.values());
     }
 
-    private getMergedPacketOfSource(source: IEntitySource_V2): QueryStreamPacket {
+    private getMergedPacketOfSource(source: IEntitySource): QueryStreamPacket {
         return this.mergedPacketPerSource.get(source) || new QueryStreamPacket();
     }
 }

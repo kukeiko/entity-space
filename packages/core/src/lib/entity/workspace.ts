@@ -2,34 +2,35 @@ import { any, Criterion, fromDeepBag, isValue, matches, MatchesBagArgument } fro
 import { Class, DeepPartial, isDefined, tramplePath } from "@entity-space/utils";
 import { flatMap, isEqual, xor, xorWith } from "lodash";
 import {
+    defaultIfEmpty,
     distinctUntilChanged,
     EMPTY,
     filter,
     finalize,
     from,
+    lastValueFrom,
     map,
     Observable,
     of,
     ReplaySubject,
+    scan,
     startWith,
     Subject,
     switchMap,
 } from "rxjs";
 import { ExpansionValue } from "../expansion";
-import { IEntityHydrator, IEntitySource_V2, mergeQueries, Query, reduceQueries } from "../query";
+import { IEntityHydrator, IEntitySource, mergeQueries, Query, QueryStreamPacket, reduceQueries } from "../query";
 import { IEntitySchema } from "../schema/schema.interface";
 import { BlueprintResolver, Instance } from "./blueprint";
 import { EntityHydrationQuery, EntitySet } from "./data-structures";
 import { Entity } from "./entity";
-import { IEntitySource } from "./entity-source.interface";
 import { normalizeEntities } from "./functions";
 import { createCriterionFromEntities } from "./functions/create-criterion-from-entities.fn";
 import { IEntityStore } from "./i-entity-store";
 import { InMemoryEntityDatabase } from "./in-memory-entity-database";
 
-export class Workspace implements IEntitySource, IEntityStore {
+export class Workspace implements IEntityStore {
     private source?: IEntitySource;
-    private source_v2?: IEntitySource_V2;
     private store?: IEntityStore;
     private hydrator?: IEntityHydrator;
     private blueprintResolver?: BlueprintResolver;
@@ -138,19 +139,24 @@ export class Workspace implements IEntitySource, IEntityStore {
     }
 
     private async loadFromSource(query: Query): Promise<false | EntitySet[]> {
-        if (this.source === void 0) {
+        if (!this.source) {
             return false;
         }
 
-        const result = await this.source.query(query);
+        const cache = new InMemoryEntityDatabase();
+        const mergedPacket = await lastValueFrom(
+            this.source
+                .query$([query], cache)
+                .pipe(scan(QueryStreamPacket.concat), defaultIfEmpty(new QueryStreamPacket()))
+        );
 
-        // if (result !== false) {
-        //     for (const queried of result) {
-        //         console.log("[effective-query]", queried.getQuery().getCriteria().toString());
-        //     }
-        // }
+        if (!mergedPacket.getAcceptedQueries().length) {
+            return false;
+        }
 
-        return result;
+        const result = cache.querySync(query);
+
+        return result ? [result] : result;
     }
 
     // [todo] T not used yet; need to add it to QueriedEntities

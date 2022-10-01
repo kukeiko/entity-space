@@ -8,7 +8,7 @@ import { mergeQueries } from "../merge-queries.fn";
 import { Query } from "../query";
 import { EntityController } from "./entity-controller";
 import { EntitySourceGateway } from "./entity-source-gateway";
-import { IEntitySource_V2 } from "./i-entity-source-v2";
+import { IEntitySource } from "./i-entity-source";
 import { QueryStreamPacket } from "./query-stream-packet";
 
 describe("playground: stream", () => {
@@ -174,14 +174,14 @@ describe("playground: stream", () => {
 
     async function queryTest<T>(
         queries: Query[],
-        source: IEntitySource_V2,
+        source: IEntitySource,
         opts?: { logEach?: boolean; logFinal?: boolean; logEntities?: boolean }
     ): Promise<T[]> {
         const logEach = opts?.logEach ?? true;
         const logFinal = opts?.logFinal ?? true;
         const logEntities = opts?.logEntities ?? true;
         const cache = new InMemoryEntityDatabase();
-        const stream = source.query_v2(queries, cache).pipe(
+        const stream = source.query$(queries, cache).pipe(
             tap(packet => {
                 if (logEach) {
                     console.log(packet.toString());

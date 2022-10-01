@@ -7,11 +7,11 @@ import { mergeQueries } from "../merge-queries.fn";
 import { Query } from "../query";
 import { EntityControllerEndpoint } from "./entity-controller-endpoint";
 import { EntityControllerEndpointBuilder } from "./entity-controller-endpoint-builder";
-import { IEntitySource_V2 } from "./i-entity-source-v2";
+import { IEntitySource } from "./i-entity-source";
 import { QueryStream } from "./query-stream";
 import { QueryStreamPacket } from "./query-stream-packet";
 
-export class EntityController implements IEntitySource_V2 {
+export class EntityController implements IEntitySource {
     protected endpoints: EntityControllerEndpoint[] = [];
 
     addEndpoint<T>(schema: IEntitySchema<T>, build: (builder: EntityControllerEndpointBuilder<T>) => unknown): this {
@@ -22,7 +22,7 @@ export class EntityController implements IEntitySource_V2 {
         return this;
     }
 
-    query_v2<T extends Entity = Entity>(
+    query$<T extends Entity = Entity>(
         queries: Query[],
         cache: InMemoryEntityDatabase
     ): Observable<QueryStreamPacket<T>> {

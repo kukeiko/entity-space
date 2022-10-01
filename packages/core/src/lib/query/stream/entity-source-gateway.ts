@@ -5,19 +5,16 @@ import {
     defer,
     EMPTY,
     filter,
-    lastValueFrom,
     map,
     merge,
     of,
     raceWith,
-    scan,
     shareReplay,
     switchMap,
     takeLast,
     tap,
 } from "rxjs";
 import { createDefaultExpansion, Entity, EntityHydrationQuery, EntitySet, IEntityStore } from "../../entity";
-import { IEntitySource } from "../../entity/entity-source.interface";
 import { createCriterionFromEntities } from "../../entity/functions/create-criterion-from-entities.fn";
 import { InMemoryEntityDatabase } from "../../entity/in-memory-entity-database";
 import { Expansion, ExpansionValue } from "../../expansion";
@@ -26,40 +23,24 @@ import { mergeQueries } from "../merge-queries.fn";
 import { Query } from "../query";
 import { reduceQueries, reduceQueries_v2 } from "../reduce-queries.fn";
 import { IEntityHydrator } from "./i-entity-hydrator";
-import { IEntitySource_V2 } from "./i-entity-source-v2";
+import { IEntitySource } from "./i-entity-source";
 import { QueryExecution } from "./query-execution";
 import { QueryStream } from "./query-stream";
 import { QueryStreamPacket } from "./query-stream-packet";
 
-export class EntitySourceGateway implements IEntitySource_V2, IEntitySource, IEntityStore, IEntityHydrator {
-    constructor(sources: IEntitySource_V2[] = []) {
+export class EntitySourceGateway implements IEntitySource, IEntityStore, IEntityHydrator {
+    constructor(sources: IEntitySource[] = []) {
         this.sources = sources.slice();
     }
 
-    private sources: IEntitySource_V2[];
+    private sources: IEntitySource[];
     private readonly stores = new Map<string, IEntityStore>();
 
     addStore(schema: IEntitySchema, store: IEntityStore): void {
         this.stores.set(schema.getId(), store);
     }
 
-    async query(query: Query): Promise<false | EntitySet<Entity>[]> {
-        // [todo] cache should be an arg. then again, this method might become obsolete anyway soon™
-        const cache = new InMemoryEntityDatabase();
-        const mergedPacket = await lastValueFrom(
-            this.query_v2([query], cache).pipe(scan(QueryStreamPacket.concat), defaultIfEmpty(new QueryStreamPacket()))
-        );
-
-        if (!mergedPacket.getAcceptedQueries().length) {
-            return false;
-        }
-
-        const result = cache.querySync(query);
-
-        return result ? [result] : result;
-    }
-
-    query_v2<T extends Entity = Entity>(queries: Query[], database: InMemoryEntityDatabase): QueryStream<T> {
+    query$<T extends Entity = Entity>(queries: Query[], database: InMemoryEntityDatabase): QueryStream<T> {
         return defer(() => {
             const execution = new QueryExecution({
                 sources: this.sources.slice().reverse(),
@@ -118,7 +99,7 @@ export class EntitySourceGateway implements IEntitySource_V2, IEntitySource, IEn
             );
         }
 
-        const sourcePackets$ = source.query_v2<T>(execution.getOpenTargets(), execution.getDatabase()).pipe(
+        const sourcePackets$ = source.query$<T>(execution.getOpenTargets(), execution.getDatabase()).pipe(
             tap(packet => {
                 execution.mergePacket(packet, source);
             }),

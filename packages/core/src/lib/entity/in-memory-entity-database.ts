@@ -14,7 +14,6 @@ import { Query } from "../query/query";
 import { IEntitySchema, IEntitySchemaRelation } from "../schema/schema.interface";
 import { EntitySet } from "./data-structures";
 import { Entity } from "./entity";
-import { IEntitySource } from "./entity-source.interface";
 import { createDefaultExpansion } from "./functions";
 import { createCriterionFromEntities } from "./functions/create-criterion-from-entities.fn";
 import { createQueriesFromEntities } from "./functions/create-queries-from-entities.fn";
@@ -22,7 +21,7 @@ import { joinEntities } from "./functions/join-entities.fn";
 import { normalizeEntities } from "./functions/normalize-entities.fn";
 import { EntityStore } from "./store/entity-store";
 
-export class InMemoryEntityDatabase implements IEntitySource {
+export class InMemoryEntityDatabase {
     private readonly stores = new Map<string, EntityStore>();
 
     async query(query: Query): Promise<false | EntitySet[]> {
