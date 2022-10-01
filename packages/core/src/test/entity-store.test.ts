@@ -1,6 +1,6 @@
 import { isValue, matches, or } from "@entity-space/criteria";
-import { EntitySchema } from "../../schema/entity-schema";
-import { EntityStore } from "./entity-store";
+import { EntitySchema } from "../lib/schema/entity-schema";
+import { EntityStore } from "../lib/entity/store/entity-store";
 
 interface Vector {
     x: number;

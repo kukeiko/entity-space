@@ -1,5 +1,5 @@
-import { EntitySchema } from "../../schema/entity-schema";
-import { mergeEntities } from "./merge-entities.fn";
+import { EntitySchema } from "../lib/schema/entity-schema";
+import { mergeEntities } from "../lib/entity/functions/merge-entities.fn";
 
 interface Foo {
     id: number;

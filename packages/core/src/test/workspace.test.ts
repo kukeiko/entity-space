@@ -1,8 +1,8 @@
 import { inSet, matches } from "@entity-space/criteria";
 import { firstValueFrom, take, tap, toArray } from "rxjs";
-import { Query } from "../query/query";
-import { EntitySchema } from "../schema/entity-schema";
-import { Workspace } from "./workspace";
+import { Query } from "../lib/query/query";
+import { EntitySchema } from "../lib/schema/entity-schema";
+import { Workspace } from "../lib/entity/workspace";
 
 describe("workspace", () => {
     describe("queryAgainstCache()", () => {

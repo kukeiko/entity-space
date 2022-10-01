@@ -1,5 +1,5 @@
 import { ExpansionValue } from "@entity-space/common";
-import { Expansion } from "../expansion";
+import { Expansion } from "../../lib/expansion/expansion";
 
 function mergeExpansions(...objects: ExpansionValue[]): boolean | ExpansionValue {
     return Expansion.mergeValues(...objects);

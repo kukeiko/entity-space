@@ -1,8 +1,8 @@
 import { ExpansionValue } from "@entity-space/common";
 import { Criterion, inRange, matches } from "@entity-space/criteria";
-import { EntitySchema } from "../schema/entity-schema";
-import { mergeQuery } from "./merge-query.fn";
-import { Query } from "./query";
+import { EntitySchema } from "../../lib/schema/entity-schema";
+import { mergeQuery } from "../../lib/query/merge-query.fn";
+import { Query } from "../../lib/query/query";
 
 function createQuery(criteria: Criterion, expansion: ExpansionValue = {}): Query {
     return new Query(new EntitySchema("foo"), criteria, expansion);

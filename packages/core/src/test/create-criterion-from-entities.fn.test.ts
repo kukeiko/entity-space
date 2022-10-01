@@ -1,5 +1,5 @@
 import { inSet, matches } from "@entity-space/criteria";
-import { createCriterionFromEntities } from "./create-criterion-from-entities.fn";
+import { createCriterionFromEntities } from "../lib/entity/functions/create-criterion-from-entities.fn";
 
 interface Vector {
     x: number;

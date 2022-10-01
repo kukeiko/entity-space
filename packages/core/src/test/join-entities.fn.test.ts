@@ -1,4 +1,4 @@
-import { joinEntities } from "./join-entities.fn";
+import { joinEntities } from "../lib/entity/functions/join-entities.fn";
 
 describe("joinEntities()", () => {
     it("primitive index: join", () => {

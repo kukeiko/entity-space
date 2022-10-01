@@ -1,6 +1,6 @@
 import { isValue, matches } from "@entity-space/criteria";
 import { cloneJson } from "@entity-space/utils";
-import { ComplexKeyMap } from "./complex-key-map";
+import { ComplexKeyMap } from "../lib/entity/data-structures/complex-key-map";
 
 interface Vector {
     x: number;

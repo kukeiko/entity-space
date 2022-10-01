@@ -1,8 +1,8 @@
 import { ExpansionValue } from "@entity-space/common";
 import { Criterion, inRange, inSet, matches, or } from "@entity-space/criteria";
-import { EntitySchema } from "../../schema/entity-schema";
-import { Query } from "../query";
-import { reduceQuery } from "../reduce-query.fn";
+import { Query } from "../../lib/query/query";
+import { reduceQuery } from "../../lib/query/reduce-query.fn";
+import { EntitySchema } from "../../lib/schema/entity-schema";
 
 describe("reduceQuery()", () => {
     function createQuery(criteria: Criterion, expansion: ExpansionValue = {}): Query {

@@ -1,6 +1,6 @@
 import { Expand, ExpansionValue } from "@entity-space/common";
-import { Instance, Metadata, MetadataReference } from "../instance";
-import { define } from "../property";
+import { Instance, Metadata, MetadataReference } from "../../lib/entity/blueprint/instance";
+import { define } from "../../lib/entity/blueprint/property";
 
 xdescribe("new model playground", () => {
     interface Square {
