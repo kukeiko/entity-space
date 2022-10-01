@@ -1,12 +1,5 @@
 import { HttpClient } from "@angular/common/http";
-import {
-    BlueprintResolver,
-    Entity,
-    EntityController,
-    IEntitySchema,
-    IEntityStore,
-    SchemaCatalog,
-} from "@entity-space/core";
+import { Entity, EntityController, IEntitySchema, IEntityStore, SchemaCatalog } from "@entity-space/core";
 import { inSetTemplate, isValueTemplate } from "@entity-space/criteria";
 import { Artist, ArtistBlueprint, Song, SongBlueprint, SongLocation } from "@entity-space/examples/libs/music-model";
 import { firstValueFrom } from "rxjs";
@@ -14,7 +7,7 @@ import { firstValueFrom } from "rxjs";
 export class MusicBoxClientSideEntityController extends EntityController implements IEntityStore {
     constructor(
         private readonly http: HttpClient,
-        private readonly blueprints: BlueprintResolver,
+
         private readonly schemas: SchemaCatalog
     ) {
         super();
@@ -58,13 +51,13 @@ export class MusicBoxClientSideEntityController extends EntityController impleme
     }
 
     withGetAllArtists(): this {
-        return this.addEndpoint(this.blueprints.resolve(ArtistBlueprint), builder =>
+        return this.addEndpoint(this.schemas.resolve(ArtistBlueprint), builder =>
             builder.supportsExpansion({ id: true, name: true }).isLoadedBy(() => this.http.get<Artist[]>("api/artists"))
         );
     }
 
     withGetAllSongs(): this {
-        return this.addEndpoint(this.blueprints.resolve(SongBlueprint), builder =>
+        return this.addEndpoint(this.schemas.resolve(SongBlueprint), builder =>
             builder
                 .supportsExpansion({ id: true, artistId: true, duration: true, name: true })
                 .isLoadedBy(() => this.http.get<Song[]>("api/songs"))
@@ -72,7 +65,7 @@ export class MusicBoxClientSideEntityController extends EntityController impleme
     }
 
     withGetSongById(): this {
-        return this.addEndpoint(this.blueprints.resolve(SongBlueprint), builder =>
+        return this.addEndpoint(this.schemas.resolve(SongBlueprint), builder =>
             builder
                 .requiresFields({ id: isValueTemplate(Number) })
                 .supportsExpansion({ id: true, artistId: true, duration: true, locations: true, name: true })

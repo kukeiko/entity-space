@@ -1,4 +1,4 @@
-import { BlueprintResolver, EntitySchema, SchemaCatalog } from "@entity-space/core";
+import { EntitySchema, SchemaCatalog } from "@entity-space/core";
 import { SongBlueprint } from "@entity-space/examples/libs/music-model";
 import { Module } from "@nestjs/common";
 import { ArtistsController } from "./controllers/artists.controller";
@@ -11,22 +11,20 @@ import { DiskDbService } from "./disk-db.service";
     controllers: [ArtistsController, SongsController, SongLocationsController],
     providers: [
         DiskDbService,
-        { provide: SchemaCatalog, useClass: SchemaCatalog },
         {
             // [todo] copy pasted from music-box-ui
-            provide: BlueprintResolver,
-            inject: [SchemaCatalog],
-            useFactory: (schemaCatalog: SchemaCatalog) => {
-                const blueprintResolver = new BlueprintResolver(schemaCatalog);
+            provide: SchemaCatalog,
+            useFactory: () => {
+                const schemas = new SchemaCatalog();
 
                 const songLocationSchema = new EntitySchema("song-location");
                 songLocationSchema.setKey("id");
                 songLocationSchema.addIndex("songId");
-                schemaCatalog.addSchema(songLocationSchema);
-                songLocationSchema.addProperty("song", blueprintResolver.resolve(SongBlueprint));
+                schemas.addSchema(songLocationSchema);
+                songLocationSchema.addProperty("song", schemas.resolve(SongBlueprint));
                 songLocationSchema.addRelation("song", "songId", "id");
 
-                return blueprintResolver;
+                return schemas;
             },
         },
     ],

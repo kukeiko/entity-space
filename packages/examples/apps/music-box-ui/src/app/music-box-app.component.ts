@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit } from "@angular/core";
-import { Blueprint, BlueprintResolver, define, Instance, Query, Workspace } from "@entity-space/core";
+import { Blueprint, define, Instance, Query, SchemaCatalog, Workspace } from "@entity-space/core";
 import { matches, some } from "@entity-space/criteria";
 import {
     Artist,
@@ -46,7 +46,7 @@ export class MusicAppComponent implements OnInit, OnDestroy {
     constructor(
         private primengConfig: PrimeNGConfig,
         private readonly workspace: Workspace,
-        private readonly resolver: BlueprintResolver
+        private readonly schemas: SchemaCatalog
     ) {}
 
     private readonly destroyed$ = new Subject<void>();
@@ -111,7 +111,7 @@ export class MusicAppComponent implements OnInit, OnDestroy {
     changeUiState(property: string, value: any): void {
         const change = {};
         tramplePath(property, change, value);
-        this.workspace.add(this.resolver.resolve(MusicBoxUiStateBlueprint), {
+        this.workspace.add(this.schemas.resolve(MusicBoxUiStateBlueprint), {
             id: this.stateId,
             ...change,
         });

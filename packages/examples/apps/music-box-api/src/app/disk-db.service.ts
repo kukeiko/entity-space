@@ -1,4 +1,4 @@
-import { BlueprintResolver, Entity, IEntitySchema, normalizeEntities, Query, SchemaCatalog } from "@entity-space/core";
+import { Entity, IEntitySchema, normalizeEntities, Query, SchemaCatalog } from "@entity-space/core";
 import { isValue, matches } from "@entity-space/criteria";
 import { Song, SongBlueprint, SongLocation } from "@entity-space/examples/libs/music-model";
 import { FileOnDiskBasedEntitySource } from "@entity-space/node";
@@ -6,10 +6,10 @@ import { Injectable } from "@nestjs/common";
 
 @Injectable()
 export class DiskDbService {
-    constructor(private readonly schemaCatalog: SchemaCatalog, private readonly blueprintResolver: BlueprintResolver) {
+    constructor(private readonly schemas: SchemaCatalog) {
         this.entitySource = new FileOnDiskBasedEntitySource(this.filePath);
-        this.songSchema = blueprintResolver.resolve(SongBlueprint);
-        this.songLocationSchema = schemaCatalog.getSchema("song-location");
+        this.songSchema = schemas.resolve(SongBlueprint);
+        this.songLocationSchema = schemas.getSchema("song-location");
     }
 
     private readonly songSchema: IEntitySchema;

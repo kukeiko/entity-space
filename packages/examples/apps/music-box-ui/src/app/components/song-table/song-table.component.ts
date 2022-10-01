@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, Input } from "@angular/core";
-import { Blueprint, BlueprintResolver, define, SchemaCatalog, Workspace } from "@entity-space/core";
+import { Blueprint, define, SchemaCatalog, Workspace } from "@entity-space/core";
 import { Artist, ArtistBlueprint, Song, SongBlueprint, WebSongLocation } from "@entity-space/examples/libs/music-model";
 import { combineLatest, map, switchMap } from "rxjs";
 
@@ -23,11 +23,7 @@ interface SongTableState {
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SongTableComponent {
-    constructor(
-        private readonly workspace: Workspace,
-        private readonly blueprintResolver: BlueprintResolver,
-        private readonly schemas: SchemaCatalog
-    ) {}
+    constructor(private readonly workspace: Workspace, private readonly schemas: SchemaCatalog) {}
 
     stateId = 1;
 
@@ -102,7 +98,7 @@ export class SongTableComponent {
         }
 
         // [todo] make workspace.update() better to use w/ blueprints
-        await this.workspace.update([this.editedSong!], this.blueprintResolver.resolve(SongBlueprint));
+        await this.workspace.update([this.editedSong!], this.schemas.resolve(SongBlueprint));
         this.hideDialog();
     }
 

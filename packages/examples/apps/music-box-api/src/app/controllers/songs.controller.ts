@@ -1,12 +1,12 @@
-import { BlueprintResolver, IEntitySchema } from "@entity-space/core";
+import { IEntitySchema, SchemaCatalog } from "@entity-space/core";
 import { Song, SongBlueprint } from "@entity-space/examples/libs/music-model";
 import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post } from "@nestjs/common";
 import { DiskDbService } from "../disk-db.service";
 
 @Controller("songs")
 export class SongsController {
-    constructor(private readonly diskDbService: DiskDbService, private readonly blueprintResolver: BlueprintResolver) {
-        this.schema = this.blueprintResolver.resolve(SongBlueprint);
+    constructor(private readonly diskDbService: DiskDbService, private readonly schemas: SchemaCatalog) {
+        this.schema = this.schemas.resolve(SongBlueprint);
     }
 
     private readonly schema: IEntitySchema;

@@ -20,8 +20,9 @@ import {
 } from "rxjs";
 import { ExpansionValue } from "../expansion";
 import { IEntityHydrator, IEntitySource, mergeQueries, Query, QueryStreamPacket, reduceQueries } from "../query";
+import { SchemaCatalog } from "../schema";
 import { IEntitySchema } from "../schema/schema.interface";
-import { BlueprintResolver, Instance } from "./blueprint";
+import { Instance } from "./blueprint";
 import { EntityHydrationQuery, EntitySet } from "./data-structures";
 import { Entity } from "./entity";
 import { normalizeEntities } from "./functions";
@@ -33,7 +34,7 @@ export class Workspace implements IEntityStore {
     private source?: IEntitySource;
     private store?: IEntityStore;
     private hydrator?: IEntityHydrator;
-    private blueprintResolver?: BlueprintResolver;
+    private schemas?: SchemaCatalog;
     private readonly queryCaches = new Map<string, Query[]>();
     private readonly queryCacheChanged = new Subject<Query[]>();
     // private readonly entityCache = new EntityCache();
@@ -82,8 +83,8 @@ export class Workspace implements IEntityStore {
         this.store = store;
     }
 
-    setBlueprintResolver(resolver: BlueprintResolver): void {
-        this.blueprintResolver = resolver;
+    setSchemaCatalog(schemas: SchemaCatalog): void {
+        this.schemas = schemas;
     }
 
     private addExecutedQuery(query: Query): void {
@@ -177,7 +178,7 @@ export class Workspace implements IEntityStore {
             return EMPTY;
         }
 
-        const schema = this.blueprintResolver?.resolve(blueprint);
+        const schema = this.schemas?.resolve(blueprint);
 
         if (!schema) {
             return EMPTY;
@@ -216,7 +217,7 @@ export class Workspace implements IEntityStore {
         expansion: ExpansionValue<T> = {}
     ): Observable<T[]> {
         if (!("getId" in schema)) {
-            const resolvedSchema = this.blueprintResolver?.resolve(schema);
+            const resolvedSchema = this.schemas?.resolve(schema);
 
             if (!resolvedSchema) {
                 throw new Error(`failed to resolve blueprint to schema for type ${schema.name}`);
@@ -319,7 +320,7 @@ export class Workspace implements IEntityStore {
         expansion: ExpansionValue<T> = {}
     ): Observable<T> {
         if (!("getId" in schema)) {
-            const resolvedSchema = this.blueprintResolver?.resolve(schema);
+            const resolvedSchema = this.schemas?.resolve(schema);
 
             if (!resolvedSchema) {
                 throw new Error(`failed to resolve blueprint to schema for type ${schema.name}`);
@@ -403,7 +404,7 @@ export class Workspace implements IEntityStore {
 
     private toSchema(schema: IEntitySchema | Class): IEntitySchema {
         if (!("getId" in schema)) {
-            const resolvedSchema = this.blueprintResolver?.resolve(schema);
+            const resolvedSchema = this.schemas?.resolve(schema);
 
             if (!resolvedSchema) {
                 throw new Error(`failed to resolve blueprint to schema for type ${schema.name}`);

@@ -3,7 +3,7 @@ import { NgModule } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { BrowserModule } from "@angular/platform-browser";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
-import { BlueprintResolver, EntitySchema, EntitySourceGateway, SchemaCatalog, Workspace } from "@entity-space/core";
+import { EntitySchema, EntitySourceGateway, SchemaCatalog, Workspace } from "@entity-space/core";
 import { ArtistBlueprint, SongBlueprint } from "@entity-space/examples/libs/music-model";
 import { ButtonModule } from "primeng/button";
 import { DialogModule } from "primeng/dialog";
@@ -35,13 +35,11 @@ import { MusicAppComponent } from "./music-box-app.component";
     ],
     declarations: [MusicAppComponent, SongTableComponent, ArtistTableComponent],
     providers: [
-        { provide: SchemaCatalog },
         {
             // [todo] copy pasted to music-box-api
-            provide: BlueprintResolver,
-            deps: [SchemaCatalog],
-            useFactory: (schemas: SchemaCatalog) => {
-                const blueprintResolver = new BlueprintResolver(schemas);
+            provide: SchemaCatalog,
+            useFactory: () => {
+                const schemas = new SchemaCatalog();
 
                 const songLocationSchema = new EntitySchema("song-location");
                 songLocationSchema.setKey("id");
@@ -52,20 +50,20 @@ import { MusicAppComponent } from "./music-box-app.component";
                 songLocationSchema.addString("url");
                 songLocationSchema.addString("path");
                 songLocationSchema.addString("songLocationType");
-                songLocationSchema.addProperty("song", blueprintResolver.resolve(SongBlueprint));
+                songLocationSchema.addProperty("song", schemas.resolve(SongBlueprint));
                 songLocationSchema.addRelation("song", "songId", "id");
 
-                schemas.addSchema(blueprintResolver.resolve(ArtistBlueprint));
-                schemas.addSchema(blueprintResolver.resolve(SongBlueprint));
+                schemas.addSchema(schemas.resolve(ArtistBlueprint));
+                schemas.addSchema(schemas.resolve(SongBlueprint));
 
-                return blueprintResolver;
+                return schemas;
             },
         },
         {
             provide: MusicBoxClientSideEntityController,
-            deps: [HttpClient, BlueprintResolver, SchemaCatalog],
-            useFactory: (http: HttpClient, blueprints: BlueprintResolver, schemas: SchemaCatalog) => {
-                const controller = new MusicBoxClientSideEntityController(http, blueprints, schemas);
+            deps: [HttpClient, SchemaCatalog],
+            useFactory: (http: HttpClient, schemas: SchemaCatalog) => {
+                const controller = new MusicBoxClientSideEntityController(http, schemas);
 
                 return controller
                     .withGetAllArtists()
@@ -87,14 +85,14 @@ import { MusicAppComponent } from "./music-box-app.component";
         },
         {
             provide: Workspace,
-            deps: [EntitySourceGateway, BlueprintResolver],
-            useFactory: (gateway: EntitySourceGateway, blueprintResolver: BlueprintResolver) => {
+            deps: [EntitySourceGateway, SchemaCatalog],
+            useFactory: (gateway: EntitySourceGateway, schemas: SchemaCatalog) => {
                 console.log("🏭 new workspace");
                 const workspace = new Workspace();
                 workspace.setSource(gateway);
                 workspace.setHydrator(gateway);
                 workspace.setStore(gateway);
-                workspace.setBlueprintResolver(blueprintResolver);
+                workspace.setSchemaCatalog(schemas);
 
                 return workspace;
             },
