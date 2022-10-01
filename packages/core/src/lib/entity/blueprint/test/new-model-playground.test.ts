@@ -1,4 +1,4 @@
-import { Expand, ExpansionObject } from "../../../expansion";
+import { Expand, ExpansionValue } from "../../../expansion";
 import { Instance, Metadata, MetadataReference } from "../instance";
 import { define } from "../property";
 
@@ -96,11 +96,11 @@ xdescribe("new model playground", () => {
         },
     };
 
-    function takesExpansion<E extends ExpansionObject<UserInstance>>(expansion: E): typeof expansion {
+    function takesExpansion<E extends ExpansionValue<UserInstance>>(expansion: E): typeof expansion {
         return {} as any;
     }
 
-    takesExpansion({});
+    takesExpansion({ children: true });
 
     const simpleExpansion = takesExpansion({ updatedBy: true });
 
@@ -111,11 +111,14 @@ xdescribe("new model playground", () => {
         updatedBy: null,
     };
 
+    type Foo = ExpansionValue<Square[]>;
+
     const deepExpansion = takesExpansion({
         id: true,
         updatedBy: true,
         createdBy: { createdBy: { name: true, children: { createdBy: true, name: true } } },
         canvas: { shapes: { area: true, length: true, radius: true } },
+        children: {},
     });
 
     type ExpandedUserInstance = Expand<UserInstance, typeof deepExpansion>;
@@ -135,6 +138,7 @@ xdescribe("new model playground", () => {
                 { area: 213, id: 1982321, type: "square", length: 123 },
             ],
         },
+        children: [],
     };
 
     it("define test", () => {

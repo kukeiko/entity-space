@@ -1,10 +1,10 @@
 import { Criterion, inRange, matches, or } from "@entity-space/criteria";
-import { ExpansionObject } from "../expansion";
+import { ExpansionValue } from "../expansion";
 import { EntitySchema } from "../schema";
 import { mergeQueries } from "./merge-queries.fn";
 import { Query } from "./query";
 
-function createQuery(criteria: Criterion, expansion: ExpansionObject = {}): Query {
+function createQuery(criteria: Criterion, expansion: ExpansionValue = {}): Query {
     return new Query(new EntitySchema("foo"), criteria, expansion);
 }
 

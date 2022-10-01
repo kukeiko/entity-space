@@ -1,22 +1,18 @@
-import { ICriterionTemplate, InstancedCriterionTemplate } from "@entity-space/criteria";
-import { DeepPartial } from "@entity-space/utils";
+import { Criterion, ICriterionTemplate, InstancedCriterionTemplate } from "@entity-space/criteria";
 import { Observable } from "rxjs";
 import { Entity, EntitySet } from "../../entity";
-import { Expansion } from "../../expansion/expansion";
+import { Expansion, ExpansionValue } from "../../expansion";
 import { IEntitySchema } from "../../schema";
-import { Query } from "../query";
 
 type Data<T> = T | T[] | EntitySet<T>;
 
-type EntityControllerEndpointInvoke<T, U, V> = (
-    query: Query<T, InstancedCriterionTemplate<U>, V extends Expansion<infer E> ? DeepPartial<E> : never>
-) => Observable<Data<T>> | Promise<Data<T>> | Data<T>;
+export type EntityControllerEndpointInvoke<T = Entity, C = ICriterionTemplate> = (query: {
+    criterion: InstancedCriterionTemplate<C>;
+    // expansion: UnfoldedExpansion<T>;
+    expansion: ExpansionValue<T>; // [todo] want to use unfolded instead
+}) => Observable<Data<T>> | Promise<Data<T>> | Data<T>;
 
-export class EntityControllerEndpoint<
-    T extends Entity = Entity,
-    U extends ICriterionTemplate = ICriterionTemplate,
-    V extends Expansion<T> = Expansion<T>
-> {
+export class EntityControllerEndpoint {
     constructor({
         schema,
         template,
@@ -24,44 +20,42 @@ export class EntityControllerEndpoint<
         invoke,
         acceptCriterion,
     }: {
-        schema: IEntitySchema<T>;
-        template: U;
-        expansion: V;
-        invoke: EntityControllerEndpointInvoke<T, U, V>;
-        acceptCriterion?: (criterion: InstancedCriterionTemplate<U>) => InstancedCriterionTemplate<U> | false;
+        schema: IEntitySchema;
+        template: ICriterionTemplate;
+        expansion: Expansion;
+        invoke: EntityControllerEndpointInvoke;
+        acceptCriterion?: (criterion: Criterion) => boolean;
     }) {
         this.schema = schema;
         this.template = template;
         this.expansion = expansion;
         this.invoke = invoke;
-        this.acceptCriterionFn = acceptCriterion;
+        this.acceptCriterionFn = acceptCriterion ?? (() => true);
     }
 
-    private readonly schema: IEntitySchema<T>;
-    private readonly template: U;
-    private readonly expansion: V;
-    private readonly invoke: EntityControllerEndpointInvoke<T, U, V>;
-    private readonly acceptCriterionFn?: (
-        criterion: InstancedCriterionTemplate<U>
-    ) => InstancedCriterionTemplate<U> | false;
+    private readonly schema: IEntitySchema;
+    private readonly template: ICriterionTemplate;
+    private readonly expansion: Expansion;
+    private readonly invoke: EntityControllerEndpointInvoke;
+    private readonly acceptCriterionFn: (criterion: Criterion) => boolean;
 
-    getSchema(): IEntitySchema<T> {
+    getSchema(): IEntitySchema {
         return this.schema;
     }
 
-    getTemplate(): U {
+    getTemplate(): ICriterionTemplate {
         return this.template;
     }
 
-    getExpansion(): V {
+    getExpansion(): Expansion {
         return this.expansion;
     }
 
-    getInvoke(): EntityControllerEndpointInvoke<T, U, V> {
+    getInvoke(): EntityControllerEndpointInvoke {
         return this.invoke;
     }
 
-    acceptCriterion(criterion: InstancedCriterionTemplate<U>): InstancedCriterionTemplate<U> | false {
-        return this.acceptCriterionFn?.(criterion) ?? criterion;
+    acceptCriterion(criterion: Criterion): boolean {
+        return this.acceptCriterionFn(criterion);
     }
 }

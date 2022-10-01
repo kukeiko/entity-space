@@ -1,3 +1,4 @@
+import { Entity } from "../entity";
 import { IEntitySchema } from "./schema.interface";
 
 export class SchemaCatalog {
@@ -8,13 +9,13 @@ export class SchemaCatalog {
         return this;
     }
 
-    getSchema(id: string): IEntitySchema {
+    getSchema<T = Entity>(id: string): IEntitySchema<T> {
         const schema = this.schemas.get(id);
 
         if (!schema) {
             throw new Error(`schema ${id} not found`);
         }
 
-        return schema;
+        return schema as IEntitySchema<T>;
     }
 }

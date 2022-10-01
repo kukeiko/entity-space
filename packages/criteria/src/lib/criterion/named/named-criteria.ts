@@ -1,6 +1,3 @@
-import { Expansion } from "@entity-space/core";
-import { AndCriteria } from "../and/and-criteria";
-import { AnyCriterion } from "../any/any";
 import { Criteria } from "../criteria";
 import { Criterion } from "../criterion";
 import { OrCriteria } from "../or/or-criteria";
@@ -275,64 +272,6 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag, R exte
             return new NamedCriteria(mergedBag);
         } else {
             return false;
-        }
-    }
-
-    static omitExpansion(criterion: Criterion, expansion: Expansion): Criterion {
-        if (criterion instanceof OrCriteria) {
-            // [todo] no clue currently why .getItems() returns any[]
-            const omitted = (criterion.getItems() as Criterion[])
-                .map(criterion => NamedCriteria.omitExpansion(criterion, expansion))
-                .filter(criterion => !(criterion instanceof AnyCriterion));
-
-            if (omitted.length == 0) {
-                return new AnyCriterion();
-            } else {
-                return new OrCriteria(omitted);
-            }
-        } else if (criterion instanceof AndCriteria) {
-            // [todo] no clue currently why .getItems() returns any[]
-            const omitted = (criterion.getItems() as Criterion[])
-                .map(criterion => NamedCriteria.omitExpansion(criterion, expansion))
-                .filter(criterion => !(criterion instanceof AnyCriterion));
-
-            if (omitted.length == 0) {
-                return new AnyCriterion();
-            } else {
-                return new AndCriteria(omitted);
-            }
-        } else if (criterion instanceof NamedCriteria) {
-            const omittedBag: NamedCriteriaBag = { ...criterion.getBag() };
-            const expansionObject = expansion.getObject();
-            for (const key in expansionObject) {
-                const expansionItem = expansionObject[key];
-
-                if (expansionItem === true) {
-                    delete omittedBag[key];
-                } else if (expansionItem) {
-                    const bagItem = omittedBag[key];
-
-                    if (bagItem instanceof NamedCriteria) {
-                        const omitted = NamedCriteria.omitExpansion(bagItem, new Expansion(expansionItem));
-
-                        if (omitted instanceof AnyCriterion) {
-                            delete omittedBag[key];
-                        } else {
-                            omittedBag[key] = omitted;
-                        }
-                    } else {
-                        delete omittedBag[key];
-                    }
-                }
-            }
-
-            if (Object.keys(omittedBag).length) {
-                return new NamedCriteria(omittedBag);
-            } else {
-                return new AnyCriterion();
-            }
-        } else {
-            return criterion;
         }
     }
 }

@@ -5,7 +5,7 @@ import { Query } from "../query";
 import { reduceQueries } from "../reduce-queries.fn";
 
 class QueryError<T extends Entity = Entity> {
-    constructor(query: Query<T>, error: unknown) {}
+    constructor(query: Query, error: unknown) {}
 }
 
 export class QueryStreamPacket<T extends Entity = Entity> {
@@ -16,9 +16,9 @@ export class QueryStreamPacket<T extends Entity = Entity> {
         errors,
         payload,
     }: {
-        accepted?: Query<T>[];
-        delivered?: Query<T>[];
-        rejected?: Query<T>[];
+        accepted?: Query[];
+        delivered?: Query[];
+        rejected?: Query[];
         errors?: QueryError<T>[];
         payload?: EntitySet<T>[];
     } = {}) {
@@ -29,9 +29,9 @@ export class QueryStreamPacket<T extends Entity = Entity> {
         this.payload = payload ?? [];
     }
 
-    private readonly accepted: Query<T>[];
-    private readonly delivered: Query<T>[];
-    private readonly rejected: Query<T>[];
+    private readonly accepted: Query[];
+    private readonly delivered: Query[];
+    private readonly rejected: Query[];
     private readonly errors: QueryError<T>[];
     private readonly payload: EntitySet<T>[];
 
@@ -39,16 +39,16 @@ export class QueryStreamPacket<T extends Entity = Entity> {
         return flatMap(this.payload, queriedEntities => queriedEntities.getEntities());
     }
 
-    getAcceptedQueries(): Query<T>[] {
+    getAcceptedQueries(): Query[] {
         return this.accepted.slice();
     }
 
     // [todo] make use of this
-    getDeliveredQueries(): Query<T>[] {
+    getDeliveredQueries(): Query[] {
         return this.delivered.slice();
     }
 
-    getRejectedQueries(): Query<T>[] {
+    getRejectedQueries(): Query[] {
         return this.rejected.slice();
     }
 
@@ -87,11 +87,11 @@ export class QueryStreamPacket<T extends Entity = Entity> {
         });
     }
 
-    reduceQueries(queries: Query<T>[]): false | Query<T>[] {
+    reduceQueries(queries: Query[]): false | Query[] {
         return reduceQueries(queries, [...this.getAcceptedQueries(), ...this.getRejectedQueries()]);
     }
 
-    reduceQueriesByAccepted(queries: Query<T>[]): false | Query<T>[] {
+    reduceQueriesByAccepted(queries: Query[]): false | Query[] {
         return reduceQueries(queries, this.getAcceptedQueries());
     }
 

@@ -1,11 +1,11 @@
 import { Criterion, inSet, matches } from "@entity-space/criteria";
-import { ExpansionObject } from "../../expansion/expansion-object";
+import { ExpansionValue } from "../../expansion";
 import { EntitySchema } from "../../schema/entity-schema";
 import { Query } from "../query";
 import { reduceQueries } from "../reduce-queries.fn";
 
 describe("reduceQueries()", () => {
-    function createQuery(criteria: Criterion, expansion: ExpansionObject = {}): Query {
+    function createQuery(criteria: Criterion, expansion: ExpansionValue = {}): Query {
         return new Query(new EntitySchema("foo"), criteria, expansion);
     }
 

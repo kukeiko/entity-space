@@ -3,6 +3,8 @@ import { InMemoryEntityDatabase } from "../../entity/in-memory-entity-database";
 import { Query } from "../query";
 import { QueryStream } from "./query-stream";
 
+// [todo] properly name this
 export interface IEntitySource_V2 {
-    query_v2<T extends Entity = Entity>(queries: Query<T>[], database: InMemoryEntityDatabase): QueryStream<T>;
+    // [todo] properly name this
+    query_v2<T extends Entity = Entity>(queries: Query[], database: InMemoryEntityDatabase): QueryStream<T>;
 }

@@ -2,6 +2,7 @@ import { Class, isDefined } from "@entity-space/utils";
 import "reflect-metadata";
 import { ArraySchema, PrimitiveSchema, PrimitiveSchemaDataType, SchemaCatalog } from "../../schema";
 import { EntitySchema } from "../../schema/entity-schema";
+import { Instance } from "./instance";
 import { BlueprintPropertyValue, hasAttribute, isProperty, Property } from "./property";
 
 const BLUEPRINT_METADATA_KEY = Symbol("blueprint-metadata");
@@ -50,12 +51,12 @@ export class BlueprintResolver {
 
     private readonly schemas = new Map<string, EntitySchema>();
 
-    resolve(blueprint: Class): EntitySchema {
+    resolve<T>(blueprint: Class<T>): EntitySchema<Instance<T>> {
         const metadata = getBlueprintMetadata(blueprint);
         let schema = this.schemas.get(metadata.id);
 
         if (schema) {
-            return schema;
+            return schema as EntitySchema<Instance<T>>;
         }
 
         console.log(`🔨 ⏳ building schema ${metadata.id} from blueprint...`);
@@ -106,7 +107,7 @@ export class BlueprintResolver {
 
         console.log(`🔨 ✔️ built schema ${metadata.id}`, schema);
 
-        return schema;
+        return schema as EntitySchema<Instance<T>>;
     }
 
     private toPrimitiveSchemaDataType(valueType: BlueprintPropertyValue): PrimitiveSchemaDataType {

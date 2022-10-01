@@ -15,6 +15,7 @@ export class SongBlueprint {
         from: "id",
         to: "songId",
     });
+    // [todo] not yet used, need to implement discriminated unions first
     // locations = define([LocalSongLocationBlueprint, WebSongLocationBlueprint], {
     //     array: true,
     //     relation: true,

@@ -1,18 +1,62 @@
-import { ExpansionObject } from "./expansion-object";
+import {
+    AndCriteria,
+    AnyCriterion,
+    Criterion,
+    NamedCriteria,
+    NamedCriteriaBag,
+    OrCriteria,
+} from "@entity-space/criteria";
+import { Unbox } from "@entity-space/utils";
+import { Entity } from "../entity";
 
-export class Expansion<E extends ExpansionObject = ExpansionObject> {
-    constructor(object: E) {
-        this.object = object;
+// type _ExpansionValue<T> = T extends number | string
+//     ? true
+//     : T extends any[]
+//     ? ExpansionValue<T[number]> | true
+//     : ExpansionValue<T> | true;
+
+export type ExpansionValue<T = Entity> = {
+    [K in keyof T]?: T[K] extends number | string | undefined
+        ? true
+        : T[K] extends any[] | undefined
+        ? ExpansionValue<Exclude<T[K], undefined>[number]> | true
+        : ExpansionValue<T[K]> | true;
+};
+
+// [todo] use
+export type UnfoldedExpansion<T = Entity, U = Unbox<T>> = {
+    [K in keyof U]?: U[K] extends number | string ? true : UnfoldedExpansion<U[K]>;
+};
+
+// [todo] Expand expression needs to be this one liner instead of having it split up like the commented out code below,
+// otherwise expanding on properties across multiple discriminated types won't make them non-voidable.
+// i have no idea why and would love to figure it out.
+// type ExpandValue<T, E> = T extends number | string ? Exclude<T, undefined> : T extends any[] ? Expand<T[number], E>[] : T & Expand<T, E>;
+// export type Expand<T, E> = T & { [K in keyof (T | E)]-?: ExpandValue<T[K], E[K]> };
+
+// [todo] maybe we can get rid of the "valueOf" thingy by checking E against true, and if so, immediately return Exclude<T, undefined>?
+
+export type Expand<T, E> = T extends number | string | null
+    ? Exclude<T, undefined>
+    : T extends any[]
+    ? Expand<T[number], E>[]
+    : "valueOf" extends keyof E // dirty solution, but cleaner for intellisense
+    ? T
+    : T & { [K in keyof (T | E)]-?: Expand<T[K], E[K]> };
+
+export class Expansion {
+    constructor(value: ExpansionValue) {
+        this.value = value;
     }
 
-    private readonly object: E;
+    private readonly value: ExpansionValue;
 
-    getObject(): E {
-        return this.object;
+    getValue(): ExpansionValue {
+        return this.value;
     }
 
     isEmpty(): boolean {
-        return Object.keys(this.object).length === 0;
+        return Object.keys(this.value).length === 0;
     }
 
     reduce(other: Expansion): boolean | Expansion {
@@ -20,40 +64,23 @@ export class Expansion<E extends ExpansionObject = ExpansionObject> {
             return true;
         }
 
-        const reducedObject = Expansion.reduceObject(other.getObject(), this.getObject());
+        const reduced = Expansion.reduceValue(other.getValue(), this.getValue());
 
-        if (reducedObject === true) {
-            return true;
-        } else if (reducedObject === false) {
-            return false;
+        if (typeof reduced == "boolean") {
+            return reduced;
         } else {
-            return new Expansion(reducedObject);
-        }
-    }
-
-    /**
-     * [todo] added for convenience
-     */
-    reduce_alt(other: Expansion): Expansion {
-        const result = this.reduce(other);
-
-        if (result === true) {
-            return new Expansion({});
-        } else if (result === false) {
-            return other;
-        } else {
-            return result;
+            return new Expansion(reduced);
         }
     }
 
     intersect(other: Expansion): false | Expansion {
-        const objectIntersection = Expansion.intersectObjects(this.getObject(), other.getObject());
+        const intersection = Expansion.intersectValues(this.getValue(), other.getValue());
 
-        return objectIntersection ? new Expansion(objectIntersection) : false;
+        return intersection ? new Expansion(intersection) : false;
     }
 
-    static intersectObjects(a: ExpansionObject, b: ExpansionObject): false | ExpansionObject {
-        const intersection: ExpansionObject = {};
+    static intersectValues(a: ExpansionValue, b: ExpansionValue): false | ExpansionValue {
+        const intersection: ExpansionValue = {};
 
         for (const key in a) {
             const myValue = a[key];
@@ -73,7 +100,11 @@ export class Expansion<E extends ExpansionObject = ExpansionObject> {
                 if (otherValue === true) {
                     intersection[key] = myValue;
                 } else {
-                    intersection[key] = this.intersectObjects(myValue, otherValue);
+                    const intersectedValue = this.intersectValues(myValue, otherValue);
+
+                    if (intersectedValue) {
+                        intersection[key] = intersectedValue;
+                    }
                 }
             }
         }
@@ -82,17 +113,17 @@ export class Expansion<E extends ExpansionObject = ExpansionObject> {
     }
 
     merge(other: Expansion): Expansion {
-        return new Expansion(Expansion.mergeObjects(this.getObject(), other.getObject()));
+        return new Expansion(Expansion.mergeValues(this.getValue(), other.getValue()));
     }
 
-    static copyObject(object: ExpansionObject): ExpansionObject {
-        return this.mergeObjects(object);
+    static copyValue(object: ExpansionValue): ExpansionValue {
+        return this.mergeValues(object);
     }
 
-    static mergeObjects(...objects: ExpansionObject[]): ExpansionObject {
-        const merged: ExpansionObject = {};
+    static mergeValues(...objects: ExpansionValue[]): ExpansionValue {
+        const merged: ExpansionValue = {};
 
-        for (const selection of objects) {
+        for (let selection of objects) {
             for (const key in selection) {
                 const left = merged[key];
                 const right = selection[key];
@@ -105,10 +136,10 @@ export class Expansion<E extends ExpansionObject = ExpansionObject> {
                     if (right === true) {
                         merged[key] = true;
                     } else {
-                        merged[key] = this.mergeObjects(right);
+                        merged[key] = this.mergeValues(right);
                     }
                 } else if (right !== true) {
-                    merged[key] = this.mergeObjects(left, right);
+                    merged[key] = this.mergeValues(left, right);
                 }
             }
         }
@@ -116,24 +147,27 @@ export class Expansion<E extends ExpansionObject = ExpansionObject> {
         return merged;
     }
 
-    static reduceObject(what: ExpansionObject, by: ExpansionObject): boolean | ExpansionObject {
+    static reduceValue(what: ExpansionValue, by: ExpansionValue): boolean | ExpansionValue {
         if (Object.keys(what).length === 0) {
             return true;
         }
 
-        const reduced = this.copyObject(what);
+        const reduced = this.copyValue(what);
         let didReduce = false;
 
         for (const key in by) {
-            if (what[key] === void 0) {
+            const whatValue = what[key];
+            const byValue = by[key];
+
+            if (!whatValue) {
                 continue;
-            } else if (by[key] === true) {
-                if (what[key] === true || Object.keys(what[key] ?? {}).length === 0) {
+            } else if (byValue === true) {
+                if (whatValue === true || Object.keys(what[key] ?? {}).length === 0) {
                     delete reduced[key];
                     didReduce = true;
                 }
-            } else if (by[key] instanceof Object) {
-                const subReduced = this.reduceObject(reduced[key] as ExpansionObject, by[key] as ExpansionObject);
+            } else if (typeof byValue === "object" && typeof whatValue === "object") {
+                const subReduced = this.reduceValue(whatValue, byValue);
 
                 if (!subReduced) {
                     continue;
@@ -142,6 +176,11 @@ export class Expansion<E extends ExpansionObject = ExpansionObject> {
                     didReduce = true;
                 } else {
                     reduced[key] = subReduced;
+                    didReduce = true;
+                }
+            } else if (typeof byValue === "object" && whatValue === true) {
+                if (Object.keys(byValue).length == 0) {
+                    delete reduced[key];
                     didReduce = true;
                 }
             }
@@ -153,6 +192,67 @@ export class Expansion<E extends ExpansionObject = ExpansionObject> {
             return true;
         } else {
             return reduced;
+        }
+    }
+
+    // [todo] had to move this from @entity-space/criteria to here due to cyclic
+    // package dependencies (core required criteria, criteria required core).
+    // maybe a sign to merge the packages back together?
+    static omitFromNamedCriteria(criterion: Criterion, expansion: Expansion): Criterion {
+        if (criterion instanceof OrCriteria) {
+            // [todo] no clue currently why .getItems() returns any[]
+            const omitted = (criterion.getItems() as Criterion[])
+                .map(criterion => Expansion.omitFromNamedCriteria(criterion, expansion))
+                .filter(criterion => !(criterion instanceof AnyCriterion));
+
+            if (omitted.length == 0) {
+                return new AnyCriterion();
+            } else {
+                return new OrCriteria(omitted);
+            }
+        } else if (criterion instanceof AndCriteria) {
+            // [todo] no clue currently why .getItems() returns any[]
+            const omitted = (criterion.getItems() as Criterion[])
+                .map(criterion => Expansion.omitFromNamedCriteria(criterion, expansion))
+                .filter(criterion => !(criterion instanceof AnyCriterion));
+
+            if (omitted.length == 0) {
+                return new AnyCriterion();
+            } else {
+                return new AndCriteria(omitted);
+            }
+        } else if (criterion instanceof NamedCriteria) {
+            const omittedBag: NamedCriteriaBag = { ...criterion.getBag() };
+            const expansionObject = expansion.getValue();
+            for (const key in expansionObject) {
+                const expansionItem = expansionObject[key];
+
+                if (expansionItem === true) {
+                    delete omittedBag[key];
+                } else if (expansionItem) {
+                    const bagItem = omittedBag[key];
+
+                    if (bagItem instanceof NamedCriteria) {
+                        const omitted = Expansion.omitFromNamedCriteria(bagItem, new Expansion(expansionItem));
+
+                        if (omitted instanceof AnyCriterion) {
+                            delete omittedBag[key];
+                        } else {
+                            omittedBag[key] = omitted;
+                        }
+                    } else {
+                        delete omittedBag[key];
+                    }
+                }
+            }
+
+            if (Object.keys(omittedBag).length) {
+                return new NamedCriteria(omittedBag);
+            } else {
+                return new AnyCriterion();
+            }
+        } else {
+            return criterion;
         }
     }
 }

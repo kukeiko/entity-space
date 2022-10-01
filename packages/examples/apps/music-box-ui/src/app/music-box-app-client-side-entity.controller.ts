@@ -3,14 +3,11 @@ import {
     BlueprintResolver,
     Entity,
     EntityController,
-    EntityControllerEndpoint,
-    Expansion,
-    ExpansionObject,
     IEntitySchema,
     IEntityStore,
     SchemaCatalog,
 } from "@entity-space/core";
-import { anyTemplate, inSetTemplate, isValueTemplate, namedTemplate } from "@entity-space/criteria";
+import { inSetTemplate, isValueTemplate } from "@entity-space/criteria";
 import { Artist, ArtistBlueprint, Song, SongBlueprint, SongLocation } from "@entity-space/examples/libs/music-model";
 import { firstValueFrom } from "rxjs";
 
@@ -61,67 +58,40 @@ export class MusicBoxClientSideEntityController extends EntityController impleme
     }
 
     withGetAllArtists(): this {
-        return this.addEndpoint(
-            new EntityControllerEndpoint({
-                schema: this.blueprints.resolve(ArtistBlueprint),
-                template: anyTemplate(),
-                expansion: new Expansion<ExpansionObject<Artist>>({ id: true, name: true }),
-                invoke: _ => this.http.get<Artist[]>("api/artists"),
-            })
+        return this.addEndpoint(this.blueprints.resolve(ArtistBlueprint), builder =>
+            builder.supportsExpansion({ id: true, name: true }).isLoadedBy(() => this.http.get<Artist[]>("api/artists"))
         );
     }
 
     withGetAllSongs(): this {
-        return this.addEndpoint(
-            new EntityControllerEndpoint({
-                schema: this.blueprints.resolve(SongBlueprint),
-                template: anyTemplate(),
-                expansion: new Expansion<ExpansionObject<Song>>({
-                    id: true,
-                    artistId: true,
-                    duration: true,
-                    locations: true,
-                    name: true,
-                }),
-                invoke: _ => this.http.get<Song[]>(`api/songs`),
-            })
+        return this.addEndpoint(this.blueprints.resolve(SongBlueprint), builder =>
+            builder
+                .supportsExpansion({ id: true, artistId: true, duration: true, name: true })
+                .isLoadedBy(() => this.http.get<Song[]>("api/songs"))
         );
     }
 
     withGetSongById(): this {
-        return this.addEndpoint(
-            new EntityControllerEndpoint({
-                schema: this.blueprints.resolve(SongBlueprint),
-                template: namedTemplate({ id: isValueTemplate(Number) }),
-                expansion: new Expansion<ExpansionObject<Song>>({
-                    id: true,
-                    artistId: true,
-                    duration: true,
-                    locations: true,
-                    name: true,
-                }),
-                invoke: query => this.http.get<Song>(`api/songs/${query.getCriteria().getBag().id.getValue()}`),
-            })
+        return this.addEndpoint(this.blueprints.resolve(SongBlueprint), builder =>
+            builder
+                .requiresFields({ id: isValueTemplate(Number) })
+                .supportsExpansion({ id: true, artistId: true, duration: true, locations: true, name: true })
+                .isLoadedBy(({ criterion, expansion }) =>
+                    this.http.get<Song>(`api/songs/${criterion.getBag().id.getValue()}`)
+                )
         );
     }
 
     withGetSongLocationsBySongId(): this {
-        return this.addEndpoint(
-            new EntityControllerEndpoint({
-                schema: this.schemas.getSchema("song-location"),
-                template: namedTemplate({ songId: inSetTemplate(Number) }),
-                expansion: new Expansion<ExpansionObject<SongLocation>>({
-                    id: true,
-                    path: true,
-                    songId: true,
-                    songLocationType: true,
-                    url: true,
-                }),
-                invoke: query =>
-                    this.http.get<SongLocation[]>(`api/song-locations`, {
-                        params: { songId: Array.from(query.getCriteria().getBag().songId.getValues()).join(",") },
-                    }),
-            })
+        return this.addEndpoint(this.schemas.getSchema<SongLocation>("song-location"), builder =>
+            builder
+                .requiresFields({ songId: inSetTemplate(Number) })
+                .supportsExpansion({ id: true, path: true, songId: true, songLocationType: true, url: true })
+                .isLoadedBy(({ criterion }) =>
+                    this.http.get<SongLocation[]>("api/song-locations", {
+                        params: { songId: Array.from(criterion.getBag().songId.getValues()).join(",") },
+                    })
+                )
         );
     }
 }

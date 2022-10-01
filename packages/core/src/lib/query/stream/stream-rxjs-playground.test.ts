@@ -1,13 +1,12 @@
-import { inSet, isValueTemplate, matches, namedTemplate } from "@entity-space/criteria";
+import { Criterion, inSet, isValueTemplate, matches } from "@entity-space/criteria";
 import { cloneDeep, flatMap, flatten } from "lodash";
 import { firstValueFrom, scan, takeLast, tap } from "rxjs";
 import { InMemoryEntityDatabase } from "../../entity/in-memory-entity-database";
-import { Expansion } from "../../expansion/expansion";
+import { ExpansionValue } from "../../expansion";
 import { EntitySchema, PrimitiveSchema } from "../../schema";
 import { mergeQueries } from "../merge-queries.fn";
 import { Query } from "../query";
 import { EntityController } from "./entity-controller";
-import { EntityControllerEndpoint } from "./entity-controller-endpoint";
 import { EntitySourceGateway } from "./entity-source-gateway";
 import { IEntitySource_V2 } from "./i-entity-source-v2";
 import { QueryStreamPacket } from "./query-stream-packet";
@@ -36,7 +35,7 @@ describe("playground: stream", () => {
         foo?: Foo;
     }
 
-    const fooChildSchema = new EntitySchema("foo-child")
+    const fooChildSchema = new EntitySchema<FooChild>("foo-child")
         .setKey("id")
         .addString("name")
         .addIndex("fooId")
@@ -52,7 +51,7 @@ describe("playground: stream", () => {
         baz?: Baz;
     }
 
-    const barSchema = new EntitySchema("bar")
+    const barSchema = new EntitySchema<Bar>("bar")
         .setKey("id")
         .addInteger("id")
         .addProperty("name", new PrimitiveSchema("string"))
@@ -66,7 +65,7 @@ describe("playground: stream", () => {
         name: string;
     }
 
-    const bazSchema = new EntitySchema("baz").setKey("id").addProperty("name", new PrimitiveSchema("string"));
+    const bazSchema = new EntitySchema<Baz>("baz").setKey("id").addProperty("name", new PrimitiveSchema("string"));
     barSchema.addProperty("baz", bazSchema);
 
     const data: { foo: Foo[]; fooChild: FooChild[]; bar: Bar[]; baz: Baz[] } = {
@@ -94,97 +93,87 @@ describe("playground: stream", () => {
         ],
     };
 
-    const queryData = <T>(query: Query, data: T[]): T[] => {
-        return cloneDeep(query.getCriteria().filter(data));
+    const queryData = <T>({
+        criterion,
+        entities,
+        expansion,
+    }: {
+        criterion: Criterion;
+        expansion?: ExpansionValue;
+        entities: T[];
+    }): T[] => {
+        return cloneDeep(criterion.filter(entities));
     };
 
     class FooAndBarAndFooChildController extends EntityController {
         withLoadFooChildByFooId(): this {
-            return this.addEndpoint(
-                new EntityControllerEndpoint({
-                    schema: fooChildSchema,
-                    template: namedTemplate({ fooId: isValueTemplate(Number) }),
-                    expansion: new Expansion({ id: true, name: true, fooId: true }),
-                    invoke: query => queryData(query, data.fooChild),
-                })
+            return this.addEndpoint(fooChildSchema, builder =>
+                builder
+                    .requiresFields({ fooId: isValueTemplate(Number) })
+                    .supportsExpansion({ id: true, name: true, fooId: true })
+                    .isLoadedBy(({ criterion }) => queryData({ criterion, entities: data.fooChild }))
             );
         }
 
         withLoadFooById(): this {
-            return this.addEndpoint(
-                new EntityControllerEndpoint({
-                    schema: fooSchema,
-                    template: namedTemplate({ id: isValueTemplate(Number) }),
-                    expansion: new Expansion({ id: true, barId: true, isEven: true, name: true }),
-                    invoke: query => queryData(query, data.foo),
-                })
+            return this.addEndpoint(fooSchema, builder =>
+                builder
+                    .requiresFields({ id: isValueTemplate(Number) })
+                    .supportsExpansion({ id: true, barId: true, isEven: true, name: true })
+                    .isLoadedBy(({ criterion, expansion }) => queryData({ criterion, expansion, entities: data.foo }))
             );
         }
 
         withLoadFooByIsEven(): this {
-            return this.addEndpoint(
-                new EntityControllerEndpoint({
-                    schema: fooSchema,
-                    template: namedTemplate({ isEven: isValueTemplate(Boolean) }),
-                    expansion: new Expansion({ id: true, barId: true, isEven: true, name: true }),
-                    invoke: query => queryData(query, data.foo),
-                })
+            return this.addEndpoint(fooSchema, builder =>
+                builder
+                    .requiresFields({ isEven: isValueTemplate(Boolean) })
+                    .supportsExpansion({ id: true, barId: true, isEven: true, name: true })
+                    .isLoadedBy(({ criterion }) => queryData({ criterion, entities: data.foo }))
             );
         }
 
         withLoadBarById(): this {
-            return this.addEndpoint(
-                new EntityControllerEndpoint({
-                    schema: barSchema,
-                    template: namedTemplate({ id: isValueTemplate(Number) }),
-                    expansion: new Expansion({ id: true, name: true, bazId: true }),
-                    invoke: query => queryData(query, data.bar),
-                })
+            return this.addEndpoint(barSchema, builder =>
+                builder
+                    .requiresFields({ id: isValueTemplate(Number) })
+                    .supportsExpansion({ id: true, name: true, bazId: true })
+                    .isLoadedBy(({ criterion }) => queryData({ criterion, entities: data.bar }))
             );
         }
 
         withLoadBarByEvenId(): this {
-            return this.addEndpoint(
-                new EntityControllerEndpoint({
-                    schema: barSchema,
-                    template: namedTemplate({ id: isValueTemplate(Number) }),
-                    expansion: new Expansion({ id: true, name: true, bazId: true }),
-                    acceptCriterion: criterion => {
-                        return criterion.getBag().id.getValue() % 2 === 0 ? criterion : false;
-                    },
-                    invoke: query => queryData(query, data.bar),
-                })
+            return this.addEndpoint(barSchema, builder =>
+                builder
+                    .requiresFields({ id: isValueTemplate(Number) })
+                    .supportsExpansion({ id: true, name: true, bazId: true })
+                    .acceptsCriterion(criterion => criterion.getBag().id.getValue() % 2 === 0)
+                    .isLoadedBy(({ criterion }) => queryData({ criterion, entities: data.bar }))
             );
         }
 
         withLoadBazById(): this {
-            return this.addEndpoint(
-                new EntityControllerEndpoint({
-                    schema: bazSchema,
-                    template: namedTemplate({ id: isValueTemplate(Number) }),
-                    expansion: new Expansion({ id: true, name: true }),
-                    invoke: query => queryData(query, data.baz),
-                })
+            return this.addEndpoint(bazSchema, builder =>
+                builder
+                    .requiresFields({ id: isValueTemplate(Number) })
+                    .supportsExpansion({ id: true, name: true })
+                    .isLoadedBy(({ criterion }) => queryData({ criterion, entities: data.baz }))
             );
         }
 
         withLoadBazByEvenId(): this {
-            return this.addEndpoint(
-                new EntityControllerEndpoint({
-                    schema: bazSchema,
-                    template: namedTemplate({ id: isValueTemplate(Number) }),
-                    expansion: new Expansion({ id: true, name: true }),
-                    acceptCriterion: criterion => {
-                        return criterion.getBag().id.getValue() % 2 === 0 ? criterion : false;
-                    },
-                    invoke: query => queryData(query, data.baz),
-                })
+            return this.addEndpoint(bazSchema, builder =>
+                builder
+                    .requiresFields({ id: isValueTemplate(Number) })
+                    .supportsExpansion({ id: true, name: true })
+                    .acceptsCriterion(criterion => criterion.getBag().id.getValue() % 2 === 0)
+                    .isLoadedBy(({ criterion }) => queryData({ criterion, entities: data.baz }))
             );
         }
     }
 
     async function queryTest<T>(
-        queries: Query<T>[],
+        queries: Query[],
         source: IEntitySource_V2,
         opts?: { logEach?: boolean; logFinal?: boolean; logEntities?: boolean }
     ): Promise<T[]> {
@@ -234,7 +223,7 @@ describe("playground: stream", () => {
         const queries: Query[] = [
             // [todo] write test using and() - which currently doesn't work because it is not handled in
             // new Query<Foo>(fooSchema, matches<Foo>({ id: inSet([2, 3]), bar: matches<Bar>({ id: [10, 21] }) }), {
-            new Query<Foo>(fooSchema, matches<Foo>({ id: inSet([2, 3]) }), {
+            new Query(fooSchema, matches<Foo>({ id: inSet([2, 3]) }), {
                 id: true,
                 name: true,
                 bar: { id: true, name: true, baz: true },

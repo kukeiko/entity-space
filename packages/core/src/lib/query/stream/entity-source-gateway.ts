@@ -1,4 +1,4 @@
-import { and, fromDeepBag, NamedCriteria } from "@entity-space/criteria";
+import { and, fromDeepBag } from "@entity-space/criteria";
 import { isNotFalse, tramplePath } from "@entity-space/utils";
 import {
     defaultIfEmpty,
@@ -16,11 +16,11 @@ import {
     takeLast,
     tap,
 } from "rxjs";
-import { Entity, EntityHydrationQuery, EntitySet, IEntityStore } from "../../entity";
+import { createDefaultExpansion, Entity, EntityHydrationQuery, EntitySet, IEntityStore } from "../../entity";
 import { IEntitySource } from "../../entity/entity-source.interface";
 import { createCriterionFromEntities } from "../../entity/functions/create-criterion-from-entities.fn";
 import { InMemoryEntityDatabase } from "../../entity/in-memory-entity-database";
-import { Expansion, ExpansionObject } from "../../expansion";
+import { Expansion, ExpansionValue } from "../../expansion";
 import { IEntitySchema, IEntitySchemaRelation } from "../../schema";
 import { mergeQueries } from "../merge-queries.fn";
 import { Query } from "../query";
@@ -59,7 +59,7 @@ export class EntitySourceGateway implements IEntitySource_V2, IEntitySource, IEn
         return result ? [result] : result;
     }
 
-    query_v2<T extends Entity = Entity>(queries: Query<T>[], database: InMemoryEntityDatabase): QueryStream<T> {
+    query_v2<T extends Entity = Entity>(queries: Query[], database: InMemoryEntityDatabase): QueryStream<T> {
         return defer(() => {
             const execution = new QueryExecution({
                 sources: this.sources.slice().reverse(),
@@ -161,6 +161,7 @@ export class EntitySourceGateway implements IEntitySource_V2, IEntitySource, IEn
         );
     }
 
+    // [todo] simplify this mess
     private startRelationHydration$<T>(
         hydrationQuery: EntityHydrationQuery<T>,
         relationQuery: Query,
@@ -181,19 +182,17 @@ export class EntitySourceGateway implements IEntitySource_V2, IEntitySource, IEn
                 // [todo] see if any deeper expansions have been rejected
                 // [update] is this comment still relevant?
                 const rejected = reduceQueries([relationQuery], accepted) || [relationQuery];
-                let finalRejected: Query<T>[] = [];
-                let finalAccepted: Query<T>[] = [];
+                let finalRejected: Query[] = [];
+                let finalAccepted: Query[] = [];
 
                 // [todo] should not check for equivalency, but instead if accepted criteria are a superset
                 if (Query.equivalentCriteria(relationQuery, ...mergeQueries(...accepted))) {
                     if (rejected.length && accepted.length) {
-                        const rejectedExpansion = Expansion.mergeObjects(...rejected.map(q => q.getExpansionObject()));
+                        const rejectedExpansion = Expansion.mergeValues(...rejected.map(q => q.getExpansionObject()));
                         const trampledRejected = {};
                         tramplePath(relation.getPropertyName(), trampledRejected, rejectedExpansion);
                         finalRejected = [hydrationQuery.getQuery().withExpansion(trampledRejected)];
-                        const successfulExpansion = Expansion.mergeObjects(
-                            ...accepted.map(q => q.getExpansionObject())
-                        );
+                        const successfulExpansion = Expansion.mergeValues(...accepted.map(q => q.getExpansionObject()));
                         const trampledSuccessful = {};
                         tramplePath(relation.getPropertyName(), trampledSuccessful, successfulExpansion);
                         finalAccepted = [hydrationQuery.getQuery().withExpansion(trampledSuccessful)];
@@ -249,7 +248,7 @@ export class EntitySourceGateway implements IEntitySource_V2, IEntitySource, IEn
     private toHydrateRelationQuery(
         entitySet: EntitySet,
         key: string,
-        expansionValue: ExpansionObject[string]
+        expansionValue: ExpansionValue[string]
     ): false | [Query, IEntitySchemaRelation] {
         if (expansionValue === void 0) {
             return false;
@@ -269,21 +268,14 @@ export class EntitySourceGateway implements IEntitySource_V2, IEntitySource, IEn
             relation.getToIndex().getPath()
         );
 
-        const relatedExpansion = expansionValue === true ? this.createDefaultExpansion(relatedSchema) : expansionValue;
+        const relatedExpansion = expansionValue === true ? createDefaultExpansion(relatedSchema) : expansionValue;
 
         return [new Query(relatedSchema, criteria, relatedExpansion), relation];
     }
 
-    private createDefaultExpansion(schema: IEntitySchema): ExpansionObject {
-        return schema
-            .getProperties()
-            .filter(property => !schema.findRelation(property.getName()))
-            .reduce((acc, property) => ({ ...acc, [property.getName()]: true }), {} as ExpansionObject);
-    }
-
     private toHydrationQueries<T>(
-        accepted: Query<T>[],
-        rejected: Query<T>[],
+        accepted: Query[],
+        rejected: Query[],
         database: InMemoryEntityDatabase
     ): EntityHydrationQuery<T>[] {
         return rejected.reduce(
@@ -292,7 +284,7 @@ export class EntitySourceGateway implements IEntitySource_V2, IEntitySource, IEn
                 ...accepted
                     .map(acceptedQuery => this.intersectCriteriaOmitExpansion(acceptedQuery, rejectedQuery))
                     .filter(isNotFalse)
-                    .map(dehydratedEntitiesQuery => database.querySync(dehydratedEntitiesQuery))
+                    .map(dehydratedEntitiesQuery => database.querySync<T>(dehydratedEntitiesQuery))
                     .map(
                         entitySet =>
                             new EntityHydrationQuery<T>({
@@ -305,14 +297,17 @@ export class EntitySourceGateway implements IEntitySource_V2, IEntitySource, IEn
         );
     }
 
-    private intersectCriteriaOmitExpansion<T>(accepted: Query<T>, rejected: Query<T>): false | Query<T> {
+    private intersectCriteriaOmitExpansion(accepted: Query, rejected: Query): false | Query {
         const intersectedCriterion = rejected.getCriteria().intersect(accepted.getCriteria());
 
         if (!intersectedCriterion) {
             return false;
         }
 
-        const intersectedWithoutDehydrated = NamedCriteria.omitExpansion(intersectedCriterion, rejected.getExpansion());
+        const intersectedWithoutDehydrated = Expansion.omitFromNamedCriteria(
+            intersectedCriterion,
+            rejected.getExpansion()
+        );
 
         return accepted.withCriteria(intersectedWithoutDehydrated);
     }

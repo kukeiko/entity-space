@@ -14,7 +14,7 @@ import { cloneDeep, flatMap, flatten } from "lodash";
 import { Entity, EntitySet, mergeEntities } from "../../entity";
 import { createCriterionFromEntities } from "../../entity/functions/create-criterion-from-entities.fn";
 import { joinEntities } from "../../entity/functions/join-entities.fn";
-import { ExpansionObject } from "../../expansion/expansion-object";
+import { ExpansionValue } from "../../expansion";
 import { Expansion } from "../..";
 import { EntitySchema, IEntitySchemaRelation, PrimitiveSchema } from "../../schema";
 import { mergeQueries } from "../merge-queries.fn";
@@ -23,7 +23,7 @@ import { reduceQueries } from "../reduce-queries.fn";
 
 describe("playground: stream", () => {
     class QueryError<T extends Entity = Entity> {
-        constructor(query: Query<T>, error: unknown) {}
+        constructor(query: Query, error: unknown) {}
     }
 
     function foo(foo: readonly number[]) {}
@@ -41,8 +41,8 @@ describe("playground: stream", () => {
             errors,
             payload,
         }: {
-            accepted?: Query<T>[];
-            rejected?: Query<T>[];
+            accepted?: Query[];
+            rejected?: Query[];
             errors?: QueryError<T>[];
             payload?: EntitySet<T>[];
         }) {
@@ -56,8 +56,8 @@ describe("playground: stream", () => {
             );
         }
 
-        private readonly accepted: Query<T>[];
-        private readonly rejected: Query<T>[];
+        private readonly accepted: Query[];
+        private readonly rejected: Query[];
         private readonly errors: QueryError<T>[];
         private readonly payload: EntitySet<T>[];
 
@@ -94,8 +94,8 @@ describe("playground: stream", () => {
 
     interface IEntitySource_V2 {
         acceptQuery?(query: Query): boolean;
-        query_strict?<T extends Entity = Entity>(query: Query<T>, cancel?: Promise<unknown>): QueryStream<T>;
-        query<T extends Entity = Entity>(query: Query<T>[], cancel?: Promise<unknown>): QueryStream<T>;
+        query_strict?<T extends Entity = Entity>(query: Query, cancel?: Promise<unknown>): QueryStream<T>;
+        query<T extends Entity = Entity>(query: Query[], cancel?: Promise<unknown>): QueryStream<T>;
     }
 
     interface IEntityHydrator {
@@ -187,11 +187,11 @@ describe("playground: stream", () => {
         const allBazEntities: Baz[] = [{ id: 100, name: "Baz - 100" }];
 
         abstract class DefaultEntitySource implements IEntitySource_V2 {
-            async *query<T>(queries: Query<T>[], cancel?: Promise<unknown>): QueryStream<T> {
-                const accepted: Query<T>[] = [];
+            async *query<T>(queries: Query[], cancel?: Promise<unknown>): QueryStream<T> {
+                const accepted: Query[] = [];
 
                 for (const query of queries) {
-                    for await (const packet of this.queryOne(query, cancel)) {
+                    for await (const packet of this.queryOne<T>(query, cancel)) {
                         yield new QueryStreamPacket<T>({
                             accepted: packet.getAcceptedQueries(),
                             errors: packet.getErrors(),
@@ -209,11 +209,11 @@ describe("playground: stream", () => {
                 }
             }
 
-            protected abstract queryOne<T>(query: Query<T>, cancel?: Promise<unknown>): QueryStream<T>;
+            protected abstract queryOne<T>(query: Query, cancel?: Promise<unknown>): QueryStream<T>;
         }
 
         class LoadFooByIdSource extends DefaultEntitySource implements IEntitySource_V2 {
-            protected async *queryOne<T>(query: Query<T>, cancel?: Promise<unknown>): QueryStream<T> {
+            protected async *queryOne<T>(query: Query, cancel?: Promise<unknown>): QueryStream<T> {
                 if (query.getEntitySchema().getId() !== fooSchema.getId()) {
                     return;
                 }
@@ -226,7 +226,7 @@ describe("playground: stream", () => {
                     return;
                 }
 
-                const supportedExpansion: ExpansionObject<Foo> = {
+                const supportedExpansion: ExpansionValue<Foo> = {
                     id: true,
                     isEven: true,
                     name: true,
@@ -259,7 +259,7 @@ describe("playground: stream", () => {
         }
 
         class LoadFooByIsEvenSource extends DefaultEntitySource implements IEntitySource_V2 {
-            protected async *queryOne<T>(query: Query<T>, cancel?: Promise<unknown>): QueryStream<T> {
+            protected async *queryOne<T>(query: Query, cancel?: Promise<unknown>): QueryStream<T> {
                 if (query.getEntitySchema().getId() !== fooSchema.getId()) {
                     return;
                 }
@@ -291,7 +291,7 @@ describe("playground: stream", () => {
         }
 
         class LoadBarByIdSource extends DefaultEntitySource implements IEntitySource_V2 {
-            protected async *queryOne<T>(query: Query<T>, cancel?: Promise<unknown>): QueryStream<T> {
+            protected async *queryOne<T>(query: Query, cancel?: Promise<unknown>): QueryStream<T> {
                 if (query.getEntitySchema().getId() !== barSchema.getId()) {
                     return;
                 }
@@ -304,7 +304,7 @@ describe("playground: stream", () => {
                     return;
                 }
 
-                const supportedExpansion: ExpansionObject<Bar> = {
+                const supportedExpansion: ExpansionValue<Bar> = {
                     id: true,
                     name: true,
                     bazId: true,
@@ -346,7 +346,7 @@ describe("playground: stream", () => {
         }
 
         class LoadBazByIdSource extends DefaultEntitySource implements IEntitySource_V2 {
-            protected async *queryOne<T>(query: Query<T>, cancel?: Promise<unknown>): QueryStream<T> {
+            protected async *queryOne<T>(query: Query, cancel?: Promise<unknown>): QueryStream<T> {
                 if (query.getEntitySchema().getId() !== bazSchema.getId()) {
                     return;
                 }
@@ -359,7 +359,7 @@ describe("playground: stream", () => {
                     return;
                 }
 
-                const supportedExpansion: ExpansionObject<Baz> = {
+                const supportedExpansion: ExpansionValue<Baz> = {
                     id: true,
                     name: true,
                 };
@@ -400,7 +400,7 @@ describe("playground: stream", () => {
         }
 
         class LoadFooChildByFooIdSource extends DefaultEntitySource implements IEntitySource_V2 {
-            protected async *queryOne<T>(query: Query<T>, cancel?: Promise<unknown>): QueryStream<T> {
+            protected async *queryOne<T>(query: Query, cancel?: Promise<unknown>): QueryStream<T> {
                 if (query.getEntitySchema().getId() !== fooChildSchema.getId()) {
                     return;
                 }
@@ -413,7 +413,7 @@ describe("playground: stream", () => {
                     return;
                 }
 
-                const supportedExpansion: ExpansionObject<FooChild> = {
+                const supportedExpansion: ExpansionValue<FooChild> = {
                     id: true,
                     name: true,
                     fooId: true,
@@ -463,13 +463,13 @@ describe("playground: stream", () => {
             private sources: IEntitySource_V2[];
             private hydrators: IEntityHydrator[];
 
-            async *query<T>(queries: Query<T>[], cancel?: Promise<unknown>): QueryStream<T> {
+            async *query<T>(queries: Query[], cancel?: Promise<unknown>): QueryStream<T> {
                 const candidates = this.sources.slice();
-                const accepted: Query<T>[] = [];
+                const accepted: Query[] = [];
                 const payload: EntitySet<T>[] = [];
 
                 for (const candidate of candidates) {
-                    for await (const packet of candidate.query(queries, cancel)) {
+                    for await (const packet of candidate.query<T>(queries, cancel)) {
                         yield new QueryStreamPacket<T>({
                             accepted: packet.getAcceptedQueries(),
                             errors: packet.getErrors(),
@@ -508,7 +508,7 @@ describe("playground: stream", () => {
                 );
 
                 const flatPayload = flatten(payload.map(p => p.getEntities()));
-                const acceptedExpansionQueries: Query<T>[] = [];
+                const acceptedExpansionQueries: Query[] = [];
 
                 for (const openExpansionQuery of openExpansionQueries) {
                     console.log(`delegating to hydrator: ${openExpansionQuery}`);
@@ -539,7 +539,7 @@ describe("playground: stream", () => {
             queriedEntities: EntitySet<T>,
             relation: IEntitySchemaRelation,
             source: IEntitySource_V2,
-            expansion?: ExpansionObject
+            expansion?: ExpansionValue
         ): QueryStream<T> {
             const relatedSchema = relation.getRelatedEntitySchema();
             // console.log(relatedSchema.getId());
@@ -554,7 +554,7 @@ describe("playground: stream", () => {
             );
             const query = new Query(relatedSchema, criteria, expansion ?? {});
             const result: Entity[] = [];
-            const accepted: Query<T>[] = [];
+            const accepted: Query[] = [];
 
             for await (const packet of source.query([query])) {
                 result.push(...packet.getEntitiesFlat());
@@ -563,16 +563,16 @@ describe("playground: stream", () => {
 
             // [todo] see if any deeper expansions have been rejected
             const rejected = reduceQueries([query], accepted) || [query];
-            let finalRejected: Query<T>[] = [];
-            let finalAccepted: Query<T>[] = [];
+            let finalRejected: Query[] = [];
+            let finalAccepted: Query[] = [];
 
             if (Query.equivalentCriteria(query, ...mergeQueries(...accepted))) {
                 if (rejected.length && accepted.length) {
-                    const rejectedExpansion = Expansion.mergeObjects(...rejected.map(q => q.getExpansionObject()));
+                    const rejectedExpansion = Expansion.mergeValues(...rejected.map(q => q.getExpansionObject()));
                     const trampledRejected = {};
                     tramplePath(relation.getPropertyName(), trampledRejected, rejectedExpansion);
                     finalRejected = [queriedEntities.getQuery().withExpansion(trampledRejected)];
-                    const successfulExpansion = Expansion.mergeObjects(...accepted.map(q => q.getExpansionObject()));
+                    const successfulExpansion = Expansion.mergeValues(...accepted.map(q => q.getExpansionObject()));
                     const trampledSuccessful = {};
                     tramplePath(relation.getPropertyName(), trampledSuccessful, successfulExpansion);
                     finalAccepted = [queriedEntities.getQuery().withExpansion(trampledSuccessful)];
@@ -658,7 +658,7 @@ describe("playground: stream", () => {
 
                         // if (relation !== void 0 && !isExpanded(entities, relation.getPropertyName())) {
                         if (relation !== void 0) {
-                            const accepted: Query<T>[] = [];
+                            const accepted: Query[] = [];
 
                             for await (const packet of expandRelation(
                                 queriedEntities,
@@ -716,7 +716,7 @@ describe("playground: stream", () => {
         );
         // const bundler = new BunduruViaRepeaters([new LoadFooByIdSource(), new LoadFooByIsEvenSource()]);
 
-        const stream = bundler.query([
+        const stream = bundler.query<Entity>([
             // new Query(barSchema, matches<Bar>({ id: 7 })),
             // new Query(
             //     fooSchema,
@@ -724,7 +724,7 @@ describe("playground: stream", () => {
             //     // or([matches<Foo>({ id: or(inSet([1, 4, 3]), inRange(7)) }), matches<Foo>({ isEven: true })]),
             //     { bar: true }
             // ),
-            new Query<Foo>(fooSchema, matches<Foo>({ id: inSet([2, 3]) }), {
+            new Query(fooSchema, matches<Foo>({ id: inSet([2, 3]) }), {
                 id: true,
                 name: true,
                 bar: { id: true, name: true, baz: true },
@@ -778,22 +778,22 @@ describe("playground: stream", () => {
 
     it("already obsolete", () => {
         interface DescribedQuery<T> {
-            open: Query<T>[];
-            accepted: Query<T>[];
+            open: Query[];
+            accepted: Query[];
         }
 
         interface QueryStreamPacket<T> {
-            open: Query<T>[];
-            accepted: Query<T>[];
-            payload: { query: Query<T>; entities: T[] }[];
-            errors: { error: unknown; query: Query<T> }[];
+            open: Query[];
+            accepted: Query[];
+            payload: { query: Query; entities: T[] }[];
+            errors: { error: unknown; query: Query }[];
         }
 
         type QueryStreamGenerator<T> = Generator<QueryStreamPacket<T>, QueryStreamPacket<T>, void>;
 
         interface IQueryStreamSource<T extends Entity = Entity> {
-            describe(query: Query<T>): Promise<DescribedQuery<T>>;
-            fetch(query: Query<T>, cancel?: Promise<unknown>): QueryStreamGenerator<T>;
+            describe(query: Query): Promise<DescribedQuery<T>>;
+            fetch(query: Query, cancel?: Promise<unknown>): QueryStreamGenerator<T>;
         }
 
         class FooQueryStreamSource implements IQueryStreamSource {

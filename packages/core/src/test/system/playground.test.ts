@@ -1,5 +1,6 @@
+import { Unbox } from "@entity-space/utils";
 import { Instance } from "../../lib/entity";
-import { ExpansionObject } from "../../lib/expansion";
+import { ExpansionValue } from "../../lib/expansion";
 import { Query } from "../../lib/query/query";
 import { TreeNodeRepository } from "../facade/data";
 import { CanvasModel, UserModel } from "../facade/model";
@@ -19,6 +20,56 @@ import { CanvasModel, UserModel } from "../facade/model";
 // }
 
 describe("prototyping-playground", () => {
+    xit("more expansion stuff", () => {
+        type Expand<T, E> = T extends number | string | null
+            ? Exclude<T, undefined>
+            : T extends any[]
+            ? Expand<T[number], E>[]
+            : "valueOf" extends keyof E // dirty solution, but cleaner for intellisense
+            ? T
+            : T & { [K in keyof (T | E)]-?: Expand<T[K], E[K]> };
+
+        type ExpansionValue<T, U = Unbox<T>> = true | { [K in keyof U]?: ExpansionValue<U[K]> };
+
+        interface Foo {
+            id: number;
+            name: string;
+            bar?: Bar;
+        }
+
+        interface Bar {
+            id: number;
+            name: string;
+            baz?: Baz[];
+        }
+
+        interface BazA {
+            id: number;
+            name: string;
+            type: "baz-a";
+            onlyInA: boolean;
+        }
+
+        interface BazB {
+            id: number;
+            name: string;
+            type: "baz-b";
+            onlyInB: boolean;
+        }
+
+        type Baz = BazA | BazB;
+
+        // function expand<T, E extends ExpansionValue_v2<T>>(expansion: E): Expand<T, E> {
+        function isExpanded<T, E extends ExpansionValue<T>>(entity: T, expansion: E): entity is T & Expand<T, E> {
+            return true;
+        }
+
+        const foo: Foo = {} as any;
+
+        if (isExpanded(foo, { bar: { baz: { onlyInA: true } } })) {
+            const item = foo.bar.baz[0];
+        }
+    });
     function foo(foo: readonly number[]) {}
 
     // [todo] investigate this idea - for each class that just wraps data (such as QueryResult), have a Struct/Json interface
@@ -67,7 +118,7 @@ describe("prototyping-playground", () => {
             shapes?: (Square | Circle)[];
         }
 
-        function takesExpansion<E = ExpansionObject<Instance<CanvasModel>>>(expansion: E): typeof expansion {
+        function takesExpansion<E = ExpansionValue<Instance<CanvasModel>>>(expansion: E): typeof expansion {
             return {} as any;
         }
 

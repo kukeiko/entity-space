@@ -15,7 +15,7 @@ export function mergeQuery(a: Query, b: Query): false | Query {
         return new Query(
             entitySchema,
             a.getCriteria(),
-            Expansion.mergeObjects(a.getExpansionObject(), b.getExpansionObject())
+            Expansion.mergeValues(a.getExpansionObject(), b.getExpansionObject())
         );
     }
 

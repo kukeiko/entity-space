@@ -1,8 +1,8 @@
-import { Class } from "@entity-space/utils";
 import { Criterion, NamedCriteriaBag } from "@entity-space/criteria";
+import { Class } from "@entity-space/utils";
 import { Instance } from "../../entity/blueprint/instance";
 import { define } from "../../entity/blueprint/property";
-import { Expand, ExpansionObject } from "../../expansion";
+import { Expand, ExpansionValue } from "../../expansion";
 
 interface Brand {
     id: number;
@@ -28,7 +28,7 @@ interface ProductReview {
 interface Query {
     criteria?: Criterion;
     // model: Class[];
-    expansion: ExpansionObject;
+    expansion: ExpansionValue;
 }
 
 const fooQuery: Query = {
@@ -75,7 +75,7 @@ xdescribe("new query playground", () => {
     it("working example #1", () => {
         // [todo] i don't need "E extends Expansion<T>", but can instead just do "E = Expansion<T>" and intellisense fully works. what?
         // i want to understand why
-        function query<T, E = ExpansionObject<T>>(type: T, criteria: NamedCriteriaBag, expansion: E): Expand<T, E> {
+        function query<T, E = ExpansionValue<T>>(type: T, criteria: NamedCriteriaBag, expansion: E): Expand<T, E> {
             return {} as any;
         }
 
@@ -85,7 +85,7 @@ xdescribe("new query playground", () => {
     });
 
     it("working example #2", () => {
-        function query<T, E = ExpansionObject<Instance<T>>>(
+        function query<T, E = ExpansionValue<Instance<T>>>(
             type: Class<T>,
             criteria: NamedCriteriaBag,
             expansion: E
@@ -104,7 +104,7 @@ xdescribe("new query playground", () => {
     });
 
     it("working example #3", () => {
-        function query<T, E = ExpansionObject<Instance<T>>>(
+        function query<T, E = ExpansionValue<Instance<T>>>(
             type: Class<T>,
             criteria: NamedCriteriaBag,
             expansion: E
@@ -130,7 +130,7 @@ xdescribe("new query playground", () => {
     });
 
     it("working example #4", () => {
-        function query<U extends Class[], E = ExpansionObject<Instance<InstanceType<U[number]>>>>(
+        function query<U extends Class[], E = ExpansionValue<Instance<InstanceType<U[number]>>>>(
             type: U,
             criteria: NamedCriteriaBag,
             expansion: E

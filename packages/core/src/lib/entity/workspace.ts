@@ -15,7 +15,7 @@ import {
     Subject,
     switchMap,
 } from "rxjs";
-import { ExpansionObject } from "../expansion/expansion-object";
+import { ExpansionValue } from "../expansion";
 import { IEntityHydrator, IEntitySource_V2, mergeQueries, Query, reduceQueries } from "../query";
 import { IEntitySchema } from "../schema/schema.interface";
 import { BlueprintResolver, Instance } from "./blueprint";
@@ -165,7 +165,7 @@ export class Workspace implements IEntitySource, IEntityStore {
     hydrate$<T>(
         blueprint: Class<T>,
         entities: Instance<T>[],
-        expansion: ExpansionObject<T>
+        expansion: ExpansionValue<Instance<T>>
     ): Observable<Instance<T>[]> {
         if (!this.hydrator) {
             return EMPTY;
@@ -197,17 +197,17 @@ export class Workspace implements IEntitySource, IEntityStore {
     query$<T extends Entity>(
         schema: IEntitySchema,
         criterion?: Criterion | MatchesBagArgument<T>,
-        expansion?: ExpansionObject<T>
+        expansion?: ExpansionValue<T>
     ): Observable<T[]>;
     query$<T extends Entity>(
         schema: Class<T>,
         criterion?: MatchesBagArgument<T>,
-        expansion?: ExpansionObject<Instance<T>>
+        expansion?: ExpansionValue<Instance<T>>
     ): Observable<Instance<T>[]>;
     query$<T extends Entity>(
         schema: IEntitySchema | Class<T>,
         criterion: any = any(),
-        expansion: ExpansionObject<T> = {}
+        expansion: ExpansionValue<T> = {}
     ): Observable<T[]> {
         if (!("getId" in schema)) {
             const resolvedSchema = this.blueprintResolver?.resolve(schema);
@@ -244,7 +244,7 @@ export class Workspace implements IEntitySource, IEntityStore {
                 // [todo] remove subject once no longer subscribed to
                 this.watchedQueries.set(
                     query,
-                    // new Query(query.getEntitySchema(), trackedCriterion, query.getExpansionObject()),
+                    // new Query(query.getEntitySchema(), trackedCriterion, query.getExpansionValue()),
                     subject
                 );
 
@@ -300,17 +300,17 @@ export class Workspace implements IEntitySource, IEntityStore {
     queryOneByKey$<T extends Entity>(
         schema: IEntitySchema,
         key: number | string,
-        expansion?: ExpansionObject<T>
+        expansion?: ExpansionValue<T>
     ): Observable<T>;
     queryOneByKey$<T>(
         schema: Class<T>,
         key: number | string,
-        expansion?: ExpansionObject<Instance<T>>
+        expansion?: ExpansionValue<Instance<T>>
     ): Observable<Instance<T>>;
     queryOneByKey$<T extends Entity>(
         schema: IEntitySchema | Class<T>,
         key: number | string,
-        expansion: ExpansionObject<T> = {}
+        expansion: ExpansionValue<T> = {}
     ): Observable<T> {
         if (!("getId" in schema)) {
             const resolvedSchema = this.blueprintResolver?.resolve(schema);

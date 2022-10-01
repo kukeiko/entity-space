@@ -1,3 +1,4 @@
+export * from "./lib/criterion/and/and-criteria";
 export * from "./lib/criterion/and/and.fn";
 export * from "./lib/criterion/any/any";
 export * from "./lib/criterion/any/any.fn";
@@ -6,6 +7,7 @@ export * from "./lib/criterion/criterion";
 export * from "./lib/criterion/named/from-deep-bag.fn";
 export * from "./lib/criterion/named/matches.fn";
 export * from "./lib/criterion/named/named-criteria";
+export * from "./lib/criterion/or/or-criteria";
 export * from "./lib/criterion/or/or.fn";
 export * from "./lib/criterion/range/in-number-range-criterion";
 export * from "./lib/criterion/range/in-range.fn";

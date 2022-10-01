@@ -1,13 +1,12 @@
-import { Expansion } from "../expansion";
-import { ExpansionObject } from "../expansion-object";
+import { Expansion, ExpansionValue } from "../expansion";
 
-function reduceExpansion(a: ExpansionObject, b: ExpansionObject): boolean | ExpansionObject {
+function reduceExpansion(a: ExpansionValue, b: ExpansionValue): boolean | ExpansionValue {
     const reduced = new Expansion(b).reduce(new Expansion(a));
 
     if (typeof reduced === "boolean") {
         return reduced;
     } else {
-        return reduced.getObject();
+        return reduced.getValue();
     }
 }
 
@@ -15,8 +14,8 @@ describe("reduceExpansion()", () => {
     describe("full reduction", () => {
         it("{ } reduced by { foo } should be true", () => {
             // arrange
-            const a: ExpansionObject = {};
-            const b: ExpansionObject = { foo: true };
+            const a: ExpansionValue = {};
+            const b: ExpansionValue = { foo: true };
 
             // act
             const reduced = reduceExpansion(a, b);
@@ -27,8 +26,8 @@ describe("reduceExpansion()", () => {
 
         it("{ foo, bar } should be completely reduced by { foo, bar }", () => {
             // arrange
-            const a: ExpansionObject = { foo: {}, bar: true };
-            const b: ExpansionObject = { foo: true, bar: {} };
+            const a: ExpansionValue = { foo: {}, bar: true };
+            const b: ExpansionValue = { foo: true, bar: {} };
 
             // act
             const reduced = reduceExpansion(a, b);
@@ -41,8 +40,8 @@ describe("reduceExpansion()", () => {
     describe("partial reduction", () => {
         it("{ foo, bar } reduced by { foo } should be { bar }", () => {
             // arrange
-            const a: ExpansionObject = { foo: true, bar: true };
-            const b: ExpansionObject = { foo: true };
+            const a: ExpansionValue = { foo: true, bar: true };
+            const b: ExpansionValue = { foo: true };
 
             // act
             const reduced = reduceExpansion(a, b);
@@ -53,8 +52,8 @@ describe("reduceExpansion()", () => {
 
         it("{ foo: { bar, baz }, khaz: { mo } } reduced by { foo: { bar }, khaz: { mo, dan } } should be { foo: { baz } }", () => {
             // arrange
-            const a: ExpansionObject = { foo: { bar: true, baz: true }, khaz: { mo: true } };
-            const b: ExpansionObject = { foo: { bar: true }, khaz: { mo: true, dan: true } };
+            const a: ExpansionValue = { foo: { bar: true, baz: true }, khaz: { mo: true } };
+            const b: ExpansionValue = { foo: { bar: true }, khaz: { mo: true, dan: true } };
 
             // act
             const reduced = reduceExpansion(a, b);
@@ -67,8 +66,8 @@ describe("reduceExpansion()", () => {
     describe("no reduction", () => {
         it("{ foo, bar } should not be reduced by { baz }", () => {
             // arrange
-            const a: ExpansionObject = { foo: true, bar: true };
-            const b: ExpansionObject = { baz: true };
+            const a: ExpansionValue = { foo: true, bar: true };
+            const b: ExpansionValue = { baz: true };
 
             // act
             const reduced = reduceExpansion(a, b);
@@ -79,8 +78,8 @@ describe("reduceExpansion()", () => {
 
         it("{ foo } should not be reduced by { }", () => {
             // arrange
-            const a: ExpansionObject = { foo: true };
-            const b: ExpansionObject = {};
+            const a: ExpansionValue = { foo: true };
+            const b: ExpansionValue = {};
 
             // act
             const reduced = reduceExpansion(a, b);

@@ -2,11 +2,11 @@ import { Criterion, or } from "@entity-space/criteria";
 import { from, merge, Observable, of, startWith, switchMap } from "rxjs";
 import { Entity, EntitySet } from "../../entity";
 import { InMemoryEntityDatabase } from "../../entity/in-memory-entity-database";
-import { ExpansionObject } from "../../expansion/expansion-object";
 import { IEntitySchema } from "../../schema";
 import { mergeQueries } from "../merge-queries.fn";
 import { Query } from "../query";
 import { EntityControllerEndpoint } from "./entity-controller-endpoint";
+import { EntityControllerEndpointBuilder } from "./entity-controller-endpoint-builder";
 import { IEntitySource_V2 } from "./i-entity-source-v2";
 import { QueryStream } from "./query-stream";
 import { QueryStreamPacket } from "./query-stream-packet";
@@ -14,13 +14,16 @@ import { QueryStreamPacket } from "./query-stream-packet";
 export class EntityController implements IEntitySource_V2 {
     protected endpoints: EntityControllerEndpoint[] = [];
 
-    addEndpoint(endpoint: EntityControllerEndpoint): this {
-        this.endpoints.push(endpoint);
+    addEndpoint<T>(schema: IEntitySchema<T>, build: (builder: EntityControllerEndpointBuilder<T>) => unknown): this {
+        const builder = new EntityControllerEndpointBuilder<T>(schema);
+        build(builder);
+        this.endpoints.push(builder.build());
+
         return this;
     }
 
     query_v2<T extends Entity = Entity>(
-        queries: Query<T, Criterion, ExpansionObject<Record<string, unknown>>>[],
+        queries: Query[],
         cache: InMemoryEntityDatabase
     ): Observable<QueryStreamPacket<T>> {
         const streams = queries.map(query => {
@@ -89,10 +92,7 @@ export class EntityController implements IEntitySource_V2 {
             return false;
         }
 
-        const acceptedCriteria = remapped
-            .getCriteria()
-            .map(criterion => endpoint.acceptCriterion(criterion))
-            .filter((criterion): criterion is Criterion => criterion !== false);
+        const acceptedCriteria = remapped.getCriteria().filter(criterion => endpoint.acceptCriterion(criterion));
 
         if (!acceptedCriteria.length) {
             return false;
@@ -104,7 +104,10 @@ export class EntityController implements IEntitySource_V2 {
 
         const stream = merge(
             ...accepted.map(query => {
-                const invoked = endpoint.getInvoke()(query);
+                const invoked = endpoint.getInvoke()({
+                    criterion: query.getCriteria(),
+                    expansion: query.getExpansion().getValue(),
+                });
                 let stream$: Observable<Entity | Entity[] | EntitySet>;
 
                 // [todo] go truly different code paths instead of wrapping all to a stream$

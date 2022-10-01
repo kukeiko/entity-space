@@ -9,6 +9,10 @@
         "strictNullChecks": true,
         "strictFunctionTypes": true,
         "noEmit": true,
-        "downlevelIteration": true
+        "downlevelIteration": true,
+        "paths": {
+            "@entity-space/utils": ["../../../../utils/src/index.ts"],
+            "@entity-space/criteria": ["../../../../criteria/src/index.ts"]
+        }
     }
 }

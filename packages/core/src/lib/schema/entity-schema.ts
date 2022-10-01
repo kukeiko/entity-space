@@ -31,6 +31,10 @@ export class EntitySchema<T extends Entity = Entity> implements IEntitySchema<T>
 
     readonly schemaType = "entity";
 
+    createDefault(): T {
+        throw new Error("not implemented");
+    }
+
     addAllOf(schema: IEntitySchema): this {
         this.allOf.push(schema);
         return this;

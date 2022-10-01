@@ -44,6 +44,7 @@ export interface IEntitySchema<T extends Entity = Entity> {
     findRelation(propertyName: string): IEntitySchemaRelation | undefined;
     getRelations(): IEntitySchemaRelation[];
     hasKey(): boolean;
+    createDefault(): T;
 }
 
 export interface IEntitySchemaProperty {
