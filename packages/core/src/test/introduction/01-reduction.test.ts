@@ -1,4 +1,5 @@
-import { Expansion, ExpansionValue, Query, reduceQuery } from "@entity-space/core";
+import { ExpansionValue } from "@entity-space/common";
+import { Expansion, Query, reduceQuery } from "@entity-space/core";
 import { inRange, matches, or } from "@entity-space/criteria";
 import { EntitySchema } from "../../lib/schema/entity-schema";
 

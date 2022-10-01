@@ -1,5 +1,6 @@
+import { ExpansionValue } from "@entity-space/common";
 import { any, AnyCriterion, Criterion } from "@entity-space/criteria";
-import { Expansion, ExpansionValue } from "../expansion";
+import { Expansion } from "../expansion";
 import { IEntitySchema } from "../schema";
 import { reduceQueries } from "./reduce-queries.fn";
 

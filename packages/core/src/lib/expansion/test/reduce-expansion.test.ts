@@ -1,4 +1,5 @@
-import { Expansion, ExpansionValue } from "../expansion";
+import { ExpansionValue } from "@entity-space/common";
+import { Expansion } from "../expansion";
 
 function reduceExpansion(a: ExpansionValue, b: ExpansionValue): boolean | ExpansionValue {
     const reduced = new Expansion(b).reduce(new Expansion(a));

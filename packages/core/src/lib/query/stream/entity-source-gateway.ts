@@ -1,4 +1,5 @@
-import { and, fromDeepBag } from "@entity-space/criteria";
+import { ExpansionValue } from "@entity-space/common";
+import { and, fromDeepBag, NamedCriteria } from "@entity-space/criteria";
 import { isNotFalse, tramplePath } from "@entity-space/utils";
 import {
     defaultIfEmpty,
@@ -17,7 +18,7 @@ import {
 import { createDefaultExpansion, Entity, EntityHydrationQuery, EntitySet, IEntityStore } from "../../entity";
 import { createCriterionFromEntities } from "../../entity/functions/create-criterion-from-entities.fn";
 import { InMemoryEntityDatabase } from "../../entity/in-memory-entity-database";
-import { Expansion, ExpansionValue } from "../../expansion";
+import { Expansion } from "../../expansion";
 import { IEntitySchema, IEntitySchemaRelation } from "../../schema";
 import { mergeQueries } from "../merge-queries.fn";
 import { Query } from "../query";
@@ -285,9 +286,9 @@ export class EntitySourceGateway implements IEntitySource, IEntityStore, IEntity
             return false;
         }
 
-        const intersectedWithoutDehydrated = Expansion.omitFromNamedCriteria(
+        const intersectedWithoutDehydrated = NamedCriteria.omitExpansion(
             intersectedCriterion,
-            rejected.getExpansion()
+            rejected.getExpansion().getValue()
         );
 
         return accepted.withCriteria(intersectedWithoutDehydrated);

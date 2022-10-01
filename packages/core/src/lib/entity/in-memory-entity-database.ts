@@ -1,3 +1,4 @@
+import { ExpansionValue } from "@entity-space/common";
 import {
     any,
     AnyCriterion,
@@ -8,7 +9,6 @@ import {
     orTemplate,
 } from "@entity-space/criteria";
 import { cloneJson, walkPath } from "@entity-space/utils";
-import { ExpansionValue } from "../expansion";
 import { Expansion } from "../expansion/expansion";
 import { Query } from "../query/query";
 import { IEntitySchema, IEntitySchemaRelation } from "../schema/schema.interface";

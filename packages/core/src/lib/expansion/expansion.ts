@@ -1,3 +1,4 @@
+import { ExpansionValue } from "@entity-space/common";
 import {
     AndCriteria,
     AnyCriterion,
@@ -8,20 +9,6 @@ import {
 } from "@entity-space/criteria";
 import { Unbox } from "@entity-space/utils";
 import { Entity } from "../entity";
-
-// type _ExpansionValue<T> = T extends number | string
-//     ? true
-//     : T extends any[]
-//     ? ExpansionValue<T[number]> | true
-//     : ExpansionValue<T> | true;
-
-export type ExpansionValue<T = Entity> = {
-    [K in keyof T]?: T[K] extends number | string | undefined
-        ? true
-        : T[K] extends any[] | undefined
-        ? ExpansionValue<Exclude<T[K], undefined>[number]> | true
-        : ExpansionValue<T[K]> | true;
-};
 
 // [todo] use
 export type UnfoldedExpansion<T = Entity, U = Unbox<T>> = {
@@ -192,67 +179,6 @@ export class Expansion {
             return true;
         } else {
             return reduced;
-        }
-    }
-
-    // [todo] had to move this from @entity-space/criteria to here due to cyclic
-    // package dependencies (core required criteria, criteria required core).
-    // maybe a sign to merge the packages back together?
-    static omitFromNamedCriteria(criterion: Criterion, expansion: Expansion): Criterion {
-        if (criterion instanceof OrCriteria) {
-            // [todo] no clue currently why .getItems() returns any[]
-            const omitted = (criterion.getItems() as Criterion[])
-                .map(criterion => Expansion.omitFromNamedCriteria(criterion, expansion))
-                .filter(criterion => !(criterion instanceof AnyCriterion));
-
-            if (omitted.length == 0) {
-                return new AnyCriterion();
-            } else {
-                return new OrCriteria(omitted);
-            }
-        } else if (criterion instanceof AndCriteria) {
-            // [todo] no clue currently why .getItems() returns any[]
-            const omitted = (criterion.getItems() as Criterion[])
-                .map(criterion => Expansion.omitFromNamedCriteria(criterion, expansion))
-                .filter(criterion => !(criterion instanceof AnyCriterion));
-
-            if (omitted.length == 0) {
-                return new AnyCriterion();
-            } else {
-                return new AndCriteria(omitted);
-            }
-        } else if (criterion instanceof NamedCriteria) {
-            const omittedBag: NamedCriteriaBag = { ...criterion.getBag() };
-            const expansionObject = expansion.getValue();
-            for (const key in expansionObject) {
-                const expansionItem = expansionObject[key];
-
-                if (expansionItem === true) {
-                    delete omittedBag[key];
-                } else if (expansionItem) {
-                    const bagItem = omittedBag[key];
-
-                    if (bagItem instanceof NamedCriteria) {
-                        const omitted = Expansion.omitFromNamedCriteria(bagItem, new Expansion(expansionItem));
-
-                        if (omitted instanceof AnyCriterion) {
-                            delete omittedBag[key];
-                        } else {
-                            omittedBag[key] = omitted;
-                        }
-                    } else {
-                        delete omittedBag[key];
-                    }
-                }
-            }
-
-            if (Object.keys(omittedBag).length) {
-                return new NamedCriteria(omittedBag);
-            } else {
-                return new AnyCriterion();
-            }
-        } else {
-            return criterion;
         }
     }
 }

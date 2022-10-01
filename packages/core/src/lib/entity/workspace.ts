@@ -1,3 +1,4 @@
+import { ExpansionValue } from "@entity-space/common";
 import { any, Criterion, fromDeepBag, isValue, matches, MatchesBagArgument } from "@entity-space/criteria";
 import { Class, DeepPartial, isDefined, tramplePath } from "@entity-space/utils";
 import { flatMap, isEqual, xor, xorWith } from "lodash";
@@ -18,7 +19,6 @@ import {
     Subject,
     switchMap,
 } from "rxjs";
-import { ExpansionValue } from "../expansion";
 import { IEntityHydrator, IEntitySource, mergeQueries, Query, QueryStreamPacket, reduceQueries } from "../query";
 import { SchemaCatalog } from "../schema";
 import { IEntitySchema } from "../schema/schema.interface";

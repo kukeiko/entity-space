@@ -1,8 +1,8 @@
+import { ExpansionValue } from "@entity-space/common";
 import { Criterion, inSet, isValueTemplate, matches } from "@entity-space/criteria";
 import { cloneDeep, flatMap, flatten } from "lodash";
 import { firstValueFrom, scan, takeLast, tap } from "rxjs";
 import { InMemoryEntityDatabase } from "../../entity/in-memory-entity-database";
-import { ExpansionValue } from "../../expansion";
 import { EntitySchema, PrimitiveSchema } from "../../schema";
 import { mergeQueries } from "../merge-queries.fn";
 import { Query } from "../query";

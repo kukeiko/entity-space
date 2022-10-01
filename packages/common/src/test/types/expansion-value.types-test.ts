@@ -1,5 +1,5 @@
 import { IsExact } from "conditional-type-checks";
-import { ExpansionValue } from "../../lib/expansion";
+import { ExpansionValue } from "../../index";
 
 /**
  * A default expansion is just "{}".

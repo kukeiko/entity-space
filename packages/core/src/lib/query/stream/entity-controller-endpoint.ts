@@ -1,7 +1,8 @@
+import { ExpansionValue } from "@entity-space/common";
 import { Criterion, ICriterionTemplate, InstancedCriterionTemplate } from "@entity-space/criteria";
 import { Observable } from "rxjs";
 import { Entity, EntitySet } from "../../entity";
-import { Expansion, ExpansionValue } from "../../expansion";
+import { Expansion } from "../../expansion";
 import { IEntitySchema } from "../../schema";
 
 type Data<T> = T | T[] | EntitySet<T>;

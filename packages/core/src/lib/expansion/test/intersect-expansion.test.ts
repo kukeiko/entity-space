@@ -1,4 +1,5 @@
-import { Expansion, ExpansionValue } from "../expansion";
+import { ExpansionValue } from "@entity-space/common";
+import { Expansion } from "../expansion";
 
 function intersectExpansion(a: ExpansionValue, b: ExpansionValue): boolean | ExpansionValue {
     const intersected = new Expansion(b).intersect(new Expansion(a));

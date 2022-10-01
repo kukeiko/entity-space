@@ -1,3 +1,4 @@
+import { ExpansionValue } from "@entity-space/common";
 import {
     anyTemplate,
     Criterion,
@@ -9,7 +10,7 @@ import {
 } from "@entity-space/criteria";
 import { size } from "lodash";
 import { createDefaultExpansion, Entity } from "../../entity";
-import { Expansion, ExpansionValue } from "../../expansion";
+import { Expansion } from "../../expansion";
 import { IEntitySchema } from "../../schema";
 import { EntityControllerEndpoint, EntityControllerEndpointInvoke } from "./entity-controller-endpoint";
 
