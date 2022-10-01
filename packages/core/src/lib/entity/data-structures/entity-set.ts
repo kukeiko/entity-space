@@ -1,4 +1,4 @@
-import { Query } from "../../query";
+import { Query } from "../../query/query";
 import { Entity } from "../entity";
 
 export class EntitySet<T extends Entity = Entity> {

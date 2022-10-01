@@ -1,4 +1,4 @@
-import { ExpansionValue } from "@entity-space/common";
+import { Entity, ExpansionValue } from "@entity-space/common";
 import {
     and,
     Criterion,
@@ -12,10 +12,11 @@ import {
 } from "@entity-space/criteria";
 import { tramplePath } from "@entity-space/utils";
 import { cloneDeep, flatMap, flatten } from "lodash";
-import { Expansion } from "../..";
-import { Entity, EntitySet, mergeEntities } from "../../entity";
+import { EntitySet } from "../../entity/data-structures/entity-set";
 import { createCriterionFromEntities } from "../../entity/functions/create-criterion-from-entities.fn";
 import { joinEntities } from "../../entity/functions/join-entities.fn";
+import { mergeEntities } from "../../entity/functions/merge-entities.fn";
+import { Expansion } from "../../expansion/expansion";
 import { EntitySchema, IEntitySchemaRelation, PrimitiveSchema } from "../../schema";
 import { mergeQueries } from "../merge-queries.fn";
 import { Query } from "../query";

@@ -1,8 +1,9 @@
+import { Entity } from "@entity-space/common";
 import { Criterion, or } from "@entity-space/criteria";
 import { from, merge, Observable, of, startWith, switchMap } from "rxjs";
-import { Entity, EntitySet } from "../../entity";
+import { EntitySet } from "../../entity/data-structures/entity-set";
 import { InMemoryEntityDatabase } from "../../entity/in-memory-entity-database";
-import { IEntitySchema } from "../../schema";
+import { IEntitySchema } from "../../schema/schema.interface";
 import { mergeQueries } from "../merge-queries.fn";
 import { Query } from "../query";
 import { EntityControllerEndpoint } from "./entity-controller-endpoint";

@@ -1,4 +1,4 @@
-import { ExpansionValue } from "@entity-space/common";
+import { Entity, ExpansionValue } from "@entity-space/common";
 import { and, fromDeepBag, NamedCriteria } from "@entity-space/criteria";
 import { isNotFalse, tramplePath } from "@entity-space/utils";
 import {
@@ -15,11 +15,14 @@ import {
     takeLast,
     tap,
 } from "rxjs";
-import { createDefaultExpansion, Entity, EntityHydrationQuery, EntitySet, IEntityStore } from "../../entity";
+import { EntityHydrationQuery } from "../../entity/data-structures/entity-hydration-query";
+import { EntitySet } from "../../entity/data-structures/entity-set";
 import { createCriterionFromEntities } from "../../entity/functions/create-criterion-from-entities.fn";
+import { createDefaultExpansion } from "../../entity/functions/create-default-expansion.fn";
+import { IEntityStore } from "../../entity/i-entity-store";
 import { InMemoryEntityDatabase } from "../../entity/in-memory-entity-database";
-import { Expansion } from "../../expansion";
-import { IEntitySchema, IEntitySchemaRelation } from "../../schema";
+import { Expansion } from "../../expansion/expansion";
+import { IEntitySchema, IEntitySchemaRelation } from "../../schema/schema.interface";
 import { mergeQueries } from "../merge-queries.fn";
 import { Query } from "../query";
 import { reduceQueries, reduceQueries_v2 } from "../reduce-queries.fn";

@@ -1,9 +1,10 @@
-import { Entity } from "../entity";
+import { Entity } from "@entity-space/common";
 import { EntitySchemaIndex } from "./entity-schema-index";
 import { EntitySchemaKey } from "./entity-schema-key";
 import { EntitySchemaProperty } from "./entity-schema-property";
 import { EntitySchemaRelation } from "./entity-schema-relation";
-import { ArraySchema, PrimitiveSchema } from "./property-value";
+import { ArraySchema } from "./property-value/array-schema";
+import { PrimitiveSchema } from "./property-value/primitive-schema";
 import {
     IEntitySchema,
     IEntitySchemaIndex,

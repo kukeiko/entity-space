@@ -1,7 +1,7 @@
 import { ExpansionValue } from "@entity-space/common";
 import { any, AnyCriterion, Criterion } from "@entity-space/criteria";
-import { Expansion } from "../expansion";
-import { IEntitySchema } from "../schema";
+import { Expansion } from "../expansion/expansion";
+import { IEntitySchema } from "../schema/schema.interface";
 import { reduceQueries } from "./reduce-queries.fn";
 
 // [todo] T is unused

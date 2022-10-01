@@ -19,14 +19,20 @@ import {
     Subject,
     switchMap,
 } from "rxjs";
-import { IEntityHydrator, IEntitySource, mergeQueries, Query, QueryStreamPacket, reduceQueries } from "../query";
-import { SchemaCatalog } from "../schema";
+import { mergeQueries } from "../query/merge-queries.fn";
+import { Query } from "../query/query";
+import { reduceQueries } from "../query/reduce-queries.fn";
+import { IEntityHydrator } from "../query/stream/i-entity-hydrator";
+import { IEntitySource } from "../query/stream/i-entity-source";
+import { QueryStreamPacket } from "../query/stream/query-stream-packet";
+import { SchemaCatalog } from "../schema/schema-catalog";
 import { IEntitySchema } from "../schema/schema.interface";
-import { Instance } from "./blueprint";
-import { EntityHydrationQuery, EntitySet } from "./data-structures";
+import { Instance } from "./blueprint/instance";
+import { EntityHydrationQuery } from "./data-structures/entity-hydration-query";
+import { EntitySet } from "./data-structures/entity-set";
 import { Entity } from "./entity";
-import { normalizeEntities } from "./functions";
 import { createCriterionFromEntities } from "./functions/create-criterion-from-entities.fn";
+import { normalizeEntities } from "./functions/normalize-entities.fn";
 import { IEntityStore } from "./i-entity-store";
 import { InMemoryEntityDatabase } from "./in-memory-entity-database";
 

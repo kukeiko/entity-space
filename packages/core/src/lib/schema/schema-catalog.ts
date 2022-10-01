@@ -1,8 +1,11 @@
+import { Entity } from "@entity-space/common";
 import { Class, isDefined } from "@entity-space/utils";
 import "reflect-metadata";
-import { BlueprintPropertyValue, Entity, hasAttribute, Instance, isProperty, Property } from "../entity";
+import { Instance } from "../entity/blueprint/instance";
+import { BlueprintPropertyValue, hasAttribute, isProperty, Property } from "../entity/blueprint/property";
 import { EntitySchema } from "./entity-schema";
-import { ArraySchema, PrimitiveSchema } from "./property-value";
+import { ArraySchema } from "./property-value/array-schema";
+import { PrimitiveSchema } from "./property-value/primitive-schema";
 import { PrimitiveSchemaDataType } from "./schema.interface";
 
 const BLUEPRINT_METADATA_KEY = Symbol("blueprint-metadata");

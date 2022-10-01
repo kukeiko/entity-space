@@ -1,4 +1,4 @@
-import { Entity } from "../entity";
+import { Entity } from "@entity-space/common";
 
 export type PrimitiveSchemaDataType = "boolean" | "integer" | "number" | "string";
 

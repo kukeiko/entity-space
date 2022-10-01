@@ -1,9 +1,9 @@
-import { ExpansionValue } from "@entity-space/common";
+import { Entity, ExpansionValue } from "@entity-space/common";
 import { Criterion, ICriterionTemplate, InstancedCriterionTemplate } from "@entity-space/criteria";
 import { Observable } from "rxjs";
-import { Entity, EntitySet } from "../../entity";
-import { Expansion } from "../../expansion";
-import { IEntitySchema } from "../../schema";
+import { EntitySet } from "../../entity/data-structures/entity-set";
+import { Expansion } from "../../expansion/expansion";
+import { IEntitySchema } from "../../schema/schema.interface";
 
 type Data<T> = T | T[] | EntitySet<T>;
 

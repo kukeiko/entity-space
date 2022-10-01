@@ -1,5 +1,5 @@
 import { ExpansionValue } from "@entity-space/common";
-import { IEntitySchema } from "../../schema";
+import { IEntitySchema } from "../../schema/schema.interface";
 
 export function createDefaultExpansion(schema: IEntitySchema): ExpansionValue {
     return schema
