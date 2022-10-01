@@ -1,5 +1,7 @@
 import { Entity } from "./entity.type";
 
+// [todo] don't really like the name. would rather have just "Expansion" instead,
+// and find another name for the class "Expansion" (in core/../expansion.ts)
 export type ExpansionValue<T = Entity> = {
     [K in keyof T]?: T[K] extends number | string | undefined
         ? true

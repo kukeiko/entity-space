@@ -1,5 +1,4 @@
-import { ExpansionValue } from "@entity-space/common";
-import { Expand } from "../../../expansion";
+import { Expand, ExpansionValue } from "@entity-space/common";
 import { Instance, Metadata, MetadataReference } from "../instance";
 import { define } from "../property";
 
