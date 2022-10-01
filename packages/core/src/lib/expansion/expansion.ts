@@ -1,12 +1,4 @@
 import { ExpansionValue } from "@entity-space/common";
-import {
-    AndCriteria,
-    AnyCriterion,
-    Criterion,
-    NamedCriteria,
-    NamedCriteriaBag,
-    OrCriteria,
-} from "@entity-space/criteria";
 import { Unbox } from "@entity-space/utils";
 import { Entity } from "../entity";
 
