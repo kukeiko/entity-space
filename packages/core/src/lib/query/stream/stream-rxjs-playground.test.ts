@@ -3,7 +3,8 @@ import { Criterion, inSet, isValueTemplate, matches } from "@entity-space/criter
 import { cloneDeep, flatMap, flatten } from "lodash";
 import { firstValueFrom, scan, takeLast, tap } from "rxjs";
 import { InMemoryEntityDatabase } from "../../entity/in-memory-entity-database";
-import { EntitySchema, PrimitiveSchema } from "../../schema";
+import { EntitySchema } from "../../schema/entity-schema";
+import { PrimitiveSchema } from "../../schema/property-value/primitive-schema";
 import { mergeQueries } from "../merge-queries.fn";
 import { Query } from "../query";
 import { EntityController } from "./entity-controller";

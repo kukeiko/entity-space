@@ -1,6 +1,6 @@
 import { ExpansionValue } from "@entity-space/common";
 import { Criterion, inRange, matches, or } from "@entity-space/criteria";
-import { EntitySchema } from "../schema";
+import { EntitySchema } from "../schema/entity-schema";
 import { mergeQueries } from "./merge-queries.fn";
 import { Query } from "./query";
 

@@ -1,6 +1,6 @@
 import { ExpansionValue } from "@entity-space/common";
 import { Unbox } from "@entity-space/utils";
-import { Instance } from "../../lib/entity";
+import { Instance } from "../../lib/entity/blueprint/instance";
 import { Query } from "../../lib/query/query";
 import { TreeNodeRepository } from "../facade/data";
 import { CanvasModel, UserModel } from "../facade/model";

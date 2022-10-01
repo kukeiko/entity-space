@@ -17,7 +17,9 @@ import { createCriterionFromEntities } from "../../entity/functions/create-crite
 import { joinEntities } from "../../entity/functions/join-entities.fn";
 import { mergeEntities } from "../../entity/functions/merge-entities.fn";
 import { Expansion } from "../../expansion/expansion";
-import { EntitySchema, IEntitySchemaRelation, PrimitiveSchema } from "../../schema";
+import { EntitySchema } from "../../schema/entity-schema";
+import { PrimitiveSchema } from "../../schema/property-value/primitive-schema";
+import { IEntitySchemaRelation } from "../../schema/schema.interface";
 import { mergeQueries } from "../merge-queries.fn";
 import { Query } from "../query";
 import { reduceQueries } from "../reduce-queries.fn";
