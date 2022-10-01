@@ -1,4 +1,4 @@
-import { reducing } from "./reducing.fn";
+import { reducing } from "../tools/reducing.fn";
 
 describe("reducing: not-in-set", () => {
     describe("full reduction", () => {

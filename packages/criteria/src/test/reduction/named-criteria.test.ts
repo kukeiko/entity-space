@@ -1,6 +1,6 @@
 import { matches } from "../../lib/criterion/named/matches.fn";
 import { inRange } from "../../lib/criterion/range/in-range.fn";
-import { reducing } from "./reducing.fn";
+import { reducing } from "../tools/reducing.fn";
 
 describe("reducing: named-criteria", () => {
     interface FooBarBaz {

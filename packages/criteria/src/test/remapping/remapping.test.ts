@@ -1,9 +1,9 @@
-import { inRangeTemplate } from "../lib/templates/in-range-template.fn";
-import { inSetTemplate } from "../lib/templates/in-set-template.fn";
-import { isValueTemplate } from "../lib/templates/is-value-template.fn";
-import { namedTemplate } from "../lib/templates/named-template.fn";
-import { orTemplate } from "../lib/templates/or-template.fn";
-import { remapping } from "./remapping.fn";
+import { inRangeTemplate } from "../../lib/templates/in-range-template.fn";
+import { inSetTemplate } from "../../lib/templates/in-set-template.fn";
+import { isValueTemplate } from "../../lib/templates/is-value-template.fn";
+import { namedTemplate } from "../../lib/templates/named-template.fn";
+import { orTemplate } from "../../lib/templates/or-template.fn";
+import { remapping } from "../tools/remapping.fn";
 
 // [todo] all tests should ignore order of remapped / open criteria
 describe("remapping", () => {

@@ -1,4 +1,4 @@
-import { inverting, xinverting } from "./inverting.fn";
+import { inverting, xinverting } from "../tools/inverting.fn";
 
 describe("inverting criteria", () => {
     // binary

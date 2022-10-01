@@ -1,4 +1,4 @@
-import { intersecting } from "./intersecting.fn";
+import { intersecting } from "../tools/intersecting.fn";
 
 describe("intersecting criteria", () => {
     // is-value

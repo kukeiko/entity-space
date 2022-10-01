@@ -1,4 +1,4 @@
-import { reducing } from "./reducing.fn";
+import { reducing } from "../tools/reducing.fn";
 
 describe("reducing: or-criteria", () => {
     reducing("[1, 7] | [10, 13]").by("[1, 13]").shouldBe(true);

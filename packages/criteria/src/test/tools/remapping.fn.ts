@@ -1,6 +1,6 @@
-import { Criterion } from "../lib/criterion/criterion";
-import { parseCriteria } from "../lib/parser/parse-criteria.fn";
-import { ICriterionTemplate } from "../lib/templates/criterion-template.interface";
+import { Criterion } from "../../lib/criterion/criterion";
+import { parseCriteria } from "../../lib/parser/parse-criteria.fn";
+import { ICriterionTemplate } from "../../lib/templates/criterion-template.interface";
 
 function parse<T extends Criterion | string>(item: T): Criterion {
     if (typeof item === "string") {

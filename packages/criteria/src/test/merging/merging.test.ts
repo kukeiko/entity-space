@@ -1,4 +1,4 @@
-import { merging, xmerging } from "./merging.fn";
+import { merging, xmerging } from "../tools/merging.fn";
 
 describe("merging criteria", () => {
     // binary
