@@ -1,6 +1,6 @@
 import { ExpansionValue } from "@entity-space/common";
 import { any, Criterion, fromDeepBag, isValue, matches, MatchesBagArgument } from "@entity-space/criteria";
-import { Class, DeepPartial, isDefined, tramplePath } from "@entity-space/utils";
+import { Class, DeepPartial, isDefined, writePath } from "@entity-space/utils";
 import { flatMap, isEqual, xor, xorWith } from "lodash";
 import {
     defaultIfEmpty,
@@ -28,7 +28,7 @@ import { QueryStreamPacket } from "../execution/query-stream-packet";
 import { SchemaCatalog } from "../schema/schema-catalog";
 import { IEntitySchema } from "../schema/schema.interface";
 import { Instance } from "./blueprint/instance";
-import { EntityHydrationQuery } from "./data-structures/entity-hydration-query";
+import { EntityHydrationQuery } from "../execution/entity-hydration-query";
 import { EntitySet } from "./data-structures/entity-set";
 import { Entity } from "./entity";
 import { createCriterionFromEntities } from "./functions/create-criterion-from-entities.fn";
@@ -342,7 +342,7 @@ export class Workspace implements IEntityStore {
         }
 
         const bag: Record<string, any> = {};
-        tramplePath(keyPath[0], bag, isValue(key));
+        writePath(keyPath[0], bag, isValue(key));
 
         return this.query$(schema, fromDeepBag(bag), expansion).pipe(
             map(result => result[0]),

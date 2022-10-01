@@ -8,7 +8,7 @@ import {
     or,
     orTemplate,
 } from "@entity-space/criteria";
-import { cloneJson, walkPath } from "@entity-space/utils";
+import { cloneJson, readPath } from "@entity-space/utils";
 import { Expansion } from "../expansion/expansion";
 import { Query } from "../query/query";
 import { IEntitySchema, IEntitySchemaRelation } from "../schema/schema.interface";
@@ -136,7 +136,7 @@ export class InMemoryEntityDatabase {
                 const referencedItems: Entity[] = [];
 
                 for (const entity of entities) {
-                    const reference = walkPath<Entity>(propertyKey, entity);
+                    const reference = readPath<Entity>(propertyKey, entity);
 
                     if (Array.isArray(reference)) {
                         referencedItems.push(...reference);

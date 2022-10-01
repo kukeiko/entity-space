@@ -22,11 +22,11 @@ export function reduceQuery(a: Query, b: Query): Query[] | false {
         const query = new Query(a.getEntitySchema(), a.getCriteria(), reducedExpansion.getValue());
         return [query];
     } else if (reducedExpansion === true) {
-        const query = new Query(a.getEntitySchema(), reducedCriteria, a.getExpansionObject());
+        const query = new Query(a.getEntitySchema(), reducedCriteria, a.getExpansionValue());
         return [query];
     } else {
         return [
-            new Query(a.getEntitySchema(), reducedCriteria, a.getExpansionObject()),
+            new Query(a.getEntitySchema(), reducedCriteria, a.getExpansionValue()),
             new Query(a.getEntitySchema(), b.getCriteria(), reducedExpansion.getValue()),
         ];
     }

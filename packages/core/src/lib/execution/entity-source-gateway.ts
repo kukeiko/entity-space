@@ -1,6 +1,6 @@
 import { Entity, ExpansionValue } from "@entity-space/common";
 import { and, fromDeepBag, NamedCriteria } from "@entity-space/criteria";
-import { isNotFalse, tramplePath } from "@entity-space/utils";
+import { isNotFalse, writePath } from "@entity-space/utils";
 import {
     defaultIfEmpty,
     defer,
@@ -15,7 +15,6 @@ import {
     takeLast,
     tap,
 } from "rxjs";
-import { EntityHydrationQuery } from "../entity/data-structures/entity-hydration-query";
 import { EntitySet } from "../entity/data-structures/entity-set";
 import { createCriterionFromEntities } from "../entity/functions/create-criterion-from-entities.fn";
 import { createDefaultExpansion } from "../entity/functions/create-default-expansion.fn";
@@ -26,6 +25,7 @@ import { mergeQueries } from "../query/merge-queries.fn";
 import { Query } from "../query/query";
 import { reduceQueries, reduceQueries_v2 } from "../query/reduce-queries.fn";
 import { IEntitySchema, IEntitySchemaRelation } from "../schema/schema.interface";
+import { EntityHydrationQuery } from "./entity-hydration-query";
 import { IEntityHydrator } from "./i-entity-hydrator";
 import { IEntitySource } from "./i-entity-source";
 import { QueryExecution } from "./query-execution";
@@ -130,7 +130,7 @@ export class EntitySourceGateway implements IEntitySource, IEntityStore, IEntity
     }
 
     private startHydration$<T>(hydrationQuery: EntityHydrationQuery<T>, execution: QueryExecution): QueryStream<T> {
-        const expansion = hydrationQuery.getQuery().getExpansionObject();
+        const expansion = hydrationQuery.getQuery().getExpansionValue();
         const targets = Object.entries(expansion)
             .map(([key, value]) => this.toHydrateRelationQuery(hydrationQuery.getEntitySet(), key, value))
             .filter(isNotFalse);
@@ -146,7 +146,6 @@ export class EntitySourceGateway implements IEntitySource, IEntityStore, IEntity
         );
     }
 
-    // [todo] simplify this mess
     private startRelationHydration$<T>(
         hydrationQuery: EntityHydrationQuery<T>,
         relationQuery: Query,
@@ -167,60 +166,13 @@ export class EntitySourceGateway implements IEntitySource, IEntityStore, IEntity
                 // [todo] see if any deeper expansions have been rejected
                 // [update] is this comment still relevant?
                 const rejected = reduceQueries([relationQuery], accepted) || [relationQuery];
-                let finalRejected: Query[] = [];
-                let finalAccepted: Query[] = [];
-
-                // [todo] should not check for equivalency, but instead if accepted criteria are a superset
-                if (Query.equivalentCriteria(relationQuery, ...mergeQueries(...accepted))) {
-                    if (rejected.length && accepted.length) {
-                        const rejectedExpansion = Expansion.mergeValues(...rejected.map(q => q.getExpansionObject()));
-                        const trampledRejected = {};
-                        tramplePath(relation.getPropertyName(), trampledRejected, rejectedExpansion);
-                        finalRejected = [hydrationQuery.getQuery().withExpansion(trampledRejected)];
-                        const successfulExpansion = Expansion.mergeValues(...accepted.map(q => q.getExpansionObject()));
-                        const trampledSuccessful = {};
-                        tramplePath(relation.getPropertyName(), trampledSuccessful, successfulExpansion);
-                        finalAccepted = [hydrationQuery.getQuery().withExpansion(trampledSuccessful)];
-                    } else if (accepted.length) {
-                        finalAccepted = [hydrationQuery.getQuery()];
-                    } else if (rejected.length) {
-                        finalRejected = [hydrationQuery.getQuery()];
-                    }
-                } else {
-                    const queriedQuery = hydrationQuery.getQuery();
-
-                    for (const acceptedQuery of accepted) {
-                        const trampledSuccessful = {};
-                        tramplePath(relation.getPropertyName(), trampledSuccessful, acceptedQuery.getExpansionObject());
-
-                        const addToFinalAccepted = new Query(
-                            queriedQuery.getEntitySchema(),
-                            and(
-                                queriedQuery.getCriteria(),
-                                fromDeepBag({ [relation.getPropertyName()]: acceptedQuery.getCriteria() })
-                            ),
-                            trampledSuccessful
-                        );
-
-                        finalAccepted.push(addToFinalAccepted);
-                    }
-
-                    for (const rejectedQuery of rejected) {
-                        const trampledRejected = {};
-                        tramplePath(relation.getPropertyName(), trampledRejected, rejectedQuery.getExpansionObject());
-
-                        const addToFinalRejected = new Query(
-                            queriedQuery.getEntitySchema(),
-                            and(
-                                queriedQuery.getCriteria(),
-                                fromDeepBag({ [relation.getPropertyName()]: rejectedQuery.getCriteria() })
-                            ),
-                            trampledRejected
-                        );
-
-                        finalRejected.push(addToFinalRejected);
-                    }
-                }
+                const [finalAccepted, finalRejected] = this.toMappedAcceptedAndRejectedQueries({
+                    accepted,
+                    hydrationQuery,
+                    rejected,
+                    relation,
+                    relationQuery,
+                });
 
                 return new QueryStreamPacket<T>({
                     accepted: finalAccepted,
@@ -228,6 +180,82 @@ export class EntitySourceGateway implements IEntitySource, IEntityStore, IEntity
                 });
             })
         );
+    }
+
+    // [todo] simplify this mess
+    private toMappedAcceptedAndRejectedQueries({
+        accepted,
+        rejected,
+        hydrationQuery,
+        relationQuery,
+        relation,
+    }: {
+        accepted: Query[];
+        rejected: Query[];
+        hydrationQuery: EntityHydrationQuery;
+        relationQuery: Query;
+        relation: IEntitySchemaRelation;
+    }): [Query[], Query[]] {
+        // [todo] should not check for equivalency, but instead if accepted criteria are a superset
+        if (Query.equivalentCriteria(relationQuery, ...mergeQueries(...accepted))) {
+            if (rejected.length && accepted.length) {
+                return [
+                    [
+                        hydrationQuery
+                            .getQuery()
+                            .withExpansion(
+                                writePath(
+                                    relation.getPropertyName(),
+                                    {},
+                                    Expansion.mergeValues(...accepted.map(q => q.getExpansionValue()))
+                                )
+                            ),
+                    ],
+                    [
+                        hydrationQuery
+                            .getQuery()
+                            .withExpansion(
+                                writePath(
+                                    relation.getPropertyName(),
+                                    {},
+                                    Expansion.mergeValues(...rejected.map(q => q.getExpansionValue()))
+                                )
+                            ),
+                    ],
+                ];
+            } else if (accepted.length) {
+                return [[hydrationQuery.getQuery()], []];
+            } else if (rejected.length) {
+                return [[], [hydrationQuery.getQuery()]];
+            } else {
+                return [[], []];
+            }
+        } else {
+            return [
+                accepted.map(acceptedQuery =>
+                    hydrationQuery
+                        .getQuery()
+                        .withCriteria(
+                            and(
+                                hydrationQuery.getQuery().getCriteria(),
+                                fromDeepBag({ [relation.getPropertyName()]: acceptedQuery.getCriteria() })
+                            )
+                        )
+                        .withExpansion(writePath(relation.getPropertyName(), {}, acceptedQuery.getExpansionValue()))
+                ),
+                rejected.map(rejectedQuery =>
+                    hydrationQuery
+                        .getQuery()
+                        .withCriteria(
+                            and(
+                                hydrationQuery.getQuery().getCriteria(),
+                                fromDeepBag({ [relation.getPropertyName()]: rejectedQuery.getCriteria() })
+                            )
+                        )
+                        .withExpansion(writePath(relation.getPropertyName(), {}, rejectedQuery.getExpansionValue()))
+                ),
+            ];
+        }
     }
 
     private toHydrateRelationQuery(

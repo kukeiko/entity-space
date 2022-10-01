@@ -1,10 +1,10 @@
 import { Criterion, fromDeepBag, inSet, InSetCriterion, isValue, or } from "@entity-space/criteria";
-import { tramplePath, walkPath } from "@entity-space/utils";
+import { writePath, readPath } from "@entity-space/utils";
 import { ComplexKeyMap } from "../data-structures/complex-key-map";
 import { Entity } from "../entity";
 
 function createCriterionOnePath(entities: Entity[], path: string, writtenPath = path): Criterion {
-    const readValue = (entity: Entity): any => walkPath(path, entity);
+    const readValue = (entity: Entity): any => readPath(path, entity);
     const set = new Set<any>();
 
     for (const entity of entities) {
@@ -12,7 +12,7 @@ function createCriterionOnePath(entities: Entity[], path: string, writtenPath = 
     }
 
     const bag: Record<string, any> = {};
-    tramplePath(writtenPath, bag, inSet(set));
+    writePath(writtenPath, bag, inSet(set));
 
     return fromDeepBag(bag);
 }
@@ -31,17 +31,17 @@ function createCriterionManyPaths(entities: Entity[], paths: string[], writtenPa
             const path = leadingPaths[i];
             const writtenPath = writtenPaths ? writtenPaths[i] : path;
             // [todo] unsafe assertion
-            tramplePath(writtenPath, bag, isValue(walkPath(path, entity)!));
+            writePath(writtenPath, bag, isValue(readPath(path, entity)!));
         }
 
         // [todo] could squeeze out more performance if ComplexKeyMap accepts a method for value,
         // just like it does for update.
-        tramplePath(writtenLastPath, bag, inSet([walkPath(lastPath, entity)!]));
+        writePath(writtenLastPath, bag, inSet([readPath(lastPath, entity)!]));
 
         map.set(entity, bag, (previous, current) => {
-            const previousSet = walkPath(writtenLastPath, previous) as InSetCriterion;
-            const currentSet = walkPath(writtenLastPath, current) as InSetCriterion;
-            tramplePath(writtenLastPath, previous, inSet([...previousSet.getValues(), ...currentSet.getValues()]));
+            const previousSet = readPath(writtenLastPath, previous) as InSetCriterion;
+            const currentSet = readPath(writtenLastPath, current) as InSetCriterion;
+            writePath(writtenLastPath, previous, inSet([...previousSet.getValues(), ...currentSet.getValues()]));
 
             return previous;
         });

@@ -10,7 +10,7 @@ import {
     SongLocationType,
     SongLocationTypeBlueprint,
 } from "@entity-space/examples/libs/music-model";
-import { pluckId, tramplePath } from "@entity-space/utils";
+import { pluckId, writePath } from "@entity-space/utils";
 import { PrimeNGConfig } from "primeng/api";
 import { combineLatest, map, of, Subject, switchMap, tap } from "rxjs";
 
@@ -110,7 +110,7 @@ export class MusicAppComponent implements OnInit, OnDestroy {
 
     changeUiState(property: string, value: any): void {
         const change = {};
-        tramplePath(property, change, value);
+        writePath(property, change, value);
         this.workspace.add(this.schemas.resolve(MusicBoxUiStateBlueprint), {
             id: this.stateId,
             ...change,

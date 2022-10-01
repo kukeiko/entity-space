@@ -37,7 +37,7 @@ export class Query {
         return this.expansion;
     }
 
-    getExpansionObject() {
+    getExpansionValue() {
         return this.expansion.getValue();
     }
 

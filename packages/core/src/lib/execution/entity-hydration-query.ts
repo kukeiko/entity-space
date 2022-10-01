@@ -1,6 +1,6 @@
-import { Query } from "../../query/query";
-import { Entity } from "../entity";
-import { EntitySet } from "./entity-set";
+import { Query } from "../query/query";
+import { Entity } from "../entity/entity";
+import { EntitySet } from "../entity/data-structures/entity-set";
 
 export class EntityHydrationQuery<T = Entity> {
     constructor({ entitySet, query }: { entitySet: EntitySet<T>; query: Query }) {

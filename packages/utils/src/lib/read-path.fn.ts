@@ -1,4 +1,4 @@
-export function walkPath<T>(path: string, object: Record<string, any>): T | undefined {
+export function readPath<T>(path: string, object: Record<string, any>): T | undefined {
     if (path === "") return object as T;
 
     for (const segment of path.split(".")) {

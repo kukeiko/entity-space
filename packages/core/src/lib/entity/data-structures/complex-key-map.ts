@@ -7,10 +7,9 @@ import {
     NamedCriteriaTemplate,
     RemapCriterionResult,
 } from "@entity-space/criteria";
-import { tramplePath, walkPath } from "@entity-space/utils";
+import { writePath, readPath } from "@entity-space/utils";
 import { Entity } from "../entity";
 
-// [todo] EntityStoreIndexV3 returns "this" at get() and set(). should this class too?
 // [todo] wanted to move this to utils, and then i noticed we have a dependency to criteria package,
 // so we can't really do that. maybe we should have a map implementing getting items by criteria
 // as an extending class?
@@ -34,10 +33,10 @@ export class ComplexKeyMap<E extends Entity = Entity, V = unknown> {
         const bag: Record<string, any> = {};
 
         for (const path of leadingPaths) {
-            tramplePath(path, bag, isValueTemplate());
+            writePath(path, bag, isValueTemplate());
         }
 
-        tramplePath(lastPath, bag, inSetTemplate());
+        writePath(lastPath, bag, inSetTemplate());
         this.criterionTemplate = NamedCriteriaTemplate.fromDeepBag(bag);
     }
 
@@ -58,7 +57,7 @@ export class ComplexKeyMap<E extends Entity = Entity, V = unknown> {
         }
 
         for (const path of leadingPaths) {
-            const key = walkPath(path, entity);
+            const key = readPath(path, entity);
 
             if (!map.has(key)) {
                 return void 0;
@@ -67,7 +66,7 @@ export class ComplexKeyMap<E extends Entity = Entity, V = unknown> {
             map = map.get(key) as Map<unknown, unknown>;
         }
 
-        return map.get(walkPath(lastPath, entity)) as V | undefined;
+        return map.get(readPath(lastPath, entity)) as V | undefined;
     }
 
     getAll(): V[] {
@@ -104,11 +103,11 @@ export class ComplexKeyMap<E extends Entity = Entity, V = unknown> {
         let map = this.map;
 
         for (const path of this.leadingPaths) {
-            const key = walkPath(path, entity);
+            const key = readPath(path, entity);
             map = this.getOrSet(map, key, () => new Map());
         }
 
-        const key = walkPath(this.lastPath, entity);
+        const key = readPath(this.lastPath, entity);
 
         if (update && map.has(key)) {
             const updated = update(map.get(key) as V, value);
@@ -120,7 +119,7 @@ export class ComplexKeyMap<E extends Entity = Entity, V = unknown> {
             value = updated;
         }
 
-        map.set(walkPath(this.lastPath, entity), value);
+        map.set(readPath(this.lastPath, entity), value);
     }
 
     setMany(entites: E[], values: V[], update?: (previous: V, current: V) => V): void {
@@ -131,10 +130,10 @@ export class ComplexKeyMap<E extends Entity = Entity, V = unknown> {
         let map = this.map;
 
         for (const path of this.leadingPaths) {
-            map = this.map.get(walkPath(path, entity)) as Map<unknown, unknown>;
+            map = this.map.get(readPath(path, entity)) as Map<unknown, unknown>;
         }
 
-        map.delete(walkPath(this.lastPath, entity));
+        map.delete(readPath(this.lastPath, entity));
     }
 
     getByCriterion(criterion: Criterion): false | { values: V[]; remapped: RemapCriterionResult } {

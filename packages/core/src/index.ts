@@ -1,7 +1,7 @@
 export * from "./lib/entity/blueprint/instance";
 export * from "./lib/entity/blueprint/property";
 export * from "./lib/entity/data-structures/complex-key-map";
-export * from "./lib/entity/data-structures/entity-hydration-query";
+export * from "./lib/execution/entity-hydration-query";
 export * from "./lib/entity/data-structures/entity-set";
 export * from "./lib/entity/data-structures/normalized-entities";
 export * from "./lib/entity/entity";
@@ -9,7 +9,6 @@ export * from "./lib/entity/entity-type.interface";
 export * from "./lib/entity/functions/create-criterion-from-entities.fn";
 export * from "./lib/entity/functions/create-default-expansion.fn";
 export * from "./lib/entity/functions/create-queries-from-entities.fn";
-export * from "./lib/entity/functions/flatten-named-criteria.fn";
 export * from "./lib/entity/functions/join-entities.fn";
 export * from "./lib/entity/functions/merge-entities.fn";
 export * from "./lib/entity/functions/named-criteria-to-key-path.fn";
