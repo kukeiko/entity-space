@@ -1,7 +1,7 @@
-import { define } from "@entity-space/core";
+import { Blueprint, BlueprintInstance, define } from "@entity-space/core";
 import { Class } from "@entity-space/utils";
-import { AuthorModel } from "../common/author.model";
-import { DataEntryModel } from "../common/data-entry.model";
+import { AuthorBlueprint } from "../common/author.model";
+import { DataEntryBlueprint } from "../common/data-entry.model";
 
 /**
  * This file contains models to showcase how you can deal with inheritance. We're using the idea of
@@ -19,27 +19,29 @@ import { DataEntryModel } from "../common/data-entry.model";
 /**
  * A model that points to an array of unioned models: circles, squares, triangles and grouped shapes.
  */
-export class CanvasModel {
+@Blueprint({ id: "canvases" })
+export class CanvasBlueprint {
     id = define(Number, { id: true, required: true });
     authorId = define(Number);
-    author = define(AuthorModel);
+    author = define(AuthorBlueprint);
     name = define(String);
-    shapes = define(allShapeModels, { array: true });
+    shapes = define(ShapeBlueprints, { array: true });
 }
 
 /**
  * Base class (and therefore abstract) for all other shapes.
  */
-export abstract class ShapeModel extends DataEntryModel {
+export abstract class BaseShapeBlueprint extends DataEntryBlueprint {
     id = define(Number, { id: true, required: true });
     area = define(Number);
-    canvas = define(CanvasModel);
+    canvas = define(CanvasBlueprint);
 }
 
 /**
  * A circle, based on a shape, with a "type" property as a discriminator to identify it correctly as a circle.
  */
-export class CircleModel extends ShapeModel {
+@Blueprint({ id: "circles" })
+export class CircleBlueprint extends BaseShapeBlueprint {
     radius = define(Number);
     type = define("circle" as const, { discriminator: true, required: true });
 }
@@ -47,7 +49,8 @@ export class CircleModel extends ShapeModel {
 /**
  * A square, based on a shape, with a "type" property as a discriminator to identify it correctly as a square.
  */
-export class SquareModel extends ShapeModel {
+@Blueprint({ id: "squares" })
+export class SquareBlueprint extends BaseShapeBlueprint {
     length = define(Number);
     type = define("square" as const, { discriminator: true, required: true });
 }
@@ -55,7 +58,8 @@ export class SquareModel extends ShapeModel {
 /**
  * A triangle, based on a shape, with a "type" property as a discriminator to identify it correctly as a triangle.
  */
-export class TriangleModel extends ShapeModel {
+@Blueprint({ id: "triangles" })
+export class TriangleBlueprint extends BaseShapeBlueprint {
     type = define("triangle" as const, { discriminator: true, required: true });
     angleA = define(Number);
     angleB = define(Number);
@@ -65,17 +69,25 @@ export class TriangleModel extends ShapeModel {
 /**
  * A group of shapes, with a "type" property as a discriminator to identify it correctly as a group of shapes.
  */
-export class ShapeGroupModel extends ShapeModel {
+@Blueprint({ id: "shape-groups" })
+export class ShapeGroupBlueprint extends BaseShapeBlueprint {
     type = define("group" as const, { discriminator: true, required: true });
-    shapes = define(allShapeModels, { array: true });
+    shapes = define(ShapeBlueprints, { array: true });
 }
 
 /**
  * Helper type to easily refer to all shapes.
  */
-export type Shape = CircleModel | SquareModel | TriangleModel | ShapeGroupModel;
+export type ShapeBlueprint = CircleBlueprint | SquareBlueprint | TriangleBlueprint | ShapeGroupBlueprint;
 
 /**
  * Helper var to easily reference to all shapes.
  */
-export const allShapeModels: Class<Shape>[] = [CircleModel, SquareModel, TriangleModel, ShapeGroupModel];
+export const ShapeBlueprints: Class<ShapeBlueprint>[] = [
+    CircleBlueprint,
+    SquareBlueprint,
+    TriangleBlueprint,
+    ShapeGroupBlueprint,
+];
+
+export type Shape = BlueprintInstance<ShapeBlueprint>;

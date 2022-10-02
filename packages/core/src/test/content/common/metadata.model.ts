@@ -1,5 +1,5 @@
-import { define } from "@entity-space/core";
-import { UserModel } from "./user.model";
+import { Blueprint, BlueprintInstance, define } from "@entity-space/core";
+import { UserBlueprint } from "./user.model";
 
 /**
  * Example of a model that has data that exists on a lot of types, but is put into a separate model to reduce repetitiveness.
@@ -13,11 +13,14 @@ import { UserModel } from "./user.model";
  * Once loaded, and when loaded without "createdBy" or "updatedBy", it can still be hydrated without loading the model it is referenced by,
  * as all we need to load those two properties is the ids of the users, which we have.
  */
-export class MetadataModel {
+@Blueprint({ id: "data-entry-metadata" })
+export class DataEntryMetadataBlueprint {
     createdAt = define(String, { readOnly: true });
     createdById = define(Number, { readOnly: true });
-    createdBy = define(UserModel, { readOnly: true });
+    createdBy = define(UserBlueprint, { readOnly: true });
     updatedAt = define(String, { nullable: true, readOnly: true });
     updatedById = define(Number, { nullable: true, readOnly: true });
-    updatedBy = define(UserModel, { nullable: true, readOnly: true });
+    updatedBy = define(UserBlueprint, { nullable: true, readOnly: true });
 }
+
+export type DataEntryMetadata = BlueprintInstance<DataEntryMetadataBlueprint>;

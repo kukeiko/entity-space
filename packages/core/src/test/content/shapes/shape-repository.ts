@@ -1,5 +1,5 @@
 import { BlueprintInstance } from "@entity-space/core";
-import { Shape } from "./shape.model";
+import { ShapeBlueprint } from "./shape.model";
 
 let id = 1;
 
@@ -8,7 +8,7 @@ function nextId(): number {
 }
 
 export class ShapeRepository {
-    all(): BlueprintInstance<Shape>[] {
+    all(): BlueprintInstance<ShapeBlueprint>[] {
         return [
             {
                 type: "circle",

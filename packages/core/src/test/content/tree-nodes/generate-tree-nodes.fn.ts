@@ -1,5 +1,5 @@
 import { BlueprintInstance } from "@entity-space/core";
-import { TreeNodeModel } from "./tree-node.model";
+import { TreeNodeBlueprint } from "./tree-node.model";
 
 interface GenerateTreeNodesOptions {
     numMaxChildren: number;
@@ -19,7 +19,7 @@ const defaultOptions: GenerateTreeNodesOptions = {
 
 export function generateTreeNodes(
     options: GenerateTreeNodesOptions = defaultOptions
-): BlueprintInstance<TreeNodeModel>[] {
+): BlueprintInstance<TreeNodeBlueprint>[] {
     const { chanceToHaveChildren, hasChildrenDiminish, numMaxChildren, numMaxNodes, numRootNodes } = options;
     let id = 1;
 
@@ -28,8 +28,8 @@ export function generateTreeNodes(
     }
 
     function generateChildren(
-        allNodes: BlueprintInstance<TreeNodeModel>[],
-        parent: BlueprintInstance<TreeNodeModel>,
+        allNodes: BlueprintInstance<TreeNodeBlueprint>[],
+        parent: BlueprintInstance<TreeNodeBlueprint>,
         childGenMalus = 1
     ): void {
         const numChildren = Math.floor(Math.random() * numMaxChildren);
@@ -39,7 +39,7 @@ export function generateTreeNodes(
                 return;
             }
 
-            const childNode: BlueprintInstance<TreeNodeModel> = {
+            const childNode: BlueprintInstance<TreeNodeBlueprint> = {
                 id: nextId(),
                 name: `${parent.name}-${i}`,
                 parentId: parent.id,
@@ -53,10 +53,10 @@ export function generateTreeNodes(
         }
     }
 
-    const allNodes: BlueprintInstance<TreeNodeModel>[] = [];
+    const allNodes: BlueprintInstance<TreeNodeBlueprint>[] = [];
 
     for (let i = 0; i < numRootNodes; i++) {
-        const rootNode: BlueprintInstance<TreeNodeModel> = {
+        const rootNode: BlueprintInstance<TreeNodeBlueprint> = {
             id: nextId(),
             name: String.fromCharCode(i + 65),
             parentId: null,

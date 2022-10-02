@@ -1,6 +1,9 @@
-import { define } from "@entity-space/core";
+import { Blueprint, BlueprintInstance, define } from "@entity-space/core";
 
-export class UserModel {
+@Blueprint({ id: "users" })
+export class UserBlueprint {
     id = define(Number, { id: true, required: true, readOnly: true });
     name = define(String);
 }
+
+export type User = BlueprintInstance<UserBlueprint>;

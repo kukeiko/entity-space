@@ -7,6 +7,9 @@ interface BlueprintMetadata {
     id: string;
 }
 
+// [todo] investigate alternative to using decorators: special property on each
+// blueprint instance (which would then also exist on each entity). we could
+// put quite a lot of useful stuff in there, like "lastCachedAt", "isPersisted" and more!
 export function Blueprint(args: { id: string }) {
     return (type: Class) => {
         const metadata: BlueprintMetadata = { id: args.id };

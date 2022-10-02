@@ -1,7 +1,7 @@
 import { Expand, ExpansionValue } from "@entity-space/common";
 import { Unbox } from "@entity-space/utils";
 import { BlueprintInstance, define, Metadata, MetadataReference } from "../../index";
-import { CanvasModel } from "../content";
+import { CanvasBlueprint } from "../content";
 
 // credit to captain-yossarian https://captain-yossarian.medium.com/typescript-object-oriented-typings-4fd42ce14c75
 // function Mixin<T extends ClassType, R extends T[]>(...classRefs: [...R]): new (...args: any[]) => UnionToIntersection<InstanceType<[...R][number]>> {
@@ -30,7 +30,7 @@ describe("playground: expansion", () => {
             shapes?: (Square | Circle)[];
         }
 
-        function takesExpansion<E = ExpansionValue<BlueprintInstance<CanvasModel>>>(expansion: E): typeof expansion {
+        function takesExpansion<E = ExpansionValue<BlueprintInstance<CanvasBlueprint>>>(expansion: E): typeof expansion {
             return {} as any;
         }
 

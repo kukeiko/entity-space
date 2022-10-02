@@ -1,6 +1,9 @@
-import { define } from "@entity-space/core";
+import { Blueprint, BlueprintInstance, define } from "@entity-space/core";
 
-export class TreeNodeLevelModel {
+@Blueprint({ id: "tree-node-levels" })
+export class TreeNodeLevelBlueprint {
     nodeId = define(Number, { id: true, required: true });
     level = define(Number);
 }
+
+export type TreeNodeLevel = BlueprintInstance<TreeNodeLevelBlueprint>;

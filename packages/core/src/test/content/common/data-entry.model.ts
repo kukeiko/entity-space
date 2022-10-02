@@ -1,6 +1,6 @@
 import { define } from "@entity-space/core";
-import { MetadataModel } from "./metadata.model";
+import { DataEntryMetadataBlueprint } from "./metadata.model";
 
-export abstract class DataEntryModel {
-    metadata = define(MetadataModel);
+export abstract class DataEntryBlueprint {
+    metadata = define(DataEntryMetadataBlueprint);
 }

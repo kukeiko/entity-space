@@ -336,6 +336,7 @@ describe("workspace", () => {
                 let index = 0;
                 const actual = await firstValueFrom(
                     workspace.query$<Entity>(entitySchema, { id: inSet([1, 2]) }).pipe(
+                        // [todo] should also make assertion against entities we just received
                         tap(() => workspace.add<Entity>(entitySchema, changes[index++] ?? [])),
                         take(changes.length + 1),
                         toArray()

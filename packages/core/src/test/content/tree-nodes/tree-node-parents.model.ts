@@ -1,7 +1,10 @@
-import { define } from "@entity-space/core";
-import { TreeNodeModel } from "./tree-node.model";
+import { Blueprint, BlueprintInstance, define } from "@entity-space/core";
+import { TreeNodeBlueprint } from "./tree-node.model";
 
-export class TreeNodeParentsModel {
+@Blueprint({ id: "tree-node-parents" })
+export class TreeNodeParentsBlueprint {
     childId = define(Number, { id: true, required: true });
-    parents = define(TreeNodeModel, { array: true });
+    parents = define(TreeNodeBlueprint, { array: true });
 }
+
+export type TreeNodeParents = BlueprintInstance<TreeNodeParentsBlueprint>;

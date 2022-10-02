@@ -65,6 +65,7 @@ export type AllAttributes =
     | RelationAttribute
     | RequiredAttribute;
 
+// [todo] user can put anything as O & "find references" doesn't work
 export function define<V extends BlueprintPropertyValue, O extends Partial<AllAttributes>>(
     valueType: V,
     options?: O

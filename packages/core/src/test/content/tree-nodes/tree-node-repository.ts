@@ -1,15 +1,15 @@
 import { BlueprintInstance } from "@entity-space/core";
 import { generateTreeNodes } from "./generate-tree-nodes.fn";
-import { TreeNodeModel } from "./tree-node.model";
+import { TreeNodeBlueprint } from "./tree-node.model";
 
 export class TreeNodeRepository {
     private _data = new Map(generateTreeNodes().map(x => [x.id, x]));
 
-    all(): BlueprintInstance<TreeNodeModel>[] {
+    all(): BlueprintInstance<TreeNodeBlueprint>[] {
         return this._clone(Array.from(this._data.values()));
     }
 
-    get(id: number, numMinParents = 0): BlueprintInstance<TreeNodeModel> | undefined {
+    get(id: number, numMinParents = 0): BlueprintInstance<TreeNodeBlueprint> | undefined {
         const item = this._data.get(id);
 
         if (numMinParents > 0) {
@@ -39,8 +39,8 @@ export class TreeNodeRepository {
         return void 0;
     }
 
-    getMany(ids: number[]): BlueprintInstance<TreeNodeModel>[] {
-        const found: BlueprintInstance<TreeNodeModel>[] = [];
+    getMany(ids: number[]): BlueprintInstance<TreeNodeBlueprint>[] {
+        const found: BlueprintInstance<TreeNodeBlueprint>[] = [];
 
         for (let i = 0; i < ids.length; ++i) {
             const treeNode = this._data.get(ids[i]);
@@ -65,16 +65,16 @@ export class TreeNodeRepository {
         return level;
     }
 
-    getTreeNodeParents(childId: number): BlueprintInstance<TreeNodeModel>[] {
+    getTreeNodeParents(childId: number): BlueprintInstance<TreeNodeBlueprint>[] {
         const child = this.get(childId);
 
         if (child === void 0) {
             return [];
         }
 
-        const parents: BlueprintInstance<TreeNodeModel>[] = [];
+        const parents: BlueprintInstance<TreeNodeBlueprint>[] = [];
 
-        let node: BlueprintInstance<TreeNodeModel> | undefined = child;
+        let node: BlueprintInstance<TreeNodeBlueprint> | undefined = child;
 
         while (node.parentId !== null && (node = this.get(node.parentId)) !== void 0) {
             parents.push(node);
@@ -83,7 +83,7 @@ export class TreeNodeRepository {
         return parents;
     }
 
-    private _clone(items: BlueprintInstance<TreeNodeModel>[]): BlueprintInstance<TreeNodeModel>[] {
+    private _clone(items: BlueprintInstance<TreeNodeBlueprint>[]): BlueprintInstance<TreeNodeBlueprint>[] {
         return JSON.parse(JSON.stringify(items));
     }
 }
