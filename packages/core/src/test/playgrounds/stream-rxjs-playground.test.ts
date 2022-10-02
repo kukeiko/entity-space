@@ -1,18 +1,8 @@
 import { ExpansionValue } from "@entity-space/common";
 import { Criterion, inSet, isValueTemplate, matches } from "@entity-space/criteria";
-import { cloneDeep, flatMap, flatten } from "lodash";
-import { firstValueFrom, scan, takeLast, tap } from "rxjs";
-import {
-    EntityApi,
-    EntitySchema,
-    EntitySourceGateway,
-    IEntitySource,
-    InMemoryEntityDatabase,
-    mergeQueries,
-    PrimitiveSchema,
-    Query,
-    QueryStreamPacket,
-} from "../../index";
+import { cloneDeep } from "lodash";
+import { EntityApi, EntitySchema, EntitySourceGateway, PrimitiveSchema, Query } from "../../index";
+import { queryTestHelper } from "../tools/query-test-helper.fn";
 
 describe("playground: stream", () => {
     const fooSchema = new EntitySchema<Foo>("foo")
@@ -175,46 +165,6 @@ describe("playground: stream", () => {
         }
     }
 
-    async function queryTest<T>(
-        queries: Query[],
-        source: IEntitySource,
-        opts?: { logEach?: boolean; logFinal?: boolean; logEntities?: boolean }
-    ): Promise<T[]> {
-        const logEach = opts?.logEach ?? true;
-        const logFinal = opts?.logFinal ?? true;
-        const logEntities = opts?.logEntities ?? true;
-        const cache = new InMemoryEntityDatabase();
-        const stream = source.query$(queries, cache).pipe(
-            tap(packet => {
-                if (logEach) {
-                    console.log(packet.toString());
-                }
-            }),
-            scan(QueryStreamPacket.concat),
-            takeLast(1)
-        );
-
-        const aggregatedPacket = await firstValueFrom(stream);
-
-        if (logFinal) {
-            const accepted = mergeQueries(...aggregatedPacket.getAcceptedQueries()).map(q => q.toString());
-            const rejected = mergeQueries(...aggregatedPacket.getRejectedQueries()).map(q => q.toString());
-
-            console.log("🎯 ✔️ ", JSON.stringify(accepted, void 0, 4));
-            console.log("🎯 ❌ ", JSON.stringify(rejected, void 0, 4));
-        }
-
-        const entities = flatMap(flatten(queries.map(query => cache.querySync(query))), entities =>
-            entities.getEntities()
-        );
-
-        if (logEntities) {
-            console.log("🎯 📦 ", JSON.stringify(entities));
-        }
-
-        return entities as T[];
-    }
-
     fit("simple test - v3", async () => {
         const controller = new FooAndBarAndFooChildController()
             .withLoadFooById()
@@ -234,7 +184,7 @@ describe("playground: stream", () => {
         ];
 
         // [todo] "isEven: true" is loaded twice because 2nd entity-controller erroneously accepts query where only "bar" is to by hydrated
-        const merged = await queryTest(queries, gateway, { logEach: true, logEntities: true });
+        const merged = await queryTestHelper(queries, gateway, { logEach: true, logEntities: true });
 
         // const expected: Foo[] = [
         //     { id: 2, name: "Two", isEven: true, barId: 10, bar: { id: 10, name: "Bar - 10", bazId: 100 } },

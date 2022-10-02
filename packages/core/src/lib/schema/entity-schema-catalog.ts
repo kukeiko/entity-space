@@ -35,7 +35,7 @@ export class EntitySchemaCatalog {
             return schema as EntitySchema<BlueprintInstance<T>>;
         }
 
-        console.log(`🔨 ⏳ building schema ${metadata.id} from blueprint...`);
+        // console.log(`🔨 ⏳ building schema ${metadata.id} from blueprint...`);
         schema = new EntitySchema(metadata.id);
         this.schemas.set(metadata.id, schema);
         const properties = getNamedProperties(blueprint);
@@ -81,7 +81,7 @@ export class EntitySchemaCatalog {
             schema.addIndex(indexedProperty.name);
         }
 
-        console.log(`🔨 ✔️ built schema ${metadata.id}`, schema);
+        // console.log(`🔨 ✔️ built schema ${metadata.id}`, schema);
 
         return schema as EntitySchema<BlueprintInstance<T>>;
     }
