@@ -1,7 +1,7 @@
 import { flatMap } from "lodash";
 import { InMemoryEntityDatabase } from "../entity/in-memory-entity-database";
 import { Query } from "../query/query";
-import { reduceQueries_v2 } from "../query/reduce-queries.fn";
+import { reduceQueries } from "../query/reduce-queries.fn";
 import { IEntitySource } from "./i-entity-source";
 import { QueryStreamPacket } from "./query-stream-packet";
 
@@ -53,10 +53,7 @@ export class QueryExecution {
 
     isSourceFullyPlanned(source: IEntitySource): boolean {
         const packet = this.getMergedPacketOfSource(source);
-        const reduced = reduceQueries_v2(this.targets, [
-            ...packet.getAcceptedQueries(),
-            ...packet.getRejectedQueries(),
-        ]);
+        const reduced = reduceQueries(this.targets, [...packet.getAcceptedQueries(), ...packet.getRejectedQueries()]);
 
         return reduced && !reduced.length;
     }
@@ -66,7 +63,7 @@ export class QueryExecution {
             packet.getAcceptedQueries()
         );
 
-        return reduceQueries_v2(this.targets, acceptedFromSources) || this.targets;
+        return reduceQueries(this.targets, acceptedFromSources) || this.targets;
     }
 
     getTargets(): Query[] {

@@ -22,7 +22,7 @@ import { InMemoryEntityDatabase } from "../entity/in-memory-entity-database";
 import { Expansion } from "../expansion/expansion";
 import { mergeQueries } from "../query/merge-queries.fn";
 import { Query } from "../query/query";
-import { reduceQueries, reduceQueries_v2 } from "../query/reduce-queries.fn";
+import { reduceQueries } from "../query/reduce-queries.fn";
 import { IEntitySchema, IEntitySchemaRelation } from "../schema/schema.interface";
 import { EntityHydrationQuery } from "./entity-hydration-query";
 import { IEntityHydrator } from "./i-entity-hydrator";
@@ -78,7 +78,7 @@ export class EntitySourceGateway implements IEntitySource, IEntityStore, IEntity
                 return of(new QueryStreamPacket<T>({ rejected: execution.getTargets() }));
             }
 
-            const rejected = reduceQueries_v2(execution.getTargets(), accepted);
+            const rejected = reduceQueries(execution.getTargets(), accepted);
 
             if (!rejected) {
                 return of(new QueryStreamPacket<T>({ rejected: execution.getTargets() }));
