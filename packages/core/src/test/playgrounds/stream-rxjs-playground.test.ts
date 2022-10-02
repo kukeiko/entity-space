@@ -2,15 +2,17 @@ import { ExpansionValue } from "@entity-space/common";
 import { Criterion, inSet, isValueTemplate, matches } from "@entity-space/criteria";
 import { cloneDeep, flatMap, flatten } from "lodash";
 import { firstValueFrom, scan, takeLast, tap } from "rxjs";
-import { InMemoryEntityDatabase } from "../../lib/entity/in-memory-entity-database";
-import { mergeQueries } from "../../lib/query/merge-queries.fn";
-import { Query } from "../../lib/query/query";
-import { EntityApi } from "../../lib/execution/entity-api";
-import { EntitySourceGateway } from "../../lib/execution/entity-source-gateway";
-import { IEntitySource } from "../../lib/execution/i-entity-source";
-import { QueryStreamPacket } from "../../lib/execution/query-stream-packet";
-import { EntitySchema } from "../../lib/schema/entity-schema";
-import { PrimitiveSchema } from "../../lib/schema/property-value/primitive-schema";
+import {
+    EntityApi,
+    EntitySchema,
+    EntitySourceGateway,
+    IEntitySource,
+    InMemoryEntityDatabase,
+    mergeQueries,
+    PrimitiveSchema,
+    Query,
+    QueryStreamPacket,
+} from "../../index";
 
 describe("playground: stream", () => {
     const fooSchema = new EntitySchema<Foo>("foo")

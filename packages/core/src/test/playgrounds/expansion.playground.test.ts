@@ -1,7 +1,6 @@
 import { Expand, ExpansionValue } from "@entity-space/common";
 import { Unbox } from "@entity-space/utils";
-import { Instance, Metadata, MetadataReference } from "../../lib/entity/blueprint/instance";
-import { define } from "../../lib/entity/blueprint/property";
+import { define, Instance, Metadata, MetadataReference } from "../../index";
 import { CanvasModel } from "../facade/model";
 
 // credit to captain-yossarian https://captain-yossarian.medium.com/typescript-object-oriented-typings-4fd42ce14c75

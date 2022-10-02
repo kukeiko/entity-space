@@ -1,8 +1,7 @@
 import { Expand, ExpansionValue } from "@entity-space/common";
 import { Criterion, NamedCriteriaBag } from "@entity-space/criteria";
 import { Class } from "@entity-space/utils";
-import { Instance } from "../../lib/entity/blueprint/instance";
-import { define } from "../../lib/entity/blueprint/property";
+import { define, Instance } from "../../index";
 
 interface Brand {
     id: number;

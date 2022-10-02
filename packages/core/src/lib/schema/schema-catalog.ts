@@ -1,8 +1,8 @@
 import { Entity } from "@entity-space/common";
 import { Class, isDefined } from "@entity-space/utils";
 import "reflect-metadata";
-import { Instance } from "../entity/blueprint/instance";
-import { BlueprintPropertyValue, hasAttribute, isProperty, Property } from "../entity/blueprint/property";
+import { Instance } from "./blueprint/instance";
+import { BlueprintPropertyValue, hasAttribute, isProperty, Property } from "./blueprint/property";
 import { EntitySchema } from "./entity-schema";
 import { ArraySchema } from "./property-value/array-schema";
 import { PrimitiveSchema } from "./property-value/primitive-schema";
