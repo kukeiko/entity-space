@@ -5,15 +5,15 @@ import { define } from "../../lib/entity/blueprint/property";
 xdescribe("new model playground", () => {
     interface Square {
         id: number;
-        area: number;
-        length: number;
+        area?: number;
+        length?: number;
         type: "square";
     }
 
     interface Circle {
         id: number;
-        area: number;
-        radius: number;
+        area?: number;
+        radius?: number;
         type: "circle";
     }
 
@@ -96,13 +96,13 @@ xdescribe("new model playground", () => {
         },
     };
 
-    function takesExpansion<E extends ExpansionValue<UserInstance>>(expansion: E): typeof expansion {
+    function takesUserExpansion<E extends ExpansionValue<UserInstance>>(expansion: E): typeof expansion {
         return {} as any;
     }
 
-    takesExpansion({ children: true });
+    takesUserExpansion({ children: true });
 
-    const simpleExpansion = takesExpansion({ updatedBy: true });
+    const simpleExpansion = takesUserExpansion({ updatedBy: true });
 
     type SimpleExpandedUser = Expand<UserInstance, typeof simpleExpansion>;
 
@@ -113,7 +113,7 @@ xdescribe("new model playground", () => {
 
     type Foo = ExpansionValue<Square[]>;
 
-    const deepExpansion = takesExpansion({
+    const deepExpansion = takesUserExpansion({
         id: true,
         updatedBy: true,
         createdBy: { createdBy: { name: true, children: { createdBy: true, name: true } } },
@@ -135,7 +135,7 @@ xdescribe("new model playground", () => {
             name: "my artsy drawing",
             shapes: [
                 { type: "circle", area: 123, id: 13984, radius: 123 },
-                { area: 213, id: 1982321, type: "square", length: 123 },
+                { area: 456, id: 1982321, type: "square", length: 123 },
             ],
         },
         children: [],
