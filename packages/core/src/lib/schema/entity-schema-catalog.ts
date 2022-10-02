@@ -1,53 +1,13 @@
 import { Entity } from "@entity-space/common";
-import { Class, isDefined } from "@entity-space/utils";
+import { Class } from "@entity-space/utils";
 import "reflect-metadata";
-import { BlueprintProperty, BlueprintPropertyValue, hasAttribute, isProperty } from "./blueprint-property";
+import { getBlueprintMetadata, getNamedProperties, isBlueprint } from "./blueprint";
 import { BlueprintInstance } from "./blueprint-instance";
+import { BlueprintPropertyValue, hasAttribute } from "./blueprint-property";
 import { EntitySchema } from "./entity-schema";
 import { ArraySchema } from "./property-value/array-schema";
 import { PrimitiveSchema } from "./property-value/primitive-schema";
 import { PrimitiveSchemaDataType } from "./schema.interface";
-
-const BLUEPRINT_METADATA_KEY = Symbol("blueprint-metadata");
-
-interface BlueprintMetadata {
-    id: string;
-}
-
-export function Blueprint(args: { id: string }) {
-    return (type: Class) => {
-        const metadata: BlueprintMetadata = { id: args.id };
-        Reflect.defineMetadata(BLUEPRINT_METADATA_KEY, metadata, type);
-    };
-}
-
-function findBlueprintMetadata(type: Class): BlueprintMetadata | undefined {
-    return Reflect.getMetadata(BLUEPRINT_METADATA_KEY, type);
-}
-
-function getBlueprintMetadata(type: Class): BlueprintMetadata {
-    const metadata = findBlueprintMetadata(type);
-
-    if (!metadata) {
-        throw new Error(`no blueprint metadata found for ${type.name}`);
-    }
-
-    return metadata;
-}
-
-function isBlueprint(value: any): value is Class {
-    return Reflect.getMetadata(BLUEPRINT_METADATA_KEY, value) !== void 0;
-}
-
-type NamedProperty = BlueprintProperty & { name: string };
-
-function getNamedProperties(blueprint: Class): NamedProperty[] {
-    const instance = new blueprint();
-
-    return Object.entries(instance)
-        .map(([name, property]) => (isProperty(property) ? { ...property, name } : void 0))
-        .filter(isDefined);
-}
 
 export class EntitySchemaCatalog {
     private readonly schemas = new Map<string, EntitySchema>();
