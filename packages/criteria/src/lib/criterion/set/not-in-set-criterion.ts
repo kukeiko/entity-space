@@ -1,11 +1,11 @@
-import { PrimitiveIncludingNull, subtractSets } from "@entity-space/utils";
+import { Null, Primitive, subtractSets } from "@entity-space/utils";
 import { Criteria } from "../criteria";
 import { Criterion } from "../criterion";
 import { InSetCriterion } from "./in-set-criterion";
 import { inSet } from "./in-set.fn";
 import { notInSet } from "./not-in-set.fn";
 
-export class NotInSetCriterion<T extends ReturnType<PrimitiveIncludingNull>> extends Criterion {
+export class NotInSetCriterion<T extends ReturnType<Primitive | typeof Null>> extends Criterion {
     constructor(values: Iterable<T>) {
         super();
         this.values = Object.freeze(new Set(values));
@@ -17,7 +17,7 @@ export class NotInSetCriterion<T extends ReturnType<PrimitiveIncludingNull>> ext
         return this.values;
     }
 
-    getValuesOfType<U extends PrimitiveIncludingNull>(type: U[]): ReturnType<U>[] {
+    getValuesOfType<U extends Primitive | typeof Null>(type: U[]): ReturnType<U>[] {
         const values: ReturnType<U>[] = [];
         const valueTypes = new Set(type.map(type => typeof type()));
 
