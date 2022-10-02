@@ -8,6 +8,7 @@ import { SongBlueprint, SongLocationEntitySchema } from "@entity-space/examples/
 import { ButtonModule } from "primeng/button";
 import { DialogModule } from "primeng/dialog";
 import { DropdownModule } from "primeng/dropdown";
+import { InputNumberModule } from "primeng/inputnumber";
 import { InputTextModule } from "primeng/inputtext";
 import { MultiSelectModule } from "primeng/multiselect";
 import { SliderModule } from "primeng/slider";
@@ -32,6 +33,7 @@ import { MusicBoxClientSideEntityApi } from "./music-box-client-side-entity-api"
         SliderModule,
         TableModule,
         TabViewModule,
+        InputNumberModule,
     ],
     declarations: [MusicAppComponent, SongTableComponent, ArtistTableComponent],
     providers: [
@@ -68,8 +70,10 @@ import { MusicBoxClientSideEntityApi } from "./music-box-client-side-entity-api"
             useFactory: (controller: MusicBoxClientSideEntityApi, schemas: EntitySchemaCatalog) => {
                 console.log("🏭 new entity gateway [V3]");
                 const gateway = new EntitySourceGateway([controller]);
+                // [todo] remove adding stores by schema
                 gateway.addStore(schemas.getSchema("song"), controller);
                 gateway.addStore(schemas.getSchema("song-location"), controller);
+                gateway.addStore(schemas.getSchema("artist"), controller);
                 return gateway;
             },
         },

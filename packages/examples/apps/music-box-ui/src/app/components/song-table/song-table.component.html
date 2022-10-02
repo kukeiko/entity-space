@@ -4,7 +4,16 @@
             <th *ngFor="let column of columns" pReorderableColumn>
                 {{ column.header }}
             </th>
-            <th></th>
+            <th>
+                <button
+                    pButton
+                    pRipple
+                    type="button"
+                    icon="pi pi-plus"
+                    class="p-button-rounded p-button-text"
+                    (click)="createSong()"
+                ></button>
+            </th>
         </tr>
     </ng-template>
     <ng-template pTemplate="body" let-song let-columns="columns">
@@ -45,6 +54,10 @@
                 [autoDisplayFirst]="false"
                 [filter]="true"
             ></p-dropdown>
+        </div>
+        <div class="field">
+            <label for="duration">Duration</label>
+            <p-inputNumber name="duration" id="duration" [(ngModel)]="editedSong.duration"></p-inputNumber>
         </div>
         <div class="field">
             <label for="webUrl">Url</label>

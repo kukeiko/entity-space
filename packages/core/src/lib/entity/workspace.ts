@@ -127,6 +127,10 @@ export class Workspace implements IEntityStore {
         entities: BlueprintInstance<T>[],
         expansion: ExpansionValue<BlueprintInstance<T>>
     ): Observable<BlueprintInstance<T>[]> {
+        if (!entities.length) {
+            return of([]);
+        }
+
         if (!this.hydrator) {
             return EMPTY;
         }

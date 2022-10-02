@@ -21,6 +21,16 @@ export class MusicBoxClientSideEntityApi extends EntityApi implements IEntitySto
                         firstValueFrom(this.http.post<SongLocation>(`api/song-locations`, entity))
                     )
                 );
+
+            case "song":
+                return Promise.all(
+                    (entities as Song[]).map(entity => firstValueFrom(this.http.post<Song>(`api/songs`, entity)))
+                );
+
+            case "artist":
+                return Promise.all(
+                    (entities as Artist[]).map(entity => firstValueFrom(this.http.post<Artist>(`api/artists`, entity)))
+                );
         }
 
         throw new Error(`create() not implemented for schema ${schema.getId()}`);
@@ -32,6 +42,13 @@ export class MusicBoxClientSideEntityApi extends EntityApi implements IEntitySto
                 return Promise.all(
                     (entities as Song[]).map(entity =>
                         firstValueFrom(this.http.patch<Song>(`api/songs/${entity.id}`, entity))
+                    )
+                );
+
+            case "artist":
+                return Promise.all(
+                    (entities as Artist[]).map(entity =>
+                        firstValueFrom(this.http.patch<Artist>(`api/artists/${entity.id}`, entity))
                     )
                 );
 

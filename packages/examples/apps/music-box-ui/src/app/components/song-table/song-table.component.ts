@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, Input } from "@angular/core";
 import { Blueprint, define, EntitySchemaCatalog, Workspace } from "@entity-space/core";
 import { Artist, ArtistBlueprint, Song, SongBlueprint, WebSongLocation } from "@entity-space/examples/libs/music-model";
-import { combineLatest, map, switchMap } from "rxjs";
+import { combineLatest, map, shareReplay, switchMap } from "rxjs";
 
 @Blueprint({ id: "song-table-input" })
 class SongTableInputBlueprint {
@@ -39,11 +39,12 @@ export class SongTableComponent {
                     artist: true,
                     // [todo] expanding song here causes all to load all songs,
                     // expecting it to be cached instead
-                    locations: { id: true, song: true },
+                    locations: { id: true },
                 }),
             })
         ),
-        map(({ artists, songs }) => this.toState(artists, songs))
+        map(({ artists, songs }) => this.toState(artists, songs)),
+        shareReplay(1)
     );
 
     toState(artists: Artist[], songs: Song[]): SongTableState {
@@ -63,6 +64,13 @@ export class SongTableComponent {
     editedSong?: Song;
     editedWebUrl = "";
 
+    createSong(): void {
+        // [todo] implement & use EntitySchema.createDefault()
+        this.editedSong = { artistId: 0, duration: 0, id: 0, name: "" };
+        this.editedWebUrl = "";
+        this.editDialogVisible = true;
+    }
+
     editSong(song: Song): void {
         // [todo] use some copying mechanism from entity-space instead
         this.editedSong = { ...song };
@@ -80,30 +88,44 @@ export class SongTableComponent {
     async saveSong(): Promise<void> {
         console.log("💾 save song", this.editedSong);
 
-        if (this.editedWebUrl) {
-            let webLocation = this.editedSong?.locations?.find(loc => loc.songLocationType === "web") as
-                | WebSongLocation
-                | undefined;
+        if (this.editedSong?.id ?? 0 > 0) {
+            if (this.editedWebUrl) {
+                let webLocation = this.editedSong?.locations?.find(loc => loc.songLocationType === "web") as
+                    | WebSongLocation
+                    | undefined;
 
-            if (!webLocation) {
-                const createdWebLocation = await this.workspace.create<WebSongLocation>(
-                    [{ id: 0, songId: this.editedSong?.id!, songLocationType: "web", url: this.editedWebUrl }],
-                    this.schemas.getSchema("song-location")
-                );
+                if (!webLocation) {
+                    const createdWebLocation = await this.workspace.create<WebSongLocation>(
+                        [{ id: 0, songId: this.editedSong?.id!, songLocationType: "web", url: this.editedWebUrl }],
+                        this.schemas.getSchema("song-location")
+                    );
 
-                if (!createdWebLocation) {
-                    return;
+                    if (!createdWebLocation) {
+                        return;
+                    }
+
+                    webLocation = createdWebLocation[0];
+                } else {
+                    webLocation.url = this.editedWebUrl;
+                    await this.workspace.update([webLocation], this.schemas.getSchema("song-location"));
                 }
-
-                webLocation = createdWebLocation[0];
-            } else {
-                webLocation.url = this.editedWebUrl;
-                await this.workspace.update([webLocation], this.schemas.getSchema("song-location"));
             }
+
+            // [todo] make workspace.update() better to use w/ blueprints
+            await this.workspace.update([this.editedSong!], this.schemas.resolve(SongBlueprint));
+        } else {
+            const createdSong = await this.workspace.create([this.editedSong!], this.schemas.resolve(SongBlueprint));
+
+            if (!createdSong) {
+                return alert("could not create song :(");
+            }
+
+            await this.workspace.create<WebSongLocation>(
+                [{ id: 0, songId: createdSong[0].id, songLocationType: "web", url: this.editedWebUrl }],
+                this.schemas.getSchema("song-location")
+            );
         }
 
-        // [todo] make workspace.update() better to use w/ blueprints
-        await this.workspace.update([this.editedSong!], this.schemas.resolve(SongBlueprint));
         this.hideDialog();
     }
 

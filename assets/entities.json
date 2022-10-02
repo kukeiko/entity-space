@@ -1,6 +1,24 @@
 {
     "song": [
         {
+            "artistId": 2,
+            "duration": 0,
+            "id": 18,
+            "name": "Salzburg 2"
+        },
+        {
+            "artistId": 5,
+            "duration": 590,
+            "id": 17,
+            "name": "Zuccabar"
+        },
+        {
+            "name": "Der Slaufkugel",
+            "id": 16,
+            "artistId": 4,
+            "duration": 466
+        },
+        {
             "name": "Plein Ciel",
             "id": 15,
             "artistId": 3
@@ -16,12 +34,31 @@
             "artistId": 1
         },
         {
-            "name": "Der Slaufkugel",
-            "id": 16,
-            "artistId": 4
+            "artistId": 6,
+            "duration": 423,
+            "id": 19,
+            "name": "Hygge"
         }
     ],
     "song-location": [
+        {
+            "id": 6,
+            "songId": 18,
+            "songLocationType": "web",
+            "url": "https://www.youtube.com/watch?v=XmfOOEj-cZc"
+        },
+        {
+            "id": 5,
+            "songId": 17,
+            "songLocationType": "web",
+            "url": "https://www.youtube.com/watch?v=Eyk-uTLjkMI"
+        },
+        {
+            "id": 4,
+            "songId": 16,
+            "songLocationType": "web",
+            "url": "https://www.youtube.com/watch?v=tTvIMhfUW1o"
+        },
         {
             "id": 3,
             "songId": 14,
@@ -41,13 +78,25 @@
             "id": 1
         },
         {
-            "id": 4,
-            "songId": 16,
+            "id": 7,
+            "songId": 19,
             "songLocationType": "web",
-            "url": "https://www.youtube.com/watch?v=tTvIMhfUW1o"
+            "url": "https://www.youtube.com/watch?v=rlZAzo0uTDI"
         }
     ],
     "artist": [
+        {
+            "id": 5,
+            "name": "Nils Andreas"
+        },
+        {
+            "name": "Cliff De Zoete",
+            "id": 4
+        },
+        {
+            "name": "N'to",
+            "id": 3
+        },
         {
             "name": "Worakls",
             "id": 2
@@ -57,12 +106,8 @@
             "id": 1
         },
         {
-            "name": "N'to",
-            "id": 3
-        },
-        {
-            "name": "Cliff De Zoete",
-            "id": 4
+            "id": 6,
+            "name": "Ikaro Grati"
         }
     ]
 }
