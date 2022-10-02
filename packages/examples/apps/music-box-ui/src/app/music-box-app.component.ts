@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit } from "@angular/core";
-import { Blueprint, define, BlueprintInstance, Query, EntitySchemaCatalog, Workspace } from "@entity-space/core";
+import { Blueprint, BlueprintInstance, define, EntitySchemaCatalog, Query, Workspace } from "@entity-space/core";
 import { matches, some } from "@entity-space/criteria";
 import {
     Artist,
@@ -69,11 +69,11 @@ export class MusicAppComponent implements OnInit, OnDestroy {
                 ),
             ])
         ),
-        map(([ui, artists, songLocationTypes, songs]) => this.toAppState(ui, songs, artists, songLocationTypes)),
+        map(([ui, artists, songLocationTypes, songs]) => this.toState(ui, songs, artists, songLocationTypes)),
         tap(state => console.log("🧙‍♂️ app state changed", state))
     );
 
-    toAppState(
+    toState(
         ui: MusicBoxUiState,
         songs: Song[],
         artists: Artist[],

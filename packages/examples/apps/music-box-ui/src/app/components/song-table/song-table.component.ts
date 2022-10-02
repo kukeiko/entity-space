@@ -35,15 +35,19 @@ export class SongTableComponent {
         switchMap(input =>
             combineLatest({
                 artists: this.workspace.query$(ArtistBlueprint),
-                songs: this.workspace.hydrate$(SongBlueprint, input.songs, { artist: true, locations: true }),
+                songs: this.workspace.hydrate$(SongBlueprint, input.songs, {
+                    artist: true,
+                    locations: { id: true, song: true },
+                }),
             })
         ),
-        map(data => {
-            const state: SongTableState = { data };
-
-            return state;
-        })
+        map(({ artists, songs }) => this.toState(artists, songs))
     );
+
+    toState(artists: Artist[], songs: Song[]): SongTableState {
+        artists.sort((a, b) => a.name.localeCompare(b.name));
+        return { data: { artists, songs } };
+    }
 
     columns: { field: string; header: string }[] = [
         { field: "id", header: "Id" },
@@ -56,7 +60,6 @@ export class SongTableComponent {
     editDialogVisible = false;
     editedSong?: Song;
     editedWebUrl = "";
-    artists$ = this.workspace.query$(ArtistBlueprint);
 
     editSong(song: Song): void {
         // [todo] use some copying mechanism from entity-space instead

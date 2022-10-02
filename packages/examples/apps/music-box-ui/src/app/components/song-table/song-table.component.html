@@ -33,11 +33,11 @@
             <label for="name">Name</label>
             <input type="text" pInputText name="name" id="name" [(ngModel)]="editedSong.name" required autofocus />
         </div>
-        <div class="field" *ngIf="artists$ | async; let artists_">
+        <div class="field" *ngIf="state$ | async; let state">
             <label for="artist">Artist</label>
             <p-dropdown
                 appendTo="body"
-                [options]="artists_"
+                [options]="state.data.artists"
                 [(ngModel)]="editedSong.artistId"
                 optionLabel="name"
                 optionValue="id"

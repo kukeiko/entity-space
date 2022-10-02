@@ -4,7 +4,7 @@ import { inSetTemplate, isValueTemplate } from "@entity-space/criteria";
 import { Artist, ArtistBlueprint, Song, SongBlueprint, SongLocation } from "@entity-space/examples/libs/music-model";
 import { firstValueFrom } from "rxjs";
 
-export class MusicBoxClientSideEntityController extends EntityApi implements IEntityStore {
+export class MusicBoxClientSideEntityApi extends EntityApi implements IEntityStore {
     constructor(
         private readonly http: HttpClient,
 

@@ -1,4 +1,4 @@
-import { Blueprint, define, BlueprintInstance } from "@entity-space/core";
+import { Blueprint, BlueprintInstance, define, EntitySchema } from "@entity-space/core";
 import { SongBlueprint } from "./song";
 
 export interface BaseSongLocation {
@@ -45,4 +45,17 @@ export class WebSongLocationBlueprint extends BaseSongLocationBlueprint {
 export class LocalSongLocationBlueprint extends BaseSongLocationBlueprint {
     path = define(String, { required: true });
     songLocationType = define("local", { discriminator: true, required: true });
+}
+
+export class SongLocationEntitySchema extends EntitySchema {
+    constructor() {
+        super("song-location");
+        this.setKey("id")
+            .addIndex("songId")
+            .addInteger("id")
+            .addInteger("songId")
+            .addString("url")
+            .addString("path")
+            .addString("songLocationType");
+    }
 }
