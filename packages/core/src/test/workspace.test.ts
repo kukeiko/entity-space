@@ -302,7 +302,7 @@ describe("workspace", () => {
         expect(queriedItems).toEqual(addedItems);
     });
 
-    fdescribe("reactive queries", () => {
+    describe("reactive queries", () => {
         const timeout = 100;
 
         it(
