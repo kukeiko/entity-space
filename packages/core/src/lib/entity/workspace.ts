@@ -1,9 +1,8 @@
 import { ExpansionValue } from "@entity-space/common";
 import { any, Criterion, fromDeepBag, isValue, matches, MatchesBagArgument } from "@entity-space/criteria";
 import { Class, DeepPartial, isDefined, writePath } from "@entity-space/utils";
-import { flatMap, isEqual, xor, xorWith } from "lodash";
+import { flatMap, flatten, isEqual, xor, xorWith } from "lodash";
 import {
-    defaultIfEmpty,
     distinctUntilChanged,
     EMPTY,
     filter,
@@ -14,21 +13,19 @@ import {
     Observable,
     of,
     ReplaySubject,
-    scan,
     startWith,
     Subject,
     switchMap,
 } from "rxjs";
+import { EntityHydrationQuery } from "../execution/entity-hydration-query";
+import { IEntityHydrator } from "../execution/i-entity-hydrator";
+import { IEntitySource } from "../execution/i-entity-source";
 import { mergeQueries } from "../query/merge-queries.fn";
 import { Query } from "../query/query";
 import { reduceQueries } from "../query/reduce-queries.fn";
-import { IEntityHydrator } from "../execution/i-entity-hydrator";
-import { IEntitySource } from "../execution/i-entity-source";
-import { QueryStreamPacket } from "../execution/query-stream-packet";
 import { SchemaCatalog } from "../schema/schema-catalog";
 import { IEntitySchema } from "../schema/schema.interface";
 import { Instance } from "./blueprint/instance";
-import { EntityHydrationQuery } from "../execution/entity-hydration-query";
 import { EntitySet } from "./data-structures/entity-set";
 import { Entity } from "./entity";
 import { createCriterionFromEntities } from "./functions/create-criterion-from-entities.fn";
@@ -43,8 +40,7 @@ export class Workspace implements IEntityStore {
     private schemas?: SchemaCatalog;
     private readonly queryCaches = new Map<string, Query[]>();
     private readonly queryCacheChanged = new Subject<Query[]>();
-    // private readonly entityCache = new EntityCache();
-    private readonly entityCache = new InMemoryEntityDatabase();
+    private readonly database = new InMemoryEntityDatabase();
     private readonly watchedQueries = new Map<Query, Subject<Entity[]>>();
 
     onQueryCacheChanged(): Observable<Query[]> {
@@ -63,13 +59,21 @@ export class Workspace implements IEntityStore {
             entities = [entities];
         }
 
+        if (!entities.length) {
+            return;
+        }
+
         // [todo] adding the overloads to support both schemas & blueprints caused having to add this "as Entity[]" assertion, no idea why
-        const queries = this.entityCache.addEntities(schema, entities as Entity[]);
+        const queries = this.database.addEntities(schema, entities as Entity[]);
 
         for (const query of queries) {
             this.addExecutedQuery(query);
         }
 
+        this.emitAllWatchedQueries();
+    }
+
+    private emitAllWatchedQueries(): void {
         for (const [watchedQuery, subject] of this.watchedQueries) {
             new Promise(resolve => setTimeout(resolve, 0))
                 .then(() => this.queryAgainstCache(watchedQuery))
@@ -95,83 +99,40 @@ export class Workspace implements IEntityStore {
 
     private addExecutedQuery(query: Query): void {
         const executedQueries = this.getCachedQueries(query.getEntitySchema());
-        const merged = mergeQueries(query, ...executedQueries);
-        this.queryCaches.set(query.getEntitySchema().getId(), merged);
-
-        const allQueriesInCache: Query[] = [];
-
-        for (const [_, queries] of this.queryCaches) {
-            allQueriesInCache.push(...queries);
-        }
-
-        this.queryCacheChanged.next(allQueriesInCache);
-    }
-
-    private async loadUncachedIntoCache(query: Query): Promise<void> {
-        const cachedQueries = this.getCachedQueries(query.getEntitySchema());
-        const reduced = reduceQueries([query], cachedQueries);
-        const entities: Entity[] = [];
-        const queriesAgainstSource = reduced === false ? [query] : reduced;
-
-        // [todo] call in parallel
-        for (const queryAgainstSource of queriesAgainstSource) {
-            const result = await this.loadFromSource(queryAgainstSource);
-
-            if (result === false) {
-                console.warn(
-                    "encountered a query that could not be executed against source",
-                    queriesAgainstSource.join(",")
-                );
-                continue;
-            }
-
-            for (const queried of result) {
-                entities.push(...queried.getEntities());
-            }
-
-            // [todo] should it not be queryAgainstSource?
-            // if not, move out of loop
-            // [todo] actually, maybe it should be result[i].getQuery()?
-            // this.addExecutedQuery(query);
-            // [todo] for now i decided caching queryAgainstSource, as that fixes the issue in products example
-            // where you execute criteria = any, expansion = reviews, and since the controller endpoint doesn't
-            // support any expansion, we don't get reviews back, but we cache it as if we had, so a subsequent
-            // call using e.g. minRating = 3 won't have reviews included
-            this.addExecutedQuery(queryAgainstSource);
-        }
-
-        if (entities.length > 0) {
-            this.add(query.getEntitySchema(), entities);
-        }
-    }
-
-    private async loadFromSource(query: Query): Promise<false | EntitySet[]> {
-        if (!this.source) {
-            return false;
-        }
-
-        const cache = new InMemoryEntityDatabase();
-        const mergedPacket = await lastValueFrom(
-            this.source
-                .query$([query], cache)
-                .pipe(scan(QueryStreamPacket.concat), defaultIfEmpty(new QueryStreamPacket()))
-        );
-
-        if (!mergedPacket.getAcceptedQueries().length) {
-            return false;
-        }
-
-        const result = cache.querySync(query);
-
-        return result ? [result] : result;
+        this.queryCaches.set(query.getEntitySchema().getId(), mergeQueries(query, ...executedQueries));
+        this.queryCacheChanged.next(flatten(Array.from(this.queryCaches.values())));
     }
 
     // [todo] T not used yet; need to add it to QueriedEntities
     async query<T extends Entity = Entity>(query: Query): Promise<false | EntitySet<T>[]> {
-        await this.loadUncachedIntoCache(query);
+        if (!this.source) {
+            return false;
+        }
+
+        const reduced = reduceQueries([query], this.getCachedQueries(query.getEntitySchema()));
+        const queriesAgainstSource = reduced === false ? [query] : reduced;
+
+        if (queriesAgainstSource.length) {
+            await lastValueFrom(this.source.query$(queriesAgainstSource, this.database));
+            queriesAgainstSource.forEach(query => this.addExecutedQuery(query));
+            this.emitAllWatchedQueries();
+        }
+
         const entities = (await this.queryAgainstCache(query)) as T[];
 
         return [new EntitySet({ query, entities })];
+    }
+
+    private async loadUncachedIntoCache(query: Query): Promise<void> {
+        if (!this.source) {
+            return;
+        }
+
+        const reduced = reduceQueries([query], this.getCachedQueries(query.getEntitySchema()));
+        const queriesAgainstSource = reduced === false ? [query] : reduced;
+        await lastValueFrom(this.source.query$(queriesAgainstSource, this.database));
+        queriesAgainstSource.forEach(query => this.addExecutedQuery(query));
+        this.emitAllWatchedQueries();
     }
 
     // [todo] not reactive yet
@@ -350,17 +311,10 @@ export class Workspace implements IEntityStore {
         );
     }
 
-    // [todo] remove any
     // [todo] should stay async because at one point i want to make use of service-workers
     // [todo] should not exist at all? (or be private)
     async queryAgainstCache(query: Query): Promise<Entity[]> {
-        const result = await this.entityCache.query(query);
-
-        if (result === false) {
-            return [];
-        }
-
-        return result.map(queried => queried.getEntities()).reduce((acc, value) => [...acc, ...value], []);
+        return this.database.querySync(query).getEntities();
     }
 
     async create<T extends Entity>(entities: T[], schema: IEntitySchema): Promise<false | T[]> {
@@ -393,7 +347,7 @@ export class Workspace implements IEntityStore {
 
     clear(): void {
         this.queryCaches.clear();
-        this.entityCache.clear();
+        this.database.clear();
         this.queryCacheChanged.next([]);
     }
 
