@@ -1,9 +1,8 @@
 import { ExpansionValue } from "@entity-space/common";
-import { Criterion, inSet, matches } from "@entity-space/criteria";
-import { Query } from "../../lib/query/query";
-import { reduceQueries } from "../../lib/query/reduce-queries.fn";
-import { EntitySchema } from "../../lib/schema/entity-schema";
+import { EntitySchema, Query, reduceQueries } from "@entity-space/core";
+import { Criterion } from "@entity-space/criteria";
 
+// [todo] add more tests
 describe("reduceQueries()", () => {
     function createQuery(criteria: Criterion, expansion: ExpansionValue = {}): Query {
         return new Query(new EntitySchema("foo"), criteria, expansion);
@@ -12,11 +11,11 @@ describe("reduceQueries()", () => {
     describe("no reduction", () => {
         it("[] reduced by [] should be []", () => {
             // arrange
-            const a = createQuery(matches({ id: inSet([1, 2]) }), { foo: true });
-            const b = createQuery(matches({ id: inSet([1]) }));
+            const a: Query[] = [];
+            const b: Query[] = [];
 
             // act
-            const reduced = reduceQueries([], []);
+            const reduced = reduceQueries(a, b);
 
             // assert
             expect(reduced).toEqual([]);
