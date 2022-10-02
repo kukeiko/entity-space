@@ -37,6 +37,8 @@ export class SongTableComponent {
                 artists: this.workspace.query$(ArtistBlueprint),
                 songs: this.workspace.hydrate$(SongBlueprint, input.songs, {
                     artist: true,
+                    // [todo] expanding song here causes all to load all songs,
+                    // expecting it to be cached instead
                     locations: { id: true, song: true },
                 }),
             })

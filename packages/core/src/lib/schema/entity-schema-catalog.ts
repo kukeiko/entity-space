@@ -47,18 +47,22 @@ export class EntitySchemaCatalog {
             for (const idProperty of idProperties) {
                 schema.addProperty(
                     idProperty.name,
-                    new PrimitiveSchema(this.toPrimitiveSchemaDataType(idProperty.valueType))
+                    new PrimitiveSchema(this.toPrimitiveSchemaDataType(idProperty.valueType)),
+                    true
                 );
             }
         }
+
         for (const relationProperty of properties.filter(hasAttribute("relation"))) {
+            const isRequired = hasAttribute("required", relationProperty);
+
             if (typeof relationProperty.valueType === "object" && "$ref" in relationProperty.valueType) {
                 const relatedSchema = this.getSchema(relationProperty.valueType.$ref);
 
                 if (hasAttribute("array", relationProperty)) {
-                    schema.addProperty(relationProperty.name, new ArraySchema(relatedSchema));
+                    schema.addProperty(relationProperty.name, new ArraySchema(relatedSchema), isRequired);
                 } else {
-                    schema.addProperty(relationProperty.name, relatedSchema);
+                    schema.addProperty(relationProperty.name, relatedSchema, isRequired);
                 }
 
                 schema.addRelation(relationProperty.name, relationProperty.from, relationProperty.to);
@@ -66,15 +70,37 @@ export class EntitySchemaCatalog {
                 const relatedSchema = this.resolve(relationProperty.valueType);
 
                 if (hasAttribute("array", relationProperty)) {
-                    schema.addProperty(relationProperty.name, new ArraySchema(relatedSchema));
+                    schema.addProperty(relationProperty.name, new ArraySchema(relatedSchema), isRequired);
                 } else {
-                    schema.addProperty(relationProperty.name, relatedSchema);
+                    schema.addProperty(relationProperty.name, relatedSchema, isRequired);
                 }
 
                 schema.addRelation(relationProperty.name, relationProperty.from, relationProperty.to);
             }
 
             // [todo] implement remaining relational value types
+        }
+
+        for (const property of properties) {
+            if (hasAttribute("relation", property) || isBlueprint(property.valueType)) {
+                continue;
+            }
+
+            const isRequired = hasAttribute("required", property);
+
+            if (hasAttribute("array", property)) {
+                schema.addProperty(
+                    property.name,
+                    new ArraySchema(new PrimitiveSchema(this.toPrimitiveSchemaDataType(property.valueType))),
+                    isRequired
+                );
+            } else {
+                schema.addProperty(
+                    property.name,
+                    new PrimitiveSchema(this.toPrimitiveSchemaDataType(property.valueType)),
+                    isRequired
+                );
+            }
         }
 
         for (const indexedProperty of properties.filter(hasAttribute("index"))) {
