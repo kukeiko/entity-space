@@ -1,4 +1,4 @@
-import { EntitySchema, SchemaCatalog } from "@entity-space/core";
+import { EntitySchema, EntitySchemaCatalog } from "@entity-space/core";
 import { SongBlueprint } from "@entity-space/examples/libs/music-model";
 import { Module } from "@nestjs/common";
 import { ArtistsController } from "./controllers/artists.controller";
@@ -13,9 +13,9 @@ import { DiskDbService } from "./disk-db.service";
         DiskDbService,
         {
             // [todo] copy pasted from music-box-ui
-            provide: SchemaCatalog,
+            provide: EntitySchemaCatalog,
             useFactory: () => {
-                const schemas = new SchemaCatalog();
+                const schemas = new EntitySchemaCatalog();
 
                 const songLocationSchema = new EntitySchema("song-location");
                 songLocationSchema.setKey("id");

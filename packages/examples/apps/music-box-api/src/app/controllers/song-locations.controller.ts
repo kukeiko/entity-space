@@ -1,4 +1,4 @@
-import { IEntitySchema, Query as EntityQuery, SchemaCatalog } from "@entity-space/core";
+import { IEntitySchema, Query as EntityQuery, EntitySchemaCatalog } from "@entity-space/core";
 import { inSet, matches } from "@entity-space/criteria";
 import { SongLocation } from "@entity-space/examples/libs/music-model";
 import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Query } from "@nestjs/common";
@@ -7,7 +7,7 @@ import { ParseIntsPipe } from "../pipes/parse-ints.pipe";
 
 @Controller("song-locations")
 export class SongLocationsController {
-    constructor(private readonly diskDbService: DiskDbService, private readonly schemaCatalog: SchemaCatalog) {
+    constructor(private readonly diskDbService: DiskDbService, private readonly schemaCatalog: EntitySchemaCatalog) {
         this.schema = this.schemaCatalog.getSchema("song-location");
     }
 
