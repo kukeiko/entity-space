@@ -139,17 +139,20 @@ export class Workspace implements IEntityStore {
 
         const criteria = createCriterionFromEntities(entities, schema.getKey().getPath());
         const query = new Query(schema, criteria, expansion);
-        const database = new InMemoryEntityDatabase();
-        database.addEntities(schema, entities);
+        const reduced = reduceQueries([query], this.getCachedQueries(query.getEntitySchema())) || [query];
+
+        if (!reduced.length) {
+            return of(this.database.querySync(query).getEntities()) as Observable<BlueprintInstance<T>[]>;
+        }
 
         const hydrationQuery = new EntityHydrationQuery<BlueprintInstance<T>>({
             entitySet: new EntitySet({ query: new Query(schema, criteria), entities }),
-            query,
+            query: reduced[0], // [todo] dirty
         });
 
-        return this.hydrator.hydrate$(hydrationQuery, database).pipe(
+        return this.hydrator.hydrate$(hydrationQuery, this.database).pipe(
             map(() => {
-                return database.querySync(query).getEntities();
+                return this.database.querySync(query).getEntities();
             })
         ) as Observable<BlueprintInstance<T>[]>;
     }
