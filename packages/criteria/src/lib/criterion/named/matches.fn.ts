@@ -6,9 +6,11 @@ import { inSet } from "../set/in-set.fn";
 import { isValue } from "../value/is-value.fn";
 import { NamedCriteria } from "./named-criteria";
 
+// [todo] "find references" doesn't work to find model properties
 export type MatchesBagArgument<T> = Partial<
     Record<keyof T, Criterion | ReturnType<Primitive | typeof Null> | ReturnType<Primitive | typeof Null>[]>
 >;
+
 /**
  * [todo] name is a bit unintuitive. it doesn't really reflect that we're creating named-criteria here.
  * however, named-criteria are an integral part for filtering entities, so it does have a reason to use
