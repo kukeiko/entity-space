@@ -10,9 +10,7 @@ describe("reduceQueries()", () => {
     }
 
     describe("no reduction", () => {
-        // [todo] currently returns "[]" - would've expected it to return "false" instead.
-        // for now i duplicated fixed method and suffixed it with "_v2"
-        xit("[] reduced by [] should be false", () => {
+        it("[] reduced by [] should be []", () => {
             // arrange
             const a = createQuery(matches({ id: inSet([1, 2]) }), { foo: true });
             const b = createQuery(matches({ id: inSet([1]) }));
@@ -21,7 +19,7 @@ describe("reduceQueries()", () => {
             const reduced = reduceQueries([], []);
 
             // assert
-            expect(reduced).toEqual(false);
+            expect(reduced).toEqual([]);
         });
     });
 });
