@@ -2,7 +2,7 @@ import { Query } from "./query";
 import { reduceQuery } from "./reduce-query.fn";
 
 export function reduceQueries(a: Query[], b: Query[]): Query[] | false {
-    if (a.length === 0 && b.length === 0) {
+    if (!a.length && !b.length) {
         return [];
     }
 

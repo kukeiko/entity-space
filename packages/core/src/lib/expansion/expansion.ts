@@ -36,6 +36,10 @@ export class Expansion {
         return intersection ? new Expansion(intersection) : false;
     }
 
+    equivalent(other: Expansion): boolean {
+        return other.reduce(this) === true && this.reduce(other) === true;
+    }
+
     static intersectValues(a: ExpansionValue, b: ExpansionValue): false | ExpansionValue {
         const intersection: ExpansionValue = {};
 

@@ -81,4 +81,14 @@ export class Query {
 
         return others.every(other => other.getCriteria().equivalent(first.getCriteria()));
     }
+
+    static equivalent(...queries: Query[]): boolean {
+        const [first, ...others] = queries;
+
+        return others.every(
+            other =>
+                other.getCriteria().equivalent(first.getCriteria()) &&
+                other.getExpansion().equivalent(first.getExpansion())
+        );
+    }
 }
