@@ -15,7 +15,6 @@ import { IEntitySchema, IEntitySchemaRelation } from "../schema/schema.interface
 import { EntitySet } from "./data-structures/entity-set";
 import { Entity } from "./entity";
 import { createCriterionFromEntities } from "./functions/create-criterion-from-entities.fn";
-import { createDefaultExpansion } from "./functions/create-default-expansion.fn";
 import { createQueriesFromEntities } from "./functions/create-queries-from-entities.fn";
 import { joinEntities } from "./functions/join-entities.fn";
 import { normalizeEntities } from "./functions/normalize-entities.fn";
@@ -118,7 +117,11 @@ export class InMemoryEntityDatabase {
             return first[propertyKey] !== void 0;
         };
 
-        const expansionObject = expansion.getValue();
+        let expansionObject = expansion.getValue();
+
+        if (expansionObject === true) {
+            expansionObject = schema.getDefaultExpansion();
+        }
 
         for (const propertyKey in expansionObject) {
             const expansionValue = expansionObject[propertyKey];
@@ -146,7 +149,11 @@ export class InMemoryEntityDatabase {
                 }
 
                 const entitySchema = property.getUnboxedEntitySchema();
-                this.expandEntities(entitySchema, new Expansion(expansionValue), referencedItems);
+                this.expandEntities(
+                    entitySchema,
+                    new Expansion({ schema: entitySchema, value: expansionValue }),
+                    referencedItems
+                );
             }
         }
     }
@@ -158,7 +165,7 @@ export class InMemoryEntityDatabase {
         const fromIndex = relation.getFromIndex();
         const toIndex = relation.getToIndex();
         const criteria = createCriterionFromEntities(entities, fromIndex.getPath(), toIndex.getPath());
-        const query = new Query(relatedSchema, criteria, expansion ?? createDefaultExpansion(relatedSchema));
+        const query = new Query(relatedSchema, criteria, expansion ?? relatedSchema.getDefaultExpansion());
 
         const result = this.querySync(query);
 

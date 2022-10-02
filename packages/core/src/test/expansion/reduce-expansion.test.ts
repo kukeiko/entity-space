@@ -1,8 +1,23 @@
 import { ExpansionValue } from "@entity-space/common";
-import { Expansion } from "../../lib/expansion/expansion";
+import { EntitySchema, Expansion } from "@entity-space/core";
 
 function reduceExpansion(a: ExpansionValue, b: ExpansionValue): boolean | ExpansionValue {
-    const reduced = new Expansion(b).reduce(new Expansion(a));
+    const rootSchema = new EntitySchema("foo");
+    const fooSchema = new EntitySchema("foo");
+    const barSchema = new EntitySchema("bar");
+    const bazSchema = new EntitySchema("baz");
+    const khazSchema = new EntitySchema("khaz");
+    const moSchema = new EntitySchema("mo");
+    fooSchema.addRelationProperty("bar", barSchema, "barId", "id").addRelationProperty("baz", bazSchema, "bazId", "id");
+
+    khazSchema.addRelationProperty("mo", moSchema, "moId", "id");
+    rootSchema
+        .addRelationProperty("foo", fooSchema, "fooId", "id")
+        .addRelationProperty("khaz", khazSchema, "khazId", "id");
+
+    const reduced = new Expansion({ schema: rootSchema, value: b }).reduce(
+        new Expansion({ schema: rootSchema, value: a })
+    );
 
     if (typeof reduced === "boolean") {
         return reduced;

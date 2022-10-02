@@ -17,7 +17,6 @@ import {
 } from "rxjs";
 import { EntitySet } from "../entity/data-structures/entity-set";
 import { createCriterionFromEntities } from "../entity/functions/create-criterion-from-entities.fn";
-import { createDefaultExpansion } from "../entity/functions/create-default-expansion.fn";
 import { IEntityStore } from "../entity/i-entity-store";
 import { InMemoryEntityDatabase } from "../entity/in-memory-entity-database";
 import { Expansion } from "../expansion/expansion";
@@ -207,7 +206,10 @@ export class EntitySourceGateway implements IEntitySource, IEntityStore, IEntity
                                 writePath(
                                     relation.getPropertyName(),
                                     {},
-                                    Expansion.mergeValues(...accepted.map(q => q.getExpansionValue()))
+                                    Expansion.mergeValues(
+                                        hydrationQuery.getQuery().getEntitySchema(),
+                                        ...accepted.map(q => q.getExpansionValue())
+                                    )
                                 )
                             ),
                     ],
@@ -218,7 +220,10 @@ export class EntitySourceGateway implements IEntitySource, IEntityStore, IEntity
                                 writePath(
                                     relation.getPropertyName(),
                                     {},
-                                    Expansion.mergeValues(...rejected.map(q => q.getExpansionValue()))
+                                    Expansion.mergeValues(
+                                        hydrationQuery.getQuery().getEntitySchema(),
+                                        ...rejected.map(q => q.getExpansionValue())
+                                    )
                                 )
                             ),
                     ],
@@ -261,7 +266,7 @@ export class EntitySourceGateway implements IEntitySource, IEntityStore, IEntity
     private toHydrateRelationQuery(
         entitySet: EntitySet,
         key: string,
-        expansionValue: ExpansionValue[string]
+        expansionValue: ExpansionValue
     ): false | [Query, IEntitySchemaRelation] {
         if (expansionValue === void 0) {
             return false;
@@ -281,7 +286,7 @@ export class EntitySourceGateway implements IEntitySource, IEntityStore, IEntity
             relation.getToIndex().getPath()
         );
 
-        const relatedExpansion = expansionValue === true ? createDefaultExpansion(relatedSchema) : expansionValue;
+        const relatedExpansion = expansionValue === true ? relatedSchema.getDefaultExpansion() : expansionValue;
 
         return [new Query(relatedSchema, criteria, relatedExpansion), relation];
     }

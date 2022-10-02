@@ -1,8 +1,10 @@
 import { ExpansionValue } from "@entity-space/common";
 import { Expansion } from "../../lib/expansion/expansion";
+import { EntitySchema } from "../../lib/schema/entity-schema";
 
 function intersectExpansion(a: ExpansionValue, b: ExpansionValue): boolean | ExpansionValue {
-    const intersected = new Expansion(b).intersect(new Expansion(a));
+    const schema = new EntitySchema("foo");
+    const intersected = new Expansion({ schema, value: b }).intersect(new Expansion({ schema, value: a }));
 
     if (typeof intersected === "boolean") {
         return intersected;

@@ -65,7 +65,13 @@ export class MusicAppComponent implements OnInit, OnDestroy {
                         artistId: pluckId(ui.filter.artists),
                         locations: some(matches<SongLocation>({ songLocationType: pluckId(ui.filter.locationTypes) })),
                     },
-                    { id: true, artistId: true, duration: true, name: true, locations: true }
+                    {
+                        id: true,
+                        artistId: true,
+                        duration: true,
+                        name: true,
+                        locations: { id: true, songLocationType: true },
+                    }
                 ),
             ])
         ),

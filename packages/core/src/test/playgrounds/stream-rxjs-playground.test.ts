@@ -113,7 +113,7 @@ describe("playground: stream", () => {
                 builder
                     .requiresFields({ id: isValueTemplate(Number) })
                     .supportsExpansion({ id: true, barId: true, isEven: true, name: true })
-                    .isLoadedBy(({ criterion, expansion }) => queryData({ criterion, expansion, entities: data.foo }))
+                    .isLoadedBy(({ criterion, expansion }) => queryData({ criterion, entities: data.foo }))
             );
         }
 
@@ -170,7 +170,7 @@ describe("playground: stream", () => {
             .withLoadFooById()
             .withLoadBarById()
             .withLoadBarByEvenId()
-            .withLoadBazById()
+            // .withLoadBazById()
             .withLoadBazByEvenId();
         const gateway = new EntitySourceGateway([controller]);
         const queries: Query[] = [

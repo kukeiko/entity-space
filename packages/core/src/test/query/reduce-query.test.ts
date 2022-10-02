@@ -6,7 +6,25 @@ import { EntitySchema } from "../../lib/schema/entity-schema";
 
 describe("reduceQuery()", () => {
     function createQuery(criteria: Criterion, expansion: ExpansionValue = {}): Query {
-        return new Query(new EntitySchema("foo"), criteria, expansion);
+        const rootSchema = new EntitySchema("foo");
+        const fooSchema = new EntitySchema("foo");
+        const barSchema = new EntitySchema("bar");
+        const bazSchema = new EntitySchema("baz");
+        const moSchema = new EntitySchema("mo");
+        const danSchema = new EntitySchema("dan");
+
+        fooSchema.addRelationProperty("bar", barSchema, "barId", "id");
+        barSchema
+            .addRelationProperty("baz", bazSchema, "bazId", "id")
+            .addRelationProperty("mo", moSchema, "moId", "id");
+
+        moSchema.addRelationProperty("dan", danSchema, "danId", "id");
+
+        rootSchema
+            .addRelationProperty("foo", fooSchema, "fooId", "id")
+            .addRelationProperty("bar", barSchema, "barId", "id");
+
+        return new Query(rootSchema, criteria, expansion);
     }
 
     describe("full reduction", () => {

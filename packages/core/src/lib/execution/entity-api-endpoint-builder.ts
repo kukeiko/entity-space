@@ -9,7 +9,6 @@ import {
     namedTemplate,
 } from "@entity-space/criteria";
 import { size } from "lodash";
-import { createDefaultExpansion } from "../entity/functions/create-default-expansion.fn";
 import { Expansion } from "../expansion/expansion";
 import { IEntitySchema } from "../schema/schema.interface";
 import { EntityApiEndpoint, EntityApiEndpointInvoke } from "./entity-api-endpoint";
@@ -25,7 +24,7 @@ export class EntityApiEndpointBuilder<
 > {
     constructor(schema: IEntitySchema) {
         this.schema = schema;
-        this.supportedExpansion = createDefaultExpansion(this.schema);
+        this.supportedExpansion = schema.getDefaultExpansion();
     }
 
     private readonly schema: IEntitySchema;
@@ -46,7 +45,7 @@ export class EntityApiEndpointBuilder<
     }
 
     supportsExpansion(expansion: ExpansionValue<T>): EntityApiEndpointBuilder<T, R, O> {
-        this.supportedExpansion = Expansion.mergeValues(this.supportedExpansion, expansion);
+        this.supportedExpansion = Expansion.mergeValues(this.schema, this.supportedExpansion, expansion);
         return this;
     }
 
@@ -74,7 +73,7 @@ export class EntityApiEndpointBuilder<
         }
 
         return new EntityApiEndpoint({
-            expansion: new Expansion(this.supportedExpansion),
+            expansion: new Expansion({ schema: this.schema, value: this.supportedExpansion }),
             invoke: this.loadEntities,
             schema: this.schema,
             template,

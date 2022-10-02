@@ -67,6 +67,18 @@ export class EntitySchema<T extends Entity = Entity> implements IEntitySchema<T>
         return this;
     }
 
+    addRelationProperty(
+        name: string,
+        valueSchema: IPropertyValueSchema,
+        from: string,
+        to: string,
+        required = false
+    ): this {
+        this.addProperty(name, valueSchema, required);
+        this.addRelation(name, from, to);
+        return this;
+    }
+
     addArray(name: string, valueSchema: IEntitySchema | IPrimitiveSchema): this {
         return this.addProperty(name, new ArraySchema(valueSchema));
     }

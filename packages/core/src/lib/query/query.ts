@@ -11,10 +11,10 @@ export class Query {
         this.criteria = criteria;
         this.expansion =
             expansion === void 0
-                ? new Expansion({})
+                ? new Expansion({ schema: entitySchema, value: true })
                 : expansion instanceof Expansion
                 ? expansion
-                : new Expansion(expansion);
+                : new Expansion({ schema: entitySchema, value: expansion });
     }
 
     private readonly entitySchema: IEntitySchema;

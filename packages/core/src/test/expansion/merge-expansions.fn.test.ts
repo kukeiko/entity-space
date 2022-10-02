@@ -1,8 +1,16 @@
 import { ExpansionValue } from "@entity-space/common";
 import { Expansion } from "../../lib/expansion/expansion";
+import { EntitySchema } from "../../lib/schema/entity-schema";
 
 function mergeExpansions(...objects: ExpansionValue[]): boolean | ExpansionValue {
-    return Expansion.mergeValues(...objects);
+    const rootSchema = new EntitySchema("foo");
+    const fooSchema = new EntitySchema("foo");
+    const barSchema = new EntitySchema("bar");
+    const bazSchema = new EntitySchema("baz");
+    fooSchema.addRelationProperty("bar", barSchema, "barId", "id").addRelationProperty("baz", bazSchema, "bazId", "id");
+    rootSchema.addRelationProperty("foo", fooSchema, "fooId", "id");
+
+    return Expansion.mergeValues(rootSchema, ...objects);
 }
 
 describe("mergeExpansions()", () => {

@@ -1,12 +1,19 @@
 import { ExpansionValue } from "@entity-space/common";
+import { IEntitySchema } from "../schema/schema.interface";
 
 // [todo] implement toUnfoldedExpansion()
 export class Expansion {
-    constructor(value: ExpansionValue) {
+    static create({ schema, value }: { value: ExpansionValue; schema: IEntitySchema }): Expansion {
+        return new Expansion({ schema, value });
+    }
+
+    constructor({ schema, value }: { value: ExpansionValue; schema: IEntitySchema }) {
         this.value = value;
+        this.schema = schema;
     }
 
     private readonly value: ExpansionValue;
+    private readonly schema: IEntitySchema;
 
     getValue(): ExpansionValue {
         return this.value;
@@ -21,27 +28,35 @@ export class Expansion {
             return true;
         }
 
-        const reduced = Expansion.reduceValue(other.getValue(), this.getValue());
+        const reduced = Expansion.reduceValue(this.schema, other.getValue(), this.getValue());
 
         if (typeof reduced == "boolean") {
             return reduced;
         } else {
-            return new Expansion(reduced);
+            return new Expansion({ schema: this.schema, value: reduced });
         }
     }
 
     intersect(other: Expansion): false | Expansion {
-        const intersection = Expansion.intersectValues(this.getValue(), other.getValue());
+        const intersection = Expansion.intersectValues(this.schema, this.getValue(), other.getValue());
 
-        return intersection ? new Expansion(intersection) : false;
+        return intersection ? new Expansion({ schema: this.schema, value: intersection }) : false;
     }
 
     equivalent(other: Expansion): boolean {
         return other.reduce(this) === true && this.reduce(other) === true;
     }
 
-    static intersectValues(a: ExpansionValue, b: ExpansionValue): false | ExpansionValue {
+    static intersectValues(schema: IEntitySchema, a: ExpansionValue, b: ExpansionValue): false | ExpansionValue {
         const intersection: ExpansionValue = {};
+
+        if (a === true) {
+            a = schema.getDefaultExpansion();
+        }
+
+        if (b === true) {
+            b = schema.getDefaultExpansion();
+        }
 
         for (const key in a) {
             const myValue = a[key];
@@ -61,7 +76,8 @@ export class Expansion {
                 if (otherValue === true) {
                     intersection[key] = myValue;
                 } else {
-                    const intersectedValue = this.intersectValues(myValue, otherValue);
+                    const relatedSchema = schema.getRelation(key).getRelatedEntitySchema();
+                    const intersectedValue = this.intersectValues(relatedSchema, myValue, otherValue);
 
                     if (intersectedValue) {
                         intersection[key] = intersectedValue;
@@ -74,17 +90,24 @@ export class Expansion {
     }
 
     merge(other: Expansion): Expansion {
-        return new Expansion(Expansion.mergeValues(this.getValue(), other.getValue()));
+        return new Expansion({
+            schema: this.schema,
+            value: Expansion.mergeValues(this.schema, this.getValue(), other.getValue()),
+        });
     }
 
-    static copyValue(object: ExpansionValue): ExpansionValue {
-        return this.mergeValues(object);
+    static copyValue(schema: IEntitySchema, object: ExpansionValue): Exclude<ExpansionValue, true> {
+        return this.mergeValues(schema, object);
     }
 
-    static mergeValues(...objects: ExpansionValue[]): ExpansionValue {
+    static mergeValues(schema: IEntitySchema, ...objects: ExpansionValue[]): Exclude<ExpansionValue, true> {
         const merged: ExpansionValue = {};
 
         for (let selection of objects) {
+            if (selection === true) {
+                selection = schema.getDefaultExpansion();
+            }
+
             for (const key in selection) {
                 const left = merged[key];
                 const right = selection[key];
@@ -97,10 +120,10 @@ export class Expansion {
                     if (right === true) {
                         merged[key] = true;
                     } else {
-                        merged[key] = this.mergeValues(right);
+                        merged[key] = this.mergeValues(schema.getRelation(key).getRelatedEntitySchema(), right);
                     }
                 } else if (right !== true) {
-                    merged[key] = this.mergeValues(left, right);
+                    merged[key] = this.mergeValues(schema.getRelation(key).getRelatedEntitySchema(), left, right);
                 }
             }
         }
@@ -108,13 +131,21 @@ export class Expansion {
         return merged;
     }
 
-    static reduceValue(what: ExpansionValue, by: ExpansionValue): boolean | ExpansionValue {
+    static reduceValue(schema: IEntitySchema, what: ExpansionValue, by: ExpansionValue): boolean | ExpansionValue {
         if (Object.keys(what).length === 0) {
             return true;
         }
 
-        const reduced = this.copyValue(what);
+        const reduced: Exclude<ExpansionValue, true> = this.copyValue(schema, what);
         let didReduce = false;
+
+        if (what === true) {
+            what = schema.getDefaultExpansion();
+        }
+
+        if (by === true) {
+            by = schema.getDefaultExpansion();
+        }
 
         for (const key in by) {
             const whatValue = what[key];
@@ -128,7 +159,11 @@ export class Expansion {
                     didReduce = true;
                 }
             } else if (typeof byValue === "object" && typeof whatValue === "object") {
-                const subReduced = this.reduceValue(whatValue, byValue);
+                const subReduced = this.reduceValue(
+                    schema.getRelation(key).getRelatedEntitySchema(),
+                    whatValue,
+                    byValue
+                );
 
                 if (!subReduced) {
                     continue;

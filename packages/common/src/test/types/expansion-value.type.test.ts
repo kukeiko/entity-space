@@ -17,7 +17,7 @@ interface SomeEntity {
  * Only true | undefined is a valid value when expanding primitives.
  */
 // $ExpectType true
-type OnlyTrueIsValidForPrimitives = IsExact<ExpansionValue<SomeEntity>["id"], true | undefined>;
+type OnlyTrueIsValidForPrimitives = IsExact<Exclude<ExpansionValue<SomeEntity>, true>["id"], true | undefined>;
 
 interface Square {
     id: number;

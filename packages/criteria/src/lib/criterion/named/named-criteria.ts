@@ -285,6 +285,10 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag, R exte
     }
 
     static omitExpansion(criterion: Criterion, expansion: ExpansionValue): Criterion {
+        if (expansion === true) {
+            throw new Error("omitting by expansion value 'true' not supported");
+        }
+
         if (criterion instanceof OrCriteria) {
             // [todo] no clue currently why .getItems() returns any[]
             const omitted = (criterion.getItems() as Criterion[])
