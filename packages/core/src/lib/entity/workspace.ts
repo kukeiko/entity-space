@@ -105,34 +105,20 @@ export class Workspace implements IEntityStore {
 
     // [todo] T not used yet; need to add it to QueriedEntities
     async query<T extends Entity = Entity>(query: Query): Promise<false | EntitySet<T>[]> {
-        if (!this.source) {
-            return false;
-        }
+        if (this.source) {
+            const reduced = reduceQueries([query], this.getCachedQueries(query.getEntitySchema()));
+            const queriesAgainstSource = reduced === false ? [query] : reduced;
 
-        const reduced = reduceQueries([query], this.getCachedQueries(query.getEntitySchema()));
-        const queriesAgainstSource = reduced === false ? [query] : reduced;
-
-        if (queriesAgainstSource.length) {
-            await lastValueFrom(this.source.query$(queriesAgainstSource, this.database));
-            queriesAgainstSource.forEach(query => this.addExecutedQuery(query));
-            this.emitAllWatchedQueries();
+            if (queriesAgainstSource.length) {
+                await lastValueFrom(this.source.query$(queriesAgainstSource, this.database));
+                queriesAgainstSource.forEach(query => this.addExecutedQuery(query));
+                this.emitAllWatchedQueries();
+            }
         }
 
         const entities = (await this.queryAgainstCache(query)) as T[];
 
         return [new EntitySet({ query, entities })];
-    }
-
-    private async loadUncachedIntoCache(query: Query): Promise<void> {
-        if (!this.source) {
-            return;
-        }
-
-        const reduced = reduceQueries([query], this.getCachedQueries(query.getEntitySchema()));
-        const queriesAgainstSource = reduced === false ? [query] : reduced;
-        await lastValueFrom(this.source.query$(queriesAgainstSource, this.database));
-        queriesAgainstSource.forEach(query => this.addExecutedQuery(query));
-        this.emitAllWatchedQueries();
     }
 
     // [todo] not reactive yet
