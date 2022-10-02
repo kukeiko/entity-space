@@ -1,4 +1,4 @@
-import { buildDefaultIndexName } from "./build-default-index-name.fn";
+import { buildDefaultIndexName } from "./functions/build-default-index-name.fn";
 import { IEntitySchema, IEntitySchemaIndex } from "./schema.interface";
 
 export class EntitySchemaIndex implements IEntitySchemaIndex {

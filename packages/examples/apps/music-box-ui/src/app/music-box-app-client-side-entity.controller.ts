@@ -1,5 +1,5 @@
 import { HttpClient } from "@angular/common/http";
-import { Entity, EntityApi, IEntitySchema, IEntityStore, SchemaCatalog } from "@entity-space/core";
+import { Entity, EntityApi, IEntitySchema, IEntityStore, EntitySchemaCatalog } from "@entity-space/core";
 import { inSetTemplate, isValueTemplate } from "@entity-space/criteria";
 import { Artist, ArtistBlueprint, Song, SongBlueprint, SongLocation } from "@entity-space/examples/libs/music-model";
 import { firstValueFrom } from "rxjs";
@@ -8,7 +8,7 @@ export class MusicBoxClientSideEntityController extends EntityApi implements IEn
     constructor(
         private readonly http: HttpClient,
 
-        private readonly schemas: SchemaCatalog
+        private readonly schemas: EntitySchemaCatalog
     ) {
         super();
     }

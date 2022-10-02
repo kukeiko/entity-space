@@ -23,8 +23,8 @@ import { IEntitySource } from "../execution/i-entity-source";
 import { mergeQueries } from "../query/merge-queries.fn";
 import { Query } from "../query/query";
 import { reduceQueries } from "../query/reduce-queries.fn";
-import { Instance } from "../schema/blueprint/instance";
-import { SchemaCatalog } from "../schema/schema-catalog";
+import { BlueprintInstance } from "../schema/blueprint-instance";
+import { EntitySchemaCatalog } from "../schema/entity-schema-catalog";
 import { IEntitySchema } from "../schema/schema.interface";
 import { EntitySet } from "./data-structures/entity-set";
 import { Entity } from "./entity";
@@ -37,7 +37,7 @@ export class Workspace implements IEntityStore {
     private source?: IEntitySource;
     private store?: IEntityStore;
     private hydrator?: IEntityHydrator;
-    private schemas?: SchemaCatalog;
+    private schemas?: EntitySchemaCatalog;
     private readonly queryCaches = new Map<string, Query[]>();
     private readonly queryCacheChanged = new Subject<Query[]>();
     private readonly database = new InMemoryEntityDatabase();
@@ -49,7 +49,7 @@ export class Workspace implements IEntityStore {
 
     // [todo] rename to upsert()?
     // [todo] we allow partials, but types don't reflect that (same @ cache and store)
-    add<T>(schema: Class<T>, entities: DeepPartial<Instance<T>>[] | DeepPartial<Instance<T>>): void;
+    add<T>(schema: Class<T>, entities: DeepPartial<BlueprintInstance<T>>[] | DeepPartial<BlueprintInstance<T>>): void;
     add<T extends Entity = Entity>(schema: IEntitySchema, entities: DeepPartial<T>[] | DeepPartial<T>): void;
     add(schema: IEntitySchema | Class, entities: Entity[] | Entity): void {
         schema = this.toSchema(schema);
@@ -93,7 +93,7 @@ export class Workspace implements IEntityStore {
         this.store = store;
     }
 
-    setSchemaCatalog(schemas: SchemaCatalog): void {
+    setSchemaCatalog(schemas: EntitySchemaCatalog): void {
         this.schemas = schemas;
     }
 
@@ -138,9 +138,9 @@ export class Workspace implements IEntityStore {
     // [todo] not reactive yet
     hydrate$<T>(
         blueprint: Class<T>,
-        entities: Instance<T>[],
-        expansion: ExpansionValue<Instance<T>>
-    ): Observable<Instance<T>[]> {
+        entities: BlueprintInstance<T>[],
+        expansion: ExpansionValue<BlueprintInstance<T>>
+    ): Observable<BlueprintInstance<T>[]> {
         if (!this.hydrator) {
             return EMPTY;
         }
@@ -156,7 +156,7 @@ export class Workspace implements IEntityStore {
         const database = new InMemoryEntityDatabase();
         database.addEntities(schema, entities);
 
-        const hydrationQuery = new EntityHydrationQuery<Instance<T>>({
+        const hydrationQuery = new EntityHydrationQuery<BlueprintInstance<T>>({
             entitySet: new EntitySet({ query: new Query(schema, criteria), entities }),
             query,
         });
@@ -165,7 +165,7 @@ export class Workspace implements IEntityStore {
             map(() => {
                 return database.querySync(query).getEntities();
             })
-        ) as Observable<Instance<T>[]>;
+        ) as Observable<BlueprintInstance<T>[]>;
     }
 
     query$<T extends Entity>(
@@ -176,8 +176,8 @@ export class Workspace implements IEntityStore {
     query$<T extends Entity>(
         schema: Class<T>,
         criterion?: MatchesBagArgument<T>,
-        expansion?: ExpansionValue<Instance<T>>
-    ): Observable<Instance<T>[]>;
+        expansion?: ExpansionValue<BlueprintInstance<T>>
+    ): Observable<BlueprintInstance<T>[]>;
     query$<T extends Entity>(
         schema: IEntitySchema | Class<T>,
         criterion: any = any(),
@@ -279,8 +279,8 @@ export class Workspace implements IEntityStore {
     queryOneByKey$<T>(
         schema: Class<T>,
         key: number | string,
-        expansion?: ExpansionValue<Instance<T>>
-    ): Observable<Instance<T>>;
+        expansion?: ExpansionValue<BlueprintInstance<T>>
+    ): Observable<BlueprintInstance<T>>;
     queryOneByKey$<T extends Entity>(
         schema: IEntitySchema | Class<T>,
         key: number | string,

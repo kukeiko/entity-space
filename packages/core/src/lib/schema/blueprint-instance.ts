@@ -1,11 +1,17 @@
 import { Class, Primitive, Unbox } from "@entity-space/utils";
-import { ArrayAttribute, Discriminant, NullableAttribute, Property, RequiredAttribute } from "./property";
+import {
+    ArrayAttribute,
+    BlueprintProperty,
+    Discriminant,
+    NullableAttribute,
+    RequiredAttribute,
+} from "./blueprint-property";
 
 export interface Metadata<T = any> {
     // in open-api context, its the uri. in indexeddb, its going to be the object store name.
     // we may want to split it up at some point - let's see.
     name: string;
-    properties: Record<keyof T, Property>;
+    properties: Record<keyof T, BlueprintProperty>;
     key: string[];
     indexes?: string[];
 }
@@ -19,7 +25,7 @@ type InstancePropertyValueType<V> = V extends Primitive
     : V extends Discriminant
     ? V
     : V extends Class
-    ? Instance<InstanceType<V>>
+    ? BlueprintInstance<InstanceType<V>>
     : V extends Metadata<infer U>
     ? U
     : V extends MetadataReference<infer U>
@@ -43,15 +49,15 @@ type InstanceDefault<T> = {
     //
     // an incredible relief is that we can still use mapped keyof stuff like in "InstanceRequired<T>";
     // looks like TypeScript can provide intellisense if at least one of the types has "keyof T"
-    [K in keyof T]?: T[K] extends Property<infer V>
+    [K in keyof T]?: T[K] extends BlueprintProperty<infer V>
         ? NullIfNullable<T[K], BoxIfArray<T[K], InstancePropertyValueType<Unbox<V>>>>
         : T[K];
 };
 
 type InstanceRequired<T> = {
-    [K in RequiredPropertyKeys<T>]: T[K] extends Property<infer V>
+    [K in RequiredPropertyKeys<T>]: T[K] extends BlueprintProperty<infer V>
         ? NullIfNullable<T[K], BoxIfArray<T[K], InstancePropertyValueType<Unbox<V>>>>
         : T[K];
 };
 
-export type Instance<T> = InstanceDefault<T> & InstanceRequired<T>;
+export type BlueprintInstance<T> = InstanceDefault<T> & InstanceRequired<T>;

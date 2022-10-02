@@ -1,7 +1,7 @@
 import { Expand, ExpansionValue } from "@entity-space/common";
 import { Criterion, NamedCriteriaBag } from "@entity-space/criteria";
 import { Class } from "@entity-space/utils";
-import { define, Instance } from "../../index";
+import { define, BlueprintInstance } from "../../index";
 
 interface Brand {
     id: number;
@@ -79,16 +79,16 @@ xdescribe("new query playground", () => {
         }
 
         query({} as Product, {}, {});
-        const users = query({} as Instance<UserModel>, {}, { name: true, children: { name: true } });
+        const users = query({} as BlueprintInstance<UserModel>, {}, { name: true, children: { name: true } });
         users.children[0].name;
     });
 
     it("working example #2", () => {
-        function query<T, E = ExpansionValue<Instance<T>>>(
+        function query<T, E = ExpansionValue<BlueprintInstance<T>>>(
             type: Class<T>,
             criteria: NamedCriteriaBag,
             expansion: E
-        ): Expand<Instance<T>, E> {
+        ): Expand<BlueprintInstance<T>, E> {
             return {} as any;
         }
 
@@ -103,11 +103,11 @@ xdescribe("new query playground", () => {
     });
 
     it("working example #3", () => {
-        function query<T, E = ExpansionValue<Instance<T>>>(
+        function query<T, E = ExpansionValue<BlueprintInstance<T>>>(
             type: Class<T>,
             criteria: NamedCriteriaBag,
             expansion: E
-        ): Expand<Instance<T>, E> {
+        ): Expand<BlueprintInstance<T>, E> {
             return {} as any;
         }
 
@@ -129,11 +129,11 @@ xdescribe("new query playground", () => {
     });
 
     it("working example #4", () => {
-        function query<U extends Class[], E = ExpansionValue<Instance<InstanceType<U[number]>>>>(
+        function query<U extends Class[], E = ExpansionValue<BlueprintInstance<InstanceType<U[number]>>>>(
             type: U,
             criteria: NamedCriteriaBag,
             expansion: E
-        ): Expand<Instance<InstanceType<U[number]>>, E> {
+        ): Expand<BlueprintInstance<InstanceType<U[number]>>, E> {
             return {} as any;
         }
 

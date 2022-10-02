@@ -3,7 +3,7 @@ import { NgModule } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { BrowserModule } from "@angular/platform-browser";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
-import { EntitySchema, EntitySourceGateway, SchemaCatalog, Workspace } from "@entity-space/core";
+import { EntitySchema, EntitySourceGateway, EntitySchemaCatalog, Workspace } from "@entity-space/core";
 import { ArtistBlueprint, SongBlueprint } from "@entity-space/examples/libs/music-model";
 import { ButtonModule } from "primeng/button";
 import { DialogModule } from "primeng/dialog";
@@ -37,9 +37,9 @@ import { MusicAppComponent } from "./music-box-app.component";
     providers: [
         {
             // [todo] copy pasted to music-box-api
-            provide: SchemaCatalog,
+            provide: EntitySchemaCatalog,
             useFactory: () => {
-                const schemas = new SchemaCatalog();
+                const schemas = new EntitySchemaCatalog();
 
                 const songLocationSchema = new EntitySchema("song-location");
                 songLocationSchema.setKey("id");
@@ -61,8 +61,8 @@ import { MusicAppComponent } from "./music-box-app.component";
         },
         {
             provide: MusicBoxClientSideEntityController,
-            deps: [HttpClient, SchemaCatalog],
-            useFactory: (http: HttpClient, schemas: SchemaCatalog) => {
+            deps: [HttpClient, EntitySchemaCatalog],
+            useFactory: (http: HttpClient, schemas: EntitySchemaCatalog) => {
                 const controller = new MusicBoxClientSideEntityController(http, schemas);
 
                 return controller
@@ -74,8 +74,8 @@ import { MusicAppComponent } from "./music-box-app.component";
         },
         {
             provide: EntitySourceGateway,
-            deps: [MusicBoxClientSideEntityController, SchemaCatalog],
-            useFactory: (controller: MusicBoxClientSideEntityController, schemas: SchemaCatalog) => {
+            deps: [MusicBoxClientSideEntityController, EntitySchemaCatalog],
+            useFactory: (controller: MusicBoxClientSideEntityController, schemas: EntitySchemaCatalog) => {
                 console.log("🏭 new entity gateway [V3]");
                 const gateway = new EntitySourceGateway([controller]);
                 gateway.addStore(schemas.getSchema("song"), controller);
@@ -85,8 +85,8 @@ import { MusicAppComponent } from "./music-box-app.component";
         },
         {
             provide: Workspace,
-            deps: [EntitySourceGateway, SchemaCatalog],
-            useFactory: (gateway: EntitySourceGateway, schemas: SchemaCatalog) => {
+            deps: [EntitySourceGateway, EntitySchemaCatalog],
+            useFactory: (gateway: EntitySourceGateway, schemas: EntitySchemaCatalog) => {
                 console.log("🏭 new workspace");
                 const workspace = new Workspace();
                 workspace.setSource(gateway);

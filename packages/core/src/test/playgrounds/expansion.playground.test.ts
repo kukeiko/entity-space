@@ -1,6 +1,6 @@
 import { Expand, ExpansionValue } from "@entity-space/common";
 import { Unbox } from "@entity-space/utils";
-import { define, Instance, Metadata, MetadataReference } from "../../index";
+import { define, BlueprintInstance, Metadata, MetadataReference } from "../../index";
 import { CanvasModel } from "../facade/model";
 
 // credit to captain-yossarian https://captain-yossarian.medium.com/typescript-object-oriented-typings-4fd42ce14c75
@@ -30,7 +30,7 @@ describe("playground: expansion", () => {
             shapes?: (Square | Circle)[];
         }
 
-        function takesExpansion<E = ExpansionValue<Instance<CanvasModel>>>(expansion: E): typeof expansion {
+        function takesExpansion<E = ExpansionValue<BlueprintInstance<CanvasModel>>>(expansion: E): typeof expansion {
             return {} as any;
         }
 
@@ -101,7 +101,7 @@ describe("playground: expansion", () => {
             shapes = define([squareMetadataRef, circleMetadataRef] as MetadataReference<Shape>[], { array: true });
         }
 
-        type UserInstance = Instance<UserModel>;
+        type UserInstance = BlueprintInstance<UserModel>;
 
         const user: UserInstance = {
             id: 823,

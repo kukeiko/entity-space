@@ -1,4 +1,4 @@
-import { Instance } from "@entity-space/core";
+import { BlueprintInstance } from "@entity-space/core";
 import { Shape } from "../model";
 
 let id = 1;
@@ -8,7 +8,7 @@ function nextId(): number {
 }
 
 export class ShapeRepository {
-    all(): Instance<Shape>[] {
+    all(): BlueprintInstance<Shape>[] {
         return [
             {
                 type: "circle",

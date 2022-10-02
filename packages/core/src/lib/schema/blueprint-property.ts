@@ -1,5 +1,5 @@
 import { Class, Primitive } from "@entity-space/utils";
-import { Metadata, MetadataReference } from "./instance";
+import { Metadata, MetadataReference } from "./blueprint-instance";
 
 export type Discriminant = string | number;
 export type MetadataToken = Class | Metadata | MetadataReference;
@@ -8,7 +8,7 @@ export type MetadataToken = Class | Metadata | MetadataReference;
 export type BlueprintPropertyValue = Primitive | Discriminant | MetadataToken | MetadataToken[];
 // export type PropertyValueType = Primitive | Discriminant | Class | Class[] | Metadata | Metadata[] | MetadataReference | MetadataReference[];
 
-export interface Property<V extends BlueprintPropertyValue = BlueprintPropertyValue> {
+export interface BlueprintProperty<V extends BlueprintPropertyValue = BlueprintPropertyValue> {
     valueType: V;
 }
 
@@ -68,24 +68,24 @@ export type AllAttributes =
 export function define<V extends BlueprintPropertyValue, O extends Partial<AllAttributes>>(
     valueType: V,
     options?: O
-): Property<V> & O {
-    return { valueType, ...(options ?? {}) } as Property<V> & O;
+): BlueprintProperty<V> & O {
+    return { valueType, ...(options ?? {}) } as BlueprintProperty<V> & O;
 }
 
-export function isProperty(value: unknown): value is Property {
-    return (value as Property | undefined | null)?.valueType != null;
+export function isProperty(value: unknown): value is BlueprintProperty {
+    return (value as BlueprintProperty | undefined | null)?.valueType != null;
 }
 
 type DistributedKeyOf<T> = T extends any ? keyof T : never;
 
-export function hasAttribute<P extends Property, K extends DistributedKeyOf<AllAttributes>>(
+export function hasAttribute<P extends BlueprintProperty, K extends DistributedKeyOf<AllAttributes>>(
     attribute: K,
     property: P
 ): property is P & Extract<AllAttributes, Record<K, true>>;
 // currying signature
 export function hasAttribute<K extends DistributedKeyOf<AllAttributes>>(
     attribute: K
-): <P extends Property>(property: P) => property is P & Extract<AllAttributes, Record<K, true>>;
+): <P extends BlueprintProperty>(property: P) => property is P & Extract<AllAttributes, Record<K, true>>;
 export function hasAttribute(attribute: string, property?: Record<string, any>): any {
     if (property === void 0) {
         return (property: Record<string, any>) => property[attribute] === true;

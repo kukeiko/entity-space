@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit } from "@angular/core";
-import { Blueprint, define, Instance, Query, SchemaCatalog, Workspace } from "@entity-space/core";
+import { Blueprint, define, BlueprintInstance, Query, EntitySchemaCatalog, Workspace } from "@entity-space/core";
 import { matches, some } from "@entity-space/criteria";
 import {
     Artist,
@@ -35,7 +35,7 @@ class MusicBoxUiStateBlueprint {
     filter = define(MusicBoxUiFilter, { required: true });
 }
 
-type MusicBoxUiState = Instance<MusicBoxUiStateBlueprint>;
+type MusicBoxUiState = BlueprintInstance<MusicBoxUiStateBlueprint>;
 
 @Component({
     selector: "music-box-app",
@@ -46,7 +46,7 @@ export class MusicAppComponent implements OnInit, OnDestroy {
     constructor(
         private primengConfig: PrimeNGConfig,
         private readonly workspace: Workspace,
-        private readonly schemas: SchemaCatalog
+        private readonly schemas: EntitySchemaCatalog
     ) {}
 
     private readonly destroyed$ = new Subject<void>();

@@ -1,8 +1,8 @@
 import { Entity } from "@entity-space/common";
 import { Class, isDefined } from "@entity-space/utils";
 import "reflect-metadata";
-import { Instance } from "./blueprint/instance";
-import { BlueprintPropertyValue, hasAttribute, isProperty, Property } from "./blueprint/property";
+import { BlueprintProperty, BlueprintPropertyValue, hasAttribute, isProperty } from "./blueprint-property";
+import { BlueprintInstance } from "./blueprint-instance";
 import { EntitySchema } from "./entity-schema";
 import { ArraySchema } from "./property-value/array-schema";
 import { PrimitiveSchema } from "./property-value/primitive-schema";
@@ -39,7 +39,7 @@ function isBlueprint(value: any): value is Class {
     return Reflect.getMetadata(BLUEPRINT_METADATA_KEY, value) !== void 0;
 }
 
-type NamedProperty = Property & { name: string };
+type NamedProperty = BlueprintProperty & { name: string };
 
 function getNamedProperties(blueprint: Class): NamedProperty[] {
     const instance = new blueprint();
@@ -49,7 +49,7 @@ function getNamedProperties(blueprint: Class): NamedProperty[] {
         .filter(isDefined);
 }
 
-export class SchemaCatalog {
+export class EntitySchemaCatalog {
     private readonly schemas = new Map<string, EntitySchema>();
 
     addSchema(schema: EntitySchema): this {
@@ -67,12 +67,12 @@ export class SchemaCatalog {
         return schema as EntitySchema<T>;
     }
 
-    resolve<T>(blueprint: Class<T>): EntitySchema<Instance<T>> {
+    resolve<T>(blueprint: Class<T>): EntitySchema<BlueprintInstance<T>> {
         const metadata = getBlueprintMetadata(blueprint);
         let schema = this.schemas.get(metadata.id);
 
         if (schema) {
-            return schema as EntitySchema<Instance<T>>;
+            return schema as EntitySchema<BlueprintInstance<T>>;
         }
 
         console.log(`🔨 ⏳ building schema ${metadata.id} from blueprint...`);
@@ -123,7 +123,7 @@ export class SchemaCatalog {
 
         console.log(`🔨 ✔️ built schema ${metadata.id}`, schema);
 
-        return schema as EntitySchema<Instance<T>>;
+        return schema as EntitySchema<BlueprintInstance<T>>;
     }
 
     private toPrimitiveSchemaDataType(valueType: BlueprintPropertyValue): PrimitiveSchemaDataType {

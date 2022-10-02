@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, Input } from "@angular/core";
-import { Blueprint, define, SchemaCatalog, Workspace } from "@entity-space/core";
+import { Blueprint, define, EntitySchemaCatalog, Workspace } from "@entity-space/core";
 import { Artist, ArtistBlueprint, Song, SongBlueprint, WebSongLocation } from "@entity-space/examples/libs/music-model";
 import { combineLatest, map, switchMap } from "rxjs";
 
@@ -23,7 +23,7 @@ interface SongTableState {
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SongTableComponent {
-    constructor(private readonly workspace: Workspace, private readonly schemas: SchemaCatalog) {}
+    constructor(private readonly workspace: Workspace, private readonly schemas: EntitySchemaCatalog) {}
 
     stateId = 1;
 
