@@ -1,5 +1,5 @@
 import { define } from "@entity-space/core";
-import { DataEntryModel } from "./data-entry.model";
+import { DataEntryModel } from "../common/data-entry.model";
 
 /**
  * Example of a model that is a tree, i.e. it has its own type as a parent and as children.

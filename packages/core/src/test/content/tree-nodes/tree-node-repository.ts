@@ -1,6 +1,6 @@
 import { BlueprintInstance } from "@entity-space/core";
-import { TreeNodeModel } from "../model";
-import { generateTreeNodes } from "./generate-tree-nodes";
+import { generateTreeNodes } from "./generate-tree-nodes.fn";
+import { TreeNodeModel } from "./tree-node.model";
 
 export class TreeNodeRepository {
     private _data = new Map(generateTreeNodes().map(x => [x.id, x]));

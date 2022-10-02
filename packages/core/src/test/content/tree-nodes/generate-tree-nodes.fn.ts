@@ -1,5 +1,5 @@
 import { BlueprintInstance } from "@entity-space/core";
-import { TreeNodeModel } from "../model";
+import { TreeNodeModel } from "./tree-node.model";
 
 interface GenerateTreeNodesOptions {
     numMaxChildren: number;
@@ -17,7 +17,9 @@ const defaultOptions: GenerateTreeNodesOptions = {
     numMaxNodes: 860,
 };
 
-export function generateTreeNodes(options: GenerateTreeNodesOptions = defaultOptions): BlueprintInstance<TreeNodeModel>[] {
+export function generateTreeNodes(
+    options: GenerateTreeNodesOptions = defaultOptions
+): BlueprintInstance<TreeNodeModel>[] {
     const { chanceToHaveChildren, hasChildrenDiminish, numMaxChildren, numMaxNodes, numRootNodes } = options;
     let id = 1;
 

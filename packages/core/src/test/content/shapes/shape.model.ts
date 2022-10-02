@@ -1,7 +1,7 @@
 import { define } from "@entity-space/core";
 import { Class } from "@entity-space/utils";
-import { AuthorModel } from "./author.model";
-import { DataEntryModel } from "./data-entry.model";
+import { AuthorModel } from "../common/author.model";
+import { DataEntryModel } from "../common/data-entry.model";
 
 /**
  * This file contains models to showcase how you can deal with inheritance. We're using the idea of

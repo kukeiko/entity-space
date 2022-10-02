@@ -1,7 +1,7 @@
 import { Expand, ExpansionValue } from "@entity-space/common";
 import { Unbox } from "@entity-space/utils";
-import { define, BlueprintInstance, Metadata, MetadataReference } from "../../index";
-import { CanvasModel } from "../facade/model";
+import { BlueprintInstance, define, Metadata, MetadataReference } from "../../index";
+import { CanvasModel } from "../content";
 
 // credit to captain-yossarian https://captain-yossarian.medium.com/typescript-object-oriented-typings-4fd42ce14c75
 // function Mixin<T extends ClassType, R extends T[]>(...classRefs: [...R]): new (...args: any[]) => UnionToIntersection<InstanceType<[...R][number]>> {

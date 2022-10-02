@@ -1,5 +1,5 @@
 import { BlueprintInstance } from "@entity-space/core";
-import { Shape } from "../model";
+import { Shape } from "./shape.model";
 
 let id = 1;
 
