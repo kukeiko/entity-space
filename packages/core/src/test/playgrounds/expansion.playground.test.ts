@@ -1,109 +1,39 @@
 import { Expand, ExpansionValue } from "@entity-space/common";
 import { Unbox } from "@entity-space/utils";
-import { BlueprintInstance, define, Metadata, MetadataReference } from "../../index";
-import { CanvasBlueprint } from "../content";
+import { BlueprintInstance, define } from "../../index";
+import { Canvas, CanvasBlueprint, ProductBlueprint, ShapeBlueprints, Square } from "../content";
 
 // credit to captain-yossarian https://captain-yossarian.medium.com/typescript-object-oriented-typings-4fd42ce14c75
 // function Mixin<T extends ClassType, R extends T[]>(...classRefs: [...R]): new (...args: any[]) => UnionToIntersection<InstanceType<[...R][number]>> {
 //     return merge(class {}, ...classRefs);
 // }
 
-describe("playground: expansion", () => {
+xdescribe("playground: expansion", () => {
     it("simple expand w/ union types", () => {
-        interface Square {
-            id: number;
-            area: number;
-            length: number;
-            type: "square";
-        }
-
-        interface Circle {
-            id: number;
-            area: number;
-            radius: number;
-            type: "circle";
-        }
-
-        interface Canvas {
-            id: number;
-            name: string;
-            shapes?: (Square | Circle)[];
-        }
-
-        function takesExpansion<E = ExpansionValue<BlueprintInstance<CanvasBlueprint>>>(expansion: E): typeof expansion {
+        function takesExpansion<E extends ExpansionValue<Canvas>>(expansion: E): typeof expansion {
             return {} as any;
         }
 
-        takesExpansion({ author: {} });
+        const foo = takesExpansion({ shapes: { angleA: true, length: true } });
     });
 
-    xit("complex expand w/ union types", () => {
-        interface Square {
-            id: number;
-            area?: number;
-            length?: number;
-            type: "square";
-        }
-
-        interface Circle {
-            id: number;
-            area?: number;
-            radius?: number;
-            type: "circle";
-        }
-
-        type Shape = Square | Circle;
-
-        interface Canvas {
-            id: number;
-            name: string;
-            shapes: Shape[];
-        }
-
-        interface Brand {
-            id: number;
-            name: string;
-        }
-
-        interface Product {
-            id: number;
-            name: string;
-            price: number;
-            rating?: number;
-            brand: Brand;
-            reviews?: ProductReview[];
-        }
-
-        interface ProductReview {
-            id: number;
-            productId?: number;
-            reviewText?: string;
-            product?: Product;
-        }
-
-        // [todo] using MetadataReference because Blueprints don't support discriminated unions yet
-        // [update] actually not 100% true - i already use Blueprints in the "new-query-playground.test"
-        const productMetadata: Metadata<Product> = {} as any;
-        const productMetadataRef: MetadataReference<Product> = {} as any;
-        const canvasMetadataRef: MetadataReference<Canvas> = {} as any;
-        const squareMetadataRef: MetadataReference<Square> = {} as any;
-        const circleMetadataRef: MetadataReference<Circle> = {} as any;
-
-        class UserModel {
+    it("complex expand w/ union types", () => {
+        // [todo] convert to type tests
+        class CustomUserBlueprint {
             id = define(Number, { required: true });
             name = define(String);
-            createdBy = define(UserModel);
-            updatedBy = define(UserModel, { nullable: true });
-            children = define(UserModel, { array: true });
+            createdBy = define(CustomUserBlueprint);
+            updatedBy = define(CustomUserBlueprint, { nullable: true });
+            children = define(CustomUserBlueprint, { array: true });
             // metadata ref is for entities where the dev does not want to (or cannot) use blueprints
-            products = define(productMetadataRef, { array: true });
-            canvas = define(canvasMetadataRef);
-            shapes = define([squareMetadataRef, circleMetadataRef] as MetadataReference<Shape>[], { array: true });
+            products = define(ProductBlueprint, { array: true });
+            canvas = define(CanvasBlueprint);
+            shapes = define(ShapeBlueprints, { array: true });
         }
 
-        type UserInstance = BlueprintInstance<UserModel>;
+        type CustomUser = BlueprintInstance<CustomUserBlueprint>;
 
-        const user: UserInstance = {
+        const user: CustomUser = {
             id: 823,
             updatedBy: null,
             products: [
@@ -133,19 +63,18 @@ describe("playground: expansion", () => {
             },
         };
 
-        function takesUserExpansion<E extends ExpansionValue<UserInstance>>(expansion: E): typeof expansion {
+        function takesUserExpansion<E extends ExpansionValue<CustomUser>>(expansion: E): typeof expansion {
             return {} as any;
         }
 
-        takesUserExpansion({ children: true });
+        const simpleExpansion = takesUserExpansion({ updatedBy: true, children: { shapes: true } });
 
-        const simpleExpansion = takesUserExpansion({ updatedBy: true });
-
-        type SimpleExpandedUser = Expand<UserInstance, typeof simpleExpansion>;
+        type SimpleExpandedUser = Expand<CustomUser, typeof simpleExpansion>;
 
         const simpleExpandedUser: SimpleExpandedUser = {
             id: 1,
             updatedBy: null,
+            children: [{ id: 2, shapes: [{ id: 3, type: "circle", radius: 3 }] }],
         };
 
         type Foo = ExpansionValue<Square[]>;
@@ -158,7 +87,7 @@ describe("playground: expansion", () => {
             children: {},
         });
 
-        type ExpandedUserInstance = Expand<UserInstance, typeof deepExpansion>;
+        type ExpandedUserInstance = Expand<CustomUser, typeof deepExpansion>;
 
         const expandedUser: ExpandedUserInstance = {
             id: 1,
@@ -179,7 +108,7 @@ describe("playground: expansion", () => {
         };
     });
 
-    xit("isExpanded() prototyping", () => {
+    it("isExpanded() prototyping", () => {
         type ExpansionValue<T, U = Unbox<T>> = true | { [K in keyof U]?: ExpansionValue<U[K]> };
 
         interface Foo {

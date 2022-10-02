@@ -1,74 +1,8 @@
 import { Expand, ExpansionValue } from "@entity-space/common";
-import { Criterion, NamedCriteriaBag } from "@entity-space/criteria";
+import { NamedCriteriaBag } from "@entity-space/criteria";
 import { Class } from "@entity-space/utils";
-import { define, BlueprintInstance } from "../../index";
-
-interface Brand {
-    id: number;
-    name: string;
-}
-
-interface Product {
-    id: number;
-    name: string;
-    price: number;
-    rating?: number;
-    brand: Brand;
-    reviews?: ProductReview[];
-}
-
-interface ProductReview {
-    id: number;
-    productId?: number;
-    reviewText?: string;
-    product?: Product;
-}
-
-interface Query {
-    criteria?: Criterion;
-    // model: Class[];
-    expansion: ExpansionValue;
-}
-
-const fooQuery: Query = {
-    expansion: { moo: true },
-};
-
-class UserModel {
-    id = define(Number, { required: true });
-    name = define(String);
-    createdBy = define(UserModel);
-    children = define(UserModel, { array: true });
-    reviews = define(ReviewModel, { array: true });
-}
-
-class ReviewModel {
-    id = define(Number, { required: true });
-    reviewText = define(String);
-    createdBy = define(UserModel);
-}
-
-class SquareModel {
-    id = define(Number, { required: true });
-    area = define(Number);
-    length = define(Number);
-    type = define("square" as const, { required: true });
-}
-
-class CircleModel {
-    id = define(Number, { required: true });
-    area = define(Number);
-    radius = define(Number);
-    type = define("circle" as const, { required: true });
-}
-
-const ShapeModels = [SquareModel, CircleModel];
-
-class CanvasModel {
-    id = define(Number, { required: true });
-    name = define(String);
-    shapes = define(ShapeModels, { array: true });
-}
+import { BlueprintInstance } from "../../index";
+import { CanvasBlueprint, Product, ShapeBlueprints, User, UserBlueprint } from "../content";
 
 xdescribe("new query playground", () => {
     it("working example #1", () => {
@@ -79,7 +13,7 @@ xdescribe("new query playground", () => {
         }
 
         query({} as Product, {}, {});
-        const users = query({} as BlueprintInstance<UserModel>, {}, { name: true, children: { name: true } });
+        const users = query({} as User, {}, { name: true, children: { name: true } });
         users.children[0].name;
     });
 
@@ -93,7 +27,7 @@ xdescribe("new query playground", () => {
         }
 
         const user = query(
-            UserModel,
+            UserBlueprint,
             {},
             { name: true, children: { name: true, reviews: { createdBy: { name: true } } } }
         );
@@ -111,7 +45,7 @@ xdescribe("new query playground", () => {
             return {} as any;
         }
 
-        const canvas = query(CanvasModel, {}, { shapes: { area: true, radius: true, length: true } });
+        const canvas = query(CanvasBlueprint, {}, { shapes: { area: true, radius: true, length: true } });
 
         for (const shape of canvas.shapes) {
             switch (shape.type) {
@@ -137,7 +71,7 @@ xdescribe("new query playground", () => {
             return {} as any;
         }
 
-        const shape = query([SquareModel, CircleModel], {}, { length: true, radius: true });
+        const shape = query(ShapeBlueprints, {}, { length: true, radius: true });
 
         switch (shape.type) {
             case "circle":
@@ -150,7 +84,7 @@ xdescribe("new query playground", () => {
                 break;
         }
 
-        const canvas = query([CanvasModel], {}, { shapes: { area: true, radius: true, length: true } });
+        const canvas = query([CanvasBlueprint], {}, { shapes: { area: true, radius: true, length: true } });
 
         for (const shape of canvas.shapes) {
             switch (shape.type) {
@@ -166,6 +100,6 @@ xdescribe("new query playground", () => {
             }
         }
 
-        const user = query([UserModel], {}, { createdBy: { name: true } });
+        const user = query([UserBlueprint], {}, { createdBy: { name: true } });
     });
 });

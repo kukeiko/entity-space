@@ -1,7 +1,7 @@
 import { Blueprint, BlueprintInstance, define } from "@entity-space/core";
 import { Class } from "@entity-space/utils";
-import { AuthorBlueprint } from "../common/author.model";
 import { DataEntryBlueprint } from "../common/data-entry.model";
+import { UserBlueprint } from "../common/user.model";
 
 /**
  * This file contains models to showcase how you can deal with inheritance. We're using the idea of
@@ -23,7 +23,7 @@ import { DataEntryBlueprint } from "../common/data-entry.model";
 export class CanvasBlueprint {
     id = define(Number, { id: true, required: true });
     authorId = define(Number);
-    author = define(AuthorBlueprint);
+    author = define(UserBlueprint, { relation: true, from: "authorId", to: "id" });
     name = define(String);
     shapes = define(ShapeBlueprints, { array: true });
 }
@@ -91,3 +91,7 @@ export const ShapeBlueprints: Class<ShapeBlueprint>[] = [
 ];
 
 export type Shape = BlueprintInstance<ShapeBlueprint>;
+export type Circle = BlueprintInstance<CircleBlueprint>;
+export type Square = BlueprintInstance<SquareBlueprint>;
+export type Triangle = BlueprintInstance<TriangleBlueprint>;
+export type Canvas = BlueprintInstance<CanvasBlueprint>;
