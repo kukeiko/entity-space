@@ -17,6 +17,6 @@ export * from "./lib/pluck.fn";
 export * from "./lib/subtract-sets.fn";
 export * from "./lib/to-map-by-id.fn";
 export * from "./lib/to-map.fn";
-export * from "./lib/trample-path.fn";
+export * from "./lib/write-path.fn";
 export * from "./lib/types";
-export * from "./lib/walk-path.fn";
+export * from "./lib/read-path.fn";

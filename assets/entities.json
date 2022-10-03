@@ -1,27 +1,79 @@
 {
     "song": [
         {
-            "name": "Plein Ciel",
-            "id": 15,
-            "artistId": 3
+            "artistId": 6,
+            "duration": 423,
+            "id": 19,
+            "name": "Hygge"
         },
         {
-            "name": "Entrudo",
-            "id": 14,
-            "artistId": 2
+            "artistId": 2,
+            "duration": 0,
+            "id": 18,
+            "name": "Salzburg"
         },
         {
-            "name": "Sacralicious",
-            "id": 13,
-            "artistId": 1
+            "artistId": 5,
+            "duration": 590,
+            "id": 17,
+            "name": "Zuccabar"
         },
         {
             "name": "Der Slaufkugel",
             "id": 16,
-            "artistId": 4
+            "artistId": 4,
+            "duration": 466
+        },
+        {
+            "name": "Plein Ciel",
+            "id": 15,
+            "artistId": 3,
+            "duration": 0
+        },
+        {
+            "name": "Entrudo",
+            "id": 14,
+            "artistId": 2,
+            "duration": 0
+        },
+        {
+            "name": "Sacralicious",
+            "id": 13,
+            "artistId": 1,
+            "duration": 0
+        },
+        {
+            "artistId": 7,
+            "duration": 467,
+            "id": 20,
+            "name": "Colourless Water"
         }
     ],
     "song-location": [
+        {
+            "id": 7,
+            "songId": 19,
+            "songLocationType": "web",
+            "url": "https://www.youtube.com/watch?v=rlZAzo0uTDI"
+        },
+        {
+            "id": 6,
+            "songId": 18,
+            "songLocationType": "web",
+            "url": "https://www.youtube.com/watch?v=XmfOOEj-cZc"
+        },
+        {
+            "id": 5,
+            "songId": 17,
+            "songLocationType": "web",
+            "url": "https://www.youtube.com/watch?v=Eyk-uTLjkMI"
+        },
+        {
+            "id": 4,
+            "songId": 16,
+            "songLocationType": "web",
+            "url": "https://www.youtube.com/watch?v=tTvIMhfUW1o"
+        },
         {
             "id": 3,
             "songId": 14,
@@ -41,13 +93,29 @@
             "id": 1
         },
         {
-            "id": 4,
-            "songId": 16,
+            "id": 8,
+            "songId": 20,
             "songLocationType": "web",
-            "url": "https://www.youtube.com/watch?v=tTvIMhfUW1o"
+            "url": "https://www.youtube.com/watch?v=EKbrNPVi_Ok"
         }
     ],
     "artist": [
+        {
+            "id": 6,
+            "name": "Ikaro Grati"
+        },
+        {
+            "id": 5,
+            "name": "Nils Andreas"
+        },
+        {
+            "name": "Cliff De Zoete",
+            "id": 4
+        },
+        {
+            "name": "N'to",
+            "id": 3
+        },
         {
             "name": "Worakls",
             "id": 2
@@ -57,12 +125,8 @@
             "id": 1
         },
         {
-            "name": "N'to",
-            "id": 3
-        },
-        {
-            "name": "Cliff De Zoete",
-            "id": 4
+            "id": 7,
+            "name": "Kyrill & Redford"
         }
     ]
 }

@@ -1,6 +1,6 @@
 /* eslint-disable */
 export default {
-    displayName: "examples-apps-music-box-api",
+    displayName: "examples-music-box-api",
     preset: "../../../../jest.preset.js",
     globals: {
         "ts-jest": {

@@ -1,9 +1,10 @@
-import { Entity } from "../entity";
+import { Entity, UnfoldedExpansion } from "@entity-space/common";
 import { EntitySchemaIndex } from "./entity-schema-index";
 import { EntitySchemaKey } from "./entity-schema-key";
 import { EntitySchemaProperty } from "./entity-schema-property";
 import { EntitySchemaRelation } from "./entity-schema-relation";
-import { ArraySchema, PrimitiveSchema } from "./property-value";
+import { ArraySchema } from "./property-value/array-schema";
+import { PrimitiveSchema } from "./property-value/primitive-schema";
 import {
     IEntitySchema,
     IEntitySchemaIndex,
@@ -31,6 +32,24 @@ export class EntitySchema<T extends Entity = Entity> implements IEntitySchema<T>
 
     readonly schemaType = "entity";
 
+    createDefault(): T {
+        throw new Error("not implemented");
+    }
+
+    getDefaultExpansion(): UnfoldedExpansion {
+        return this.getProperties()
+            .filter(property => property.isRequired())
+            .reduce((acc, property) => {
+                const valueSchema = property.getValueSchema();
+
+                if (valueSchema.schemaType === "entity") {
+                    return { ...acc, [property.getName()]: valueSchema.getDefaultExpansion() };
+                } else {
+                    return { ...acc, [property.getName()]: true } as UnfoldedExpansion;
+                }
+            }, {} as UnfoldedExpansion);
+    }
+
     addAllOf(schema: IEntitySchema): this {
         this.allOf.push(schema);
         return this;
@@ -42,9 +61,21 @@ export class EntitySchema<T extends Entity = Entity> implements IEntitySchema<T>
         return this;
     }
 
-    addProperty(name: string, valueSchema: IPropertyValueSchema): this {
-        const property = new EntitySchemaProperty(this, name, valueSchema);
+    addProperty(name: string, valueSchema: IPropertyValueSchema, required = false): this {
+        const property = new EntitySchemaProperty(this, name, valueSchema, required);
         this.properties.push(property);
+        return this;
+    }
+
+    addRelationProperty(
+        name: string,
+        valueSchema: IPropertyValueSchema,
+        from: string,
+        to: string,
+        required = false
+    ): this {
+        this.addProperty(name, valueSchema, required);
+        this.addRelation(name, from, to);
         return this;
     }
 
@@ -52,12 +83,12 @@ export class EntitySchema<T extends Entity = Entity> implements IEntitySchema<T>
         return this.addProperty(name, new ArraySchema(valueSchema));
     }
 
-    addString(name: string): this {
-        return this.addProperty(name, new PrimitiveSchema("string"));
+    addString(name: string, required = false): this {
+        return this.addProperty(name, new PrimitiveSchema("string"), required);
     }
 
-    addInteger(name: string): this {
-        return this.addProperty(name, new PrimitiveSchema("integer"));
+    addInteger(name: string, required = false): this {
+        return this.addProperty(name, new PrimitiveSchema("integer"), required);
     }
 
     addRelation(propertyKey: string, from: string, to: string): this {

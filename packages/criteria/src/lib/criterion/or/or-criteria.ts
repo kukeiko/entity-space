@@ -87,6 +87,22 @@ export class OrCriteria<T extends Criterion = Criterion> extends Criteria<T> {
         return intersected.length === 1 ? intersected[0] : new OrCriteria(intersected);
     }
 
+    intersectBy(other: Criterion): false | Criterion {
+        let intersection = other;
+
+        for (const item of this.getItems()) {
+            const result = item.intersect(intersection);
+
+            if (!result) {
+                return false;
+            }
+
+            intersection = result;
+        }
+
+        return intersection;
+    }
+
     override invert(): false | Criterion {
         const inverted = this.items.map(criterion => criterion.invert());
 

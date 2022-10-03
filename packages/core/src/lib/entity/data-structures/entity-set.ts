@@ -1,4 +1,4 @@
-import { Query } from "../../query";
+import { Query } from "../../query/query";
 import { Entity } from "../entity";
 
 export class EntitySet<T extends Entity = Entity> {
@@ -16,5 +16,9 @@ export class EntitySet<T extends Entity = Entity> {
 
     getQuery(): Query {
         return this.query;
+    }
+
+    static empty<T extends Entity = Entity>(query: Query): EntitySet<T> {
+        return new EntitySet({ query, entities: [] });
     }
 }

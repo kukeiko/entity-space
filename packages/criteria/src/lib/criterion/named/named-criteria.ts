@@ -1,4 +1,4 @@
-import { Expansion } from "@entity-space/core";
+import { ExpansionValue } from "@entity-space/common";
 import { AndCriteria } from "../and/and-criteria";
 import { AnyCriterion } from "../any/any";
 import { Criteria } from "../criteria";
@@ -133,7 +133,13 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag, R exte
     }
 
     override intersect(other: Criterion): false | Criterion {
-        if (!(other instanceof NamedCriteria)) {
+        if (other instanceof AnyCriterion) {
+            // [todo] apply this to all other criteria
+            return this;
+        } else if (other instanceof OrCriteria) {
+            // [todo] apply this to all other criteria
+            return other.intersectBy(this);
+        } else if (!(other instanceof NamedCriteria)) {
             return false;
         }
 
@@ -278,11 +284,15 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag, R exte
         }
     }
 
-    static omitExpansion(criterion: Criterion, expansion: Expansion): Criterion {
+    static omitExpansion(criterion: Criterion, expansion: ExpansionValue): Criterion {
+        if (expansion === true) {
+            throw new Error("omitting by expansion value 'true' not supported");
+        }
+
         if (criterion instanceof OrCriteria) {
             // [todo] no clue currently why .getItems() returns any[]
             const omitted = (criterion.getItems() as Criterion[])
-                .map(criterion => NamedCriteria.omitExpansion(criterion, expansion))
+                .map(criterion => this.omitExpansion(criterion, expansion))
                 .filter(criterion => !(criterion instanceof AnyCriterion));
 
             if (omitted.length == 0) {
@@ -293,7 +303,7 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag, R exte
         } else if (criterion instanceof AndCriteria) {
             // [todo] no clue currently why .getItems() returns any[]
             const omitted = (criterion.getItems() as Criterion[])
-                .map(criterion => NamedCriteria.omitExpansion(criterion, expansion))
+                .map(criterion => this.omitExpansion(criterion, expansion))
                 .filter(criterion => !(criterion instanceof AnyCriterion));
 
             if (omitted.length == 0) {
@@ -303,9 +313,9 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag, R exte
             }
         } else if (criterion instanceof NamedCriteria) {
             const omittedBag: NamedCriteriaBag = { ...criterion.getBag() };
-            const expansionObject = expansion.getObject();
-            for (const key in expansionObject) {
-                const expansionItem = expansionObject[key];
+
+            for (const key in expansion) {
+                const expansionItem = expansion[key];
 
                 if (expansionItem === true) {
                     delete omittedBag[key];
@@ -313,7 +323,7 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag, R exte
                     const bagItem = omittedBag[key];
 
                     if (bagItem instanceof NamedCriteria) {
-                        const omitted = NamedCriteria.omitExpansion(bagItem, new Expansion(expansionItem));
+                        const omitted = this.omitExpansion(bagItem, expansionItem);
 
                         if (omitted instanceof AnyCriterion) {
                             delete omittedBag[key];

@@ -1,4 +1,4 @@
-import { Entity } from "../entity";
+import { Entity, UnfoldedExpansion } from "@entity-space/common";
 
 export type PrimitiveSchemaDataType = "boolean" | "integer" | "number" | "string";
 
@@ -44,6 +44,8 @@ export interface IEntitySchema<T extends Entity = Entity> {
     findRelation(propertyName: string): IEntitySchemaRelation | undefined;
     getRelations(): IEntitySchemaRelation[];
     hasKey(): boolean;
+    createDefault(): T;
+    getDefaultExpansion(): UnfoldedExpansion;
 }
 
 export interface IEntitySchemaProperty {
@@ -55,6 +57,7 @@ export interface IEntitySchemaProperty {
     getValueSchema(): IPropertyValueSchema;
     isReadOnly(): boolean;
     isWriteOnly(): boolean;
+    isRequired(): boolean;
 }
 
 export interface IDictionarySchema {

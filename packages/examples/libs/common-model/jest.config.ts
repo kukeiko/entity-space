@@ -1,6 +1,6 @@
 /* eslint-disable */
 export default {
-    displayName: "examples-libs-common-model",
+    displayName: "examples-common-model",
     preset: "../../../../jest.preset.js",
     globals: {
         "ts-jest": {

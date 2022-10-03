@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, Input } from "@angular/core";
-import { Blueprint, BlueprintResolver, define, SchemaCatalog, Workspace } from "@entity-space/core";
+import { Blueprint, define, EntitySchemaCatalog, Workspace } from "@entity-space/core";
 import { Artist, ArtistBlueprint, Song, SongBlueprint, WebSongLocation } from "@entity-space/examples/libs/music-model";
-import { combineLatest, map, switchMap } from "rxjs";
+import { combineLatest, map, shareReplay, switchMap } from "rxjs";
 
 @Blueprint({ id: "song-table-input" })
 class SongTableInputBlueprint {
@@ -23,11 +23,7 @@ interface SongTableState {
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SongTableComponent {
-    constructor(
-        private readonly workspace: Workspace,
-        private readonly blueprintResolver: BlueprintResolver,
-        private readonly schemas: SchemaCatalog
-    ) {}
+    constructor(private readonly workspace: Workspace, private readonly schemas: EntitySchemaCatalog) {}
 
     stateId = 1;
 
@@ -39,15 +35,22 @@ export class SongTableComponent {
         switchMap(input =>
             combineLatest({
                 artists: this.workspace.query$(ArtistBlueprint),
-                songs: this.workspace.hydrate$(SongBlueprint, input.songs, { artist: true, locations: true }),
+                songs: this.workspace.hydrate$(SongBlueprint, input.songs, {
+                    artist: true,
+                    // [todo] expanding song here causes all to load all songs,
+                    // expecting it to be cached instead
+                    locations: { id: true },
+                }),
             })
         ),
-        map(data => {
-            const state: SongTableState = { data };
-
-            return state;
-        })
+        map(({ artists, songs }) => this.toState(artists, songs)),
+        shareReplay(1)
     );
+
+    toState(artists: Artist[], songs: Song[]): SongTableState {
+        artists.sort((a, b) => a.name.localeCompare(b.name));
+        return { data: { artists, songs } };
+    }
 
     columns: { field: string; header: string }[] = [
         { field: "id", header: "Id" },
@@ -60,12 +63,25 @@ export class SongTableComponent {
     editDialogVisible = false;
     editedSong?: Song;
     editedWebUrl = "";
-    artists$ = this.workspace.query$(ArtistBlueprint);
+    editedDuration = "";
+
+    createSong(): void {
+        // [todo] implement & use EntitySchema.createDefault()
+        this.editedSong = { artistId: 0, duration: 0, id: 0, name: "" };
+        this.editedWebUrl = "";
+        this.editedDuration = "";
+        this.editDialogVisible = true;
+    }
+
+    secondsToTimeString(seconds?: number): string {
+        return new Date(1000 * (seconds ?? 0)).toISOString().slice(14, 19);
+    }
 
     editSong(song: Song): void {
         // [todo] use some copying mechanism from entity-space instead
         this.editedSong = { ...song };
         this.editedWebUrl = this.getUrl(song) ?? "";
+        this.editedDuration = this.secondsToTimeString(song.duration);
         console.log("✍ edit song", this.editedSong);
         this.editDialogVisible = true;
     }
@@ -76,33 +92,61 @@ export class SongTableComponent {
         return webLocation?.url;
     }
 
+    getEditedDuration(): number {
+        const [seconds, minutes, hours] = this.editedDuration
+            .split(":")
+            .reverse()
+            .map(value => +value);
+
+        return seconds + minutes * 60 + hours * 60 * 60;
+    }
+
     async saveSong(): Promise<void> {
         console.log("💾 save song", this.editedSong);
-
-        if (this.editedWebUrl) {
-            let webLocation = this.editedSong?.locations?.find(loc => loc.songLocationType === "web") as
-                | WebSongLocation
-                | undefined;
-
-            if (!webLocation) {
-                const createdWebLocation = await this.workspace.create<WebSongLocation>(
-                    [{ id: 0, songId: this.editedSong?.id!, songLocationType: "web", url: this.editedWebUrl }],
-                    this.schemas.getSchema("song-location")
-                );
-
-                if (!createdWebLocation) {
-                    return;
-                }
-
-                webLocation = createdWebLocation[0];
-            } else {
-                webLocation.url = this.editedWebUrl;
-                await this.workspace.update([webLocation], this.schemas.getSchema("song-location"));
-            }
+        if (!this.editedSong) {
+            return;
         }
 
-        // [todo] make workspace.update() better to use w/ blueprints
-        await this.workspace.update([this.editedSong!], this.blueprintResolver.resolve(SongBlueprint));
+        this.editedSong.duration = this.getEditedDuration();
+
+        if (this.editedSong?.id ?? 0 > 0) {
+            if (this.editedWebUrl) {
+                let webLocation = this.editedSong?.locations?.find(loc => loc.songLocationType === "web") as
+                    | WebSongLocation
+                    | undefined;
+
+                if (!webLocation) {
+                    const createdWebLocation = await this.workspace.create<WebSongLocation>(
+                        [{ id: 0, songId: this.editedSong?.id!, songLocationType: "web", url: this.editedWebUrl }],
+                        this.schemas.getSchema("song-location")
+                    );
+
+                    if (!createdWebLocation) {
+                        return;
+                    }
+
+                    webLocation = createdWebLocation[0];
+                } else {
+                    webLocation.url = this.editedWebUrl;
+                    await this.workspace.update([webLocation], this.schemas.getSchema("song-location"));
+                }
+            }
+
+            // [todo] make workspace.update() better to use w/ blueprints
+            await this.workspace.update([this.editedSong!], this.schemas.resolve(SongBlueprint));
+        } else {
+            const createdSong = await this.workspace.create([this.editedSong!], this.schemas.resolve(SongBlueprint));
+
+            if (!createdSong) {
+                return alert("could not create song :(");
+            }
+
+            await this.workspace.create<WebSongLocation>(
+                [{ id: 0, songId: createdSong[0].id, songLocationType: "web", url: this.editedWebUrl }],
+                this.schemas.getSchema("song-location")
+            );
+        }
+
         this.hideDialog();
     }
 

@@ -1,6 +1,6 @@
 /* eslint-disable */
 export default {
-    displayName: "examples-apps-music-box-ui",
+    displayName: "examples-music-box-ui",
     preset: "../../../../jest.preset.js",
     setupFilesAfterEnv: ["<rootDir>/src/test-setup.ts"],
     globals: {

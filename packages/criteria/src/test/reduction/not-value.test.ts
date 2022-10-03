@@ -1,4 +1,4 @@
-import { reducing } from "./reducing.fn";
+import { reducing } from "../tools/reducing.fn";
 
 describe("reducing: not-value", () => {
     /**

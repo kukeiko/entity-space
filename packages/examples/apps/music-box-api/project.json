@@ -29,7 +29,7 @@
         "serve": {
             "executor": "@nrwl/node:node",
             "options": {
-                "buildTarget": "examples-apps-music-box-api:build"
+                "buildTarget": "examples-music-box-api:build"
             }
         },
         "lint": {

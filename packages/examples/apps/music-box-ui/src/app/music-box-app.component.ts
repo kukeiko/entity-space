@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from "@angular/core";
-import { Blueprint, BlueprintResolver, define, Instance, Query, Workspace } from "@entity-space/core";
-import { matches, some } from "@entity-space/criteria";
+import { Blueprint, BlueprintInstance, define, EntitySchemaCatalog, Query, Workspace } from "@entity-space/core";
+import { inRange, matches, some } from "@entity-space/criteria";
 import {
     Artist,
     ArtistBlueprint,
@@ -10,9 +10,9 @@ import {
     SongLocationType,
     SongLocationTypeBlueprint,
 } from "@entity-space/examples/libs/music-model";
-import { pluckId, tramplePath } from "@entity-space/utils";
+import { pluckId, writePath } from "@entity-space/utils";
 import { PrimeNGConfig } from "primeng/api";
-import { combineLatest, map, of, Subject, switchMap, tap } from "rxjs";
+import { combineLatest, map, of, shareReplay, Subject, switchMap, tap } from "rxjs";
 
 interface MusicBoxAppState {
     data: {
@@ -27,6 +27,8 @@ interface MusicBoxAppState {
 class MusicBoxUiFilter {
     artists = define(ArtistBlueprint, { array: true, required: true });
     locationTypes = define(SongLocationTypeBlueprint, { array: true, required: true });
+    duration = define(Number, { array: true, required: true });
+    updateHack = define(String);
 }
 
 @Blueprint({ id: "music-box-ui-state" })
@@ -35,7 +37,7 @@ class MusicBoxUiStateBlueprint {
     filter = define(MusicBoxUiFilter, { required: true });
 }
 
-type MusicBoxUiState = Instance<MusicBoxUiStateBlueprint>;
+type MusicBoxUiState = BlueprintInstance<MusicBoxUiStateBlueprint>;
 
 @Component({
     selector: "music-box-app",
@@ -46,7 +48,7 @@ export class MusicAppComponent implements OnInit, OnDestroy {
     constructor(
         private primengConfig: PrimeNGConfig,
         private readonly workspace: Workspace,
-        private readonly resolver: BlueprintResolver
+        private readonly schemas: EntitySchemaCatalog
     ) {}
 
     private readonly destroyed$ = new Subject<void>();
@@ -64,16 +66,24 @@ export class MusicAppComponent implements OnInit, OnDestroy {
                     {
                         artistId: pluckId(ui.filter.artists),
                         locations: some(matches<SongLocation>({ songLocationType: pluckId(ui.filter.locationTypes) })),
+                        duration: inRange(ui.filter.duration[0] ?? void 0, ui.filter.duration[1] ?? void 0),
                     },
-                    { id: true, artistId: true, duration: true, name: true, locations: true }
+                    {
+                        id: true,
+                        artistId: true,
+                        duration: true,
+                        name: true,
+                        locations: { id: true, songLocationType: true },
+                    }
                 ),
             ])
         ),
-        map(([ui, artists, songLocationTypes, songs]) => this.toAppState(ui, songs, artists, songLocationTypes)),
-        tap(state => console.log("🧙‍♂️ app state changed", state))
+        map(([ui, artists, songLocationTypes, songs]) => this.toState(ui, songs, artists, songLocationTypes)),
+        tap(state => console.log("🧙‍♂️ app state changed", state)),
+        shareReplay(1)
     );
 
-    toAppState(
+    toState(
         ui: MusicBoxUiState,
         songs: Song[],
         artists: Artist[],
@@ -91,7 +101,7 @@ export class MusicAppComponent implements OnInit, OnDestroy {
     ngOnInit(): void {
         this.workspace.add(MusicBoxUiStateBlueprint, {
             id: this.stateId,
-            filter: { artists: [], locationTypes: [] },
+            filter: { artists: [], locationTypes: [], duration: [0, 600] },
         });
 
         this.workspace.add(SongLocationTypeBlueprint, [
@@ -110,10 +120,12 @@ export class MusicAppComponent implements OnInit, OnDestroy {
 
     changeUiState(property: string, value: any): void {
         const change = {};
-        tramplePath(property, change, value);
-        this.workspace.add(this.resolver.resolve(MusicBoxUiStateBlueprint), {
+        writePath(property, change, value);
+        this.workspace.add(this.schemas.resolve(MusicBoxUiStateBlueprint), {
             id: this.stateId,
             ...change,
+            // [todo] workspace doesn't see change for ui.filter.duration, so added this hack here
+            updateHack: (Math.random() * 1337).toString(16),
         });
     }
 }

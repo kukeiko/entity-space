@@ -15,6 +15,7 @@
         "skipDefaultLibCheck": true,
         "baseUrl": ".",
         "paths": {
+            "@entity-space/common": ["packages/common/src/index.ts"],
             "@entity-space/core": ["packages/core/src/index.ts"],
             "@entity-space/criteria": ["packages/criteria/src/index.ts"],
             "@entity-space/examples/libs/common-model": ["packages/examples/libs/common-model/src/index.ts"],

@@ -1,70 +1,66 @@
+import { ExpansionValue } from "@entity-space/common";
 import { any, AnyCriterion, Criterion } from "@entity-space/criteria";
-import { Entity } from "../entity";
-import { Expansion, ExpansionObject } from "../expansion";
-import { IEntitySchema } from "../schema";
+import { Expansion } from "../expansion/expansion";
+import { IEntitySchema } from "../schema/schema.interface";
 import { reduceQueries } from "./reduce-queries.fn";
 
 // [todo] T is unused
-export class Query<
-    T extends Entity = Entity,
-    C extends Criterion = Criterion,
-    E extends ExpansionObject = ExpansionObject
-> {
-    constructor(entitySchema: IEntitySchema, criteria: C = any() as C, expansion?: E | Expansion<E>) {
+export class Query {
+    constructor(entitySchema: IEntitySchema, criteria: Criterion = any(), expansion?: Expansion | ExpansionValue) {
         this.entitySchema = entitySchema;
         this.criteria = criteria;
         this.expansion =
             expansion === void 0
-                ? new Expansion<E>({} as E)
+                ? new Expansion({ schema: entitySchema, value: true })
                 : expansion instanceof Expansion
                 ? expansion
-                : new Expansion<E>(expansion);
+                : new Expansion({ schema: entitySchema, value: expansion });
     }
 
     private readonly entitySchema: IEntitySchema;
-    private readonly criteria: C;
-    private readonly expansion: Expansion<E>;
+    private readonly criteria: Criterion;
+    private readonly expansion: Expansion;
 
     getEntitySchema(): IEntitySchema {
         return this.entitySchema;
     }
 
-    getCriteria(): C {
+    getCriteria(): Criterion {
         return this.criteria;
     }
 
-    withCriteria<C extends Criterion>(criteria: C): Query<T, C, E> {
+    withCriteria(criteria: Criterion): Query {
         return new Query(this.entitySchema, criteria, this.expansion);
     }
 
-    getExpansion(): Expansion<E> {
+    getExpansion(): Expansion {
         return this.expansion;
     }
 
-    getExpansionObject(): E {
-        return this.expansion.getObject();
+    getExpansionValue() {
+        return this.expansion.getValue();
     }
 
-    withoutExpansion(): Query<T, C, ExpansionObject> {
+    withoutExpansion(): Query {
         return new Query(this.entitySchema, this.criteria);
     }
 
-    withExpansion(expansion: E | Expansion<E>): Query<T, C, E> {
+    withExpansion(expansion: Expansion | ExpansionValue): Query {
         return new Query(this.entitySchema, this.criteria, expansion);
     }
 
     toString(): string {
-        const expansion = this.expansion.isEmpty() ? "" : "/" + JSON.stringify(this.expansion.getObject());
+        const expansion = this.expansion.isEmpty() ? "" : "/" + JSON.stringify(this.expansion.getValue());
         const criterion = this.criteria instanceof AnyCriterion ? "" : ":" + this.criteria.toString();
 
         return `${this.entitySchema.getId()}${criterion}${expansion}`;
     }
 
-    reduceBy(others: Query<T>[]): false | Query<T>[] {
+    reduceBy(others: Query[]): false | Query[] {
         return reduceQueries([this], others);
     }
 
-    intersect(other: Query<T>): false | Query<T> {
+    intersect(other: Query): false | Query {
         const intersectedCriterion = this.getCriteria().intersect(other.getCriteria());
 
         if (intersectedCriterion === false) {
@@ -84,5 +80,15 @@ export class Query<
         const [first, ...others] = queries;
 
         return others.every(other => other.getCriteria().equivalent(first.getCriteria()));
+    }
+
+    static equivalent(...queries: Query[]): boolean {
+        const [first, ...others] = queries;
+
+        return others.every(
+            other =>
+                other.getCriteria().equivalent(first.getCriteria()) &&
+                other.getExpansion().equivalent(first.getExpansion())
+        );
     }
 }

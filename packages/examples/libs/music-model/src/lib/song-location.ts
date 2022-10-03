@@ -1,10 +1,10 @@
-import { Blueprint, define, Instance } from "@entity-space/core";
+import { Blueprint, BlueprintInstance, define, EntitySchema } from "@entity-space/core";
 import { SongBlueprint } from "./song";
 
 export interface BaseSongLocation {
     id: number;
     songId: number;
-    song?: Instance<SongBlueprint>;
+    song?: BlueprintInstance<SongBlueprint>;
 }
 
 export interface WebSongLocation extends BaseSongLocation {
@@ -25,7 +25,7 @@ export class SongLocationTypeBlueprint {
     name = define(String, { required: true });
 }
 
-export type SongLocationType = Instance<SongLocationTypeBlueprint>;
+export type SongLocationType = BlueprintInstance<SongLocationTypeBlueprint>;
 
 // [todo] not yet used, need to implement discriminated unions first
 export abstract class BaseSongLocationBlueprint {
@@ -45,4 +45,17 @@ export class WebSongLocationBlueprint extends BaseSongLocationBlueprint {
 export class LocalSongLocationBlueprint extends BaseSongLocationBlueprint {
     path = define(String, { required: true });
     songLocationType = define("local", { discriminator: true, required: true });
+}
+
+export class SongLocationEntitySchema extends EntitySchema {
+    constructor() {
+        super("song-location");
+        this.setKey("id")
+            .addIndex("songId")
+            .addInteger("id")
+            .addInteger("songId")
+            .addString("url")
+            .addString("path")
+            .addString("songLocationType");
+    }
 }

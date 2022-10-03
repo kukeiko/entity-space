@@ -1,3 +1,4 @@
+import { ExpansionValue } from "@entity-space/common";
 import {
     any,
     AnyCriterion,
@@ -7,21 +8,19 @@ import {
     or,
     orTemplate,
 } from "@entity-space/criteria";
-import { cloneJson, walkPath } from "@entity-space/utils";
+import { cloneJson, readPath } from "@entity-space/utils";
 import { Expansion } from "../expansion/expansion";
-import { ExpansionObject } from "../expansion/expansion-object";
 import { Query } from "../query/query";
 import { IEntitySchema, IEntitySchemaRelation } from "../schema/schema.interface";
-import { EntitySet } from "./data-structures";
+import { EntitySet } from "./data-structures/entity-set";
 import { Entity } from "./entity";
-import { IEntitySource } from "./entity-source.interface";
 import { createCriterionFromEntities } from "./functions/create-criterion-from-entities.fn";
 import { createQueriesFromEntities } from "./functions/create-queries-from-entities.fn";
 import { joinEntities } from "./functions/join-entities.fn";
 import { normalizeEntities } from "./functions/normalize-entities.fn";
 import { EntityStore } from "./store/entity-store";
 
-export class InMemoryEntityDatabase implements IEntitySource {
+export class InMemoryEntityDatabase {
     private readonly stores = new Map<string, EntityStore>();
 
     async query(query: Query): Promise<false | EntitySet[]> {
@@ -30,7 +29,7 @@ export class InMemoryEntityDatabase implements IEntitySource {
         return result ? [result] : result;
     }
 
-    querySync<T>(query: Query<T>): EntitySet<T> {
+    querySync<T = Entity>(query: Query): EntitySet<T> {
         const store = this.getOrCreateStore(query.getEntitySchema());
         const criterion = this.withoutRetlationalCriteria(query.getCriteria(), query.getEntitySchema());
         let entities = store.getByCriterion(criterion) as T[];
@@ -48,7 +47,7 @@ export class InMemoryEntityDatabase implements IEntitySource {
             entities = query.getCriteria().filter(entities);
         }
 
-        return new EntitySet({ query, entities });
+        return new EntitySet<T>({ query, entities });
     }
 
     // [todo] i think introduction of this broke workspace playground tests
@@ -118,7 +117,11 @@ export class InMemoryEntityDatabase implements IEntitySource {
             return first[propertyKey] !== void 0;
         };
 
-        const expansionObject = expansion.getObject();
+        let expansionObject = expansion.getValue();
+
+        if (expansionObject === true) {
+            expansionObject = schema.getDefaultExpansion();
+        }
 
         for (const propertyKey in expansionObject) {
             const expansionValue = expansionObject[propertyKey];
@@ -136,7 +139,7 @@ export class InMemoryEntityDatabase implements IEntitySource {
                 const referencedItems: Entity[] = [];
 
                 for (const entity of entities) {
-                    const reference = walkPath<Entity>(propertyKey, entity);
+                    const reference = readPath<Entity>(propertyKey, entity);
 
                     if (Array.isArray(reference)) {
                         referencedItems.push(...reference);
@@ -146,27 +149,23 @@ export class InMemoryEntityDatabase implements IEntitySource {
                 }
 
                 const entitySchema = property.getUnboxedEntitySchema();
-                this.expandEntities(entitySchema, new Expansion(expansionValue), referencedItems);
+                this.expandEntities(
+                    entitySchema,
+                    new Expansion({ schema: entitySchema, value: expansionValue }),
+                    referencedItems
+                );
             }
         }
     }
 
-    private expandRelation(entities: Entity[], relation: IEntitySchemaRelation, expansion?: ExpansionObject): void {
+    private expandRelation(entities: Entity[], relation: IEntitySchemaRelation, expansion?: ExpansionValue): void {
         const relatedSchema = relation.getRelatedEntitySchema();
         // [todo] what about dictionaries?
         const isArray = relation.getProperty().getValueSchema().schemaType === "array";
         const fromIndex = relation.getFromIndex();
         const toIndex = relation.getToIndex();
         const criteria = createCriterionFromEntities(entities, fromIndex.getPath(), toIndex.getPath());
-        const query = new Query(
-            relatedSchema,
-            criteria,
-            expansion ??
-                relatedSchema
-                    .getProperties()
-                    .filter(property => !relatedSchema.findRelation(property.getName()))
-                    .reduce((acc, property) => ({ ...acc, [property.getName()]: true }), {} as ExpansionObject)
-        );
+        const query = new Query(relatedSchema, criteria, expansion ?? relatedSchema.getDefaultExpansion());
 
         const result = this.querySync(query);
 

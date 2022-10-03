@@ -1,4 +1,4 @@
-import { Blueprint, define, Instance, MetadataReference } from "@entity-space/core";
+import { Blueprint, define, BlueprintInstance, MetadataReference } from "@entity-space/core";
 import { ArtistBlueprint } from "./artist";
 import { SongLocation } from "./song-location";
 
@@ -15,6 +15,7 @@ export class SongBlueprint {
         from: "id",
         to: "songId",
     });
+    // [todo] not yet used, need to implement discriminated unions first
     // locations = define([LocalSongLocationBlueprint, WebSongLocationBlueprint], {
     //     array: true,
     //     relation: true,
@@ -23,4 +24,4 @@ export class SongBlueprint {
     // });
 }
 
-export type Song = Instance<SongBlueprint>;
+export type Song = BlueprintInstance<SongBlueprint>;

@@ -1,12 +1,14 @@
+import { ExpansionValue } from "@entity-space/common";
 import { any, Criterion, fromDeepBag, isValue, matches, MatchesBagArgument } from "@entity-space/criteria";
-import { Class, DeepPartial, isDefined, tramplePath } from "@entity-space/utils";
-import { flatMap, isEqual, xor, xorWith } from "lodash";
+import { Class, DeepPartial, isDefined, writePath } from "@entity-space/utils";
+import { flatMap, flatten, isEqual, xor, xorWith } from "lodash";
 import {
     distinctUntilChanged,
     EMPTY,
     filter,
     finalize,
     from,
+    lastValueFrom,
     map,
     Observable,
     of,
@@ -15,28 +17,30 @@ import {
     Subject,
     switchMap,
 } from "rxjs";
-import { ExpansionObject } from "../expansion/expansion-object";
-import { IEntityHydrator, IEntitySource_V2, mergeQueries, Query, reduceQueries } from "../query";
+import { EntityHydrationQuery } from "../execution/entity-hydration-query";
+import { IEntityHydrator } from "../execution/i-entity-hydrator";
+import { IEntitySource } from "../execution/i-entity-source";
+import { mergeQueries } from "../query/merge-queries.fn";
+import { Query } from "../query/query";
+import { reduceQueries } from "../query/reduce-queries.fn";
+import { BlueprintInstance } from "../schema/blueprint-instance";
+import { EntitySchemaCatalog } from "../schema/entity-schema-catalog";
 import { IEntitySchema } from "../schema/schema.interface";
-import { BlueprintResolver, Instance } from "./blueprint";
-import { EntityHydrationQuery, EntitySet } from "./data-structures";
+import { EntitySet } from "./data-structures/entity-set";
 import { Entity } from "./entity";
-import { IEntitySource } from "./entity-source.interface";
-import { normalizeEntities } from "./functions";
 import { createCriterionFromEntities } from "./functions/create-criterion-from-entities.fn";
+import { normalizeEntities } from "./functions/normalize-entities.fn";
 import { IEntityStore } from "./i-entity-store";
 import { InMemoryEntityDatabase } from "./in-memory-entity-database";
 
-export class Workspace implements IEntitySource, IEntityStore {
+export class Workspace implements IEntityStore {
     private source?: IEntitySource;
-    private source_v2?: IEntitySource_V2;
     private store?: IEntityStore;
     private hydrator?: IEntityHydrator;
-    private blueprintResolver?: BlueprintResolver;
+    private schemas?: EntitySchemaCatalog;
     private readonly queryCaches = new Map<string, Query[]>();
     private readonly queryCacheChanged = new Subject<Query[]>();
-    // private readonly entityCache = new EntityCache();
-    private readonly entityCache = new InMemoryEntityDatabase();
+    private readonly database = new InMemoryEntityDatabase();
     private readonly watchedQueries = new Map<Query, Subject<Entity[]>>();
 
     onQueryCacheChanged(): Observable<Query[]> {
@@ -45,7 +49,7 @@ export class Workspace implements IEntitySource, IEntityStore {
 
     // [todo] rename to upsert()?
     // [todo] we allow partials, but types don't reflect that (same @ cache and store)
-    add<T>(schema: Class<T>, entities: DeepPartial<Instance<T>>[] | DeepPartial<Instance<T>>): void;
+    add<T>(schema: Class<T>, entities: DeepPartial<BlueprintInstance<T>>[] | DeepPartial<BlueprintInstance<T>>): void;
     add<T extends Entity = Entity>(schema: IEntitySchema, entities: DeepPartial<T>[] | DeepPartial<T>): void;
     add(schema: IEntitySchema | Class, entities: Entity[] | Entity): void {
         schema = this.toSchema(schema);
@@ -55,13 +59,21 @@ export class Workspace implements IEntitySource, IEntityStore {
             entities = [entities];
         }
 
+        if (!entities.length) {
+            return;
+        }
+
         // [todo] adding the overloads to support both schemas & blueprints caused having to add this "as Entity[]" assertion, no idea why
-        const queries = this.entityCache.addEntities(schema, entities as Entity[]);
+        const queries = this.database.addEntities(schema, entities as Entity[]);
 
         for (const query of queries) {
             this.addExecutedQuery(query);
         }
 
+        this.emitAllWatchedQueries();
+    }
+
+    private emitAllWatchedQueries(): void {
         for (const [watchedQuery, subject] of this.watchedQueries) {
             new Promise(resolve => setTimeout(resolve, 0))
                 .then(() => this.queryAgainstCache(watchedQuery))
@@ -81,81 +93,29 @@ export class Workspace implements IEntitySource, IEntityStore {
         this.store = store;
     }
 
-    setBlueprintResolver(resolver: BlueprintResolver): void {
-        this.blueprintResolver = resolver;
+    setSchemaCatalog(schemas: EntitySchemaCatalog): void {
+        this.schemas = schemas;
     }
 
     private addExecutedQuery(query: Query): void {
         const executedQueries = this.getCachedQueries(query.getEntitySchema());
-        const merged = mergeQueries(query, ...executedQueries);
-        this.queryCaches.set(query.getEntitySchema().getId(), merged);
-
-        const allQueriesInCache: Query[] = [];
-
-        for (const [_, queries] of this.queryCaches) {
-            allQueriesInCache.push(...queries);
-        }
-
-        this.queryCacheChanged.next(allQueriesInCache);
-    }
-
-    private async loadUncachedIntoCache(query: Query): Promise<void> {
-        const cachedQueries = this.getCachedQueries(query.getEntitySchema());
-        const reduced = reduceQueries([query], cachedQueries);
-        const entities: Entity[] = [];
-        const queriesAgainstSource = reduced === false ? [query] : reduced;
-
-        // [todo] call in parallel
-        for (const queryAgainstSource of queriesAgainstSource) {
-            const result = await this.loadFromSource(queryAgainstSource);
-
-            if (result === false) {
-                console.warn(
-                    "encountered a query that could not be executed against source",
-                    queriesAgainstSource.join(",")
-                );
-                continue;
-            }
-
-            for (const queried of result) {
-                entities.push(...queried.getEntities());
-            }
-
-            // [todo] should it not be queryAgainstSource?
-            // if not, move out of loop
-            // [todo] actually, maybe it should be result[i].getQuery()?
-            // this.addExecutedQuery(query);
-            // [todo] for now i decided caching queryAgainstSource, as that fixes the issue in products example
-            // where you execute criteria = any, expansion = reviews, and since the controller endpoint doesn't
-            // support any expansion, we don't get reviews back, but we cache it as if we had, so a subsequent
-            // call using e.g. minRating = 3 won't have reviews included
-            this.addExecutedQuery(queryAgainstSource);
-        }
-
-        if (entities.length > 0) {
-            this.add(query.getEntitySchema(), entities);
-        }
-    }
-
-    private async loadFromSource(query: Query): Promise<false | EntitySet[]> {
-        if (this.source === void 0) {
-            return false;
-        }
-
-        const result = await this.source.query(query);
-
-        // if (result !== false) {
-        //     for (const queried of result) {
-        //         console.log("[effective-query]", queried.getQuery().getCriteria().toString());
-        //     }
-        // }
-
-        return result;
+        this.queryCaches.set(query.getEntitySchema().getId(), mergeQueries(query, ...executedQueries));
+        this.queryCacheChanged.next(flatten(Array.from(this.queryCaches.values())));
     }
 
     // [todo] T not used yet; need to add it to QueriedEntities
     async query<T extends Entity = Entity>(query: Query): Promise<false | EntitySet<T>[]> {
-        await this.loadUncachedIntoCache(query);
+        if (this.source) {
+            const reduced = reduceQueries([query], this.getCachedQueries(query.getEntitySchema()));
+            const queriesAgainstSource = reduced === false ? [query] : reduced;
+
+            if (queriesAgainstSource.length) {
+                await lastValueFrom(this.source.query$(queriesAgainstSource, this.database));
+                queriesAgainstSource.forEach(query => this.addExecutedQuery(query));
+                this.emitAllWatchedQueries();
+            }
+        }
+
         const entities = (await this.queryAgainstCache(query)) as T[];
 
         return [new EntitySet({ query, entities })];
@@ -164,14 +124,18 @@ export class Workspace implements IEntitySource, IEntityStore {
     // [todo] not reactive yet
     hydrate$<T>(
         blueprint: Class<T>,
-        entities: Instance<T>[],
-        expansion: ExpansionObject<T>
-    ): Observable<Instance<T>[]> {
+        entities: BlueprintInstance<T>[],
+        expansion: ExpansionValue<BlueprintInstance<T>>
+    ): Observable<BlueprintInstance<T>[]> {
+        if (!entities.length) {
+            return of([]);
+        }
+
         if (!this.hydrator) {
             return EMPTY;
         }
 
-        const schema = this.blueprintResolver?.resolve(blueprint);
+        const schema = this.schemas?.resolve(blueprint);
 
         if (!schema) {
             return EMPTY;
@@ -179,38 +143,41 @@ export class Workspace implements IEntitySource, IEntityStore {
 
         const criteria = createCriterionFromEntities(entities, schema.getKey().getPath());
         const query = new Query(schema, criteria, expansion);
-        const database = new InMemoryEntityDatabase();
-        database.addEntities(schema, entities);
+        const reduced = reduceQueries([query], this.getCachedQueries(query.getEntitySchema())) || [query];
 
-        const hydrationQuery = new EntityHydrationQuery<Instance<T>>({
+        if (!reduced.length) {
+            return of(this.database.querySync(query).getEntities()) as Observable<BlueprintInstance<T>[]>;
+        }
+
+        const hydrationQuery = new EntityHydrationQuery<BlueprintInstance<T>>({
             entitySet: new EntitySet({ query: new Query(schema, criteria), entities }),
-            query,
+            query: reduced[0], // [todo] dirty
         });
 
-        return this.hydrator.hydrate$(hydrationQuery, database).pipe(
+        return this.hydrator.hydrate$(hydrationQuery, this.database).pipe(
             map(() => {
-                return database.querySync(query).getEntities();
+                return this.database.querySync(query).getEntities();
             })
-        ) as Observable<Instance<T>[]>;
+        ) as Observable<BlueprintInstance<T>[]>;
     }
 
     query$<T extends Entity>(
         schema: IEntitySchema,
         criterion?: Criterion | MatchesBagArgument<T>,
-        expansion?: ExpansionObject<T>
+        expansion?: ExpansionValue<T>
     ): Observable<T[]>;
     query$<T extends Entity>(
         schema: Class<T>,
         criterion?: MatchesBagArgument<T>,
-        expansion?: ExpansionObject<Instance<T>>
-    ): Observable<Instance<T>[]>;
+        expansion?: ExpansionValue<BlueprintInstance<T>>
+    ): Observable<BlueprintInstance<T>[]>;
     query$<T extends Entity>(
         schema: IEntitySchema | Class<T>,
         criterion: any = any(),
-        expansion: ExpansionObject<T> = {}
+        expansion: ExpansionValue<T> = {}
     ): Observable<T[]> {
         if (!("getId" in schema)) {
-            const resolvedSchema = this.blueprintResolver?.resolve(schema);
+            const resolvedSchema = this.schemas?.resolve(schema);
 
             if (!resolvedSchema) {
                 throw new Error(`failed to resolve blueprint to schema for type ${schema.name}`);
@@ -244,7 +211,7 @@ export class Workspace implements IEntitySource, IEntityStore {
                 // [todo] remove subject once no longer subscribed to
                 this.watchedQueries.set(
                     query,
-                    // new Query(query.getEntitySchema(), trackedCriterion, query.getExpansionObject()),
+                    // new Query(query.getEntitySchema(), trackedCriterion, query.getExpansionValue()),
                     subject
                 );
 
@@ -300,20 +267,20 @@ export class Workspace implements IEntitySource, IEntityStore {
     queryOneByKey$<T extends Entity>(
         schema: IEntitySchema,
         key: number | string,
-        expansion?: ExpansionObject<T>
+        expansion?: ExpansionValue<T>
     ): Observable<T>;
     queryOneByKey$<T>(
         schema: Class<T>,
         key: number | string,
-        expansion?: ExpansionObject<Instance<T>>
-    ): Observable<Instance<T>>;
+        expansion?: ExpansionValue<BlueprintInstance<T>>
+    ): Observable<BlueprintInstance<T>>;
     queryOneByKey$<T extends Entity>(
         schema: IEntitySchema | Class<T>,
         key: number | string,
-        expansion: ExpansionObject<T> = {}
+        expansion: ExpansionValue<T> = {}
     ): Observable<T> {
         if (!("getId" in schema)) {
-            const resolvedSchema = this.blueprintResolver?.resolve(schema);
+            const resolvedSchema = this.schemas?.resolve(schema);
 
             if (!resolvedSchema) {
                 throw new Error(`failed to resolve blueprint to schema for type ${schema.name}`);
@@ -329,7 +296,7 @@ export class Workspace implements IEntitySource, IEntityStore {
         }
 
         const bag: Record<string, any> = {};
-        tramplePath(keyPath[0], bag, isValue(key));
+        writePath(keyPath[0], bag, isValue(key));
 
         return this.query$(schema, fromDeepBag(bag), expansion).pipe(
             map(result => result[0]),
@@ -337,17 +304,10 @@ export class Workspace implements IEntitySource, IEntityStore {
         );
     }
 
-    // [todo] remove any
     // [todo] should stay async because at one point i want to make use of service-workers
     // [todo] should not exist at all? (or be private)
     async queryAgainstCache(query: Query): Promise<Entity[]> {
-        const result = await this.entityCache.query(query);
-
-        if (result === false) {
-            return [];
-        }
-
-        return result.map(queried => queried.getEntities()).reduce((acc, value) => [...acc, ...value], []);
+        return this.database.querySync(query).getEntities();
     }
 
     async create<T extends Entity>(entities: T[], schema: IEntitySchema): Promise<false | T[]> {
@@ -380,7 +340,7 @@ export class Workspace implements IEntitySource, IEntityStore {
 
     clear(): void {
         this.queryCaches.clear();
-        this.entityCache.clear();
+        this.database.clear();
         this.queryCacheChanged.next([]);
     }
 
@@ -397,7 +357,7 @@ export class Workspace implements IEntitySource, IEntityStore {
 
     private toSchema(schema: IEntitySchema | Class): IEntitySchema {
         if (!("getId" in schema)) {
-            const resolvedSchema = this.blueprintResolver?.resolve(schema);
+            const resolvedSchema = this.schemas?.resolve(schema);
 
             if (!resolvedSchema) {
                 throw new Error(`failed to resolve blueprint to schema for type ${schema.name}`);

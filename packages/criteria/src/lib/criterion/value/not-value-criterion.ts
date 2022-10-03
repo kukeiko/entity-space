@@ -1,8 +1,8 @@
-import { getInstanceClass, PrimitiveIncludingNull } from "@entity-space/utils";
+import { getInstanceClass, Null, Primitive } from "@entity-space/utils";
 import { Criterion } from "../criterion";
 import { isValue } from "./is-value.fn";
 
-export class NotValueCriterion<T extends PrimitiveIncludingNull = PrimitiveIncludingNull> extends Criterion {
+export class NotValueCriterion<T extends Primitive | typeof Null = Primitive | typeof Null> extends Criterion {
     constructor(valueTypes: T[], value: ReturnType<T>) {
         super();
         this.valueTypes = Object.freeze(valueTypes.slice());

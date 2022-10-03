@@ -1,5 +1,5 @@
 import { or } from "@entity-space/criteria";
-import { Expansion } from "../expansion";
+import { Expansion } from "../expansion/expansion";
 import { Query } from "./query";
 
 // [todo] clean up this method, it is really hard to read and hacked together.
@@ -15,7 +15,7 @@ export function mergeQuery(a: Query, b: Query): false | Query {
         return new Query(
             entitySchema,
             a.getCriteria(),
-            Expansion.mergeObjects(a.getExpansionObject(), b.getExpansionObject())
+            Expansion.mergeValues(a.getEntitySchema(), a.getExpansionValue(), b.getExpansionValue())
         );
     }
 
@@ -27,7 +27,7 @@ export function mergeQuery(a: Query, b: Query): false | Query {
     const bIsSubsetOfA = expandReduced_B_by_A !== false && Object.keys(expandReduced_B_by_A).length === 0;
 
     if (aIsSubsetOfB && bIsSubsetOfA && mergedCriteria === false) {
-        return new Query(entitySchema, or(a.getCriteria(), b.getCriteria()), a.getExpansionObject());
+        return new Query(entitySchema, or(a.getCriteria(), b.getCriteria()), a.getExpansionValue());
     }
 
     if (mergedCriteria === false) {
@@ -36,24 +36,24 @@ export function mergeQuery(a: Query, b: Query): false | Query {
 
     if (aIsSubsetOfB && bIsSubsetOfA) {
         // equal expansion
-        return new Query(entitySchema, mergedCriteria, a.getExpansionObject());
+        return new Query(entitySchema, mergedCriteria, a.getExpansionValue());
     } else if (aIsSubsetOfB) {
         // [todo] use criterion.equivalent()
         if (a.getCriteria().reduce(b.getCriteria()) === true && b.getCriteria().reduce(a.getCriteria()) === true) {
             // equal criteria
-            return new Query(entitySchema, mergedCriteria, b.getExpansionObject());
+            return new Query(entitySchema, mergedCriteria, b.getExpansionValue());
         } else if (b.getCriteria().reduce(a.getCriteria()) === true) {
             // [todo] redundant?
-            return new Query(entitySchema, mergedCriteria, b.getExpansionObject());
+            return new Query(entitySchema, mergedCriteria, b.getExpansionValue());
         }
     } else if (bIsSubsetOfA) {
         // [todo] use criterion.equivalent()
         if (a.getCriteria().reduce(b.getCriteria()) === true && b.getCriteria().reduce(a.getCriteria()) === true) {
             // equal criteria
-            return new Query(entitySchema, mergedCriteria, a.getExpansionObject());
+            return new Query(entitySchema, mergedCriteria, a.getExpansionValue());
         } else if (a.getCriteria().reduce(b.getCriteria()) === true) {
             // [todo] redundant?
-            return new Query(entitySchema, mergedCriteria, a.getExpansionObject());
+            return new Query(entitySchema, mergedCriteria, a.getExpansionValue());
         }
     }
 

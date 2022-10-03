@@ -7,9 +7,8 @@ export default {
             tsconfig: "<rootDir>/tsconfig.spec.json",
         },
     },
-    testEnvironment: "node",
     transform: {
-        "^.+\\.[tj]sx?$": "ts-jest",
+        "^.+\\.[tj]s$": "ts-jest",
     },
     moduleFileExtensions: ["ts", "tsx", "js", "jsx"],
     coverageDirectory: "../../coverage/packages/core",

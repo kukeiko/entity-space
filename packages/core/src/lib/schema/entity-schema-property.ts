@@ -1,12 +1,14 @@
 import { IEntitySchema, IEntitySchemaProperty, IPrimitiveSchema, IPropertyValueSchema } from "./schema.interface";
 
 export class EntitySchemaProperty implements IEntitySchemaProperty {
-    constructor(entitySchema: IEntitySchema, name: string, valueSchema: IPropertyValueSchema) {
+    constructor(entitySchema: IEntitySchema, name: string, valueSchema: IPropertyValueSchema, required = false) {
         this.name = name;
         this.valueSchema = valueSchema;
         this.entitySchema = entitySchema;
+        this.required = required;
     }
 
+    private required = false;
     private readOnly = false;
     private writeOnly = false;
 
@@ -55,16 +57,24 @@ export class EntitySchemaProperty implements IEntitySchemaProperty {
         return this.valueSchema;
     }
 
+    isRequired(): boolean {
+        return this.required;
+    }
+
+    setRequired(flag: boolean): void {
+        this.required = flag;
+    }
+
     isReadOnly(): boolean {
         return this.readOnly;
     }
 
-    isWriteOnly(): boolean {
-        return this.writeOnly;
-    }
-
     setReadOnly(flag: boolean): void {
         this.readOnly = flag;
+    }
+
+    isWriteOnly(): boolean {
+        return this.writeOnly;
     }
 
     setWriteOnly(flag: boolean): void {

@@ -1,4 +1,4 @@
-import { tramplePath, walkPath } from "@entity-space/utils";
+import { writePath, readPath } from "@entity-space/utils";
 import { ComplexKeyMap } from "../data-structures/complex-key-map";
 import { Entity } from "../entity";
 
@@ -13,26 +13,26 @@ function joinEntitiesOnePath(
     const fromMap = new Map<any, Entity[]>();
 
     for (const entity of fromEntities) {
-        const value = walkPath(fromPath, entity);
+        const value = readPath(fromPath, entity);
         const array = fromMap.get(value) ?? fromMap.set(value, []).get(value)!;
         array.push(entity);
     }
 
     for (const toEntity of toEntities) {
-        const value = walkPath(toPath, toEntity);
+        const value = readPath(toPath, toEntity);
         const fromEntities = fromMap.get(value) ?? [];
 
         for (const fromEntity of fromEntities) {
             if (isArray) {
-                let array = walkPath(joinedProperty, fromEntity) as Entity[] | undefined;
+                let array = readPath(joinedProperty, fromEntity) as Entity[] | undefined;
 
                 if (!array) {
-                    tramplePath(joinedProperty, fromEntity, [toEntity]);
+                    writePath(joinedProperty, fromEntity, [toEntity]);
                 } else {
                     array.push(toEntity);
                 }
             } else {
-                tramplePath(joinedProperty, fromEntity, toEntity);
+                writePath(joinedProperty, fromEntity, toEntity);
             }
         }
     }
@@ -57,15 +57,15 @@ function joinEntitiesManyPaths(
 
         for (const fromEntity of fromEntities) {
             if (isArray) {
-                let array = walkPath(joinedProperty, fromEntity) as Entity[] | undefined;
+                let array = readPath(joinedProperty, fromEntity) as Entity[] | undefined;
 
                 if (!array) {
-                    tramplePath(joinedProperty, fromEntity, [toEntity]);
+                    writePath(joinedProperty, fromEntity, [toEntity]);
                 } else {
                     array.push(toEntity);
                 }
             } else {
-                tramplePath(joinedProperty, fromEntity, toEntity);
+                writePath(joinedProperty, fromEntity, toEntity);
             }
         }
     }

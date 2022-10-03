@@ -1,4 +1,4 @@
-import { isPrimitiveOrNull, PrimitiveIncludingNull } from "@entity-space/utils";
+import { isPrimitiveOrNull, Null, Primitive } from "@entity-space/utils";
 import { Criterion } from "../criterion/criterion";
 import { OrCriteria } from "../criterion/or/or-criteria";
 import { InSetCriterion } from "../criterion/set/in-set-criterion";
@@ -7,7 +7,7 @@ import { ICriterionTemplate } from "./criterion-template.interface";
 import { RemapCriterionResult } from "./remap-criterion-result";
 import { remapOrCriteria } from "./remap-or-criteria.fn";
 
-export class InSetCriterionTemplate<T extends PrimitiveIncludingNull = PrimitiveIncludingNull>
+export class InSetCriterionTemplate<T extends Primitive | typeof Null = Primitive | typeof Null>
     implements ICriterionTemplate<InSetCriterion<ReturnType<T>>>
 {
     constructor(valueTypes: T[]) {
