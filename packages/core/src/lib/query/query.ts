@@ -50,7 +50,7 @@ export class Query {
     }
 
     toString(): string {
-        const expansion = this.expansion.isEmpty() ? "" : "/" + JSON.stringify(this.expansion.getValue());
+        const expansion = this.expansion.isEmpty() ? "" : "/" + this.expansion.toString();
         const criterion = this.criteria instanceof AnyCriterion ? "" : ":" + this.criteria.toString();
 
         return `${this.entitySchema.getId()}${criterion}${expansion}`;

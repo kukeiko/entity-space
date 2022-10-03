@@ -23,6 +23,21 @@ export class Expansion {
         return Object.keys(this.value).length === 0;
     }
 
+    toString(): string {
+        return Expansion.toString(this.value);
+    }
+
+    static toString(value?: ExpansionValue): string {
+        // [todo] expansion value allowing undefined is a bit of a pain, gotta fix that somehow.
+        if (value === true || value === void 0) {
+            return "";
+        }
+
+        return `{ ${Object.entries(value)
+            .map(([key, value]) => (value === true ? key : `${key}: ${this.toString(value)}`))
+            .join(", ")} }`;
+    }
+
     reduce(other: Expansion): boolean | Expansion {
         if (other.isEmpty()) {
             return true;
