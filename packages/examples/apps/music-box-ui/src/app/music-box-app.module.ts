@@ -8,6 +8,7 @@ import { SongBlueprint, SongLocationEntitySchema } from "@entity-space/examples/
 import { ButtonModule } from "primeng/button";
 import { DialogModule } from "primeng/dialog";
 import { DropdownModule } from "primeng/dropdown";
+import { InputMaskModule } from "primeng/inputmask";
 import { InputNumberModule } from "primeng/inputnumber";
 import { InputTextModule } from "primeng/inputtext";
 import { MultiSelectModule } from "primeng/multiselect";
@@ -34,6 +35,7 @@ import { MusicBoxClientSideEntityApi } from "./music-box-client-side-entity-api"
         TableModule,
         TabViewModule,
         InputNumberModule,
+        InputMaskModule,
     ],
     declarations: [MusicAppComponent, SongTableComponent, ArtistTableComponent],
     providers: [

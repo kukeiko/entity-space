@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from "@angular/core";
 import { Blueprint, BlueprintInstance, define, EntitySchemaCatalog, Query, Workspace } from "@entity-space/core";
-import { matches, some } from "@entity-space/criteria";
+import { inRange, matches, some } from "@entity-space/criteria";
 import {
     Artist,
     ArtistBlueprint,
@@ -27,6 +27,8 @@ interface MusicBoxAppState {
 class MusicBoxUiFilter {
     artists = define(ArtistBlueprint, { array: true, required: true });
     locationTypes = define(SongLocationTypeBlueprint, { array: true, required: true });
+    duration = define(Number, { array: true, required: true });
+    updateHack = define(String);
 }
 
 @Blueprint({ id: "music-box-ui-state" })
@@ -64,6 +66,7 @@ export class MusicAppComponent implements OnInit, OnDestroy {
                     {
                         artistId: pluckId(ui.filter.artists),
                         locations: some(matches<SongLocation>({ songLocationType: pluckId(ui.filter.locationTypes) })),
+                        duration: inRange(ui.filter.duration[0] ?? void 0, ui.filter.duration[1] ?? void 0),
                     },
                     {
                         id: true,
@@ -98,7 +101,7 @@ export class MusicAppComponent implements OnInit, OnDestroy {
     ngOnInit(): void {
         this.workspace.add(MusicBoxUiStateBlueprint, {
             id: this.stateId,
-            filter: { artists: [], locationTypes: [] },
+            filter: { artists: [], locationTypes: [], duration: [0, 600] },
         });
 
         this.workspace.add(SongLocationTypeBlueprint, [
@@ -121,6 +124,8 @@ export class MusicAppComponent implements OnInit, OnDestroy {
         this.workspace.add(this.schemas.resolve(MusicBoxUiStateBlueprint), {
             id: this.stateId,
             ...change,
+            // [todo] workspace doesn't see change for ui.filter.duration, so added this hack here
+            updateHack: (Math.random() * 1337).toString(16),
         });
     }
 }

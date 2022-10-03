@@ -21,6 +21,7 @@
             <td *ngFor="let column of columns" [ngSwitch]="column.field">
                 <span *ngSwitchCase="'artist'">{{ song.artist?.name }}</span>
                 <span *ngSwitchCase="'url'">{{ getUrl(song) }}</span>
+                <span *ngSwitchCase="'duration'">{{ secondsToTimeString(song.duration) }}</span>
                 <span *ngSwitchDefault>{{ song[column.field] }}</span>
             </td>
             <td>
@@ -57,7 +58,7 @@
         </div>
         <div class="field">
             <label for="duration">Duration</label>
-            <p-inputNumber name="duration" id="duration" [(ngModel)]="editedSong.duration"></p-inputNumber>
+            <p-inputMask name="duration" id="duration" mask="99:99" [(ngModel)]="editedDuration"></p-inputMask>
         </div>
         <div class="field">
             <label for="webUrl">Url</label>

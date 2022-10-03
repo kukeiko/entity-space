@@ -63,18 +63,25 @@ export class SongTableComponent {
     editDialogVisible = false;
     editedSong?: Song;
     editedWebUrl = "";
+    editedDuration = "";
 
     createSong(): void {
         // [todo] implement & use EntitySchema.createDefault()
         this.editedSong = { artistId: 0, duration: 0, id: 0, name: "" };
         this.editedWebUrl = "";
+        this.editedDuration = "";
         this.editDialogVisible = true;
+    }
+
+    secondsToTimeString(seconds?: number): string {
+        return new Date(1000 * (seconds ?? 0)).toISOString().slice(14, 19);
     }
 
     editSong(song: Song): void {
         // [todo] use some copying mechanism from entity-space instead
         this.editedSong = { ...song };
         this.editedWebUrl = this.getUrl(song) ?? "";
+        this.editedDuration = this.secondsToTimeString(song.duration);
         console.log("✍ edit song", this.editedSong);
         this.editDialogVisible = true;
     }
@@ -85,8 +92,22 @@ export class SongTableComponent {
         return webLocation?.url;
     }
 
+    getEditedDuration(): number {
+        const [seconds, minutes, hours] = this.editedDuration
+            .split(":")
+            .reverse()
+            .map(value => +value);
+
+        return seconds + minutes * 60 + hours * 60 * 60;
+    }
+
     async saveSong(): Promise<void> {
         console.log("💾 save song", this.editedSong);
+        if (!this.editedSong) {
+            return;
+        }
+
+        this.editedSong.duration = this.getEditedDuration();
 
         if (this.editedSong?.id ?? 0 > 0) {
             if (this.editedWebUrl) {

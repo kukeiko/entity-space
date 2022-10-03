@@ -1,10 +1,16 @@
 {
     "song": [
         {
+            "artistId": 6,
+            "duration": 423,
+            "id": 19,
+            "name": "Hygge"
+        },
+        {
             "artistId": 2,
             "duration": 0,
             "id": 18,
-            "name": "Salzburg 2"
+            "name": "Salzburg"
         },
         {
             "artistId": 5,
@@ -21,26 +27,35 @@
         {
             "name": "Plein Ciel",
             "id": 15,
-            "artistId": 3
+            "artistId": 3,
+            "duration": 0
         },
         {
             "name": "Entrudo",
             "id": 14,
-            "artistId": 2
+            "artistId": 2,
+            "duration": 0
         },
         {
             "name": "Sacralicious",
             "id": 13,
-            "artistId": 1
+            "artistId": 1,
+            "duration": 0
         },
         {
-            "artistId": 6,
-            "duration": 423,
-            "id": 19,
-            "name": "Hygge"
+            "artistId": 7,
+            "duration": 467,
+            "id": 20,
+            "name": "Colourless Water"
         }
     ],
     "song-location": [
+        {
+            "id": 7,
+            "songId": 19,
+            "songLocationType": "web",
+            "url": "https://www.youtube.com/watch?v=rlZAzo0uTDI"
+        },
         {
             "id": 6,
             "songId": 18,
@@ -78,13 +93,17 @@
             "id": 1
         },
         {
-            "id": 7,
-            "songId": 19,
+            "id": 8,
+            "songId": 20,
             "songLocationType": "web",
-            "url": "https://www.youtube.com/watch?v=rlZAzo0uTDI"
+            "url": "https://www.youtube.com/watch?v=EKbrNPVi_Ok"
         }
     ],
     "artist": [
+        {
+            "id": 6,
+            "name": "Ikaro Grati"
+        },
         {
             "id": 5,
             "name": "Nils Andreas"
@@ -106,8 +125,8 @@
             "id": 1
         },
         {
-            "id": 6,
-            "name": "Ikaro Grati"
+            "id": 7,
+            "name": "Kyrill & Redford"
         }
     ]
 }

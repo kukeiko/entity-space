@@ -26,6 +26,16 @@
                         panelStyleClass="min-w-max"
                     ></p-multiSelect>
                 </div>
+                <div class="field col-1">
+                    <label for="duration">Duration</label>
+                    <p-slider
+                        [ngModel]="state.ui.filter.duration"
+                        (ngModelChange)="changeUiState('filter.duration', $event)"
+                        [range]="true"
+                        [min]="0"
+                        [max]="600"
+                    ></p-slider>
+                </div>
             </div>
             <song-table [songs]="state.data.songs"></song-table>
         </ng-template>
