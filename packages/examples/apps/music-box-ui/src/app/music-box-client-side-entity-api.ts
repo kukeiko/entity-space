@@ -1,5 +1,12 @@
 import { HttpClient } from "@angular/common/http";
-import { Entity, EntityApi, EntitySchemaCatalog, IEntitySchema, IEntityStore } from "@entity-space/core";
+import {
+    Entity,
+    EntityApi,
+    EntityQueryTracing,
+    EntitySchemaCatalog,
+    IEntitySchema,
+    IEntityStore,
+} from "@entity-space/core";
 import { inSetTemplate, isValueTemplate } from "@entity-space/criteria";
 import { Artist, ArtistBlueprint, Song, SongBlueprint, SongLocation } from "@entity-space/examples/libs/music-model";
 import { firstValueFrom } from "rxjs";
@@ -7,10 +14,10 @@ import { firstValueFrom } from "rxjs";
 export class MusicBoxClientSideEntityApi extends EntityApi implements IEntityStore {
     constructor(
         private readonly http: HttpClient,
-
-        private readonly schemas: EntitySchemaCatalog
+        private readonly schemas: EntitySchemaCatalog,
+        tracing: EntityQueryTracing
     ) {
-        super();
+        super(tracing);
     }
 
     create(entities: Entity[], schema: IEntitySchema<Entity>): Promise<false | Entity[]> {

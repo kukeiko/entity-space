@@ -69,7 +69,7 @@ export class QueryStreamPacket<T extends Entity = Entity> {
     toString(): string {
         const accepted = this.accepted.length == 0 ? "" : "✔️ " + this.accepted.join(",");
         const rejected = this.rejected.length == 0 ? "" : "❌ " + this.rejected.join(",");
-        const entities = this.getEntitiesFlat().length == 0 ? "" : "📦 " + JSON.stringify(this.getEntitiesFlat());
+        const entities = this.getEntitiesFlat().length == 0 ? "" : "🎁 " + JSON.stringify(this.getEntitiesFlat());
 
         return [accepted, rejected, entities].filter(str => str.length > 0).join(", ");
     }

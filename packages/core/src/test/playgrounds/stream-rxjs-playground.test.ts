@@ -2,6 +2,7 @@ import { ExpansionValue } from "@entity-space/common";
 import { Criterion, inSet, isValueTemplate, matches } from "@entity-space/criteria";
 import { cloneDeep } from "lodash";
 import { EntityApi, EntitySchema, EntitySourceGateway, PrimitiveSchema, Query } from "../../index";
+import { EntityQueryTracing } from "../../lib/tracing/entity-query-tracing";
 import { queryTestHelper } from "../tools/query-test-helper.fn";
 
 describe("playground: stream", () => {
@@ -99,6 +100,10 @@ describe("playground: stream", () => {
     };
 
     class FooAndBarAndFooChildController extends EntityApi {
+        constructor() {
+            super(new EntityQueryTracing());
+        }
+
         withLoadFooChildByFooId(): this {
             return this.addEndpoint(fooChildSchema, builder =>
                 builder
@@ -172,7 +177,7 @@ describe("playground: stream", () => {
             .withLoadBarByEvenId()
             // .withLoadBazById()
             .withLoadBazByEvenId();
-        const gateway = new EntitySourceGateway([controller]);
+        const gateway = new EntitySourceGateway([controller], new EntityQueryTracing());
         const queries: Query[] = [
             // [todo] write test using and() - which currently doesn't work because it is not handled in
             // new Query<Foo>(fooSchema, matches<Foo>({ id: inSet([2, 3]), bar: matches<Bar>({ id: [10, 21] }) }), {

@@ -3,7 +3,7 @@ import { NgModule } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { BrowserModule } from "@angular/platform-browser";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
-import { EntitySchemaCatalog, EntitySourceGateway, Workspace } from "@entity-space/core";
+import { EntityQueryTracing, EntitySchemaCatalog, EntitySourceGateway, Workspace } from "@entity-space/core";
 import { SongBlueprint, SongLocationEntitySchema } from "@entity-space/examples/libs/music-model";
 import { ButtonModule } from "primeng/button";
 import { DialogModule } from "primeng/dialog";
@@ -40,6 +40,7 @@ import { MusicBoxClientSideEntityApi } from "./music-box-client-side-entity-api"
     declarations: [MusicAppComponent, SongTableComponent, ArtistTableComponent],
     providers: [
         SongLocationEntitySchema,
+        EntityQueryTracing,
         {
             // [todo] copy pasted to music-box-api
             provide: EntitySchemaCatalog,
@@ -55,9 +56,9 @@ import { MusicBoxClientSideEntityApi } from "./music-box-client-side-entity-api"
         },
         {
             provide: MusicBoxClientSideEntityApi,
-            deps: [HttpClient, EntitySchemaCatalog],
-            useFactory: (http: HttpClient, schemas: EntitySchemaCatalog) => {
-                const controller = new MusicBoxClientSideEntityApi(http, schemas);
+            deps: [HttpClient, EntitySchemaCatalog, EntityQueryTracing],
+            useFactory: (http: HttpClient, schemas: EntitySchemaCatalog, tracing: EntityQueryTracing) => {
+                const controller = new MusicBoxClientSideEntityApi(http, schemas, tracing);
 
                 return controller
                     .withGetAllArtists()
@@ -68,10 +69,14 @@ import { MusicBoxClientSideEntityApi } from "./music-box-client-side-entity-api"
         },
         {
             provide: EntitySourceGateway,
-            deps: [MusicBoxClientSideEntityApi, EntitySchemaCatalog],
-            useFactory: (controller: MusicBoxClientSideEntityApi, schemas: EntitySchemaCatalog) => {
-                console.log("🏭 new entity gateway [V3]");
-                const gateway = new EntitySourceGateway([controller]);
+            deps: [MusicBoxClientSideEntityApi, EntitySchemaCatalog, EntityQueryTracing],
+            useFactory: (
+                controller: MusicBoxClientSideEntityApi,
+                schemas: EntitySchemaCatalog,
+                tracing: EntityQueryTracing
+            ) => {
+                console.log("🏭 new entity gateway");
+                const gateway = new EntitySourceGateway([controller], tracing);
                 // [todo] remove adding stores by schema
                 gateway.addStore(schemas.getSchema("song"), controller);
                 gateway.addStore(schemas.getSchema("song-location"), controller);
@@ -81,10 +86,10 @@ import { MusicBoxClientSideEntityApi } from "./music-box-client-side-entity-api"
         },
         {
             provide: Workspace,
-            deps: [EntitySourceGateway, EntitySchemaCatalog],
-            useFactory: (gateway: EntitySourceGateway, schemas: EntitySchemaCatalog) => {
+            deps: [EntitySourceGateway, EntitySchemaCatalog, EntityQueryTracing],
+            useFactory: (gateway: EntitySourceGateway, schemas: EntitySchemaCatalog, tracing: EntityQueryTracing) => {
                 console.log("🏭 new workspace");
-                const workspace = new Workspace();
+                const workspace = new Workspace(tracing);
                 workspace.setSource(gateway);
                 workspace.setHydrator(gateway);
                 workspace.setStore(gateway);

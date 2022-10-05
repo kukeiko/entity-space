@@ -2,6 +2,7 @@ import { Entity } from "@entity-space/common";
 import { EntitySourceGateway, Query } from "@entity-space/core";
 import { matches } from "@entity-space/criteria";
 import { reduceQueries } from "../lib/query/reduce-queries.fn";
+import { EntityQueryTracing } from "../lib/tracing/entity-query-tracing";
 import { TestContentData, TestContentDatabase, TestContentEntityApi, User, UserBlueprint } from "./content";
 import { TestContentCatalog } from "./content/test-content-catalog";
 import { createQuery } from "./tools/create-query.fn";
@@ -9,16 +10,6 @@ import { queryTestHelper, QueryTestHelperOptions } from "./tools/query-test-help
 
 describe("entity-source-gateway", () => {
     let catalog = new TestContentCatalog();
-    let data = new TestContentDatabase();
-    let api = new TestContentEntityApi(data, catalog);
-    let gateway = new EntitySourceGateway();
-
-    beforeEach(() => {
-        catalog = new TestContentCatalog();
-        data = new TestContentDatabase();
-        api = new TestContentEntityApi(data, catalog);
-        gateway = new EntitySourceGateway([api]);
-    });
 
     function wrappedQueryTestHelper({
         title,
@@ -39,8 +30,8 @@ describe("entity-source-gateway", () => {
             // arrange
             const catalog = new TestContentCatalog();
             const database = new TestContentDatabase(data);
-            const api = buildApi(new TestContentEntityApi(database, catalog));
-            const gateway = new EntitySourceGateway([api]);
+            const api = buildApi(new TestContentEntityApi(database, catalog, new EntityQueryTracing()));
+            const gateway = new EntitySourceGateway([api], new EntityQueryTracing());
 
             // act
             const [entities, packet] = await queryTestHelper<User>(query, gateway, options);

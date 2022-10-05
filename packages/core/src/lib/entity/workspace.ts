@@ -10,12 +10,14 @@ import {
     from,
     lastValueFrom,
     map,
+    merge,
     Observable,
     of,
     ReplaySubject,
     startWith,
     Subject,
     switchMap,
+    tap,
 } from "rxjs";
 import { EntityHydrationQuery } from "../execution/entity-hydration-query";
 import { IEntityHydrator } from "../execution/i-entity-hydrator";
@@ -26,6 +28,7 @@ import { reduceQueries } from "../query/reduce-queries.fn";
 import { BlueprintInstance } from "../schema/blueprint-instance";
 import { EntitySchemaCatalog } from "../schema/entity-schema-catalog";
 import { IEntitySchema } from "../schema/schema.interface";
+import { EntityQueryTracing } from "../tracing/entity-query-tracing";
 import { EntitySet } from "./data-structures/entity-set";
 import { Entity } from "./entity";
 import { createCriterionFromEntities } from "./functions/create-criterion-from-entities.fn";
@@ -34,6 +37,8 @@ import { IEntityStore } from "./i-entity-store";
 import { InMemoryEntityDatabase } from "./in-memory-entity-database";
 
 export class Workspace implements IEntityStore {
+    constructor(private readonly tracing: EntityQueryTracing) {}
+
     private source?: IEntitySource;
     private store?: IEntityStore;
     private hydrator?: IEntityHydrator;
@@ -53,7 +58,7 @@ export class Workspace implements IEntityStore {
     add<T extends Entity = Entity>(schema: IEntitySchema, entities: DeepPartial<T>[] | DeepPartial<T>): void;
     add(schema: IEntitySchema | Class, entities: Entity[] | Entity): void {
         schema = this.toSchema(schema);
-        console.log("🆕 add entities", schema.getId(), JSON.stringify(entities));
+        // console.log("🆕 add entities", schema.getId(), JSON.stringify(entities));
 
         if (!Array.isArray(entities)) {
             entities = [entities];
@@ -67,7 +72,7 @@ export class Workspace implements IEntityStore {
         const queries = this.database.addEntities(schema, entities as Entity[]);
 
         for (const query of queries) {
-            this.addExecutedQuery(query);
+            this.addQueryToCached(query);
         }
 
         this.emitAllWatchedQueries();
@@ -97,26 +102,34 @@ export class Workspace implements IEntityStore {
         this.schemas = schemas;
     }
 
-    private addExecutedQuery(query: Query): void {
-        const executedQueries = this.getCachedQueries(query.getEntitySchema());
-        this.queryCaches.set(query.getEntitySchema().getId(), mergeQueries(query, ...executedQueries));
+    private addQueryToCached(query: Query): void {
+        const cachedQueries = this.getCachedQueries(query.getEntitySchema());
+        this.queryCaches.set(query.getEntitySchema().getId(), mergeQueries(query, ...cachedQueries));
         this.queryCacheChanged.next(flatten(Array.from(this.queryCaches.values())));
     }
 
     // [todo] T not used yet; need to add it to QueriedEntities
     async query<T extends Entity = Entity>(query: Query): Promise<false | EntitySet<T>[]> {
         if (this.source) {
-            const reduced = reduceQueries([query], this.getCachedQueries(query.getEntitySchema()));
+            const cachedQueries = this.getCachedQueries(query.getEntitySchema());
+            const reduced = reduceQueries([query], cachedQueries);
             const queriesAgainstSource = reduced === false ? [query] : reduced;
 
             if (queriesAgainstSource.length) {
+                if (reduced !== false) {
+                    this.tracing.queryGotSubtracted(query, cachedQueries, queriesAgainstSource);
+                }
+
                 await lastValueFrom(this.source.query$(queriesAgainstSource, this.database));
-                queriesAgainstSource.forEach(query => this.addExecutedQuery(query));
+                queriesAgainstSource.forEach(query => this.addQueryToCached(query));
                 this.emitAllWatchedQueries();
+            } else {
+                this.tracing.queryGotFullySubtracted(query, cachedQueries, { byLabel: "by cached" });
             }
         }
 
         const entities = (await this.queryAgainstCache(query)) as T[];
+        this.tracing.queryResolved(query, `${entities.length}x entit${entities.length === 1 ? "y" : "ies"}`);
 
         return [new EntitySet({ query, entities })];
     }
@@ -135,6 +148,7 @@ export class Workspace implements IEntityStore {
             return EMPTY;
         }
 
+        const hydrator = this.hydrator;
         const schema = this.schemas?.resolve(blueprint);
 
         if (!schema) {
@@ -143,22 +157,40 @@ export class Workspace implements IEntityStore {
 
         const criteria = createCriterionFromEntities(entities, schema.getKey().getPath());
         const query = new Query(schema, criteria, expansion);
-        const reduced = reduceQueries([query], this.getCachedQueries(query.getEntitySchema())) || [query];
+        const cachedQueries = this.getCachedQueries(query.getEntitySchema());
+        const reduced = reduceQueries([query], cachedQueries);
+        const queriesAgainstSource = reduced === false ? [query] : reduced;
 
-        if (!reduced.length) {
-            return of(this.database.querySync(query).getEntities()) as Observable<BlueprintInstance<T>[]>;
+        this.tracing.querySpawned(query);
+
+        if (queriesAgainstSource.length) {
+            if (reduced) {
+                this.tracing.queryGotSubtracted(query, cachedQueries, queriesAgainstSource, { byLabel: "by cached" });
+            }
+
+            const hydrationQueries = queriesAgainstSource.map(
+                query =>
+                    new EntityHydrationQuery<BlueprintInstance<T>>({
+                        entitySet: new EntitySet({ query: new Query(schema, criteria), entities }),
+                        query,
+                    })
+            );
+
+            return merge(
+                ...hydrationQueries.map(hydrationQuery => hydrator.hydrate$(hydrationQuery, this.database))
+            ).pipe(
+                map(() => {
+                    const entities = this.database.querySync(query).getEntities();
+                    this.tracing.queryResolved(query, JSON.stringify(entities));
+                    return entities;
+                })
+            ) as Observable<BlueprintInstance<T>[]>;
+        } else {
+            this.tracing.queryGotFullySubtracted(query, cachedQueries, { byLabel: "by cached" });
+            const entities = this.database.querySync(query).getEntities();
+            this.tracing.queryResolved(query, JSON.stringify(entities));
+            return of(entities) as Observable<BlueprintInstance<T>[]>;
         }
-
-        const hydrationQuery = new EntityHydrationQuery<BlueprintInstance<T>>({
-            entitySet: new EntitySet({ query: new Query(schema, criteria), entities }),
-            query: reduced[0], // [todo] dirty
-        });
-
-        return this.hydrator.hydrate$(hydrationQuery, this.database).pipe(
-            map(() => {
-                return this.database.querySync(query).getEntities();
-            })
-        ) as Observable<BlueprintInstance<T>[]>;
     }
 
     query$<T extends Entity>(
@@ -193,6 +225,8 @@ export class Workspace implements IEntityStore {
         const query = new Query(schema, criterion, expansion);
         // const subject = new Subject<Entity[]>();
         const subject = new ReplaySubject<Entity[]>(1);
+
+        this.tracing.querySpawned(query);
 
         return from(this.query(query)).pipe(
             switchMap(result => {
@@ -255,8 +289,9 @@ export class Workspace implements IEntityStore {
 
                         return equal.length == 0;
                     }),
+                    tap(() => this.tracing.reactiveQueryEmitted(query)),
                     finalize(() => {
-                        console.log(`🧹 clean up query ${query}`);
+                        this.tracing.reactiveQueryDisposed(query);
                         this.watchedQueries.delete(query);
                     })
                 ) as any as Observable<T[]>;
@@ -345,14 +380,7 @@ export class Workspace implements IEntityStore {
     }
 
     private getCachedQueries(schema: IEntitySchema): Query[] {
-        let cache = this.queryCaches.get(schema.getId());
-
-        if (cache === void 0) {
-            cache = [];
-            this.queryCaches.set(schema.getId(), cache);
-        }
-
-        return cache;
+        return this.queryCaches.get(schema.getId()) ?? [];
     }
 
     private toSchema(schema: IEntitySchema | Class): IEntitySchema {

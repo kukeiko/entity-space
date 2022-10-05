@@ -3,6 +3,11 @@ import { firstValueFrom, take, tap, toArray } from "rxjs";
 import { Workspace } from "../lib/entity/workspace";
 import { Query } from "../lib/query/query";
 import { EntitySchema } from "../lib/schema/entity-schema";
+import { EntityQueryTracing } from "../lib/tracing/entity-query-tracing";
+
+function createWorkspace(): Workspace {
+    return new Workspace(new EntityQueryTracing());
+}
 
 describe("workspace", () => {
     describe("queryAgainstCache()", () => {
@@ -14,7 +19,7 @@ describe("workspace", () => {
             }
 
             const schema = new EntitySchema("foo").setKey("id").addIndex("bar");
-            const workspace = new Workspace();
+            const workspace = createWorkspace();
 
             const entities: Entity[] = [
                 { id: 1, bar: 2 },
@@ -49,7 +54,7 @@ describe("workspace", () => {
             }
 
             const schema = new EntitySchema("foo").setKey("id").addIndex(["bar", "baz"], { name: "barAndBaz" });
-            const workspace = new Workspace();
+            const workspace = createWorkspace();
 
             const entities: Entity[] = [
                 { id: 1, bar: 2, baz: 1337 },
@@ -82,7 +87,7 @@ describe("workspace", () => {
             }
 
             const schema = new EntitySchema("foo").setKey("id").addIndex("bar.baz");
-            const workspace = new Workspace();
+            const workspace = createWorkspace();
 
             const entities: Entity[] = [
                 { id: 1, bar: { baz: 2 } },
@@ -119,7 +124,7 @@ describe("workspace", () => {
             }
 
             const schema = new EntitySchema("foo").setKey("id").addIndex(["bar.baz", "bar.moo"], { name: "bar" });
-            const workspace = new Workspace();
+            const workspace = createWorkspace();
 
             const entities: Entity[] = [
                 { id: 1, bar: { baz: 2, moo: 10 } },
@@ -165,7 +170,7 @@ describe("workspace", () => {
                 .setKey("id")
                 .addIndex(["bar.baz", "bar.moo", "khaz.mo", "khaz.dan"], { name: "bar" });
 
-            const workspace = new Workspace();
+            const workspace = createWorkspace();
 
             const entities: Entity[] = [
                 { id: 1, bar: { baz: 2, moo: 10 }, khaz: { mo: 1, dan: 2 } },
@@ -206,7 +211,7 @@ describe("workspace", () => {
             // [todo] unintuitive usage of auto computed index name
             fooSchema.addRelation("bar", "id,secondaryId", "fooId");
 
-            const workspace = new Workspace();
+            const workspace = createWorkspace();
 
             workspace.add(fooSchema, [{ id: 1337, secondaryId: 128, name: "i am foo" }]);
             workspace.add(barSchema, [{ id: 64, fooId: 1337, secondaryId: 128, name: "i belong to foo" }]);
@@ -237,7 +242,7 @@ describe("workspace", () => {
             barSchema.addRelation("baz", "bazId", "id");
             fooSchema.addProperty("bar", barSchema);
 
-            const workspace = new Workspace();
+            const workspace = createWorkspace();
             workspace.add(fooSchema, [{ id: 1337, name: "i am foo", bar: { bazId: 128 } }]);
             workspace.add(bazSchema, [{ id: 128, name: "i am baz" }]);
 
@@ -276,7 +281,7 @@ describe("workspace", () => {
         const bazSchema = new EntitySchema("baz").setKey("id");
         barSchema.addProperty("baz", bazSchema);
 
-        const workspace = new Workspace();
+        const workspace = createWorkspace();
 
         const addedItems: Foo[] = [
             {
@@ -315,7 +320,7 @@ describe("workspace", () => {
                 }
 
                 const entitySchema = new EntitySchema("foo").setKey("id");
-                const workspace = new Workspace();
+                const workspace = createWorkspace();
                 const entities: Entity[] = [
                     { id: 1, name: "one" },
                     { id: 2, name: "two" },

@@ -1,6 +1,6 @@
-import { Query } from "../query/query";
-import { Entity } from "../entity/entity";
 import { EntitySet } from "../entity/data-structures/entity-set";
+import { Entity } from "../entity/entity";
+import { Query } from "../query/query";
 
 export class EntityHydrationQuery<T = Entity> {
     constructor({ entitySet, query }: { entitySet: EntitySet<T>; query: Query }) {
@@ -17,5 +17,9 @@ export class EntityHydrationQuery<T = Entity> {
 
     getQuery(): Query {
         return this.query;
+    }
+
+    toString(): string {
+        return this.query.toString();
     }
 }

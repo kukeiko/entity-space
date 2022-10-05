@@ -1,18 +1,21 @@
 import { Entity } from "@entity-space/common";
 import { Criterion, or } from "@entity-space/criteria";
-import { from, merge, Observable, of, startWith, switchMap } from "rxjs";
+import { from, merge, Observable, of, startWith, switchMap, tap } from "rxjs";
 import { EntitySet } from "../entity/data-structures/entity-set";
 import { InMemoryEntityDatabase } from "../entity/in-memory-entity-database";
 import { mergeQueries } from "../query/merge-queries.fn";
 import { Query } from "../query/query";
+import { IEntitySchema } from "../schema/schema.interface";
+import { EntityQueryTracing } from "../tracing/entity-query-tracing";
 import { EntityApiEndpoint } from "./entity-api-endpoint";
 import { EntityApiEndpointBuilder } from "./entity-api-endpoint-builder";
 import { IEntitySource } from "./i-entity-source";
 import { QueryStream } from "./query-stream";
 import { QueryStreamPacket } from "./query-stream-packet";
-import { IEntitySchema } from "../schema/schema.interface";
 
 export class EntityApi implements IEntitySource {
+    constructor(protected readonly tracing: EntityQueryTracing) {}
+
     protected endpoints: EntityApiEndpoint[] = [];
 
     addEndpoint<T>(schema: IEntitySchema<T>, build: (builder: EntityApiEndpointBuilder<T>) => unknown): this {
@@ -103,6 +106,8 @@ export class EntityApi implements IEntitySource {
             ...acceptedCriteria.map(criterion => new Query(endpoint.getSchema(), criterion, effectiveExpansion))
         );
 
+        accepted.forEach(query => this.tracing.queryDispatchedToEndpoint(query, endpoint.getTemplate()));
+
         const stream = merge(
             ...accepted.map(query => {
                 const invoked = endpoint.getInvoke()({
@@ -146,7 +151,12 @@ export class EntityApi implements IEntitySource {
                                 })
                             );
                         }
-                    })
+                    }),
+                    tap(packet =>
+                        accepted.forEach(query =>
+                            this.tracing.endpointDeliveredPacket(query, endpoint.getTemplate(), packet)
+                        )
+                    )
                 );
             })
         ).pipe(startWith(new QueryStreamPacket({ accepted })));

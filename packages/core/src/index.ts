@@ -47,3 +47,4 @@ export * from "./lib/schema/property-value/primitive-schema";
 export * from "./lib/schema/schema.interface";
 export * from "./lib/schema/unused/entity-space-schema";
 export * from "./lib/schema/unused/open-api-schema";
+export * from "./lib/tracing/entity-query-tracing";

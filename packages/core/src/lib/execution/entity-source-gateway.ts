@@ -24,6 +24,7 @@ import { mergeQueries } from "../query/merge-queries.fn";
 import { Query } from "../query/query";
 import { reduceQueries } from "../query/reduce-queries.fn";
 import { IEntitySchema, IEntitySchemaRelation } from "../schema/schema.interface";
+import { EntityQueryTracing } from "../tracing/entity-query-tracing";
 import { EntityHydrationQuery } from "./entity-hydration-query";
 import { IEntityHydrator } from "./i-entity-hydrator";
 import { IEntitySource } from "./i-entity-source";
@@ -32,7 +33,7 @@ import { QueryStream } from "./query-stream";
 import { QueryStreamPacket } from "./query-stream-packet";
 
 export class EntitySourceGateway implements IEntitySource, IEntityStore, IEntityHydrator {
-    constructor(sources: IEntitySource[] = []) {
+    constructor(sources: IEntitySource[] = [], private readonly tracing: EntityQueryTracing) {
         this.sources = sources.slice();
     }
 
@@ -51,6 +52,8 @@ export class EntitySourceGateway implements IEntitySource, IEntityStore, IEntity
                 database,
             });
 
+            queries.forEach(query => this.tracing.queryStartedExecution(query));
+
             return merge(this.startNextSource$<T>(execution));
         });
     }
@@ -65,6 +68,8 @@ export class EntitySourceGateway implements IEntitySource, IEntityStore, IEntity
             database,
         });
 
+        this.tracing.queryStartedExecution(hydrationQuery.getQuery());
+
         return this.startHydration$<T>(hydrationQuery, execution);
     }
 
@@ -75,6 +80,7 @@ export class EntitySourceGateway implements IEntitySource, IEntityStore, IEntity
             const accepted = execution.getAccepted();
 
             if (!accepted.length) {
+                execution.getTargets().forEach(query => this.tracing.queryGotRejectedByAllSources(query));
                 return of(new QueryStreamPacket<T>({ rejected: execution.getTargets() }));
             }
 
@@ -122,7 +128,8 @@ export class EntitySourceGateway implements IEntitySource, IEntityStore, IEntity
 
         const withoutRejected$ = sourcePackets$.pipe(
             map(packet => packet.withoutRejected()),
-            filter(packet => !packet.isEmpty())
+            filter(packet => !packet.isEmpty()),
+            tap(packet => execution.getTargets().forEach(query => this.tracing.queryReceivedPacket(query, packet)))
         );
 
         return merge(withoutRejected$, startNext$);
@@ -133,6 +140,8 @@ export class EntitySourceGateway implements IEntitySource, IEntityStore, IEntity
         const targets = Object.entries(expansion)
             .map(([key, value]) => this.toHydrateRelationQuery(hydrationQuery.getEntitySet(), key, value))
             .filter(isNotFalse);
+
+        targets.forEach(([query]) => this.tracing.querySpawned(query));
 
         if (!targets.length) {
             return EMPTY;
@@ -157,6 +166,8 @@ export class EntitySourceGateway implements IEntitySource, IEntityStore, IEntity
             targets: [relationQuery],
         });
 
+        this.tracing.queryStartedExecution(relationQuery);
+
         return this.startNextSource$(execution).pipe(
             defaultIfEmpty(new QueryStreamPacket<T>({ rejected: [relationQuery] })),
             takeLast(1),
@@ -177,7 +188,8 @@ export class EntitySourceGateway implements IEntitySource, IEntityStore, IEntity
                     accepted: finalAccepted,
                     rejected: finalRejected,
                 });
-            })
+            }),
+            tap(packet => this.tracing.queryReceivedPacket(relationQuery, packet))
         );
     }
 
