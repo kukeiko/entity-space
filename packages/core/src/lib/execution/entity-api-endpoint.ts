@@ -5,13 +5,13 @@ import { EntitySet } from "../entity/data-structures/entity-set";
 import { Expansion } from "../expansion/expansion";
 import { IEntitySchema } from "../schema/schema.interface";
 
-type Data<T> = T | T[] | EntitySet<T>;
+export type EntityApiEndpointData<T = Entity> = T | T[] | EntitySet<T>;
 
 export type EntityApiEndpointInvoke<T = Entity, C = ICriterionTemplate> = (query: {
     criterion: InstancedCriterionTemplate<C>;
     // expansion: UnfoldedExpansion<T>;
     expansion: ExpansionValue<T>; // [todo] want to use unfolded instead
-}) => Observable<Data<T>> | Promise<Data<T>> | Data<T>;
+}) => Observable<EntityApiEndpointData<T>> | Promise<EntityApiEndpointData<T>> | EntityApiEndpointData<T>;
 
 export class EntityApiEndpoint {
     constructor({

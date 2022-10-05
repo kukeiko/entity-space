@@ -1,13 +1,13 @@
 import { Entity } from "@entity-space/common";
 import { Criterion, or } from "@entity-space/criteria";
-import { from, merge, Observable, of, startWith, switchMap, tap } from "rxjs";
+import { from, map, merge, Observable, of, startWith, tap } from "rxjs";
 import { EntitySet } from "../entity/data-structures/entity-set";
 import { InMemoryEntityDatabase } from "../entity/in-memory-entity-database";
 import { mergeQueries } from "../query/merge-queries.fn";
 import { Query } from "../query/query";
 import { IEntitySchema } from "../schema/schema.interface";
 import { EntityQueryTracing } from "../tracing/entity-query-tracing";
-import { EntityApiEndpoint } from "./entity-api-endpoint";
+import { EntityApiEndpoint, EntityApiEndpointData, EntityApiEndpointInvoke } from "./entity-api-endpoint";
 import { EntityApiEndpointBuilder } from "./entity-api-endpoint-builder";
 import { IEntitySource } from "./i-entity-source";
 import { QueryStream } from "./query-stream";
@@ -114,49 +114,11 @@ export class EntityApi implements IEntitySource {
                     criterion: query.getCriteria(),
                     expansion: query.getExpansion().getValue(),
                 });
-                let stream$: Observable<Entity | Entity[] | EntitySet>;
 
-                // [todo] go truly different code paths instead of wrapping all to a stream$
-                // (mainly because I want to support synchronous execution)
-                if (invoked instanceof Promise) {
-                    stream$ = from(invoked);
-                } else if (Array.isArray(invoked) || invoked instanceof EntitySet || !(invoked instanceof Observable)) {
-                    stream$ = of(invoked);
-                } else {
-                    stream$ = invoked;
-                }
-
-                return stream$.pipe(
-                    switchMap(data => {
-                        if (data instanceof EntitySet) {
-                            cache.addEntities(data.getQuery().getEntitySchema(), data.getEntities());
-
-                            // if instead we have an EntitySet, the source told us exactly what has been delivered
-                            return of(
-                                new QueryStreamPacket({
-                                    delivered: [data.getQuery()], // [todo] remove
-                                    payload: [new EntitySet({ query, entities: data.getEntities() })],
-                                })
-                            );
-                        } else {
-                            const entities = Array.isArray(data) ? data : [data];
-                            cache.addEntities(query.getEntitySchema(), entities);
-
-                            // if all we have is just an array of entities, we assume that everything has been delivered
-                            return of(
-                                new QueryStreamPacket({
-                                    delivered: [query],
-                                    // [todo] remove
-                                    payload: [new EntitySet({ query, entities })],
-                                })
-                            );
-                        }
-                    }),
-                    tap(packet =>
-                        accepted.forEach(query =>
-                            this.tracing.endpointDeliveredPacket(query, endpoint.getTemplate(), packet)
-                        )
-                    )
+                return this.invokedToDataStream(invoked).pipe(
+                    map(data => this.endpointDataToPacket(query, data)),
+                    tap(packet => this.addPacketToDatabase(packet, cache)),
+                    tap(packet => this.tracePacket(packet, endpoint, accepted))
                 );
             })
         ).pipe(startWith(new QueryStreamPacket({ accepted })));
@@ -164,6 +126,40 @@ export class EntityApi implements IEntitySource {
         const rejected = or(acceptedCriteria).reduce(or(remapped.getCriteria()));
 
         return [stream, [...remapped.getOpen(), ...(rejected !== false && rejected !== true ? [rejected] : [])]];
+    }
+
+    private addPacketToDatabase(packet: QueryStreamPacket, database: InMemoryEntityDatabase): void {
+        packet
+            .getPayload()
+            .forEach(entitySet =>
+                database.addEntities(entitySet.getQuery().getEntitySchema(), entitySet.getEntities())
+            );
+    }
+
+    private tracePacket(packet: QueryStreamPacket, endpoint: EntityApiEndpoint, accepted: Query[]): void {
+        accepted.forEach(query => this.tracing.endpointDeliveredPacket(query, endpoint.getTemplate(), packet));
+    }
+
+    private invokedToDataStream(invoked: ReturnType<EntityApiEndpointInvoke>): Observable<EntityApiEndpointData> {
+        if (invoked instanceof Promise) {
+            return from(invoked);
+        } else if (Array.isArray(invoked) || invoked instanceof EntitySet || !(invoked instanceof Observable)) {
+            return of(invoked);
+        } else {
+            return invoked;
+        }
+    }
+
+    private endpointDataToPacket(query: Query, data: EntityApiEndpointData): QueryStreamPacket {
+        if (data instanceof EntitySet) {
+            // if we have an EntitySet, the source told us exactly what has been delivered
+            return new QueryStreamPacket({ payload: [data] });
+        } else {
+            // if instead all we have is just an array of entities, we assume that everything has been delivered
+            const entities = Array.isArray(data) ? data : [data];
+
+            return new QueryStreamPacket({ payload: [new EntitySet({ entities, query })] });
+        }
     }
 
     private getEndpointsAcceptingSchema(schema: IEntitySchema): EntityApiEndpoint[] {

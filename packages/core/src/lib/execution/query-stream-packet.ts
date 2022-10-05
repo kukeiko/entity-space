@@ -13,26 +13,22 @@ class QueryError<T extends Entity = Entity> {
 export class QueryStreamPacket<T extends Entity = Entity> {
     constructor({
         accepted,
-        delivered,
         rejected,
         errors,
         payload,
     }: {
         accepted?: Query[];
-        delivered?: Query[];
         rejected?: Query[];
         errors?: QueryError<T>[];
         payload?: EntitySet<T>[];
     } = {}) {
         this.accepted = accepted ?? [];
-        this.delivered = delivered ?? [];
         this.rejected = rejected ?? [];
         this.errors = errors ?? [];
         this.payload = payload ?? [];
     }
 
     private readonly accepted: Query[];
-    private readonly delivered: Query[];
     private readonly rejected: Query[];
     private readonly errors: QueryError<T>[];
     private readonly payload: EntitySet<T>[];
@@ -45,9 +41,9 @@ export class QueryStreamPacket<T extends Entity = Entity> {
         return this.accepted.slice();
     }
 
-    // [todo] make use of this
+    // [todo] not (yet?) used
     getDeliveredQueries(): Query[] {
-        return this.delivered.slice();
+        return this.payload.map(payload => payload.getQuery());
     }
 
     getRejectedQueries(): Query[] {
