@@ -12,7 +12,7 @@ import {
 } from "@entity-space/examples/libs/music-model";
 import { pluckId, writePath } from "@entity-space/utils";
 import { PrimeNGConfig } from "primeng/api";
-import { combineLatest, map, of, shareReplay, Subject, switchMap, tap } from "rxjs";
+import { combineLatest, map, of, shareReplay, Subject, switchMap } from "rxjs";
 
 interface MusicBoxAppState {
     data: {
@@ -79,7 +79,6 @@ export class MusicAppComponent implements OnInit, OnDestroy {
             ])
         ),
         map(([ui, artists, songLocationTypes, songs]) => this.toState(ui, songs, artists, songLocationTypes)),
-        tap(state => console.log("🧙‍♂️ app state changed", state)),
         shareReplay(1)
     );
 

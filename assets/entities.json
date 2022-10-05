@@ -8,7 +8,7 @@
         },
         {
             "artistId": 2,
-            "duration": 0,
+            "duration": 433,
             "id": 18,
             "name": "Salzburg"
         },
@@ -28,19 +28,19 @@
             "name": "Plein Ciel",
             "id": 15,
             "artistId": 3,
-            "duration": 0
+            "duration": 307
         },
         {
             "name": "Entrudo",
             "id": 14,
             "artistId": 2,
-            "duration": 0
+            "duration": 364
         },
         {
             "name": "Sacralicious",
             "id": 13,
             "artistId": 1,
-            "duration": 0
+            "duration": 446
         },
         {
             "artistId": 7,

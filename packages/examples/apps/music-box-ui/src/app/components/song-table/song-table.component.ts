@@ -73,10 +73,6 @@ export class SongTableComponent {
         this.editDialogVisible = true;
     }
 
-    secondsToTimeString(seconds?: number): string {
-        return new Date(1000 * (seconds ?? 0)).toISOString().slice(14, 19);
-    }
-
     editSong(song: Song): void {
         // [todo] use some copying mechanism from entity-space instead
         this.editedSong = { ...song };
@@ -92,13 +88,17 @@ export class SongTableComponent {
         return webLocation?.url;
     }
 
+    secondsToTimeString(seconds?: number): string {
+        return new Date(1000 * (seconds ?? 0)).toISOString().slice(14, 19);
+    }
+
     getEditedDuration(): number {
-        const [seconds, minutes, hours] = this.editedDuration
+        const [seconds, minutes] = this.editedDuration
             .split(":")
             .reverse()
             .map(value => +value);
 
-        return seconds + minutes * 60 + hours * 60 * 60;
+        return seconds + minutes * 60;
     }
 
     async saveSong(): Promise<void> {
