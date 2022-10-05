@@ -11,8 +11,9 @@ export class IsValueCriterionTemplate<T extends Primitive | typeof Null = Primit
     implements ICriterionTemplate<IsValueCriterion<ReturnType<T>>>
 {
     constructor(valueTypes?: T[]) {
-        this.valueTypes = valueTypes ?? [Number, String, Boolean, Null] as T[];
-        this.valueMatches = (value: unknown): value is ReturnType<T> => isPrimitiveOrNull(value, this.valueTypes.slice());
+        this.valueTypes = valueTypes ?? ([Number, String, Boolean, Null] as T[]);
+        this.valueMatches = (value: unknown): value is ReturnType<T> =>
+            isPrimitiveOrNull(value, this.valueTypes.slice());
     }
 
     private readonly valueTypes: readonly T[];
@@ -55,5 +56,26 @@ export class IsValueCriterionTemplate<T extends Primitive | typeof Null = Primit
         }
 
         return this.valueMatches(criterion.getValue());
+    }
+
+    toString(): string {
+        // [todo] duplicated from in-set-criterion
+        const valueTypeNames = new Set<string>(
+            this.valueTypes.map(valueType => {
+                if (valueType === Null) {
+                    return "null";
+                } else if (valueType === Number) {
+                    return "number";
+                } else if (valueType === String) {
+                    return "string";
+                } else if (valueType === Boolean) {
+                    return "boolean";
+                } else {
+                    throw new Error(`unexpected value type ${valueType}`);
+                }
+            })
+        );
+
+        return `${Array.from(valueTypeNames.values()).join(" | ")}`;
     }
 }

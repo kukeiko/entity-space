@@ -153,6 +153,13 @@ export class NamedCriteriaTemplate<
         return true;
     }
 
+    toString(): string {
+        return `{ ${[
+            ...Object.entries(this.requiredItems).map(([key, value]) => `${key}: ${value.toString()}`),
+            ...Object.entries(this.optionalItems).map(([key, value]) => `${key}?: ${value.toString()}`),
+        ].join(", ")} }`;
+    }
+
     static fromDeepBag(deepBag: Record<string, any>): NamedCriteriaTemplate {
         const bag: NamedCriteriaTemplateItems = {};
 

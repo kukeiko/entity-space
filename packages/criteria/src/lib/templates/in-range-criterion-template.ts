@@ -41,4 +41,12 @@ export class InRangeCriterionTemplate<T extends typeof String | typeof Number>
 
         return false;
     }
+
+    toString(): string {
+        if (this.valueType === Number) {
+            return `[number, number]`;
+        } else {
+            return `[string, string]`;
+        }
+    }
 }

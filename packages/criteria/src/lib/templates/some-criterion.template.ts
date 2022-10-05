@@ -30,4 +30,8 @@ export class SomeCriterionTemplate<T extends ICriterionTemplate> implements ICri
     matches(criterion: Criterion): criterion is SomeCriterion {
         return criterion instanceof SomeCriterion;
     }
+
+    toString(): string {
+        return `some: ${this.item.toString()}`;
+    }
 }

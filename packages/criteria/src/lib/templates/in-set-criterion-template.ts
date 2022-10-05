@@ -71,4 +71,24 @@ export class InSetCriterionTemplate<T extends Primitive | typeof Null = Primitiv
 
         return Array.from(criterion.getValues()).every(this.valueMatches);
     }
+
+    toString(): string {
+        const valueTypeNames = new Set<string>(
+            this.valueTypes.map(valueType => {
+                if (valueType === Null) {
+                    return "null";
+                } else if (valueType === Number) {
+                    return "number";
+                } else if (valueType === String) {
+                    return "string";
+                } else if (valueType === Boolean) {
+                    return "boolean";
+                } else {
+                    throw new Error(`unexpected value type ${valueType}`);
+                }
+            })
+        );
+
+        return `{ ${Array.from(valueTypeNames.values()).join(", ")} }`;
+    }
 }

@@ -59,4 +59,8 @@ export class OrCriteriaTemplate<T extends ICriterionTemplate>
 
         return criterion.getItems().every(item => this.getItems().some(template => template.matches(item)));
     }
+
+    toString(): string {
+        return `(${this.items.map(item => item.toString()).join(" | ")})`;
+    }
 }

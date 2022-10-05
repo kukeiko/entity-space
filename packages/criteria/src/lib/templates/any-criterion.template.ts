@@ -11,4 +11,8 @@ export class AnyCriterionTemplate implements ICriterionTemplate<AnyCriterion> {
     matches(criterion: Criterion): criterion is Criterion {
         return true;
     }
+
+    toString(): string {
+        return "any";
+    }
 }
