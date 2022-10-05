@@ -1,12 +1,18 @@
-import { inSet, matches } from "@entity-space/criteria";
+import { ExpansionValue } from "@entity-space/common";
+import { Criterion, inSet, matches } from "@entity-space/criteria";
 import { firstValueFrom, take, tap, toArray } from "rxjs";
 import { Workspace } from "../lib/entity/workspace";
 import { Query } from "../lib/query/query";
 import { EntitySchema } from "../lib/schema/entity-schema";
+import { IEntitySchema } from "../lib/schema/schema.interface";
 import { EntityQueryTracing } from "../lib/tracing/entity-query-tracing";
 
 function createWorkspace(): Workspace {
     return new Workspace(new EntityQueryTracing());
+}
+
+function createQuery(entitySchema: IEntitySchema, criteria: Criterion, expansion: ExpansionValue = {}): Query {
+    return new Query({ entitySchema, criteria, expansion });
 }
 
 describe("workspace", () => {
@@ -37,7 +43,7 @@ describe("workspace", () => {
             workspace.add(schema, entities);
 
             // act
-            const query = new Query(schema, matches<Entity>({ bar: inSet([2, 3]) }));
+            const query = createQuery(schema, matches<Entity>({ bar: inSet([2, 3]) }));
             const result = await workspace.queryAgainstCache(query);
 
             // assert
@@ -71,7 +77,7 @@ describe("workspace", () => {
             workspace.add(schema, entities);
 
             // act
-            const query = new Query(schema, matches<Entity>({ bar: inSet([2, 3]), baz: inSet([1337]) }));
+            const query = createQuery(schema, matches<Entity>({ bar: inSet([2, 3]), baz: inSet([1337]) }));
             const result = await workspace.queryAgainstCache(query);
 
             // assert
@@ -105,7 +111,7 @@ describe("workspace", () => {
             workspace.add(schema, entities);
 
             // act
-            const query = new Query(schema, matches<Entity>({ bar: matches({ baz: inSet([2, 3]) }) }));
+            const query = createQuery(schema, matches<Entity>({ bar: matches({ baz: inSet([2, 3]) }) }));
             const result = await workspace.queryAgainstCache(query);
 
             // assert
@@ -141,7 +147,7 @@ describe("workspace", () => {
             workspace.add(schema, entities);
 
             // act
-            const query = new Query(
+            const query = createQuery(
                 schema,
                 matches<Entity>({ bar: matches({ baz: inSet([2, 3]), moo: inSet([10]) }) })
             );
@@ -184,7 +190,7 @@ describe("workspace", () => {
             workspace.add(schema, entities);
 
             // act
-            const query = new Query(
+            const query = createQuery(
                 schema,
                 matches<Entity>({
                     bar: matches({ baz: inSet([2, 3]), moo: inSet([10]) }),
@@ -216,7 +222,7 @@ describe("workspace", () => {
             workspace.add(fooSchema, [{ id: 1337, secondaryId: 128, name: "i am foo" }]);
             workspace.add(barSchema, [{ id: 64, fooId: 1337, secondaryId: 128, name: "i belong to foo" }]);
 
-            const query = new Query(fooSchema, matches({ id: inSet([1337]), secondaryId: inSet([128]) }), {
+            const query = createQuery(fooSchema, matches({ id: inSet([1337]), secondaryId: inSet([128]) }), {
                 bar: true,
             });
             const fooItems = await workspace.queryAgainstCache(query);
@@ -247,7 +253,7 @@ describe("workspace", () => {
             workspace.add(bazSchema, [{ id: 128, name: "i am baz" }]);
 
             // act
-            const query = new Query(fooSchema, matches({ id: inSet([1337]) }), { bar: { baz: true } });
+            const query = createQuery(fooSchema, matches({ id: inSet([1337]) }), { bar: { baz: true } });
             const fooItems = await workspace.queryAgainstCache(query);
 
             // assert
@@ -300,7 +306,7 @@ describe("workspace", () => {
         // act
         workspace.add(fooSchema, addedItems);
 
-        const query = new Query(fooSchema, matches({ id: inSet([1337]) }), { bar: { baz: true } });
+        const query = createQuery(fooSchema, matches({ id: inSet([1337]) }), { bar: { baz: true } });
         const queriedItems = await workspace.queryAgainstCache(query);
 
         // assert

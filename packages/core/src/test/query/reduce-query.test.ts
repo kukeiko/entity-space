@@ -22,7 +22,7 @@ describe("reduceQuery()", () => {
             .addRelationProperty("foo", fooSchema, "fooId", "id")
             .addRelationProperty("bar", barSchema, "barId", "id");
 
-        return new Query(rootSchema, criteria, expansion);
+        return new Query({ entitySchema: rootSchema, criteria, expansion });
     }
 
     describe("full reduction", () => {

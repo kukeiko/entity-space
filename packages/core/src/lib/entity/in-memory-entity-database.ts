@@ -165,7 +165,7 @@ export class InMemoryEntityDatabase {
         const fromIndex = relation.getFromIndex();
         const toIndex = relation.getToIndex();
         const criteria = createCriterionFromEntities(entities, fromIndex.getPath(), toIndex.getPath());
-        const query = new Query(relatedSchema, criteria, expansion ?? relatedSchema.getDefaultExpansion());
+        const query = new Query({ entitySchema: relatedSchema, criteria, expansion: expansion ?? relatedSchema.getDefaultExpansion() });
 
         const result = this.querySync(query);
 

@@ -19,15 +19,15 @@ export function reduceQuery(a: Query, b: Query): Query[] | false {
             return [];
         }
 
-        const query = new Query(a.getEntitySchema(), a.getCriteria(), reducedExpansion.getValue());
+        const query = new Query({ entitySchema: a.getEntitySchema(), criteria: a.getCriteria(), expansion: reducedExpansion.getValue() });
         return [query];
     } else if (reducedExpansion === true) {
-        const query = new Query(a.getEntitySchema(), reducedCriteria, a.getExpansionValue());
+        const query = new Query({ entitySchema: a.getEntitySchema(), criteria: reducedCriteria, expansion: a.getExpansionValue() });
         return [query];
     } else {
         return [
-            new Query(a.getEntitySchema(), reducedCriteria, a.getExpansionValue()),
-            new Query(a.getEntitySchema(), b.getCriteria(), reducedExpansion.getValue()),
+            new Query({ entitySchema: a.getEntitySchema(), criteria: reducedCriteria, expansion: a.getExpansionValue() }),
+            new Query({ entitySchema: a.getEntitySchema(), criteria: b.getCriteria(), expansion: reducedExpansion.getValue() }),
         ];
     }
 }

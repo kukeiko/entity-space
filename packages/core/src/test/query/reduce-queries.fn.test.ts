@@ -5,7 +5,7 @@ import { Criterion } from "@entity-space/criteria";
 // [todo] add more tests
 describe("reduceQueries()", () => {
     function createQuery(criteria: Criterion, expansion: ExpansionValue = {}): Query {
-        return new Query(new EntitySchema("foo"), criteria, expansion);
+        return new Query({ entitySchema: new EntitySchema("foo"), criteria, expansion });
     }
 
     describe("no reduction", () => {

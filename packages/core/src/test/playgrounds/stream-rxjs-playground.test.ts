@@ -181,10 +181,14 @@ describe("playground: stream", () => {
         const queries: Query[] = [
             // [todo] write test using and() - which currently doesn't work because it is not handled in
             // new Query<Foo>(fooSchema, matches<Foo>({ id: inSet([2, 3]), bar: matches<Bar>({ id: [10, 21] }) }), {
-            new Query(fooSchema, matches<Foo>({ id: inSet([2, 3]) }), {
-                id: true,
-                name: true,
-                bar: { id: true, name: true, baz: true },
+            new Query({
+                entitySchema: fooSchema,
+                criteria: matches<Foo>({ id: inSet([2, 3]) }),
+                expansion: {
+                    id: true,
+                    name: true,
+                    bar: { id: true, name: true, baz: true },
+                },
             }),
         ];
 

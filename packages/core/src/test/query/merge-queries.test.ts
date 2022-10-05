@@ -3,7 +3,7 @@ import { EntitySchema, mergeQueries, Query } from "@entity-space/core";
 import { Criterion, inRange, matches, or } from "@entity-space/criteria";
 
 function createQuery(criteria: Criterion, expansion: ExpansionValue = {}): Query {
-    return new Query(new EntitySchema("foo"), criteria, expansion);
+    return new Query({ entitySchema: new EntitySchema("foo"), criteria, expansion });
 }
 
 interface Product {

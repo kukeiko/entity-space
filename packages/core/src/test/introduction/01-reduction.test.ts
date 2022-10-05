@@ -191,37 +191,37 @@ describe("what's reduction for?", () => {
 
         const productSchema = new EntitySchema("product");
 
-        const price_100_to_200_rating_3_to_5_no_reviews = new Query(
-            productSchema,
-            matches({
+        const price_100_to_200_rating_3_to_5_no_reviews = new Query({
+            entitySchema: productSchema,
+            criteria: matches({
                 price: inRange(100, 200),
                 rating: inRange(3, 5),
             }),
-            {
+            expansion: {
                 ...basic_properties,
-            }
-        );
+            },
+        });
 
-        const price_100_to_300_rating_2_to_5_with_reviews = new Query(
-            productSchema,
-            matches({
+        const price_100_to_300_rating_2_to_5_with_reviews = new Query({
+            entitySchema: productSchema,
+            criteria: matches({
                 price: inRange(100, 300),
                 rating: inRange(2, 5),
             }),
-            {
+            expansion: {
                 ...basic_properties,
                 ...review_property,
-            }
-        );
+            },
+        });
 
         /**
          * Our expected outcome is two queries:
          */
         const expected: Query[] = [
             // one for loading the missing entities
-            new Query(
-                productSchema,
-                or([
+            new Query({
+                entitySchema: productSchema,
+                criteria: or([
                     matches({
                         price: inRange(200, 300, [false, true]),
                         rating: inRange(2, 5),
@@ -231,22 +231,22 @@ describe("what's reduction for?", () => {
                         rating: inRange(2, 3, [true, false]),
                     }),
                 ]),
-                {
+                expansion: {
                     ...basic_properties,
                     ...review_property,
-                }
-            ),
+                },
+            }),
             // and one for loading the missing properties (i.e. the reviews) of the entities we already have
-            new Query(
-                productSchema,
-                matches({
+            new Query({
+                entitySchema: productSchema,
+                criteria: matches({
                     price: inRange(100, 200),
                     rating: inRange(3, 5),
                 }),
-                {
+                expansion: {
                     ...review_property,
-                }
-            ),
+                },
+            }),
         ];
 
         const actual = reduceQuery(

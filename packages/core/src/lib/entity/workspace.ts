@@ -156,7 +156,7 @@ export class Workspace implements IEntityStore {
         }
 
         const criteria = createCriterionFromEntities(entities, schema.getKey().getPath());
-        const query = new Query(schema, criteria, expansion);
+        const query = new Query({ entitySchema: schema, criteria, expansion });
         const cachedQueries = this.getCachedQueries(query.getEntitySchema());
         const reduced = reduceQueries([query], cachedQueries);
         const queriesAgainstSource = reduced === false ? [query] : reduced;
@@ -171,7 +171,7 @@ export class Workspace implements IEntityStore {
             const hydrationQueries = queriesAgainstSource.map(
                 query =>
                     new EntityHydrationQuery<BlueprintInstance<T>>({
-                        entitySet: new EntitySet({ query: new Query(schema, criteria), entities }),
+                        entitySet: new EntitySet({ query: new Query({ entitySchema: schema, criteria }), entities }),
                         query,
                     })
             );
@@ -222,7 +222,7 @@ export class Workspace implements IEntityStore {
             criterion = matches(criterion);
         }
 
-        const query = new Query(schema, criterion, expansion);
+        const query = new Query({ entitySchema: schema, criteria: criterion, expansion });
         // const subject = new Subject<Entity[]>();
         const subject = new ReplaySubject<Entity[]>(1);
 

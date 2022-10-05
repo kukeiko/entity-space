@@ -37,7 +37,7 @@ export class EntityApi implements IEntitySource {
             const initialPackets: QueryStreamPacket[] = [];
 
             if (openCriteria.length) {
-                const rejected = [new Query(query.getEntitySchema(), or(openCriteria), query.getExpansion())];
+                const rejected = [new Query({ entitySchema: query.getEntitySchema(), criteria: or(openCriteria), expansion: query.getExpansion() })];
                 initialPackets.push(new QueryStreamPacket({ rejected }));
             }
 
@@ -58,7 +58,7 @@ export class EntityApi implements IEntitySource {
         for (const endpoint of endpoints) {
             const dispatched = this.dispatchToEndpoint(
                 endpoint,
-                new Query(query.getEntitySchema(), or(openCriteria), query.getExpansion()),
+                new Query({ entitySchema: query.getEntitySchema(), criteria: or(openCriteria), expansion: query.getExpansion() }),
                 cache
             );
 
@@ -103,7 +103,7 @@ export class EntityApi implements IEntitySource {
         }
 
         const accepted = mergeQueries(
-            ...acceptedCriteria.map(criterion => new Query(endpoint.getSchema(), criterion, effectiveExpansion))
+            ...acceptedCriteria.map(criterion => new Query({ entitySchema: endpoint.getSchema(), criteria: criterion, expansion: effectiveExpansion }))
         );
 
         accepted.forEach(query => this.tracing.queryDispatchedToEndpoint(query, endpoint.getTemplate()));

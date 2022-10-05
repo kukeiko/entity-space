@@ -13,7 +13,7 @@ export class ArtistsController {
 
     @Get()
     all(): Promise<Artist[]> {
-        return this.diskDbService.query(new EntityQuery(this.schema));
+        return this.diskDbService.query(new EntityQuery({ entitySchema: this.schema }));
     }
 
     @Get(":id")

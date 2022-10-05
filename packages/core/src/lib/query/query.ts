@@ -6,7 +6,15 @@ import { reduceQueries } from "./reduce-queries.fn";
 
 // [todo] T is unused
 export class Query {
-    constructor(entitySchema: IEntitySchema, criteria: Criterion = any(), expansion?: Expansion | ExpansionValue) {
+    constructor({
+        entitySchema,
+        criteria = any(),
+        expansion,
+    }: {
+        entitySchema: IEntitySchema;
+        criteria?: Criterion;
+        expansion?: Expansion | ExpansionValue;
+    }) {
         this.entitySchema = entitySchema;
         this.criteria = criteria;
         this.expansion =
@@ -30,7 +38,7 @@ export class Query {
     }
 
     withCriteria(criteria: Criterion): Query {
-        return new Query(this.entitySchema, criteria, this.expansion);
+        return new Query({ entitySchema: this.entitySchema, criteria, expansion: this.expansion });
     }
 
     getExpansion(): Expansion {
@@ -42,11 +50,11 @@ export class Query {
     }
 
     withoutExpansion(): Query {
-        return new Query(this.entitySchema, this.criteria);
+        return new Query({ entitySchema: this.entitySchema, criteria: this.criteria });
     }
 
     withExpansion(expansion: Expansion | ExpansionValue): Query {
-        return new Query(this.entitySchema, this.criteria, expansion);
+        return new Query({ entitySchema: this.entitySchema, criteria: this.criteria, expansion });
     }
 
     toString(): string {
@@ -73,7 +81,11 @@ export class Query {
             return false;
         }
 
-        return new Query(this.entitySchema, intersectedCriterion, intersectedExpansion);
+        return new Query({
+            entitySchema: this.entitySchema,
+            criteria: intersectedCriterion,
+            expansion: intersectedExpansion,
+        });
     }
 
     static equivalentCriteria(...queries: Query[]): boolean {

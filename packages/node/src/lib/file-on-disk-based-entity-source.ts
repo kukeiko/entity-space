@@ -15,7 +15,7 @@ export class FileOnDiskBasedEntitySource implements IEntityStore {
     async query(query: Query): Promise<false | EntitySet[]> {
         const entities = query.getCriteria().filter(await this.loadEntitiesFromFile(query.getEntitySchema()));
         const ids = entities.map(entity => entity["id"]);
-        const actualQuery = new Query(query.getEntitySchema(), matches({ id: inSet(ids) }));
+        const actualQuery = new Query({ entitySchema: query.getEntitySchema(), criteria: matches({ id: inSet(ids) }) });
         const result = new EntitySet({ query: actualQuery, entities });
 
         return [result];

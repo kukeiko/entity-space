@@ -8,7 +8,7 @@ export function createQueriesFromEntities(schema: IEntitySchema, entities: Entit
 
     if (schema.hasKey()) {
         const indexCriteria = createCriterionFromEntities(entities, schema.getKey().getPath());
-        const query = new Query(schema, indexCriteria);
+        const query = new Query({ entitySchema: schema, criteria: indexCriteria });
         queries.push(query);
     }
 

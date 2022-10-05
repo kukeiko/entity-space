@@ -9,5 +9,5 @@ export function createQuery<T>(
     criteria?: MatchesBagArgument<BlueprintInstance<T>>,
     expansion?: ExpansionValue<BlueprintInstance<T>>
 ): Query {
-    return new Query(schemas.resolve(blueprint), criteria ? matches(criteria) : any(), expansion);
+    return new Query({ entitySchema: schemas.resolve(blueprint), criteria: criteria ? matches(criteria) : any(), expansion });
 }

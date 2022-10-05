@@ -300,7 +300,7 @@ export class EntitySourceGateway implements IEntitySource, IEntityStore, IEntity
 
         const relatedExpansion = expansionValue === true ? relatedSchema.getDefaultExpansion() : expansionValue;
 
-        return [new Query(relatedSchema, criteria, relatedExpansion), relation];
+        return [new Query({ entitySchema: relatedSchema, criteria, expansion: relatedExpansion }), relation];
     }
 
     private toHydrationQueries<T>(

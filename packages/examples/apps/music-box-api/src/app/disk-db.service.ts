@@ -18,7 +18,9 @@ export class DiskDbService {
     private readonly filePath = "./assets/entities.json";
 
     async getSong(id: number): Promise<Song | undefined> {
-        const results = await this.entitySource.query(new Query(this.songSchema, matches<Song>({ id: isValue(id) })));
+        const results = await this.entitySource.query(
+            new Query({ entitySchema: this.songSchema, criteria: matches<Song>({ id: isValue(id) }) })
+        );
 
         if (!results) {
             return void 0;
@@ -30,7 +32,7 @@ export class DiskDbService {
     }
 
     async getSongs(): Promise<Song[]> {
-        const results = await this.entitySource.query(new Query(this.songSchema));
+        const results = await this.entitySource.query(new Query({ entitySchema: this.songSchema }));
 
         if (!results) {
             return [];
@@ -52,7 +54,7 @@ export class DiskDbService {
     }
 
     async getSongLocations(): Promise<SongLocation[]> {
-        const results = await this.entitySource.query(new Query(this.songLocationSchema));
+        const results = await this.entitySource.query(new Query({ entitySchema: this.songLocationSchema }));
 
         if (!results) {
             return [];
