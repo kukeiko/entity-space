@@ -2,7 +2,6 @@ export * from "./lib/entity/data-structures/complex-key-map";
 export * from "./lib/entity/data-structures/entity-set";
 export * from "./lib/entity/data-structures/normalized-entities";
 export * from "./lib/entity/entity";
-export * from "./lib/entity/entity-type.interface";
 export * from "./lib/entity/functions/create-criterion-from-entities.fn";
 export * from "./lib/entity/functions/create-default-expansion.fn";
 export * from "./lib/entity/functions/create-queries-from-entities.fn";
