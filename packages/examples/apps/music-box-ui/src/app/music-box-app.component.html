@@ -45,4 +45,9 @@
             <artist-table [artists]="state.data.artists"></artist-table>
         </ng-template>
     </p-tabPanel>
+    <p-tabPanel header="Cached Queries">
+        <ng-template pTemplate="content">
+            <query-cache-table [queries]="cachedQueries"></query-cache-table>
+        </ng-template>
+    </p-tabPanel>
 </p-tabView>

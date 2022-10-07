@@ -1,7 +1,7 @@
 import { IEntitySchema } from "../../schema/schema.interface";
 import { Entity } from "../entity";
 
-// [todo] use Map instead?
+// [todo] just use Map instead?
 export class NormalizedEntities {
     private readonly entitiesPerSchema = new Map<IEntitySchema, Entity[]>();
 

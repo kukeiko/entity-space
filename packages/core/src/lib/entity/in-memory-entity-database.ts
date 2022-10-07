@@ -8,9 +8,13 @@ import {
     or,
     orTemplate,
 } from "@entity-space/criteria";
-import { cloneJson, readPath } from "@entity-space/utils";
+import { cloneJson, groupBy, readPath } from "@entity-space/utils";
+import { flatten } from "lodash";
+import { Observable, Subject } from "rxjs";
 import { Expansion } from "../expansion/expansion";
+import { mergeQueries } from "../query/merge-queries.fn";
 import { Query } from "../query/query";
+import { reduceQueries } from "../query/reduce-queries.fn";
 import { IEntitySchema, IEntitySchemaRelation } from "../schema/schema.interface";
 import { EntitySet } from "./data-structures/entity-set";
 import { Entity } from "./entity";
@@ -18,15 +22,46 @@ import { createCriterionFromEntities } from "./functions/create-criterion-from-e
 import { createQueriesFromEntities } from "./functions/create-queries-from-entities.fn";
 import { joinEntities } from "./functions/join-entities.fn";
 import { normalizeEntities } from "./functions/normalize-entities.fn";
+import { IEntityDatabase } from "./i-entity-database";
 import { EntityStore } from "./store/entity-store";
 
-export class InMemoryEntityDatabase {
+export class InMemoryEntityDatabase implements IEntityDatabase {
     private readonly stores = new Map<string, EntityStore>();
+    private readonly cachedQueries = new Map<string, Query[]>();
+    private readonly queryCacheChanged = new Subject<Query[]>();
 
-    async query(query: Query): Promise<false | EntitySet[]> {
-        const result = this.querySync(query);
+    queryCacheChanged$(): Observable<Query[]> {
+        return this.queryCacheChanged.asObservable();
+    }
 
-        return result ? [result] : result;
+    async query(query: Query): Promise<EntitySet> {
+        return this.querySync(query);
+    }
+
+    reduceByCached(query: Query): Query[] | false {
+        const cached = this.getCachedQueries(query.getEntitySchema());
+        return reduceQueries([query], cached);
+    }
+
+    // [todo] not used; but i did not want to delete it already.
+    // if i don't find a use soonish™, i should remove it
+    reduceManyByCached(queries: Query[]): Query[] {
+        const groupedBySchema = groupBy(queries, query => query.getEntitySchema());
+
+        const reduced: Query[] = [];
+
+        for (const [schema, queries] of groupedBySchema.entries()) {
+            const result = reduceQueries(queries, this.getCachedQueries(schema));
+
+            if (!result) {
+                reduced.push(...queries);
+                continue;
+            }
+
+            reduced.push(...result);
+        }
+
+        return reduced;
     }
 
     querySync<T = Entity>(query: Query): EntitySet<T> {
@@ -58,7 +93,7 @@ export class InMemoryEntityDatabase {
             index.getPath().forEach(path => (optionalDeepBag[path] = anyTemplate()));
         });
 
-        const template = orTemplate(NamedCriteriaTemplate.fromDeepBags({}, optionalDeepBag));
+        const template = orTemplate(NamedCriteriaTemplate.fromRequiredAndOptionalDeepBags({}, optionalDeepBag));
         const remapped = template.remap(criterion);
 
         if (remapped === false) {
@@ -66,6 +101,25 @@ export class InMemoryEntityDatabase {
         }
 
         return remapped.getCriteria().length === 1 ? remapped.getCriteria()[0] : or(remapped.getCriteria());
+    }
+
+    async upsert(entitySet: EntitySet<Entity>): Promise<void> {
+        this.addQueryToCached(entitySet.getQuery());
+        const entities = cloneJson(entitySet.getEntities());
+        const normalized = normalizeEntities(entitySet.getQuery().getEntitySchema(), entities);
+
+        for (const schema of normalized.getSchemas()) {
+            const normalizedEntities = normalized.get(schema);
+            this.getOrCreateStore(schema).add(normalizedEntities);
+
+            if (normalizedEntities.length > 0) {
+                const indexQueries = createQueriesFromEntities(schema, normalizedEntities);
+
+                for (const indexQuery of indexQueries) {
+                    this.addQueryToCached(indexQuery);
+                }
+            }
+        }
     }
 
     // [todo] not totally happy with this method also creating the queries from the entities,
@@ -94,6 +148,8 @@ export class InMemoryEntityDatabase {
 
     clear(): void {
         this.stores.clear();
+        this.cachedQueries.clear();
+        this.queryCacheChanged.next([]);
     }
 
     private getOrCreateStore(schema: IEntitySchema): EntityStore {
@@ -165,7 +221,11 @@ export class InMemoryEntityDatabase {
         const fromIndex = relation.getFromIndex();
         const toIndex = relation.getToIndex();
         const criteria = createCriterionFromEntities(entities, fromIndex.getPath(), toIndex.getPath());
-        const query = new Query({ entitySchema: relatedSchema, criteria, expansion: expansion ?? relatedSchema.getDefaultExpansion() });
+        const query = new Query({
+            entitySchema: relatedSchema,
+            criteria,
+            expansion: expansion ?? relatedSchema.getDefaultExpansion(),
+        });
 
         const result = this.querySync(query);
 
@@ -177,5 +237,15 @@ export class InMemoryEntityDatabase {
             toIndex.getPath(),
             isArray
         );
+    }
+
+    addQueryToCached(query: Query): void {
+        const cachedQueries = this.getCachedQueries(query.getEntitySchema());
+        this.cachedQueries.set(query.getEntitySchema().getId(), mergeQueries(query, ...cachedQueries));
+        this.queryCacheChanged.next(flatten(Array.from(this.cachedQueries.values())));
+    }
+
+    getCachedQueries(schema: IEntitySchema): Query[] {
+        return this.cachedQueries.get(schema.getId()) ?? [];
     }
 }

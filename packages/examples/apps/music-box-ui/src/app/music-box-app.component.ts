@@ -12,7 +12,7 @@ import {
 } from "@entity-space/examples/libs/music-model";
 import { pluckId, writePath } from "@entity-space/utils";
 import { PrimeNGConfig } from "primeng/api";
-import { combineLatest, map, of, shareReplay, Subject, switchMap } from "rxjs";
+import { combineLatest, map, of, shareReplay, Subject, switchMap, takeUntil } from "rxjs";
 
 interface MusicBoxAppState {
     data: {
@@ -52,6 +52,8 @@ export class MusicAppComponent implements OnInit, OnDestroy {
     ) {}
 
     private readonly destroyed$ = new Subject<void>();
+
+    cachedQueries: Query[] = [];
 
     stateId = 1;
 
@@ -94,9 +96,6 @@ export class MusicAppComponent implements OnInit, OnDestroy {
         return { ui, data: { songs, artists, songLocationTypes } };
     }
 
-    queriesIssuedAgainstApi: Query[] = [];
-    queriesInWorkspaceCache: Query[] = [];
-
     ngOnInit(): void {
         this.workspace.add(MusicBoxUiStateBlueprint, {
             id: this.stateId,
@@ -109,7 +108,11 @@ export class MusicAppComponent implements OnInit, OnDestroy {
         ]);
 
         this.primengConfig.ripple = true;
-        this.workspace.onQueryCacheChanged().subscribe(queries => (this.queriesInWorkspaceCache = queries));
+
+        this.workspace
+            .queryCacheChanged$()
+            .pipe(takeUntil(this.destroyed$))
+            .subscribe(cachedQueries => (this.cachedQueries = cachedQueries));
     }
 
     ngOnDestroy(): void {

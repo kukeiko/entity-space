@@ -176,7 +176,7 @@ export class NamedCriteriaTemplate<
         return new NamedCriteriaTemplate(bag);
     }
 
-    static fromDeepBags(
+    static fromRequiredAndOptionalDeepBags(
         requiredDeepBag: Record<string, any>,
         optionalDeepBag: Record<string, any>
     ): NamedCriteriaTemplate {

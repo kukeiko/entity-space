@@ -1,15 +1,14 @@
 import { Query } from "../../query/query";
 import { IEntitySchema } from "../../schema/schema.interface";
 import { Entity } from "../entity";
-import { createCriterionFromEntities } from "./create-criterion-from-entities.fn";
+import { createIdQueryFromEntities } from "./create-id-query-from-entities.fn";
 
 export function createQueriesFromEntities(schema: IEntitySchema, entities: Entity[]): Query[] {
     const queries: Query[] = [];
 
+    // [todo] also implement other indexes
     if (schema.hasKey()) {
-        const indexCriteria = createCriterionFromEntities(entities, schema.getKey().getPath());
-        const query = new Query({ entitySchema: schema, criteria: indexCriteria });
-        queries.push(query);
+        queries.push(createIdQueryFromEntities(schema, entities));
     }
 
     return queries;

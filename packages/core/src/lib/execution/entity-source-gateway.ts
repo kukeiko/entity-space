@@ -17,8 +17,8 @@ import {
 } from "rxjs";
 import { EntitySet } from "../entity/data-structures/entity-set";
 import { createCriterionFromEntities } from "../entity/functions/create-criterion-from-entities.fn";
+import { IEntityDatabase } from "../entity/i-entity-database";
 import { IEntityStore } from "../entity/i-entity-store";
-import { InMemoryEntityDatabase } from "../entity/in-memory-entity-database";
 import { Expansion } from "../expansion/expansion";
 import { mergeQueries } from "../query/merge-queries.fn";
 import { Query } from "../query/query";
@@ -44,7 +44,7 @@ export class EntitySourceGateway implements IEntitySource, IEntityStore, IEntity
         this.stores.set(schema.getId(), store);
     }
 
-    query$<T extends Entity = Entity>(queries: Query[], database: InMemoryEntityDatabase): QueryStream<T> {
+    query$<T extends Entity = Entity>(queries: Query[], database: IEntityDatabase): QueryStream<T> {
         return defer(() => {
             const execution = new QueryExecution({
                 sources: this.sources.slice().reverse(),
@@ -58,10 +58,7 @@ export class EntitySourceGateway implements IEntitySource, IEntityStore, IEntity
         });
     }
 
-    hydrate$<T extends Entity>(
-        hydrationQuery: EntityHydrationQuery<T>,
-        database: InMemoryEntityDatabase
-    ): QueryStream<T> {
+    hydrate$<T extends Entity>(hydrationQuery: EntityHydrationQuery<T>, database: IEntityDatabase): QueryStream<T> {
         const execution = new QueryExecution({
             sources: this.sources.slice().reverse(),
             targets: [hydrationQuery.getQuery()],
@@ -158,30 +155,43 @@ export class EntitySourceGateway implements IEntitySource, IEntityStore, IEntity
         hydrationQuery: EntityHydrationQuery<T>,
         relationQuery: Query,
         relation: IEntitySchemaRelation,
-        database: InMemoryEntityDatabase
+        database: IEntityDatabase
     ): QueryStream<T> {
+        const cached = database.getCachedQueries(relationQuery.getEntitySchema());
+        const reduced = reduceQueries([relationQuery], cached);
+        const relationQueries = reduced === false ? [relationQuery] : reduced;
+
+        if (!relationQueries.length) {
+            this.tracing.queryGotFullySubtracted(relationQuery, cached);
+            return of(new QueryStreamPacket<T>({ accepted: [relationQuery] }));
+        }
+
+        if (reduced) {
+            this.tracing.queryGotSubtracted(relationQuery, cached, relationQueries);
+        }
+
         const execution = new QueryExecution({
             sources: this.sources.slice().reverse(),
             database,
-            targets: [relationQuery],
+            targets: relationQueries,
         });
 
         this.tracing.queryStartedExecution(relationQuery);
 
         return this.startNextSource$(execution).pipe(
-            defaultIfEmpty(new QueryStreamPacket<T>({ rejected: [relationQuery] })),
+            defaultIfEmpty(new QueryStreamPacket<T>({ rejected: relationQueries })),
             takeLast(1),
             map(() => {
                 const accepted = execution.getAccepted();
                 // [todo] see if any deeper expansions have been rejected
                 // [update] is this comment still relevant?
-                const rejected = reduceQueries([relationQuery], accepted) || [relationQuery];
+                const rejected = reduceQueries(relationQueries, accepted) || relationQueries;
                 const [finalAccepted, finalRejected] = this.toMappedAcceptedAndRejectedQueries({
                     accepted,
                     hydrationQuery,
                     rejected,
                     relation,
-                    relationQuery,
+                    relationQueries,
                 });
 
                 return new QueryStreamPacket<T>({
@@ -198,17 +208,17 @@ export class EntitySourceGateway implements IEntitySource, IEntityStore, IEntity
         accepted,
         rejected,
         hydrationQuery,
-        relationQuery,
+        relationQueries,
         relation,
     }: {
         accepted: Query[];
         rejected: Query[];
         hydrationQuery: EntityHydrationQuery;
-        relationQuery: Query;
+        relationQueries: Query[];
         relation: IEntitySchemaRelation;
     }): [Query[], Query[]] {
         // [todo] should not check for equivalency, but instead if accepted criteria are a superset
-        if (Query.equivalentCriteria(relationQuery, ...mergeQueries(...accepted))) {
+        if (Query.equivalentCriteria(...mergeQueries(...relationQueries), ...mergeQueries(...accepted))) {
             if (rejected.length && accepted.length) {
                 return [
                     [
@@ -306,7 +316,7 @@ export class EntitySourceGateway implements IEntitySource, IEntityStore, IEntity
     private toHydrationQueries<T>(
         accepted: Query[],
         rejected: Query[],
-        database: InMemoryEntityDatabase
+        database: IEntityDatabase
     ): EntityHydrationQuery<T>[] {
         return rejected.reduce(
             (hydrationQueries, rejectedQuery) => [
