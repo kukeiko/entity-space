@@ -1,7 +1,7 @@
 import { ExpansionValue } from "@entity-space/common";
 import { any, Criterion, fromDeepBag, isValue, matches, MatchesBagArgument } from "@entity-space/criteria";
 import { Class, DeepPartial, isDefined, writePath } from "@entity-space/utils";
-import { flatMap, flatten, isEqual, xor, xorWith } from "lodash";
+import { flatMap, isEqual, xor, xorWith } from "lodash";
 import {
     distinctUntilChanged,
     EMPTY,
@@ -22,7 +22,6 @@ import {
 import { EntityHydrationQuery } from "../execution/entity-hydration-query";
 import { IEntityHydrator } from "../execution/i-entity-hydrator";
 import { IEntitySource } from "../execution/i-entity-source";
-import { mergeQueries } from "../query/merge-queries.fn";
 import { Query } from "../query/query";
 import { reduceQueries } from "../query/reduce-queries.fn";
 import { BlueprintInstance } from "../schema/blueprint-instance";
@@ -32,6 +31,7 @@ import { EntityQueryTracing } from "../tracing/entity-query-tracing";
 import { EntitySet } from "./data-structures/entity-set";
 import { Entity } from "./entity";
 import { createCriterionFromEntities } from "./functions/create-criterion-from-entities.fn";
+import { createIdQueryFromEntities } from "./functions/create-id-query-from-entities.fn";
 import { normalizeEntities } from "./functions/normalize-entities.fn";
 import { IEntityStore } from "./i-entity-store";
 import { InMemoryEntityDatabase } from "./in-memory-entity-database";
@@ -43,20 +43,20 @@ export class Workspace implements IEntityStore {
     private store?: IEntityStore;
     private hydrator?: IEntityHydrator;
     private schemas?: EntitySchemaCatalog;
-    private readonly queryCaches = new Map<string, Query[]>();
-    private readonly queryCacheChanged = new Subject<Query[]>();
     private readonly database = new InMemoryEntityDatabase();
     private readonly watchedQueries = new Map<Query, Subject<Entity[]>>();
 
-    onQueryCacheChanged(): Observable<Query[]> {
-        return this.queryCacheChanged.asObservable();
-    }
-
     // [todo] rename to upsert()?
     // [todo] we allow partials, but types don't reflect that (same @ cache and store)
-    add<T>(schema: Class<T>, entities: DeepPartial<BlueprintInstance<T>>[] | DeepPartial<BlueprintInstance<T>>): void;
-    add<T extends Entity = Entity>(schema: IEntitySchema, entities: DeepPartial<T>[] | DeepPartial<T>): void;
-    add(schema: IEntitySchema | Class, entities: Entity[] | Entity): void {
+    async add<T>(
+        schema: Class<T>,
+        entities: DeepPartial<BlueprintInstance<T>>[] | DeepPartial<BlueprintInstance<T>>
+    ): Promise<void>;
+    async add<T extends Entity = Entity>(
+        schema: IEntitySchema,
+        entities: DeepPartial<T>[] | DeepPartial<T>
+    ): Promise<void>;
+    async add(schema: IEntitySchema | Class, entities: Entity[] | Entity): Promise<void> {
         schema = this.toSchema(schema);
         // console.log("🆕 add entities", schema.getId(), JSON.stringify(entities));
 
@@ -68,12 +68,13 @@ export class Workspace implements IEntityStore {
             return;
         }
 
-        // [todo] adding the overloads to support both schemas & blueprints caused having to add this "as Entity[]" assertion, no idea why
-        const queries = this.database.addEntities(schema, entities as Entity[]);
-
-        for (const query of queries) {
-            this.addQueryToCached(query);
-        }
+        await this.database.upsert(
+            new EntitySet({
+                // [todo] adding the overloads to support both schemas & blueprints caused having to add this "as Entity[]" assertion, no idea why
+                query: createIdQueryFromEntities(schema, entities as Entity[]),
+                entities: entities as Entity[],
+            })
+        );
 
         this.emitAllWatchedQueries();
     }
@@ -102,26 +103,20 @@ export class Workspace implements IEntityStore {
         this.schemas = schemas;
     }
 
-    private addQueryToCached(query: Query): void {
-        const cachedQueries = this.getCachedQueries(query.getEntitySchema());
-        this.queryCaches.set(query.getEntitySchema().getId(), mergeQueries(query, ...cachedQueries));
-        this.queryCacheChanged.next(flatten(Array.from(this.queryCaches.values())));
-    }
-
     // [todo] T not used yet; need to add it to QueriedEntities
     async query<T extends Entity = Entity>(query: Query): Promise<false | EntitySet<T>[]> {
         if (this.source) {
-            const cachedQueries = this.getCachedQueries(query.getEntitySchema());
+            const cachedQueries = this.database.getCachedQueries(query.getEntitySchema());
             const reduced = reduceQueries([query], cachedQueries);
             const queriesAgainstSource = reduced === false ? [query] : reduced;
 
             if (queriesAgainstSource.length) {
-                if (reduced !== false) {
+                if (reduced) {
                     this.tracing.queryGotSubtracted(query, cachedQueries, queriesAgainstSource);
                 }
 
                 await lastValueFrom(this.source.query$(queriesAgainstSource, this.database));
-                queriesAgainstSource.forEach(query => this.addQueryToCached(query));
+                queriesAgainstSource.forEach(query => this.database.addQueryToCached(query));
                 this.emitAllWatchedQueries();
             } else {
                 this.tracing.queryGotFullySubtracted(query, cachedQueries, { byLabel: "by cached" });
@@ -157,7 +152,7 @@ export class Workspace implements IEntityStore {
 
         const criteria = createCriterionFromEntities(entities, schema.getKey().getPath());
         const query = new Query({ entitySchema: schema, criteria, expansion });
-        const cachedQueries = this.getCachedQueries(query.getEntitySchema());
+        const cachedQueries = this.database.getCachedQueries(query.getEntitySchema());
         const reduced = reduceQueries([query], cachedQueries);
         const queriesAgainstSource = reduced === false ? [query] : reduced;
 
@@ -181,6 +176,7 @@ export class Workspace implements IEntityStore {
             ).pipe(
                 map(() => {
                     const entities = this.database.querySync(query).getEntities();
+                    // [todo] should only trace "resolved" once
                     this.tracing.queryResolved(query, JSON.stringify(entities));
                     return entities;
                 })
@@ -345,6 +341,10 @@ export class Workspace implements IEntityStore {
         return this.database.querySync(query).getEntities();
     }
 
+    queryCacheChanged$(): Observable<Query[]> {
+        return this.database.queryCacheChanged$();
+    }
+
     async create<T extends Entity>(entities: T[], schema: IEntitySchema): Promise<false | T[]> {
         const result = (await this.store?.create(entities, schema)) ?? false;
 
@@ -352,7 +352,12 @@ export class Workspace implements IEntityStore {
             return false;
         }
 
-        this.add(schema, result);
+        await this.database.upsert(
+            new EntitySet({
+                query: createIdQueryFromEntities(schema, entities),
+                entities,
+            })
+        );
 
         return result as T[];
     }
@@ -364,7 +369,12 @@ export class Workspace implements IEntityStore {
             return false;
         }
 
-        this.add(schema, result);
+        await this.database.upsert(
+            new EntitySet({
+                query: createIdQueryFromEntities(schema, entities),
+                entities,
+            })
+        );
 
         return result as T[];
     }
@@ -374,13 +384,7 @@ export class Workspace implements IEntityStore {
     }
 
     clear(): void {
-        this.queryCaches.clear();
         this.database.clear();
-        this.queryCacheChanged.next([]);
-    }
-
-    private getCachedQueries(schema: IEntitySchema): Query[] {
-        return this.queryCaches.get(schema.getId()) ?? [];
     }
 
     private toSchema(schema: IEntitySchema | Class): IEntitySchema {

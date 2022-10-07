@@ -4,7 +4,6 @@ import { Expansion } from "../expansion/expansion";
 import { IEntitySchema } from "../schema/schema.interface";
 import { reduceQueries } from "./reduce-queries.fn";
 
-// [todo] T is unused
 export class Query {
     constructor({
         entitySchema,

@@ -1,5 +1,5 @@
 import { flatMap } from "lodash";
-import { InMemoryEntityDatabase } from "../entity/in-memory-entity-database";
+import { IEntityDatabase } from "../entity/i-entity-database";
 import { Query } from "../query/query";
 import { reduceQueries } from "../query/reduce-queries.fn";
 import { IEntitySource } from "./i-entity-source";
@@ -13,7 +13,7 @@ export class QueryExecution {
     }: {
         sources: IEntitySource[];
         targets: Query[];
-        database: InMemoryEntityDatabase;
+        database: IEntityDatabase;
     }) {
         this.targets = targets.slice();
         this.openSources = sources.slice();
@@ -27,9 +27,9 @@ export class QueryExecution {
     private readonly targets: Query[];
     private readonly openSources: IEntitySource[];
     private readonly mergedPacketPerSource = new Map<IEntitySource, QueryStreamPacket>();
-    private readonly database: InMemoryEntityDatabase;
+    private readonly database: IEntityDatabase;
 
-    getDatabase(): InMemoryEntityDatabase {
+    getDatabase(): IEntityDatabase {
         return this.database;
     }
 

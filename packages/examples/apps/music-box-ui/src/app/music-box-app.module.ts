@@ -16,6 +16,7 @@ import { SliderModule } from "primeng/slider";
 import { TableModule } from "primeng/table";
 import { TabViewModule } from "primeng/tabview";
 import { ArtistTableComponent } from "./components/artist-table/artist-table.component";
+import { QueryCacheTableComponent } from "./components/query-cache-table/query-cache-table.component";
 import { SongTableComponent } from "./components/song-table/song-table.component";
 import { MusicAppComponent } from "./music-box-app.component";
 import { MusicBoxClientSideEntityApi } from "./music-box-client-side-entity-api";
@@ -37,7 +38,7 @@ import { MusicBoxClientSideEntityApi } from "./music-box-client-side-entity-api"
         InputNumberModule,
         InputMaskModule,
     ],
-    declarations: [MusicAppComponent, SongTableComponent, ArtistTableComponent],
+    declarations: [MusicAppComponent, SongTableComponent, ArtistTableComponent, QueryCacheTableComponent],
     providers: [
         SongLocationEntitySchema,
         EntityQueryTracing,
