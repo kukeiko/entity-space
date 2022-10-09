@@ -4,17 +4,27 @@ import { Expansion } from "../expansion/expansion";
 import { IEntitySchema } from "../schema/schema.interface";
 import { reduceQueries } from "./reduce-queries.fn";
 
+export interface EntityQueryCtorArg {
+    entitySchema: IEntitySchema;
+    criteria?: Criterion;
+    options?: Criterion;
+    expansion?: Expansion | ExpansionValue;
+}
+
 export class Query {
     constructor({
         entitySchema,
         criteria = any(),
+        options = any(),
         expansion,
     }: {
         entitySchema: IEntitySchema;
         criteria?: Criterion;
+        options?: Criterion;
         expansion?: Expansion | ExpansionValue;
     }) {
         this.entitySchema = entitySchema;
+        this.options = options;
         this.criteria = criteria;
         this.expansion =
             expansion === void 0
@@ -26,6 +36,7 @@ export class Query {
 
     private readonly entitySchema: IEntitySchema;
     private readonly criteria: Criterion;
+    private readonly options: Criterion;
     private readonly expansion: Expansion;
 
     getEntitySchema(): IEntitySchema {
@@ -34,6 +45,10 @@ export class Query {
 
     getCriteria(): Criterion {
         return this.criteria;
+    }
+
+    getOptions(): Criterion {
+        return this.options;
     }
 
     withCriteria(criteria: Criterion): Query {
