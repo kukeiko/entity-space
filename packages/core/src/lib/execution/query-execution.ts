@@ -52,10 +52,12 @@ export class QueryExecution {
     }
 
     isSourceFullyPlanned(source: IEntitySource): boolean {
-        const packet = this.getMergedPacketOfSource(source);
-        const reduced = reduceQueries(this.targets, [...packet.getAcceptedQueries(), ...packet.getRejectedQueries()]);
+        // [todo] temporarily™ deactivated until i figured out when to start hydration in the gateway
+        return false;
+        // const packet = this.getMergedPacketOfSource(source);
+        // const reduced = reduceQueries(this.targets, [...packet.getAcceptedQueries(), ...packet.getRejectedQueries()]);
 
-        return reduced && !reduced.length;
+        // return reduced && !reduced.length;
     }
 
     getOpenTargets(): Query[] {
