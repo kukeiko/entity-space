@@ -53,12 +53,18 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag, R exte
         } else if (other instanceof NamedCriteria) {
             // same reduction mechanics as found in and-criteria.ts
             const otherBag = other.getBag();
-            const reductions: {
-                criterion: Criterion;
-                result: Criterion | boolean;
-                key: string;
-                inverted?: Criterion;
-            }[] = [];
+            const reductions: (
+                | {
+                      result: Criterion | true;
+                      key: string;
+                      inverted?: never;
+                  }
+                | {
+                      result: false;
+                      key: string;
+                      inverted: Criterion;
+                  }
+            )[] = [];
 
             for (const key in this.bag) {
                 const mine = this.bag[key];
@@ -77,7 +83,7 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag, R exte
                         return false;
                     }
 
-                    reductions.push({ criterion: mine, key, result: false, inverted });
+                    reductions.push({ key, result: false, inverted });
                 } else {
                     const result = mine.reduce(otherCriterion);
 
@@ -85,7 +91,7 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag, R exte
                         return false;
                     }
 
-                    reductions.push({ criterion: mine, key, result });
+                    reductions.push({ key, result });
                 }
             }
 
@@ -109,19 +115,16 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag, R exte
             const accumulator: Record<string, Criterion> = { ...other.getBag() };
             const built: Record<string, Criterion>[] = [];
 
-            for (const { criterion, key, result, inverted } of reductions) {
+            for (const { key, result, inverted } of reductions) {
                 if (result === true) {
                     continue;
+                } else if (result === false) {
+                    built.push({ ...accumulator, [key]: inverted });
+                    accumulator[key] = this.bag[key]!;
+                } else {
+                    built.push({ ...accumulator, [key]: result });
+                    accumulator[key] = this.bag[key]!;
                 }
-
-                const reduced = result === false ? inverted ?? criterion.invert() : result;
-
-                if (reduced === false) {
-                    return false;
-                }
-
-                built.push({ ...accumulator, [key]: reduced });
-                accumulator[key] = this.bag[key]!;
             }
 
             return built.length === 1
