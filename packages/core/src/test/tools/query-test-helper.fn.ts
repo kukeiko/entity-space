@@ -2,7 +2,9 @@ import { IEntitySource, InMemoryEntityDatabase, mergeQueries, Query, QueryStream
 import { flatMap, flatten } from "lodash";
 import { firstValueFrom, scan, takeLast, tap } from "rxjs";
 
-export type QueryTestHelperOptions = { logEach?: boolean; logFinal?: boolean; logEntities?: boolean } | true;
+export type QueryTestHelperOptions =
+    | { logTracing?: boolean; logEach?: boolean; logFinal?: boolean; logEntities?: boolean }
+    | true;
 
 export async function queryTestHelper<T>(
     queries: Query[] | Query,

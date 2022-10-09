@@ -41,7 +41,14 @@ import { MusicBoxClientSideEntityApi } from "./music-box-client-side-entity-api"
     declarations: [MusicAppComponent, SongTableComponent, ArtistTableComponent, QueryCacheTableComponent],
     providers: [
         SongLocationEntitySchema,
-        EntityQueryTracing,
+        {
+            provide: EntityQueryTracing,
+            useFactory: () => {
+                const tracing = new EntityQueryTracing();
+                tracing.enableConsole();
+                return tracing;
+            },
+        },
         {
             // [todo] copy pasted to music-box-api
             provide: EntitySchemaCatalog,

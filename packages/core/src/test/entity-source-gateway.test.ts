@@ -30,8 +30,14 @@ describe("entity-source-gateway", () => {
             // arrange
             const catalog = new TestContentCatalog();
             const database = new TestContentDatabase(data);
-            const api = buildApi(new TestContentEntityApi(database, catalog, new EntityQueryTracing()));
-            const gateway = new EntitySourceGateway([api], new EntityQueryTracing());
+            const tracing = new EntityQueryTracing();
+
+            if (options === true || options?.logTracing) {
+                tracing.enableConsole();
+            }
+
+            const api = buildApi(new TestContentEntityApi(database, catalog, tracing));
+            const gateway = new EntitySourceGateway([api], tracing);
 
             // act
             const [entities, packet] = await queryTestHelper<User>(query, gateway, options);
