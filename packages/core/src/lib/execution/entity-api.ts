@@ -1,10 +1,12 @@
 import { Entity } from "@entity-space/common";
-import { Criterion, or } from "@entity-space/criteria";
+import { isNotFalse } from "@entity-space/utils";
+import { flatten } from "lodash";
 import { from, map, merge, Observable, of, startWith, switchMap, tap } from "rxjs";
 import { EntitySet } from "../entity/data-structures/entity-set";
 import { IEntityDatabase } from "../entity/i-entity-database";
-import { mergeQueries } from "../query/merge-queries.fn";
+import { EntityQueryTemplate } from "../query/entity-query-template";
 import { Query } from "../query/query";
+import { reduceQueries } from "../query/reduce-queries.fn";
 import { IEntitySchema } from "../schema/schema.interface";
 import { EntityQueryTracing } from "../tracing/entity-query-tracing";
 import { EntityApiEndpoint, EntityApiEndpointData, EntityApiEndpointInvoke } from "./entity-api-endpoint";
@@ -25,23 +27,15 @@ export class EntityApi implements IEntitySource {
 
         return this;
     }
-
     query$<T extends Entity = Entity>(queries: Query[], database: IEntityDatabase): Observable<QueryStreamPacket<T>> {
         const streams = queries.map(query => {
             const endpoints = this.getEndpointsAcceptingSchema(query.getEntitySchema());
-            const [delegatedStreams, openCriteria] = this.dispatchToEndpoints(query, endpoints, database);
-
+            const [delegatedStreams, acceptedQueries] = this.dispatchToEndpoints(query, endpoints, database);
+            const rejectedQueries = reduceQueries(queries, acceptedQueries);
             const initialPackets: QueryStreamPacket[] = [];
 
-            if (openCriteria.length) {
-                const rejected = [
-                    new Query({
-                        entitySchema: query.getEntitySchema(),
-                        criteria: or(openCriteria),
-                        expansion: query.getExpansion(),
-                    }),
-                ];
-                initialPackets.push(new QueryStreamPacket({ rejected }));
+            if (!rejectedQueries || rejectedQueries.length) {
+                initialPackets.push(new QueryStreamPacket({ rejected: rejectedQueries || queries }));
             }
 
             return merge(...initialPackets.map(packet => of(packet)), ...delegatedStreams);
@@ -54,76 +48,60 @@ export class EntityApi implements IEntitySource {
         query: Query,
         endpoints: EntityApiEndpoint[],
         database: IEntityDatabase
-    ): [QueryStream[], Criterion[]] {
-        let openCriteria: Criterion[] = [query.getCriteria()];
+    ): [QueryStream[], Query[]] {
+        let open: Query[] = [query];
         const delegatedStreams: QueryStream[] = [];
+        const acceptedQueries: Query[] = [];
 
         for (const endpoint of endpoints) {
-            const dispatched = this.dispatchToEndpoint(
-                endpoint,
-                new Query({
-                    entitySchema: query.getEntitySchema(),
-                    criteria: or(openCriteria),
-                    expansion: query.getExpansion(),
-                }),
-                database
-            );
+            const dispatched = this.dispatchToEndpoint(endpoint, open, database);
 
             if (!dispatched) {
                 continue;
             }
 
             delegatedStreams.push(dispatched[0]);
-            openCriteria = dispatched[1];
+            acceptedQueries.push(...dispatched[1]);
+            open = reduceQueries(open, dispatched[1]) || open;
 
-            if (!openCriteria.length) {
+            if (!open.length) {
                 break;
             }
         }
 
-        return [delegatedStreams, openCriteria];
+        return [delegatedStreams, acceptedQueries];
     }
 
     private dispatchToEndpoint(
         endpoint: EntityApiEndpoint,
-        query: Query,
+        queries: Query[],
         database: IEntityDatabase
-    ): false | [Observable<QueryStreamPacket>, Criterion[]] {
-        // [todo] why are the query criteria wrapped in an or()?
-        const remapped = endpoint.getTemplate().remap(or(query.getCriteria()));
+    ): false | [Observable<QueryStreamPacket>, Query[]] {
+        const queryTemplate = new EntityQueryTemplate({
+            schema: endpoint.getSchema(),
+            criterion: endpoint.getTemplate(),
+            expansion: endpoint.getExpansion(),
+        });
+
+        const remapped = flatten(queries.map(query => queryTemplate.remap(query)).filter(isNotFalse));
 
         if (!remapped) {
             return false;
         }
 
-        const supportedExpansion = endpoint.getExpansion();
-        const effectiveExpansion = supportedExpansion.intersect(query.getExpansion());
+        const acceptedRemapped = remapped.filter(query => endpoint.acceptCriterion(query.getCriteria()));
 
-        if (!effectiveExpansion) {
+        if (!acceptedRemapped.length) {
             return false;
         }
 
-        const acceptedCriteria = remapped.getCriteria().filter(criterion => endpoint.acceptCriterion(criterion));
+        acceptedRemapped.forEach(query => this.tracing.queryDispatchedToEndpoint(query, endpoint.getTemplate()));
 
-        if (!acceptedCriteria.length) {
-            return false;
-        }
-
-        const accepted = mergeQueries(
-            ...acceptedCriteria.map(
-                criterion =>
-                    new Query({
-                        entitySchema: endpoint.getSchema(),
-                        criteria: criterion,
-                        expansion: effectiveExpansion,
-                    })
-            )
-        );
-
-        accepted.forEach(query => this.tracing.queryDispatchedToEndpoint(query, endpoint.getTemplate()));
+        const initialPacket = new QueryStreamPacket({ accepted: acceptedRemapped });
+        // console.log("✔️ ", acceptedRemapped.join(", "));
 
         const stream = merge(
-            ...accepted.map(query => {
+            ...acceptedRemapped.map(query => {
                 const invoked = endpoint.getInvoke()({
                     criterion: query.getCriteria(),
                     expansion: query.getExpansion().getValue(),
@@ -132,14 +110,12 @@ export class EntityApi implements IEntitySource {
                 return this.invokedToDataStream(invoked).pipe(
                     map(data => this.endpointDataToPacket(query, data)),
                     switchMap(packet => this.addPacketToDatabase(packet, database)),
-                    tap(packet => this.tracePacket(packet, endpoint, accepted))
+                    tap(packet => this.tracePacket(packet, endpoint, acceptedRemapped))
                 );
             })
-        ).pipe(startWith(new QueryStreamPacket({ accepted })));
+        ).pipe(startWith(initialPacket));
 
-        const rejected = or(acceptedCriteria).reduce(or(remapped.getCriteria()));
-
-        return [stream, [...remapped.getOpen(), ...(rejected !== false && rejected !== true ? [rejected] : [])]];
+        return [stream, acceptedRemapped];
     }
 
     private async addPacketToDatabase(
