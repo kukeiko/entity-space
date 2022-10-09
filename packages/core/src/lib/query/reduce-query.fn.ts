@@ -1,43 +1,51 @@
-import { Query } from "./query";
+import { Criterion } from "@entity-space/criteria";
+import { Expansion } from "../expansion/expansion";
+import { EntityQueryCtorArg, Query } from "./query";
+
+type ReducedParts = { options: Criterion | boolean; criteria: Criterion | boolean; expansion: Expansion | boolean };
+
+function containsNoFalse(
+    parts: ReducedParts
+): parts is { options: Criterion | true; criteria: Criterion | true; expansion: Expansion | true } {
+    return !Object.values(parts).some(part => part === false);
+}
 
 // [todo] shouldn't be able to reduce queries w/ different entity-schemas
 export function reduceQuery(a: Query, b: Query): Query[] | false {
-    const reducedCriteria = b.getCriteria().reduce(a.getCriteria());
-    const reducedExpansion = b.getExpansion().reduce(a.getExpansion());
+    const reduction: { options: Criterion | boolean; criteria: Criterion | boolean; expansion: Expansion | boolean } = {
+        options: b.getOptions().reduce(a.getOptions()),
+        criteria: b.getCriteria().reduce(a.getCriteria()),
+        expansion: b.getExpansion().reduce(a.getExpansion()),
+    };
 
-    if (!reducedCriteria || !reducedExpansion) {
+    if (!containsNoFalse(reduction)) {
         return false;
-    } else if (reducedCriteria === true && reducedExpansion === true) {
+    } else if (Object.values(reduction).every(reduced => reduced === true)) {
         return [];
-    } else if (reducedCriteria === true && reducedExpansion !== true) {
-        const query = new Query({
-            entitySchema: a.getEntitySchema(),
-            criteria: a.getCriteria(),
-            expansion: reducedExpansion.getValue(),
-        });
-        return [query];
-    } else if (reducedCriteria !== true && reducedExpansion === true) {
-        const query = new Query({
-            entitySchema: a.getEntitySchema(),
-            criteria: reducedCriteria,
-            expansion: a.getExpansionValue(),
-        });
-        return [query];
-    } else if (reducedCriteria !== true && reducedExpansion !== true) {
-        return [
-            new Query({
-                entitySchema: a.getEntitySchema(),
-                criteria: reducedCriteria,
-                expansion: a.getExpansionValue(),
-            }),
-            new Query({
-                entitySchema: a.getEntitySchema(),
-                criteria: b.getCriteria(),
-                expansion: reducedExpansion.getValue(),
-            }),
-        ];
-    } else {
-        // [todo] figure out why we have to provide this catch-all else case
-        throw new Error("can not happen. why does TypeScript complain? am I wrong?");
     }
+
+    const reducedQueries: Query[] = [];
+    const accumulated: EntityQueryCtorArg = {
+        entitySchema: a.getEntitySchema(),
+        criteria: a.getCriteria(),
+        expansion: a.getExpansion(),
+        options: a.getOptions(),
+    };
+
+    if (reduction.options !== true) {
+        reducedQueries.push(new Query({ ...accumulated, options: reduction.options }));
+        accumulated.options = b.getOptions();
+    }
+
+    if (reduction.criteria !== true) {
+        reducedQueries.push(new Query({ ...accumulated, criteria: reduction.criteria }));
+        accumulated.criteria = b.getCriteria();
+    }
+
+    if (reduction.expansion !== true) {
+        reducedQueries.push(new Query({ ...accumulated, expansion: reduction.expansion }));
+        accumulated.expansion = b.getExpansion();
+    }
+
+    return reducedQueries;
 }
