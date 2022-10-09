@@ -54,7 +54,7 @@ export class EntitySourceGateway implements IEntitySource, IEntityStore, IEntity
 
             queries.forEach(query => this.tracing.queryStartedExecution(query));
 
-            return merge(this.startNextSource$<T>(execution));
+            return this.startNextSource$<T>(execution);
         });
     }
 
@@ -120,7 +120,7 @@ export class EntitySourceGateway implements IEntitySource, IEntityStore, IEntity
         // which would require emitting packets with rejected queries that have not been properly rejected by the EntitySource
         const startNext$ = sourceEnded$.pipe(
             raceWith(sourceIsFullyPlanned$),
-            switchMap(() => merge(this.startNextSource$<T>(execution)))
+            switchMap(() => this.startNextSource$<T>(execution))
         );
 
         const withoutRejected$ = sourcePackets$.pipe(
@@ -186,6 +186,7 @@ export class EntitySourceGateway implements IEntitySource, IEntityStore, IEntity
                 // [todo] see if any deeper expansions have been rejected
                 // [update] is this comment still relevant?
                 const rejected = reduceQueries(relationQueries, accepted) || relationQueries;
+
                 const [finalAccepted, finalRejected] = this.toMappedAcceptedAndRejectedQueries({
                     accepted,
                     hydrationQuery,
@@ -309,8 +310,9 @@ export class EntitySourceGateway implements IEntitySource, IEntityStore, IEntity
         );
 
         const relatedExpansion = expansionValue === true ? relatedSchema.getDefaultExpansion() : expansionValue;
+        const query = new Query({ entitySchema: relatedSchema, criteria, expansion: relatedExpansion });
 
-        return [new Query({ entitySchema: relatedSchema, criteria, expansion: relatedExpansion }), relation];
+        return [query, relation];
     }
 
     private toHydrationQueries<T>(
@@ -325,6 +327,7 @@ export class EntitySourceGateway implements IEntitySource, IEntityStore, IEntity
                     .map(acceptedQuery => this.intersectCriteriaOmitExpansion(acceptedQuery, rejectedQuery))
                     .filter(isNotFalse)
                     .map(dehydratedEntitiesQuery => database.querySync<T>(dehydratedEntitiesQuery))
+                    .filter(entitySet => entitySet.getEntities().length > 0)
                     .map(
                         entitySet =>
                             new EntityHydrationQuery<T>({
