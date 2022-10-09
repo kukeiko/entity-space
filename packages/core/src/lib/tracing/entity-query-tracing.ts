@@ -65,7 +65,7 @@ export class EntityQueryTracing {
         }
 
         console.log(
-            `🔌 query ${query.toString()} got dispatched to an endpoint acepting criteria ${template.toString()}`
+            `🔌 query ${query.toString()} got dispatched to an endpoint accepting criteria ${template.toString()}`
         );
     }
 
