@@ -50,12 +50,12 @@ describe("entity-source-gateway", () => {
             if (expected.accepted) {
                 const accepted = expected.accepted === "all" ? [query] : expected.accepted;
 
-                expect(reduceQueries(packet.getAcceptedQueries(), accepted)).toEqual([]);
+                expect(reduceQueries(accepted, packet.getAcceptedQueries())).toEqual([]);
             }
 
             if (expected.rejected) {
                 const rejected = expected.rejected === "all" ? [query] : expected.rejected;
-                expect(reduceQueries(packet.getRejectedQueries(), rejected)).toEqual([]);
+                expect(reduceQueries(rejected, packet.getRejectedQueries())).toEqual([]);
             }
         });
     }
@@ -70,15 +70,18 @@ describe("entity-source-gateway", () => {
 
     wrappedQueryTestHelper({
         title: "should work #2 (criteria on root)",
-        buildApi: api => api.withGetAllUsers(),
+        // buildApi: api => api.withGetAllUsers(),
+        buildApi: api => api.withGetUserById(),
         data: { users: [{ id: 2, parentId: 7 }, { id: 7 }] },
         query: createQuery(catalog, UserBlueprint, { id: 2 }, { id: true, parentId: true, parent: { id: true } }),
         expected: { entities: [{ id: 2, parentId: 7, parent: { id: 7 } }], accepted: "all", rejected: [] },
+        // options: true,
     });
 
     wrappedQueryTestHelper({
         title: "should work #3 (criteria on both root and parent)",
-        buildApi: api => api.withGetAllUsers(),
+        // buildApi: api => api.withGetAllUsers(),
+        buildApi: api => api.withGetUserById(),
         data: { users: [{ id: 2, parentId: 7 }, { id: 7 }] },
         query: createQuery(
             catalog,
@@ -104,7 +107,7 @@ describe("entity-source-gateway", () => {
 
     wrappedQueryTestHelper({
         title: "should work #5 (deep expansion on parent)",
-        buildApi: api => api.withGetAllUsers(),
+        buildApi: api => api.withGetUserById(),
         data: { users: [{ id: 2, parentId: 7 }, { id: 7, parentId: 13 }, { id: 13, parentId: 64 }, { id: 64 }] },
         query: createQuery(
             catalog,

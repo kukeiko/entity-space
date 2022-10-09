@@ -1,4 +1,5 @@
-import { EntityApi } from "@entity-space/core";
+import { isValueTemplate } from "@entity-space/criteria";
+import { EntityApi } from "../../index";
 import { EntityQueryTracing } from "../../lib/tracing/entity-query-tracing";
 import { UserBlueprint } from "./common/user.model";
 import { TestContentCatalog } from "./test-content-catalog";
@@ -21,6 +22,16 @@ export class TestContentEntityApi extends EntityApi {
                     name: true,
                     parentId: true,
                 })
+                // .isLoadedBy(({ criterion }) => criterion.filter(this.data.get("users")))
+                .isLoadedBy(() => this.data.get("users"))
+        );
+    }
+
+    withGetUserById(): this {
+        return this.addEndpoint(this.catalog.resolve(UserBlueprint), builder =>
+            builder
+                .requiresFields({ id: isValueTemplate(Number) })
+                .supportsExpansion({ id: true, name: true, parentId: true })
                 .isLoadedBy(({ criterion }) => criterion.filter(this.data.get("users")))
         );
     }
