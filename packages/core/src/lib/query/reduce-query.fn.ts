@@ -4,9 +4,11 @@ import { EntityQueryCtorArg, Query } from "./query";
 
 type ReducedParts = { options: Criterion | boolean; criteria: Criterion | boolean; expansion: Expansion | boolean };
 
-function containsNoFalse(
-    parts: ReducedParts
-): parts is { options: Criterion | true; criteria: Criterion | true; expansion: Expansion | true } {
+type WithoutFalse<T> = {
+    [K in keyof T]: Exclude<T[K], false>;
+};
+
+function containsNoFalse(parts: ReducedParts): parts is WithoutFalse<ReducedParts> {
     return !Object.values(parts).some(part => part === false);
 }
 
