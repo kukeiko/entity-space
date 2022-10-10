@@ -1,5 +1,5 @@
+import { IEntitySchema } from "@entity-space/common";
 import { uniq } from "lodash";
-import { IEntitySchema } from "../../schema/schema.interface";
 import { ComplexKeyMap } from "../data-structures/complex-key-map";
 import { Entity } from "../entity";
 

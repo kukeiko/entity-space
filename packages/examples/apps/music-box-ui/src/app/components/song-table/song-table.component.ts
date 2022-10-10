@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, Input } from "@angular/core";
-import { Blueprint, define, EntitySchemaCatalog, Workspace } from "@entity-space/core";
+import { Blueprint, define, EntitySchemaCatalog } from "@entity-space/common";
+import { Workspace } from "@entity-space/core";
 import { Artist, ArtistBlueprint, Song, SongBlueprint, WebSongLocation } from "@entity-space/examples/libs/music-model";
 import { combineLatest, map, shareReplay, switchMap } from "rxjs";
 

@@ -1,6 +1,6 @@
+import { IEntitySchema } from "@entity-space/common";
 import { Observable } from "rxjs";
 import { Query } from "../query/query";
-import { IEntitySchema } from "../schema/schema.interface";
 import { EntitySet } from "./data-structures/entity-set";
 import { Entity } from "./entity";
 

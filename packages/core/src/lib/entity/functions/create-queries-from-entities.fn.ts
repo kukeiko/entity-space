@@ -1,5 +1,5 @@
+import { IEntitySchema } from "@entity-space/common";
 import { Query } from "../../query/query";
-import { IEntitySchema } from "../../schema/schema.interface";
 import { Entity } from "../entity";
 import { createIdQueryFromEntities } from "./create-id-query-from-entities.fn";
 

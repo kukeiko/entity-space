@@ -1,4 +1,4 @@
-import { Blueprint, BlueprintInstance, define } from "@entity-space/core";
+import { Blueprint, BlueprintInstance, define } from "@entity-space/common";
 import { TreeNodeBlueprint } from "./tree-node.model";
 
 @Blueprint({ id: "tree-node-parents" })

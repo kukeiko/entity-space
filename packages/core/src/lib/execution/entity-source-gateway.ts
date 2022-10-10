@@ -1,4 +1,4 @@
-import { Entity, ExpansionValue } from "@entity-space/common";
+import { Entity, ExpansionValue, IEntitySchema, IEntitySchemaRelation } from "@entity-space/common";
 import { and, fromDeepBag, NamedCriteria } from "@entity-space/criteria";
 import { isNotFalse, writePath } from "@entity-space/utils";
 import {
@@ -23,7 +23,6 @@ import { Expansion } from "../expansion/expansion";
 import { mergeQueries } from "../query/merge-queries.fn";
 import { Query } from "../query/query";
 import { reduceQueries } from "../query/reduce-queries.fn";
-import { IEntitySchema, IEntitySchemaRelation } from "../schema/schema.interface";
 import { EntityQueryTracing } from "../tracing/entity-query-tracing";
 import { EntityHydrationQuery } from "./entity-hydration-query";
 import { IEntityHydrator } from "./i-entity-hydrator";

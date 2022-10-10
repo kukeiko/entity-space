@@ -1,10 +1,8 @@
-import { ExpansionValue } from "@entity-space/common";
+import { EntitySchema, ExpansionValue, IEntitySchema } from "@entity-space/common";
 import { Criterion, inSet, matches } from "@entity-space/criteria";
 import { firstValueFrom, take, tap, toArray } from "rxjs";
 import { Workspace } from "../lib/entity/workspace";
 import { Query } from "../lib/query/query";
-import { EntitySchema } from "../lib/schema/entity-schema";
-import { IEntitySchema } from "../lib/schema/schema.interface";
 import { EntityQueryTracing } from "../lib/tracing/entity-query-tracing";
 
 function createWorkspace(): Workspace {

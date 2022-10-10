@@ -1,4 +1,5 @@
-import { Entity, EntitySchemaCatalog, IEntitySchema, normalizeEntities, Query } from "@entity-space/core";
+import { Entity, EntitySchemaCatalog, IEntitySchema } from "@entity-space/common";
+import { normalizeEntities, Query } from "@entity-space/core";
 import { isValue, matches } from "@entity-space/criteria";
 import { Song, SongBlueprint, SongLocation } from "@entity-space/examples/libs/music-model";
 import { FileOnDiskBasedEntitySource } from "@entity-space/node";

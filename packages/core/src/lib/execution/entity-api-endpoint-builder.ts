@@ -1,4 +1,4 @@
-import { Entity, ExpansionValue } from "@entity-space/common";
+import { Entity, ExpansionValue, IEntitySchema } from "@entity-space/common";
 import {
     anyTemplate,
     Criterion,
@@ -10,7 +10,6 @@ import {
 } from "@entity-space/criteria";
 import { size } from "lodash";
 import { Expansion } from "../expansion/expansion";
-import { IEntitySchema } from "../schema/schema.interface";
 import { EntityApiEndpoint, EntityApiEndpointInvoke } from "./entity-api-endpoint";
 
 type AddFieldsArgument<T> = {

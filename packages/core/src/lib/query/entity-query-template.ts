@@ -1,7 +1,7 @@
+import { IEntitySchema } from "@entity-space/common";
 import { anyTemplate, Criterion, ICriterionTemplate } from "@entity-space/criteria";
 import { permutateEntries } from "@entity-space/utils";
 import { Expansion } from "../expansion/expansion";
-import { IEntitySchema } from "../schema/schema.interface";
 import { Query } from "./query";
 
 type RemappedParts = {

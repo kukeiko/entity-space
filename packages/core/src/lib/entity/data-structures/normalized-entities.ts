@@ -1,4 +1,4 @@
-import { IEntitySchema } from "../../schema/schema.interface";
+import { IEntitySchema } from "@entity-space/common";
 import { Entity } from "../entity";
 
 // [todo] just use Map instead?

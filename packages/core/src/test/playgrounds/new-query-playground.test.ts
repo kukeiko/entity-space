@@ -1,7 +1,6 @@
-import { Expand, ExpansionValue } from "@entity-space/common";
+import { BlueprintInstance, Expand, ExpansionValue } from "@entity-space/common";
 import { NamedCriteriaBag } from "@entity-space/criteria";
 import { Class } from "@entity-space/utils";
-import { BlueprintInstance } from "../../index";
 import { CanvasBlueprint, Product, ShapeBlueprints, User, UserBlueprint } from "../content";
 
 xdescribe("new query playground", () => {

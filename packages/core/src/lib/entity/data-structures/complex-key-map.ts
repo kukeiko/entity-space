@@ -1,3 +1,4 @@
+import { Entity } from "@entity-space/common";
 import {
     Criterion,
     InSetCriterion,
@@ -7,8 +8,7 @@ import {
     NamedCriteriaTemplate,
     RemapCriterionResult,
 } from "@entity-space/criteria";
-import { writePath, readPath } from "@entity-space/utils";
-import { Entity } from "../entity";
+import { readPath, writePath } from "@entity-space/utils";
 
 // [todo] wanted to move this to utils, and then i noticed we have a dependency to criteria package,
 // so we can't really do that. maybe we should have a map implementing getting items by criteria

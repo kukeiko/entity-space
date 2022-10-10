@@ -1,6 +1,5 @@
-import { Expand, ExpansionValue } from "@entity-space/common";
+import { BlueprintInstance, define, Expand, ExpansionValue } from "@entity-space/common";
 import { Unbox } from "@entity-space/utils";
-import { BlueprintInstance, define } from "../../index";
 import { Canvas, CanvasBlueprint, ProductBlueprint, ShapeBlueprints, Square } from "../content";
 
 // credit to captain-yossarian https://captain-yossarian.medium.com/typescript-object-oriented-typings-4fd42ce14c75

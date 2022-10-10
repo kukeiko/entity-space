@@ -1,7 +1,7 @@
-import { ExpansionValue } from "@entity-space/common";
+import { EntitySchema, ExpansionValue, PrimitiveSchema } from "@entity-space/common";
 import { Criterion, inSet, isValueTemplate, matches } from "@entity-space/criteria";
 import { cloneDeep } from "lodash";
-import { EntityApi, EntitySchema, EntitySourceGateway, PrimitiveSchema, Query } from "../../index";
+import { EntityApi, EntitySourceGateway, Query } from "../../index";
 import { EntityQueryTracing } from "../../lib/tracing/entity-query-tracing";
 import { queryTestHelper } from "../tools/query-test-helper.fn";
 

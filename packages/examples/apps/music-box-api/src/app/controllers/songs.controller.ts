@@ -1,4 +1,4 @@
-import { EntitySchemaCatalog, IEntitySchema } from "@entity-space/core";
+import { EntitySchemaCatalog, IEntitySchema } from "@entity-space/common";
 import { Song, SongBlueprint } from "@entity-space/examples/libs/music-model";
 import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post } from "@nestjs/common";
 import { DiskDbService } from "../disk-db.service";

@@ -1,10 +1,9 @@
-import { Entity, UnfoldedExpansion } from "@entity-space/common";
 import { EntitySchemaIndex } from "./entity-schema-index";
 import { EntitySchemaKey } from "./entity-schema-key";
 import { EntitySchemaProperty } from "./entity-schema-property";
 import { EntitySchemaRelation } from "./entity-schema-relation";
-import { ArraySchema } from "./property-value/array-schema";
-import { PrimitiveSchema } from "./property-value/primitive-schema";
+import { ArraySchema } from "./array-schema";
+import { PrimitiveSchema } from "./primitive-schema";
 import {
     IEntitySchema,
     IEntitySchemaIndex,
@@ -13,6 +12,8 @@ import {
     IPrimitiveSchema,
     IPropertyValueSchema,
 } from "./schema.interface";
+import { Entity } from "../entity.type";
+import { UnfoldedExpansion } from "../unfolded-expansion.type";
 
 // [todo] rename to "EntityTypeSchema"
 export class EntitySchema<T extends Entity = Entity> implements IEntitySchema<T> {

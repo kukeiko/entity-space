@@ -1,4 +1,4 @@
-import { EntitySchemaCatalog } from "../../lib/schema/entity-schema-catalog";
+import { EntitySchemaCatalog } from "@entity-space/common";
 
 export class TestContentCatalog extends EntitySchemaCatalog {
     constructor() {

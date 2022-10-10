@@ -1,4 +1,4 @@
-import { ExpansionValue } from "@entity-space/common";
+import { BlueprintInstance, EntitySchemaCatalog, ExpansionValue, IEntitySchema } from "@entity-space/common";
 import { any, Criterion, fromDeepBag, isValue, matches, MatchesBagArgument } from "@entity-space/criteria";
 import { Class, DeepPartial, isDefined, writePath } from "@entity-space/utils";
 import { flatMap, isEqual, xor, xorWith } from "lodash";
@@ -24,9 +24,6 @@ import { IEntityHydrator } from "../execution/i-entity-hydrator";
 import { IEntitySource } from "../execution/i-entity-source";
 import { Query } from "../query/query";
 import { reduceQueries } from "../query/reduce-queries.fn";
-import { BlueprintInstance } from "../schema/blueprint-instance";
-import { EntitySchemaCatalog } from "../schema/entity-schema-catalog";
-import { IEntitySchema } from "../schema/schema.interface";
 import { EntityQueryTracing } from "../tracing/entity-query-tracing";
 import { EntitySet } from "./data-structures/entity-set";
 import { Entity } from "./entity";

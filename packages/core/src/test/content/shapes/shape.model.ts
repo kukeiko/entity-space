@@ -1,4 +1,4 @@
-import { Blueprint, BlueprintInstance, define } from "@entity-space/core";
+import { Blueprint, BlueprintInstance, define } from "@entity-space/common";
 import { Class } from "@entity-space/utils";
 import { DataEntryBlueprint } from "../common/data-entry.model";
 import { UserBlueprint } from "../common/user.model";

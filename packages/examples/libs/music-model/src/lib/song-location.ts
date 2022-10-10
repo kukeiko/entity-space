@@ -1,4 +1,4 @@
-import { Blueprint, BlueprintInstance, define, EntitySchema } from "@entity-space/core";
+import { Blueprint, BlueprintInstance, define, EntitySchema } from "@entity-space/common";
 import { SongBlueprint } from "./song";
 
 export interface BaseSongLocation {

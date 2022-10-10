@@ -1,7 +1,6 @@
+import { Entity, IEntitySchema } from "@entity-space/common";
 import { Criterion, or } from "@entity-space/criteria";
-import { IEntitySchema } from "../../schema/schema.interface";
 import { ComplexKeyMap } from "../data-structures/complex-key-map";
-import { Entity } from "../entity";
 import { EntityStoreCommonIndex } from "./entity-store-common-index";
 import { EntityStoreUniqueIndex } from "./entity-store-unique-index";
 

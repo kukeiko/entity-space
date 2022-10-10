@@ -1,5 +1,6 @@
 import { Component, OnDestroy, OnInit } from "@angular/core";
-import { Blueprint, BlueprintInstance, define, EntitySchemaCatalog, Query, Workspace } from "@entity-space/core";
+import { Blueprint, BlueprintInstance, define, EntitySchemaCatalog } from "@entity-space/common";
+import { Query, Workspace } from "@entity-space/core";
 import { inRange, matches, some } from "@entity-space/criteria";
 import {
     Artist,

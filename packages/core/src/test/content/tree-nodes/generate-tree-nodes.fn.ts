@@ -1,4 +1,4 @@
-import { BlueprintInstance } from "@entity-space/core";
+import { BlueprintInstance } from "@entity-space/common";
 import { TreeNodeBlueprint } from "./tree-node.model";
 
 interface GenerateTreeNodesOptions {

@@ -1,9 +1,9 @@
-import { Blueprint, BlueprintInstance, define } from "@entity-space/core";
+import { Blueprint, BlueprintInstance, define } from "@entity-space/common";
 import { ReviewBlueprint } from "./review.model";
 
 @Blueprint({ id: "users" })
 export class UserBlueprint {
-    id = define(Number, { id: true, required: true, readOnly: true });
+    id = define(Number, { id: true, required: true, readOnly: true, index: true });
     name = define(String);
     // [todo] expected parentId = define([Number, Null]) to work as well
     // figure out which one is more obvious for the user (probably the nullable attribute)

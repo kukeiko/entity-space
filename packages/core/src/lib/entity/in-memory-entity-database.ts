@@ -1,4 +1,4 @@
-import { ExpansionValue } from "@entity-space/common";
+import { ExpansionValue, IEntitySchema, IEntitySchemaRelation } from "@entity-space/common";
 import {
     any,
     AnyCriterion,
@@ -15,7 +15,6 @@ import { Expansion } from "../expansion/expansion";
 import { mergeQueries } from "../query/merge-queries.fn";
 import { Query } from "../query/query";
 import { reduceQueries } from "../query/reduce-queries.fn";
-import { IEntitySchema, IEntitySchemaRelation } from "../schema/schema.interface";
 import { EntitySet } from "./data-structures/entity-set";
 import { Entity } from "./entity";
 import { createCriterionFromEntities } from "./functions/create-criterion-from-entities.fn";

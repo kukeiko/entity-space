@@ -1,4 +1,5 @@
-import { Entity, UnfoldedExpansion } from "@entity-space/common";
+import { Entity } from "../entity.type";
+import { UnfoldedExpansion } from "../unfolded-expansion.type";
 
 export type PrimitiveSchemaDataType = "boolean" | "integer" | "number" | "string";
 

@@ -1,4 +1,4 @@
-import { EntitySchema } from "@entity-space/core";
+import { EntitySchema } from "@entity-space/common";
 
 export class CommonModelSchemaCatalog {
     constructor() {

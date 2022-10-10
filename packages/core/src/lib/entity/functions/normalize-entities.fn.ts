@@ -1,4 +1,4 @@
-import { IEntitySchema } from "../../schema/schema.interface";
+import { IEntitySchema } from "@entity-space/common";
 import { NormalizedEntities } from "../data-structures/normalized-entities";
 import { Entity } from "../entity";
 

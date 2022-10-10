@@ -1,5 +1,5 @@
-import { ExpansionValue } from "@entity-space/common";
-import { EntitySchema, Query, reduceQueries } from "@entity-space/core";
+import { EntitySchema, ExpansionValue } from "@entity-space/common";
+import { Query, reduceQueries } from "@entity-space/core";
 import { Criterion } from "@entity-space/criteria";
 
 // [todo] add more tests

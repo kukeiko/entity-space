@@ -1,4 +1,4 @@
-import { Entity } from "@entity-space/common";
+import { Entity, IEntitySchema } from "@entity-space/common";
 import { isNotFalse } from "@entity-space/utils";
 import { flatten } from "lodash";
 import { from, map, merge, Observable, of, startWith, switchMap, tap } from "rxjs";
@@ -7,7 +7,6 @@ import { IEntityDatabase } from "../entity/i-entity-database";
 import { EntityQueryTemplate } from "../query/entity-query-template";
 import { Query } from "../query/query";
 import { reduceQueries } from "../query/reduce-queries.fn";
-import { IEntitySchema } from "../schema/schema.interface";
 import { EntityQueryTracing } from "../tracing/entity-query-tracing";
 import { EntityApiEndpoint, EntityApiEndpointData, EntityApiEndpointInvoke } from "./entity-api-endpoint";
 import { EntityApiEndpointBuilder } from "./entity-api-endpoint-builder";

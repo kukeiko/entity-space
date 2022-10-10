@@ -1,4 +1,4 @@
-import { EntitySchema } from "../lib/schema/entity-schema";
+import { EntitySchema } from "@entity-space/common";
 import { mergeEntities } from "../lib/entity/functions/merge-entities.fn";
 
 interface Foo {

@@ -1,4 +1,4 @@
-import { BlueprintInstance, define } from "@entity-space/core";
+import { BlueprintInstance, define } from "@entity-space/common";
 import { UserBlueprint } from "./user.model";
 
 export class ReviewBlueprint {
