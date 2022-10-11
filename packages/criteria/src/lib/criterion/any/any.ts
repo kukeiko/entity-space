@@ -1,4 +1,5 @@
 import { Criterion } from "../criterion";
+import { never } from "../never/never.fn";
 
 export class AnyCriterion extends Criterion {
     reduce(_: Criterion): boolean | Criterion {
@@ -6,8 +7,7 @@ export class AnyCriterion extends Criterion {
     }
 
     override invert(): false | Criterion {
-        // [todo] implement & return "NeverCriterion"
-        return false;
+        return never();
     }
 
     override merge(other: Criterion): false | Criterion {

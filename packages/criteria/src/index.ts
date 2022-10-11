@@ -29,6 +29,8 @@ export * from "./lib/templates/instanced-criterion-template.type";
 export * from "./lib/templates/is-value-template.fn";
 export * from "./lib/templates/named-criteria-template";
 export * from "./lib/templates/named-template.fn";
+export * from "./lib/templates/never-criterion.template";
+export * from "./lib/templates/never-template.fn";
 export * from "./lib/templates/or-template.fn";
 export * from "./lib/templates/remap-criterion-result";
 export * from "./lib/templates/some-criterion.template";
