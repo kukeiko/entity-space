@@ -17,10 +17,13 @@ describe("lexer", () => {
     });
 
     function shouldLex(input: string, tokens: Token[], specFn = it): void {
-        specFn(`should lex ${input} to ${JSON.stringify(tokens)}`, () => {
-            const lexed = lex(input);
-            expect(lexed).toEqual(tokens);
-        });
+        specFn(
+            `should lex ${input} to [${tokens.map(token => `${TokenType[token.type]}(${token.value})`).join(", ")}]`,
+            () => {
+                const lexed = lex(input);
+                expect(lexed).toEqual(tokens);
+            }
+        );
     }
 
     function fshouldLex(input: string, tokens: Token[]): void {
@@ -62,4 +65,7 @@ describe("lexer", () => {
     ]);
 
     shouldLex('"foo"', [token(TokenType.String, "foo")]);
+    shouldLex("true", [token(TokenType.Literal, "true")]);
+    shouldLex("false", [token(TokenType.Literal, "false")]);
+    shouldLex("null", [token(TokenType.Literal, "null")]);
 });

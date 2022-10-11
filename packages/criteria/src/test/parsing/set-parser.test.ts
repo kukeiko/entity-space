@@ -33,4 +33,18 @@ describe("parse-tokens: in-set / not-in-set", () => {
         ],
         notInSet([1, 2, 3])
     );
+
+    itShouldParseTokens(
+        setCriterionTokenParser,
+        [
+            token(TokenType.Special, "{"),
+            token(TokenType.Literal, "true"),
+            token(TokenType.Special, ","),
+            token(TokenType.Number, "2"),
+            token(TokenType.Special, ","),
+            token(TokenType.String, "null"),
+            token(TokenType.Special, "}"),
+        ],
+        inSet([true, 2, "null"])
+    );
 });

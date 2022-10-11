@@ -1,8 +1,9 @@
 import { merging, xmerging } from "../tools/merging.fn";
 
 describe("merging criteria", () => {
-    // binary
+    // value
     merging("true").with("true").shouldBe("true");
+    merging("true").with("false").shouldBe("{true, false}");
     merging("false").with("false").shouldBe("false");
     merging("even").with("even").shouldBe("even");
     merging("odd").with("odd").shouldBe("odd");
