@@ -14,15 +14,15 @@ function containsNoFalse(parts: ReducedParts): parts is WithoutFalse<ReducedPart
 
 // [todo] shouldn't be able to reduce queries w/ different entity-schemas
 export function reduceQuery(a: Query, b: Query): Query[] | false {
-    const reduction: { options: Criterion | boolean; criteria: Criterion | boolean; expansion: Expansion | boolean } = {
+    const reducedParts: ReducedParts = {
         options: b.getOptions().reduce(a.getOptions()),
         criteria: b.getCriteria().reduce(a.getCriteria()),
         expansion: b.getExpansion().reduce(a.getExpansion()),
     };
 
-    if (!containsNoFalse(reduction)) {
+    if (!containsNoFalse(reducedParts)) {
         return false;
-    } else if (Object.values(reduction).every(reduced => reduced === true)) {
+    } else if (Object.values(reducedParts).every(reduced => reduced === true)) {
         return [];
     }
 
@@ -34,18 +34,18 @@ export function reduceQuery(a: Query, b: Query): Query[] | false {
         options: a.getOptions(),
     };
 
-    if (reduction.options !== true) {
-        reducedQueries.push(new Query({ ...accumulated, options: reduction.options }));
+    if (reducedParts.options !== true) {
+        reducedQueries.push(new Query({ ...accumulated, options: reducedParts.options }));
         accumulated.options = b.getOptions();
     }
 
-    if (reduction.criteria !== true) {
-        reducedQueries.push(new Query({ ...accumulated, criteria: reduction.criteria }));
+    if (reducedParts.criteria !== true) {
+        reducedQueries.push(new Query({ ...accumulated, criteria: reducedParts.criteria }));
         accumulated.criteria = b.getCriteria();
     }
 
-    if (reduction.expansion !== true) {
-        reducedQueries.push(new Query({ ...accumulated, expansion: reduction.expansion }));
+    if (reducedParts.expansion !== true) {
+        reducedQueries.push(new Query({ ...accumulated, expansion: reducedParts.expansion }));
         accumulated.expansion = b.getExpansion();
     }
 
