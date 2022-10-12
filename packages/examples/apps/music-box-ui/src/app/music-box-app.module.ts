@@ -71,6 +71,7 @@ import { MusicBoxClientSideEntityApi } from "./music-box-client-side-entity-api"
 
                 return controller
                     .withGetAllArtists()
+                    .withSearchSongs()
                     .withGetAllSongs()
                     .withGetSongById()
                     .withGetSongLocationsBySongId();

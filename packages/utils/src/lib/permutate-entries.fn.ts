@@ -28,6 +28,7 @@ function permutateEntriesInternal<T>(
 
 type Permutated<T> = { [K in keyof T]: Unbox<T[K]> };
 
+// [todo] i think we can get rid of the aggregated parameter
 export function permutateEntries<T>(entries: T, aggregated: Partial<T> = {}): Permutated<T>[] {
     const entries_ = Object.entries(entries);
 

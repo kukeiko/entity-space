@@ -36,6 +36,17 @@
                         [max]="600"
                     ></p-slider>
                 </div>
+                <div class="field col-1">
+                    <label for="searchText">Search</label>
+                    <input
+                        type="text"
+                        name="searchText"
+                        id="searchText"
+                        pInputText
+                        [ngModel]="state.ui.filter.searchText"
+                        (ngModelChange)="changeUiState('filter.searchText', $event)"
+                    />
+                </div>
             </div>
             <song-table [songs]="state.data.songs"></song-table>
         </ng-template>

@@ -1,3 +1,4 @@
+import { ExpansionValue } from "@entity-space/common";
 import { or } from "@entity-space/criteria";
 import { Expansion } from "../expansion/expansion";
 import { Query } from "./query";
@@ -8,12 +9,22 @@ export function mergeQuery(a: Query, b: Query): false | Query {
         return false;
     }
 
-    const entitySchema = a.getEntitySchema();
+    if (!a.getOptions().equivalent(b.getOptions())) {
+        return false;
+    }
 
-    if (a.getCriteria().equivalent(b.getCriteria())) {
+    const options = a.getOptions();
+    const entitySchema = a.getEntitySchema();
+    const equivalentCriteria = a.getCriteria().equivalent(b.getCriteria());
+
+    if (equivalentCriteria) {
         // same identity, just merge expansions
-        return new Query(
-            { entitySchema, criteria: a.getCriteria(), expansion: Expansion.mergeValues(a.getEntitySchema(), a.getExpansionValue(), b.getExpansionValue()) }        );
+        return new Query({
+            entitySchema,
+            criteria: a.getCriteria(),
+            expansion: Expansion.mergeValues(a.getEntitySchema(), a.getExpansionValue(), b.getExpansionValue()),
+            options
+        });
     }
 
     const mergedCriteria = a.getCriteria().merge(b.getCriteria());
@@ -22,36 +33,44 @@ export function mergeQuery(a: Query, b: Query): false | Query {
 
     const aIsSubsetOfB = expandReduced_A_by_B !== false && Object.keys(expandReduced_A_by_B).length === 0;
     const bIsSubsetOfA = expandReduced_B_by_A !== false && Object.keys(expandReduced_B_by_A).length === 0;
+    const equivalentExpansion = aIsSubsetOfB && bIsSubsetOfA;
 
-    if (aIsSubsetOfB && bIsSubsetOfA && mergedCriteria === false) {
-        return new Query({ entitySchema, criteria: or(a.getCriteria(), b.getCriteria()), expansion: a.getExpansionValue() });
+    if (equivalentExpansion && mergedCriteria === false) {
+        return new Query({
+            entitySchema,
+            criteria: or(a.getCriteria(), b.getCriteria()),
+            expansion: a.getExpansionValue(),
+            options,
+        });
     }
 
     if (mergedCriteria === false) {
         return false;
     }
 
-    if (aIsSubsetOfB && bIsSubsetOfA) {
-        // equal expansion
-        return new Query({ entitySchema, criteria: mergedCriteria, expansion: a.getExpansionValue() });
+    const criteria = mergedCriteria;
+    let expansion: ExpansionValue | undefined;
+
+    if (equivalentExpansion) {
+        expansion = a.getExpansionValue();
     } else if (aIsSubsetOfB) {
-        // [todo] use criterion.equivalent()
-        if (a.getCriteria().reduce(b.getCriteria()) === true && b.getCriteria().reduce(a.getCriteria()) === true) {
-            // equal criteria
-            return new Query({ entitySchema, criteria: mergedCriteria, expansion: b.getExpansionValue() });
+        if (equivalentCriteria) {
+            expansion = b.getExpansionValue();
         } else if (b.getCriteria().reduce(a.getCriteria()) === true) {
             // [todo] redundant?
-            return new Query({ entitySchema, criteria: mergedCriteria, expansion: b.getExpansionValue() });
+            expansion = b.getExpansionValue();
         }
     } else if (bIsSubsetOfA) {
-        // [todo] use criterion.equivalent()
-        if (a.getCriteria().reduce(b.getCriteria()) === true && b.getCriteria().reduce(a.getCriteria()) === true) {
-            // equal criteria
-            return new Query({ entitySchema, criteria: mergedCriteria, expansion: a.getExpansionValue() });
+        if (equivalentCriteria) {
+            expansion = a.getExpansionValue();
         } else if (a.getCriteria().reduce(b.getCriteria()) === true) {
             // [todo] redundant?
-            return new Query({ entitySchema, criteria: mergedCriteria, expansion: a.getExpansionValue() });
+            expansion = a.getExpansionValue();
         }
+    }
+
+    if (expansion) {
+        return new Query({ entitySchema, options, criteria, expansion });
     }
 
     return false;

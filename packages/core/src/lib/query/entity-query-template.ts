@@ -1,5 +1,5 @@
 import { IEntitySchema } from "@entity-space/common";
-import { anyTemplate, Criterion, ICriterionTemplate } from "@entity-space/criteria";
+import { anyTemplate, Criterion, ICriterionTemplate, neverTemplate } from "@entity-space/criteria";
 import { permutateEntries } from "@entity-space/utils";
 import { Expansion } from "../expansion/expansion";
 import { Query } from "./query";
@@ -31,7 +31,7 @@ export class EntityQueryTemplate {
         expansion?: Expansion;
     }) {
         this.schema = schema;
-        this.options = options ?? anyTemplate();
+        this.options = options ?? neverTemplate();
         this.criterion = criterion ?? anyTemplate();
         this.expansion = expansion ?? new Expansion({ schema, value: true });
     }

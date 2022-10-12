@@ -10,6 +10,8 @@ import {
 } from "@entity-space/criteria";
 import { cloneJson, groupBy, readPath } from "@entity-space/utils";
 import { flatten } from "lodash";
+import { NeverCriterion } from "packages/criteria/src/lib/criterion/never/never";
+import { never } from "packages/criteria/src/lib/criterion/never/never.fn";
 import { Observable, Subject } from "rxjs";
 import { Expansion } from "../expansion/expansion";
 import { mergeQueries } from "../query/merge-queries.fn";
@@ -28,6 +30,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
     private readonly stores = new Map<string, EntityStore>();
     private readonly cachedQueries = new Map<string, Query[]>();
     private readonly queryCacheChanged = new Subject<Query[]>();
+    private readonly optionsCache: { options: Criterion; ids: Criterion }[] = [];
 
     queryCacheChanged$(): Observable<Query[]> {
         return this.queryCacheChanged.asObservable();
@@ -68,6 +71,16 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         const criterion = this.withoutRetlationalCriteria(query.getCriteria(), query.getEntitySchema());
         let entities = store.getByCriterion(criterion) as T[];
 
+        const options = query.getOptions();
+
+        if (!(options instanceof NeverCriterion) && !(options instanceof AnyCriterion)) {
+            for (const cachedOptions of this.optionsCache) {
+                if (cachedOptions.options.equivalent(options)) {
+                    entities = cachedOptions.ids.filter(entities);
+                }
+            }
+        }
+
         if (!query.getExpansion().isEmpty() && entities.length > 0) {
             // [todo] dirty to do it here?
             // [todo] this way of cloning is quite slow.
@@ -106,6 +119,17 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         this.addQueryToCached(entitySet.getQuery());
         const entities = cloneJson(entitySet.getEntities());
         const normalized = normalizeEntities(entitySet.getQuery().getEntitySchema(), entities);
+        const options = entitySet.getQuery().getOptions();
+
+        if (!(options instanceof NeverCriterion) && !(options instanceof AnyCriterion)) {
+            if (entitySet.getEntities().length) {
+                const key = entitySet.getSchema().getKey();
+                const keyCriterion = createCriterionFromEntities(entitySet.getEntities(), key.getPath());
+                this.optionsCache.push({ options, ids: keyCriterion });
+            } else {
+                this.optionsCache.push({ options, ids: never() });
+            }
+        }
 
         for (const schema of normalized.getSchemas()) {
             const normalizedEntities = normalized.get(schema);

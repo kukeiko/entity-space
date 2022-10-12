@@ -75,7 +75,6 @@ describe("entity-source-gateway", () => {
         data: { users: [{ id: 2, parentId: 7 }, { id: 7 }] },
         query: createQuery(catalog, UserBlueprint, { id: 2 }, { id: true, parentId: true, parent: { id: true } }),
         expected: { entities: [{ id: 2, parentId: 7, parent: { id: 7 } }], accepted: "all", rejected: [] },
-        // options: true,
     });
 
     wrappedQueryTestHelper({

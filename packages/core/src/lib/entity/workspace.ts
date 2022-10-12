@@ -2,6 +2,7 @@ import { BlueprintInstance, EntitySchemaCatalog, ExpansionValue, IEntitySchema }
 import { any, Criterion, fromDeepBag, isValue, matches, MatchesBagArgument } from "@entity-space/criteria";
 import { Class, DeepPartial, isDefined, writePath } from "@entity-space/utils";
 import { flatMap, isEqual, xor, xorWith } from "lodash";
+import { never } from "packages/criteria/src/lib/criterion/never/never.fn";
 import {
     distinctUntilChanged,
     EMPTY,
@@ -194,12 +195,14 @@ export class Workspace implements IEntityStore {
     query$<T extends Entity>(
         schema: Class<T>,
         criterion?: MatchesBagArgument<T>,
-        expansion?: ExpansionValue<BlueprintInstance<T>>
+        expansion?: ExpansionValue<BlueprintInstance<T>>,
+        options?: MatchesBagArgument<Entity>
     ): Observable<BlueprintInstance<T>[]>;
     query$<T extends Entity>(
         schema: IEntitySchema | Class<T>,
         criterion: any = any(),
-        expansion: ExpansionValue<T> = {}
+        expansion: ExpansionValue<T> = {},
+        options: any = never()
     ): Observable<T[]> {
         if (!("getId" in schema)) {
             const resolvedSchema = this.schemas?.resolve(schema);
@@ -215,7 +218,11 @@ export class Workspace implements IEntityStore {
             criterion = matches(criterion);
         }
 
-        const query = new Query({ entitySchema: schema, criteria: criterion, expansion });
+        if (!(options instanceof Criterion)) {
+            options = matches(options);
+        }
+
+        const query = new Query({ entitySchema: schema, criteria: criterion, expansion, options });
         // const subject = new Subject<Entity[]>();
         const subject = new ReplaySubject<Entity[]>(1);
 

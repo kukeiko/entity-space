@@ -82,6 +82,19 @@ export class MusicBoxClientSideEntityApi extends EntityApi implements IEntitySto
         );
     }
 
+    withSearchSongs(): this {
+        return this.addEndpoint(this.schemas.resolve(SongBlueprint), builder =>
+            builder
+                .requiresOptions({ searchText: isValueTemplate(String) })
+                .supportsExpansion({ id: true, artistId: true, duration: true, name: true })
+                .isLoadedBy(({ options }) =>
+                    this.http.get<Song[]>("api/songs", {
+                        params: { searchText: options.getBag().searchText.getValue() },
+                    })
+                )
+        );
+    }
+
     withGetSongById(): this {
         return this.addEndpoint(this.schemas.resolve(SongBlueprint), builder =>
             builder

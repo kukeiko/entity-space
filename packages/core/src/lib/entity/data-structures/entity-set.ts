@@ -1,3 +1,4 @@
+import { IEntitySchema } from "@entity-space/common";
 import { Query } from "../../query/query";
 import { Entity } from "../entity";
 
@@ -16,6 +17,10 @@ export class EntitySet<T extends Entity = Entity> {
 
     getQuery(): Query {
         return this.query;
+    }
+
+    getSchema(): IEntitySchema {
+        return this.query.getEntitySchema();
     }
 
     static empty<T extends Entity = Entity>(query: Query): EntitySet<T> {

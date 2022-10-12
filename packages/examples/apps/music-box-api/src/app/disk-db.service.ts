@@ -32,14 +32,22 @@ export class DiskDbService {
         return entities[0];
     }
 
-    async getSongs(): Promise<Song[]> {
+    async getSongs(searchText?: string): Promise<Song[]> {
         const results = await this.entitySource.query(new Query({ entitySchema: this.songSchema }));
 
         if (!results) {
             return [];
         }
 
-        return results.reduce((acc, value) => [...acc, ...value.getEntities()], [] as Entity[]) as Song[];
+        return (results.reduce((acc, value) => [...acc, ...value.getEntities()], [] as Entity[]) as Song[]).filter(
+            song => {
+                if (!searchText) {
+                    return song;
+                }
+
+                return song.name.toLocaleLowerCase().includes(searchText.toLocaleLowerCase());
+            }
+        );
     }
 
     async createSong(song: Song): Promise<Song> {

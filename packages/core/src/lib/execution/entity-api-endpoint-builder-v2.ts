@@ -1,6 +1,7 @@
+import { IEntitySchema } from "@entity-space/common";
 import { ICriterionTemplate } from "@entity-space/criteria";
-import { IEntitySchema } from "../schema/schema.interface";
 
+// [todo] accidentally committed this file
 type AddFieldsArgument<T> = {
     [K in keyof T]?: ICriterionTemplate;
 };
@@ -11,9 +12,7 @@ interface SchemaDefined<T> {
     // loadsAll() :
 }
 
-interface RequiredFieldsDefined<T, R> {
-
-}
+interface RequiredFieldsDefined<T, R> {}
 
 export class EntityApiEndpointBuilder_V2 {
     forSchema<T>(schema: IEntitySchema<T>): any {}

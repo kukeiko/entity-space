@@ -2,25 +2,35 @@ import { Criterion } from "@entity-space/criteria";
 import { Expansion } from "../expansion/expansion";
 import { EntityQueryCtorArg, Query } from "./query";
 
-type ReducedParts = { options: Criterion | boolean; criteria: Criterion | boolean; expansion: Expansion | boolean };
+type ReducedParts = { options: true | Criterion; criteria: true | Criterion; expansion: true | Expansion };
 
-type WithoutFalse<T> = {
-    [K in keyof T]: Exclude<T[K], false>;
-};
+function subtractParts(a: Query, b: Query): false | ReducedParts {
+    const options = b.getOptions().reduce(a.getOptions());
 
-function containsNoFalse(parts: ReducedParts): parts is WithoutFalse<ReducedParts> {
-    return !Object.values(parts).some(part => part === false);
+    if (!options) {
+        return false;
+    }
+
+    const criteria = b.getCriteria().reduce(a.getCriteria());
+
+    if (!criteria) {
+        return false;
+    }
+
+    const expansion = b.getExpansion().reduce(a.getExpansion());
+
+    if (!expansion) {
+        return false;
+    }
+
+    return { options, criteria, expansion };
 }
 
 // [todo] shouldn't be able to reduce queries w/ different entity-schemas
 export function reduceQuery(a: Query, b: Query): Query[] | false {
-    const reducedParts: ReducedParts = {
-        options: b.getOptions().reduce(a.getOptions()),
-        criteria: b.getCriteria().reduce(a.getCriteria()),
-        expansion: b.getExpansion().reduce(a.getExpansion()),
-    };
+    const reducedParts = subtractParts(a, b);
 
-    if (!containsNoFalse(reducedParts)) {
+    if (!reducedParts) {
         return false;
     } else if (Object.values(reducedParts).every(reduced => reduced === true)) {
         return [];

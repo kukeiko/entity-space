@@ -1,5 +1,7 @@
 import { ExpansionValue, IEntitySchema } from "@entity-space/common";
 import { any, AnyCriterion, Criterion } from "@entity-space/criteria";
+import { NeverCriterion } from "packages/criteria/src/lib/criterion/never/never";
+import { never } from "packages/criteria/src/lib/criterion/never/never.fn";
 import { Expansion } from "../expansion/expansion";
 import { reduceQueries } from "./reduce-queries.fn";
 
@@ -14,7 +16,7 @@ export class Query {
     constructor({
         entitySchema,
         criteria = any(),
-        options = any(),
+        options = never(),
         expansion,
     }: {
         entitySchema: IEntitySchema;
@@ -71,10 +73,11 @@ export class Query {
     }
 
     toString(): string {
-        const expansion = this.expansion.isEmpty() ? "" : "/" + this.expansion.toString();
+        const options = this.options instanceof NeverCriterion ? "" : `<${this.options.toString()}>`;
         const criterion = this.criteria instanceof AnyCriterion ? "" : `(${this.criteria.toString()})`;
+        const expansion = this.expansion.isEmpty() ? "" : "/" + this.expansion.toString();
 
-        return `${this.entitySchema.getId()}${criterion}${expansion}`;
+        return `${this.entitySchema.getId()}${options}${criterion}${expansion}`;
     }
 
     reduceBy(others: Query[]): false | Query[] {

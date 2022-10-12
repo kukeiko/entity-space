@@ -6,8 +6,9 @@ import { Expansion } from "../expansion/expansion";
 
 export type EntityApiEndpointData<T = Entity> = T | T[] | EntitySet<T>;
 
-export type EntityApiEndpointInvoke<T = Entity, C = ICriterionTemplate> = (query: {
+export type EntityApiEndpointInvoke<T = Entity, C = ICriterionTemplate, O = ICriterionTemplate> = (query: {
     criterion: InstancedCriterionTemplate<C>;
+    options: InstancedCriterionTemplate<O>;
     // expansion: UnfoldedExpansion<T>;
     expansion: ExpansionValue<T>; // [todo] want to use unfolded instead
 }) => Observable<EntityApiEndpointData<T>> | Promise<EntityApiEndpointData<T>> | EntityApiEndpointData<T>;
@@ -15,26 +16,30 @@ export type EntityApiEndpointInvoke<T = Entity, C = ICriterionTemplate> = (query
 export class EntityApiEndpoint {
     constructor({
         schema,
-        template,
+        optionsTemplate,
+        criterionTemplate,
         expansion,
         invoke,
         acceptCriterion,
     }: {
         schema: IEntitySchema;
-        template: ICriterionTemplate;
+        optionsTemplate: ICriterionTemplate;
+        criterionTemplate: ICriterionTemplate;
         expansion: Expansion;
         invoke: EntityApiEndpointInvoke;
         acceptCriterion?: (criterion: Criterion) => boolean;
     }) {
         this.schema = schema;
-        this.template = template;
+        this.criterionTemplate = criterionTemplate;
+        this.optionsTemplate = optionsTemplate;
         this.expansion = expansion;
         this.invoke = invoke;
         this.acceptCriterionFn = acceptCriterion ?? (() => true);
     }
 
     private readonly schema: IEntitySchema;
-    private readonly template: ICriterionTemplate;
+    private readonly optionsTemplate: ICriterionTemplate;
+    private readonly criterionTemplate: ICriterionTemplate;
     private readonly expansion: Expansion;
     private readonly invoke: EntityApiEndpointInvoke;
     private readonly acceptCriterionFn: (criterion: Criterion) => boolean;
@@ -43,8 +48,12 @@ export class EntityApiEndpoint {
         return this.schema;
     }
 
-    getTemplate(): ICriterionTemplate {
-        return this.template;
+    getCriterionTemplate(): ICriterionTemplate {
+        return this.criterionTemplate;
+    }
+
+    getOptionsTemplate(): ICriterionTemplate {
+        return this.optionsTemplate;
     }
 
     getExpansion(): Expansion {

@@ -29,6 +29,7 @@ class MusicBoxUiFilter {
     artists = define(ArtistBlueprint, { array: true, required: true });
     locationTypes = define(SongLocationTypeBlueprint, { array: true, required: true });
     duration = define(Number, { array: true, required: true });
+    searchText = define(String);
     updateHack = define(String);
 }
 
@@ -64,21 +65,42 @@ export class MusicAppComponent implements OnInit, OnDestroy {
                 of(ui),
                 this.workspace.query$(ArtistBlueprint, void 0, { id: true, name: true }),
                 this.workspace.query$(SongLocationTypeBlueprint),
-                this.workspace.query$(
-                    SongBlueprint,
-                    {
-                        artistId: pluckId(ui.filter.artists),
-                        locations: some(matches<SongLocation>({ songLocationType: pluckId(ui.filter.locationTypes) })),
-                        duration: inRange(ui.filter.duration[0] ?? void 0, ui.filter.duration[1] ?? void 0),
-                    },
-                    {
-                        id: true,
-                        artistId: true,
-                        duration: true,
-                        name: true,
-                        locations: { id: true, songLocationType: true },
-                    }
-                ),
+                // this.workspace.query$(
+                //     SongBlueprint,
+                //     {
+                //         artistId: pluckId(ui.filter.artists),
+                //         locations: some(matches<SongLocation>({ songLocationType: pluckId(ui.filter.locationTypes) })),
+                //         duration: inRange(ui.filter.duration[0] ?? void 0, ui.filter.duration[1] ?? void 0),
+                //     },
+                //     {
+                //         id: true,
+                //         artistId: true,
+                //         duration: true,
+                //         name: true,
+                //         locations: { id: true, songLocationType: true },
+                //     },
+                //     ui.filter.searchText ? { searchText: ui.filter.searchText } : void 0
+                // ),
+                ui.filter.searchText
+                    ? this.workspace.query$(
+                          SongBlueprint,
+                          {
+                              artistId: pluckId(ui.filter.artists),
+                              locations: some(
+                                  matches<SongLocation>({ songLocationType: pluckId(ui.filter.locationTypes) })
+                              ),
+                              duration: inRange(ui.filter.duration[0] ?? void 0, ui.filter.duration[1] ?? void 0),
+                          },
+                          {
+                              id: true,
+                              artistId: true,
+                              duration: true,
+                              name: true,
+                              locations: { id: true, songLocationType: true },
+                          },
+                          { searchText: ui.filter.searchText }
+                      )
+                    : of([]),
             ])
         ),
         map(([ui, artists, songLocationTypes, songs]) => this.toState(ui, songs, artists, songLocationTypes)),

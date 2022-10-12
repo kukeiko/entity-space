@@ -78,8 +78,9 @@ export class EntityApi implements IEntitySource {
     ): false | [Observable<QueryStreamPacket>, Query[]] {
         const queryTemplate = new EntityQueryTemplate({
             schema: endpoint.getSchema(),
-            criterion: endpoint.getTemplate(),
+            criterion: endpoint.getCriterionTemplate(),
             expansion: endpoint.getExpansion(),
+            options: endpoint.getOptionsTemplate(),
         });
 
         const remapped = flatten(queries.map(query => queryTemplate.remap(query)).filter(isNotFalse));
@@ -94,7 +95,7 @@ export class EntityApi implements IEntitySource {
             return false;
         }
 
-        acceptedRemapped.forEach(query => this.tracing.queryDispatchedToEndpoint(query, endpoint.getTemplate()));
+        acceptedRemapped.forEach(query => this.tracing.queryDispatchedToEndpoint(query, endpoint.getCriterionTemplate()));
 
         const initialPacket = new QueryStreamPacket({ accepted: acceptedRemapped });
         // console.log("✔️ ", acceptedRemapped.join(", "));
@@ -104,6 +105,7 @@ export class EntityApi implements IEntitySource {
                 const invoked = endpoint.getInvoke()({
                     criterion: query.getCriteria(),
                     expansion: query.getExpansion().getValue(),
+                    options: query.getOptions(),
                 });
 
                 return this.invokedToDataStream(invoked).pipe(
@@ -127,7 +129,7 @@ export class EntityApi implements IEntitySource {
     }
 
     private tracePacket(packet: QueryStreamPacket, endpoint: EntityApiEndpoint, accepted: Query[]): void {
-        accepted.forEach(query => this.tracing.endpointDeliveredPacket(query, endpoint.getTemplate(), packet));
+        accepted.forEach(query => this.tracing.endpointDeliveredPacket(query, endpoint.getCriterionTemplate(), packet));
     }
 
     private invokedToDataStream(invoked: ReturnType<EntityApiEndpointInvoke>): Observable<EntityApiEndpointData> {
