@@ -14,6 +14,7 @@ import { cloneJson, groupBy, readPath } from "@entity-space/utils";
 import { flatten } from "lodash";
 import { Observable, Subject } from "rxjs";
 import { Expansion } from "../expansion/expansion";
+import { QueryPaging } from "../query/query-paging";
 import { mergeQueries } from "../query/merge-queries.fn";
 import { Query } from "../query/query";
 import { reduceQueries } from "../query/reduce-queries.fn";
@@ -30,7 +31,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
     private readonly stores = new Map<string, EntityStore>();
     private readonly cachedQueries = new Map<string, Query[]>();
     private readonly queryCacheChanged = new Subject<Query[]>();
-    private readonly optionsCache: { options: Criterion; ids: Criterion }[] = [];
+    private readonly optionsPagingCache: { options?: Criterion; paging?: QueryPaging; ids: Criterion }[] = [];
 
     queryCacheChanged$(): Observable<Query[]> {
         return this.queryCacheChanged.asObservable();
@@ -73,12 +74,39 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         let entities = store.getByCriterion(criterion) as T[];
 
         const options = query.getOptions();
+        const paging = query.getPaging();
 
         if (!(options instanceof NeverCriterion) && !(options instanceof AnyCriterion)) {
-            for (const cachedOptions of this.optionsCache) {
-                if (cachedOptions.options.equivalent(options)) {
-                    entities = cachedOptions.ids.filter(entities);
+            let foundMatch = false;
+
+            for (const cachedOptions of this.optionsPagingCache) {
+                if (cachedOptions.options && cachedOptions.options.equivalent(options)) {
+                    if (!paging || (cachedOptions.paging && cachedOptions.paging.equivalent(paging))) {
+                        entities = cachedOptions.ids.filter(entities);
+                        foundMatch = true;
+                        break;
+                    }
                 }
+            }
+
+            if (!foundMatch) {
+                return new EntitySet<T>({ query, entities: [] });
+            }
+        } else if (paging) {
+            let foundMatch = false;
+            
+            for (const cachedOptions of this.optionsPagingCache) {
+                if (cachedOptions.options || !cachedOptions.paging) continue;
+
+                if (cachedOptions.paging.equivalent(paging)) {
+                    entities = cachedOptions.ids.filter(entities);
+                    foundMatch = true;
+                    break;
+                }
+            }
+
+            if (!foundMatch) {
+                return new EntitySet<T>({ query, entities: [] });
             }
         }
 
@@ -121,14 +149,23 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         const entities = cloneJson(entitySet.getEntities());
         const normalized = normalizeEntities(entitySet.getQuery().getEntitySchema(), entities);
         const options = entitySet.getQuery().getOptions();
+        const paging = entitySet.getQuery().getPaging();
 
         if (!(options instanceof NeverCriterion) && !(options instanceof AnyCriterion)) {
             if (entitySet.getEntities().length) {
                 const key = entitySet.getSchema().getKey();
                 const keyCriterion = createCriterionFromEntities(entitySet.getEntities(), key.getPath());
-                this.optionsCache.push({ options, ids: keyCriterion });
+                this.optionsPagingCache.push({ options, paging, ids: keyCriterion });
             } else {
-                this.optionsCache.push({ options, ids: never() });
+                this.optionsPagingCache.push({ options, paging, ids: never() });
+            }
+        } else if (paging) {
+            if (entitySet.getEntities().length) {
+                const key = entitySet.getSchema().getKey();
+                const keyCriterion = createCriterionFromEntities(entitySet.getEntities(), key.getPath());
+                this.optionsPagingCache.push({ paging, ids: keyCriterion });
+            } else {
+                this.optionsPagingCache.push({ paging, ids: never() });
             }
         }
 
