@@ -68,6 +68,7 @@ export class EntityQueryTemplate {
                 options: parts.options,
                 criteria: parts.criterion,
                 expansion: parts.expansion,
+                paging: query.getPaging()
             });
         });
     }

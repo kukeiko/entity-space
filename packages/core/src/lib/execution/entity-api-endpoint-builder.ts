@@ -36,6 +36,8 @@ export class EntityApiEndpointBuilder<
     private anyOptionsSupported = false;
     private requiredOptionFields: OptionsRequiredFields = {} as OptionsRequiredFields;
     private optionalOptionFields: OptionsOptionalFields = {} as OptionsOptionalFields;
+    private pagingRequired = false;
+    private pagingSupported = false;
 
     private supportedExpansion: ExpansionValue;
     private loadEntities?: EntityApiEndpointInvoke;
@@ -70,6 +72,16 @@ export class EntityApiEndpointBuilder<
     > {
         this.optionalOptionFields = { ...this.optionalOptionFields, ...fields };
         return this as any;
+    }
+
+    requiresPaging(): this {
+        this.pagingRequired = true;
+        return this;
+    }
+
+    supportsPaging(): this {
+        this.pagingSupported = true;
+        return this;
     }
 
     supportsAnyFields(): this {
@@ -168,6 +180,8 @@ export class EntityApiEndpointBuilder<
             criterionTemplate,
             optionsTemplate,
             acceptCriterion: this.acceptCriterion,
+            pagingRequired: this.pagingRequired,
+            pagingSupported: this.pagingSupported,
         });
     }
 }

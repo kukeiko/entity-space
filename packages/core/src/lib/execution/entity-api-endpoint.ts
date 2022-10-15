@@ -3,6 +3,7 @@ import { Criterion, ICriterionTemplate, InstancedCriterionTemplate } from "@enti
 import { Observable } from "rxjs";
 import { EntitySet } from "../entity/data-structures/entity-set";
 import { Expansion } from "../expansion/expansion";
+import { QueryPaging } from "../query/query-paging";
 
 export type EntityApiEndpointData<T = Entity> = T | T[] | EntitySet<T>;
 
@@ -11,6 +12,7 @@ export type EntityApiEndpointInvoke<T = Entity, C = ICriterionTemplate, O = ICri
     options: InstancedCriterionTemplate<O>;
     // expansion: UnfoldedExpansion<T>;
     expansion: ExpansionValue<T>; // [todo] want to use unfolded instead
+    paging?: QueryPaging;
 }) => Observable<EntityApiEndpointData<T>> | Promise<EntityApiEndpointData<T>> | EntityApiEndpointData<T>;
 
 export class EntityApiEndpoint {
@@ -21,6 +23,9 @@ export class EntityApiEndpoint {
         expansion,
         invoke,
         acceptCriterion,
+        sortableFields,
+        pagingRequired,
+        pagingSupported,
     }: {
         schema: IEntitySchema;
         optionsTemplate: ICriterionTemplate;
@@ -28,6 +33,9 @@ export class EntityApiEndpoint {
         expansion: Expansion;
         invoke: EntityApiEndpointInvoke;
         acceptCriterion?: (criterion: Criterion) => boolean;
+        sortableFields?: string[];
+        pagingRequired?: boolean;
+        pagingSupported?: boolean;
     }) {
         this.schema = schema;
         this.criterionTemplate = criterionTemplate;
@@ -35,6 +43,9 @@ export class EntityApiEndpoint {
         this.expansion = expansion;
         this.invoke = invoke;
         this.acceptCriterionFn = acceptCriterion ?? (() => true);
+        this.sortableFields = sortableFields ?? [];
+        this.pagingRequired = pagingRequired ?? false;
+        this.pagingSupported = pagingSupported ?? false;
     }
 
     private readonly schema: IEntitySchema;
@@ -43,6 +54,9 @@ export class EntityApiEndpoint {
     private readonly expansion: Expansion;
     private readonly invoke: EntityApiEndpointInvoke;
     private readonly acceptCriterionFn: (criterion: Criterion) => boolean;
+    private readonly pagingRequired: boolean;
+    private readonly pagingSupported: boolean;
+    private readonly sortableFields: string[];
 
     getSchema(): IEntitySchema {
         return this.schema;
@@ -66,5 +80,17 @@ export class EntityApiEndpoint {
 
     acceptCriterion(criterion: Criterion): boolean {
         return this.acceptCriterionFn(criterion);
+    }
+
+    getSortableFields(): string[] {
+        return this.sortableFields;
+    }
+
+    requiresPaging(): boolean {
+        return this.pagingRequired;
+    }
+
+    supportsPaging(): boolean {
+        return this.pagingSupported;
     }
 }

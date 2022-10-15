@@ -89,13 +89,25 @@ export class EntityApi implements IEntitySource {
             return false;
         }
 
-        const acceptedRemapped = remapped.filter(query => endpoint.acceptCriterion(query.getCriteria()));
+        const acceptedRemapped = remapped.filter(query => {
+            if (query.getPaging() && !(endpoint.requiresPaging() || endpoint.supportsPaging())) {
+                return false;
+            } else if (!query.getPaging() && endpoint.requiresPaging()) {
+                return false;
+            } else if (!endpoint.acceptCriterion(query.getCriteria())) {
+                return false;
+            }
+
+            return true;
+        });
 
         if (!acceptedRemapped.length) {
             return false;
         }
 
-        acceptedRemapped.forEach(query => this.tracing.queryDispatchedToEndpoint(query, endpoint.getCriterionTemplate()));
+        acceptedRemapped.forEach(query =>
+            this.tracing.queryDispatchedToEndpoint(query, endpoint.getCriterionTemplate())
+        );
 
         const initialPacket = new QueryStreamPacket({ accepted: acceptedRemapped });
         // console.log("✔️ ", acceptedRemapped.join(", "));
@@ -106,6 +118,7 @@ export class EntityApi implements IEntitySource {
                     criterion: query.getCriteria(),
                     expansion: query.getExpansion().getValue(),
                     options: query.getOptions(),
+                    paging: query.getPaging(),
                 });
 
                 return this.invokedToDataStream(invoked).pipe(
