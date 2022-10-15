@@ -23,6 +23,30 @@ export class InNumberRangeCriterion extends InRangeCriterion<number> {
                     [otherFrom?.value, selfTo?.value],
                     [otherFrom?.op === ">=", selfTo?.op === "<="]
                 );
+            } else if (
+                otherFrom?.value &&
+                selfTo?.value &&
+                otherFrom.op === ">=" &&
+                selfTo.op === "<=" &&
+                otherFrom.value - 1 === selfTo.value
+            ) {
+                // [todo] only tested in mergeQuery(), should write test within criteria pkg as well
+                return new InNumberRangeCriterion(
+                    [selfFrom?.value, otherTo?.value],
+                    [selfFrom?.op === ">=", otherTo?.op === "<="]
+                );
+            } else if (
+                selfFrom?.value &&
+                otherTo?.value &&
+                selfFrom.op === ">=" &&
+                otherTo.op === "<=" &&
+                selfFrom.value - 1 === otherTo.value
+            ) {
+                // [todo] only tested in mergeQuery(), should write test within criteria pkg as well
+                return new InNumberRangeCriterion(
+                    [otherFrom?.value, selfTo?.value],
+                    [otherFrom?.op === ">=", selfTo?.op === "<="]
+                );
             }
         }
 
