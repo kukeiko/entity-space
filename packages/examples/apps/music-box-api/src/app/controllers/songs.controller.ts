@@ -12,8 +12,23 @@ export class SongsController {
     private readonly schema: IEntitySchema;
 
     @Get()
-    getSongs(@Query("searchText") searchText?: string): Promise<Song[]> {
-        return this.diskDbService.getSongs(searchText);
+    async getSongs(
+        @Query("searchText") searchText?: string,
+        @Query("skip") skip?: string,
+        @Query("top") top?: string
+    ): Promise<Song[]> {
+        let songs = await this.diskDbService.getSongs(searchText);
+
+        if (skip || top) {
+            const parsedSkip = parseInt(skip || "0");
+            const parsedTop = top ? parseInt(top) : void 0;
+
+            if (!isNaN(parsedSkip) && (parsedTop === void 0 || !isNaN(parsedTop))) {
+                return songs.slice(parsedSkip, parsedTop);
+            }
+        }
+
+        return songs;
     }
 
     @Get(":id")

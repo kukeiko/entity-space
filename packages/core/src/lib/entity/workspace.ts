@@ -22,6 +22,7 @@ import {
 import { EntityHydrationQuery } from "../execution/entity-hydration-query";
 import { IEntityHydrator } from "../execution/i-entity-hydrator";
 import { IEntitySource } from "../execution/i-entity-source";
+import { QueryPaging } from "../query/query-paging";
 import { Query } from "../query/query";
 import { reduceQueries } from "../query/reduce-queries.fn";
 import { EntityQueryTracing } from "../tracing/entity-query-tracing";
@@ -195,13 +196,15 @@ export class Workspace implements IEntityStore {
         schema: Class<T>,
         criterion?: MatchesBagArgument<T>,
         expansion?: ExpansionValue<BlueprintInstance<T>>,
-        options?: MatchesBagArgument<Entity>
+        options?: MatchesBagArgument<Entity>,
+        paging?: { skip?: number; top?: number }
     ): Observable<BlueprintInstance<T>[]>;
     query$<T extends Entity>(
         schema: IEntitySchema | Class<T>,
         criterion: any = any(),
         expansion: ExpansionValue<T> = {},
-        options: any = never()
+        options: any = never(),
+        paging?: { skip?: number; top?: number }
     ): Observable<T[]> {
         if (!("getId" in schema)) {
             const resolvedSchema = this.schemas?.resolve(schema);
@@ -221,7 +224,23 @@ export class Workspace implements IEntityStore {
             options = matches(options);
         }
 
-        const query = new Query({ entitySchema: schema, criteria: criterion, expansion, options });
+        let queryPaging: QueryPaging | undefined;
+
+        if (paging) {
+            const skip = paging?.skip ?? 0;
+            const top = paging?.top;
+
+            if (skip || top) {
+                queryPaging = new QueryPaging({
+                    sort: [],
+                    from: skip,
+                    to: top ? top + skip : void 0,
+                });
+            }
+        }
+
+        const query = new Query({ entitySchema: schema, criteria: criterion, expansion, options, paging: queryPaging });
+
         // const subject = new Subject<Entity[]>();
         const subject = new ReplaySubject<Entity[]>(1);
 

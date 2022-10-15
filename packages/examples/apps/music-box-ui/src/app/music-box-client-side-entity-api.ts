@@ -1,4 +1,4 @@
-import { HttpClient } from "@angular/common/http";
+import { HttpClient, HttpParams } from "@angular/common/http";
 import { Entity, EntitySchemaCatalog, IEntitySchema } from "@entity-space/common";
 import { EntityApi, EntityQueryTracing, IEntityStore } from "@entity-space/core";
 import { inSetTemplate, isValueTemplate } from "@entity-space/criteria";
@@ -86,12 +86,26 @@ export class MusicBoxClientSideEntityApi extends EntityApi implements IEntitySto
         return this.addEndpoint(this.schemas.resolve(SongBlueprint), builder =>
             builder
                 .requiresOptions({ searchText: isValueTemplate(String) })
+                .supportsPaging()
                 .supportsExpansion({ id: true, artistId: true, duration: true, name: true })
-                .isLoadedBy(({ options }) =>
-                    this.http.get<Song[]>("api/songs", {
-                        params: { searchText: options.getBag().searchText.getValue() },
-                    })
-                )
+                .isLoadedBy(({ options, paging }) => {
+                    const [skip, top] = [paging?.getSkip(), paging?.getTop()];
+
+                    let params = new HttpParams({});
+                    params = params.set("searchText", options.getBag().searchText.getValue());
+
+                    if (skip) {
+                        params = params.set("skip", skip);
+                    }
+
+                    if (top) {
+                        params = params.set("top", top);
+                    }
+
+                    return this.http.get<Song[]>("api/songs", {
+                        params,
+                    });
+                })
         );
     }
 

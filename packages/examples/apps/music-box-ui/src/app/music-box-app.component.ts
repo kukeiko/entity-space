@@ -98,7 +98,8 @@ export class MusicAppComponent implements OnInit, OnDestroy {
                               name: true,
                               locations: { id: true, songLocationType: true },
                           },
-                          { searchText: ui.filter.searchText }
+                          { searchText: ui.filter.searchText },
+                          { top: 3 }
                       )
                     : of([]),
             ])
