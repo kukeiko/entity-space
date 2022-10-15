@@ -1,7 +1,5 @@
 import { ExpansionValue, IEntitySchema } from "@entity-space/common";
-import { any, AnyCriterion, Criterion } from "@entity-space/criteria";
-import { NeverCriterion } from "packages/criteria/src/lib/criterion/never/never";
-import { never } from "packages/criteria/src/lib/criterion/never/never.fn";
+import { any, AnyCriterion, Criterion, never, NeverCriterion } from "@entity-space/criteria";
 import { Expansion } from "../expansion/expansion";
 import { reduceQueries } from "./reduce-queries.fn";
 

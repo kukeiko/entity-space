@@ -5,13 +5,13 @@ import {
     anyTemplate,
     Criterion,
     NamedCriteriaTemplate,
+    never,
+    NeverCriterion,
     or,
     orTemplate,
 } from "@entity-space/criteria";
 import { cloneJson, groupBy, readPath } from "@entity-space/utils";
 import { flatten } from "lodash";
-import { NeverCriterion } from "packages/criteria/src/lib/criterion/never/never";
-import { never } from "packages/criteria/src/lib/criterion/never/never.fn";
 import { Observable, Subject } from "rxjs";
 import { Expansion } from "../expansion/expansion";
 import { mergeQueries } from "../query/merge-queries.fn";
@@ -66,6 +66,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         return reduced;
     }
 
+    // [todo] need some tests
     querySync<T = Entity>(query: Query): EntitySet<T> {
         const store = this.getOrCreateStore(query.getEntitySchema());
         const criterion = this.withoutRetlationalCriteria(query.getCriteria(), query.getEntitySchema());

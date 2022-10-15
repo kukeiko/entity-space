@@ -1,8 +1,7 @@
 import { BlueprintInstance, EntitySchemaCatalog, ExpansionValue, IEntitySchema } from "@entity-space/common";
-import { any, Criterion, fromDeepBag, isValue, matches, MatchesBagArgument } from "@entity-space/criteria";
+import { any, Criterion, fromDeepBag, isValue, matches, MatchesBagArgument, never } from "@entity-space/criteria";
 import { Class, DeepPartial, isDefined, writePath } from "@entity-space/utils";
 import { flatMap, isEqual, xor, xorWith } from "lodash";
-import { never } from "packages/criteria/src/lib/criterion/never/never.fn";
 import {
     distinctUntilChanged,
     EMPTY,
