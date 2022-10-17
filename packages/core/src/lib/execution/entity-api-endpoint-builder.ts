@@ -18,7 +18,7 @@ type AddFieldsArgument<T> = {
 };
 
 export class EntityApiEndpointBuilder<
-    T = Entity,
+    T extends Entity = Entity,
     CriterionRequiredFields extends NamedCriteriaTemplateItems = {},
     CriterionOptionalFields extends NamedCriteriaTemplateItems = {},
     OptionsRequiredFields extends NamedCriteriaTemplateItems = {},

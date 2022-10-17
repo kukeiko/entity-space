@@ -17,7 +17,7 @@ export class EntitySchemaCatalog {
         return this;
     }
 
-    getSchema<T = Entity>(id: string): EntitySchema<T> {
+    getSchema<T extends Entity = Entity>(id: string): EntitySchema<T> {
         const schema = this.schemas.get(id);
 
         if (!schema) {
@@ -43,7 +43,7 @@ export class EntitySchemaCatalog {
 
         if (idProperties.length > 0) {
             schema.setKey(idProperties.map(property => property.name));
-            
+
             for (const idProperty of idProperties) {
                 schema.addProperty(
                     idProperty.name,

@@ -93,7 +93,7 @@ export class QueryStreamPacket<T extends Entity = Entity> {
         return reduceQueries(queries, this.getAcceptedQueries());
     }
 
-    static isEmpty<T>(packet: QueryStreamPacket<T>): boolean {
+    static isEmpty<T extends Entity >(packet: QueryStreamPacket<T>): boolean {
         return !packet.accepted.length && !packet.errors.length && !packet.payload.length && !packet.rejected.length;
     }
 
@@ -101,11 +101,11 @@ export class QueryStreamPacket<T extends Entity = Entity> {
         return QueryStreamPacket.isEmpty(this);
     }
 
-    static isNotEmpty<T>(packet: QueryStreamPacket<T>): boolean {
+    static isNotEmpty<T extends Entity >(packet: QueryStreamPacket<T>): boolean {
         return !QueryStreamPacket.isEmpty(packet);
     }
 
-    static concat<T>(a: QueryStreamPacket<T>, b: QueryStreamPacket<T>): QueryStreamPacket<T> {
+    static concat<T extends Entity >(a: QueryStreamPacket<T>, b: QueryStreamPacket<T>): QueryStreamPacket<T> {
         return new QueryStreamPacket<T>({
             accepted: [...a.getAcceptedQueries(), ...b.getAcceptedQueries()],
             errors: [...a.getErrors(), ...b.getErrors()],
@@ -114,7 +114,7 @@ export class QueryStreamPacket<T extends Entity = Entity> {
         });
     }
 
-    static withoutRejected<T>(packet: QueryStreamPacket<T>): QueryStreamPacket<T> {
+    static withoutRejected<T extends Entity >(packet: QueryStreamPacket<T>): QueryStreamPacket<T> {
         return new QueryStreamPacket<T>({
             accepted: packet.getAcceptedQueries(),
             errors: packet.getErrors(),

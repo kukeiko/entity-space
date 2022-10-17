@@ -1,4 +1,5 @@
 {
+    "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
     "projectType": "application",
     "sourceRoot": "packages/examples/apps/music-box-ui/src",
     "prefix": "entity-space",
@@ -89,7 +90,7 @@
         },
         "test": {
             "executor": "@nrwl/jest:jest",
-            "outputs": ["coverage/packages/examples/apps/music-box-ui"],
+            "outputs": ["{workspaceRoot}/coverage/packages/examples/apps/music-box-ui"],
             "options": {
                 "jestConfig": "packages/examples/apps/music-box-ui/jest.config.ts",
                 "passWithNoTests": true

@@ -1,5 +1,5 @@
 {
-    "$schema": "..\\..\\..\\..\\node_modules\\nx\\schemas\\project-schema.json",
+    "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
     "sourceRoot": "packages/examples/libs/music-model/src",
     "projectType": "library",
     "targets": {
@@ -12,7 +12,7 @@
         },
         "test": {
             "executor": "@nrwl/jest:jest",
-            "outputs": ["coverage/packages/examples/libs/music-model"],
+            "outputs": ["{workspaceRoot}/coverage/packages/examples/libs/music-model"],
             "options": {
                 "jestConfig": "packages/examples/libs/music-model/jest.config.ts",
                 "passWithNoTests": true

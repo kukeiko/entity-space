@@ -1,5 +1,5 @@
 {
-    "$schema": "..\\..\\..\\..\\node_modules\\nx\\schemas\\project-schema.json",
+    "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
     "projectType": "application",
     "sourceRoot": "packages/examples/apps/products-ui/src",
     "prefix": "entity-space",
@@ -86,7 +86,7 @@
         },
         "test": {
             "executor": "@nrwl/jest:jest",
-            "outputs": ["coverage/packages/examples/apps/products-ui"],
+            "outputs": ["{workspaceRoot}/coverage/packages/examples/apps/products-ui"],
             "options": {
                 "jestConfig": "packages/examples/apps/products-ui/jest.config.ts",
                 "passWithNoTests": true

@@ -74,7 +74,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
     }
 
     // [todo] need some tests
-    querySync<T = Entity>(query: Query): EntitySet<T> {
+    querySync<T extends Entity = Entity>(query: Query): EntitySet<T> {
         const store = this.getOrCreateStore(query.getEntitySchema());
         const criterion = this.withoutRetlationalCriteria(query.getCriteria(), query.getEntitySchema());
         let entities = store.getByCriterion(criterion) as T[];

@@ -11,5 +11,5 @@ export interface IEntityDatabase {
     getCachedQueries(schema: IEntitySchema): Query[];
     // [todo] try to get rid of this - had to introduce when switching "InMemoryEntityDatabase"
     // w/ "IEntityDatabase" in EntitySourceGateway
-    querySync<T = Entity>(query: Query): EntitySet<T>;
+    querySync<T extends Entity = Entity>(query: Query): EntitySet<T>;
 }

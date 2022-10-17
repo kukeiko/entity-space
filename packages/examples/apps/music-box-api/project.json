@@ -1,16 +1,18 @@
 {
-    "$schema": "..\\..\\..\\..\\node_modules\\nx\\schemas\\project-schema.json",
+    "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
     "sourceRoot": "packages/examples/apps/music-box-api/src",
     "projectType": "application",
     "targets": {
         "build": {
-            "executor": "@nrwl/node:webpack",
+            "executor": "@nrwl/webpack:webpack",
             "outputs": ["{options.outputPath}"],
             "options": {
                 "outputPath": "dist/packages/examples/apps/music-box-api",
                 "main": "packages/examples/apps/music-box-api/src/main.ts",
                 "tsConfig": "packages/examples/apps/music-box-api/tsconfig.app.json",
-                "assets": ["packages/examples/apps/music-box-api/src/assets"]
+                "assets": ["packages/examples/apps/music-box-api/src/assets"],
+                "target": "node",
+                "compiler": "tsc"
             },
             "configurations": {
                 "production": {
@@ -41,7 +43,7 @@
         },
         "test": {
             "executor": "@nrwl/jest:jest",
-            "outputs": ["coverage/packages/examples/apps/music-box-api"],
+            "outputs": ["{workspaceRoot}/coverage/packages/examples/apps/music-box-api"],
             "options": {
                 "jestConfig": "packages/examples/apps/music-box-api/jest.config.ts",
                 "passWithNoTests": true

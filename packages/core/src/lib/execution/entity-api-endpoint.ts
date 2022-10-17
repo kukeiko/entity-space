@@ -5,9 +5,13 @@ import { EntitySet } from "../entity/data-structures/entity-set";
 import { Expansion } from "../expansion/expansion";
 import { QueryPaging } from "../query/query-paging";
 
-export type EntityApiEndpointData<T = Entity> = T | T[] | EntitySet<T>;
+export type EntityApiEndpointData<T extends Entity = Entity> = T | T[] | EntitySet<T>;
 
-export type EntityApiEndpointInvoke<T = Entity, C = ICriterionTemplate, O = ICriterionTemplate> = (query: {
+export type EntityApiEndpointInvoke<
+    T extends Entity = Entity,
+    C = ICriterionTemplate,
+    O = ICriterionTemplate
+> = (query: {
     criterion: InstancedCriterionTemplate<C>;
     options: InstancedCriterionTemplate<O>;
     // expansion: UnfoldedExpansion<T>;

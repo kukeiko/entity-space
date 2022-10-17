@@ -69,7 +69,7 @@ export class EntitySourceGateway implements IEntitySource, IEntityStore, IEntity
         return this.startHydration$<T>(hydrationQuery, execution);
     }
 
-    private startNextSource$<T>(execution: QueryExecution): QueryStream<T> {
+    private startNextSource$<T extends Entity>(execution: QueryExecution): QueryStream<T> {
         const source = execution.popSource();
 
         if (!source) {
@@ -131,7 +131,10 @@ export class EntitySourceGateway implements IEntitySource, IEntityStore, IEntity
         return merge(withoutRejected$, startNext$);
     }
 
-    private startHydration$<T>(hydrationQuery: EntityHydrationQuery<T>, execution: QueryExecution): QueryStream<T> {
+    private startHydration$<T extends Entity>(
+        hydrationQuery: EntityHydrationQuery<T>,
+        execution: QueryExecution
+    ): QueryStream<T> {
         const expansion = hydrationQuery.getQuery().getExpansionValue();
         const targets = Object.entries(expansion)
             .map(([key, value]) => this.toHydrateRelationQuery(hydrationQuery.getEntitySet(), key, value))
@@ -150,7 +153,7 @@ export class EntitySourceGateway implements IEntitySource, IEntityStore, IEntity
         );
     }
 
-    private startRelationHydration$<T>(
+    private startRelationHydration$<T extends Entity>(
         hydrationQuery: EntityHydrationQuery<T>,
         relationQuery: Query,
         relation: IEntitySchemaRelation,
@@ -314,7 +317,7 @@ export class EntitySourceGateway implements IEntitySource, IEntityStore, IEntity
         return [query, relation];
     }
 
-    private toHydrationQueries<T>(
+    private toHydrationQueries<T extends Entity>(
         accepted: Query[],
         rejected: Query[],
         database: IEntityDatabase

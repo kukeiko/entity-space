@@ -1,5 +1,5 @@
 {
-    "$schema": "..\\..\\..\\..\\node_modules\\nx\\schemas\\project-schema.json",
+    "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
     "sourceRoot": "packages/examples/libs/common-model/src",
     "projectType": "library",
     "targets": {
@@ -12,7 +12,7 @@
         },
         "test": {
             "executor": "@nrwl/jest:jest",
-            "outputs": ["coverage/packages/examples/libs/common-model"],
+            "outputs": ["{workspaceRoot}/coverage/packages/examples/libs/common-model"],
             "options": {
                 "jestConfig": "packages/examples/libs/common-model/jest.config.ts",
                 "passWithNoTests": true

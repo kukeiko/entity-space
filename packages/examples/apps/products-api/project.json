@@ -1,16 +1,18 @@
 {
-    "$schema": "..\\..\\..\\..\\node_modules\\nx\\schemas\\project-schema.json",
+    "$schema": "../../../../node_modules/nx/schemas/project-schema.json",
     "sourceRoot": "packages/examples/apps/products-api/src",
     "projectType": "application",
     "targets": {
         "build": {
-            "executor": "@nrwl/node:webpack",
+            "executor": "@nrwl/webpack:webpack",
             "outputs": ["{options.outputPath}"],
             "options": {
                 "outputPath": "dist/packages/examples/apps/products-api",
                 "main": "packages/examples/apps/products-api/src/main.ts",
                 "tsConfig": "packages/examples/apps/products-api/tsconfig.app.json",
-                "assets": ["packages/examples/apps/products-api/src/assets"]
+                "assets": ["packages/examples/apps/products-api/src/assets"],
+                "target": "node",
+                "compiler": "tsc"
             },
             "configurations": {
                 "production": {
@@ -41,7 +43,7 @@
         },
         "test": {
             "executor": "@nrwl/jest:jest",
-            "outputs": ["coverage/packages/examples/apps/products-api"],
+            "outputs": ["{workspaceRoot}/coverage/packages/examples/apps/products-api"],
             "options": {
                 "jestConfig": "packages/examples/apps/products-api/jest.config.ts",
                 "passWithNoTests": true

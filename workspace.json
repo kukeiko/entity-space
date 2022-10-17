@@ -14,5 +14,6 @@
         "lexer": "packages/lexer",
         "node": "packages/node",
         "utils": "packages/utils"
-    }
+    },
+    "$schema": "./node_modules/nx/schemas/workspace-schema.json"
 }

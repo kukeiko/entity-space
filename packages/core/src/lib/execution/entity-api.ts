@@ -19,7 +19,10 @@ export class EntityApi implements IEntitySource {
 
     protected endpoints: EntityApiEndpoint[] = [];
 
-    addEndpoint<T>(schema: IEntitySchema<T>, build: (builder: EntityApiEndpointBuilder<T>) => unknown): this {
+    addEndpoint<T extends Entity>(
+        schema: IEntitySchema<T>,
+        build: (builder: EntityApiEndpointBuilder<T>) => unknown
+    ): this {
         const builder = new EntityApiEndpointBuilder<T>(schema);
         build(builder);
         this.endpoints.push(builder.build());

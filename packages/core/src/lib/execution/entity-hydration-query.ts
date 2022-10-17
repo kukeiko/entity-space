@@ -2,7 +2,7 @@ import { EntitySet } from "../entity/data-structures/entity-set";
 import { Entity } from "../entity/entity";
 import { Query } from "../query/query";
 
-export class EntityHydrationQuery<T = Entity> {
+export class EntityHydrationQuery<T extends Entity = Entity> {
     constructor({ entitySet, query }: { entitySet: EntitySet<T>; query: Query }) {
         this.entitySet = entitySet;
         this.query = query;
