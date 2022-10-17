@@ -37,6 +37,16 @@
                     ></p-slider>
                 </div>
                 <div class="field col-1">
+                    <label for="duration">Paging</label>
+                    <p-slider
+                        [ngModel]="state.ui.filter.paging"
+                        (ngModelChange)="changeUiState('filter.paging', $event)"
+                        [range]="true"
+                        [min]="0"
+                        [max]="10"
+                    ></p-slider>
+                </div>
+                <div class="field col-1">
                     <label for="searchText">Search</label>
                     <input
                         type="text"

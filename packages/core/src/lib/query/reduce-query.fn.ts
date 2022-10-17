@@ -1,7 +1,7 @@
 import { Criterion } from "@entity-space/criteria";
 import { Expansion } from "../expansion/expansion";
-import { QueryPaging } from "./query-paging";
 import { EntityQueryCtorArg, Query } from "./query";
+import { QueryPaging } from "./query-paging";
 
 type ReducedParts = {
     options: true | Criterion;
@@ -25,6 +25,20 @@ function subtractParts(a: Query, b: Query): false | ReducedParts {
         }
 
         paging = subractedPaging;
+
+        if (!b.getOptions().equivalent(a.getOptions())) {
+            return false;
+        }
+
+        if (!b.getCriteria().equivalent(a.getCriteria())) {
+            return false;
+        }
+
+        const expansion = b.getExpansion().reduce(a.getExpansion());
+
+        if (!expansion) {
+            return false;
+        }
     }
 
     const options = b.getOptions().reduce(a.getOptions());

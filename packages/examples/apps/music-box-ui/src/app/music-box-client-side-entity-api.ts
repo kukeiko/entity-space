@@ -77,8 +77,23 @@ export class MusicBoxClientSideEntityApi extends EntityApi implements IEntitySto
     withGetAllSongs(): this {
         return this.addEndpoint(this.schemas.resolve(SongBlueprint), builder =>
             builder
+                .supportsPaging()
                 .supportsExpansion({ id: true, artistId: true, duration: true, name: true })
-                .isLoadedBy(() => this.http.get<Song[]>("api/songs"))
+                .isLoadedBy(({ paging }) => {
+                    const [from, to] = [paging?.getFrom(), paging?.getTo()];
+
+                    let params = new HttpParams({});
+
+                    if (from) {
+                        params = params.set("from", from);
+                    }
+
+                    if (to) {
+                        params = params.set("to", to);
+                    }
+
+                    return this.http.get<Song[]>("api/songs", { params });
+                })
         );
     }
 
@@ -89,22 +104,20 @@ export class MusicBoxClientSideEntityApi extends EntityApi implements IEntitySto
                 .supportsPaging()
                 .supportsExpansion({ id: true, artistId: true, duration: true, name: true })
                 .isLoadedBy(({ options, paging }) => {
-                    const [skip, top] = [paging?.getSkip(), paging?.getTop()];
+                    const [from, to] = [paging?.getFrom(), paging?.getTo()];
 
                     let params = new HttpParams({});
                     params = params.set("searchText", options.getBag().searchText.getValue());
 
-                    if (skip) {
-                        params = params.set("skip", skip);
+                    if (from) {
+                        params = params.set("from", from);
                     }
 
-                    if (top) {
-                        params = params.set("top", top);
+                    if (to) {
+                        params = params.set("to", to);
                     }
 
-                    return this.http.get<Song[]>("api/songs", {
-                        params,
-                    });
+                    return this.http.get<Song[]>("api/songs", { params });
                 })
         );
     }

@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit } from "@angular/core";
-import { Blueprint, BlueprintInstance, define, EntitySchemaCatalog } from "@entity-space/common";
+import { Blueprint, BlueprintInstance, define, Entity, EntitySchemaCatalog } from "@entity-space/common";
 import { Query, Workspace } from "@entity-space/core";
 import { inRange, matches, some } from "@entity-space/criteria";
 import {
@@ -13,7 +13,7 @@ import {
 } from "@entity-space/examples/libs/music-model";
 import { pluckId, writePath } from "@entity-space/utils";
 import { PrimeNGConfig } from "primeng/api";
-import { combineLatest, map, of, shareReplay, Subject, switchMap, takeUntil } from "rxjs";
+import { combineLatest, debounceTime, map, of, shareReplay, Subject, switchMap, takeUntil } from "rxjs";
 
 interface MusicBoxAppState {
     data: {
@@ -29,6 +29,7 @@ class MusicBoxUiFilter {
     artists = define(ArtistBlueprint, { array: true, required: true });
     locationTypes = define(SongLocationTypeBlueprint, { array: true, required: true });
     duration = define(Number, { array: true, required: true });
+    paging = define(Number, { array: true, required: true });
     searchText = define(String);
     updateHack = define(String);
 }
@@ -99,7 +100,7 @@ export class MusicAppComponent implements OnInit, OnDestroy {
                               locations: { id: true, songLocationType: true },
                           },
                           { searchText: ui.filter.searchText },
-                          { top: 3 }
+                          { from: ui.filter.paging[0], to: ui.filter.paging[1] }
                       )
                     : of([]),
             ])
@@ -123,7 +124,7 @@ export class MusicAppComponent implements OnInit, OnDestroy {
     ngOnInit(): void {
         this.workspace.add(MusicBoxUiStateBlueprint, {
             id: this.stateId,
-            filter: { artists: [], locationTypes: [], duration: [0, 600] },
+            filter: { artists: [], locationTypes: [], duration: [0, 600], paging: [0, 3] },
         });
 
         this.workspace.add(SongLocationTypeBlueprint, [
@@ -137,6 +138,15 @@ export class MusicAppComponent implements OnInit, OnDestroy {
             .queryCacheChanged$()
             .pipe(takeUntil(this.destroyed$))
             .subscribe(cachedQueries => (this.cachedQueries = cachedQueries));
+
+        this.uiStateChange.pipe(takeUntil(this.destroyed$), debounceTime(500)).subscribe(change => {
+            this.workspace.add(this.schemas.resolve(MusicBoxUiStateBlueprint), {
+                id: this.stateId,
+                ...change,
+                // [todo] workspace doesn't see change for ui.filter.duration, so added this hack here
+                updateHack: (Math.random() * 1337).toString(16),
+            });
+        });
     }
 
     ngOnDestroy(): void {
@@ -144,14 +154,9 @@ export class MusicAppComponent implements OnInit, OnDestroy {
         this.destroyed$.complete();
     }
 
+    private uiStateChange = new Subject<Entity>();
+
     changeUiState(property: string, value: any): void {
-        const change = {};
-        writePath(property, change, value);
-        this.workspace.add(this.schemas.resolve(MusicBoxUiStateBlueprint), {
-            id: this.stateId,
-            ...change,
-            // [todo] workspace doesn't see change for ui.filter.duration, so added this hack here
-            updateHack: (Math.random() * 1337).toString(16),
-        });
+        this.uiStateChange.next(writePath(property, {}, value));
     }
 }

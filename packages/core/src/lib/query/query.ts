@@ -71,9 +71,10 @@ export class Query {
     toString(): string {
         const options = this.options instanceof NeverCriterion ? "" : `<${this.options.toString()}>`;
         const criterion = this.criteria instanceof AnyCriterion ? "" : `(${this.criteria.toString()})`;
+        const paging = this.paging ? `[${this.paging.getFrom() ?? "..."}, ${this.paging.getTo() ?? "..."}]` : "";
         const expansion = this.expansion.isEmpty() ? "" : "/" + this.expansion.toString();
 
-        return `${this.entitySchema.getId()}${options}${criterion}${expansion}`;
+        return `${this.entitySchema.getId()}${options}${criterion}${paging}${expansion}`;
     }
 
     reduceBy(others: Query[]): false | Query[] {

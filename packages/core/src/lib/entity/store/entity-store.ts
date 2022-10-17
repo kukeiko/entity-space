@@ -1,8 +1,10 @@
 import { Entity, IEntitySchema } from "@entity-space/common";
 import { Criterion, or } from "@entity-space/criteria";
+import { QueryPaging } from "../../query/query-paging";
 import { ComplexKeyMap } from "../data-structures/complex-key-map";
 import { EntityStoreCommonIndex } from "./entity-store-common-index";
 import { EntityStoreUniqueIndex } from "./entity-store-unique-index";
+import { PagedEntityIdCache } from "./paged-entity-id-cache";
 
 export class EntityStore {
     constructor(entitySchema: IEntitySchema) {
@@ -20,10 +22,13 @@ export class EntityStore {
     private readonly entitySchema: IEntitySchema;
     private readonly uniqueIndexes = new Map<string, EntityStoreUniqueIndex>();
     private readonly commonIndexes = new Map<string, EntityStoreCommonIndex>();
+    private readonly noOptionsPageCache = new PagedEntityIdCache();
+    private readonly optionsCache: { options: Criterion; ids: Entity[] }[] = [];
+    private readonly optionsPageCache: { options: Criterion; cache: PagedEntityIdCache }[] = [];
     private entities: (Entity | undefined)[] = [];
 
     // [todo] indexing needs to be crash safe (transactional safety)
-    add(entities: Entity[]): void {
+    add(entities: Entity[], options?: Criterion, page?: QueryPaging): void {
         if (this.entitySchema.hasKey()) {
             const key = this.entitySchema.getKey();
             entities = this.dedupeEntities(entities, key.getPath());
@@ -51,6 +56,28 @@ export class EntityStore {
                 this.entities.push(entity);
             }
         }
+
+        // if (options && page) {
+        //     const match = this.optionsPageCache.find(item => item.options.equivalent(options));
+
+        //     if (match) {
+        //         match.cache.add(entities, page);
+        //     } else {
+        //         const cache = new PagedEntityIdCache();
+        //         cache.add(entities, page);
+        //         this.optionsPageCache.push({ options, cache });
+        //     }
+        // } else if (options) {
+        //     const match = this.optionsCache.find(item => item.options.equivalent(options));
+
+        //     if (match) {
+        //         match.ids = entities;
+        //     } else {
+        //         this.optionsCache.push({ ids: entities, options });
+        //     }
+        // } else if (page) {
+        //     this.noOptionsPageCache.add(entities, page);
+        // }
     }
 
     get(entity: Entity): Entity | undefined {
@@ -65,9 +92,9 @@ export class EntityStore {
         return this.entities[slot];
     }
 
-    getByCriterion(criterion: Criterion): Entity[] {
+    getByCriterion(criterion: Criterion, options?: Criterion, page?: QueryPaging): Entity[] {
         const entities: Entity[] = [];
-        const result = this.getSlotsByCriterion(criterion);
+        const result = this.getSlotsByCriterion(criterion, options, page);
 
         for (const slot of result.values()) {
             entities.push(this.entities[slot]!);
@@ -76,7 +103,7 @@ export class EntityStore {
         return entities;
     }
 
-    private getSlotsByCriterion(criterion: Criterion): Set<number> {
+    private getSlotsByCriterion(criterion: Criterion, options?: Criterion, page?: QueryPaging): Set<number> {
         const uniqueIndexes = [...this.uniqueIndexes.values()].sort(
             (a, b) => b.getPaths().length - a.getPaths().length
         );

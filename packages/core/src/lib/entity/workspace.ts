@@ -22,8 +22,8 @@ import {
 import { EntityHydrationQuery } from "../execution/entity-hydration-query";
 import { IEntityHydrator } from "../execution/i-entity-hydrator";
 import { IEntitySource } from "../execution/i-entity-source";
-import { QueryPaging } from "../query/query-paging";
 import { Query } from "../query/query";
+import { QueryPaging } from "../query/query-paging";
 import { reduceQueries } from "../query/reduce-queries.fn";
 import { EntityQueryTracing } from "../tracing/entity-query-tracing";
 import { EntitySet } from "./data-structures/entity-set";
@@ -197,14 +197,14 @@ export class Workspace implements IEntityStore {
         criterion?: MatchesBagArgument<T>,
         expansion?: ExpansionValue<BlueprintInstance<T>>,
         options?: MatchesBagArgument<Entity>,
-        paging?: { skip?: number; top?: number }
+        paging?: { skip?: number; top?: number; from?: number; to?: number }
     ): Observable<BlueprintInstance<T>[]>;
     query$<T extends Entity>(
         schema: IEntitySchema | Class<T>,
         criterion: any = any(),
         expansion: ExpansionValue<T> = {},
         options: any = never(),
-        paging?: { skip?: number; top?: number }
+        paging?: { skip?: number; top?: number; from?: number; to?: number }
     ): Observable<T[]> {
         if (!("getId" in schema)) {
             const resolvedSchema = this.schemas?.resolve(schema);
@@ -221,21 +221,29 @@ export class Workspace implements IEntityStore {
         }
 
         if (!(options instanceof Criterion)) {
-            options = matches(options);
+            if (Object.keys(options).length) {
+                options = matches(options);
+            } else {
+                options = never();
+            }
         }
 
         let queryPaging: QueryPaging | undefined;
 
         if (paging) {
-            const skip = paging?.skip ?? 0;
-            const top = paging?.top;
+            if (paging.from || paging.to) {
+                queryPaging = new QueryPaging({ sort: [], from: paging.from, to: paging.to });
+            } else {
+                const skip = paging?.skip ?? 0;
+                const top = paging?.top;
 
-            if (skip || top) {
-                queryPaging = new QueryPaging({
-                    sort: [],
-                    from: skip,
-                    to: top ? top + skip : void 0,
-                });
+                if (skip || top) {
+                    queryPaging = new QueryPaging({
+                        sort: [],
+                        from: skip,
+                        to: top ? top + skip : void 0,
+                    });
+                }
             }
         }
 

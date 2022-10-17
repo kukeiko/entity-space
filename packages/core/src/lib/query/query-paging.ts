@@ -36,6 +36,14 @@ export class QueryPaging {
         return this.range?.getFrom()?.value;
     }
 
+    getFrom(): number | undefined {
+        return this.range?.getFrom()?.value;
+    }
+
+    getTo(): number | undefined {
+        return this.range?.getTo()?.value;
+    }
+
     equivalent(other: QueryPaging): boolean {
         return this.subtract(other) === true && other.subtract(this) === true;
     }

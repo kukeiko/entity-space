@@ -4,7 +4,7 @@ import { FormsModule } from "@angular/forms";
 import { BrowserModule } from "@angular/platform-browser";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import { EntitySchemaCatalog } from "@entity-space/common";
-import { EntityQueryTracing,  EntitySourceGateway, Workspace } from "@entity-space/core";
+import { EntityQueryTracing, EntitySourceGateway, Workspace } from "@entity-space/core";
 import { SongBlueprint, SongLocationEntitySchema } from "@entity-space/examples/libs/music-model";
 import { ButtonModule } from "primeng/button";
 import { DialogModule } from "primeng/dialog";
@@ -31,13 +31,13 @@ import { MusicBoxClientSideEntityApi } from "./music-box-client-side-entity-api"
         DropdownModule,
         FormsModule,
         HttpClientModule,
+        InputMaskModule,
+        InputNumberModule,
         InputTextModule,
         MultiSelectModule,
         SliderModule,
         TableModule,
         TabViewModule,
-        InputNumberModule,
-        InputMaskModule,
     ],
     declarations: [MusicAppComponent, SongTableComponent, ArtistTableComponent, QueryCacheTableComponent],
     providers: [

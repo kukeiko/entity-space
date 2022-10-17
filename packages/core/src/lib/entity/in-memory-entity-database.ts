@@ -10,13 +10,13 @@ import {
     or,
     orTemplate,
 } from "@entity-space/criteria";
-import { cloneJson, groupBy, readPath } from "@entity-space/utils";
+import { cloneJson, groupBy, isDefined, readPath } from "@entity-space/utils";
 import { flatten } from "lodash";
 import { Observable, Subject } from "rxjs";
 import { Expansion } from "../expansion/expansion";
-import { QueryPaging } from "../query/query-paging";
 import { mergeQueries } from "../query/merge-queries.fn";
 import { Query } from "../query/query";
+import { QueryPaging } from "../query/query-paging";
 import { reduceQueries } from "../query/reduce-queries.fn";
 import { EntitySet } from "./data-structures/entity-set";
 import { Entity } from "./entity";
@@ -26,12 +26,18 @@ import { joinEntities } from "./functions/join-entities.fn";
 import { normalizeEntities } from "./functions/normalize-entities.fn";
 import { IEntityDatabase } from "./i-entity-database";
 import { EntityStore } from "./store/entity-store";
+import { PagedEntityIdCache } from "./store/paged-entity-id-cache";
 
 export class InMemoryEntityDatabase implements IEntityDatabase {
     private readonly stores = new Map<string, EntityStore>();
     private readonly cachedQueries = new Map<string, Query[]>();
     private readonly queryCacheChanged = new Subject<Query[]>();
-    private readonly optionsPagingCache: { options?: Criterion; paging?: QueryPaging; ids: Criterion }[] = [];
+    private readonly optionsCache: { options?: Criterion; paging?: QueryPaging; ids: Criterion }[] = [];
+    // private
+
+    private readonly noOptionsPageCache: { criteria: Criterion; cache: PagedEntityIdCache }[] = [];
+    private readonly optionsCache_v2: { options: Criterion; criteria: Criterion; ids: Entity[] }[] = [];
+    private readonly optionsPageCache: { options: Criterion; criteria: Criterion; cache: PagedEntityIdCache }[] = [];
 
     queryCacheChanged$(): Observable<Query[]> {
         return this.queryCacheChanged.asObservable();
@@ -74,39 +80,46 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         let entities = store.getByCriterion(criterion) as T[];
 
         const options = query.getOptions();
-        const paging = query.getPaging();
+        const page = query.getPaging();
+        const criteria = query.getCriteria();
 
         if (!(options instanceof NeverCriterion) && !(options instanceof AnyCriterion)) {
-            let foundMatch = false;
+            if (page) {
+                const match = this.optionsPageCache.find(
+                    item => item.options.equivalent(options) && item.criteria.equivalent(criteria)
+                );
 
-            for (const cachedOptions of this.optionsPagingCache) {
-                if (cachedOptions.options && cachedOptions.options.equivalent(options)) {
-                    if (!paging || (cachedOptions.paging && cachedOptions.paging.equivalent(paging))) {
-                        entities = cachedOptions.ids.filter(entities);
-                        foundMatch = true;
-                        break;
-                    }
+                if (!match) {
+                    return new EntitySet<T>({ query, entities: [] });
+                } else {
+                    entities = match.cache
+                        .get(page)
+                        .filter(isDefined)
+                        .map(id => store.get(id))
+                        .filter(isDefined) as T[];
+                }
+            } else {
+                const match = this.optionsCache_v2.find(
+                    item => item.options.equivalent(options) && item.criteria.equivalent(criteria)
+                );
+
+                if (!match) {
+                    return new EntitySet<T>({ query, entities: [] });
+                } else {
+                    entities = match.ids.map(id => store.get(id)).filter(isDefined) as T[];
                 }
             }
+        } else if (page) {
+            const match = this.noOptionsPageCache.find(item => item.criteria.equivalent(criteria));
 
-            if (!foundMatch) {
+            if (!match) {
                 return new EntitySet<T>({ query, entities: [] });
-            }
-        } else if (paging) {
-            let foundMatch = false;
-            
-            for (const cachedOptions of this.optionsPagingCache) {
-                if (cachedOptions.options || !cachedOptions.paging) continue;
-
-                if (cachedOptions.paging.equivalent(paging)) {
-                    entities = cachedOptions.ids.filter(entities);
-                    foundMatch = true;
-                    break;
-                }
-            }
-
-            if (!foundMatch) {
-                return new EntitySet<T>({ query, entities: [] });
+            } else {
+                entities = match.cache
+                    .get(page)
+                    .filter(isDefined)
+                    .map(id => store.get(id))
+                    .filter(isDefined) as T[];
             }
         }
 
@@ -149,23 +162,58 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         const entities = cloneJson(entitySet.getEntities());
         const normalized = normalizeEntities(entitySet.getQuery().getEntitySchema(), entities);
         const options = entitySet.getQuery().getOptions();
-        const paging = entitySet.getQuery().getPaging();
+        const page = entitySet.getQuery().getPaging();
+        const criteria = entitySet.getQuery().getCriteria();
+
+        if (!(options instanceof NeverCriterion) && !(options instanceof AnyCriterion) && page) {
+            const match = this.optionsPageCache.find(
+                item => item.options.equivalent(options) && item.criteria.equivalent(criteria)
+            );
+
+            if (match) {
+                match.cache.add(entities, page);
+            } else {
+                const cache = new PagedEntityIdCache();
+                cache.add(entities, page);
+                this.optionsPageCache.push({ options, cache, criteria });
+            }
+        } else if (!(options instanceof NeverCriterion) && !(options instanceof AnyCriterion)) {
+            const match = this.optionsCache_v2.find(
+                item => item.options.equivalent(options) && item.criteria.equivalent(criteria)
+            );
+
+            if (match) {
+                match.ids = entities;
+            } else {
+                this.optionsCache_v2.push({ ids: entities, options, criteria });
+            }
+        } else if (page) {
+            const match = this.noOptionsPageCache.find(item => item.criteria.equivalent(criteria));
+
+            if (match) {
+                match.cache.add(entities, page);
+            } else {
+                const cache = new PagedEntityIdCache();
+                cache.add(entities, page);
+                this.noOptionsPageCache.push({ cache, criteria });
+            }
+        }
 
         if (!(options instanceof NeverCriterion) && !(options instanceof AnyCriterion)) {
             if (entitySet.getEntities().length) {
                 const key = entitySet.getSchema().getKey();
                 const keyCriterion = createCriterionFromEntities(entitySet.getEntities(), key.getPath());
-                this.optionsPagingCache.push({ options, paging, ids: keyCriterion });
+                this.optionsCache.push({ options, paging: page, ids: keyCriterion });
             } else {
-                this.optionsPagingCache.push({ options, paging, ids: never() });
+                this.optionsCache.push({ options, paging: page, ids: never() });
             }
-        } else if (paging) {
+        } else if (page) {
             if (entitySet.getEntities().length) {
                 const key = entitySet.getSchema().getKey();
                 const keyCriterion = createCriterionFromEntities(entitySet.getEntities(), key.getPath());
-                this.optionsPagingCache.push({ paging, ids: keyCriterion });
+                this.optionsCache.push({ paging: page, ids: keyCriterion });
             } else {
-                this.optionsPagingCache.push({ paging, ids: never() });
+                this.optionsCache.push({ paging: page, ids: never() });
             }
         }
 

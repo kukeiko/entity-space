@@ -14,17 +14,21 @@ export class SongsController {
     @Get()
     async getSongs(
         @Query("searchText") searchText?: string,
-        @Query("skip") skip?: string,
-        @Query("top") top?: string
+        @Query("from") from?: string,
+        @Query("to") to?: string
     ): Promise<Song[]> {
         let songs = await this.diskDbService.getSongs(searchText);
 
-        if (skip || top) {
-            const parsedSkip = parseInt(skip || "0");
-            const parsedTop = top ? parseInt(top) : void 0;
+        if (from || to) {
+            const parsedFrom = parseInt(from || "0");
+            let parsedTo = to ? parseInt(to) : void 0;
 
-            if (!isNaN(parsedSkip) && (parsedTop === void 0 || !isNaN(parsedTop))) {
-                return songs.slice(parsedSkip, parsedTop);
+            if (parsedTo !== void 0 && !isNaN(parsedTo)) {
+                parsedTo += 1;
+            }
+
+            if (!isNaN(parsedFrom) && (parsedTo === void 0 || !isNaN(parsedTo))) {
+                return songs.slice(parsedFrom, parsedTo);
             }
         }
 
