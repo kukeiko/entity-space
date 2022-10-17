@@ -41,7 +41,7 @@ describe("merging criteria", () => {
 
     // named-criteria
     merging("{ foo: [1, 7] }").with("{ foo: [3, 13] }").shouldBe("{ foo: [1, 13] }");
-    merging("{ foo: [1, 7] }").with("{ foo: [8, 13] }").shouldBe(false);
+    merging("{ foo: [1, 7] }").with("{ foo: [8, 13] }").shouldBe("{ foo: [1, 13] }");
 
     merging("{ foo: [1, 7], bar: [3, 5] }")
         .with("{ foo: [1, 7], bar: [5, 7] }")
