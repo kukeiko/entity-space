@@ -3,12 +3,9 @@ import { or } from "../../lib/criterion/or/or.fn";
 import { inRange } from "../../lib/criterion/range/in-range.fn";
 import { inSet } from "../../lib/criterion/set/in-set.fn";
 import { criteriaTokenParser } from "../../lib/parser/criteria.token-parser";
-import { noBracketsCriteriaTokenParser } from "../../lib/parser/no-brackets-criteria.token-parser";
 import { itShouldParseTokens } from "./utils";
 
-describe("token-parser: value-criteria", () => {
-    const terminator = token(TokenType.Special, ";");
-
+describe("token-parser: or-criteria", () => {
     itShouldParseTokens(
         criteriaTokenParser,
         [
@@ -46,7 +43,7 @@ describe("token-parser: value-criteria", () => {
     );
 
     itShouldParseTokens(
-        noBracketsCriteriaTokenParser,
+        () => criteriaTokenParser(false),
         [
             token(TokenType.Special, "("),
             token(TokenType.Number, "13"),
@@ -59,13 +56,12 @@ describe("token-parser: value-criteria", () => {
             token(TokenType.Special, ","),
             token(TokenType.Number, "200"),
             token(TokenType.Special, ")"),
-            terminator,
         ],
         or([inRange(13, 37, [false, true]), inRange(100, 200, [true, false])])
     );
 
     itShouldParseTokens(
-        noBracketsCriteriaTokenParser,
+        () => criteriaTokenParser(false),
         [
             token(TokenType.Special, "("),
             token(TokenType.Special, "("),
@@ -80,7 +76,6 @@ describe("token-parser: value-criteria", () => {
             token(TokenType.Number, "200"),
             token(TokenType.Special, ")"),
             token(TokenType.Special, ")"),
-            terminator,
         ],
         or([inRange(13, 37, [false, true]), inRange(100, 200, [true, false])])
     );

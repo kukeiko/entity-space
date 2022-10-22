@@ -1,8 +1,8 @@
 import { TokenType } from "@entity-space/lexer";
 import { Criterion } from "../criterion/criterion";
 import { matches } from "../criterion/named/matches.fn";
+import { criteriaTokenParser } from "./criteria.token-parser";
 import { CriterionTokenParser } from "./criterion-token-parser.type";
-import { noBracketsCriteriaTokenParser } from "./no-brackets-criteria.token-parser";
 
 export function* namedCriteriaTokenParser(): CriterionTokenParser {
     let token = yield;
@@ -28,7 +28,7 @@ export function* namedCriteriaTokenParser(): CriterionTokenParser {
             return false;
         }
 
-        const criterionTokenParser = noBracketsCriteriaTokenParser();
+        const criterionTokenParser = criteriaTokenParser(false);
         criterionTokenParser.next();
 
         while (true) {

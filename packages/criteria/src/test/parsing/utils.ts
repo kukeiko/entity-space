@@ -12,14 +12,23 @@ export function itShouldParseTokens(
         const generator = makeGenerator();
         generator.next();
 
+        let createCriterion: (() => Criterion) | undefined;
         for (const token of tokens) {
             const result = generator.next(token);
 
             if (result.value === false) {
                 throw new Error(`parser did not accept token ${JSON.stringify(token)}`);
-            } else if (result.value !== undefined && result.done) {
-                return expect(result.value()).toEqual(expected);
+            } else if (result.value !== void 0) {
+                createCriterion = result.value;
             }
+
+            if (result.done) {
+                break;
+            }
+        }
+
+        if (createCriterion) {
+            return expect(createCriterion()).toEqual(expected);
         }
 
         throw new Error("nothing parsed");

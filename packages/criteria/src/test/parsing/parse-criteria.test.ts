@@ -33,7 +33,19 @@ describe("parse-criteria", () => {
     shouldParse('"foo"', isValue("foo"));
     shouldParse('!"foo"', notValue("foo"));
     shouldParse("true", isValue(true));
-    shouldParse("true & odd", and<any>([isValue(true), isEven(false)]));
+    shouldParse("true & odd", and([isValue(true), isEven(false)]));
+    shouldParse("true | odd", or([isValue(true), isEven(false)]));
+    shouldParse("true | odd & false", or([isValue(true), and(isEven(false), isValue(false))]));
+    shouldParse("true & odd | false", or([and(isValue(true), isEven(false)), isValue(false)]));
+    shouldParse("true & odd | false", or([and(isValue(true), isEven(false)), isValue(false)]));
+    shouldParse(
+        "1 | 2 & 3 & 4 | 5 & 6 | 7",
+        or(isValue(1), and(isValue(2), isValue(3), isValue(4)), and(isValue(5), isValue(6)), isValue(7))
+    );
+    shouldParse(
+        "(1 | 2 & 3 & 4 | 5 & 6 | 7)",
+        or(isValue(1), and(isValue(2), isValue(3), isValue(4)), and(isValue(5), isValue(6)), isValue(7))
+    );
     shouldParse("7 | 8", or(isValue(7), isValue(8)));
     shouldParse("7 & 8", and(isValue(7), isValue(8)));
     shouldParse("[1, 7]", inRange(1, 7));

@@ -5,15 +5,38 @@ import { or } from "../criterion/or/or.fn";
 import { CriterionTokenParser } from "./criterion-token-parser.type";
 import { criterionTokenParser } from "./criterion.token-parser";
 
-export function* criteriaTokenParser(): CriterionTokenParser {
-    let token = yield;
+export function* criteriaTokenParser(requireBrackets = true): CriterionTokenParser {
+    if (requireBrackets) {
+        let token = yield;
 
-    if (!(token.type === TokenType.Special && token.value === "(")) {
-        return false;
+        if (!(token.type === TokenType.Special && token.value === "(")) {
+            return false;
+        }
     }
 
-    const items: Criterion[] = [];
-    let combinator = "|";
+    let items: Criterion[] = [];
+    let combinator: "|" | "&" | undefined;
+    let andCount = 0;
+
+    const packAndedItems = () => {
+        if (andCount == 0) {
+            return;
+        }
+
+        const andedItems = items.slice(-(andCount + 1));
+        items = [...items.slice(0, -(andCount + 1)), and(andedItems)];
+        andCount = 0;
+    };
+
+    const createCriterion = () => {
+        packAndedItems();
+
+        if (items.length === 1) {
+            return items[0];
+        } else {
+            return or(items);
+        }
+    };
 
     while (true) {
         let valueResult = yield* criterionTokenParser();
@@ -24,14 +47,45 @@ export function* criteriaTokenParser(): CriterionTokenParser {
             items.push(valueResult());
         }
 
-        token = yield;
+        let token = yield requireBrackets ? void 0 : createCriterion;
 
-        if (token.type === TokenType.Special && token.value === ")") {
-            return () => (items.length === 1 ? items[0] : combinator === "|" ? or(items) : and(items));
+        if (requireBrackets && token.type === TokenType.Special && token.value === ")") {
+            return createCriterion;
         } else if (token.type === TokenType.Combinator) {
-            combinator = token.value;
+            if (token.value === "|") {
+                if (combinator === "&") {
+                    packAndedItems();
+                }
+
+                combinator = token.value;
+            } else if (token.value === "&") {
+                andCount++;
+                combinator = token.value;
+            } else {
+                return false;
+            }
+        } else if (!requireBrackets) {
+            return createCriterion;
         } else {
             return false;
         }
+
+        // if (token.type === TokenType.Combinator) {
+        //     if (token.value === "|") {
+        //         if (combinator === "&") {
+        //             packAndedItems();
+        //         }
+
+        //         combinator = token.value;
+        //     } else if (token.value === "&") {
+        //         andCount++;
+        //         combinator = token.value;
+        //     } else {
+        //         // [todo] untested case
+        //         return createCriterion;
+        //     }
+        // } else {
+        //     return createCriterion;
+        // }
     }
 }
