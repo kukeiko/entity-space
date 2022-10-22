@@ -1,4 +1,4 @@
-import { lex, token, TokenType } from "@entity-space/lexer";
+import { lex } from "@entity-space/lexer";
 import { Criteria } from "../criterion/criteria";
 import { Criterion } from "../criterion/criterion";
 import { noBracketsCriteriaTokenParser } from "./no-brackets-criteria.token-parser";
@@ -10,29 +10,32 @@ export function parseCriteria(input: string): Criterion {
         throw new Error("no tokens provided");
     }
 
-    // [todo] this seems like a fishy workaround. try to get rid of it
-    const terminator = token(TokenType.Special, ";");
-    tokens.push(terminator);
-
     const generator = noBracketsCriteriaTokenParser();
     generator.next();
+    let createCriterion: (() => Criterion) | undefined;
 
     for (const token of tokens) {
         const result = generator.next(token);
 
         if (result.value === false) {
             throw new Error(`syntax error, token: ${JSON.stringify(token)}`);
-        } else if (result.value !== undefined && result.done) {
-            const criterion = result.value();
-
-            if (criterion instanceof Criteria) {
-                if (criterion.getItems().length === 1) {
-                    return criterion.getItems()[0];
-                }
-            }
-
-            return criterion;
+        } else if (result.value !== void 0) {
+            createCriterion = result.value;
         }
+
+        if (result.done) {
+            break;
+        }
+    }
+
+    if (createCriterion !== void 0) {
+        const criterion = createCriterion();
+
+        if (criterion instanceof Criteria && criterion.getItems().length === 1) {
+            return criterion.getItems()[0];
+        }
+
+        return criterion;
     }
 
     throw new Error("syntax error");
