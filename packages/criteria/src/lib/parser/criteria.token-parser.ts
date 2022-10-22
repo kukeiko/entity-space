@@ -69,23 +69,5 @@ export function* criteriaTokenParser(requireBrackets = true): CriterionTokenPars
         } else {
             return false;
         }
-
-        // if (token.type === TokenType.Combinator) {
-        //     if (token.value === "|") {
-        //         if (combinator === "&") {
-        //             packAndedItems();
-        //         }
-
-        //         combinator = token.value;
-        //     } else if (token.value === "&") {
-        //         andCount++;
-        //         combinator = token.value;
-        //     } else {
-        //         // [todo] untested case
-        //         return createCriterion;
-        //     }
-        // } else {
-        //     return createCriterion;
-        // }
     }
 }
