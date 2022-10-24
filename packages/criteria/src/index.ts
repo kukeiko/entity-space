@@ -39,3 +39,6 @@ export * from "./lib/templates/or-template.fn";
 export * from "./lib/templates/remap-criterion-result";
 export * from "./lib/templates/some-criterion.template";
 export * from "./lib/templates/some-template.fn";
+export * from "./lib/parser/criterion-token-parser.type";
+export * from "./lib/parser/criteria.token-parser";
+export * from "./lib/parser/token-parser";

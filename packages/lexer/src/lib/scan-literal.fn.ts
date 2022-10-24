@@ -1,4 +1,4 @@
-const regex = /[-_a-zA-Z]/;
+const regex = /[-_a-zA-Z.]/;
 
 export function scanLiteral(char: string, iterator: IterableIterator<string>): [string, IteratorResult<string>] {
     let buffer = char;

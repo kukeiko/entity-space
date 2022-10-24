@@ -1,11 +1,11 @@
-import { TokenType } from "@entity-space/lexer";
+import { Token, TokenType } from "@entity-space/lexer";
 import { and } from "../criterion/and/and.fn";
 import { Criterion } from "../criterion/criterion";
 import { or } from "../criterion/or/or.fn";
 import { CriterionTokenParser } from "./criterion-token-parser.type";
 import { criterionTokenParser } from "./criterion.token-parser";
 
-export function* criteriaTokenParser(requireBrackets = true): CriterionTokenParser {
+export function* criteriaTokenParser(requireBrackets = true, endWith?: Token): CriterionTokenParser {
     if (requireBrackets) {
         let token = yield;
 
@@ -65,6 +65,8 @@ export function* criteriaTokenParser(requireBrackets = true): CriterionTokenPars
                 return false;
             }
         } else if (!requireBrackets) {
+            return createCriterion;
+        } else if (endWith && token.type === endWith.type && token.value === endWith.value) {
             return createCriterion;
         } else {
             return false;

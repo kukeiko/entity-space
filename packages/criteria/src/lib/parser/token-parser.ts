@@ -1,7 +1,5 @@
-import { CriterionTokenParser } from "./criterion-token-parser.type";
-
 // [todo] want to move to @entity-space/lexer eventually
-export function* tokenParser(createGenerators: (() => CriterionTokenParser)[]): CriterionTokenParser {
+export function* tokenParser(createGenerators: (() => Generator)[]): Generator {
     let generators = createGenerators.map(create => create());
     generators.forEach(gen => gen.next());
 

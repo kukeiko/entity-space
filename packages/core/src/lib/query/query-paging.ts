@@ -114,4 +114,34 @@ export class QueryPaging {
             );
         }
     }
+
+    toString(): string {
+        const parts: string[] = [];
+
+        for (const sort of this.sort) {
+            if (sort.mode === "desc") {
+                parts.push(`!${sort.field}`);
+            } else {
+                parts.push(sort.field);
+            }
+        }
+
+        const from = this.getFrom();
+
+        if (from === void 0) {
+            parts.push("...");
+        } else {
+            parts.push(from.toString());
+        }
+
+        const to = this.getTo();
+
+        if (to === void 0) {
+            parts.push("...");
+        } else {
+            parts.push(to.toString());
+        }
+
+        return `[${parts.join(", ")}]`;
+    }
 }

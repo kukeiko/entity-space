@@ -15,5 +15,5 @@ export function criterionTokenParser(): CriterionTokenParser {
         namedCriteriaTokenParser,
         valueCriterionTokenParser,
         anyCriterionTokenParser,
-    ]);
+    ]) as CriterionTokenParser;
 }
