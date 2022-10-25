@@ -101,7 +101,7 @@ describe("reduceQuery()", () => {
             .toBe(["song({ artistId: 7 })[6, 10]/{ id, name }", "song({ artistId: 7 })[0, 5]/{ name }"]);
     });
 
-    describe("no reduction", () => {
+    describe("no subtraction", () => {
         expectQuery("root({ id: { 1, 2 } })/{ foo }", schemas).minus("root({ id: 1 })").toBe(false);
         expectQuery("song({ artistId: { 7, 9 } })[0, 10]", schemas).minus("song({ artistId: 7 })[0, 10]").toBe(false);
         expectQuery(`song<{ searchText: "foo" }>({ artistId: 7 })[0, 10]`, schemas)
