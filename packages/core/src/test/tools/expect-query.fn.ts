@@ -1,4 +1,5 @@
 import { EntitySchemaCatalog } from "@entity-space/common";
+import { mergeQuery } from "../../lib/query/merge-query.fn";
 import { parseQuery } from "../../lib/query/parse-query.fn";
 import { reduceQuery } from "../../lib/query/reduce-query.fn";
 
@@ -9,6 +10,9 @@ export function expectQuery(
 ): {
     minus(other: string): {
         toBe(expected: boolean | string | string[]): void;
+    };
+    plus(other: string): {
+        toBe(expected: false | string): void;
     };
 } {
     return {
@@ -41,6 +45,25 @@ export function expectQuery(
                             }
 
                             expect(result.toString()).toEqual(expected);
+                        });
+                    }
+                },
+            };
+        },
+        plus(other) {
+            return {
+                toBe(expected) {
+                    if (expected === false) {
+                        specFn(`${query} should not be addable with ${other}`, () => {
+                            expect(
+                                mergeQuery(parseQuery(query, schemas), parseQuery(other, schemas)).toString()
+                            ).toEqual("false");
+                        });
+                    } else {
+                        specFn(`${query} plus ${other} should be ${expected}`, () => {
+                            expect(
+                                mergeQuery(parseQuery(query, schemas), parseQuery(other, schemas)).toString()
+                            ).toEqual(parseQuery(expected, schemas).toString());
                         });
                     }
                 },

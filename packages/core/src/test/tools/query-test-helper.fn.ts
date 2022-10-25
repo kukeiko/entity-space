@@ -1,6 +1,10 @@
-import { IEntitySource, InMemoryEntityDatabase, mergeQueries, Query, QueryStreamPacket } from "@entity-space/core";
 import { flatMap, flatten } from "lodash";
 import { firstValueFrom, scan, takeLast, tap } from "rxjs";
+import { InMemoryEntityDatabase } from "../../lib/entity/in-memory-entity-database";
+import { IEntitySource } from "../../lib/execution/i-entity-source";
+import { QueryStreamPacket } from "../../lib/execution/query-stream-packet";
+import { mergeQueries } from "../../lib/query/merge-queries.fn";
+import { Query } from "../../lib/query/query";
 
 export type QueryTestHelperOptions =
     | { logTracing?: boolean; logEach?: boolean; logFinal?: boolean; logEntities?: boolean }

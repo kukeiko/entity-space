@@ -1,6 +1,8 @@
 import { EntitySchema, ExpansionValue } from "@entity-space/common";
-import { Expansion, Query, reduceQuery } from "@entity-space/core";
 import { inRange, matches, or } from "@entity-space/criteria";
+import { Expansion } from "../../lib/expansion/expansion";
+import { Query } from "../../lib/query/query";
+import { reduceQuery } from "../../lib/query/reduce-query.fn";
 
 /**
  * This file serves as an introduction via code for anyone new and interested in this library.

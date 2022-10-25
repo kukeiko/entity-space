@@ -1,6 +1,7 @@
 import { EntitySchema, ExpansionValue } from "@entity-space/common";
-import { Query, reduceQueries } from "@entity-space/core";
 import { Criterion } from "@entity-space/criteria";
+import { Query } from "../../lib/query/query";
+import { reduceQueries } from "../../lib/query/reduce-queries.fn";
 
 // [todo] add more tests
 describe("reduceQueries()", () => {

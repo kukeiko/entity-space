@@ -1,5 +1,5 @@
 import { EntitySchema, ExpansionValue } from "@entity-space/common";
-import { Expansion } from "@entity-space/core";
+import { Expansion } from "../../lib/expansion/expansion";
 
 function reduceExpansion(a: ExpansionValue, b: ExpansionValue): boolean | ExpansionValue {
     const rootSchema = new EntitySchema("foo");

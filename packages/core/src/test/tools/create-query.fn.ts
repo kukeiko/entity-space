@@ -1,7 +1,7 @@
 import { BlueprintInstance, EntitySchemaCatalog, ExpansionValue } from "@entity-space/common";
-import { Query } from "@entity-space/core";
 import { any, matches, MatchesBagArgument } from "@entity-space/criteria";
 import { Class } from "@entity-space/utils";
+import { Query } from "../../lib/query/query";
 
 export function createQuery<T>(
     schemas: EntitySchemaCatalog,

@@ -1,6 +1,7 @@
 import { Entity } from "@entity-space/common";
-import { EntitySourceGateway, Query } from "@entity-space/core";
 import { matches } from "@entity-space/criteria";
+import { EntitySourceGateway } from "../lib/execution/entity-source-gateway";
+import { Query } from "../lib/query/query";
 import { reduceQueries } from "../lib/query/reduce-queries.fn";
 import { EntityQueryTracing } from "../lib/tracing/entity-query-tracing";
 import { TestContentData, TestContentDatabase, TestContentEntityApi, User, UserBlueprint } from "./content";
