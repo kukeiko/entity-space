@@ -8,7 +8,13 @@ function createCriterionOnePath(entities: Entity[], path: string, writtenPath = 
     const set = new Set<any>();
 
     for (const entity of entities) {
-        set.add(readValue(entity));
+        const value = readValue(entity);
+
+        if (value === void 0) {
+            continue;
+        }
+
+        set.add(value);
     }
 
     const bag: Record<string, any> = {};
@@ -26,12 +32,24 @@ function createCriterionManyPaths(entities: Entity[], paths: string[], writtenPa
 
     for (const entity of entities) {
         const bag: Bag = {};
+        let hasUndefinedValue = false;
 
         for (let i = 0; i < leadingPaths.length; ++i) {
             const path = leadingPaths[i];
             const writtenPath = writtenPaths ? writtenPaths[i] : path;
+            const value = readPath(path, entity);
+
+            if (value === void 0) {
+                hasUndefinedValue = true;
+                break;
+            }
+
             // [todo] unsafe assertion
-            writePath(writtenPath, bag, isValue(readPath(path, entity)!));
+            writePath(writtenPath, bag, isValue(value as any));
+        }
+
+        if (hasUndefinedValue) {
+            continue;
         }
 
         // [todo] could squeeze out more performance if ComplexKeyMap accepts a method for value,
