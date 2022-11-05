@@ -1,9 +1,10 @@
 import { Entity, IEntitySchema } from "@entity-space/common";
 import { isNotFalse } from "@entity-space/utils";
 import { flatten } from "lodash";
-import { from, map, merge, Observable, of, startWith, switchMap, tap } from "rxjs";
+import { filter, from, map, merge, mergeAll, Observable, of, startWith, switchMap, tap } from "rxjs";
 import { EntitySet } from "../entity/data-structures/entity-set";
 import { IEntityDatabase } from "../entity/i-entity-database";
+import { InMemoryEntityDatabase } from "../entity/in-memory-entity-database";
 import { EntityQueryTemplate } from "../query/entity-query-template";
 import { Query } from "../query/query";
 import { reduceQueries } from "../query/reduce-queries.fn";
@@ -11,10 +12,11 @@ import { EntityQueryTracing } from "../tracing/entity-query-tracing";
 import { EntityApiEndpoint, EntityApiEndpointData, EntityApiEndpointInvoke } from "./entity-api-endpoint";
 import { EntityApiEndpointBuilder } from "./entity-api-endpoint-builder";
 import { IEntitySource } from "./i-entity-source";
+import { IEntityStreamInterceptor } from "./i-entity-stream-interceptor";
 import { QueryStream } from "./query-stream";
 import { QueryStreamPacket } from "./query-stream-packet";
 
-export class EntityApi implements IEntitySource {
+export class EntityApi implements IEntitySource, IEntityStreamInterceptor {
     constructor(protected readonly tracing: EntityQueryTracing) {}
 
     protected endpoints: EntityApiEndpoint[] = [];
@@ -29,6 +31,20 @@ export class EntityApi implements IEntitySource {
 
         return this;
     }
+
+    intercept(stream: QueryStream): QueryStream {
+        const db = new InMemoryEntityDatabase(); // [todo] remove
+
+        return merge(
+            stream.pipe(map(QueryStreamPacket.withoutRejected)),
+            stream.pipe(
+                filter(QueryStreamPacket.containsRejected),
+                map(packet => this.query$(packet.getRejectedQueries(), db)),
+                mergeAll()
+            )
+        );
+    }
+
     query$<T extends Entity = Entity>(queries: Query[], database: IEntityDatabase): Observable<QueryStreamPacket<T>> {
         const streams = queries.map(query => {
             const endpoints = this.getEndpointsAcceptingSchema(query.getEntitySchema());
@@ -145,7 +161,13 @@ export class EntityApi implements IEntitySource {
     }
 
     private tracePacket(packet: QueryStreamPacket, endpoint: EntityApiEndpoint, accepted: Query[]): void {
-        accepted.forEach(query => this.tracing.endpointDeliveredPacket(query, endpoint.getCriterionTemplate(), packet));
+        const relevantAccepted = accepted.filter(acceptedQuery =>
+            packet.getPayload().some(payload => payload.getQuery().intersect(acceptedQuery))
+        );
+
+        relevantAccepted.forEach(query =>
+            this.tracing.endpointDeliveredPacket(query, endpoint.getCriterionTemplate(), packet)
+        );
     }
 
     private invokedToDataStream(invoked: ReturnType<EntityApiEndpointInvoke>): Observable<EntityApiEndpointData> {

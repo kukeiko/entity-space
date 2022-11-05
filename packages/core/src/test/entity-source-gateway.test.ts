@@ -9,7 +9,7 @@ import { TestContentCatalog } from "./content/test-content-catalog";
 import { createQuery } from "./tools/create-query.fn";
 import { queryTestHelper, QueryTestHelperOptions } from "./tools/query-test-helper.fn";
 
-describe("entity-source-gateway", () => {
+xdescribe("entity-source-gateway", () => {
     let catalog = new TestContentCatalog();
 
     function wrappedQueryTestHelper({

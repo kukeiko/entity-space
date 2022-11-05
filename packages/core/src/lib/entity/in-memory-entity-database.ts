@@ -157,7 +157,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         return remapped.getCriteria().length === 1 ? remapped.getCriteria()[0] : or(remapped.getCriteria());
     }
 
-    async upsert(entitySet: EntitySet<Entity>): Promise<void> {
+    upsertSync(entitySet: EntitySet<Entity>): void {
         this.addQueryToCached(entitySet.getQuery());
         const entities = cloneJson(entitySet.getEntities());
         const normalized = normalizeEntities(entitySet.getQuery().getEntitySchema(), entities);
@@ -229,6 +229,10 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
                 }
             }
         }
+    }
+
+    async upsert(entitySet: EntitySet<Entity>): Promise<void> {
+        this.upsertSync(entitySet);
     }
 
     // [todo] not totally happy with this method also creating the queries from the entities,

@@ -1,5 +1,5 @@
 import { ExpansionValue, IEntitySchema } from "@entity-space/common";
-import { any, AnyCriterion, Criterion, never, NeverCriterion } from "@entity-space/criteria";
+import { any, AnyCriterion, Criterion, NamedCriteria, never, NeverCriterion } from "@entity-space/criteria";
 import { Expansion } from "../expansion/expansion";
 import { QueryPaging } from "./query-paging";
 import { reduceQueries } from "./reduce-queries.fn";
@@ -100,6 +100,25 @@ export class Query {
             criteria: intersectedCriterion,
             expansion: intersectedExpansion,
         });
+    }
+
+    intersectCriteriaOmitExpansion(other: Query): false | Query {
+        const intersectedCriterion = other.getCriteria().intersect(this.getCriteria());
+
+        if (!intersectedCriterion) {
+            return false;
+        }
+
+        const intersectedWithoutDehydrated = NamedCriteria.omitExpansion(
+            intersectedCriterion,
+            other.getExpansion().getValue()
+        );
+
+        if (intersectedWithoutDehydrated === intersectedCriterion) {
+            return false;
+        }
+
+        return this.withCriteria(intersectedWithoutDehydrated);
     }
 
     static equivalentCriteria(...queries: Query[]): boolean {

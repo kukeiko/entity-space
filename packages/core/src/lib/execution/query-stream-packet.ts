@@ -1,13 +1,29 @@
 import { Entity } from "@entity-space/common";
 import { flatMap } from "lodash";
 import { EntitySet } from "../entity/data-structures/entity-set";
-import { mergeQueries } from "../query/merge-queries.fn";
+import { mergeQueries_v2 } from "../query/merge-queries-v2.fn";
 import { Query } from "../query/query";
 import { reduceQueries } from "../query/reduce-queries.fn";
 
+function hasProperty<T extends string>(value: unknown, key: T): value is typeof value & Record<T, unknown> {
+    return (value ?? ({} as any))[key] !== void 0;
+}
+
 // [todo] not used / implemented
-class QueryError<T extends Entity = Entity> {
-    constructor(query: Query, error: unknown) {}
+export class QueryError<T extends Entity = Entity> {
+    constructor(query: Query, public error: unknown) {}
+
+    getErrorMessage(): string {
+        if (hasProperty(this.error, "message")) {
+            if (typeof this.error.message === "string") {
+                return this.error.message;
+            } else {
+                return JSON.stringify(this.error.message);
+            }
+        }
+
+        return JSON.stringify(this.error);
+    }
 }
 
 export class QueryStreamPacket<T extends Entity = Entity> {
@@ -76,12 +92,12 @@ export class QueryStreamPacket<T extends Entity = Entity> {
 
     merge(other: QueryStreamPacket<T>): QueryStreamPacket<T> {
         return new QueryStreamPacket<T>({
-            accepted: mergeQueries(...this.getAcceptedQueries(), ...other.getAcceptedQueries()),
+            accepted: mergeQueries_v2(...this.getAcceptedQueries(), ...other.getAcceptedQueries()),
             // [todo] just concatenated, not actually merged
             errors: [...this.getErrors(), ...other.getErrors()],
             // [todo] just concatenated, not actually merged
             payload: [...this.getPayload(), ...other.getPayload()],
-            rejected: mergeQueries(...this.getRejectedQueries(), ...other.getRejectedQueries()),
+            rejected: mergeQueries_v2(...this.getRejectedQueries(), ...other.getRejectedQueries()),
         });
     }
 
@@ -93,7 +109,7 @@ export class QueryStreamPacket<T extends Entity = Entity> {
         return reduceQueries(queries, this.getAcceptedQueries());
     }
 
-    static isEmpty<T extends Entity >(packet: QueryStreamPacket<T>): boolean {
+    static isEmpty<T extends Entity>(packet: QueryStreamPacket<T>): boolean {
         return !packet.accepted.length && !packet.errors.length && !packet.payload.length && !packet.rejected.length;
     }
 
@@ -101,11 +117,15 @@ export class QueryStreamPacket<T extends Entity = Entity> {
         return QueryStreamPacket.isEmpty(this);
     }
 
-    static isNotEmpty<T extends Entity >(packet: QueryStreamPacket<T>): boolean {
+    static isNotEmpty<T extends Entity>(packet: QueryStreamPacket<T>): boolean {
         return !QueryStreamPacket.isEmpty(packet);
     }
 
-    static concat<T extends Entity >(a: QueryStreamPacket<T>, b: QueryStreamPacket<T>): QueryStreamPacket<T> {
+    static containsRejected<T extends Entity>(packet: QueryStreamPacket<T>): boolean {
+        return packet.rejected.length > 0;
+    }
+
+    static concat<T extends Entity>(a: QueryStreamPacket<T>, b: QueryStreamPacket<T>): QueryStreamPacket<T> {
         return new QueryStreamPacket<T>({
             accepted: [...a.getAcceptedQueries(), ...b.getAcceptedQueries()],
             errors: [...a.getErrors(), ...b.getErrors()],
@@ -114,11 +134,17 @@ export class QueryStreamPacket<T extends Entity = Entity> {
         });
     }
 
-    static withoutRejected<T extends Entity >(packet: QueryStreamPacket<T>): QueryStreamPacket<T> {
+    static withoutRejected<T extends Entity>(packet: QueryStreamPacket<T>): QueryStreamPacket<T> {
         return new QueryStreamPacket<T>({
             accepted: packet.getAcceptedQueries(),
             errors: packet.getErrors(),
             payload: packet.getPayload(),
+        });
+    }
+
+    static withOnlyRejected<T extends Entity>(packet: QueryStreamPacket<T>): QueryStreamPacket<T> {
+        return new QueryStreamPacket<T>({
+            rejected: packet.getRejectedQueries(),
         });
     }
 }
