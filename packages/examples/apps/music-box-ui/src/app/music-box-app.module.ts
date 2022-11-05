@@ -94,15 +94,32 @@ import { MusicBoxClientSideEntityApi } from "./music-box-client-side-entity-api"
                 return gateway;
             },
         },
+        // {
+        //     provide: Workspace,
+        //     deps: [EntitySourceGateway, EntitySchemaCatalog, EntityQueryTracing],
+        //     useFactory: (gateway: EntitySourceGateway, schemas: EntitySchemaCatalog, tracing: EntityQueryTracing) => {
+        //         console.log("🏭 new workspace");
+        //         const workspace = new Workspace(tracing);
+        //         workspace.setSource(gateway);
+        //         workspace.setHydrator(gateway);
+        //         workspace.setStore(gateway);
+        //         workspace.setSchemaCatalog(schemas);
+
+        //         return workspace;
+        //     },
+        // },
         {
             provide: Workspace,
-            deps: [EntitySourceGateway, EntitySchemaCatalog, EntityQueryTracing],
-            useFactory: (gateway: EntitySourceGateway, schemas: EntitySchemaCatalog, tracing: EntityQueryTracing) => {
+            deps: [MusicBoxClientSideEntityApi, EntitySchemaCatalog, EntityQueryTracing],
+            useFactory: (
+                api: MusicBoxClientSideEntityApi,
+                schemas: EntitySchemaCatalog,
+                tracing: EntityQueryTracing
+            ) => {
                 console.log("🏭 new workspace");
                 const workspace = new Workspace(tracing);
-                workspace.setSource(gateway);
-                workspace.setHydrator(gateway);
-                workspace.setStore(gateway);
+                workspace.interceptors = [api];
+                workspace.setStore(api);
                 workspace.setSchemaCatalog(schemas);
 
                 return workspace;

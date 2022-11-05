@@ -82,7 +82,7 @@ export class DiskDbService {
         return results.reduce((acc, value) => [...acc, ...value.getEntities()], [] as Entity[]) as T[];
     }
 
-    async createEntity<T>(entity: T, schema: IEntitySchema): Promise<T> {
+    async createEntity<T extends Entity>(entity: T, schema: IEntitySchema): Promise<T> {
         const normalized = normalizeEntities(schema, [entity]);
         const creatable = normalized.get(schema)[0];
 

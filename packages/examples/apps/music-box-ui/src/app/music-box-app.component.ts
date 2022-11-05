@@ -66,43 +66,43 @@ export class MusicAppComponent implements OnInit, OnDestroy {
                 of(ui),
                 this.workspace.query$(ArtistBlueprint, void 0, { id: true, name: true }),
                 this.workspace.query$(SongLocationTypeBlueprint),
-                // this.workspace.query$(
-                //     SongBlueprint,
-                //     {
-                //         artistId: pluckId(ui.filter.artists),
-                //         locations: some(matches<SongLocation>({ songLocationType: pluckId(ui.filter.locationTypes) })),
-                //         duration: inRange(ui.filter.duration[0] ?? void 0, ui.filter.duration[1] ?? void 0),
-                //     },
-                //     {
-                //         id: true,
-                //         artistId: true,
-                //         duration: true,
-                //         name: true,
-                //         locations: { id: true, songLocationType: true },
-                //     },
-                //     ui.filter.searchText ? { searchText: ui.filter.searchText } : void 0
-                // ),
-                ui.filter.searchText
-                    ? this.workspace.query$(
-                          SongBlueprint,
-                          {
-                              artistId: pluckId(ui.filter.artists),
-                              locations: some(
-                                  matches<SongLocation>({ songLocationType: pluckId(ui.filter.locationTypes) })
-                              ),
-                              duration: inRange(ui.filter.duration[0] ?? void 0, ui.filter.duration[1] ?? void 0),
-                          },
-                          {
-                              id: true,
-                              artistId: true,
-                              duration: true,
-                              name: true,
-                              locations: { id: true, songLocationType: true },
-                          },
-                          { searchText: ui.filter.searchText },
-                          { from: ui.filter.paging[0], to: ui.filter.paging[1] }
-                      )
-                    : of([]),
+                this.workspace.query$(
+                    SongBlueprint,
+                    {
+                        artistId: pluckId(ui.filter.artists),
+                        locations: some(matches<SongLocation>({ songLocationType: pluckId(ui.filter.locationTypes) })),
+                        duration: inRange(ui.filter.duration[0] ?? void 0, ui.filter.duration[1] ?? void 0),
+                    },
+                    {
+                        id: true,
+                        artistId: true,
+                        duration: true,
+                        name: true,
+                        locations: { id: true, songLocationType: true },
+                    }
+                    // ui.filter.searchText ? { searchText: ui.filter.searchText } : void 0
+                ),
+                // ui.filter.searchText
+                //     ? this.workspace.query$(
+                //           SongBlueprint,
+                //           {
+                //               artistId: pluckId(ui.filter.artists),
+                //               locations: some(
+                //                   matches<SongLocation>({ songLocationType: pluckId(ui.filter.locationTypes) })
+                //               ),
+                //               duration: inRange(ui.filter.duration[0] ?? void 0, ui.filter.duration[1] ?? void 0),
+                //           },
+                //           {
+                //               id: true,
+                //               artistId: true,
+                //               duration: true,
+                //               name: true,
+                //               locations: { id: true, songLocationType: true },
+                //           },
+                //           { searchText: ui.filter.searchText },
+                //           { from: ui.filter.paging[0], to: ui.filter.paging[1] }
+                //       )
+                //     : of([]),
             ])
         ),
         map(([ui, artists, songLocationTypes, songs]) => this.toState(ui, songs, artists, songLocationTypes)),
@@ -139,7 +139,7 @@ export class MusicAppComponent implements OnInit, OnDestroy {
             .pipe(takeUntil(this.destroyed$))
             .subscribe(cachedQueries => (this.cachedQueries = cachedQueries));
 
-        this.uiStateChange.pipe(takeUntil(this.destroyed$), debounceTime(500)).subscribe(change => {
+        this.uiStateChange.pipe(takeUntil(this.destroyed$), debounceTime(0)).subscribe(change => {
             this.workspace.add(this.schemas.resolve(MusicBoxUiStateBlueprint), {
                 id: this.stateId,
                 ...change,

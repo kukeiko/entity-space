@@ -1,6 +1,6 @@
-import { BlueprintInstance, EntitySchemaCatalog, ExpansionValue, IEntitySchema } from "@entity-space/common";
+import { BlueprintInstance, Entity, EntitySchemaCatalog, ExpansionValue, IEntitySchema } from "@entity-space/common";
 import { any, Criterion, fromDeepBag, isValue, matches, MatchesBagArgument, never } from "@entity-space/criteria";
-import { Class, DeepPartial, isDefined, writePath } from "@entity-space/utils";
+import { Class, DeepPartial, isDefined, isNotFalse, writePath } from "@entity-space/utils";
 import { flatMap, isEqual, xor, xorWith } from "lodash";
 import {
     distinctUntilChanged,
@@ -11,30 +11,34 @@ import {
     lastValueFrom,
     map,
     merge,
+    mergeAll,
     Observable,
     of,
     ReplaySubject,
     startWith,
     Subject,
     switchMap,
-    tap,
+    tap
 } from "rxjs";
-import { EntityHydrationQuery } from "../execution/entity-hydration-query";
 import { IEntityHydrator } from "../execution/i-entity-hydrator";
 import { IEntitySource } from "../execution/i-entity-source";
+import { IEntityStreamInterceptor } from "../execution/i-entity-stream-interceptor";
+import { SchemaRelationBasedHydrator } from "../execution/interceptors/schema-relation-based-hydrator";
+import { QueryStream } from "../execution/query-stream";
+import { QueryStreamPacket } from "../execution/query-stream-packet";
+import { runInterceptors } from "../execution/run-interceptors.fn";
 import { Query } from "../query/query";
 import { QueryPaging } from "../query/query-paging";
 import { reduceQueries } from "../query/reduce-queries.fn";
 import { EntityQueryTracing } from "../tracing/entity-query-tracing";
 import { EntitySet } from "./data-structures/entity-set";
-import { Entity } from "./entity";
 import { createCriterionFromEntities } from "./functions/create-criterion-from-entities.fn";
 import { createIdQueryFromEntities } from "./functions/create-id-query-from-entities.fn";
 import { normalizeEntities } from "./functions/normalize-entities.fn";
 import { IEntityStore } from "./i-entity-store";
 import { InMemoryEntityDatabase } from "./in-memory-entity-database";
 
-export class Workspace implements IEntityStore {
+export class Workspace implements IEntityStore, IEntityStreamInterceptor {
     constructor(private readonly tracing: EntityQueryTracing) {}
 
     private source?: IEntitySource;
@@ -43,6 +47,7 @@ export class Workspace implements IEntityStore {
     private schemas?: EntitySchemaCatalog;
     private readonly database = new InMemoryEntityDatabase();
     private readonly watchedQueries = new Map<Query, Subject<Entity[]>>();
+    interceptors: IEntityStreamInterceptor[] = [];
 
     // [todo] rename to upsert()?
     // [todo] we allow partials, but types don't reflect that (same @ cache and store)
@@ -103,28 +108,56 @@ export class Workspace implements IEntityStore {
 
     // [todo] T not used yet; need to add it to QueriedEntities
     async query<T extends Entity = Entity>(query: Query): Promise<false | EntitySet<T>[]> {
-        if (this.source) {
-            const cachedQueries = this.database.getCachedQueries(query.getEntitySchema());
-            const reduced = reduceQueries([query], cachedQueries);
-            const queriesAgainstSource = reduced === false ? [query] : reduced;
+        const sources = [...this.interceptors, new SchemaRelationBasedHydrator(this.tracing, [this])];
+        const cachedQueries = this.database.getCachedQueries(query.getEntitySchema());
+        const reduced = reduceQueries([query], cachedQueries);
+        const queriesAgainstSource = reduced === false ? [query] : reduced;
 
-            if (queriesAgainstSource.length) {
-                if (reduced) {
-                    this.tracing.queryGotSubtracted(query, cachedQueries, queriesAgainstSource);
-                }
-
-                await lastValueFrom(this.source.query$(queriesAgainstSource, this.database));
-                queriesAgainstSource.forEach(query => this.database.addQueryToCached(query));
-                this.emitAllWatchedQueries();
-            } else {
-                this.tracing.queryGotFullySubtracted(query, cachedQueries, { byLabel: "by cached" });
+        if (queriesAgainstSource.length) {
+            if (reduced) {
+                this.tracing.queryGotSubtracted(query, cachedQueries, queriesAgainstSource);
             }
+
+            await lastValueFrom(
+                runInterceptors(sources, queriesAgainstSource).pipe(
+                    switchMap(packet => {
+                        if (!packet.getPayload().length) {
+                            return of(packet);
+                        }
+
+                        // [todo] prevent upserting entities that are loaded from the database we'Re upserting to
+                        // (which should currently happen as we pass this workspace as a source to the hydrator)
+                        return merge(...packet.getPayload().map(entitySet => this.database.upsert(entitySet)));
+                    })
+                )
+            );
+            queriesAgainstSource.forEach(query => this.database.addQueryToCached(query));
+            this.emitAllWatchedQueries();
+        } else {
+            this.tracing.queryGotFullySubtracted(query, cachedQueries, { byLabel: "by cached" });
         }
 
         const entities = (await this.queryAgainstCache(query)) as T[];
         this.tracing.queryResolved(query, `${entities.length}x entit${entities.length === 1 ? "y" : "ies"}`);
 
         return [new EntitySet({ query, entities })];
+    }
+
+    intercept(stream: QueryStream<Entity>): QueryStream<Entity> {
+        return merge(
+            stream.pipe(map(QueryStreamPacket.withoutRejected), filter(QueryStreamPacket.isNotEmpty)),
+            stream.pipe(
+                map(QueryStreamPacket.withOnlyRejected),
+                filter(QueryStreamPacket.isNotEmpty),
+                switchMap(packet =>
+                    merge(...packet.getRejectedQueries().map(query => this.query(query))).pipe(
+                        filter(isNotFalse),
+                        map(payload => of(new QueryStreamPacket({ payload })))
+                    )
+                ),
+                mergeAll()
+            )
+        );
     }
 
     // [todo] not reactive yet
@@ -136,53 +169,51 @@ export class Workspace implements IEntityStore {
         if (!entities.length) {
             return of([]);
         }
-
-        if (!this.hydrator) {
-            return EMPTY;
-        }
-
-        const hydrator = this.hydrator;
         const schema = this.schemas?.resolve(blueprint);
 
         if (!schema) {
             return EMPTY;
         }
-
         const criteria = createCriterionFromEntities(entities, schema.getKey().getPath());
-        const query = new Query({ entitySchema: schema, criteria, expansion });
-        const cachedQueries = this.database.getCachedQueries(query.getEntitySchema());
-        const reduced = reduceQueries([query], cachedQueries);
-        const queriesAgainstSource = reduced === false ? [query] : reduced;
+        const entitySetQuery = new Query({
+            entitySchema: schema,
+            criteria,
+            // [todo] expansion missing
+        });
 
-        this.tracing.querySpawned(query);
+        const hydrationQuery = new Query({ entitySchema: schema, criteria, expansion });
+        const cachedQueries = this.database.getCachedQueries(hydrationQuery.getEntitySchema());
+        const reduced = reduceQueries([hydrationQuery], cachedQueries);
+        const queriesAgainstSource = reduced === false ? [hydrationQuery] : reduced;
 
+        this.tracing.querySpawned(hydrationQuery);
         if (queriesAgainstSource.length) {
             if (reduced) {
-                this.tracing.queryGotSubtracted(query, cachedQueries, queriesAgainstSource, { byLabel: "by cached" });
+                this.tracing.queryGotSubtracted(hydrationQuery, cachedQueries, queriesAgainstSource, {
+                    byLabel: "by cached",
+                });
             }
 
-            const hydrationQueries = queriesAgainstSource.map(
-                query =>
-                    new EntityHydrationQuery<BlueprintInstance<T>>({
-                        entitySet: new EntitySet({ query: new Query({ entitySchema: schema, criteria }), entities }),
-                        query,
-                    })
-            );
+            const hydrator = new SchemaRelationBasedHydrator(this.tracing, [this]);
+            const entitySet = new EntitySet({ entities, query: entitySetQuery });
+            const kickstartHydrationSource: IEntityStreamInterceptor = {
+                intercept(stream) {
+                    return merge(stream, of(new QueryStreamPacket({ payload: [entitySet] })));
+                },
+            };
 
-            return merge(
-                ...hydrationQueries.map(hydrationQuery => hydrator.hydrate$(hydrationQuery, this.database))
-            ).pipe(
+            return runInterceptors([kickstartHydrationSource, hydrator], [hydrationQuery]).pipe(
                 map(() => {
-                    const entities = this.database.querySync(query).getEntities();
+                    const entities = this.database.querySync(hydrationQuery).getEntities();
                     // [todo] should only trace "resolved" once
-                    this.tracing.queryResolved(query, JSON.stringify(entities));
+                    this.tracing.queryResolved(hydrationQuery, JSON.stringify(entities));
                     return entities;
                 })
             ) as Observable<BlueprintInstance<T>[]>;
         } else {
-            this.tracing.queryGotFullySubtracted(query, cachedQueries, { byLabel: "by cached" });
-            const entities = this.database.querySync(query).getEntities();
-            this.tracing.queryResolved(query, JSON.stringify(entities));
+            this.tracing.queryGotFullySubtracted(hydrationQuery, cachedQueries, { byLabel: "by cached" });
+            const entities = this.database.querySync(hydrationQuery).getEntities();
+            this.tracing.queryResolved(hydrationQuery, JSON.stringify(entities));
             return of(entities) as Observable<BlueprintInstance<T>[]>;
         }
     }
@@ -384,10 +415,12 @@ export class Workspace implements IEntityStore {
 
         await this.database.upsert(
             new EntitySet({
-                query: createIdQueryFromEntities(schema, entities),
-                entities,
+                query: createIdQueryFromEntities(schema, result),
+                entities: result as T[],
             })
         );
+
+        this.emitAllWatchedQueries();
 
         return result as T[];
     }
@@ -405,6 +438,8 @@ export class Workspace implements IEntityStore {
                 entities,
             })
         );
+
+        this.emitAllWatchedQueries();
 
         return result as T[];
     }

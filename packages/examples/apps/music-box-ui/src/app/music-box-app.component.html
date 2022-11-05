@@ -57,6 +57,15 @@
                         (ngModelChange)="changeUiState('filter.searchText', $event)"
                     />
                 </div>
+                <!-- <div class="col-1 flex align-items-center">
+                    <button
+                        pButton
+                        label="Search"
+                        icon="pi pi-search"
+                        class="p-button-text"
+                        (click)="search()"
+                    ></button>
+                </div> -->
             </div>
             <song-table [songs]="state.data.songs"></song-table>
         </ng-template>

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, Input } from "@angular/core";
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from "@angular/core";
 import { Blueprint, define, EntitySchemaCatalog } from "@entity-space/common";
 import { Workspace } from "@entity-space/core";
 import { Artist, ArtistBlueprint, Song, SongBlueprint, WebSongLocation } from "@entity-space/examples/libs/music-model";
@@ -24,7 +24,11 @@ interface SongTableState {
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SongTableComponent {
-    constructor(private readonly workspace: Workspace, private readonly schemas: EntitySchemaCatalog) {}
+    constructor(
+        private readonly workspace: Workspace,
+        private readonly schemas: EntitySchemaCatalog,
+        private readonly changeDetector: ChangeDetectorRef
+    ) {}
 
     stateId = 1;
 
@@ -40,7 +44,7 @@ export class SongTableComponent {
                     artist: true,
                     // [todo] expanding song here causes all to load all songs,
                     // expecting it to be cached instead
-                    locations: { id: true },
+                    locations: { id: true, url: true },
                 }),
             })
         ),
@@ -153,5 +157,6 @@ export class SongTableComponent {
 
     hideDialog() {
         this.editDialogVisible = false;
+        this.changeDetector.markForCheck();
     }
 }
