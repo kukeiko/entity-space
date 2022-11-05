@@ -1,4 +1,4 @@
-import { IEntitySchema } from "@entity-space/common";
+import { Entity, IEntitySchema } from "@entity-space/common";
 import { ICriterionTemplate } from "@entity-space/criteria";
 
 // [todo] accidentally committed this file
@@ -15,5 +15,5 @@ interface SchemaDefined<T> {
 interface RequiredFieldsDefined<T, R> {}
 
 export class EntityApiEndpointBuilder_V2 {
-    forSchema<T>(schema: IEntitySchema<T>): any {}
+    forSchema<T extends Entity>(schema: IEntitySchema<T>): any {}
 }

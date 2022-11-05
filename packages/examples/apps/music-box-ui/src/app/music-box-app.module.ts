@@ -4,7 +4,7 @@ import { FormsModule } from "@angular/forms";
 import { BrowserModule } from "@angular/platform-browser";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import { EntitySchemaCatalog } from "@entity-space/common";
-import { EntityQueryTracing, EntitySourceGateway, Workspace } from "@entity-space/core";
+import { EntityQueryTracing, Workspace } from "@entity-space/core";
 import { SongBlueprint, SongLocationEntitySchema } from "@entity-space/examples/libs/music-model";
 import { ButtonModule } from "primeng/button";
 import { DialogModule } from "primeng/dialog";
@@ -75,23 +75,6 @@ import { MusicBoxClientSideEntityApi } from "./music-box-client-side-entity-api"
                     .withGetAllSongs()
                     .withGetSongById()
                     .withGetSongLocationsBySongId();
-            },
-        },
-        {
-            provide: EntitySourceGateway,
-            deps: [MusicBoxClientSideEntityApi, EntitySchemaCatalog, EntityQueryTracing],
-            useFactory: (
-                controller: MusicBoxClientSideEntityApi,
-                schemas: EntitySchemaCatalog,
-                tracing: EntityQueryTracing
-            ) => {
-                console.log("🏭 new entity gateway");
-                const gateway = new EntitySourceGateway([controller], tracing);
-                // [todo] remove adding stores by schema
-                gateway.addStore(schemas.getSchema("song"), controller);
-                gateway.addStore(schemas.getSchema("song-location"), controller);
-                gateway.addStore(schemas.getSchema("artist"), controller);
-                return gateway;
             },
         },
         // {

@@ -11,12 +11,11 @@ import { reduceQueries } from "../query/reduce-queries.fn";
 import { EntityQueryTracing } from "../tracing/entity-query-tracing";
 import { EntityApiEndpoint, EntityApiEndpointData, EntityApiEndpointInvoke } from "./entity-api-endpoint";
 import { EntityApiEndpointBuilder } from "./entity-api-endpoint-builder";
-import { IEntitySource } from "./i-entity-source";
 import { IEntityStreamInterceptor } from "./i-entity-stream-interceptor";
 import { QueryStream } from "./query-stream";
 import { QueryStreamPacket } from "./query-stream-packet";
 
-export class EntityApi implements IEntitySource, IEntityStreamInterceptor {
+export class EntityApi implements IEntityStreamInterceptor {
     constructor(protected readonly tracing: EntityQueryTracing) {}
 
     protected endpoints: EntityApiEndpoint[] = [];

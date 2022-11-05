@@ -18,10 +18,8 @@ import {
     startWith,
     Subject,
     switchMap,
-    tap
+    tap,
 } from "rxjs";
-import { IEntityHydrator } from "../execution/i-entity-hydrator";
-import { IEntitySource } from "../execution/i-entity-source";
 import { IEntityStreamInterceptor } from "../execution/i-entity-stream-interceptor";
 import { SchemaRelationBasedHydrator } from "../execution/interceptors/schema-relation-based-hydrator";
 import { QueryStream } from "../execution/query-stream";
@@ -41,9 +39,7 @@ import { InMemoryEntityDatabase } from "./in-memory-entity-database";
 export class Workspace implements IEntityStore, IEntityStreamInterceptor {
     constructor(private readonly tracing: EntityQueryTracing) {}
 
-    private source?: IEntitySource;
     private store?: IEntityStore;
-    private hydrator?: IEntityHydrator;
     private schemas?: EntitySchemaCatalog;
     private readonly database = new InMemoryEntityDatabase();
     private readonly watchedQueries = new Map<Query, Subject<Entity[]>>();
@@ -88,14 +84,6 @@ export class Workspace implements IEntityStore, IEntityStreamInterceptor {
                 .then(() => this.queryAgainstCache(watchedQuery))
                 .then(value => subject.next(value));
         }
-    }
-
-    setSource(source: IEntitySource): void {
-        this.source = source;
-    }
-
-    setHydrator(hydrator: IEntityHydrator): void {
-        this.hydrator = hydrator;
     }
 
     setStore(store: IEntityStore): void {
