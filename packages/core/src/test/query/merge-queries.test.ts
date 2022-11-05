@@ -1,10 +1,13 @@
-import { EntitySchema, ExpansionValue } from "@entity-space/common";
+import { EntitySchema, EntitySchemaCatalog, ExpansionValue } from "@entity-space/common";
 import { Criterion, inRange, matches, or } from "@entity-space/criteria";
 import { mergeQueries } from "../../lib/query/merge-queries.fn";
+import { mergeQueries_v2 } from "../../lib/query/merge-queries-v2.fn";
+import { mergeQuery } from "../../lib/query/merge-query.fn";
+import { parseQuery } from "../../lib/query/parse-query.fn";
 import { Query } from "../../lib/query/query";
 
 function createQuery(criteria: Criterion, expansion: ExpansionValue = {}): Query {
-    return new Query({ entitySchema: new EntitySchema("foo"), criteria, expansion });
+    return new Query({ entitySchema: new EntitySchema("user"), criteria, expansion });
 }
 
 interface Product {
@@ -145,5 +148,27 @@ describe("mergeQueries()", () => {
 
         // assert
         expect(secondMerge).toEqual(expected);
+    });
+
+    it("should merge A, B & C where A can only be merged after B & C have been merged", () => {
+        const schemas = new EntitySchemaCatalog();
+        const userSchema = new EntitySchema("users");
+        userSchema.addRelationProperty("parent", userSchema, "parentId", "id");
+        schemas.addSchema(userSchema);
+
+        const A = parseQuery("users({ id: {2, 3}, parent: { id: 7 } })/{ id, parentId }", schemas);
+        const B = parseQuery("users({ id: 2, parent: { id: 7 } })/{ id, parentId, parent: { id } }", schemas);
+        const C = parseQuery("users({ id: 3, parent: { id: 7 } })/{ id, parentId, parent: { id } }", schemas);
+        const expected = "users({ id: {2, 3}, parent: { id: 7 } })/{ id, parentId, parent: { id } }";
+
+        expect(mergeQuery(A, B)).toBe(false);
+        expect(mergeQuery(A, C)).toBe(false);
+        const BC = mergeQuery(B, C);
+        expect(BC).not.toBe(false);
+        expect(BC.toString()).toEqual(expected);
+
+        expect(mergeQuery(A, BC as Query).toString()).toEqual(expected);
+
+        expect(mergeQueries_v2(A, B, C).toString()).toEqual(expected);
     });
 });
