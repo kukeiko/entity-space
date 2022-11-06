@@ -12,8 +12,8 @@ import { EntityQueryTracing } from "../tracing/entity-query-tracing";
 import { EntityApiEndpoint, EntityApiEndpointData, EntityApiEndpointInvoke } from "./entity-api-endpoint";
 import { EntityApiEndpointBuilder } from "./entity-api-endpoint-builder";
 import { IEntityStreamInterceptor } from "./i-entity-stream-interceptor";
-import { QueryStream } from "./query-stream";
-import { QueryStreamPacket } from "./query-stream-packet";
+import { EntityStream } from "./entity-stream";
+import { EntityStreamPacket } from "./entity-stream-packet";
 
 export class EntityApi implements IEntityStreamInterceptor {
     constructor(protected readonly tracing: EntityQueryTracing) {}
@@ -31,43 +31,43 @@ export class EntityApi implements IEntityStreamInterceptor {
         return this;
     }
 
-    intercept(stream: QueryStream): QueryStream {
+    intercept(stream: EntityStream): EntityStream {
         const db = new InMemoryEntityDatabase(); // [todo] remove
 
         return merge(
-            stream.pipe(map(QueryStreamPacket.withoutRejected)),
+            stream.pipe(map(EntityStreamPacket.withoutRejected)),
             stream.pipe(
-                filter(QueryStreamPacket.containsRejected),
+                filter(EntityStreamPacket.containsRejected),
                 map(packet => this.query$(packet.getRejectedQueries(), db)),
                 mergeAll()
             )
         );
     }
 
-    query$<T extends Entity = Entity>(queries: EntityQuery[], database: IEntityDatabase): Observable<QueryStreamPacket<T>> {
+    query$<T extends Entity = Entity>(queries: EntityQuery[], database: IEntityDatabase): Observable<EntityStreamPacket<T>> {
         const streams = queries.map(query => {
             const endpoints = this.getEndpointsAcceptingSchema(query.getEntitySchema());
             const [delegatedStreams, acceptedQueries] = this.dispatchToEndpoints(query, endpoints, database);
             const rejectedQueries = subtractQueries(queries, acceptedQueries);
-            const initialPackets: QueryStreamPacket[] = [];
+            const initialPackets: EntityStreamPacket[] = [];
 
             if (!rejectedQueries || rejectedQueries.length) {
-                initialPackets.push(new QueryStreamPacket({ rejected: rejectedQueries || queries }));
+                initialPackets.push(new EntityStreamPacket({ rejected: rejectedQueries || queries }));
             }
 
             return merge(...initialPackets.map(packet => of(packet)), ...delegatedStreams);
         });
 
-        return merge(...streams) as Observable<QueryStreamPacket<T>>;
+        return merge(...streams) as Observable<EntityStreamPacket<T>>;
     }
 
     private dispatchToEndpoints(
         query: EntityQuery,
         endpoints: EntityApiEndpoint[],
         database: IEntityDatabase
-    ): [QueryStream[], EntityQuery[]] {
+    ): [EntityStream[], EntityQuery[]] {
         let open: EntityQuery[] = [query];
-        const delegatedStreams: QueryStream[] = [];
+        const delegatedStreams: EntityStream[] = [];
         const acceptedQueries: EntityQuery[] = [];
 
         for (const endpoint of endpoints) {
@@ -93,7 +93,7 @@ export class EntityApi implements IEntityStreamInterceptor {
         endpoint: EntityApiEndpoint,
         queries: EntityQuery[],
         database: IEntityDatabase
-    ): false | [Observable<QueryStreamPacket>, EntityQuery[]] {
+    ): false | [Observable<EntityStreamPacket>, EntityQuery[]] {
         const queryTemplate = new EntityQueryTemplate({
             schema: endpoint.getSchema(),
             criterion: endpoint.getCriterionTemplate(),
@@ -127,7 +127,7 @@ export class EntityApi implements IEntityStreamInterceptor {
             this.tracing.queryDispatchedToEndpoint(query, endpoint.getCriterionTemplate())
         );
 
-        const initialPacket = new QueryStreamPacket({ accepted: acceptedRemapped });
+        const initialPacket = new EntityStreamPacket({ accepted: acceptedRemapped });
         // console.log("✔️ ", acceptedRemapped.join(", "));
 
         const stream = merge(
@@ -151,15 +151,15 @@ export class EntityApi implements IEntityStreamInterceptor {
     }
 
     private async addPacketToDatabase(
-        packet: QueryStreamPacket,
+        packet: EntityStreamPacket,
         database: IEntityDatabase
-    ): Promise<QueryStreamPacket> {
+    ): Promise<EntityStreamPacket> {
         await Promise.all(packet.getPayload().map(entitySet => database.upsert(entitySet)));
 
         return packet;
     }
 
-    private tracePacket(packet: QueryStreamPacket, endpoint: EntityApiEndpoint, accepted: EntityQuery[]): void {
+    private tracePacket(packet: EntityStreamPacket, endpoint: EntityApiEndpoint, accepted: EntityQuery[]): void {
         const relevantAccepted = accepted.filter(acceptedQuery =>
             packet.getPayload().some(payload => payload.getQuery().intersect(acceptedQuery))
         );
@@ -179,15 +179,15 @@ export class EntityApi implements IEntityStreamInterceptor {
         }
     }
 
-    private endpointDataToPacket(query: EntityQuery, data: EntityApiEndpointData): QueryStreamPacket {
+    private endpointDataToPacket(query: EntityQuery, data: EntityApiEndpointData): EntityStreamPacket {
         if (data instanceof EntitySet) {
             // if we have an EntitySet, the source told us exactly what has been delivered
-            return new QueryStreamPacket({ payload: [data] });
+            return new EntityStreamPacket({ payload: [data] });
         } else {
             // if instead all we have is just an array of entities, we assume that everything has been delivered
             const entities = Array.isArray(data) ? data : [data];
 
-            return new QueryStreamPacket({ payload: [new EntitySet({ entities, query })] });
+            return new EntityStreamPacket({ payload: [new EntitySet({ entities, query })] });
         }
     }
 

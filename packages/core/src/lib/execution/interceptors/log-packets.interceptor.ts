@@ -1,15 +1,15 @@
 import { Entity } from "@entity-space/common";
 import { EMPTY, merge, switchMap, takeLast, tap } from "rxjs";
 import { IEntityStreamInterceptor } from "../i-entity-stream-interceptor";
-import { QueryStream } from "../query-stream";
-import { QueryStreamPacket } from "../query-stream-packet";
+import { EntityStream } from "../entity-stream";
+import { EntityStreamPacket } from "../entity-stream-packet";
 
 export type LogPacketsInterceptorOptions = { logEach?: boolean; logFinal?: boolean } | true;
 
 export class LogPacketsInterceptor implements IEntityStreamInterceptor {
     constructor(private readonly options: LogPacketsInterceptorOptions) {}
 
-    intercept(stream: QueryStream<Entity>): QueryStream<Entity> {
+    intercept(stream: EntityStream<Entity>): EntityStream<Entity> {
         let options = this.options;
 
         if (options === true) {
@@ -27,7 +27,7 @@ export class LogPacketsInterceptor implements IEntityStreamInterceptor {
             switchMap(() => EMPTY)
         );
 
-        let mergedPacket = new QueryStreamPacket();
+        let mergedPacket = new EntityStreamPacket();
 
         const logFinalStream = stream.pipe(
             tap(packet => {

@@ -10,8 +10,8 @@ import { mergeQueries } from "../../query/merge-queries.fn";
 import { subtractQueries } from "../../query/subtract-queries.fn";
 import { EntityQueryTracing } from "../../tracing/entity-query-tracing";
 import { IEntityStreamInterceptor } from "../i-entity-stream-interceptor";
-import { QueryStream } from "../query-stream";
-import { QueryStreamPacket } from "../query-stream-packet";
+import { EntityStream } from "../entity-stream";
+import { EntityStreamPacket } from "../entity-stream-packet";
 import { runInterceptors } from "../run-interceptors.fn";
 
 export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
@@ -20,12 +20,12 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
         private readonly interceptors: IEntityStreamInterceptor[]
     ) {}
 
-    intercept(stream: QueryStream): QueryStream {
+    intercept(stream: EntityStream): EntityStream {
         const rejected: EntityQuery[] = [];
         const payloads: EntitySet[] = [];
 
         return merge(
-            stream.pipe(map(QueryStreamPacket.withoutRejected)),
+            stream.pipe(map(EntityStreamPacket.withoutRejected)),
             stream.pipe(
                 tap(packet => {
                     rejected.push(...packet.getRejectedQueries());
@@ -33,7 +33,7 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
                 }),
                 takeLast(1),
                 switchMap(() => {
-                    const hydrationStreams: QueryStream[] = [];
+                    const hydrationStreams: EntityStream[] = [];
 
                     // [todo] move to method & use [].reduce()
                     for (const entitySet of payloads) {
@@ -78,7 +78,7 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
                     }
 
                     if (!hydrationStreams.length) {
-                        return of(new QueryStreamPacket({ rejected }));
+                        return of(new EntityStreamPacket({ rejected }));
                     }
 
                     return merge(...hydrationStreams);
@@ -120,7 +120,7 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
         hydrationQuery: EntityQuery,
         relationQuery: EntityQuery,
         relation: IEntitySchemaRelation
-    ): QueryStream {
+    ): EntityStream {
         this.tracing.queryStartedExecution(relationQuery);
 
         const accepted: EntityQuery[] = [];
@@ -145,6 +145,7 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
                     relationQuery,
                 });
 
+                // [todo] remove these
                 console.log(
                     "🌵",
                     finalAccepted.map(q => q.toString())
@@ -155,7 +156,7 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
                     finalRejected.map(q => q.toString())
                 );
 
-                return new QueryStreamPacket({
+                return new EntityStreamPacket({
                     accepted: finalAccepted,
                     rejected: finalRejected,
                     payload: payloads,

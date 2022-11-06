@@ -22,8 +22,8 @@ import {
 } from "rxjs";
 import { IEntityStreamInterceptor } from "../execution/i-entity-stream-interceptor";
 import { SchemaRelationBasedHydrator } from "../execution/interceptors/schema-relation-based-hydrator";
-import { QueryStream } from "../execution/query-stream";
-import { QueryStreamPacket } from "../execution/query-stream-packet";
+import { EntityStream } from "../execution/entity-stream";
+import { EntityStreamPacket } from "../execution/entity-stream-packet";
 import { runInterceptors } from "../execution/run-interceptors.fn";
 import { ScopedByBlueprintWorkspace } from "../execution/scoped-by-blueprint-workspace";
 import { EntityQuery } from "../query/entity-query";
@@ -133,16 +133,16 @@ export class Workspace implements IEntityStore, IEntityStreamInterceptor {
         return [new EntitySet({ query, entities })];
     }
 
-    intercept(stream: QueryStream<Entity>): QueryStream<Entity> {
+    intercept(stream: EntityStream<Entity>): EntityStream<Entity> {
         return merge(
-            stream.pipe(map(QueryStreamPacket.withoutRejected), filter(QueryStreamPacket.isNotEmpty)),
+            stream.pipe(map(EntityStreamPacket.withoutRejected), filter(EntityStreamPacket.isNotEmpty)),
             stream.pipe(
-                map(QueryStreamPacket.withOnlyRejected),
-                filter(QueryStreamPacket.isNotEmpty),
+                map(EntityStreamPacket.withOnlyRejected),
+                filter(EntityStreamPacket.isNotEmpty),
                 switchMap(packet =>
                     merge(...packet.getRejectedQueries().map(query => this.query(query))).pipe(
                         filter(isNotFalse),
-                        map(payload => of(new QueryStreamPacket({ payload })))
+                        map(payload => of(new EntityStreamPacket({ payload })))
                     )
                 ),
                 mergeAll()
@@ -188,7 +188,7 @@ export class Workspace implements IEntityStore, IEntityStreamInterceptor {
             const entitySet = new EntitySet({ entities, query: entitySetQuery });
             const kickstartHydrationSource: IEntityStreamInterceptor = {
                 intercept(stream) {
-                    return merge(stream, of(new QueryStreamPacket({ payload: [entitySet] })));
+                    return merge(stream, of(new EntityStreamPacket({ payload: [entitySet] })));
                 },
             };
 

@@ -1,5 +1,5 @@
 import { ICriterionTemplate } from "@entity-space/criteria";
-import { QueryStreamPacket } from "../execution/query-stream-packet";
+import { EntityStreamPacket } from "../execution/entity-stream-packet";
 import { EntityQuery } from "../query/entity-query";
 
 export class EntityQueryTracing {
@@ -69,7 +69,7 @@ export class EntityQueryTracing {
         );
     }
 
-    endpointDeliveredPacket(query: EntityQuery, template: ICriterionTemplate, packet: QueryStreamPacket): void {
+    endpointDeliveredPacket(query: EntityQuery, template: ICriterionTemplate, packet: EntityStreamPacket): void {
         if (!this.consoleEnabled) {
             return;
         }
@@ -79,7 +79,7 @@ export class EntityQueryTracing {
         );
     }
 
-    queryReceivedPacket(query: EntityQuery, packet: QueryStreamPacket): void {
+    queryReceivedPacket(query: EntityQuery, packet: EntityStreamPacket): void {
         if (!this.consoleEnabled) {
             return;
         }

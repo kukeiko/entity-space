@@ -1,5 +1,5 @@
-import { QueryStream } from "./query-stream";
+import { EntityStream } from "./entity-stream";
 
 export interface IEntityStreamInterceptor {
-    intercept(stream: QueryStream): QueryStream;
+    intercept(stream: EntityStream): EntityStream;
 }
