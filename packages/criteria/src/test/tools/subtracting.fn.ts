@@ -9,15 +9,15 @@ function parse<T extends Criterion | string>(item: T): Criterion {
     return item;
 }
 
-export function freducing(criterion: Criterion | string) {
-    return reducing(criterion, fit);
+export function fsubtracting(criterion: Criterion | string) {
+    return subtracting(criterion, fit);
 }
 
-export function xreducing(criterion: Criterion | string) {
-    return reducing(criterion, xit);
+export function xsubtracting(criterion: Criterion | string) {
+    return subtracting(criterion, xit);
 }
 
-export function reducing(
+export function subtracting(
     criterion: Criterion | string,
     specFn = it
 ): {

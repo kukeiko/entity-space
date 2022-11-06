@@ -4,22 +4,22 @@ import { EntityQuery } from "../../lib/query/entity-query";
 import { subtractQueries } from "../../lib/query/subtract-queries.fn";
 
 // [todo] add more tests
-describe("reduceQueries()", () => {
+describe("subtractQueries()", () => {
     function createQuery(criteria: Criterion, expansion: ExpansionValue = {}): EntityQuery {
         return new EntityQuery({ entitySchema: new EntitySchema("foo"), criteria, expansion });
     }
 
-    describe("no reduction", () => {
-        it("[] reduced by [] should be []", () => {
+    describe("no subtraction", () => {
+        it("[] subtracted by [] should be []", () => {
             // arrange
             const a: EntityQuery[] = [];
             const b: EntityQuery[] = [];
 
             // act
-            const reduced = subtractQueries(a, b);
+            const subtracted = subtractQueries(a, b);
 
             // assert
-            expect(reduced).toEqual([]);
+            expect(subtracted).toEqual([]);
         });
     });
 });

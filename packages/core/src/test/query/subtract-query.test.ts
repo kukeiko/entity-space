@@ -1,7 +1,7 @@
 import { EntitySchema, EntitySchemaCatalog } from "@entity-space/common";
 import { expectQuery } from "../tools/expect-query.fn";
 
-describe("reduceQuery()", () => {
+describe("subtractQuery()", () => {
     const schemas = new EntitySchemaCatalog();
     const rootSchema = new EntitySchema("root");
     const fooSchema = new EntitySchema("foo");
@@ -82,7 +82,7 @@ describe("reduceQuery()", () => {
             ]);
 
         // [todo] a bit surprised about this one.
-        // it effectively tests that reduceQuery() does not do simplification by using mergeQuery()
+        // it effectively tests that subtractQuery() does not do simplification by using mergeQuery()
         // but maybe that is something we want it to do by default?
         expectQuery("root({ price: [100, 300], rating: [3, 7] })", schemas)
             .minus("root({ price: [100, 200], rating: [3, 5] } | { price: (200, 300], rating: [3, 5] })")
