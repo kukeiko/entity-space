@@ -7,7 +7,7 @@ import { MergePacketsTakeLastInterceptor } from "../lib/execution/interceptors/m
 import { SchemaRelationBasedHydrator } from "../lib/execution/interceptors/schema-relation-based-hydrator";
 import { QueryStreamPacket } from "../lib/execution/query-stream-packet";
 import { runInterceptors } from "../lib/execution/run-interceptors.fn";
-import { EntityQuery } from "../lib/query/query";
+import { EntityQuery } from "../lib/query/entity-query";
 import { EntityQueryTracing } from "../lib/tracing/entity-query-tracing";
 import { TestContentData, TestContentDatabase, TestContentEntityApi, User, UserBlueprint } from "./content";
 import { TestContentCatalog } from "./content/test-content-catalog";

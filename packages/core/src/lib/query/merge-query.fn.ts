@@ -1,8 +1,7 @@
-import { ExpansionValue } from "@entity-space/common";
 import { or } from "@entity-space/criteria";
 import { Expansion } from "../expansion/expansion";
+import { EntityQuery } from "./entity-query";
 import { QueryPaging } from "./query-paging";
-import { EntityQuery } from "./query";
 
 // [todo] clean up this method, it is really hard to read and hacked together.
 export function mergeQuery(a: EntityQuery, b: EntityQuery): false | EntityQuery {
@@ -98,7 +97,12 @@ export function mergeQuery(a: EntityQuery, b: EntityQuery): false | EntityQuery 
 
     if (equivalentExpansion) {
         if (mergedCriteria !== false) {
-            return new EntityQuery({ entitySchema, options, criteria: mergedCriteria, expansion: a.getExpansionValue() });
+            return new EntityQuery({
+                entitySchema,
+                options,
+                criteria: mergedCriteria,
+                expansion: a.getExpansionValue(),
+            });
         } else {
             return new EntityQuery({
                 entitySchema,

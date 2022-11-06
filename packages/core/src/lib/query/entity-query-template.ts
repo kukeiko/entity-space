@@ -2,7 +2,7 @@ import { IEntitySchema } from "@entity-space/common";
 import { anyTemplate, Criterion, ICriterionTemplate, neverTemplate } from "@entity-space/criteria";
 import { permutateEntries } from "@entity-space/utils";
 import { Expansion } from "../expansion/expansion";
-import { EntityQuery } from "./query";
+import { EntityQuery } from "./entity-query";
 
 type RemappedParts = {
     options: false | Criterion[];

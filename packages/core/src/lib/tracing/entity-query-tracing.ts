@@ -1,6 +1,6 @@
 import { ICriterionTemplate } from "@entity-space/criteria";
 import { QueryStreamPacket } from "../execution/query-stream-packet";
-import { EntityQuery } from "../query/query";
+import { EntityQuery } from "../query/entity-query";
 
 export class EntityQueryTracing {
     private consoleEnabled = false;

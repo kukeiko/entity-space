@@ -2,7 +2,7 @@ import { EntitySchema, ExpansionValue, IEntitySchema } from "@entity-space/commo
 import { Criterion, inSet, matches } from "@entity-space/criteria";
 import { firstValueFrom, take, tap, toArray } from "rxjs";
 import { Workspace } from "../lib/entity/workspace";
-import { EntityQuery } from "../lib/query/query";
+import { EntityQuery } from "../lib/query/entity-query";
 import { EntityQueryTracing } from "../lib/tracing/entity-query-tracing";
 
 function createWorkspace(): Workspace {

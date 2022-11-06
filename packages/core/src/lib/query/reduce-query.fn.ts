@@ -1,6 +1,6 @@
 import { Criterion } from "@entity-space/criteria";
 import { Expansion } from "../expansion/expansion";
-import { EntityQueryCtorArg, EntityQuery } from "./query";
+import { EntityQueryCtorArg, EntityQuery } from "./entity-query";
 import { QueryPaging } from "./query-paging";
 
 type ReducedParts = {

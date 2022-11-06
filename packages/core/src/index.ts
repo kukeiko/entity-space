@@ -23,7 +23,7 @@ export * from "./lib/execution/query-stream-packet";
 export * from "./lib/expansion/expansion";
 export * from "./lib/query/merge-queries.fn";
 export * from "./lib/query/merge-query.fn";
-export * from "./lib/query/query";
+export * from "./lib/query/entity-query";
 export * from "./lib/query/reduce-queries.fn";
 export * from "./lib/query/reduce-query.fn";
 export * from "./lib/tracing/entity-query-tracing";

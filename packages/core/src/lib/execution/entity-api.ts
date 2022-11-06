@@ -6,7 +6,7 @@ import { EntitySet } from "../entity/data-structures/entity-set";
 import { IEntityDatabase } from "../entity/i-entity-database";
 import { InMemoryEntityDatabase } from "../entity/in-memory-entity-database";
 import { EntityQueryTemplate } from "../query/entity-query-template";
-import { EntityQuery } from "../query/query";
+import { EntityQuery } from "../query/entity-query";
 import { reduceQueries } from "../query/reduce-queries.fn";
 import { EntityQueryTracing } from "../tracing/entity-query-tracing";
 import { EntityApiEndpoint, EntityApiEndpointData, EntityApiEndpointInvoke } from "./entity-api-endpoint";

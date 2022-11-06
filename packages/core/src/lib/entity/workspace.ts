@@ -26,7 +26,7 @@ import { QueryStream } from "../execution/query-stream";
 import { QueryStreamPacket } from "../execution/query-stream-packet";
 import { runInterceptors } from "../execution/run-interceptors.fn";
 import { ScopedByBlueprintWorkspace } from "../execution/scoped-by-blueprint-workspace";
-import { EntityQuery } from "../query/query";
+import { EntityQuery } from "../query/entity-query";
 import { QueryPaging } from "../query/query-paging";
 import { reduceQueries } from "../query/reduce-queries.fn";
 import { EntityQueryTracing } from "../tracing/entity-query-tracing";

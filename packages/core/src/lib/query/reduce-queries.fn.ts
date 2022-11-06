@@ -1,4 +1,4 @@
-import { EntityQuery } from "./query";
+import { EntityQuery } from "./entity-query";
 import { reduceQuery } from "./reduce-query.fn";
 
 export function reduceQueries(a: EntityQuery[], b: EntityQuery[]): EntityQuery[] | false {

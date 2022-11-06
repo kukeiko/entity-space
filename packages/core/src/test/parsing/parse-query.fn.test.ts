@@ -1,4 +1,4 @@
-import { EntityQuery } from "../../lib/query/query";
+import { EntityQuery } from "../../lib/query/entity-query";
 import { parseQuery } from "../../lib/query/parse-query.fn";
 import { EntitySchema, EntitySchemaCatalog, ExpansionValue } from "@entity-space/common";
 import { Criterion, isValue, matches, or } from "@entity-space/criteria";

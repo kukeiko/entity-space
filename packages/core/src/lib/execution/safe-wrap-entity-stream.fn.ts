@@ -1,7 +1,7 @@
 import { isNotFalse } from "@entity-space/utils";
 import { flatMap } from "lodash";
 import { catchError, defaultIfEmpty, EMPTY, map, merge, of, shareReplay, switchMap, takeLast, tap } from "rxjs";
-import { EntityQuery } from "../query/query";
+import { EntityQuery } from "../query/entity-query";
 import { reduceQueries } from "../query/reduce-queries.fn";
 import { QueryStream } from "./query-stream";
 import { QueryError, QueryStreamPacket } from "./query-stream-packet";

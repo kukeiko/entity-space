@@ -1,7 +1,7 @@
 import { EntitySchemaCatalog, ExpansionValue } from "@entity-space/common";
 import { criteriaTokenParser, Criterion } from "@entity-space/criteria";
 import { lex, Token, TokenType } from "@entity-space/lexer";
-import { EntityQuery } from "./query";
+import { EntityQuery } from "./entity-query";
 import { EntityQueryPagingSort, QueryPaging } from "./query-paging";
 
 export function parseQuery(input: string, schemas: EntitySchemaCatalog): EntityQuery {
