@@ -81,7 +81,6 @@ export class EntityQuery {
         return subtractQueries([this], others);
     }
 
-    // [todo] not actually used anywhere
     intersect(other: EntityQuery): false | EntityQuery {
         const intersectedCriterion = this.getCriteria().intersect(other.getCriteria());
 
