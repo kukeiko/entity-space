@@ -1,10 +1,9 @@
 import { EntitySchema, EntitySchemaCatalog, ExpansionValue } from "@entity-space/common";
 import { Criterion, inRange, matches, or } from "@entity-space/criteria";
 import { mergeQueries } from "../../lib/query/merge-queries.fn";
-import { mergeQueries_v2 } from "../../lib/query/merge-queries-v2.fn";
 import { mergeQuery } from "../../lib/query/merge-query.fn";
 import { parseQuery } from "../../lib/query/parse-query.fn";
-import { EntityQuery } from "../../lib/query/query";
+import { EntityQuery } from "../../lib/query/entity-query";
 
 function createQuery(criteria: Criterion, expansion: ExpansionValue = {}): EntityQuery {
     return new EntityQuery({ entitySchema: new EntitySchema("user"), criteria, expansion });
@@ -143,11 +142,10 @@ describe("mergeQueries()", () => {
         ];
 
         // act
-        const firstMerge = mergeQueries(a, b);
-        const secondMerge = mergeQueries(...firstMerge, c);
+        const actual = mergeQueries(a, b, c);
 
         // assert
-        expect(secondMerge).toEqual(expected);
+        expect(actual).toEqual(expected);
     });
 
     it("should merge A, B & C where A can only be merged after B & C have been merged", () => {
@@ -169,6 +167,6 @@ describe("mergeQueries()", () => {
 
         expect(mergeQuery(A, BC as EntityQuery).toString()).toEqual(expected);
 
-        expect(mergeQueries_v2(A, B, C).toString()).toEqual(expected);
+        expect(mergeQueries(A, B, C).toString()).toEqual(expected);
     });
 });

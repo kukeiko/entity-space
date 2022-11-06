@@ -1,28 +1,44 @@
 import { mergeQuery } from "./merge-query.fn";
-import { EntityQuery } from "./query";
+import { EntityQuery } from "./entity-query";
 
 export function mergeQueries(...queries: EntityQuery[]): EntityQuery[] {
-    const [first, ...others] = [...queries];
-
-    if (first === void 0) {
+    if (!queries.length) {
         return [];
     }
 
-    let didMerge = false;
-    let merged = others.map(other => {
-        const result = mergeQuery(first, other);
+    let merged: EntityQuery[] = queries.slice();
+    let nextMerged: EntityQuery[] = [];
 
-        if (result !== false) {
-            didMerge = true;
-            return result;
-        } else {
-            return other;
+    for (let i = 0; i < merged.length; ++i) {
+        let query = merged[i];
+        let didMerge = false;
+
+        for (let e = 0; e < merged.length; ++e) {
+            if (e == i) {
+                continue;
+            }
+
+            const other = merged[e];
+            const result = mergeQuery(query, other);
+
+            if (result) {
+                nextMerged.push(result);
+                didMerge = true;
+                query = result;
+            } else {
+                nextMerged.push(other);
+            }
         }
-    });
 
-    if (didMerge) {
-        return mergeQueries(...merged);
+        if (didMerge) {
+            i = 0;
+        } else {
+            nextMerged.unshift(query);
+        }
+
+        merged = nextMerged.slice();
+        nextMerged = [];
     }
 
-    return queries;
+    return merged;
 }

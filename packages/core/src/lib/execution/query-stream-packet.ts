@@ -1,8 +1,8 @@
 import { Entity } from "@entity-space/common";
 import { flatMap } from "lodash";
 import { EntitySet } from "../entity/data-structures/entity-set";
-import { mergeQueries_v2 } from "../query/merge-queries-v2.fn";
-import { EntityQuery } from "../query/query";
+import { mergeQueries } from "../query/merge-queries.fn";
+import { EntityQuery } from "../query/entity-query";
 import { reduceQueries } from "../query/reduce-queries.fn";
 
 function hasProperty<T extends string>(value: unknown, key: T): value is typeof value & Record<T, unknown> {
@@ -92,12 +92,12 @@ export class QueryStreamPacket<T extends Entity = Entity> {
 
     merge(other: QueryStreamPacket<T>): QueryStreamPacket<T> {
         return new QueryStreamPacket<T>({
-            accepted: mergeQueries_v2(...this.getAcceptedQueries(), ...other.getAcceptedQueries()),
+            accepted: mergeQueries(...this.getAcceptedQueries(), ...other.getAcceptedQueries()),
             // [todo] just concatenated, not actually merged
             errors: [...this.getErrors(), ...other.getErrors()],
             // [todo] just concatenated, not actually merged
             payload: [...this.getPayload(), ...other.getPayload()],
-            rejected: mergeQueries_v2(...this.getRejectedQueries(), ...other.getRejectedQueries()),
+            rejected: mergeQueries(...this.getRejectedQueries(), ...other.getRejectedQueries()),
         });
     }
 
