@@ -1,7 +1,7 @@
 import { EntitySchema, ExpansionValue } from "@entity-space/common";
 import { inRange, matches, or } from "@entity-space/criteria";
 import { Expansion } from "../../lib/expansion/expansion";
-import { Query } from "../../lib/query/query";
+import { EntityQuery } from "../../lib/query/query";
 import { reduceQuery } from "../../lib/query/reduce-query.fn";
 
 /**
@@ -192,7 +192,7 @@ describe("what's reduction for?", () => {
 
         const productSchema = new EntitySchema("product");
 
-        const price_100_to_200_rating_3_to_5_no_reviews = new Query({
+        const price_100_to_200_rating_3_to_5_no_reviews = new EntityQuery({
             entitySchema: productSchema,
             criteria: matches({
                 price: inRange(100, 200),
@@ -203,7 +203,7 @@ describe("what's reduction for?", () => {
             },
         });
 
-        const price_100_to_300_rating_2_to_5_with_reviews = new Query({
+        const price_100_to_300_rating_2_to_5_with_reviews = new EntityQuery({
             entitySchema: productSchema,
             criteria: matches({
                 price: inRange(100, 300),
@@ -218,9 +218,9 @@ describe("what's reduction for?", () => {
         /**
          * Our expected outcome is two queries:
          */
-        const expected: Query[] = [
+        const expected: EntityQuery[] = [
             // one for loading the missing entities
-            new Query({
+            new EntityQuery({
                 entitySchema: productSchema,
                 criteria: or([
                     matches({
@@ -238,7 +238,7 @@ describe("what's reduction for?", () => {
                 },
             }),
             // and one for loading the missing properties (i.e. the reviews) of the entities we already have
-            new Query({
+            new EntityQuery({
                 entitySchema: productSchema,
                 criteria: matches({
                     price: inRange(100, 200),

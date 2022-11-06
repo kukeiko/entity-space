@@ -1,6 +1,6 @@
 import { ICriterionTemplate } from "@entity-space/criteria";
 import { QueryStreamPacket } from "../execution/query-stream-packet";
-import { Query } from "../query/query";
+import { EntityQuery } from "../query/query";
 
 export class EntityQueryTracing {
     private consoleEnabled = false;
@@ -9,7 +9,7 @@ export class EntityQueryTracing {
         this.consoleEnabled = true;
     }
 
-    querySpawned(query: Query): void {
+    querySpawned(query: EntityQuery): void {
         if (!this.consoleEnabled) {
             return;
         }
@@ -17,7 +17,7 @@ export class EntityQueryTracing {
         console.log(`🥚 query spawned: ${query.toString()}`);
     }
 
-    queryStartedExecution(query: Query): void {
+    queryStartedExecution(query: EntityQuery): void {
         if (!this.consoleEnabled) {
             return;
         }
@@ -25,7 +25,7 @@ export class EntityQueryTracing {
         console.log("💎 query started execution:", query.toString());
     }
 
-    queryResolved(query: Query, result?: string): void {
+    queryResolved(query: EntityQuery, result?: string): void {
         if (!this.consoleEnabled) {
             return;
         }
@@ -33,7 +33,7 @@ export class EntityQueryTracing {
         console.log(`🐣 query has been resolved: ${query.toString()}${result !== void 0 ? `, result: ${result}` : ""}`);
     }
 
-    queryGotSubtracted(query: Query, by: Query[], result: Query[], options?: { byLabel?: string }): void {
+    queryGotSubtracted(query: EntityQuery, by: EntityQuery[], result: EntityQuery[], options?: { byLabel?: string }): void {
         if (!this.consoleEnabled) {
             return;
         }
@@ -47,7 +47,7 @@ export class EntityQueryTracing {
         );
     }
 
-    queryGotFullySubtracted(query: Query, by: Query[], options?: { byLabel?: string }): void {
+    queryGotFullySubtracted(query: EntityQuery, by: EntityQuery[], options?: { byLabel?: string }): void {
         if (!this.consoleEnabled) {
             return;
         }
@@ -59,7 +59,7 @@ export class EntityQueryTracing {
         );
     }
 
-    queryDispatchedToEndpoint(query: Query, template: ICriterionTemplate): void {
+    queryDispatchedToEndpoint(query: EntityQuery, template: ICriterionTemplate): void {
         if (!this.consoleEnabled) {
             return;
         }
@@ -69,7 +69,7 @@ export class EntityQueryTracing {
         );
     }
 
-    endpointDeliveredPacket(query: Query, template: ICriterionTemplate, packet: QueryStreamPacket): void {
+    endpointDeliveredPacket(query: EntityQuery, template: ICriterionTemplate, packet: QueryStreamPacket): void {
         if (!this.consoleEnabled) {
             return;
         }
@@ -79,7 +79,7 @@ export class EntityQueryTracing {
         );
     }
 
-    queryReceivedPacket(query: Query, packet: QueryStreamPacket): void {
+    queryReceivedPacket(query: EntityQuery, packet: QueryStreamPacket): void {
         if (!this.consoleEnabled) {
             return;
         }
@@ -87,7 +87,7 @@ export class EntityQueryTracing {
         console.log(`📦 query ${query.toString()} received packet ${packet.toString()}`);
     }
 
-    queryGotRejectedByAllSources(query: Query): void {
+    queryGotRejectedByAllSources(query: EntityQuery): void {
         if (!this.consoleEnabled) {
             return;
         }
@@ -95,7 +95,7 @@ export class EntityQueryTracing {
         console.log(`❌ query got rejected by all sources: ${query.toString()}`);
     }
 
-    reactiveQueryEmitted(query: Query): void {
+    reactiveQueryEmitted(query: EntityQuery): void {
         if (!this.consoleEnabled) {
             return;
         }
@@ -103,7 +103,7 @@ export class EntityQueryTracing {
         console.log(`🔥 reactive query ${query.toString()} caused an emit`);
     }
 
-    reactiveQueryDisposed(query: Query): void {
+    reactiveQueryDisposed(query: EntityQuery): void {
         if (!this.consoleEnabled) {
             return;
         }

@@ -1,5 +1,5 @@
 import { Entity, IEntitySchema } from "@entity-space/common";
-import { EntitySet, IEntityStore, Query } from "@entity-space/core";
+import { EntitySet, IEntityStore, EntityQuery } from "@entity-space/core";
 import { inSet, matches } from "@entity-space/criteria";
 import { toMap } from "@entity-space/utils";
 import { constants } from "node:fs";
@@ -13,10 +13,10 @@ export class FileOnDiskBasedEntitySource implements IEntityStore {
 
     private readonly filePath: string;
 
-    async query(query: Query): Promise<false | EntitySet[]> {
+    async query(query: EntityQuery): Promise<false | EntitySet[]> {
         const entities = query.getCriteria().filter(await this.loadEntitiesFromFile(query.getEntitySchema()));
         const ids = entities.map(entity => entity["id"]);
-        const actualQuery = new Query({ entitySchema: query.getEntitySchema(), criteria: matches({ id: inSet(ids) }) });
+        const actualQuery = new EntityQuery({ entitySchema: query.getEntitySchema(), criteria: matches({ id: inSet(ids) }) });
         const result = new EntitySet({ query: actualQuery, entities });
 
         return [result];

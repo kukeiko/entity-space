@@ -1,6 +1,6 @@
 import { Criterion } from "@entity-space/criteria";
 import { Expansion } from "../expansion/expansion";
-import { EntityQueryCtorArg, Query } from "./query";
+import { EntityQueryCtorArg, EntityQuery } from "./query";
 import { QueryPaging } from "./query-paging";
 
 type ReducedParts = {
@@ -10,7 +10,7 @@ type ReducedParts = {
     paging: true | QueryPaging[];
 };
 
-function subtractParts(a: Query, b: Query): false | ReducedParts {
+function subtractParts(a: EntityQuery, b: EntityQuery): false | ReducedParts {
     const pagingA = a.getPaging();
     const pagingB = b.getPaging();
     let paging: true | QueryPaging[] = true;
@@ -65,7 +65,7 @@ function subtractParts(a: Query, b: Query): false | ReducedParts {
 // [todo] shouldn't be able to reduce queries w/ different entity-schemas
 // [todo] it is still unexpected for me that this method returns an empty array on full subtraction,
 // but Criterion.reduce() would return true. should make it consistent.
-export function reduceQuery(a: Query, b: Query): Query[] | false {
+export function reduceQuery(a: EntityQuery, b: EntityQuery): EntityQuery[] | false {
     const reducedParts = subtractParts(a, b);
 
     if (!reducedParts) {
@@ -74,7 +74,7 @@ export function reduceQuery(a: Query, b: Query): Query[] | false {
         return [];
     }
 
-    const reducedQueries: Query[] = [];
+    const reducedQueries: EntityQuery[] = [];
     const accumulated: EntityQueryCtorArg = {
         entitySchema: a.getEntitySchema(),
         criteria: a.getCriteria(),
@@ -85,24 +85,24 @@ export function reduceQuery(a: Query, b: Query): Query[] | false {
 
     if (reducedParts.paging !== true) {
         reducedParts.paging.forEach(paging => {
-            reducedQueries.push(new Query({ ...accumulated, paging }));
+            reducedQueries.push(new EntityQuery({ ...accumulated, paging }));
         });
 
         accumulated.paging = b.getPaging();
     }
 
     if (reducedParts.options !== true) {
-        reducedQueries.push(new Query({ ...accumulated, options: reducedParts.options }));
+        reducedQueries.push(new EntityQuery({ ...accumulated, options: reducedParts.options }));
         accumulated.options = b.getOptions();
     }
 
     if (reducedParts.criteria !== true) {
-        reducedQueries.push(new Query({ ...accumulated, criteria: reducedParts.criteria }));
+        reducedQueries.push(new EntityQuery({ ...accumulated, criteria: reducedParts.criteria }));
         accumulated.criteria = b.getCriteria();
     }
 
     if (reducedParts.expansion !== true) {
-        reducedQueries.push(new Query({ ...accumulated, expansion: reducedParts.expansion }));
+        reducedQueries.push(new EntityQuery({ ...accumulated, expansion: reducedParts.expansion }));
         accumulated.expansion = b.getExpansion();
     }
 

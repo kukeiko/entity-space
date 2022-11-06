@@ -1,5 +1,5 @@
 import { Entity, EntitySchemaCatalog, IEntitySchema } from "@entity-space/common";
-import { normalizeEntities, Query } from "@entity-space/core";
+import { normalizeEntities, EntityQuery } from "@entity-space/core";
 import { isValue, matches } from "@entity-space/criteria";
 import { Song, SongBlueprint, SongLocation } from "@entity-space/examples/libs/music-model";
 import { FileOnDiskBasedEntitySource } from "@entity-space/node";
@@ -20,7 +20,7 @@ export class DiskDbService {
 
     async getSong(id: number): Promise<Song | undefined> {
         const results = await this.entitySource.query(
-            new Query({ entitySchema: this.songSchema, criteria: matches<Song>({ id: isValue(id) }) })
+            new EntityQuery({ entitySchema: this.songSchema, criteria: matches<Song>({ id: isValue(id) }) })
         );
 
         if (!results) {
@@ -33,7 +33,7 @@ export class DiskDbService {
     }
 
     async getSongs(searchText?: string): Promise<Song[]> {
-        const results = await this.entitySource.query(new Query({ entitySchema: this.songSchema }));
+        const results = await this.entitySource.query(new EntityQuery({ entitySchema: this.songSchema }));
 
         if (!results) {
             return [];
@@ -63,7 +63,7 @@ export class DiskDbService {
     }
 
     async getSongLocations(): Promise<SongLocation[]> {
-        const results = await this.entitySource.query(new Query({ entitySchema: this.songLocationSchema }));
+        const results = await this.entitySource.query(new EntityQuery({ entitySchema: this.songLocationSchema }));
 
         if (!results) {
             return [];
@@ -72,7 +72,7 @@ export class DiskDbService {
         return results.reduce((acc, value) => [...acc, ...value.getEntities()], [] as Entity[]) as SongLocation[];
     }
 
-    async query<T extends Entity>(query: Query): Promise<T[]> {
+    async query<T extends Entity>(query: EntityQuery): Promise<T[]> {
         const results = await this.entitySource.query(query);
 
         if (!results) {

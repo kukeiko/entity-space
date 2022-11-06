@@ -7,7 +7,7 @@ import { MergePacketsTakeLastInterceptor } from "../lib/execution/interceptors/m
 import { SchemaRelationBasedHydrator } from "../lib/execution/interceptors/schema-relation-based-hydrator";
 import { QueryStreamPacket } from "../lib/execution/query-stream-packet";
 import { runInterceptors } from "../lib/execution/run-interceptors.fn";
-import { Query } from "../lib/query/query";
+import { EntityQuery } from "../lib/query/query";
 import { EntityQueryTracing } from "../lib/tracing/entity-query-tracing";
 import { TestContentData, TestContentDatabase, TestContentEntityApi, User, UserBlueprint } from "./content";
 import { TestContentCatalog } from "./content/test-content-catalog";
@@ -50,7 +50,7 @@ describe("interceptors", () => {
             new MergePacketsTakeLastInterceptor(),
         ];
 
-        const queries: Query[] = [createQuery(catalog, UserBlueprint, void 0, { id: true })];
+        const queries: EntityQuery[] = [createQuery(catalog, UserBlueprint, void 0, { id: true })];
 
         const expected = new QueryStreamPacket({
             accepted: queries,
@@ -78,7 +78,7 @@ describe("interceptors", () => {
             new MergePacketsTakeLastInterceptor(),
         ];
 
-        const query: Query = createQuery(catalog, UserBlueprint, { id: 2 }, { id: true });
+        const query: EntityQuery = createQuery(catalog, UserBlueprint, { id: 2 }, { id: true });
 
         const expected = new QueryStreamPacket({
             accepted: [query],
@@ -109,7 +109,7 @@ describe("interceptors", () => {
             new MergePacketsTakeLastInterceptor(),
         ];
 
-        const query: Query = createQuery(
+        const query: EntityQuery = createQuery(
             catalog,
             UserBlueprint,
             { id: 2 },
@@ -145,7 +145,7 @@ describe("interceptors", () => {
             new MergePacketsTakeLastInterceptor(),
         ];
 
-        const query: Query = createQuery(
+        const query: EntityQuery = createQuery(
             catalog,
             UserBlueprint,
             { id: [2, 3], parent: matches<User>({ id: 7 }) },
@@ -189,7 +189,7 @@ describe("interceptors", () => {
             new MergePacketsTakeLastInterceptor(),
         ];
 
-        const query: Query = createQuery(
+        const query: EntityQuery = createQuery(
             catalog,
             UserBlueprint,
             { parent: matches<User>({ id: 7 }) },
@@ -265,7 +265,7 @@ describe("interceptors", () => {
             new MergePacketsTakeLastInterceptor(),
         ];
 
-        const query: Query = createQuery(
+        const query: EntityQuery = createQuery(
             catalog,
             UserBlueprint,
             { id: 2 },
@@ -324,7 +324,7 @@ describe("interceptors", () => {
             new LogPacketsInterceptor(true),
         ];
 
-        const query: Query = createQuery(
+        const query: EntityQuery = createQuery(
             catalog,
             UserBlueprint,
             { id: 2 },

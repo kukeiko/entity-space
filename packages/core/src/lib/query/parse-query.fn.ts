@@ -1,10 +1,10 @@
 import { EntitySchemaCatalog, ExpansionValue } from "@entity-space/common";
-import { criteriaTokenParser, Criterion, CriterionTokenParser, tokenParser } from "@entity-space/criteria";
-import { lex, token, Token, TokenType } from "@entity-space/lexer";
-import { Query } from "./query";
+import { criteriaTokenParser, Criterion } from "@entity-space/criteria";
+import { lex, Token, TokenType } from "@entity-space/lexer";
+import { EntityQuery } from "./query";
 import { EntityQueryPagingSort, QueryPaging } from "./query-paging";
 
-export function parseQuery(input: string, schemas: EntitySchemaCatalog): Query {
+export function parseQuery(input: string, schemas: EntitySchemaCatalog): EntityQuery {
     let tokens = lex(input);
 
     if (tokens.length === 0) {
@@ -23,7 +23,7 @@ export function parseQuery(input: string, schemas: EntitySchemaCatalog): Query {
         if (result.done) {
             if (result.value) {
                 const parts = result.value;
-                return new Query({
+                return new EntityQuery({
                     entitySchema: schemas.getSchema(parts.schemaName!),
                     options: parts.options,
                     criteria: parts.criteria,

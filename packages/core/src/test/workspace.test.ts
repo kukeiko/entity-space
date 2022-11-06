@@ -2,15 +2,15 @@ import { EntitySchema, ExpansionValue, IEntitySchema } from "@entity-space/commo
 import { Criterion, inSet, matches } from "@entity-space/criteria";
 import { firstValueFrom, take, tap, toArray } from "rxjs";
 import { Workspace } from "../lib/entity/workspace";
-import { Query } from "../lib/query/query";
+import { EntityQuery } from "../lib/query/query";
 import { EntityQueryTracing } from "../lib/tracing/entity-query-tracing";
 
 function createWorkspace(): Workspace {
     return new Workspace(new EntityQueryTracing());
 }
 
-function createQuery(entitySchema: IEntitySchema, criteria: Criterion, expansion: ExpansionValue = {}): Query {
-    return new Query({ entitySchema, criteria, expansion });
+function createQuery(entitySchema: IEntitySchema, criteria: Criterion, expansion: ExpansionValue = {}): EntityQuery {
+    return new EntityQuery({ entitySchema, criteria, expansion });
 }
 
 describe("workspace", () => {

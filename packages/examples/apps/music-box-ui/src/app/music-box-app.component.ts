@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from "@angular/core";
 import { Blueprint, BlueprintInstance, define, Entity, EntitySchemaCatalog } from "@entity-space/common";
-import { Query, Workspace } from "@entity-space/core";
+import { EntityQuery, Workspace } from "@entity-space/core";
 import { inRange, matches, some } from "@entity-space/criteria";
 import {
     Artist,
@@ -56,7 +56,7 @@ export class MusicAppComponent implements OnInit, OnDestroy {
 
     private readonly destroyed$ = new Subject<void>();
 
-    cachedQueries: Query[] = [];
+    cachedQueries: EntityQuery[] = [];
 
     stateId = 1;
     uiState = this.workspace.scopeByBlueprint(MusicBoxUiStateBlueprint).oneById(this.stateId).pipe(filter(isDefined));

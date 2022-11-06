@@ -1,5 +1,5 @@
 import { Component, OnInit } from "@angular/core";
-import { EntitySourceGateway, ExpansionObject, Query, Workspace } from "@entity-space/core";
+import { EntitySourceGateway, ExpansionObject, EntityQuery, Workspace } from "@entity-space/core";
 import { Criterion, inRange, matches } from "@entity-space/criteria";
 import { Product, ProductsSchemaCatalog } from "@entity-space/examples/libs/products-model";
 import { merge } from "rxjs";
@@ -30,8 +30,8 @@ export class AppComponent implements OnInit {
 
     gateway: EntitySourceGateway;
     workspace: Workspace;
-    queriesIssuedAgainstApi: Query[] = [];
-    queriesInWorkspaceCache: Query[] = [];
+    queriesIssuedAgainstApi: EntityQuery[] = [];
+    queriesInWorkspaceCache: EntityQuery[] = [];
     products: Product[] = [];
 
     displayedQueryColumns: string[] = ["schema", "criteria", "expansion"];
@@ -80,7 +80,7 @@ export class AppComponent implements OnInit {
 
             // [todo] i added the matches({ id: inSet([1, 2, 3]) }) to test remapping criteria
             // resulting in multiple API calls, remove it and add as filter option to UI
-            const query = new Query(
+            const query = new EntityQuery(
                 this.schemaCatalog.getProductSchema(),
                 // or(criteria, matches({ id: inSet([1, 2, 3]) })),
                 criteria,

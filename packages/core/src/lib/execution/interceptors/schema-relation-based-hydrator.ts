@@ -6,7 +6,7 @@ import { EntitySet } from "../../entity/data-structures/entity-set";
 import { createCriterionFromEntities } from "../../entity/functions/create-criterion-from-entities.fn";
 import { Expansion } from "../../expansion/expansion";
 import { mergeQueries } from "../../query/merge-queries.fn";
-import { Query } from "../../query/query";
+import { EntityQuery } from "../../query/query";
 import { reduceQueries } from "../../query/reduce-queries.fn";
 import { EntityQueryTracing } from "../../tracing/entity-query-tracing";
 import { IEntityStreamInterceptor } from "../i-entity-stream-interceptor";
@@ -21,7 +21,7 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
     ) {}
 
     intercept(stream: QueryStream): QueryStream {
-        const rejected: Query[] = [];
+        const rejected: EntityQuery[] = [];
         const payloads: EntitySet[] = [];
 
         return merge(
@@ -91,7 +91,7 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
         entitySet: EntitySet,
         key: string,
         expansionValue: ExpansionValue
-    ): false | [Query, IEntitySchemaRelation] {
+    ): false | [EntityQuery, IEntitySchemaRelation] {
         if (expansionValue === void 0) {
             return false;
         }
@@ -111,19 +111,19 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
         );
 
         const relatedExpansion = expansionValue === true ? relatedSchema.getDefaultExpansion() : expansionValue;
-        const query = new Query({ entitySchema: relatedSchema, criteria, expansion: relatedExpansion });
+        const query = new EntityQuery({ entitySchema: relatedSchema, criteria, expansion: relatedExpansion });
 
         return [query, relation];
     }
 
     private startRelationHydration(
-        hydrationQuery: Query,
-        relationQuery: Query,
+        hydrationQuery: EntityQuery,
+        relationQuery: EntityQuery,
         relation: IEntitySchemaRelation
     ): QueryStream {
         this.tracing.queryStartedExecution(relationQuery);
 
-        const accepted: Query[] = [];
+        const accepted: EntityQuery[] = [];
         const payloads: EntitySet[] = [];
 
         return runInterceptors(this.interceptors, [relationQuery]).pipe(
@@ -173,14 +173,14 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
         relationQuery,
         relation,
     }: {
-        accepted: Query[];
-        rejected: Query[];
-        hydrationQuery: Query;
-        relationQuery: Query;
+        accepted: EntityQuery[];
+        rejected: EntityQuery[];
+        hydrationQuery: EntityQuery;
+        relationQuery: EntityQuery;
         relation: IEntitySchemaRelation;
-    }): [Query[], Query[]] {
+    }): [EntityQuery[], EntityQuery[]] {
         // [todo] should not check for equivalency, but instead if accepted criteria are a superset
-        if (Query.equivalentCriteria(relationQuery, ...mergeQueries(...accepted))) {
+        if (EntityQuery.equivalentCriteria(relationQuery, ...mergeQueries(...accepted))) {
             if (rejected.length && accepted.length) {
                 return [
                     [

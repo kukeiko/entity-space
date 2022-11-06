@@ -12,7 +12,7 @@ export interface EntityQueryCtorArg {
     paging?: QueryPaging;
 }
 
-export class Query {
+export class EntityQuery {
     constructor({ entitySchema, criteria = any(), options = never(), expansion, paging }: EntityQueryCtorArg) {
         this.entitySchema = entitySchema;
         this.options = options;
@@ -48,8 +48,8 @@ export class Query {
         return this.paging;
     }
 
-    withCriteria(criteria: Criterion): Query {
-        return new Query({ entitySchema: this.entitySchema, criteria, expansion: this.expansion });
+    withCriteria(criteria: Criterion): EntityQuery {
+        return new EntityQuery({ entitySchema: this.entitySchema, criteria, expansion: this.expansion });
     }
 
     getExpansion(): Expansion {
@@ -60,12 +60,12 @@ export class Query {
         return this.expansion.getValue();
     }
 
-    withoutExpansion(): Query {
-        return new Query({ entitySchema: this.entitySchema, criteria: this.criteria });
+    withoutExpansion(): EntityQuery {
+        return new EntityQuery({ entitySchema: this.entitySchema, criteria: this.criteria });
     }
 
-    withExpansion(expansion: Expansion | ExpansionValue): Query {
-        return new Query({ entitySchema: this.entitySchema, criteria: this.criteria, expansion });
+    withExpansion(expansion: Expansion | ExpansionValue): EntityQuery {
+        return new EntityQuery({ entitySchema: this.entitySchema, criteria: this.criteria, expansion });
     }
 
     toString(): string {
@@ -77,12 +77,12 @@ export class Query {
         return `${this.entitySchema.getId()}${options}${criterion}${paging}${expansion}`;
     }
 
-    reduceBy(others: Query[]): false | Query[] {
+    reduceBy(others: EntityQuery[]): false | EntityQuery[] {
         return reduceQueries([this], others);
     }
 
     // [todo] not actually used anywhere
-    intersect(other: Query): false | Query {
+    intersect(other: EntityQuery): false | EntityQuery {
         const intersectedCriterion = this.getCriteria().intersect(other.getCriteria());
 
         if (intersectedCriterion === false) {
@@ -95,14 +95,14 @@ export class Query {
             return false;
         }
 
-        return new Query({
+        return new EntityQuery({
             entitySchema: this.entitySchema,
             criteria: intersectedCriterion,
             expansion: intersectedExpansion,
         });
     }
 
-    intersectCriteriaOmitExpansion(other: Query): false | Query {
+    intersectCriteriaOmitExpansion(other: EntityQuery): false | EntityQuery {
         const intersectedCriterion = other.getCriteria().intersect(this.getCriteria());
 
         if (!intersectedCriterion) {
@@ -121,13 +121,13 @@ export class Query {
         return this.withCriteria(intersectedWithoutDehydrated);
     }
 
-    static equivalentCriteria(...queries: Query[]): boolean {
+    static equivalentCriteria(...queries: EntityQuery[]): boolean {
         const [first, ...others] = queries;
 
         return others.every(other => other.getCriteria().equivalent(first.getCriteria()));
     }
 
-    static equivalent(...queries: Query[]): boolean {
+    static equivalent(...queries: EntityQuery[]): boolean {
         const [first, ...others] = queries;
 
         return others.every(

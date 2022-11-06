@@ -15,7 +15,7 @@ import { flatten } from "lodash";
 import { Observable, Subject } from "rxjs";
 import { Expansion } from "../expansion/expansion";
 import { mergeQueries } from "../query/merge-queries.fn";
-import { Query } from "../query/query";
+import { EntityQuery } from "../query/query";
 import { QueryPaging } from "../query/query-paging";
 import { reduceQueries } from "../query/reduce-queries.fn";
 import { EntitySet } from "./data-structures/entity-set";
@@ -30,8 +30,8 @@ import { PagedEntityIdCache } from "./store/paged-entity-id-cache";
 
 export class InMemoryEntityDatabase implements IEntityDatabase {
     private readonly stores = new Map<string, EntityStore>();
-    private readonly cachedQueries = new Map<string, Query[]>();
-    private readonly queryCacheChanged = new Subject<Query[]>();
+    private readonly cachedQueries = new Map<string, EntityQuery[]>();
+    private readonly queryCacheChanged = new Subject<EntityQuery[]>();
     private readonly optionsCache: { options?: Criterion; paging?: QueryPaging; ids: Criterion }[] = [];
     // private
 
@@ -39,25 +39,25 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
     private readonly optionsCache_v2: { options: Criterion; criteria: Criterion; ids: Entity[] }[] = [];
     private readonly optionsPageCache: { options: Criterion; criteria: Criterion; cache: PagedEntityIdCache }[] = [];
 
-    queryCacheChanged$(): Observable<Query[]> {
+    queryCacheChanged$(): Observable<EntityQuery[]> {
         return this.queryCacheChanged.asObservable();
     }
 
-    async query(query: Query): Promise<EntitySet> {
+    async query(query: EntityQuery): Promise<EntitySet> {
         return this.querySync(query);
     }
 
-    reduceByCached(query: Query): Query[] | false {
+    reduceByCached(query: EntityQuery): EntityQuery[] | false {
         const cached = this.getCachedQueries(query.getEntitySchema());
         return reduceQueries([query], cached);
     }
 
     // [todo] not used; but i did not want to delete it already.
     // if i don't find a use soonish™, i should remove it
-    reduceManyByCached(queries: Query[]): Query[] {
+    reduceManyByCached(queries: EntityQuery[]): EntityQuery[] {
         const groupedBySchema = groupBy(queries, query => query.getEntitySchema());
 
-        const reduced: Query[] = [];
+        const reduced: EntityQuery[] = [];
 
         for (const [schema, queries] of groupedBySchema.entries()) {
             const result = reduceQueries(queries, this.getCachedQueries(schema));
@@ -74,7 +74,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
     }
 
     // [todo] need some tests
-    querySync<T extends Entity = Entity>(query: Query): EntitySet<T> {
+    querySync<T extends Entity = Entity>(query: EntityQuery): EntitySet<T> {
         const store = this.getOrCreateStore(query.getEntitySchema());
         const criterion = this.withoutRetlationalCriteria(query.getCriteria(), query.getEntitySchema());
         let entities = store.getByCriterion(criterion) as T[];
@@ -238,10 +238,10 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
     // [todo] not totally happy with this method also creating the queries from the entities,
     // but i wanted to prevent normalizing twice when adding entities, so that is why it is here
     // instead of in the workspace.
-    addEntities(schema: IEntitySchema, entities: Entity[]): Query[] {
+    addEntities(schema: IEntitySchema, entities: Entity[]): EntityQuery[] {
         entities = cloneJson(entities);
         const normalized = normalizeEntities(schema, entities);
-        const createdQueries: Query[] = [];
+        const createdQueries: EntityQuery[] = [];
 
         for (const schema of normalized.getSchemas()) {
             const normalizedEntities = normalized.get(schema);
@@ -334,7 +334,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         const fromIndex = relation.getFromIndex();
         const toIndex = relation.getToIndex();
         const criteria = createCriterionFromEntities(entities, fromIndex.getPath(), toIndex.getPath());
-        const query = new Query({
+        const query = new EntityQuery({
             entitySchema: relatedSchema,
             criteria,
             expansion: expansion ?? relatedSchema.getDefaultExpansion(),
@@ -352,13 +352,13 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         );
     }
 
-    addQueryToCached(query: Query): void {
+    addQueryToCached(query: EntityQuery): void {
         const cachedQueries = this.getCachedQueries(query.getEntitySchema());
         this.cachedQueries.set(query.getEntitySchema().getId(), mergeQueries(query, ...cachedQueries));
         this.queryCacheChanged.next(flatten(Array.from(this.cachedQueries.values())));
     }
 
-    getCachedQueries(schema: IEntitySchema): Query[] {
+    getCachedQueries(schema: IEntitySchema): EntityQuery[] {
         return this.cachedQueries.get(schema.getId()) ?? [];
     }
 }

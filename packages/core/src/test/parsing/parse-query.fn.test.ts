@@ -1,4 +1,4 @@
-import { Query } from "../../lib/query/query";
+import { EntityQuery } from "../../lib/query/query";
 import { parseQuery } from "../../lib/query/parse-query.fn";
 import { EntitySchema, EntitySchemaCatalog, ExpansionValue } from "@entity-space/common";
 import { Criterion, isValue, matches, or } from "@entity-space/criteria";
@@ -9,7 +9,7 @@ describe("parseQuery()", () => {
     const fooSchema = new EntitySchema("foo");
     catalog.addSchema(fooSchema);
 
-    function shouldParse(stringified: string, expected: Query, specFn = it): void {
+    function shouldParse(stringified: string, expected: EntityQuery, specFn = it): void {
         specFn(`should parse ${stringified} to ${expected.toString()}`, () => {
             const parse = () => parseQuery(stringified, catalog);
             expect(parse).not.toThrow();
@@ -24,11 +24,11 @@ describe("parseQuery()", () => {
         });
     }
 
-    function fshouldParse(stringified: string, expected: Query): void {
+    function fshouldParse(stringified: string, expected: EntityQuery): void {
         shouldParse(stringified, expected, fit);
     }
 
-    function xshouldParse(stringified: string, expected: Query): void {
+    function xshouldParse(stringified: string, expected: EntityQuery): void {
         shouldParse(stringified, expected, xit);
     }
 
@@ -42,8 +42,8 @@ describe("parseQuery()", () => {
         criteria?: Criterion;
         expansion?: ExpansionValue;
         paging?: QueryPaging;
-    }): Query {
-        return new Query({ entitySchema: fooSchema, options, criteria, expansion, paging });
+    }): EntityQuery {
+        return new EntityQuery({ entitySchema: fooSchema, options, criteria, expansion, paging });
     }
 
     // schema only

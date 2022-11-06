@@ -1,7 +1,7 @@
-import { Query } from "./query";
+import { EntityQuery } from "./query";
 import { reduceQuery } from "./reduce-query.fn";
 
-export function reduceQueries(a: Query[], b: Query[]): Query[] | false {
+export function reduceQueries(a: EntityQuery[], b: EntityQuery[]): EntityQuery[] | false {
     if (!a.length && !b.length) {
         return [];
     }
@@ -12,7 +12,7 @@ export function reduceQueries(a: Query[], b: Query[]): Query[] | false {
     // for each query in B, pick each query in A and try to reduce it by B.
     // queries in A are updated with the reduced results as we go.
     for (const queryB of b) {
-        const nextReduced: Query[] = [];
+        const nextReduced: EntityQuery[] = [];
 
         for (const queryA of reduced) {
             const reducedQueries = reduceQuery(queryA, queryB);

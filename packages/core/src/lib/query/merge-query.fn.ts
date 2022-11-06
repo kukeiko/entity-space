@@ -2,10 +2,10 @@ import { ExpansionValue } from "@entity-space/common";
 import { or } from "@entity-space/criteria";
 import { Expansion } from "../expansion/expansion";
 import { QueryPaging } from "./query-paging";
-import { Query } from "./query";
+import { EntityQuery } from "./query";
 
 // [todo] clean up this method, it is really hard to read and hacked together.
-export function mergeQuery(a: Query, b: Query): false | Query {
+export function mergeQuery(a: EntityQuery, b: EntityQuery): false | EntityQuery {
     if (a.getEntitySchema().getId() !== b.getEntitySchema().getId()) {
         return false;
     }
@@ -38,7 +38,7 @@ export function mergeQuery(a: Query, b: Query): false | Query {
                     if (equivalentExpansion) {
                         return a; // could also return b, as everything is equivalent
                     } else {
-                        return new Query({
+                        return new EntityQuery({
                             entitySchema: a.getEntitySchema(),
                             options: a.getOptions(),
                             criteria: a.getCriteria(),
@@ -52,7 +52,7 @@ export function mergeQuery(a: Query, b: Query): false | Query {
                             const mergedRange = pagingA.mergeRange(pagingB);
 
                             if (mergedRange) {
-                                return new Query({
+                                return new EntityQuery({
                                     entitySchema: a.getEntitySchema(),
                                     options: a.getOptions(),
                                     criteria: a.getCriteria(),
@@ -85,7 +85,7 @@ export function mergeQuery(a: Query, b: Query): false | Query {
 
     if (equivalentCriteria) {
         // same identity, just merge expansions
-        return new Query({
+        return new EntityQuery({
             entitySchema,
             criteria: a.getCriteria(),
             expansion: Expansion.mergeValues(a.getEntitySchema(), a.getExpansionValue(), b.getExpansionValue()),
@@ -98,9 +98,9 @@ export function mergeQuery(a: Query, b: Query): false | Query {
 
     if (equivalentExpansion) {
         if (mergedCriteria !== false) {
-            return new Query({ entitySchema, options, criteria: mergedCriteria, expansion: a.getExpansionValue() });
+            return new EntityQuery({ entitySchema, options, criteria: mergedCriteria, expansion: a.getExpansionValue() });
         } else {
-            return new Query({
+            return new EntityQuery({
                 entitySchema,
                 criteria: or(a.getCriteria(), b.getCriteria()),
                 expansion: a.getExpansionValue(),

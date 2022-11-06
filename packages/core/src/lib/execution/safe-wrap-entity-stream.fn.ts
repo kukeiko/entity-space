@@ -1,12 +1,12 @@
 import { isNotFalse } from "@entity-space/utils";
 import { flatMap } from "lodash";
 import { catchError, defaultIfEmpty, EMPTY, map, merge, of, shareReplay, switchMap, takeLast, tap } from "rxjs";
-import { Query } from "../query/query";
+import { EntityQuery } from "../query/query";
 import { reduceQueries } from "../query/reduce-queries.fn";
 import { QueryStream } from "./query-stream";
 import { QueryError, QueryStreamPacket } from "./query-stream-packet";
 
-export function safeWrapEntityStream(stream: QueryStream, queries: Query[]): QueryStream {
+export function safeWrapEntityStream(stream: QueryStream, queries: EntityQuery[]): QueryStream {
     const safelyWrapped = stream.pipe(
         // a stream that doesn't emit anything is equal to a stream emitting 1x packet that rejects all queries
         defaultIfEmpty(new QueryStreamPacket({ rejected: queries })),
@@ -31,8 +31,8 @@ export function safeWrapEntityStream(stream: QueryStream, queries: Query[]): Que
         // prevent unnecessarily repeating potentially costly calls (e.g. accessing http resources)
         shareReplay(1)
     );
-    const accepted: Query[] = [];
-    const rejected: Query[] = [];
+    const accepted: EntityQuery[] = [];
+    const rejected: EntityQuery[] = [];
 
     const trackAcceptedAndRejected = safelyWrapped.pipe(
         tap(packet => {

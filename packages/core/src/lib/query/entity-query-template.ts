@@ -2,7 +2,7 @@ import { IEntitySchema } from "@entity-space/common";
 import { anyTemplate, Criterion, ICriterionTemplate, neverTemplate } from "@entity-space/criteria";
 import { permutateEntries } from "@entity-space/utils";
 import { Expansion } from "../expansion/expansion";
-import { Query } from "./query";
+import { EntityQuery } from "./query";
 
 type RemappedParts = {
     options: false | Criterion[];
@@ -41,7 +41,7 @@ export class EntityQueryTemplate {
     private readonly criterion: ICriterionTemplate;
     private readonly expansion: Expansion;
 
-    remap(query: Query): false | Query[] {
+    remap(query: EntityQuery): false | EntityQuery[] {
         // [todo] can be removed if i decide to make remap() result of ICriterionTemplate just an array
         // of successfully remapped Criteria (instead of also the open ones)
         const remapCriterion = (criterion: Criterion, template: ICriterionTemplate): false | Criterion[] => {
@@ -63,7 +63,7 @@ export class EntityQueryTemplate {
         const permutatedRemappedParts = permutateEntries(remappedParts);
 
         return permutatedRemappedParts.map(parts => {
-            return new Query({
+            return new EntityQuery({
                 entitySchema: this.schema,
                 options: parts.options,
                 criteria: parts.criterion,

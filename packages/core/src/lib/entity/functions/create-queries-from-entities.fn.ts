@@ -1,10 +1,10 @@
 import { IEntitySchema } from "@entity-space/common";
-import { Query } from "../../query/query";
+import { EntityQuery } from "../../query/query";
 import { Entity } from "../entity";
 import { createIdQueryFromEntities } from "./create-id-query-from-entities.fn";
 
-export function createQueriesFromEntities(schema: IEntitySchema, entities: Entity[]): Query[] {
-    const queries: Query[] = [];
+export function createQueriesFromEntities(schema: IEntitySchema, entities: Entity[]): EntityQuery[] {
+    const queries: EntityQuery[] = [];
 
     // [todo] also implement other indexes
     if (schema.hasKey()) {

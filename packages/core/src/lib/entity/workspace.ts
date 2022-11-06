@@ -26,7 +26,7 @@ import { QueryStream } from "../execution/query-stream";
 import { QueryStreamPacket } from "../execution/query-stream-packet";
 import { runInterceptors } from "../execution/run-interceptors.fn";
 import { ScopedByBlueprintWorkspace } from "../execution/scoped-by-blueprint-workspace";
-import { Query } from "../query/query";
+import { EntityQuery } from "../query/query";
 import { QueryPaging } from "../query/query-paging";
 import { reduceQueries } from "../query/reduce-queries.fn";
 import { EntityQueryTracing } from "../tracing/entity-query-tracing";
@@ -44,7 +44,7 @@ export class Workspace implements IEntityStore, IEntityStreamInterceptor {
     private store?: IEntityStore;
     private schemas?: EntitySchemaCatalog;
     private readonly database = new InMemoryEntityDatabase();
-    private readonly watchedQueries = new Map<Query, Subject<Entity[]>>();
+    private readonly watchedQueries = new Map<EntityQuery, Subject<Entity[]>>();
     interceptors: IEntityStreamInterceptor[] = [];
 
     // [todo] rename to upsert()?
@@ -97,7 +97,7 @@ export class Workspace implements IEntityStore, IEntityStreamInterceptor {
     }
 
     // [todo] T not used yet; need to add it to QueriedEntities
-    async query<T extends Entity = Entity>(query: Query): Promise<false | EntitySet<T>[]> {
+    async query<T extends Entity = Entity>(query: EntityQuery): Promise<false | EntitySet<T>[]> {
         const sources = [...this.interceptors, new SchemaRelationBasedHydrator(this.tracing, [this])];
         const cachedQueries = this.database.getCachedQueries(query.getEntitySchema());
         const reduced = reduceQueries([query], cachedQueries);
@@ -165,13 +165,13 @@ export class Workspace implements IEntityStore, IEntityStreamInterceptor {
             return EMPTY;
         }
         const criteria = createCriterionFromEntities(entities, schema.getKey().getPath());
-        const entitySetQuery = new Query({
+        const entitySetQuery = new EntityQuery({
             entitySchema: schema,
             criteria,
             // [todo] expansion missing
         });
 
-        const hydrationQuery = new Query({ entitySchema: schema, criteria, expansion });
+        const hydrationQuery = new EntityQuery({ entitySchema: schema, criteria, expansion });
         const cachedQueries = this.database.getCachedQueries(hydrationQuery.getEntitySchema());
         const reduced = reduceQueries([hydrationQuery], cachedQueries);
         const queriesAgainstSource = reduced === false ? [hydrationQuery] : reduced;
@@ -268,7 +268,7 @@ export class Workspace implements IEntityStore, IEntityStreamInterceptor {
             }
         }
 
-        const query = new Query({ entitySchema: schema, criteria: criterion, expansion, options, paging: queryPaging });
+        const query = new EntityQuery({ entitySchema: schema, criteria: criterion, expansion, options, paging: queryPaging });
 
         // const subject = new Subject<Entity[]>();
         const subject = new ReplaySubject<Entity[]>(1);
@@ -388,11 +388,11 @@ export class Workspace implements IEntityStore, IEntityStreamInterceptor {
 
     // [todo] should stay async because at one point i want to make use of service-workers
     // [todo] should not exist at all? (or be private)
-    async queryAgainstCache(query: Query): Promise<Entity[]> {
+    async queryAgainstCache(query: EntityQuery): Promise<Entity[]> {
         return this.database.querySync(query).getEntities();
     }
 
-    queryCacheChanged$(): Observable<Query[]> {
+    queryCacheChanged$(): Observable<EntityQuery[]> {
         return this.database.queryCacheChanged$();
     }
 

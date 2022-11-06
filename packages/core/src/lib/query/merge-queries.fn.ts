@@ -1,7 +1,7 @@
 import { mergeQuery } from "./merge-query.fn";
-import { Query } from "./query";
+import { EntityQuery } from "./query";
 
-export function mergeQueries(...queries: Query[]): Query[] {
+export function mergeQueries(...queries: EntityQuery[]): EntityQuery[] {
     const [first, ...others] = [...queries];
 
     if (first === void 0) {

@@ -2,7 +2,7 @@ import { Entity } from "@entity-space/common";
 import { flatMap } from "lodash";
 import { EntitySet } from "../entity/data-structures/entity-set";
 import { mergeQueries_v2 } from "../query/merge-queries-v2.fn";
-import { Query } from "../query/query";
+import { EntityQuery } from "../query/query";
 import { reduceQueries } from "../query/reduce-queries.fn";
 
 function hasProperty<T extends string>(value: unknown, key: T): value is typeof value & Record<T, unknown> {
@@ -11,7 +11,7 @@ function hasProperty<T extends string>(value: unknown, key: T): value is typeof 
 
 // [todo] not used / implemented
 export class QueryError<T extends Entity = Entity> {
-    constructor(query: Query, public error: unknown) {}
+    constructor(query: EntityQuery, public error: unknown) {}
 
     getErrorMessage(): string {
         if (hasProperty(this.error, "message")) {
@@ -33,8 +33,8 @@ export class QueryStreamPacket<T extends Entity = Entity> {
         errors,
         payload,
     }: {
-        accepted?: Query[];
-        rejected?: Query[];
+        accepted?: EntityQuery[];
+        rejected?: EntityQuery[];
         errors?: QueryError<T>[];
         payload?: EntitySet<T>[];
     } = {}) {
@@ -44,8 +44,8 @@ export class QueryStreamPacket<T extends Entity = Entity> {
         this.payload = payload ?? [];
     }
 
-    private readonly accepted: Query[];
-    private readonly rejected: Query[];
+    private readonly accepted: EntityQuery[];
+    private readonly rejected: EntityQuery[];
     private readonly errors: QueryError<T>[];
     private readonly payload: EntitySet<T>[];
 
@@ -53,16 +53,16 @@ export class QueryStreamPacket<T extends Entity = Entity> {
         return flatMap(this.payload, queriedEntities => queriedEntities.getEntities());
     }
 
-    getAcceptedQueries(): Query[] {
+    getAcceptedQueries(): EntityQuery[] {
         return this.accepted.slice();
     }
 
     // [todo] not (yet?) used
-    getDeliveredQueries(): Query[] {
+    getDeliveredQueries(): EntityQuery[] {
         return this.payload.map(payload => payload.getQuery());
     }
 
-    getRejectedQueries(): Query[] {
+    getRejectedQueries(): EntityQuery[] {
         return this.rejected.slice();
     }
 
@@ -101,11 +101,11 @@ export class QueryStreamPacket<T extends Entity = Entity> {
         });
     }
 
-    reduceQueries(queries: Query[]): false | Query[] {
+    reduceQueries(queries: EntityQuery[]): false | EntityQuery[] {
         return reduceQueries(queries, [...this.getAcceptedQueries(), ...this.getRejectedQueries()]);
     }
 
-    reduceQueriesByAccepted(queries: Query[]): false | Query[] {
+    reduceQueriesByAccepted(queries: EntityQuery[]): false | EntityQuery[] {
         return reduceQueries(queries, this.getAcceptedQueries());
     }
 
