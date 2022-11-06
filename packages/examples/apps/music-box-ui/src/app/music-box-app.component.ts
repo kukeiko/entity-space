@@ -59,10 +59,10 @@ export class MusicAppComponent implements OnInit, OnDestroy {
     cachedQueries: EntityQuery[] = [];
 
     stateId = 1;
-    uiState = this.workspace.scopeByBlueprint(MusicBoxUiStateBlueprint).oneById(this.stateId).pipe(filter(isDefined));
-    artists = this.workspace.scopeByBlueprint(ArtistBlueprint);
-    songLocationTypes = this.workspace.scopeByBlueprint(SongLocationTypeBlueprint);
-    songs = this.workspace.scopeByBlueprint(SongBlueprint).withDefaultHydration({
+    uiState = this.workspace.scope(MusicBoxUiStateBlueprint).oneById(this.stateId).pipe(filter(isDefined));
+    artists = this.workspace.scope(ArtistBlueprint);
+    songLocationTypes = this.workspace.scope(SongLocationTypeBlueprint);
+    songs = this.workspace.scope(SongBlueprint).withDefaultHydration({
         id: true,
         artistId: true,
         duration: true,

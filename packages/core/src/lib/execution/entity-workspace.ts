@@ -468,12 +468,14 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
         return schema;
     }
 
-    scopeByBlueprint<T>(blueprint: Class<T>): ScopedEntityWorkspace<T> {
+    scope<T extends Entity>(blueprint: Class<T>): ScopedEntityWorkspace<BlueprintInstance<T>> {
         // [todo] to be removed by making schemas not undefined
         if (!this.schemas) {
             throw new Error("this.schemas is falsy");
         }
 
-        return new ScopedEntityWorkspace({ blueprint, schemas: this.schemas, workspace: this });
+        const schema = this.schemas.resolve(blueprint);
+
+        return new ScopedEntityWorkspace({ schema, workspace: this });
     }
 }

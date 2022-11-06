@@ -1,29 +1,13 @@
-import {
-    BlueprintInstance,
-    Entity,
-    EntitySchemaCatalog,
-    EntitySelectionValue,
-    IEntitySchema,
-} from "@entity-space/common";
+import { Entity, EntitySelectionValue, IEntitySchema } from "@entity-space/common";
 import { fromDeepBag, MatchesBagArgument } from "@entity-space/criteria";
-import { Class, readPath, writePath } from "@entity-space/utils";
+import { readPath, writePath } from "@entity-space/utils";
 import { map, Observable } from "rxjs";
-import { EntityWorkspace } from "./entity-workspace";
 import { EntitySelection } from "../query/entity-selection";
+import { EntityWorkspace } from "./entity-workspace";
 
-export class ScopedEntityWorkspace<T> {
-    constructor({
-        blueprint,
-        schemas,
-        workspace,
-    }: {
-        blueprint: Class<T>;
-        schemas: EntitySchemaCatalog;
-        workspace: EntityWorkspace;
-    }) {
-        // this.blueprint = blueprint;
-        this.schema = schemas.resolve(blueprint);
-        // this.schemas = schemas;
+export class ScopedEntityWorkspace<T extends Entity = Entity> {
+    constructor({ schema, workspace }: { schema: IEntitySchema<T>; workspace: EntityWorkspace }) {
+        this.schema = schema;
         this.workspace = workspace;
     }
 
@@ -31,12 +15,9 @@ export class ScopedEntityWorkspace<T> {
     private readonly schema: IEntitySchema;
     // private readonly schemas: EntitySchemaCatalog;
     private readonly workspace: EntityWorkspace;
-    private defaultHydrate: EntitySelectionValue<BlueprintInstance<T>> = true;
+    private defaultHydrate: EntitySelectionValue<T> = true;
 
-    oneById(
-        id: number | string | Entity,
-        hydrate: EntitySelectionValue<BlueprintInstance<T>> = true
-    ): Observable<BlueprintInstance<T> | undefined> {
+    oneById(id: number | string | Entity, hydrate: EntitySelectionValue<T> = true): Observable<T | undefined> {
         let bag: Record<string, any>;
         const keyPaths = this.schema.getKey().getPath();
 
@@ -56,35 +37,24 @@ export class ScopedEntityWorkspace<T> {
 
         const criterion = fromDeepBag(bag);
 
-        hydrate = EntitySelection.mergeValues(this.schema, hydrate, this.defaultHydrate) as EntitySelectionValue<
-            BlueprintInstance<T>
-        >;
+        hydrate = EntitySelection.mergeValues(this.schema, hydrate, this.defaultHydrate) as EntitySelectionValue<T>;
 
-        return this.workspace
-            .query$<BlueprintInstance<T>>(this.schema, criterion, hydrate)
-            .pipe(map(entities => entities[0]));
+        return this.workspace.query$<T>(this.schema, criterion, hydrate).pipe(map(entities => entities[0]));
     }
 
-    all(hydrate: EntitySelectionValue<BlueprintInstance<T>> = true): Observable<BlueprintInstance<T>[]> {
-        hydrate = EntitySelection.mergeValues(this.schema, hydrate, this.defaultHydrate) as EntitySelectionValue<
-            BlueprintInstance<T>
-        >;
+    all(hydrate: EntitySelectionValue<T> = true): Observable<T[]> {
+        hydrate = EntitySelection.mergeValues(this.schema, hydrate, this.defaultHydrate) as EntitySelectionValue<T>;
 
-        return this.workspace.query$<BlueprintInstance<T>>(this.schema, void 0, hydrate);
+        return this.workspace.query$<T>(this.schema, void 0, hydrate);
     }
 
-    many(
-        criteria: MatchesBagArgument<BlueprintInstance<T>>,
-        hydrate: EntitySelectionValue<BlueprintInstance<T>> = true
-    ): Observable<BlueprintInstance<T>[]> {
-        hydrate = EntitySelection.mergeValues(this.schema, hydrate, this.defaultHydrate) as EntitySelectionValue<
-            BlueprintInstance<T>
-        >;
+    many(criteria: MatchesBagArgument<T>, hydrate: EntitySelectionValue<T> = true): Observable<T[]> {
+        hydrate = EntitySelection.mergeValues(this.schema, hydrate, this.defaultHydrate) as EntitySelectionValue<T>;
 
-        return this.workspace.query$<BlueprintInstance<T>>(this.schema, criteria, hydrate);
+        return this.workspace.query$<T>(this.schema, criteria, hydrate);
     }
 
-    withDefaultHydration(hydrate: EntitySelectionValue<BlueprintInstance<T>>): this {
+    withDefaultHydration(hydrate: EntitySelectionValue<T>): this {
         this.defaultHydrate = hydrate;
         return this;
     }
