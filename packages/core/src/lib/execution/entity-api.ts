@@ -97,7 +97,7 @@ export class EntityApi implements IEntityStreamInterceptor {
         const queryTemplate = new EntityQueryTemplate({
             schema: endpoint.getSchema(),
             criterion: endpoint.getCriterionTemplate(),
-            expansion: endpoint.getExpansion(),
+            selection: endpoint.getSelection(),
             options: endpoint.getOptionsTemplate(),
         });
 
@@ -134,7 +134,7 @@ export class EntityApi implements IEntityStreamInterceptor {
             ...acceptedRemapped.map(query => {
                 const invoked = endpoint.getInvoke()({
                     criterion: query.getCriteria(),
-                    expansion: query.getExpansion().getValue(),
+                    selection: query.getSelection().getValue(),
                     options: query.getOptions(),
                     paging: query.getPaging(),
                 });

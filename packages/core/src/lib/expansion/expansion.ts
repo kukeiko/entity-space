@@ -65,11 +65,11 @@ export class EntitySelection {
         const intersection: EntitySelectionValue = {};
 
         if (a === true) {
-            a = schema.getDefaultExpansion();
+            a = schema.getDefaultSelection();
         }
 
         if (b === true) {
-            b = schema.getDefaultExpansion();
+            b = schema.getDefaultSelection();
         }
 
         for (const key in a) {
@@ -119,7 +119,7 @@ export class EntitySelection {
 
         for (let selection of objects) {
             if (selection === true) {
-                selection = schema.getDefaultExpansion();
+                selection = schema.getDefaultSelection();
             }
 
             for (const key in selection) {
@@ -154,11 +154,11 @@ export class EntitySelection {
         let didReduce = false;
 
         if (what === true) {
-            what = schema.getDefaultExpansion();
+            what = schema.getDefaultSelection();
         }
 
         if (by === true) {
-            by = schema.getDefaultExpansion();
+            by = schema.getDefaultSelection();
         }
 
         for (const key in by) {

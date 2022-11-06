@@ -16,17 +16,17 @@ export function mergeQuery(a: EntityQuery, b: EntityQuery): false | EntityQuery 
     const pagingA = a.getPaging();
     const pagingB = b.getPaging();
     const equivalentCriteria = a.getCriteria().equivalent(b.getCriteria());
-    const equivalentExpansion = a.getExpansion().equivalent(b.getExpansion());
+    const equivalentSelection = a.getSelection().equivalent(b.getSelection());
 
     if (pagingA || pagingB) {
         if (pagingA && !pagingB) {
-            if (equivalentCriteria && equivalentExpansion) {
+            if (equivalentCriteria && equivalentSelection) {
                 return b;
             } else {
                 return false;
             }
         } else if (!pagingA && pagingB) {
-            if (equivalentCriteria && equivalentExpansion) {
+            if (equivalentCriteria && equivalentSelection) {
                 return a;
             } else {
                 return false;
@@ -34,20 +34,20 @@ export function mergeQuery(a: EntityQuery, b: EntityQuery): false | EntityQuery 
         } else if (pagingA && pagingB) {
             if (equivalentCriteria) {
                 if (pagingA.equivalent(pagingB)) {
-                    if (equivalentExpansion) {
+                    if (equivalentSelection) {
                         return a; // could also return b, as everything is equivalent
                     } else {
                         return new EntityQuery({
                             entitySchema: a.getEntitySchema(),
                             options: a.getOptions(),
                             criteria: a.getCriteria(),
-                            expansion: a.getExpansion().merge(b.getExpansion()),
+                            selection: a.getSelection().merge(b.getSelection()),
                             paging: a.getPaging(),
                         });
                     }
                 } else {
                     if (pagingA.equivalentSort(pagingB)) {
-                        if (equivalentExpansion) {
+                        if (equivalentSelection) {
                             const mergedRange = pagingA.mergeRange(pagingB);
 
                             if (mergedRange) {
@@ -55,7 +55,7 @@ export function mergeQuery(a: EntityQuery, b: EntityQuery): false | EntityQuery 
                                     entitySchema: a.getEntitySchema(),
                                     options: a.getOptions(),
                                     criteria: a.getCriteria(),
-                                    expansion: a.getExpansion(),
+                                    selection: a.getSelection(),
                                     paging: new QueryPaging({
                                         sort: pagingA.getSort(),
                                         from: mergedRange.getFrom()?.value,
@@ -87,7 +87,7 @@ export function mergeQuery(a: EntityQuery, b: EntityQuery): false | EntityQuery 
         return new EntityQuery({
             entitySchema,
             criteria: a.getCriteria(),
-            expansion: EntitySelection.mergeValues(a.getEntitySchema(), a.getExpansionValue(), b.getExpansionValue()),
+            selection: EntitySelection.mergeValues(a.getEntitySchema(), a.getSelectionValue(), b.getSelectionValue()),
             options,
             paging,
         });
@@ -95,19 +95,19 @@ export function mergeQuery(a: EntityQuery, b: EntityQuery): false | EntityQuery 
 
     const mergedCriteria = a.getCriteria().merge(b.getCriteria());
 
-    if (equivalentExpansion) {
+    if (equivalentSelection) {
         if (mergedCriteria !== false) {
             return new EntityQuery({
                 entitySchema,
                 options,
                 criteria: mergedCriteria,
-                expansion: a.getExpansionValue(),
+                selection: a.getSelectionValue(),
             });
         } else {
             return new EntityQuery({
                 entitySchema,
                 criteria: or(a.getCriteria(), b.getCriteria()),
-                expansion: a.getExpansionValue(),
+                selection: a.getSelectionValue(),
                 options,
             });
         }

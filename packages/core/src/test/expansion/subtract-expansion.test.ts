@@ -1,7 +1,7 @@
 import { EntitySchema, EntitySelectionValue } from "@entity-space/common";
 import { EntitySelection } from "../../lib/expansion/expansion";
 
-function subtractExpansion(a: EntitySelectionValue, b: EntitySelectionValue): boolean | EntitySelectionValue {
+function subtractSelection(a: EntitySelectionValue, b: EntitySelectionValue): boolean | EntitySelectionValue {
     const rootSchema = new EntitySchema("foo");
     const fooSchema = new EntitySchema("foo");
     const barSchema = new EntitySchema("bar");
@@ -34,7 +34,7 @@ describe("subtractExpansion()", () => {
             const b: EntitySelectionValue = { foo: true };
 
             // act
-            const subtracted = subtractExpansion(a, b);
+            const subtracted = subtractSelection(a, b);
 
             // assert
             expect(subtracted).toEqual(true);
@@ -46,7 +46,7 @@ describe("subtractExpansion()", () => {
             const b: EntitySelectionValue = { foo: true, bar: {} };
 
             // act
-            const subtracted = subtractExpansion(a, b);
+            const subtracted = subtractSelection(a, b);
 
             // assert
             expect(subtracted).toEqual(true);
@@ -60,7 +60,7 @@ describe("subtractExpansion()", () => {
             const b: EntitySelectionValue = { foo: true };
 
             // act
-            const subtracted = subtractExpansion(a, b);
+            const subtracted = subtractSelection(a, b);
 
             // assert
             expect(subtracted).toEqual({ bar: true });
@@ -72,7 +72,7 @@ describe("subtractExpansion()", () => {
             const b: EntitySelectionValue = { foo: { bar: true }, khaz: { mo: true, dan: true } };
 
             // act
-            const subtracted = subtractExpansion(a, b);
+            const subtracted = subtractSelection(a, b);
 
             // assert
             expect(subtracted).toEqual({ foo: { baz: true } });
@@ -86,7 +86,7 @@ describe("subtractExpansion()", () => {
             const b: EntitySelectionValue = { baz: true };
 
             // act
-            const subtracted = subtractExpansion(a, b);
+            const subtracted = subtractSelection(a, b);
 
             // assert
             expect(subtracted).toEqual(false);
@@ -98,7 +98,7 @@ describe("subtractExpansion()", () => {
             const b: EntitySelectionValue = {};
 
             // act
-            const subtracted = subtractExpansion(a, b);
+            const subtracted = subtractSelection(a, b);
 
             // assert
             expect(subtracted).toEqual(false);

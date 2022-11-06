@@ -17,7 +17,7 @@ export class TestContentEntityApi extends EntityApi {
     withGetAllUsers(): this {
         return this.addEndpoint(this.catalog.resolve(UserBlueprint), builder =>
             builder
-                .supportsExpansion({
+                .supportsSelection({
                     id: true,
                     name: true,
                     parentId: true,
@@ -31,7 +31,7 @@ export class TestContentEntityApi extends EntityApi {
         return this.addEndpoint(this.catalog.resolve(UserBlueprint), builder =>
             builder
                 .requiresFields({ id: isValueTemplate(Number) })
-                .supportsExpansion({ id: true, name: true, parentId: true })
+                .supportsSelection({ id: true, name: true, parentId: true })
                 .isLoadedBy(({ criterion }) => criterion.filter(this.data.get("users")))
         );
     }

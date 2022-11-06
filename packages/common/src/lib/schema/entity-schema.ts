@@ -37,14 +37,14 @@ export class EntitySchema<T extends Entity = Entity> implements IEntitySchema<T>
         throw new Error("not implemented");
     }
 
-    getDefaultExpansion(): UnfoldedEntitySelection {
+    getDefaultSelection(): UnfoldedEntitySelection {
         return this.getProperties()
             .filter(property => property.isRequired())
             .reduce((acc, property) => {
                 const valueSchema = property.getValueSchema();
 
                 if (valueSchema.schemaType === "entity") {
-                    return { ...acc, [property.getName()]: valueSchema.getDefaultExpansion() };
+                    return { ...acc, [property.getName()]: valueSchema.getDefaultSelection() };
                 } else {
                     return { ...acc, [property.getName()]: true } as UnfoldedEntitySelection;
                 }

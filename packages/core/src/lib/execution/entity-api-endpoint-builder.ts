@@ -26,7 +26,7 @@ export class EntityApiEndpointBuilder<
 > {
     constructor(schema: IEntitySchema) {
         this.schema = schema;
-        this.supportedExpansion = schema.getDefaultExpansion();
+        this.supportedSelection = schema.getDefaultSelection();
     }
 
     private readonly schema: IEntitySchema;
@@ -39,7 +39,7 @@ export class EntityApiEndpointBuilder<
     private pagingRequired = false;
     private pagingSupported = false;
 
-    private supportedExpansion: EntitySelectionValue;
+    private supportedSelection: EntitySelectionValue;
     private loadEntities?: EntityApiEndpointInvoke;
     private acceptCriterion: (criterion: Criterion) => boolean = () => true;
 
@@ -115,8 +115,8 @@ export class EntityApiEndpointBuilder<
         return this as any;
     }
 
-    supportsExpansion(
-        expansion: EntitySelectionValue<T>
+    supportsSelection(
+        selection: EntitySelectionValue<T>
     ): EntityApiEndpointBuilder<
         T,
         CriterionRequiredFields,
@@ -124,7 +124,7 @@ export class EntityApiEndpointBuilder<
         OptionsRequiredFields,
         OptionsOptionalFields
     > {
-        this.supportedExpansion = EntitySelection.mergeValues(this.schema, this.supportedExpansion, expansion);
+        this.supportedSelection = EntitySelection.mergeValues(this.schema, this.supportedSelection, selection);
         return this;
     }
 
@@ -174,7 +174,7 @@ export class EntityApiEndpointBuilder<
         }
 
         return new EntityApiEndpoint({
-            expansion: new EntitySelection({ schema: this.schema, value: this.supportedExpansion }),
+            selection: new EntitySelection({ schema: this.schema, value: this.supportedSelection }),
             invoke: this.loadEntities,
             schema: this.schema,
             criterionTemplate,

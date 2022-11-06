@@ -2,7 +2,7 @@ import { IsExact } from "conditional-type-checks";
 import { EntitySelectionValue } from "../../index";
 
 /**
- * A default expansion is just "{}".
+ * A default selection is just "{}".
  */
 // $ExpectType true
 type DefaultIsEmpty = IsExact<EntitySelectionValue, {}>;
@@ -37,7 +37,7 @@ type Shape = Square | Circle;
 type DistributedKeyOf<T> = T extends any ? keyof T : never;
 
 /**
- * Here we're making sure that an expansion of a union type (Shape, which is Circle | Square )
+ * Here we're making sure that a selection of a union type (Shape, which is Circle | Square )
  * has both the common properties (area, id, type) as well as type specific properties:
  * "radius" for Circle, "length" for Square
  */

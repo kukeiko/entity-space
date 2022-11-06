@@ -6,7 +6,7 @@ import { QueryPaging } from "./query-paging";
 type ReducedParts = {
     options: true | Criterion;
     criteria: true | Criterion;
-    expansion: true | EntitySelection;
+    selection: true | EntitySelection;
     paging: true | QueryPaging[];
 };
 
@@ -34,9 +34,9 @@ function subtractParts(a: EntityQuery, b: EntityQuery): false | ReducedParts {
             return false;
         }
 
-        const expansion = b.getExpansion().subtractFrom(a.getExpansion());
+        const selection = b.getSelection().subtractFrom(a.getSelection());
 
-        if (!expansion) {
+        if (!selection) {
             return false;
         }
     }
@@ -53,13 +53,13 @@ function subtractParts(a: EntityQuery, b: EntityQuery): false | ReducedParts {
         return false;
     }
 
-    const expansion = b.getExpansion().subtractFrom(a.getExpansion());
+    const selection = b.getSelection().subtractFrom(a.getSelection());
 
-    if (!expansion) {
+    if (!selection) {
         return false;
     }
 
-    return { options, criteria, expansion, paging };
+    return { options, criteria, selection, paging };
 }
 
 // [todo] shouldn't be able to reduce queries w/ different entity-schemas
@@ -78,7 +78,7 @@ export function subtractQuery(a: EntityQuery, b: EntityQuery): EntityQuery[] | f
     const accumulated: EntityQueryCtorArg = {
         entitySchema: a.getEntitySchema(),
         criteria: a.getCriteria(),
-        expansion: a.getExpansion(),
+        selection: a.getSelection(),
         options: a.getOptions(),
         paging: a.getPaging(),
     };
@@ -101,9 +101,9 @@ export function subtractQuery(a: EntityQuery, b: EntityQuery): EntityQuery[] | f
         accumulated.criteria = b.getCriteria();
     }
 
-    if (reducedParts.expansion !== true) {
-        reducedQueries.push(new EntityQuery({ ...accumulated, expansion: reducedParts.expansion }));
-        accumulated.expansion = b.getExpansion();
+    if (reducedParts.selection !== true) {
+        reducedQueries.push(new EntityQuery({ ...accumulated, selection: reducedParts.selection }));
+        accumulated.selection = b.getSelection();
     }
 
     return reducedQueries;

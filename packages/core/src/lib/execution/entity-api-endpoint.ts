@@ -15,7 +15,7 @@ export type EntityApiEndpointInvoke<
     criterion: InstancedCriterionTemplate<C>;
     options: InstancedCriterionTemplate<O>;
     // expansion: UnfoldedExpansion<T>;
-    expansion: EntitySelectionValue<T>; // [todo] want to use unfolded instead
+    selection: EntitySelectionValue<T>; // [todo] want to use unfolded instead
     paging?: QueryPaging;
 }) => Observable<EntityApiEndpointData<T>> | Promise<EntityApiEndpointData<T>> | EntityApiEndpointData<T>;
 
@@ -24,7 +24,7 @@ export class EntityApiEndpoint {
         schema,
         optionsTemplate,
         criterionTemplate,
-        expansion,
+        selection,
         invoke,
         acceptCriterion,
         sortableFields,
@@ -34,7 +34,7 @@ export class EntityApiEndpoint {
         schema: IEntitySchema;
         optionsTemplate: ICriterionTemplate;
         criterionTemplate: ICriterionTemplate;
-        expansion: EntitySelection;
+        selection: EntitySelection;
         invoke: EntityApiEndpointInvoke;
         acceptCriterion?: (criterion: Criterion) => boolean;
         sortableFields?: string[];
@@ -44,7 +44,7 @@ export class EntityApiEndpoint {
         this.schema = schema;
         this.criterionTemplate = criterionTemplate;
         this.optionsTemplate = optionsTemplate;
-        this.expansion = expansion;
+        this.selection = selection;
         this.invoke = invoke;
         this.acceptCriterionFn = acceptCriterion ?? (() => true);
         this.sortableFields = sortableFields ?? [];
@@ -55,7 +55,7 @@ export class EntityApiEndpoint {
     private readonly schema: IEntitySchema;
     private readonly optionsTemplate: ICriterionTemplate;
     private readonly criterionTemplate: ICriterionTemplate;
-    private readonly expansion: EntitySelection;
+    private readonly selection: EntitySelection;
     private readonly invoke: EntityApiEndpointInvoke;
     private readonly acceptCriterionFn: (criterion: Criterion) => boolean;
     private readonly pagingRequired: boolean;
@@ -74,8 +74,8 @@ export class EntityApiEndpoint {
         return this.optionsTemplate;
     }
 
-    getExpansion(): EntitySelection {
-        return this.expansion;
+    getSelection(): EntitySelection {
+        return this.selection;
     }
 
     getInvoke(): EntityApiEndpointInvoke {

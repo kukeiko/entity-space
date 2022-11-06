@@ -46,7 +46,7 @@ export interface IEntitySchema<T extends Entity = Entity> {
     getRelations(): IEntitySchemaRelation[];
     hasKey(): boolean;
     createDefault(): T;
-    getDefaultExpansion(): UnfoldedEntitySelection;
+    getDefaultSelection(): UnfoldedEntitySelection;
 }
 
 export interface IEntitySchemaProperty {

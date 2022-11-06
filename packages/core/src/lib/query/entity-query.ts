@@ -8,28 +8,28 @@ export interface EntityQueryCtorArg {
     entitySchema: IEntitySchema;
     criteria?: Criterion;
     options?: Criterion;
-    expansion?: EntitySelection | EntitySelectionValue;
+    selection?: EntitySelection | EntitySelectionValue;
     paging?: QueryPaging;
 }
 
 export class EntityQuery {
-    constructor({ entitySchema, criteria = any(), options = never(), expansion, paging }: EntityQueryCtorArg) {
+    constructor({ entitySchema, criteria = any(), options = never(), selection, paging }: EntityQueryCtorArg) {
         this.entitySchema = entitySchema;
         this.options = options;
         this.criteria = criteria;
-        this.expansion =
-            expansion === void 0
+        this.selection =
+            selection === void 0
                 ? new EntitySelection({ schema: entitySchema, value: true })
-                : expansion instanceof EntitySelection
-                ? expansion
-                : new EntitySelection({ schema: entitySchema, value: expansion });
+                : selection instanceof EntitySelection
+                ? selection
+                : new EntitySelection({ schema: entitySchema, value: selection });
         this.paging = paging;
     }
 
     private readonly entitySchema: IEntitySchema;
     private readonly criteria: Criterion;
     private readonly options: Criterion;
-    private readonly expansion: EntitySelection;
+    private readonly selection: EntitySelection;
     private readonly paging?: QueryPaging;
 
     getEntitySchema(): IEntitySchema {
@@ -49,32 +49,32 @@ export class EntityQuery {
     }
 
     withCriteria(criteria: Criterion): EntityQuery {
-        return new EntityQuery({ entitySchema: this.entitySchema, criteria, expansion: this.expansion });
+        return new EntityQuery({ entitySchema: this.entitySchema, criteria, selection: this.selection });
     }
 
-    getExpansion(): EntitySelection {
-        return this.expansion;
+    getSelection(): EntitySelection {
+        return this.selection;
     }
 
-    getExpansionValue() {
-        return this.expansion.getValue();
+    getSelectionValue() {
+        return this.selection.getValue();
     }
 
-    withoutExpansion(): EntityQuery {
+    withoutSelection(): EntityQuery {
         return new EntityQuery({ entitySchema: this.entitySchema, criteria: this.criteria });
     }
 
-    withExpansion(expansion: EntitySelection | EntitySelectionValue): EntityQuery {
-        return new EntityQuery({ entitySchema: this.entitySchema, criteria: this.criteria, expansion });
+    withSelection(selection: EntitySelection | EntitySelectionValue): EntityQuery {
+        return new EntityQuery({ entitySchema: this.entitySchema, criteria: this.criteria, selection });
     }
 
     toString(): string {
         const options = this.options instanceof NeverCriterion ? "" : `<${this.options.toString()}>`;
         const criterion = this.criteria instanceof AnyCriterion ? "" : `(${this.criteria.toString()})`;
         const paging = this.paging ? this.paging.toString() : "";
-        const expansion = this.expansion.isEmpty() ? "" : "/" + this.expansion.toString();
+        const selection = this.selection.isEmpty() ? "" : "/" + this.selection.toString();
 
-        return `${this.entitySchema.getId()}${options}${criterion}${paging}${expansion}`;
+        return `${this.entitySchema.getId()}${options}${criterion}${paging}${selection}`;
     }
 
     subtractBy(others: EntityQuery[]): false | EntityQuery[] {
@@ -82,35 +82,35 @@ export class EntityQuery {
     }
 
     intersect(other: EntityQuery): false | EntityQuery {
-        const intersectedCriterion = this.getCriteria().intersect(other.getCriteria());
+        const criteria = this.getCriteria().intersect(other.getCriteria());
 
-        if (intersectedCriterion === false) {
+        if (criteria === false) {
             return false;
         }
 
-        const intersectedExpansion = this.getExpansion().intersect(other.getExpansion());
+        const selection = this.getSelection().intersect(other.getSelection());
 
-        if (intersectedExpansion === false) {
+        if (selection === false) {
             return false;
         }
 
         return new EntityQuery({
             entitySchema: this.entitySchema,
-            criteria: intersectedCriterion,
-            expansion: intersectedExpansion,
+            criteria,
+            selection,
         });
     }
 
-    intersectCriteriaOmitExpansion(other: EntityQuery): false | EntityQuery {
+    intersectCriteriaOmitSelection(other: EntityQuery): false | EntityQuery {
         const intersectedCriterion = other.getCriteria().intersect(this.getCriteria());
 
         if (!intersectedCriterion) {
             return false;
         }
 
-        const intersectedWithoutDehydrated = NamedCriteria.omitExpansion(
+        const intersectedWithoutDehydrated = NamedCriteria.omitSelection(
             intersectedCriterion,
-            other.getExpansion().getValue()
+            other.getSelection().getValue()
         );
 
         if (intersectedWithoutDehydrated === intersectedCriterion) {
@@ -132,7 +132,7 @@ export class EntityQuery {
         return others.every(
             other =>
                 other.getCriteria().equivalent(first.getCriteria()) &&
-                other.getExpansion().equivalent(first.getExpansion())
+                other.getSelection().equivalent(first.getSelection())
         );
     }
 }

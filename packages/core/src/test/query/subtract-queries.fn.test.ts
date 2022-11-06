@@ -5,8 +5,8 @@ import { subtractQueries } from "../../lib/query/subtract-queries.fn";
 
 // [todo] add more tests
 describe("subtractQueries()", () => {
-    function createQuery(criteria: Criterion, expansion: EntitySelectionValue = {}): EntityQuery {
-        return new EntityQuery({ entitySchema: new EntitySchema("foo"), criteria, expansion });
+    function createQuery(criteria: Criterion, selection: EntitySelectionValue = {}): EntityQuery {
+        return new EntityQuery({ entitySchema: new EntitySchema("foo"), criteria, selection });
     }
 
     describe("no subtraction", () => {

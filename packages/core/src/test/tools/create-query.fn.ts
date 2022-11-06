@@ -12,6 +12,6 @@ export function createQuery<T>(
     return new EntityQuery({
         entitySchema: schemas.resolve(blueprint),
         criteria: criteria ? matches(criteria) : any(),
-        expansion,
+        selection: expansion,
     });
 }

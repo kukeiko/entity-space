@@ -1,7 +1,7 @@
 import { EntitySchema, EntitySelectionValue } from "@entity-space/common";
 import { EntitySelection } from "../../lib/expansion/expansion";
 
-function mergeExpansions(...objects: EntitySelectionValue[]): boolean | EntitySelectionValue {
+function mergeIntersections(...objects: EntitySelectionValue[]): boolean | EntitySelectionValue {
     const rootSchema = new EntitySchema("foo");
     const fooSchema = new EntitySchema("foo");
     const barSchema = new EntitySchema("bar");
@@ -19,7 +19,7 @@ describe("mergeExpansions()", () => {
         const b: EntitySelectionValue = { bar: true };
 
         // act
-        const merged = mergeExpansions(a, b);
+        const merged = mergeIntersections(a, b);
 
         // assert
         expect(merged).toEqual({ foo: true, bar: true });
@@ -31,7 +31,7 @@ describe("mergeExpansions()", () => {
         const b: EntitySelectionValue = { foo: { baz: true } };
 
         // act
-        const merged = mergeExpansions(a, b);
+        const merged = mergeIntersections(a, b);
 
         // assert
         expect(merged).toEqual({ foo: { bar: true, baz: true } });
@@ -43,7 +43,7 @@ describe("mergeExpansions()", () => {
         const b: EntitySelectionValue = { foo: { bar: true } };
 
         // act
-        const merged = mergeExpansions(a, b);
+        const merged = mergeIntersections(a, b);
 
         // assert
         expect(merged).toEqual({ foo: { bar: true } });

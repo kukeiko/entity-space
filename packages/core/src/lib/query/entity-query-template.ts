@@ -7,7 +7,7 @@ import { EntityQuery } from "./entity-query";
 type RemappedParts = {
     options: false | Criterion[];
     criterion: false | Criterion[];
-    expansion: false | EntitySelection;
+    selection: false | EntitySelection;
 };
 
 type WithoutFalse<T> = {
@@ -23,23 +23,23 @@ export class EntityQueryTemplate {
         schema,
         options,
         criterion,
-        expansion,
+        selection,
     }: {
         schema: IEntitySchema;
         options?: ICriterionTemplate;
         criterion?: ICriterionTemplate;
-        expansion?: EntitySelection;
+        selection?: EntitySelection;
     }) {
         this.schema = schema;
         this.options = options ?? neverTemplate();
         this.criterion = criterion ?? anyTemplate();
-        this.expansion = expansion ?? new EntitySelection({ schema, value: true });
+        this.selection = selection ?? new EntitySelection({ schema, value: true });
     }
 
     private readonly schema: IEntitySchema;
     private readonly options: ICriterionTemplate;
     private readonly criterion: ICriterionTemplate;
-    private readonly expansion: EntitySelection;
+    private readonly selection: EntitySelection;
 
     remap(query: EntityQuery): false | EntityQuery[] {
         // [todo] can be removed if i decide to make remap() result of ICriterionTemplate just an array
@@ -53,7 +53,7 @@ export class EntityQueryTemplate {
         const remappedParts: RemappedParts = {
             options: remapCriterion(query.getOptions(), this.options),
             criterion: remapCriterion(query.getCriteria(), this.criterion),
-            expansion: this.expansion.intersect(query.getExpansion()),
+            selection: this.selection.intersect(query.getSelection()),
         };
 
         if (!containsNoFalse(remappedParts)) {
@@ -67,8 +67,8 @@ export class EntityQueryTemplate {
                 entitySchema: this.schema,
                 options: parts.options,
                 criteria: parts.criterion,
-                expansion: parts.expansion,
-                paging: query.getPaging()
+                selection: parts.selection,
+                paging: query.getPaging(),
             });
         });
     }

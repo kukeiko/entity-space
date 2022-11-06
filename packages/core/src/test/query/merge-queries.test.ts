@@ -5,8 +5,8 @@ import { mergeQuery } from "../../lib/query/merge-query.fn";
 import { parseQuery } from "../../lib/query/parse-query.fn";
 import { EntityQuery } from "../../lib/query/entity-query";
 
-function createQuery(criteria: Criterion, expansion: EntitySelectionValue = {}): EntityQuery {
-    return new EntityQuery({ entitySchema: new EntitySchema("user"), criteria, expansion });
+function createQuery(criteria: Criterion, selection: EntitySelectionValue = {}): EntityQuery {
+    return new EntityQuery({ entitySchema: new EntitySchema("user"), criteria, selection });
 }
 
 interface Product {

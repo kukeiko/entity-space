@@ -70,7 +70,7 @@ export class MusicBoxClientSideEntityApi extends EntityApi implements IEntitySto
 
     withGetAllArtists(): this {
         return this.addEndpoint(this.schemas.resolve(ArtistBlueprint), builder =>
-            builder.supportsExpansion({ id: true, name: true }).isLoadedBy(() => this.http.get<Artist[]>("api/artists"))
+            builder.supportsSelection({ id: true, name: true }).isLoadedBy(() => this.http.get<Artist[]>("api/artists"))
         );
     }
 
@@ -78,7 +78,7 @@ export class MusicBoxClientSideEntityApi extends EntityApi implements IEntitySto
         return this.addEndpoint(this.schemas.resolve(SongBlueprint), builder =>
             builder
                 .supportsPaging()
-                .supportsExpansion({ id: true, artistId: true, duration: true, name: true })
+                .supportsSelection({ id: true, artistId: true, duration: true, name: true })
                 .isLoadedBy(({ paging }) => {
                     const [from, to] = [paging?.getFrom(), paging?.getTo()];
 
@@ -102,7 +102,7 @@ export class MusicBoxClientSideEntityApi extends EntityApi implements IEntitySto
             builder
                 .requiresOptions({ searchText: isValueTemplate(String) })
                 .supportsPaging()
-                .supportsExpansion({ id: true, artistId: true, duration: true, name: true })
+                .supportsSelection({ id: true, artistId: true, duration: true, name: true })
                 .isLoadedBy(({ options, paging }) => {
                     const [from, to] = [paging?.getFrom(), paging?.getTo()];
 
@@ -126,10 +126,8 @@ export class MusicBoxClientSideEntityApi extends EntityApi implements IEntitySto
         return this.addEndpoint(this.schemas.resolve(SongBlueprint), builder =>
             builder
                 .requiresFields({ id: isValueTemplate(Number) })
-                .supportsExpansion({ id: true, artistId: true, duration: true, locations: true, name: true })
-                .isLoadedBy(({ criterion, expansion }) =>
-                    this.http.get<Song>(`api/songs/${criterion.getBag().id.getValue()}`)
-                )
+                .supportsSelection({ id: true, artistId: true, duration: true, locations: true, name: true })
+                .isLoadedBy(({ criterion }) => this.http.get<Song>(`api/songs/${criterion.getBag().id.getValue()}`))
         );
     }
 
@@ -137,7 +135,7 @@ export class MusicBoxClientSideEntityApi extends EntityApi implements IEntitySto
         return this.addEndpoint(this.schemas.getSchema<SongLocation>("song-location"), builder =>
             builder
                 .requiresFields({ songId: inSetTemplate(Number) })
-                .supportsExpansion({ id: true, path: true, songId: true, songLocationType: true, url: true })
+                .supportsSelection({ id: true, path: true, songId: true, songLocationType: true, url: true })
                 .isLoadedBy(({ criterion }) =>
                     this.http.get<SongLocation[]>("api/song-locations", {
                         params: { songId: Array.from(criterion.getBag().songId.getValues()).join(",") },

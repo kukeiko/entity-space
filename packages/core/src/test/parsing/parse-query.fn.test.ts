@@ -35,15 +35,15 @@ describe("parseQuery()", () => {
     function createFooQuery({
         options,
         criteria,
-        expansion,
+        selection,
         paging,
     }: {
         options?: Criterion;
         criteria?: Criterion;
-        expansion?: EntitySelectionValue;
+        selection?: EntitySelectionValue;
         paging?: QueryPaging;
     }): EntityQuery {
-        return new EntityQuery({ entitySchema: fooSchema, options, criteria, expansion, paging });
+        return new EntityQuery({ entitySchema: fooSchema, options, criteria, selection, paging });
     }
 
     // schema only
@@ -61,14 +61,14 @@ describe("parseQuery()", () => {
     // schema + expansion
     shouldParse(
         "foo/{id,name,artist:{id,name}}",
-        createFooQuery({ expansion: { id: true, name: true, artist: { id: true, name: true } } })
+        createFooQuery({ selection: { id: true, name: true, artist: { id: true, name: true } } })
     );
     // schema + options + expansion
     shouldParse(
         'foo<{searchText: "bar"}>/{id,name,artist:{id,name}}',
         createFooQuery({
             options: matches({ searchText: "bar" }),
-            expansion: { id: true, name: true, artist: { id: true, name: true } },
+            selection: { id: true, name: true, artist: { id: true, name: true } },
         })
     );
     // schema + criteria + expansion
@@ -76,7 +76,7 @@ describe("parseQuery()", () => {
         "foo({artistId:7})/{id,name,artist:{id,name}}",
         createFooQuery({
             criteria: matches({ artistId: 7 }),
-            expansion: { id: true, name: true, artist: { id: true, name: true } },
+            selection: { id: true, name: true, artist: { id: true, name: true } },
         })
     );
     // schema + options + criteria + expansion
@@ -85,7 +85,7 @@ describe("parseQuery()", () => {
         createFooQuery({
             options: matches({ searchText: "bar" }),
             criteria: matches({ artistId: 7 }),
-            expansion: { id: true, name: true, artist: { id: true, name: true } },
+            selection: { id: true, name: true, artist: { id: true, name: true } },
         })
     );
     // schema + paging
@@ -118,7 +118,7 @@ describe("parseQuery()", () => {
         createFooQuery({
             options: matches({ searchText: "bar" }),
             criteria: matches({ artistId: 7 }),
-            expansion: { id: true, name: true, artist: { id: true, name: true } },
+            selection: { id: true, name: true, artist: { id: true, name: true } },
             paging: new QueryPaging({
                 sort: [
                     { field: "name", mode: "asc" },

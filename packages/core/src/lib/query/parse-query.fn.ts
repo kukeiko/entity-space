@@ -27,7 +27,7 @@ export function parseQuery(input: string, schemas: EntitySchemaCatalog): EntityQ
                     entitySchema: schemas.getSchema(parts.schemaName!),
                     options: parts.options,
                     criteria: parts.criteria,
-                    expansion: parts.expansion,
+                    selection: parts.selection,
                     paging: parts.paging,
                 });
             } else {
@@ -44,7 +44,7 @@ interface QueryParts {
     options?: Criterion;
     criteria?: Criterion;
     paging?: QueryPaging;
-    expansion?: EntitySelectionValue;
+    selection?: EntitySelectionValue;
 }
 
 type QueryPartsParser = Generator<unknown, false | QueryParts, Token>;
@@ -93,13 +93,13 @@ function* queryParser(terminator: Token): QueryPartsParser {
     }
 
     if (token.type === TokenType.Special && token.value === "/") {
-        const expansion = yield* expansionParser();
+        const selection = yield* selectionParser();
 
-        if (!expansion) {
+        if (!selection) {
             return false;
         }
 
-        parts = { ...parts, expansion };
+        parts = { ...parts, selection: selection };
         token = yield;
     }
 
@@ -110,14 +110,14 @@ function* queryParser(terminator: Token): QueryPartsParser {
     }
 }
 
-function* expansionParser(): Generator<unknown, false | EntitySelectionValue, Token> {
+function* selectionParser(): Generator<unknown, false | EntitySelectionValue, Token> {
     let token = yield;
 
     if (!(token.type === TokenType.Special && token.value === "{")) {
         return false;
     }
 
-    let expansion: EntitySelectionValue = {};
+    let selection: EntitySelectionValue = {};
 
     while (true) {
         token = yield;
@@ -134,24 +134,24 @@ function* expansionParser(): Generator<unknown, false | EntitySelectionValue, To
         token = yield;
 
         if (token.type === TokenType.Special && token.value === ",") {
-            expansion[propertyName] = true;
+            selection[propertyName] = true;
         } else if (token.type === TokenType.Special && token.value === ":") {
-            const propertyValue = yield* expansionParser();
+            const propertyValue = yield* selectionParser();
 
             if (propertyValue === false) {
                 return false;
             }
 
-            expansion[propertyName] = propertyValue;
+            selection[propertyName] = propertyValue;
         } else if (token.type === TokenType.Special && token.value === "}") {
-            expansion[propertyName] = true;
+            selection[propertyName] = true;
             break;
         } else {
             return false;
         }
     }
 
-    return expansion;
+    return selection;
 }
 
 function* pagingParser(): Generator<unknown, false | QueryPaging, Token> {

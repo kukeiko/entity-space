@@ -123,11 +123,11 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
             }
         }
 
-        if (!query.getExpansion().isEmpty() && entities.length > 0) {
+        if (!query.getSelection().isEmpty() && entities.length > 0) {
             // [todo] dirty to do it here?
             // [todo] this way of cloning is quite slow.
             entities = cloneJson(entities);
-            this.expandEntities(query.getEntitySchema(), query.getExpansion(), entities);
+            this.expandEntities(query.getEntitySchema(), query.getSelection(), entities);
             entities = query.getCriteria().filter(entities);
         }
 
@@ -276,7 +276,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         return store;
     }
 
-    private expandEntities(schema: IEntitySchema, expansion: EntitySelection, entities: Entity[]): void {
+    private expandEntities(schema: IEntitySchema, selection: EntitySelection, entities: Entity[]): void {
         // [todo] dirty
         const isExpanded = (propertyKey: string): boolean => {
             const first = entities[0];
@@ -286,24 +286,28 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
             return first[propertyKey] !== void 0;
         };
 
-        let expansionObject = expansion.getValue();
+        let selectionValue = selection.getValue();
 
-        if (expansionObject === true) {
-            expansionObject = schema.getDefaultExpansion();
+        if (selectionValue === true) {
+            selectionValue = schema.getDefaultSelection();
         }
 
-        for (const propertyKey in expansionObject) {
-            const expansionValue = expansionObject[propertyKey];
+        for (const propertyKey in selectionValue) {
+            const selectionValueProperty = selectionValue[propertyKey];
 
-            if (expansionValue === void 0) {
+            if (selectionValueProperty === void 0) {
                 continue;
             }
 
             const relation = schema.findRelation(propertyKey);
 
             if (relation !== void 0 && !isExpanded(relation.getPropertyName())) {
-                this.expandRelation(entities, relation, expansionValue === true ? void 0 : expansionValue);
-            } else if (expansionValue !== true) {
+                this.expandRelation(
+                    entities,
+                    relation,
+                    selectionValueProperty === true ? void 0 : selectionValueProperty
+                );
+            } else if (selectionValueProperty !== true) {
                 const property = schema.getProperty(propertyKey);
                 const referencedItems: Entity[] = [];
 
@@ -320,14 +324,18 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
                 const entitySchema = property.getUnboxedEntitySchema();
                 this.expandEntities(
                     entitySchema,
-                    new EntitySelection({ schema: entitySchema, value: expansionValue }),
+                    new EntitySelection({ schema: entitySchema, value: selectionValueProperty }),
                     referencedItems
                 );
             }
         }
     }
 
-    private expandRelation(entities: Entity[], relation: IEntitySchemaRelation, expansion?: EntitySelectionValue): void {
+    private expandRelation(
+        entities: Entity[],
+        relation: IEntitySchemaRelation,
+        selection?: EntitySelectionValue
+    ): void {
         const relatedSchema = relation.getRelatedEntitySchema();
         // [todo] what about dictionaries?
         const isArray = relation.getProperty().getValueSchema().schemaType === "array";
@@ -337,7 +345,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         const query = new EntityQuery({
             entitySchema: relatedSchema,
             criteria,
-            expansion: expansion ?? relatedSchema.getDefaultExpansion(),
+            selection: selection ?? relatedSchema.getDefaultSelection(),
         });
 
         const result = this.querySync(query);

@@ -7,13 +7,13 @@ import { Canvas, CanvasBlueprint, ProductBlueprint, ShapeBlueprints, Square } fr
 //     return merge(class {}, ...classRefs);
 // }
 
-xdescribe("playground: expansion", () => {
+xdescribe("playground: selection", () => {
     it("simple expand w/ union types", () => {
-        function takesExpansion<E extends EntitySelectionValue<Canvas>>(expansion: E): typeof expansion {
+        function takesSelection<E extends EntitySelectionValue<Canvas>>(selection: E): typeof selection {
             return {} as any;
         }
 
-        const foo = takesExpansion({ shapes: { angleA: true, length: true } });
+        const foo = takesSelection({ shapes: { angleA: true, length: true } });
     });
 
     it("complex expand w/ union types", () => {
@@ -62,15 +62,15 @@ xdescribe("playground: expansion", () => {
             },
         };
 
-        function takesUserExpansion<E extends EntitySelectionValue<CustomUser>>(expansion: E): typeof expansion {
+        function takesUserSelection<E extends EntitySelectionValue<CustomUser>>(selection: E): typeof selection {
             return {} as any;
         }
 
-        const simpleExpansion = takesUserExpansion({ updatedBy: true, children: { shapes: true } });
+        const simpleSelection = takesUserSelection({ updatedBy: true, children: { shapes: true } });
 
-        type SimpleExpandedUser = Select<CustomUser, typeof simpleExpansion>;
+        type SimpleSelectedUser = Select<CustomUser, typeof simpleSelection>;
 
-        const simpleExpandedUser: SimpleExpandedUser = {
+        const simpleSelectedUser: SimpleSelectedUser = {
             id: 1,
             updatedBy: null,
             children: [{ id: 2, shapes: [{ id: 3, type: "circle", radius: 3 }] }],
@@ -78,7 +78,7 @@ xdescribe("playground: expansion", () => {
 
         type Foo = EntitySelectionValue<Square[]>;
 
-        const deepExpansion = takesUserExpansion({
+        const deepExpansion = takesUserSelection({
             id: true,
             updatedBy: true,
             createdBy: { createdBy: { name: true, children: { createdBy: true, name: true } } },

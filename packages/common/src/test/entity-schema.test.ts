@@ -1,8 +1,8 @@
 import { EntitySchema } from "../lib/schema/entity-schema";
 
 describe("entity-schema", () => {
-    describe("getDefaultExpansion()", () => {
-        it("should return an expansion with all required properties set", () => {
+    describe("getDefaultSelection()", () => {
+        it("should return a selection with all required properties set", () => {
             // arrange
             const fooSchema = new EntitySchema("foo");
             fooSchema.addInteger("required", true);
@@ -16,7 +16,7 @@ describe("entity-schema", () => {
             const expected = { required: true, bar: { required: true } };
 
             // act
-            const actual = fooSchema.getDefaultExpansion();
+            const actual = fooSchema.getDefaultSelection();
 
             // assert
             expect(actual).toEqual(expected);

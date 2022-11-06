@@ -1,4 +1,10 @@
-import { BlueprintInstance, Entity, EntitySchemaCatalog, EntitySelectionValue, IEntitySchema } from "@entity-space/common";
+import {
+    BlueprintInstance,
+    Entity,
+    EntitySchemaCatalog,
+    EntitySelectionValue,
+    IEntitySchema,
+} from "@entity-space/common";
 import { any, Criterion, fromDeepBag, isValue, matches, MatchesBagArgument, never } from "@entity-space/criteria";
 import { Class, DeepPartial, isDefined, isNotFalse, writePath } from "@entity-space/utils";
 import { flatMap, isEqual, xor, xorWith } from "lodash";
@@ -154,7 +160,7 @@ export class Workspace implements IEntityStore, IEntityStreamInterceptor {
     hydrate$<T>(
         blueprint: Class<T>,
         entities: BlueprintInstance<T>[],
-        expansion: EntitySelectionValue<BlueprintInstance<T>>
+        selection: EntitySelectionValue<BlueprintInstance<T>>
     ): Observable<BlueprintInstance<T>[]> {
         if (!entities.length) {
             return of([]);
@@ -168,10 +174,10 @@ export class Workspace implements IEntityStore, IEntityStreamInterceptor {
         const entitySetQuery = new EntityQuery({
             entitySchema: schema,
             criteria,
-            // [todo] expansion missing
+            // [todo] selection missing
         });
 
-        const hydrationQuery = new EntityQuery({ entitySchema: schema, criteria, expansion });
+        const hydrationQuery = new EntityQuery({ entitySchema: schema, criteria, selection });
         const cachedQueries = this.database.getCachedQueries(hydrationQuery.getEntitySchema());
         const reduced = subtractQueries([hydrationQuery], cachedQueries);
         const queriesAgainstSource = reduced === false ? [hydrationQuery] : reduced;
@@ -211,19 +217,19 @@ export class Workspace implements IEntityStore, IEntityStreamInterceptor {
     query$<T extends Entity>(
         schema: IEntitySchema,
         criterion?: Criterion | MatchesBagArgument<T>,
-        expansion?: EntitySelectionValue<T>
+        selection?: EntitySelectionValue<T>
     ): Observable<T[]>;
     query$<T extends Entity>(
         schema: Class<T>,
         criterion?: MatchesBagArgument<T>,
-        expansion?: EntitySelectionValue<BlueprintInstance<T>>,
+        selection?: EntitySelectionValue<BlueprintInstance<T>>,
         options?: MatchesBagArgument<Entity>,
         paging?: { skip?: number; top?: number; from?: number; to?: number }
     ): Observable<BlueprintInstance<T>[]>;
     query$<T extends Entity>(
         schema: IEntitySchema | Class<T>,
         criterion: any = any(),
-        expansion: EntitySelectionValue<T> = {},
+        selection: EntitySelectionValue<T> = {},
         options: any = never(),
         paging?: { skip?: number; top?: number; from?: number; to?: number }
     ): Observable<T[]> {
@@ -268,7 +274,13 @@ export class Workspace implements IEntityStore, IEntityStreamInterceptor {
             }
         }
 
-        const query = new EntityQuery({ entitySchema: schema, criteria: criterion, expansion, options, paging: queryPaging });
+        const query = new EntityQuery({
+            entitySchema: schema,
+            criteria: criterion,
+            selection: selection,
+            options,
+            paging: queryPaging,
+        });
 
         // const subject = new Subject<Entity[]>();
         const subject = new ReplaySubject<Entity[]>(1);
@@ -349,17 +361,17 @@ export class Workspace implements IEntityStore, IEntityStreamInterceptor {
     queryOneByKey$<T extends Entity>(
         schema: IEntitySchema,
         key: number | string,
-        expansion?: EntitySelectionValue<T>
+        selection?: EntitySelectionValue<T>
     ): Observable<T>;
     queryOneByKey$<T>(
         schema: Class<T>,
         key: number | string,
-        expansion?: EntitySelectionValue<BlueprintInstance<T>>
+        selection?: EntitySelectionValue<BlueprintInstance<T>>
     ): Observable<BlueprintInstance<T>>;
     queryOneByKey$<T extends Entity>(
         schema: IEntitySchema | Class<T>,
         key: number | string,
-        expansion: EntitySelectionValue<T> = {}
+        selection: EntitySelectionValue<T> = {}
     ): Observable<T> {
         if (!("getId" in schema)) {
             const resolvedSchema = this.schemas?.resolve(schema);
@@ -380,7 +392,7 @@ export class Workspace implements IEntityStore, IEntityStreamInterceptor {
         const bag: Record<string, any> = {};
         writePath(keyPath[0], bag, isValue(key));
 
-        return this.query$(schema, fromDeepBag(bag), expansion).pipe(
+        return this.query$(schema, fromDeepBag(bag), selection).pipe(
             map(result => result[0]),
             filter(isDefined)
         );

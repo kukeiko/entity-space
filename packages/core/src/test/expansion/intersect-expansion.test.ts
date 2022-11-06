@@ -1,7 +1,7 @@
 import { EntitySchema, EntitySelectionValue } from "@entity-space/common";
 import { EntitySelection } from "../../lib/expansion/expansion";
 
-function intersectExpansion(a: EntitySelectionValue, b: EntitySelectionValue): boolean | EntitySelectionValue {
+function intersectSelection(a: EntitySelectionValue, b: EntitySelectionValue): boolean | EntitySelectionValue {
     const schema = new EntitySchema("foo");
     const intersected = new EntitySelection({ schema, value: b }).intersect(new EntitySelection({ schema, value: a }));
 
@@ -12,7 +12,7 @@ function intersectExpansion(a: EntitySelectionValue, b: EntitySelectionValue): b
     }
 }
 
-describe("expansion: intersect", () => {
+describe("selection: intersect", () => {
     it("{ foo, bar } intersected with { foo } should be { foo }", () => {
         // arrange
         const a: EntitySelectionValue = { foo: true, bar: true };
@@ -20,8 +20,8 @@ describe("expansion: intersect", () => {
         const expected: EntitySelectionValue = { foo: true };
 
         // act
-        const intersected_A_with_B = intersectExpansion(a, b);
-        const intersected_B_with_A = intersectExpansion(b, a);
+        const intersected_A_with_B = intersectSelection(a, b);
+        const intersected_B_with_A = intersectSelection(b, a);
 
         // assert
         expect(intersected_A_with_B).toEqual(expected);
@@ -35,8 +35,8 @@ describe("expansion: intersect", () => {
         const expected: EntitySelectionValue = { bar: { baz: true, khaz: true } };
 
         // act
-        const intersected_A_with_B = intersectExpansion(a, b);
-        const intersected_B_with_A = intersectExpansion(b, a);
+        const intersected_A_with_B = intersectSelection(a, b);
+        const intersected_B_with_A = intersectSelection(b, a);
 
         // assert
         expect(intersected_A_with_B).toEqual(expected);
@@ -50,8 +50,8 @@ describe("expansion: intersect", () => {
         const expected = false;
 
         // act
-        const intersected_A_with_B = intersectExpansion(a, b);
-        const intersected_B_with_A = intersectExpansion(b, a);
+        const intersected_A_with_B = intersectSelection(a, b);
+        const intersected_B_with_A = intersectSelection(b, a);
 
         // assert
         expect(intersected_A_with_B).toEqual(expected);

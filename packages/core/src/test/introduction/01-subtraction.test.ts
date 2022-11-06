@@ -198,7 +198,7 @@ describe("what's reduction for?", () => {
                 price: inRange(100, 200),
                 rating: inRange(3, 5),
             }),
-            expansion: {
+            selection: {
                 ...basic_properties,
             },
         });
@@ -209,7 +209,7 @@ describe("what's reduction for?", () => {
                 price: inRange(100, 300),
                 rating: inRange(2, 5),
             }),
-            expansion: {
+            selection: {
                 ...basic_properties,
                 ...review_property,
             },
@@ -232,7 +232,7 @@ describe("what's reduction for?", () => {
                         rating: inRange(2, 3, [true, false]),
                     }),
                 ]),
-                expansion: {
+                selection: {
                     ...basic_properties,
                     ...review_property,
                 },
@@ -244,7 +244,7 @@ describe("what's reduction for?", () => {
                     price: inRange(100, 200),
                     rating: inRange(3, 5),
                 }),
-                expansion: {
+                selection: {
                     ...review_property,
                 },
             }),

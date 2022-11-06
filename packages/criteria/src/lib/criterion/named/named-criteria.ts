@@ -287,15 +287,15 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag, R exte
         }
     }
 
-    static omitExpansion(criterion: Criterion, expansion: EntitySelectionValue): Criterion {
-        if (expansion === true) {
-            throw new Error("omitting by expansion value 'true' not supported");
+    static omitSelection(criterion: Criterion, selection: EntitySelectionValue): Criterion {
+        if (selection === true) {
+            throw new Error("omitting by selection value 'true' not supported");
         }
 
         if (criterion instanceof OrCriteria) {
             // [todo] no clue currently why .getItems() returns any[]
             const omitted = (criterion.getItems() as Criterion[])
-                .map(criterion => this.omitExpansion(criterion, expansion))
+                .map(criterion => this.omitSelection(criterion, selection))
                 .filter(criterion => !(criterion instanceof AnyCriterion));
 
             if (omitted.length == 0) {
@@ -306,7 +306,7 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag, R exte
         } else if (criterion instanceof AndCriteria) {
             // [todo] no clue currently why .getItems() returns any[]
             const omitted = (criterion.getItems() as Criterion[])
-                .map(criterion => this.omitExpansion(criterion, expansion))
+                .map(criterion => this.omitSelection(criterion, selection))
                 .filter(criterion => !(criterion instanceof AnyCriterion));
 
             if (omitted.length == 0) {
@@ -317,16 +317,16 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag, R exte
         } else if (criterion instanceof NamedCriteria) {
             const omittedBag: NamedCriteriaBag = { ...criterion.getBag() };
 
-            for (const key in expansion) {
-                const expansionItem = expansion[key];
+            for (const key in selection) {
+                const selectionItem = selection[key];
 
-                if (expansionItem === true) {
+                if (selectionItem === true) {
                     delete omittedBag[key];
-                } else if (expansionItem) {
+                } else if (selectionItem) {
                     const bagItem = omittedBag[key];
 
                     if (bagItem instanceof NamedCriteria) {
-                        const omitted = this.omitExpansion(bagItem, expansionItem);
+                        const omitted = this.omitSelection(bagItem, selectionItem);
 
                         if (omitted instanceof AnyCriterion) {
                             delete omittedBag[key];

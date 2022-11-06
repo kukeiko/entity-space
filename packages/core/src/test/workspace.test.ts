@@ -10,7 +10,7 @@ function createWorkspace(): Workspace {
 }
 
 function createQuery(entitySchema: IEntitySchema, criteria: Criterion, expansion: EntitySelectionValue = {}): EntityQuery {
-    return new EntityQuery({ entitySchema, criteria, expansion });
+    return new EntityQuery({ entitySchema, criteria, selection: expansion });
 }
 
 describe("workspace", () => {
@@ -204,8 +204,8 @@ describe("workspace", () => {
         });
     });
 
-    describe("expansions", () => {
-        it("expanding on 1x composite index", async () => {
+    describe("selections", () => {
+        it("selecting on 1x composite index", async () => {
             const fooSchema = new EntitySchema("foo").setKey(["id", "secondaryId"]);
             const barSchema = new EntitySchema("bar")
                 .setKey("id")
