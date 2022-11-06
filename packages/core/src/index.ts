@@ -24,6 +24,6 @@ export * from "./lib/expansion/expansion";
 export * from "./lib/query/merge-queries.fn";
 export * from "./lib/query/merge-query.fn";
 export * from "./lib/query/entity-query";
-export * from "./lib/query/reduce-queries.fn";
-export * from "./lib/query/reduce-query.fn";
+export * from "./lib/query/subtract-queries.fn";
+export * from "./lib/query/subtract-query.fn";
 export * from "./lib/tracing/entity-query-tracing";

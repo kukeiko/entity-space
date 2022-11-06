@@ -3,7 +3,7 @@ import { flatMap } from "lodash";
 import { EntitySet } from "../entity/data-structures/entity-set";
 import { mergeQueries } from "../query/merge-queries.fn";
 import { EntityQuery } from "../query/entity-query";
-import { subtractQueries } from "../query/reduce-queries.fn";
+import { subtractQueries } from "../query/subtract-queries.fn";
 
 function hasProperty<T extends string>(value: unknown, key: T): value is typeof value & Record<T, unknown> {
     return (value ?? ({} as any))[key] !== void 0;

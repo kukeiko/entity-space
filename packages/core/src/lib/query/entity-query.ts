@@ -2,7 +2,7 @@ import { ExpansionValue, IEntitySchema } from "@entity-space/common";
 import { any, AnyCriterion, Criterion, NamedCriteria, never, NeverCriterion } from "@entity-space/criteria";
 import { Expansion } from "../expansion/expansion";
 import { QueryPaging } from "./query-paging";
-import { subtractQueries } from "./reduce-queries.fn";
+import { subtractQueries } from "./subtract-queries.fn";
 
 export interface EntityQueryCtorArg {
     entitySchema: IEntitySchema;

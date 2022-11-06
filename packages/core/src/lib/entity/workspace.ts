@@ -28,7 +28,7 @@ import { runInterceptors } from "../execution/run-interceptors.fn";
 import { ScopedByBlueprintWorkspace } from "../execution/scoped-by-blueprint-workspace";
 import { EntityQuery } from "../query/entity-query";
 import { QueryPaging } from "../query/query-paging";
-import { subtractQueries } from "../query/reduce-queries.fn";
+import { subtractQueries } from "../query/subtract-queries.fn";
 import { EntityQueryTracing } from "../tracing/entity-query-tracing";
 import { EntitySet } from "./data-structures/entity-set";
 import { createCriterionFromEntities } from "./functions/create-criterion-from-entities.fn";

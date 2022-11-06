@@ -7,7 +7,7 @@ import { createCriterionFromEntities } from "../../entity/functions/create-crite
 import { Expansion } from "../../expansion/expansion";
 import { EntityQuery } from "../../query/entity-query";
 import { mergeQueries } from "../../query/merge-queries.fn";
-import { subtractQueries } from "../../query/reduce-queries.fn";
+import { subtractQueries } from "../../query/subtract-queries.fn";
 import { EntityQueryTracing } from "../../tracing/entity-query-tracing";
 import { IEntityStreamInterceptor } from "../i-entity-stream-interceptor";
 import { QueryStream } from "../query-stream";

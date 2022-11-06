@@ -17,7 +17,7 @@ import { Expansion } from "../expansion/expansion";
 import { EntityQuery } from "../query/entity-query";
 import { mergeQueries } from "../query/merge-queries.fn";
 import { QueryPaging } from "../query/query-paging";
-import { subtractQueries } from "../query/reduce-queries.fn";
+import { subtractQueries } from "../query/subtract-queries.fn";
 import { EntitySet } from "./data-structures/entity-set";
 import { Entity } from "./entity";
 import { createCriterionFromEntities } from "./functions/create-criterion-from-entities.fn";

@@ -1,5 +1,5 @@
 import { EntityQuery } from "./entity-query";
-import { subtractQuery } from "./reduce-query.fn";
+import { subtractQuery } from "./subtract-query.fn";
 
 export function subtractQueries(a: EntityQuery[], b: EntityQuery[]): EntityQuery[] | false {
     if (!a.length && !b.length) {
