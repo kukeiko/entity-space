@@ -20,3 +20,4 @@ export * from "./lib/to-map.fn";
 export * from "./lib/write-path.fn";
 export * from "./lib/types";
 export * from "./lib/read-path.fn";
+export * from "./lib/has-property.fn";

@@ -4,27 +4,7 @@ import { EntitySet } from "../entity/data-structures/entity-set";
 import { mergeQueries } from "../query/merge-queries.fn";
 import { EntityQuery } from "../query/entity-query";
 import { subtractQueries } from "../query/subtract-queries.fn";
-
-function hasProperty<T extends string>(value: unknown, key: T): value is typeof value & Record<T, unknown> {
-    return (value ?? ({} as any))[key] !== void 0;
-}
-
-// [todo] not used / implemented
-export class QueryError<T extends Entity = Entity> {
-    constructor(query: EntityQuery, public error: unknown) {}
-
-    getErrorMessage(): string {
-        if (hasProperty(this.error, "message")) {
-            if (typeof this.error.message === "string") {
-                return this.error.message;
-            } else {
-                return JSON.stringify(this.error.message);
-            }
-        }
-
-        return JSON.stringify(this.error);
-    }
-}
+import { EntityQueryError } from "../query/entity-query-error";
 
 export class EntityStreamPacket<T extends Entity = Entity> {
     constructor({
@@ -35,7 +15,7 @@ export class EntityStreamPacket<T extends Entity = Entity> {
     }: {
         accepted?: EntityQuery[];
         rejected?: EntityQuery[];
-        errors?: QueryError<T>[];
+        errors?: EntityQueryError<T>[];
         payload?: EntitySet<T>[];
     } = {}) {
         this.accepted = accepted ?? [];
@@ -46,7 +26,7 @@ export class EntityStreamPacket<T extends Entity = Entity> {
 
     private readonly accepted: EntityQuery[];
     private readonly rejected: EntityQuery[];
-    private readonly errors: QueryError<T>[];
+    private readonly errors: EntityQueryError<T>[];
     private readonly payload: EntitySet<T>[];
 
     getEntitiesFlat(): T[] {
@@ -70,7 +50,7 @@ export class EntityStreamPacket<T extends Entity = Entity> {
         return this.payload.slice();
     }
 
-    getErrors(): QueryError<T>[] {
+    getErrors(): EntityQueryError<T>[] {
         return this.errors.slice();
     }
 

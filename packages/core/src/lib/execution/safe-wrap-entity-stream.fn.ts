@@ -2,16 +2,17 @@ import { isNotFalse } from "@entity-space/utils";
 import { flatMap } from "lodash";
 import { catchError, defaultIfEmpty, EMPTY, map, merge, of, shareReplay, switchMap, takeLast, tap } from "rxjs";
 import { EntityQuery } from "../query/entity-query";
+import { EntityQueryError } from "../query/entity-query-error";
 import { subtractQueries } from "../query/subtract-queries.fn";
 import { EntityStream } from "./entity-stream";
-import { QueryError, EntityStreamPacket } from "./entity-stream-packet";
+import { EntityStreamPacket } from "./entity-stream-packet";
 
 export function safeWrapEntityStream(stream: EntityStream, queries: EntityQuery[]): EntityStream {
     const safelyWrapped = stream.pipe(
         // a stream that doesn't emit anything is equal to a stream emitting 1x packet that rejects all queries
         defaultIfEmpty(new EntityStreamPacket({ rejected: queries })),
         // make sure uncaught errors are mapped to QueryErrors so that the stream doesn't get prematurely aborted
-        catchError(error => of(new EntityStreamPacket({ errors: queries.map(query => new QueryError(query, error)) }))),
+        catchError(error => of(new EntityStreamPacket({ errors: queries.map(query => new EntityQueryError(query, error)) }))),
         map(packet => {
             if (!packet.getAcceptedQueries().length) {
                 return packet;
