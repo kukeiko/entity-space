@@ -3,7 +3,7 @@ import { flatMap } from "lodash";
 import { EntitySet } from "../entity/data-structures/entity-set";
 import { mergeQueries } from "../query/merge-queries.fn";
 import { EntityQuery } from "../query/entity-query";
-import { reduceQueries } from "../query/reduce-queries.fn";
+import { subtractQueries } from "../query/reduce-queries.fn";
 
 function hasProperty<T extends string>(value: unknown, key: T): value is typeof value & Record<T, unknown> {
     return (value ?? ({} as any))[key] !== void 0;
@@ -102,11 +102,11 @@ export class QueryStreamPacket<T extends Entity = Entity> {
     }
 
     reduceQueries(queries: EntityQuery[]): false | EntityQuery[] {
-        return reduceQueries(queries, [...this.getAcceptedQueries(), ...this.getRejectedQueries()]);
+        return subtractQueries(queries, [...this.getAcceptedQueries(), ...this.getRejectedQueries()]);
     }
 
     reduceQueriesByAccepted(queries: EntityQuery[]): false | EntityQuery[] {
-        return reduceQueries(queries, this.getAcceptedQueries());
+        return subtractQueries(queries, this.getAcceptedQueries());
     }
 
     static isEmpty<T extends Entity>(packet: QueryStreamPacket<T>): boolean {

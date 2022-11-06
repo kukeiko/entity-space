@@ -7,7 +7,7 @@ import { IEntityDatabase } from "../entity/i-entity-database";
 import { InMemoryEntityDatabase } from "../entity/in-memory-entity-database";
 import { EntityQueryTemplate } from "../query/entity-query-template";
 import { EntityQuery } from "../query/entity-query";
-import { reduceQueries } from "../query/reduce-queries.fn";
+import { subtractQueries } from "../query/reduce-queries.fn";
 import { EntityQueryTracing } from "../tracing/entity-query-tracing";
 import { EntityApiEndpoint, EntityApiEndpointData, EntityApiEndpointInvoke } from "./entity-api-endpoint";
 import { EntityApiEndpointBuilder } from "./entity-api-endpoint-builder";
@@ -48,7 +48,7 @@ export class EntityApi implements IEntityStreamInterceptor {
         const streams = queries.map(query => {
             const endpoints = this.getEndpointsAcceptingSchema(query.getEntitySchema());
             const [delegatedStreams, acceptedQueries] = this.dispatchToEndpoints(query, endpoints, database);
-            const rejectedQueries = reduceQueries(queries, acceptedQueries);
+            const rejectedQueries = subtractQueries(queries, acceptedQueries);
             const initialPackets: QueryStreamPacket[] = [];
 
             if (!rejectedQueries || rejectedQueries.length) {
@@ -79,7 +79,7 @@ export class EntityApi implements IEntityStreamInterceptor {
 
             delegatedStreams.push(dispatched[0]);
             acceptedQueries.push(...dispatched[1]);
-            open = reduceQueries(open, dispatched[1]) || open;
+            open = subtractQueries(open, dispatched[1]) || open;
 
             if (!open.length) {
                 break;

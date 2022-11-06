@@ -2,7 +2,7 @@ import { EntitySchema, ExpansionValue } from "@entity-space/common";
 import { inRange, matches, or } from "@entity-space/criteria";
 import { Expansion } from "../../lib/expansion/expansion";
 import { EntityQuery } from "../../lib/query/entity-query";
-import { reduceQuery } from "../../lib/query/reduce-query.fn";
+import { subtractQuery } from "../../lib/query/reduce-query.fn";
 
 /**
  * This file serves as an introduction via code for anyone new and interested in this library.
@@ -250,7 +250,7 @@ describe("what's reduction for?", () => {
             }),
         ];
 
-        const actual = reduceQuery(
+        const actual = subtractQuery(
             price_100_to_300_rating_2_to_5_with_reviews,
             price_100_to_200_rating_3_to_5_no_reviews
         );

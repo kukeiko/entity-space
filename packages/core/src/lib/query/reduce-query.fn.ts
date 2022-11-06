@@ -65,7 +65,7 @@ function subtractParts(a: EntityQuery, b: EntityQuery): false | ReducedParts {
 // [todo] shouldn't be able to reduce queries w/ different entity-schemas
 // [todo] it is still unexpected for me that this method returns an empty array on full subtraction,
 // but Criterion.reduce() would return true. should make it consistent.
-export function reduceQuery(a: EntityQuery, b: EntityQuery): EntityQuery[] | false {
+export function subtractQuery(a: EntityQuery, b: EntityQuery): EntityQuery[] | false {
     const reducedParts = subtractParts(a, b);
 
     if (!reducedParts) {

@@ -7,7 +7,7 @@ import { createCriterionFromEntities } from "../../entity/functions/create-crite
 import { Expansion } from "../../expansion/expansion";
 import { EntityQuery } from "../../query/entity-query";
 import { mergeQueries } from "../../query/merge-queries.fn";
-import { reduceQueries } from "../../query/reduce-queries.fn";
+import { subtractQueries } from "../../query/reduce-queries.fn";
 import { EntityQueryTracing } from "../../tracing/entity-query-tracing";
 import { IEntityStreamInterceptor } from "../i-entity-stream-interceptor";
 import { QueryStream } from "../query-stream";
@@ -135,7 +135,7 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
             map(() => {
                 // [todo] see if any deeper expansions have been rejected
                 // [update] is this comment still relevant?
-                const rejected = reduceQueries([relationQuery], accepted) || [relationQuery];
+                const rejected = subtractQueries([relationQuery], accepted) || [relationQuery];
 
                 const [finalAccepted, finalRejected] = this.toMappedAcceptedAndRejectedQueries({
                     accepted,

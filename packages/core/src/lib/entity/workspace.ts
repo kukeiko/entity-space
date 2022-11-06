@@ -28,7 +28,7 @@ import { runInterceptors } from "../execution/run-interceptors.fn";
 import { ScopedByBlueprintWorkspace } from "../execution/scoped-by-blueprint-workspace";
 import { EntityQuery } from "../query/entity-query";
 import { QueryPaging } from "../query/query-paging";
-import { reduceQueries } from "../query/reduce-queries.fn";
+import { subtractQueries } from "../query/reduce-queries.fn";
 import { EntityQueryTracing } from "../tracing/entity-query-tracing";
 import { EntitySet } from "./data-structures/entity-set";
 import { createCriterionFromEntities } from "./functions/create-criterion-from-entities.fn";
@@ -100,7 +100,7 @@ export class Workspace implements IEntityStore, IEntityStreamInterceptor {
     async query<T extends Entity = Entity>(query: EntityQuery): Promise<false | EntitySet<T>[]> {
         const sources = [...this.interceptors, new SchemaRelationBasedHydrator(this.tracing, [this])];
         const cachedQueries = this.database.getCachedQueries(query.getEntitySchema());
-        const reduced = reduceQueries([query], cachedQueries);
+        const reduced = subtractQueries([query], cachedQueries);
         const queriesAgainstSource = reduced === false ? [query] : reduced;
 
         if (queriesAgainstSource.length) {
@@ -173,7 +173,7 @@ export class Workspace implements IEntityStore, IEntityStreamInterceptor {
 
         const hydrationQuery = new EntityQuery({ entitySchema: schema, criteria, expansion });
         const cachedQueries = this.database.getCachedQueries(hydrationQuery.getEntitySchema());
-        const reduced = reduceQueries([hydrationQuery], cachedQueries);
+        const reduced = subtractQueries([hydrationQuery], cachedQueries);
         const queriesAgainstSource = reduced === false ? [hydrationQuery] : reduced;
 
         this.tracing.querySpawned(hydrationQuery);

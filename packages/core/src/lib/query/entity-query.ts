@@ -2,7 +2,7 @@ import { ExpansionValue, IEntitySchema } from "@entity-space/common";
 import { any, AnyCriterion, Criterion, NamedCriteria, never, NeverCriterion } from "@entity-space/criteria";
 import { Expansion } from "../expansion/expansion";
 import { QueryPaging } from "./query-paging";
-import { reduceQueries } from "./reduce-queries.fn";
+import { subtractQueries } from "./reduce-queries.fn";
 
 export interface EntityQueryCtorArg {
     entitySchema: IEntitySchema;
@@ -77,8 +77,8 @@ export class EntityQuery {
         return `${this.entitySchema.getId()}${options}${criterion}${paging}${expansion}`;
     }
 
-    reduceBy(others: EntityQuery[]): false | EntityQuery[] {
-        return reduceQueries([this], others);
+    subtractBy(others: EntityQuery[]): false | EntityQuery[] {
+        return subtractQueries([this], others);
     }
 
     // [todo] not actually used anywhere

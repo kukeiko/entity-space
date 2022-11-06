@@ -1,7 +1,7 @@
 import { EntitySchema, ExpansionValue } from "@entity-space/common";
 import { Criterion } from "@entity-space/criteria";
 import { EntityQuery } from "../../lib/query/entity-query";
-import { reduceQueries } from "../../lib/query/reduce-queries.fn";
+import { subtractQueries } from "../../lib/query/reduce-queries.fn";
 
 // [todo] add more tests
 describe("reduceQueries()", () => {
@@ -16,7 +16,7 @@ describe("reduceQueries()", () => {
             const b: EntityQuery[] = [];
 
             // act
-            const reduced = reduceQueries(a, b);
+            const reduced = subtractQueries(a, b);
 
             // assert
             expect(reduced).toEqual([]);

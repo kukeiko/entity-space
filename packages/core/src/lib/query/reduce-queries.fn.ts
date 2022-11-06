@@ -1,7 +1,7 @@
 import { EntityQuery } from "./entity-query";
-import { reduceQuery } from "./reduce-query.fn";
+import { subtractQuery } from "./reduce-query.fn";
 
-export function reduceQueries(a: EntityQuery[], b: EntityQuery[]): EntityQuery[] | false {
+export function subtractQueries(a: EntityQuery[], b: EntityQuery[]): EntityQuery[] | false {
     if (!a.length && !b.length) {
         return [];
     }
@@ -15,7 +15,7 @@ export function reduceQueries(a: EntityQuery[], b: EntityQuery[]): EntityQuery[]
         const nextReduced: EntityQuery[] = [];
 
         for (const queryA of reduced) {
-            const reducedQueries = reduceQuery(queryA, queryB);
+            const reducedQueries = subtractQuery(queryA, queryB);
 
             if (reducedQueries) {
                 nextReduced.push(...reducedQueries);

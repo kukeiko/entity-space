@@ -17,7 +17,7 @@ import { Expansion } from "../expansion/expansion";
 import { EntityQuery } from "../query/entity-query";
 import { mergeQueries } from "../query/merge-queries.fn";
 import { QueryPaging } from "../query/query-paging";
-import { reduceQueries } from "../query/reduce-queries.fn";
+import { subtractQueries } from "../query/reduce-queries.fn";
 import { EntitySet } from "./data-structures/entity-set";
 import { Entity } from "./entity";
 import { createCriterionFromEntities } from "./functions/create-criterion-from-entities.fn";
@@ -49,7 +49,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
 
     reduceByCached(query: EntityQuery): EntityQuery[] | false {
         const cached = this.getCachedQueries(query.getEntitySchema());
-        return reduceQueries([query], cached);
+        return subtractQueries([query], cached);
     }
 
     // [todo] not used; but i did not want to delete it already.
@@ -60,7 +60,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         const reduced: EntityQuery[] = [];
 
         for (const [schema, queries] of groupedBySchema.entries()) {
-            const result = reduceQueries(queries, this.getCachedQueries(schema));
+            const result = subtractQueries(queries, this.getCachedQueries(schema));
 
             if (!result) {
                 reduced.push(...queries);
