@@ -1,5 +1,5 @@
-import { InRangeCriterionTemplate } from "./in-range-criterion-template";
+import { InRangeCriterionShape } from "./in-range-criterion-template";
 
-export function inRangeTemplate<T extends typeof Number | typeof String>(valueType: T): InRangeCriterionTemplate<T> {
-    return new InRangeCriterionTemplate(valueType);
+export function inRangeShape<T extends typeof Number | typeof String>(valueType: T): InRangeCriterionShape<T> {
+    return new InRangeCriterionShape(valueType);
 }

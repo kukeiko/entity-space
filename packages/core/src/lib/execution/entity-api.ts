@@ -5,7 +5,7 @@ import { filter, from, map, merge, mergeAll, Observable, of, startWith, switchMa
 import { EntitySet } from "../entity/data-structures/entity-set";
 import { IEntityDatabase } from "../entity/i-entity-database";
 import { InMemoryEntityDatabase } from "../entity/in-memory-entity-database";
-import { EntityQueryTemplate } from "../query/entity-query-template";
+import { EntityQueryShape } from "../query/entity-query-template";
 import { EntityQuery } from "../query/entity-query";
 import { subtractQueries } from "../query/subtract-queries.fn";
 import { EntityQueryTracing } from "../tracing/entity-query-tracing";
@@ -94,14 +94,14 @@ export class EntityApi implements IEntityStreamInterceptor {
         queries: EntityQuery[],
         database: IEntityDatabase
     ): false | [Observable<EntityStreamPacket>, EntityQuery[]] {
-        const queryTemplate = new EntityQueryTemplate({
+        const queryTemplate = new EntityQueryShape({
             schema: endpoint.getSchema(),
             criterion: endpoint.getCriterionTemplate(),
             selection: endpoint.getSelection(),
             options: endpoint.getOptionsTemplate(),
         });
 
-        const remapped = flatten(queries.map(query => queryTemplate.remap(query)).filter(isNotFalse));
+        const remapped = flatten(queries.map(query => queryTemplate.reshape(query)).filter(isNotFalse));
 
         if (!remapped) {
             return false;

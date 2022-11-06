@@ -1,5 +1,5 @@
-import { NeverCriterionTemplate } from "./never-criterion.template";
+import { NeverCriterionShape } from "./never-criterion.template";
 
-export function neverTemplate(): NeverCriterionTemplate {
-    return new NeverCriterionTemplate();
+export function neverShape(): NeverCriterionShape {
+    return new NeverCriterionShape();
 }

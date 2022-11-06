@@ -1,11 +1,11 @@
 import { AnyCriterion } from "../criterion/any/any";
 import { Criterion } from "../criterion/criterion";
-import { ICriterionTemplate } from "./criterion-template.interface";
-import { RemapCriterionResult } from "./remap-criterion-result";
+import { ICriterionShape } from "./criterion-shape.interface";
+import { ReshapedCriterion } from "./reshaped-criterion";
 
-export class AnyCriterionTemplate implements ICriterionTemplate<AnyCriterion> {
-    remap(criterion: Criterion): false | RemapCriterionResult<AnyCriterion> {
-        return new RemapCriterionResult([criterion]);
+export class AnyCriterionShape implements ICriterionShape<AnyCriterion> {
+    reshape(criterion: Criterion): false | ReshapedCriterion<AnyCriterion> {
+        return new ReshapedCriterion([criterion]);
     }
 
     matches(criterion: Criterion): criterion is Criterion {

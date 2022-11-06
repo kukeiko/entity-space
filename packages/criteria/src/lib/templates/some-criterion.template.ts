@@ -1,30 +1,30 @@
 import { Criterion } from "../criterion/criterion";
 import { SomeCriterion } from "../criterion/some/some.criterion";
-import { ICriterionTemplate } from "./criterion-template.interface";
-import { RemapCriterionResult } from "./remap-criterion-result";
+import { ICriterionShape } from "./criterion-shape.interface";
+import { ReshapedCriterion } from "./reshaped-criterion";
 
-export class SomeCriterionTemplate<T extends ICriterionTemplate> implements ICriterionTemplate<SomeCriterion> {
+export class SomeCriterionShape<T extends ICriterionShape> implements ICriterionShape<SomeCriterion> {
     constructor(item: T) {
         this.item = item;
     }
 
     private readonly item: T;
 
-    remap(criterion: Criterion): false | RemapCriterionResult<SomeCriterion> {
+    reshape(criterion: Criterion): false | ReshapedCriterion<SomeCriterion> {
         if (!(criterion instanceof SomeCriterion)) {
             return false;
         }
 
-        const result = this.item.remap(criterion.getItem());
+        const result = this.item.reshape(criterion.getItem());
 
         if (result === false) {
             return false;
         }
 
-        const remapped = result.getCriteria().map(criterion => new SomeCriterion(criterion));
+        const remapped = result.getReshaped().map(criterion => new SomeCriterion(criterion));
         const open = result.getOpen().map(open => new SomeCriterion(open));
 
-        return new RemapCriterionResult(remapped, open);
+        return new ReshapedCriterion(remapped, open);
     }
 
     matches(criterion: Criterion): criterion is SomeCriterion {

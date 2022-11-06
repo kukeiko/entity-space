@@ -1,5 +1,5 @@
 import { IEntitySchema } from "@entity-space/common";
-import { anyTemplate, Criterion, ICriterionTemplate, neverTemplate } from "@entity-space/criteria";
+import { anyShape, Criterion, ICriterionShape, neverShape } from "@entity-space/criteria";
 import { permutateEntries } from "@entity-space/utils";
 import { EntitySelection } from "./entity-selection";
 import { EntityQuery } from "./entity-query";
@@ -18,7 +18,7 @@ function containsNoFalse(parts: RemappedParts): parts is WithoutFalse<RemappedPa
     return !Object.values(parts).some(part => part === false);
 }
 
-export class EntityQueryTemplate {
+export class EntityQueryShape {
     constructor({
         schema,
         options,
@@ -26,33 +26,33 @@ export class EntityQueryTemplate {
         selection,
     }: {
         schema: IEntitySchema;
-        options?: ICriterionTemplate;
-        criterion?: ICriterionTemplate;
+        options?: ICriterionShape;
+        criterion?: ICriterionShape;
         selection?: EntitySelection;
     }) {
         this.schema = schema;
-        this.options = options ?? neverTemplate();
-        this.criterion = criterion ?? anyTemplate();
+        this.options = options ?? neverShape();
+        this.criterion = criterion ?? anyShape();
         this.selection = selection ?? new EntitySelection({ schema, value: true });
     }
 
     private readonly schema: IEntitySchema;
-    private readonly options: ICriterionTemplate;
-    private readonly criterion: ICriterionTemplate;
+    private readonly options: ICriterionShape;
+    private readonly criterion: ICriterionShape;
     private readonly selection: EntitySelection;
 
-    remap(query: EntityQuery): false | EntityQuery[] {
+    reshape(query: EntityQuery): false | EntityQuery[] {
         // [todo] can be removed if i decide to make remap() result of ICriterionTemplate just an array
         // of successfully remapped Criteria (instead of also the open ones)
-        const remapCriterion = (criterion: Criterion, template: ICriterionTemplate): false | Criterion[] => {
-            const remapped = template.remap(criterion);
+        const reshapeCriterion = (criterion: Criterion, template: ICriterionShape): false | Criterion[] => {
+            const reshaped = template.reshape(criterion);
 
-            return remapped ? remapped.getCriteria() : false;
+            return reshaped ? reshaped.getReshaped() : false;
         };
 
         const remappedParts: RemappedParts = {
-            options: remapCriterion(query.getOptions(), this.options),
-            criterion: remapCriterion(query.getCriteria(), this.criterion),
+            options: reshapeCriterion(query.getOptions(), this.options),
+            criterion: reshapeCriterion(query.getCriteria(), this.criterion),
             selection: this.selection.intersect(query.getSelection()),
         };
 

@@ -1,21 +1,19 @@
-import { ICriterionTemplate } from "./criterion-template.interface";
-import { OrCriteriaTemplate } from "./or-criteria-template";
-import { orTemplate } from "./or-template.fn";
-import { SomeCriterionTemplate } from "./some-criterion.template";
+import { ICriterionShape } from "./criterion-shape.interface";
+import { OrCriteriaShape } from "./or-criteria-template";
+import { orShape } from "./or-template.fn";
+import { SomeCriterionShape } from "./some-criterion.template";
 
-export function someTemplate<T extends ICriterionTemplate>(template: T): SomeCriterionTemplate<T>;
-export function someTemplate<T extends ICriterionTemplate, U extends T[]>(
+export function someShape<T extends ICriterionShape>(template: T): SomeCriterionShape<T>;
+export function someShape<T extends ICriterionShape, U extends T[]>(
     ...templates: [...U]
-): SomeCriterionTemplate<OrCriteriaTemplate<[...U][number]>>;
-export function someTemplate<T extends ICriterionTemplate>(
-    templates: T[]
-): SomeCriterionTemplate<OrCriteriaTemplate<T>>;
-export function someTemplate<T extends ICriterionTemplate>(...args: any): any {
+): SomeCriterionShape<OrCriteriaShape<[...U][number]>>;
+export function someShape<T extends ICriterionShape>(templates: T[]): SomeCriterionShape<OrCriteriaShape<T>>;
+export function someShape<T extends ICriterionShape>(...args: any): any {
     const items: T[] = Array.isArray(args[0]) ? args[0] : args;
 
     if (items.length > 1) {
-        return new SomeCriterionTemplate(orTemplate(items));
+        return new SomeCriterionShape(orShape(items));
     } else {
-        return new SomeCriterionTemplate(items[0]);
+        return new SomeCriterionShape(items[0]);
     }
 }

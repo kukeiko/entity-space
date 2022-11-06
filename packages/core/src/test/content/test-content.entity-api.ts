@@ -1,4 +1,4 @@
-import { isValueTemplate } from "@entity-space/criteria";
+import { isValueShape } from "@entity-space/criteria";
 import { EntityApi } from "../../index";
 import { EntityQueryTracing } from "../../lib/tracing/entity-query-tracing";
 import { UserBlueprint } from "./common/user.model";
@@ -30,7 +30,7 @@ export class TestContentEntityApi extends EntityApi {
     withGetUserById(): this {
         return this.addEndpoint(this.catalog.resolve(UserBlueprint), builder =>
             builder
-                .requiresFields({ id: isValueTemplate(Number) })
+                .requiresFields({ id: isValueShape(Number) })
                 .supportsSelection({ id: true, name: true, parentId: true })
                 .isLoadedBy(({ criterion }) => criterion.filter(this.data.get("users")))
         );

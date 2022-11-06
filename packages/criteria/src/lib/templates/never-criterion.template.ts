@@ -1,13 +1,14 @@
 import { AnyCriterion } from "../criterion/any/any";
 import { Criterion } from "../criterion/criterion";
 import { NeverCriterion } from "../criterion/never/never";
-import { ICriterionTemplate } from "./criterion-template.interface";
-import { RemapCriterionResult } from "./remap-criterion-result";
+import { ICriterionShape } from "./criterion-shape.interface";
+import { ReshapedCriterion } from "./reshaped-criterion";
 
-export class NeverCriterionTemplate implements ICriterionTemplate<AnyCriterion> {
-    remap(criterion: Criterion): false | RemapCriterionResult<AnyCriterion> {
+// [todo] shouldn't it be NeverCriterion instead of AnyCriterion?
+export class NeverCriterionShape implements ICriterionShape<AnyCriterion> {
+    reshape(criterion: Criterion): false | ReshapedCriterion<AnyCriterion> {
         if (criterion instanceof NeverCriterion) {
-            return new RemapCriterionResult([criterion]);
+            return new ReshapedCriterion([criterion]);
         }
 
         return false;

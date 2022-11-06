@@ -1,9 +1,9 @@
 import { Entity, IEntitySchema } from "@entity-space/common";
-import { ICriterionTemplate } from "@entity-space/criteria";
+import { ICriterionShape } from "@entity-space/criteria";
 
 // [todo] accidentally committed this file
 type AddFieldsArgument<T> = {
-    [K in keyof T]?: ICriterionTemplate;
+    [K in keyof T]?: ICriterionShape;
 };
 
 interface SchemaDefined<T> {

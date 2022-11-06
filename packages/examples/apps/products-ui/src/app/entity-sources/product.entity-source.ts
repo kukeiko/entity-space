@@ -1,7 +1,7 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { EntityApi, IEntitySource } from "@entity-space/core";
-import { inRangeTemplate, isValueTemplate } from "@entity-space/criteria";
+import { inRangeShape, isValueShape } from "@entity-space/criteria";
 import { Product, ProductFilter, ProductsSchemaCatalog } from "@entity-space/examples/libs/products-model";
 import { firstValueFrom } from "rxjs";
 
@@ -14,7 +14,7 @@ export class ProductEntitySource extends EntityApi<Product> implements IEntitySo
         this.addEndpoint(builder =>
             builder
                 .requiresFields({
-                    id: isValueTemplate(Number),
+                    id: isValueShape(Number),
                 })
                 .isLoadedBy(async query => {
                     const id = query.getCriteria().getBag().id.getValue();
@@ -28,8 +28,8 @@ export class ProductEntitySource extends EntityApi<Product> implements IEntitySo
         this.addEndpoint(builder =>
             builder
                 .supportsFields({
-                    price: inRangeTemplate(Number),
-                    rating: inRangeTemplate(Number),
+                    price: inRangeShape(Number),
+                    rating: inRangeShape(Number),
                 })
                 .supportsExpansion({
                     reviews: true,

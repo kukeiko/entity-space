@@ -1,3 +1,3 @@
-import { ICriterionTemplate } from "./criterion-template.interface";
+import { ICriterionShape } from "./criterion-shape.interface";
 
-export type InstancedCriterionTemplate<T> = T extends ICriterionTemplate<infer U> ? U : never;
+export type InstancedCriterionShape<T> = T extends ICriterionShape<infer U> ? U : never;

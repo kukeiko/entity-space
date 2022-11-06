@@ -1,28 +1,28 @@
 import { Criterion } from "../criterion/criterion";
 import { OrCriteria } from "../criterion/or/or-criteria";
-import { ICriterionTemplate } from "./criterion-template.interface";
-import { RemapCriterionResult } from "./remap-criterion-result";
+import { ICriterionShape } from "./criterion-shape.interface";
+import { ReshapedCriterion } from "./reshaped-criterion";
 
-export function remapOrCriteria<T extends ICriterionTemplate>(
+export function reshapeOrCriteria<T extends ICriterionShape>(
     template: T,
     criterion: OrCriteria
-): ReturnType<T["remap"]> | false {
+): ReturnType<T["reshape"]> | false {
     const remapped: Criterion[] = [];
     const open: Criterion[] = [];
 
     for (const item of criterion.getItems()) {
-        const result = template.remap(item);
+        const result = template.reshape(item);
 
         if (result === false) {
             open.push(item);
         } else {
-            remapped.push(...result.getCriteria());
+            remapped.push(...result.getReshaped());
             open.push(...result.getOpen());
         }
     }
 
     if (remapped.length > 0) {
-        return new RemapCriterionResult(remapped, open) as ReturnType<T["remap"]>;
+        return new ReshapedCriterion(remapped, open) as ReturnType<T["reshape"]>;
     }
 
     return false;

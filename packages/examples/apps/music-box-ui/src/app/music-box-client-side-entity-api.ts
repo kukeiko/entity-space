@@ -1,7 +1,7 @@
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { Entity, EntitySchemaCatalog, IEntitySchema } from "@entity-space/common";
 import { EntityApi, EntityQueryTracing, IEntityStore } from "@entity-space/core";
-import { inSetTemplate, isValueTemplate } from "@entity-space/criteria";
+import { inSetShape, isValueShape } from "@entity-space/criteria";
 import { Artist, ArtistBlueprint, Song, SongBlueprint, SongLocation } from "@entity-space/examples/libs/music-model";
 import { firstValueFrom } from "rxjs";
 
@@ -100,7 +100,7 @@ export class MusicBoxClientSideEntityApi extends EntityApi implements IEntitySto
     withSearchSongs(): this {
         return this.addEndpoint(this.schemas.resolve(SongBlueprint), builder =>
             builder
-                .requiresOptions({ searchText: isValueTemplate(String) })
+                .requiresOptions({ searchText: isValueShape(String) })
                 .supportsPaging()
                 .supportsSelection({ id: true, artistId: true, duration: true, name: true })
                 .isLoadedBy(({ options, paging }) => {
@@ -125,7 +125,7 @@ export class MusicBoxClientSideEntityApi extends EntityApi implements IEntitySto
     withGetSongById(): this {
         return this.addEndpoint(this.schemas.resolve(SongBlueprint), builder =>
             builder
-                .requiresFields({ id: isValueTemplate(Number) })
+                .requiresFields({ id: isValueShape(Number) })
                 .supportsSelection({ id: true, artistId: true, duration: true, locations: true, name: true })
                 .isLoadedBy(({ criterion }) => this.http.get<Song>(`api/songs/${criterion.getBag().id.getValue()}`))
         );
@@ -134,7 +134,7 @@ export class MusicBoxClientSideEntityApi extends EntityApi implements IEntitySto
     withGetSongLocationsBySongId(): this {
         return this.addEndpoint(this.schemas.getSchema<SongLocation>("song-location"), builder =>
             builder
-                .requiresFields({ songId: inSetTemplate(Number) })
+                .requiresFields({ songId: inSetShape(Number) })
                 .supportsSelection({ id: true, path: true, songId: true, songLocationType: true, url: true })
                 .isLoadedBy(({ criterion }) =>
                     this.http.get<SongLocation[]>("api/song-locations", {

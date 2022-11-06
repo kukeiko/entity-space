@@ -2,11 +2,11 @@ import { Entity } from "@entity-space/common";
 import {
     Criterion,
     InSetCriterion,
-    inSetTemplate,
+    inSetShape,
     IsValueCriterion,
-    isValueTemplate,
-    NamedCriteriaTemplate,
-    RemapCriterionResult,
+    isValueShape,
+    NamedCriteriaShape,
+    ReshapedCriterion,
 } from "@entity-space/criteria";
 import { readPath, writePath } from "@entity-space/utils";
 
@@ -33,17 +33,17 @@ export class ComplexKeyMap<E extends Entity = Entity, V = unknown> {
         const bag: Record<string, any> = {};
 
         for (const path of leadingPaths) {
-            writePath(path, bag, isValueTemplate());
+            writePath(path, bag, isValueShape());
         }
 
-        writePath(lastPath, bag, inSetTemplate());
-        this.criterionTemplate = NamedCriteriaTemplate.fromDeepBag(bag);
+        writePath(lastPath, bag, inSetShape());
+        this.criterionTemplate = NamedCriteriaShape.fromDeepBag(bag);
     }
 
     private readonly map = new Map<unknown, unknown>();
     private readonly leadingPaths: string[];
     private readonly lastPath: string;
-    private readonly criterionTemplate: NamedCriteriaTemplate;
+    private readonly criterionTemplate: NamedCriteriaShape;
 
     get(entity: E, paths?: string[]): V | undefined {
         let map = this.map;
@@ -136,8 +136,8 @@ export class ComplexKeyMap<E extends Entity = Entity, V = unknown> {
         map.delete(readPath(this.lastPath, entity));
     }
 
-    getByCriterion(criterion: Criterion): false | { values: V[]; remapped: RemapCriterionResult } {
-        const remapped = this.criterionTemplate.remap(criterion);
+    getByCriterion(criterion: Criterion): false | { values: V[]; remapped: ReshapedCriterion } {
+        const remapped = this.criterionTemplate.reshape(criterion);
 
         if (remapped === false) {
             return false;
@@ -145,7 +145,7 @@ export class ComplexKeyMap<E extends Entity = Entity, V = unknown> {
 
         const values: V[] = [];
 
-        for (const criterion of remapped.getCriteria()) {
+        for (const criterion of remapped.getReshaped()) {
             let map = this.map;
 
             if (this.leadingPaths.length > 0) {

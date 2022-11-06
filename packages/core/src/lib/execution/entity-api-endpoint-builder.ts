@@ -1,28 +1,28 @@
 import { Entity, EntitySelectionValue, IEntitySchema } from "@entity-space/common";
 import {
-    anyTemplate,
+    anyShape,
     Criterion,
-    ICriterionTemplate,
-    InstancedCriterionTemplate,
-    NamedCriteriaTemplate,
-    NamedCriteriaTemplateItems,
-    namedTemplate,
-    neverTemplate,
+    ICriterionShape,
+    InstancedCriterionShape,
+    NamedCriteriaShape,
+    NamedCriteriaShapeItems,
+    namedShape,
+    neverShape,
 } from "@entity-space/criteria";
 import { size } from "lodash";
 import { EntitySelection } from "../query/entity-selection";
 import { EntityApiEndpoint, EntityApiEndpointInvoke } from "./entity-api-endpoint";
 
 type AddFieldsArgument<T> = {
-    [K in keyof T]?: ICriterionTemplate;
+    [K in keyof T]?: ICriterionShape;
 };
 
 export class EntityApiEndpointBuilder<
     T extends Entity = Entity,
-    CriterionRequiredFields extends NamedCriteriaTemplateItems = {},
-    CriterionOptionalFields extends NamedCriteriaTemplateItems = {},
-    OptionsRequiredFields extends NamedCriteriaTemplateItems = {},
-    OptionsOptionalFields extends NamedCriteriaTemplateItems = {}
+    CriterionRequiredFields extends NamedCriteriaShapeItems = {},
+    CriterionOptionalFields extends NamedCriteriaShapeItems = {},
+    OptionsRequiredFields extends NamedCriteriaShapeItems = {},
+    OptionsOptionalFields extends NamedCriteriaShapeItems = {}
 > {
     constructor(schema: IEntitySchema) {
         this.schema = schema;
@@ -130,8 +130,8 @@ export class EntityApiEndpointBuilder<
 
     acceptsCriterion(
         accept: (
-            criterion: InstancedCriterionTemplate<
-                NamedCriteriaTemplate<CriterionRequiredFields, CriterionOptionalFields>
+            criterion: InstancedCriterionShape<
+                NamedCriteriaShape<CriterionRequiredFields, CriterionOptionalFields>
             >
         ) => boolean
     ): this {
@@ -142,8 +142,8 @@ export class EntityApiEndpointBuilder<
     isLoadedBy(
         load: EntityApiEndpointInvoke<
             T,
-            NamedCriteriaTemplate<CriterionRequiredFields, CriterionOptionalFields>,
-            NamedCriteriaTemplate<OptionsRequiredFields, OptionsOptionalFields>
+            NamedCriteriaShape<CriterionRequiredFields, CriterionOptionalFields>,
+            NamedCriteriaShape<OptionsRequiredFields, OptionsOptionalFields>
         >
     ): this {
         this.loadEntities = load as any;
@@ -155,22 +155,22 @@ export class EntityApiEndpointBuilder<
             throw new Error("isLoadedBy() hasn't been called yet");
         }
 
-        let optionsTemplate: ICriterionTemplate;
+        let optionsTemplate: ICriterionShape;
 
         if (this.anyOptionsSupported) {
-            optionsTemplate = anyTemplate();
+            optionsTemplate = anyShape();
         } else if (size(this.requiredOptionFields) || (0 && size(this.optionalOptionFields) > 0)) {
-            optionsTemplate = namedTemplate(this.requiredOptionFields, this.optionalOptionFields);
+            optionsTemplate = namedShape(this.requiredOptionFields, this.optionalOptionFields);
         } else {
-            optionsTemplate = neverTemplate();
+            optionsTemplate = neverShape();
         }
 
-        let criterionTemplate: ICriterionTemplate;
+        let criterionTemplate: ICriterionShape;
 
         if (size(this.requiredFields) > 0 || size(this.optionalFields) > 0) {
-            criterionTemplate = namedTemplate(this.requiredFields, this.optionalFields);
+            criterionTemplate = namedShape(this.requiredFields, this.optionalFields);
         } else {
-            criterionTemplate = anyTemplate();
+            criterionTemplate = anyShape();
         }
 
         return new EntityApiEndpoint({

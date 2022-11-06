@@ -1,6 +1,6 @@
 import { Criterion } from "../../lib/criterion/criterion";
 import { parseCriteria } from "../../lib/parser/parse-criteria.fn";
-import { ICriterionTemplate } from "../../lib/templates/criterion-template.interface";
+import { ICriterionShape } from "../../lib/templates/criterion-shape.interface";
 
 function parse<T extends Criterion | string>(item: T): Criterion {
     if (typeof item === "string") {
@@ -23,32 +23,32 @@ export function remapping(
     specFn = it
 ): {
     using(
-        template: ICriterionTemplate,
+        template: ICriterionShape,
         label?: string
     ): {
         shouldBe(remapped: (Criterion | string)[] | string | false, open?: (Criterion | string)[]): void;
     };
 } {
     return {
-        using(template: ICriterionTemplate, label?: string) {
+        using(template: ICriterionShape, label?: string) {
             return {
                 shouldBe(remapped: (Criterion | string)[] | string | false, open: (Criterion | string)[] = []) {
                     const templateName = label ?? (template as any).constructor.name;
 
                     if (remapped === false) {
                         specFn(`${criterion} should not remap using ${templateName}`, () => {
-                            expect(template.remap(parse(criterion))).toEqual(false);
+                            expect(template.reshape(parse(criterion))).toEqual(false);
                         });
                     } else {
                         const remappedString = typeof remapped === "string" ? remapped : `${remapped.join(", ")}`;
 
                         if (open.length === 0) {
                             specFn(`${criterion} should fully remap using ${templateName} to ${remappedString}`, () => {
-                                const result = template.remap(parse(criterion));
+                                const result = template.reshape(parse(criterion));
                                 expect(result).not.toBe(false);
 
                                 if (result !== false) {
-                                    expect(result.getCriteria().join(", ")).toEqual(remappedString);
+                                    expect(result.getReshaped().join(", ")).toEqual(remappedString);
                                 }
                             });
                         } else {
@@ -57,11 +57,11 @@ export function remapping(
                             specFn(
                                 `${criterion} should remap using ${templateName} to ${remappedString}, leaving ${openString}`,
                                 () => {
-                                    const result = template.remap(parse(criterion));
+                                    const result = template.reshape(parse(criterion));
                                     expect(result).not.toBe(false);
 
                                     if (result !== false) {
-                                        expect(result.getCriteria().join(", ")).toEqual(remappedString);
+                                        expect(result.getReshaped().join(", ")).toEqual(remappedString);
                                         expect(result.getOpen().join(", ")).toEqual(open.join(", "));
                                     }
                                 }

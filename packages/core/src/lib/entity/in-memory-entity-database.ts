@@ -2,13 +2,13 @@ import { EntitySelectionValue, IEntitySchema, IEntitySchemaRelation } from "@ent
 import {
     any,
     AnyCriterion,
-    anyTemplate,
+    anyShape,
     Criterion,
-    NamedCriteriaTemplate,
+    NamedCriteriaShape,
     never,
     NeverCriterion,
     or,
-    orTemplate,
+    orShape,
 } from "@entity-space/criteria";
 import { cloneJson, groupBy, isDefined, readPath } from "@entity-space/utils";
 import { flatten } from "lodash";
@@ -144,17 +144,17 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         const optionalDeepBag: Record<string, any> = {};
 
         schema.getIndexes().forEach(index => {
-            index.getPath().forEach(path => (optionalDeepBag[path] = anyTemplate()));
+            index.getPath().forEach(path => (optionalDeepBag[path] = anyShape()));
         });
 
-        const template = orTemplate(NamedCriteriaTemplate.fromRequiredAndOptionalDeepBags({}, optionalDeepBag));
-        const remapped = template.remap(criterion);
+        const template = orShape(NamedCriteriaShape.fromRequiredAndOptionalDeepBags({}, optionalDeepBag));
+        const remapped = template.reshape(criterion);
 
         if (remapped === false) {
             return any();
         }
 
-        return remapped.getCriteria().length === 1 ? remapped.getCriteria()[0] : or(remapped.getCriteria());
+        return remapped.getReshaped().length === 1 ? remapped.getReshaped()[0] : or(remapped.getReshaped());
     }
 
     upsertSync(entitySet: EntitySet<Entity>): void {

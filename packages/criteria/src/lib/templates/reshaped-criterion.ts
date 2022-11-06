@@ -2,7 +2,7 @@ import { Criterion } from "../criterion/criterion";
 
 // [todo] consider renaming to "RemappedCriterion", as this was the term i used for searching this file
 // after taking a break from the project
-export class RemapCriterionResult<T extends Criterion = Criterion> {
+export class ReshapedCriterion<T extends Criterion = Criterion> {
     constructor(criteria: T[], open?: Criterion[]) {
         this.criteria = criteria;
         this.open = open ?? [];
@@ -11,8 +11,7 @@ export class RemapCriterionResult<T extends Criterion = Criterion> {
     private readonly criteria: T[];
     private readonly open: Criterion[];
 
-    // [todo] consider rename to "getRemapped()" - would be more consistent w/ naming of "getOpen()"
-    getCriteria(): T[] {
+    getReshaped(): T[] {
         return this.criteria;
     }
 

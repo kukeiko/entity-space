@@ -3,12 +3,12 @@ import { Criterion } from "../criterion/criterion";
 import { OrCriteria } from "../criterion/or/or-criteria";
 import { InSetCriterion } from "../criterion/set/in-set-criterion";
 import { IsValueCriterion } from "../criterion/value/is-value-criterion";
-import { ICriterionTemplate } from "./criterion-template.interface";
-import { RemapCriterionResult } from "./remap-criterion-result";
-import { remapOrCriteria } from "./remap-or-criteria.fn";
+import { ICriterionShape } from "./criterion-shape.interface";
+import { ReshapedCriterion } from "./reshaped-criterion";
+import { reshapeOrCriteria } from "./remap-or-criteria.fn";
 
-export class InSetCriterionTemplate<T extends Primitive | typeof Null = Primitive | typeof Null>
-    implements ICriterionTemplate<InSetCriterion<ReturnType<T>>>
+export class InSetCriterionShape<T extends Primitive | typeof Null = Primitive | typeof Null>
+    implements ICriterionShape<InSetCriterion<ReturnType<T>>>
 {
     constructor(valueTypes: T[]) {
         this.valueTypes = valueTypes;
@@ -33,7 +33,7 @@ export class InSetCriterionTemplate<T extends Primitive | typeof Null = Primitiv
         return this.valueTypes;
     }
 
-    remap(criterion: Criterion): false | RemapCriterionResult<InSetCriterion<ReturnType<T>>> {
+    reshape(criterion: Criterion): false | ReshapedCriterion<InSetCriterion<ReturnType<T>>> {
         if (criterion instanceof InSetCriterion) {
             const valuesMatchingType = new Set(Array.from(criterion.getValues()).filter(this.valueMatches));
 
@@ -45,16 +45,16 @@ export class InSetCriterionTemplate<T extends Primitive | typeof Null = Primitiv
                 const remapped = new InSetCriterion(valuesMatchingType);
                 const open = valuesNotMatchingType.length > 0 ? [new InSetCriterion(valuesNotMatchingType)] : [];
 
-                return new RemapCriterionResult([remapped], open);
+                return new ReshapedCriterion([remapped], open);
             }
         } else if (criterion instanceof IsValueCriterion) {
             const value = criterion.getValue();
 
             if (this.valueMatches(value)) {
-                return new RemapCriterionResult([new InSetCriterion([value])]);
+                return new ReshapedCriterion([new InSetCriterion([value])]);
             }
         } else if (criterion instanceof OrCriteria) {
-            const result = remapOrCriteria(this, criterion);
+            const result = reshapeOrCriteria(this, criterion);
 
             if (result !== false) {
                 return result;

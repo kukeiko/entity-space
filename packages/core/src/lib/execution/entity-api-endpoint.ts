@@ -1,5 +1,5 @@
 import { Entity, EntitySelectionValue, IEntitySchema } from "@entity-space/common";
-import { Criterion, ICriterionTemplate, InstancedCriterionTemplate } from "@entity-space/criteria";
+import { Criterion, ICriterionShape, InstancedCriterionShape } from "@entity-space/criteria";
 import { Observable } from "rxjs";
 import { EntitySet } from "../entity/data-structures/entity-set";
 import { EntitySelection } from "../query/entity-selection";
@@ -9,11 +9,11 @@ export type EntityApiEndpointData<T extends Entity = Entity> = T | T[] | EntityS
 
 export type EntityApiEndpointInvoke<
     T extends Entity = Entity,
-    C = ICriterionTemplate,
-    O = ICriterionTemplate
+    C = ICriterionShape,
+    O = ICriterionShape
 > = (query: {
-    criterion: InstancedCriterionTemplate<C>;
-    options: InstancedCriterionTemplate<O>;
+    criterion: InstancedCriterionShape<C>;
+    options: InstancedCriterionShape<O>;
     // expansion: UnfoldedExpansion<T>;
     selection: EntitySelectionValue<T>; // [todo] want to use unfolded instead
     paging?: QueryPaging;
@@ -32,8 +32,8 @@ export class EntityApiEndpoint {
         pagingSupported,
     }: {
         schema: IEntitySchema;
-        optionsTemplate: ICriterionTemplate;
-        criterionTemplate: ICriterionTemplate;
+        optionsTemplate: ICriterionShape;
+        criterionTemplate: ICriterionShape;
         selection: EntitySelection;
         invoke: EntityApiEndpointInvoke;
         acceptCriterion?: (criterion: Criterion) => boolean;
@@ -53,8 +53,8 @@ export class EntityApiEndpoint {
     }
 
     private readonly schema: IEntitySchema;
-    private readonly optionsTemplate: ICriterionTemplate;
-    private readonly criterionTemplate: ICriterionTemplate;
+    private readonly optionsTemplate: ICriterionShape;
+    private readonly criterionTemplate: ICriterionShape;
     private readonly selection: EntitySelection;
     private readonly invoke: EntityApiEndpointInvoke;
     private readonly acceptCriterionFn: (criterion: Criterion) => boolean;
@@ -66,11 +66,11 @@ export class EntityApiEndpoint {
         return this.schema;
     }
 
-    getCriterionTemplate(): ICriterionTemplate {
+    getCriterionTemplate(): ICriterionShape {
         return this.criterionTemplate;
     }
 
-    getOptionsTemplate(): ICriterionTemplate {
+    getOptionsTemplate(): ICriterionShape {
         return this.optionsTemplate;
     }
 

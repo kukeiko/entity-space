@@ -1,7 +1,7 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
 import { EntityApi, IEntitySource } from "@entity-space/core";
-import { isValueTemplate } from "@entity-space/criteria";
+import { isValueShape } from "@entity-space/criteria";
 import { Brand, ProductsSchemaCatalog } from "@entity-space/examples/libs/products-model";
 import { firstValueFrom } from "rxjs";
 
@@ -12,7 +12,7 @@ export class BrandEntitySource extends EntityApi<Brand> implements IEntitySource
 
         this.addEndpoint(builder =>
             builder
-                .requiresFields({ id: isValueTemplate(Number) })
+                .requiresFields({ id: isValueShape(Number) })
                 .supportsExpansion({ reviews: true })
                 .isLoadedBy(async query => {
                     const id = query.getCriteria().getBag().id.getValue();

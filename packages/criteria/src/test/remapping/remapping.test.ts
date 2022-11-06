@@ -1,48 +1,48 @@
-import { inRangeTemplate } from "../../lib/templates/in-range-template.fn";
-import { inSetTemplate } from "../../lib/templates/in-set-template.fn";
-import { isValueTemplate } from "../../lib/templates/is-value-template.fn";
-import { namedTemplate } from "../../lib/templates/named-template.fn";
-import { orTemplate } from "../../lib/templates/or-template.fn";
+import { inRangeShape } from "../../lib/templates/in-range-template.fn";
+import { inSetShape } from "../../lib/templates/in-set-template.fn";
+import { isValueShape } from "../../lib/templates/is-value-template.fn";
+import { namedShape } from "../../lib/templates/named-template.fn";
+import { orShape } from "../../lib/templates/or-template.fn";
 import { remapping } from "../tools/remapping.fn";
 
 // [todo] all tests should ignore order of remapped / open criteria
 describe("remapping", () => {
-    remapping("[1, 7]").using(inRangeTemplate(Number), "in-range:number").shouldBe("[1, 7]");
+    remapping("[1, 7]").using(inRangeShape(Number), "in-range:number").shouldBe("[1, 7]");
 
     remapping("[1, 7]")
-        .using(orTemplate(inRangeTemplate(Number)), "in-range:number")
+        .using(orShape(inRangeShape(Number)), "in-range:number")
         .shouldBe("([1, 7])");
 
     remapping("[1, 7]")
-        .using(orTemplate(inSetTemplate(Number), inRangeTemplate(Number)), "or(in-set:number, in-range:number)")
+        .using(orShape(inSetShape(Number), inRangeShape(Number)), "or(in-set:number, in-range:number)")
         .shouldBe("([1, 7])");
 
-    remapping("[1, 7] | [10, 13]").using(inRangeTemplate(Number), "in-range:number").shouldBe(["[1, 7]", "[10, 13]"]);
+    remapping("[1, 7] | [10, 13]").using(inRangeShape(Number), "in-range:number").shouldBe(["[1, 7]", "[10, 13]"]);
 
     remapping("[1, 7] | [10, 13] | {1, 2, 3}")
-        .using(inRangeTemplate(Number), "in-range:number")
+        .using(inRangeShape(Number), "in-range:number")
         .shouldBe(["[1, 7]", "[10, 13]"], ["{1, 2, 3}"]);
 
-    remapping("{1, 2, 3}").using(isValueTemplate(Number), "is-value:number").shouldBe(["1", "2", "3"]);
+    remapping("{1, 2, 3}").using(isValueShape(Number), "is-value:number").shouldBe(["1", "2", "3"]);
 
     remapping("{1, 2, 3}")
-        .using(orTemplate(isValueTemplate(Number)), "or(is-value:number)")
+        .using(orShape(isValueShape(Number)), "or(is-value:number)")
         .shouldBe("(1 | 2 | 3)");
 
     remapping("{ foo: {1, 2, 3} }")
-        .using(namedTemplate({ foo: isValueTemplate(Number) }), "{ foo: is-value:number }")
+        .using(namedShape({ foo: isValueShape(Number) }), "{ foo: is-value:number }")
         .shouldBe(["{ foo: 1 }", "{ foo: 2 }", "{ foo: 3 }"]);
 
     remapping("{ foo: {1, 2}, bar: {4, 5} }")
         .using(
-            namedTemplate({ foo: isValueTemplate(Number), bar: isValueTemplate(Number) }),
+            namedShape({ foo: isValueShape(Number), bar: isValueShape(Number) }),
             "{ foo: is-value:number, bar: is-value:number }"
         )
         .shouldBe(["{ foo: 1, bar: 4 }", "{ foo: 1, bar: 5 }", "{ foo: 2, bar: 4 }", "{ foo: 2, bar: 5 }"]);
 
     remapping("{ foo: {1, 2}, bar: { baz: {4, 5} } }")
         .using(
-            namedTemplate({ foo: isValueTemplate(Number), bar: namedTemplate({ baz: isValueTemplate(Number) }) }),
+            namedShape({ foo: isValueShape(Number), bar: namedShape({ baz: isValueShape(Number) }) }),
             "{ foo: is-value:number, bar: { baz: is-value:number } }"
         )
         .shouldBe([
@@ -53,23 +53,23 @@ describe("remapping", () => {
         ]);
 
     remapping("{ foo: ([1, 7] | [13, 37]) }")
-        .using(namedTemplate({ foo: inRangeTemplate(Number) }), "{ foo: in-range:number }")
+        .using(namedShape({ foo: inRangeShape(Number) }), "{ foo: in-range:number }")
         .shouldBe(["{ foo: [1, 7] }", "{ foo: [13, 37] }"]);
 
     remapping("{ foo: ([1, 7] | [13, 37]), bar: 7 }")
-        .using(namedTemplate({ foo: inRangeTemplate(Number) }), "{ foo: in-range:number }")
+        .using(namedShape({ foo: inRangeShape(Number) }), "{ foo: in-range:number }")
         .shouldBe(["{ foo: [1, 7] }", "{ foo: [13, 37] }"]);
 
     remapping("{ foo: {1, 2, 3}, bar: {13, 37} | [7, 64] }")
         .using(
-            namedTemplate({ foo: inSetTemplate(Number), bar: inSetTemplate(Number) }),
+            namedShape({ foo: inSetShape(Number), bar: inSetShape(Number) }),
             "{ foo: in-set:number, bar: in-set:number }"
         )
         .shouldBe(["{ foo: {1, 2, 3}, bar: {13, 37} }"], ["{ foo: {1, 2, 3}, bar: ([7, 64]) }"]);
 
     remapping("{ foo: {1, 2, 3} | [100, 200], bar: {13, 37} | [7, 64] }")
         .using(
-            namedTemplate({ foo: inSetTemplate(Number), bar: inSetTemplate(Number) }),
+            namedShape({ foo: inSetShape(Number), bar: inSetShape(Number) }),
             "{ foo: in-set:number, bar: in-set:number }"
         )
         .shouldBe(
@@ -79,16 +79,16 @@ describe("remapping", () => {
 
     remapping("{ foo: {1, 2, 3} | [100, 200], bar: {13, 37} | [7, 64] } | { foo: ({4, 5, 6}) }")
         .using(
-            namedTemplate({ foo: inSetTemplate(Number) }, { bar: inSetTemplate(Number) }),
+            namedShape({ foo: inSetShape(Number) }, { bar: inSetShape(Number) }),
             "{ foo: in-set:number, bar?: in-set:number }"
         )
         .shouldBe(["{ foo: {1, 2, 3} }", "{ foo: {4, 5, 6} }"], ["{ foo: ([100, 200]), bar: ({13, 37} | [7, 64]) }"]);
 
     remapping("{ foo: {1, 2, 3} | [100, 200], bar: {13, 37} | [7, 64] }")
         .using(
-            orTemplate(
-                namedTemplate({ foo: inSetTemplate(Number), bar: inSetTemplate(Number) }),
-                namedTemplate({ foo: inRangeTemplate(Number), bar: inRangeTemplate(Number) })
+            orShape(
+                namedShape({ foo: inSetShape(Number), bar: inSetShape(Number) }),
+                namedShape({ foo: inRangeShape(Number), bar: inRangeShape(Number) })
             ),
             "or({ foo: in-set:number, bar: in-set:number }, { foo: in-range:number, bar: in-range:number })"
         )
@@ -99,10 +99,10 @@ describe("remapping", () => {
 
     remapping("{ foo: {1, 2, 3} | [100, 200], bar: {13, 37} | [7, 64] }")
         .using(
-            orTemplate(
-                namedTemplate({ foo: inSetTemplate(Number), bar: inSetTemplate(Number) }),
-                namedTemplate({ foo: inRangeTemplate(Number), bar: inRangeTemplate(Number) }),
-                namedTemplate({ foo: inSetTemplate(Number) })
+            orShape(
+                namedShape({ foo: inSetShape(Number), bar: inSetShape(Number) }),
+                namedShape({ foo: inRangeShape(Number), bar: inRangeShape(Number) }),
+                namedShape({ foo: inSetShape(Number) })
             ),
             "or({ foo: in-set:number, bar: in-set:number }, { foo: in-range:number, bar: in-range:number }, { foo: in-set:number })"
         )

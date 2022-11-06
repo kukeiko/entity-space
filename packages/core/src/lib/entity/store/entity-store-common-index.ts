@@ -1,4 +1,4 @@
-import { Criterion, RemapCriterionResult } from "@entity-space/criteria";
+import { Criterion, ReshapedCriterion } from "@entity-space/criteria";
 import { ComplexKeyMap } from "../data-structures/complex-key-map";
 import { Entity } from "../entity";
 
@@ -25,7 +25,7 @@ export class EntityStoreCommonIndex<E extends Entity = Entity> {
         return this;
     }
 
-    getByCriterion(criterion: Criterion): false | { values: Set<number>[]; remapped: RemapCriterionResult<Criterion> } {
+    getByCriterion(criterion: Criterion): false | { values: Set<number>[]; remapped: ReshapedCriterion<Criterion> } {
         return this.map.getByCriterion(criterion);
     }
 

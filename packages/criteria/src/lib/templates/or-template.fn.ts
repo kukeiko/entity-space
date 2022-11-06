@@ -1,14 +1,14 @@
-import { ICriterionTemplate } from "./criterion-template.interface";
-import { OrCriteriaTemplate } from "./or-criteria-template";
+import { ICriterionShape } from "./criterion-shape.interface";
+import { OrCriteriaShape } from "./or-criteria-template";
 
-export function orTemplate<T extends ICriterionTemplate, U extends T[]>(
+export function orShape<T extends ICriterionShape, U extends T[]>(
     ...templates: [...U]
-): OrCriteriaTemplate<[...U][number]>;
-export function orTemplate<T extends ICriterionTemplate>(templates: T[]): OrCriteriaTemplate<T>;
-export function orTemplate<T extends ICriterionTemplate>(...args: any): OrCriteriaTemplate<T> {
+): OrCriteriaShape<[...U][number]>;
+export function orShape<T extends ICriterionShape>(templates: T[]): OrCriteriaShape<T>;
+export function orShape<T extends ICriterionShape>(...args: any): OrCriteriaShape<T> {
     if (Array.isArray(args[0])) {
-        return new OrCriteriaTemplate(args[0]);
+        return new OrCriteriaShape(args[0]);
     } else {
-        return new OrCriteriaTemplate(args);
+        return new OrCriteriaShape(args);
     }
 }

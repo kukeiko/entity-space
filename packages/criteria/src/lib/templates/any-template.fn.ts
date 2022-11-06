@@ -1,5 +1,5 @@
-import { AnyCriterionTemplate } from "./any-criterion.template";
+import { AnyCriterionShape } from "./any-criterion.template";
 
-export function anyTemplate(): AnyCriterionTemplate {
-    return new AnyCriterionTemplate();
+export function anyShape(): AnyCriterionShape {
+    return new AnyCriterionShape();
 }

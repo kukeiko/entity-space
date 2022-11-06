@@ -1,4 +1,4 @@
-import { ICriterionTemplate } from "@entity-space/criteria";
+import { ICriterionShape } from "@entity-space/criteria";
 import { EntityStreamPacket } from "../execution/entity-stream-packet";
 import { EntityQuery } from "../query/entity-query";
 
@@ -59,7 +59,7 @@ export class EntityQueryTracing {
         );
     }
 
-    queryDispatchedToEndpoint(query: EntityQuery, template: ICriterionTemplate): void {
+    queryDispatchedToEndpoint(query: EntityQuery, template: ICriterionShape): void {
         if (!this.consoleEnabled) {
             return;
         }
@@ -69,7 +69,7 @@ export class EntityQueryTracing {
         );
     }
 
-    endpointDeliveredPacket(query: EntityQuery, template: ICriterionTemplate, packet: EntityStreamPacket): void {
+    endpointDeliveredPacket(query: EntityQuery, template: ICriterionShape, packet: EntityStreamPacket): void {
         if (!this.consoleEnabled) {
             return;
         }

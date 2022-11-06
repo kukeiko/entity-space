@@ -1,9 +1,9 @@
-import { NamedCriteriaTemplate, NamedCriteriaTemplateItems } from "./named-criteria-template";
+import { NamedCriteriaShape, NamedCriteriaShapeItems } from "./named-criteria-template";
 
 // [todo] user can't have autocomplete, e.g. matchesTemplate<Product>({...}) would be nice
-export function namedTemplate<T extends NamedCriteriaTemplateItems, U extends NamedCriteriaTemplateItems = {}>(
+export function namedShape<T extends NamedCriteriaShapeItems, U extends NamedCriteriaShapeItems = {}>(
     required: T,
     optional?: U
-): NamedCriteriaTemplate<T, U> {
-    return new NamedCriteriaTemplate(required, optional);
+): NamedCriteriaShape<T, U> {
+    return new NamedCriteriaShape(required, optional);
 }

@@ -1,4 +1,4 @@
-import { InNumberRangeCriterion, inRange, inRangeTemplate } from "@entity-space/criteria";
+import { InNumberRangeCriterion, inRange, inRangeShape } from "@entity-space/criteria";
 import { isEqual } from "lodash";
 
 export interface EntityQueryPagingSort {
@@ -81,14 +81,14 @@ export class QueryPaging {
                 return subtractedRange;
             }
 
-            const remapped = inRangeTemplate(Number).remap(subtractedRange);
+            const remapped = inRangeShape(Number).reshape(subtractedRange);
 
             if (remapped === false) {
                 return false;
             }
 
             // [todo] hack - should add option to not map to lt/gt via template
-            const toInclusiveRemapped = remapped.getCriteria().map(criterion => {
+            const toInclusiveRemapped = remapped.getReshaped().map(criterion => {
                 let from = criterion.getFrom()?.value;
 
                 if (from && criterion.getFrom()?.op == ">") {
