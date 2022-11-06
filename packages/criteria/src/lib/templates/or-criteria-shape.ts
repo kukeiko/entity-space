@@ -1,7 +1,7 @@
 import { Criterion } from "../criterion/criterion";
 import { OrCriteria } from "../criterion/or/or-criteria";
 import { ICriterionShape } from "./criterion-shape.interface";
-import { InstancedCriterionShape } from "./instanced-criterion-template.type";
+import { InstancedCriterionShape } from "./instanced-criterion-shape.type";
 import { ReshapedCriterion } from "./reshaped-criterion";
 
 export class OrCriteriaShape<T extends ICriterionShape>

@@ -1,8 +1,8 @@
-import { inRangeShape } from "../../lib/templates/in-range-template.fn";
-import { inSetShape } from "../../lib/templates/in-set-template.fn";
-import { isValueShape } from "../../lib/templates/is-value-template.fn";
-import { namedShape } from "../../lib/templates/named-template.fn";
-import { orShape } from "../../lib/templates/or-template.fn";
+import { inRangeShape } from "../../lib/templates/in-range-shape.fn";
+import { inSetShape } from "../../lib/templates/in-set-shape.fn";
+import { isValueShape } from "../../lib/templates/is-value-shape.fn";
+import { namedShape } from "../../lib/templates/named-shape.fn";
+import { orShape } from "../../lib/templates/or-shape.fn";
 import { remapping } from "../tools/remapping.fn";
 
 // [todo] all tests should ignore order of remapped / open criteria

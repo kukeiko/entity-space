@@ -5,7 +5,7 @@ import { InSetCriterion } from "../criterion/set/in-set-criterion";
 import { IsValueCriterion } from "../criterion/value/is-value-criterion";
 import { ICriterionShape } from "./criterion-shape.interface";
 import { ReshapedCriterion } from "./reshaped-criterion";
-import { reshapeOrCriteria } from "./remap-or-criteria.fn";
+import { reshapeOrCriteria } from "./reshape-or-criteria.fn";
 
 export class IsValueCriterionShape<T extends Primitive | typeof Null = Primitive | typeof Null>
     implements ICriterionShape<IsValueCriterion<ReturnType<T>>>

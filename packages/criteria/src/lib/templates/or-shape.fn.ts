@@ -1,5 +1,5 @@
 import { ICriterionShape } from "./criterion-shape.interface";
-import { OrCriteriaShape } from "./or-criteria-template";
+import { OrCriteriaShape } from "./or-criteria-shape";
 
 export function orShape<T extends ICriterionShape, U extends T[]>(
     ...templates: [...U]

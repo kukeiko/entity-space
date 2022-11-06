@@ -1,5 +1,5 @@
 import { Null, Primitive } from "@entity-space/utils";
-import { InSetCriterionShape } from "./in-set-criterion-template";
+import { InSetCriterionShape } from "./in-set-criterion-shape";
 
 export function inSetShape<T extends Primitive | typeof Null, U extends T[]>(
     ...valueTypes: [...U]

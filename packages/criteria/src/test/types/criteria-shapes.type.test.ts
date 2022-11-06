@@ -4,12 +4,12 @@ import { NamedCriteria } from "../../lib/criterion/named/named-criteria";
 import { OrCriteria } from "../../lib/criterion/or/or-criteria";
 import { InNumberRangeCriterion } from "../../lib/criterion/range/in-number-range-criterion";
 import { InSetCriterion } from "../../lib/criterion/set/in-set-criterion";
-import { InRangeCriterionShape } from "../../lib/templates/in-range-criterion-template";
-import { InSetCriterionShape } from "../../lib/templates/in-set-criterion-template";
+import { InRangeCriterionShape } from "../../lib/templates/in-range-criterion-shape";
+import { InSetCriterionShape } from "../../lib/templates/in-set-criterion-shape";
 // import { AndCriteriaTemplate } from "../../lib/templates/and-criteria-template";
-import { InstancedCriterionShape } from "../../lib/templates/instanced-criterion-template.type";
-import { NamedCriteriaShape } from "../../lib/templates/named-criteria-template";
-import { OrCriteriaShape } from "../../lib/templates/or-criteria-template";
+import { InstancedCriterionShape } from "../../lib/templates/instanced-criterion-shape.type";
+import { NamedCriteriaShape } from "../../lib/templates/named-criteria-shape";
+import { OrCriteriaShape } from "../../lib/templates/or-criteria-shape";
 // import { NotInSetCriterion } from "../../lib/templates/not-in-set-criterion";
 // import { NotInSetCriterionTemplate } from "../../lib/templates/not-in-set-criterion-template";
 
@@ -21,9 +21,7 @@ type OrCriteria_OneItem = IsExact<
 
 // $ExpectType true
 type OrCriteria_TwoItems = IsExact<
-    InstancedCriterionShape<
-        OrCriteriaShape<InRangeCriterionShape<typeof Number> | InSetCriterionShape<typeof Number>>
-    >,
+    InstancedCriterionShape<OrCriteriaShape<InRangeCriterionShape<typeof Number> | InSetCriterionShape<typeof Number>>>,
     OrCriteria<InNumberRangeCriterion | InSetCriterion<number>>
 >;
 

@@ -1,5 +1,5 @@
 import { Null, Primitive } from "@entity-space/utils";
-import { IsValueCriterionShape } from "./is-value-criterion.template";
+import { IsValueCriterionShape } from "./is-value-criterion-shape";
 
 export function isValueShape<T extends Primitive | typeof Null, U extends T[]>(
     ...valueTypes: [...U]

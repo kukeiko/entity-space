@@ -5,7 +5,7 @@ import { InRangeCriterion } from "../criterion/range/in-range-criterion";
 import { InStringRangeCriterion } from "../criterion/range/in-string-range-criterion";
 import { ICriterionShape } from "./criterion-shape.interface";
 import { ReshapedCriterion } from "./reshaped-criterion";
-import { reshapeOrCriteria } from "./remap-or-criteria.fn";
+import { reshapeOrCriteria } from "./reshape-or-criteria.fn";
 
 export class InRangeCriterionShape<T extends typeof String | typeof Number>
     implements ICriterionShape<InRangeCriterion<ReturnType<T>>>

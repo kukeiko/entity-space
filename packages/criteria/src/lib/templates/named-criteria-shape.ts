@@ -3,9 +3,9 @@ import { Criterion } from "../criterion/criterion";
 import { NamedCriteria } from "../criterion/named/named-criteria";
 import { OrCriteria } from "../criterion/or/or-criteria";
 import { ICriterionShape } from "./criterion-shape.interface";
-import { InstancedCriterionShape } from "./instanced-criterion-template.type";
+import { InstancedCriterionShape } from "./instanced-criterion-shape.type";
 import { ReshapedCriterion } from "./reshaped-criterion";
-import { reshapeOrCriteria } from "./remap-or-criteria.fn";
+import { reshapeOrCriteria } from "./reshape-or-criteria.fn";
 
 function looksLikeShape(value: any): value is ICriterionShape {
     return (value as any as ICriterionShape)?.reshape instanceof Function;

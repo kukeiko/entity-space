@@ -5,7 +5,7 @@ import { filter, from, map, merge, mergeAll, Observable, of, startWith, switchMa
 import { EntitySet } from "../entity/data-structures/entity-set";
 import { IEntityDatabase } from "../entity/i-entity-database";
 import { InMemoryEntityDatabase } from "../entity/in-memory-entity-database";
-import { EntityQueryShape } from "../query/entity-query-template";
+import { EntityQueryShape } from "../query/entity-query-shape";
 import { EntityQuery } from "../query/entity-query";
 import { subtractQueries } from "../query/subtract-queries.fn";
 import { EntityQueryTracing } from "../tracing/entity-query-tracing";

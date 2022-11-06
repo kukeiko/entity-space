@@ -1,4 +1,4 @@
-import { AnyCriterionShape } from "./any-criterion.template";
+import { AnyCriterionShape } from "./any-criterion-shape";
 
 export function anyShape(): AnyCriterionShape {
     return new AnyCriterionShape();
