@@ -167,7 +167,7 @@ describe("what's reduction for?", () => {
             reviews: true,
         };
 
-        const actual = Expansion.reduceValue(new EntitySchema("foo"), basic_properties_with_reviews, basic_properties);
+        const actual = Expansion.subtractValue(new EntitySchema("foo"), basic_properties_with_reviews, basic_properties);
 
         expect(actual).toEqual(expected);
     });

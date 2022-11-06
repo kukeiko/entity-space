@@ -37,17 +37,17 @@ export class Expansion {
             .join(", ")} }`;
     }
 
-    reduce(other: Expansion): boolean | Expansion {
+    subtractFrom(other: Expansion): boolean | Expansion {
         if (other.isEmpty()) {
             return true;
         }
 
-        const reduced = Expansion.reduceValue(this.schema, other.getValue(), this.getValue());
+        const subtracted = Expansion.subtractValue(this.schema, other.getValue(), this.getValue());
 
-        if (typeof reduced == "boolean") {
-            return reduced;
+        if (typeof subtracted == "boolean") {
+            return subtracted;
         } else {
-            return new Expansion({ schema: this.schema, value: reduced });
+            return new Expansion({ schema: this.schema, value: subtracted });
         }
     }
 
@@ -58,7 +58,7 @@ export class Expansion {
     }
 
     equivalent(other: Expansion): boolean {
-        return other.reduce(this) === true && this.reduce(other) === true;
+        return other.subtractFrom(this) === true && this.subtractFrom(other) === true;
     }
 
     static intersectValues(schema: IEntitySchema, a: ExpansionValue, b: ExpansionValue): false | ExpansionValue {
@@ -145,7 +145,7 @@ export class Expansion {
         return merged;
     }
 
-    static reduceValue(schema: IEntitySchema, what: ExpansionValue, by: ExpansionValue): boolean | ExpansionValue {
+    static subtractValue(schema: IEntitySchema, what: ExpansionValue, by: ExpansionValue): boolean | ExpansionValue {
         if (Object.keys(what).length === 0) {
             return true;
         }
@@ -173,7 +173,7 @@ export class Expansion {
                     didReduce = true;
                 }
             } else if (typeof byValue === "object" && typeof whatValue === "object") {
-                const subReduced = this.reduceValue(
+                const subReduced = this.subtractValue(
                     schema.getRelation(key).getRelatedEntitySchema(),
                     whatValue,
                     byValue

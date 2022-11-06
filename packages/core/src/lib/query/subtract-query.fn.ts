@@ -34,7 +34,7 @@ function subtractParts(a: EntityQuery, b: EntityQuery): false | ReducedParts {
             return false;
         }
 
-        const expansion = b.getExpansion().reduce(a.getExpansion());
+        const expansion = b.getExpansion().subtractFrom(a.getExpansion());
 
         if (!expansion) {
             return false;
@@ -53,7 +53,7 @@ function subtractParts(a: EntityQuery, b: EntityQuery): false | ReducedParts {
         return false;
     }
 
-    const expansion = b.getExpansion().reduce(a.getExpansion());
+    const expansion = b.getExpansion().subtractFrom(a.getExpansion());
 
     if (!expansion) {
         return false;

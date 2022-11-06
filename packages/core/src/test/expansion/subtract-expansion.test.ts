@@ -1,7 +1,7 @@
 import { EntitySchema, ExpansionValue } from "@entity-space/common";
 import { Expansion } from "../../lib/expansion/expansion";
 
-function reduceExpansion(a: ExpansionValue, b: ExpansionValue): boolean | ExpansionValue {
+function subtractExpansion(a: ExpansionValue, b: ExpansionValue): boolean | ExpansionValue {
     const rootSchema = new EntitySchema("foo");
     const fooSchema = new EntitySchema("foo");
     const barSchema = new EntitySchema("bar");
@@ -15,93 +15,93 @@ function reduceExpansion(a: ExpansionValue, b: ExpansionValue): boolean | Expans
         .addRelationProperty("foo", fooSchema, "fooId", "id")
         .addRelationProperty("khaz", khazSchema, "khazId", "id");
 
-    const reduced = new Expansion({ schema: rootSchema, value: b }).reduce(
+    const subtracted = new Expansion({ schema: rootSchema, value: b }).subtractFrom(
         new Expansion({ schema: rootSchema, value: a })
     );
 
-    if (typeof reduced === "boolean") {
-        return reduced;
+    if (typeof subtracted === "boolean") {
+        return subtracted;
     } else {
-        return reduced.getValue();
+        return subtracted.getValue();
     }
 }
 
-describe("reduceExpansion()", () => {
-    describe("full reduction", () => {
-        it("{ } reduced by { foo } should be true", () => {
+describe("subtractExpansion()", () => {
+    describe("full subtraction", () => {
+        it("{ } subtracted by { foo } should be true", () => {
             // arrange
             const a: ExpansionValue = {};
             const b: ExpansionValue = { foo: true };
 
             // act
-            const reduced = reduceExpansion(a, b);
+            const subtracted = subtractExpansion(a, b);
 
             // assert
-            expect(reduced).toEqual(true);
+            expect(subtracted).toEqual(true);
         });
 
-        it("{ foo, bar } should be completely reduced by { foo, bar }", () => {
+        it("{ foo, bar } should be completely subtracted by { foo, bar }", () => {
             // arrange
             const a: ExpansionValue = { foo: {}, bar: true };
             const b: ExpansionValue = { foo: true, bar: {} };
 
             // act
-            const reduced = reduceExpansion(a, b);
+            const subtracted = subtractExpansion(a, b);
 
             // assert
-            expect(reduced).toEqual(true);
+            expect(subtracted).toEqual(true);
         });
     });
 
     describe("partial reduction", () => {
-        it("{ foo, bar } reduced by { foo } should be { bar }", () => {
+        it("{ foo, bar } subtracted by { foo } should be { bar }", () => {
             // arrange
             const a: ExpansionValue = { foo: true, bar: true };
             const b: ExpansionValue = { foo: true };
 
             // act
-            const reduced = reduceExpansion(a, b);
+            const subtracted = subtractExpansion(a, b);
 
             // assert
-            expect(reduced).toEqual({ bar: true });
+            expect(subtracted).toEqual({ bar: true });
         });
 
-        it("{ foo: { bar, baz }, khaz: { mo } } reduced by { foo: { bar }, khaz: { mo, dan } } should be { foo: { baz } }", () => {
+        it("{ foo: { bar, baz }, khaz: { mo } } subtracted by { foo: { bar }, khaz: { mo, dan } } should be { foo: { baz } }", () => {
             // arrange
             const a: ExpansionValue = { foo: { bar: true, baz: true }, khaz: { mo: true } };
             const b: ExpansionValue = { foo: { bar: true }, khaz: { mo: true, dan: true } };
 
             // act
-            const reduced = reduceExpansion(a, b);
+            const subtracted = subtractExpansion(a, b);
 
             // assert
-            expect(reduced).toEqual({ foo: { baz: true } });
+            expect(subtracted).toEqual({ foo: { baz: true } });
         });
     });
 
     describe("no reduction", () => {
-        it("{ foo, bar } should not be reduced by { baz }", () => {
+        it("{ foo, bar } should not be subtracted by { baz }", () => {
             // arrange
             const a: ExpansionValue = { foo: true, bar: true };
             const b: ExpansionValue = { baz: true };
 
             // act
-            const reduced = reduceExpansion(a, b);
+            const subtracted = subtractExpansion(a, b);
 
             // assert
-            expect(reduced).toEqual(false);
+            expect(subtracted).toEqual(false);
         });
 
-        it("{ foo } should not be reduced by { }", () => {
+        it("{ foo } should not be subtracted by { }", () => {
             // arrange
             const a: ExpansionValue = { foo: true };
             const b: ExpansionValue = {};
 
             // act
-            const reduced = reduceExpansion(a, b);
+            const subtracted = subtractExpansion(a, b);
 
             // assert
-            expect(reduced).toEqual(false);
+            expect(subtracted).toEqual(false);
         });
     });
 });
