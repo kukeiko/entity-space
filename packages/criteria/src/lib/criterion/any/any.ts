@@ -2,7 +2,7 @@ import { Criterion } from "../criterion";
 import { never } from "../never/never.fn";
 
 export class AnyCriterion extends Criterion {
-    reduce(_: Criterion): boolean | Criterion {
+    subtractFrom(_: Criterion): boolean | Criterion {
         return true;
     }
 

@@ -32,7 +32,7 @@ export class NotInSetCriterion<T extends ReturnType<Primitive | typeof Null>> ex
         return values;
     }
 
-    reduce(other: Criterion): boolean | Criterion {
+    subtractFrom(other: Criterion): boolean | Criterion {
         if (other instanceof Criteria) {
             return other.reduceBy(this);
         } else if (other instanceof InSetCriterion) {

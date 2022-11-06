@@ -45,7 +45,7 @@ export class InSetCriterion<
         return this.values.has(item);
     }
 
-    reduce(other: Criterion): boolean | Criterion {
+    subtractFrom(other: Criterion): boolean | Criterion {
         if (other instanceof Criteria) {
             return other.reduceBy(this);
         } else if (other instanceof InSetCriterion) {

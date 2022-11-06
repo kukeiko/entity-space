@@ -20,7 +20,7 @@ export class NotValueCriterion<T extends Primitive | typeof Null = Primitive | t
         return item === this.value;
     }
 
-    reduce(other: Criterion): boolean | Criterion {
+    subtractFrom(other: Criterion): boolean | Criterion {
         if (other instanceof getInstanceClass(this) && other.getValue() === this.getValue()) {
             return true;
         }

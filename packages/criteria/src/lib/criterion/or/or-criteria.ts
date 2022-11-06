@@ -5,11 +5,11 @@ import { Criterion } from "../criterion";
 export class OrCriteria<T extends Criterion = Criterion> extends Criteria<T> {
     readonly combinator: "|" = "|"; // otherwise typeof OrCriteria === typeof AndCriteria
 
-    reduce(other: Criterion): boolean | Criterion {
+    subtractFrom(other: Criterion): boolean | Criterion {
         let reduced = other;
 
         for (const mine of this.items) {
-            const result = mine.reduce(reduced);
+            const result = mine.subtractFrom(reduced);
 
             if (result === true) {
                 return true;
@@ -26,7 +26,7 @@ export class OrCriteria<T extends Criterion = Criterion> extends Criteria<T> {
         let didReduceAny = false;
 
         for (const mine of this.getItems()) {
-            const reduced = other.reduce(mine);
+            const reduced = other.subtractFrom(mine);
 
             if (reduced === true) {
                 didReduceAny = true;

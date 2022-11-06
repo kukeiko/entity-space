@@ -18,7 +18,7 @@ describe("what's reduction for?", () => {
         const from_100_to_300 = inRange(100, 300);
         const expected = inRange(200, 300, [false, true]);
 
-        const difference = from_100_to_200.reduce(from_100_to_300);
+        const difference = from_100_to_200.subtractFrom(from_100_to_300);
 
         expect(difference).toEqual(expected);
     });
@@ -49,7 +49,7 @@ describe("what's reduction for?", () => {
          * We can figure out the difference by reducing the secondCriteria by the initialCriteria, that is:
          * take away from the secondCriteria the intersection it has with the initialCriteria:
          */
-        const difference = from_100_to_200.reduce(from_100_to_300);
+        const difference = from_100_to_200.subtractFrom(from_100_to_300);
 
         /**
          * The difference should now be the following criteria: a range starting at bigger 200 until less than equals 300,
@@ -126,7 +126,7 @@ describe("what's reduction for?", () => {
         /**
          * We're now using the "reduceObjectCriterion()" method as we want to reduce criteria that span across multiple properties.
          */
-        const difference = price_100_to_200_rating_3_to_5.reduce(price_100_to_300_rating_2_to_5);
+        const difference = price_100_to_200_rating_3_to_5.subtractFrom(price_100_to_300_rating_2_to_5);
 
         /**
          * Note: we have to do a "arrayWithExactContents" here to ignore the order of elements inside "expected".

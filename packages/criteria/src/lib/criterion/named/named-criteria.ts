@@ -47,7 +47,7 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag, R exte
         }
     }
 
-    reduce(other: Criterion): boolean | Criterion {
+    subtractFrom(other: Criterion): boolean | Criterion {
         if (other instanceof Criteria) {
             return other.reduceBy(this);
         } else if (other instanceof NamedCriteria) {
@@ -85,7 +85,7 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag, R exte
 
                     reductions.push({ key, result: false, inverted });
                 } else {
-                    const result = mine.reduce(otherCriterion);
+                    const result = mine.subtractFrom(otherCriterion);
 
                     if (result === false) {
                         return false;
@@ -234,9 +234,9 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag, R exte
     }
 
     override merge(other: Criterion): false | Criterion {
-        if (other.reduce(this) === true) {
+        if (other.subtractFrom(this) === true) {
             return other;
-        } else if (this.reduce(other) === true) {
+        } else if (this.subtractFrom(other) === true) {
             return this;
         } else if (other instanceof Criteria) {
             return other.merge(this);
@@ -266,7 +266,7 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag, R exte
                     }
 
                     // [todo] could we use Criterion.equivalent() here?
-                    const isMineSubsetOfOther = myBagCriterion.reduce(otherBagCriterion) === true;
+                    const isMineSubsetOfOther = myBagCriterion.subtractFrom(otherBagCriterion) === true;
                     const isOtherSubsetOfMine = otherBagCriterion.reduce(myBagCriterion) === true;
 
                     if (!(isMineSubsetOfOther && isOtherSubsetOfMine)) {

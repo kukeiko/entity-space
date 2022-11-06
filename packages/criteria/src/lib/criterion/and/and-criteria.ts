@@ -6,8 +6,8 @@ import { OrCriteria } from "../or/or-criteria";
 export class AndCriteria<T extends Criterion = Criterion> extends Criteria<T> {
     readonly combinator: "&" = "&"; // otherwise typeof OrCriteria === typeof AndCriteria
 
-    reduce(other: Criterion): boolean | Criterion {
-        const items = this.items.map(criterion => ({ criterion, result: criterion.reduce(other) }));
+    subtractFrom(other: Criterion): boolean | Criterion {
+        const items = this.items.map(criterion => ({ criterion, result: criterion.subtractFrom(other) }));
 
         if (items.every(x => x.result === false)) {
             return false;
@@ -58,7 +58,7 @@ export class AndCriteria<T extends Criterion = Criterion> extends Criteria<T> {
         let didReduceAny = false;
 
         for (const mine of this.getItems()) {
-            const reduced = other.reduce(mine);
+            const reduced = other.subtractFrom(mine);
 
             if (reduced === true) {
                 return true;

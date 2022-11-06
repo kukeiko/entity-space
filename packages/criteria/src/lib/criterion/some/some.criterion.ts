@@ -8,8 +8,8 @@ export class SomeCriterion<T extends Criterion = Criterion> extends Criterion {
 
     private readonly criterion: T;
 
-    reduce(other: Criterion): boolean | Criterion {
-        const reduced = this.criterion.reduce(other);
+    subtractFrom(other: Criterion): boolean | Criterion {
+        const reduced = this.criterion.subtractFrom(other);
 
         if (typeof reduced == "boolean") {
             return reduced;

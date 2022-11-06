@@ -25,7 +25,7 @@ export class IsValueCriterion<
 
     // [todo] some reduction cases were missing - seems like i was sloppy? figure out if there are more,
     // and not only here, but in all criterion implementations
-    reduce(other: Criterion): boolean | Criterion {
+    subtractFrom(other: Criterion): boolean | Criterion {
         if (other instanceof Criteria) {
             // [todo] added this case - write test for it
             return other.reduceBy(this);

@@ -41,13 +41,13 @@ function subtractParts(a: EntityQuery, b: EntityQuery): false | ReducedParts {
         }
     }
 
-    const options = b.getOptions().reduce(a.getOptions());
+    const options = b.getOptions().subtractFrom(a.getOptions());
 
     if (!options || (options !== true && paging !== true)) {
         return false;
     }
 
-    const criteria = b.getCriteria().reduce(a.getCriteria());
+    const criteria = b.getCriteria().subtractFrom(a.getCriteria());
 
     if (!criteria || (criteria !== true && paging !== true)) {
         return false;

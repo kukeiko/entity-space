@@ -75,7 +75,7 @@ export class QueryPaging {
         } else if (other.range === void 0) {
             return false;
         } else {
-            const subtractedRange = this.range.reduce(other.range);
+            const subtractedRange = this.range.subtractFrom(other.range);
 
             if (typeof subtractedRange === "boolean") {
                 return subtractedRange;

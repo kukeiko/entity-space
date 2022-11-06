@@ -21,7 +21,7 @@ export class OrCriteriaTemplate<T extends ICriterionTemplate>
         let remapped: InstancedCriterionTemplate<T>[] = [];
 
         const addToRemapped = (criterion: InstancedCriterionTemplate<T>) => {
-            remapped = remapped.filter(item => criterion.reduce(item) !== true);
+            remapped = remapped.filter(item => criterion.subtractFrom(item) !== true);
             remapped.push(criterion);
         };
 

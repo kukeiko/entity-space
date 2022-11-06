@@ -13,7 +13,7 @@ export abstract class Criterion {
         return false;
     }
 
-    abstract reduce(other: Criterion): boolean | Criterion;
+    abstract subtractFrom(other: Criterion): boolean | Criterion;
     abstract toString(): string;
     abstract matches(value: any): boolean;
 
@@ -23,6 +23,6 @@ export abstract class Criterion {
 
     // [todo] test this
     equivalent(other: Criterion): boolean {
-        return this.reduce(other) === true && other.reduce(this) === true;
+        return this.subtractFrom(other) === true && other.subtractFrom(this) === true;
     }
 }
