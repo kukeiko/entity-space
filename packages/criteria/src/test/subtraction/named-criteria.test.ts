@@ -101,19 +101,19 @@ describe("subtraction: named-criteria", () => {
             });
 
             // act
-            const reduced1 = b1.subtractFrom(a1);
-            const reduced2 = b2.subtractFrom(a2);
+            const subtracted_1 = b1.subtractFrom(a1);
+            const subtracted_2 = b2.subtractFrom(a2);
 
-            if (typeof reduced1 === "boolean" || typeof reduced2 === "boolean") {
+            if (typeof subtracted_1 === "boolean" || typeof subtracted_2 === "boolean") {
                 return fail("expected both subtractions to not be false/true");
             }
 
-            const reduced_1_by_2 = reduced2.subtractFrom(reduced1);
-            const reduced_2_by_1 = reduced1.subtractFrom(reduced2);
+            const subtracted_1_by_2 = subtracted_2.subtractFrom(subtracted_1);
+            const subtracted_2_by_1 = subtracted_1.subtractFrom(subtracted_2);
 
             // assert
-            expect(reduced_1_by_2).toEqual(true);
-            expect(reduced_2_by_1).toEqual(true);
+            expect(subtracted_1_by_2).toEqual(true);
+            expect(subtracted_2_by_1).toEqual(true);
         });
     });
 });
