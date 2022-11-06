@@ -8,7 +8,7 @@ import {
 import { fromDeepBag, MatchesBagArgument } from "@entity-space/criteria";
 import { Class, readPath, writePath } from "@entity-space/utils";
 import { map, Observable } from "rxjs";
-import { Workspace } from "../entity/workspace";
+import { Workspace } from "./workspace";
 import { EntitySelection } from "../query/entity-selection";
 
 export class ScopedByBlueprintWorkspace<T> {

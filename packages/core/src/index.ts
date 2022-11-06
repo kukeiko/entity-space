@@ -13,7 +13,7 @@ export * from "./lib/entity/in-memory-entity-database";
 export * from "./lib/entity/store/entity-store";
 export * from "./lib/entity/store/entity-store-common-index";
 export * from "./lib/entity/store/entity-store-unique-index";
-export * from "./lib/entity/workspace";
+export * from "./lib/execution/workspace";
 export * from "./lib/execution/entity-api";
 export * from "./lib/execution/entity-api-endpoint";
 export * from "./lib/execution/entity-api-endpoint-builder";

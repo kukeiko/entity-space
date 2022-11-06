@@ -26,22 +26,22 @@ import {
     switchMap,
     tap,
 } from "rxjs";
-import { IEntityStreamInterceptor } from "../execution/i-entity-stream-interceptor";
-import { SchemaRelationBasedHydrator } from "../execution/interceptors/schema-relation-based-hydrator";
-import { EntityStream } from "../execution/entity-stream";
-import { EntityStreamPacket } from "../execution/entity-stream-packet";
-import { runInterceptors } from "../execution/run-interceptors.fn";
-import { ScopedByBlueprintWorkspace } from "../execution/scoped-by-blueprint-workspace";
+import { IEntityStreamInterceptor } from "./i-entity-stream-interceptor";
+import { SchemaRelationBasedHydrator } from "./interceptors/schema-relation-based-hydrator";
+import { EntityStream } from "./entity-stream";
+import { EntityStreamPacket } from "./entity-stream-packet";
+import { runInterceptors } from "./run-interceptors.fn";
+import { ScopedByBlueprintWorkspace } from "./scoped-by-blueprint-workspace";
 import { EntityQuery } from "../query/entity-query";
 import { QueryPaging } from "../query/query-paging";
 import { subtractQueries } from "../query/subtract-queries.fn";
 import { EntityQueryTracing } from "../tracing/entity-query-tracing";
-import { EntitySet } from "./data-structures/entity-set";
-import { createCriterionFromEntities } from "./functions/create-criterion-from-entities.fn";
-import { createIdQueryFromEntities } from "./functions/create-id-query-from-entities.fn";
-import { normalizeEntities } from "./functions/normalize-entities.fn";
-import { IEntityStore } from "./i-entity-store";
-import { InMemoryEntityDatabase } from "./in-memory-entity-database";
+import { EntitySet } from "../entity/data-structures/entity-set";
+import { createCriterionFromEntities } from "../entity/functions/create-criterion-from-entities.fn";
+import { createIdQueryFromEntities } from "../entity/functions/create-id-query-from-entities.fn";
+import { normalizeEntities } from "../entity/functions/normalize-entities.fn";
+import { IEntityStore } from "../entity/i-entity-store";
+import { InMemoryEntityDatabase } from "../entity/in-memory-entity-database";
 
 // [todo] move to "execution" folder
 export class Workspace implements IEntityStore, IEntityStreamInterceptor {
