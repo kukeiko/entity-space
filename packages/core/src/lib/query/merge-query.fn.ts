@@ -1,5 +1,5 @@
 import { or } from "@entity-space/criteria";
-import { EntitySelection } from "../expansion/expansion";
+import { EntitySelection } from "./entity-selection";
 import { EntityQuery } from "./entity-query";
 import { QueryPaging } from "./query-paging";
 

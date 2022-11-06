@@ -2,7 +2,7 @@ import { Entity, EntitySelectionValue, IEntitySchema } from "@entity-space/commo
 import { Criterion, ICriterionTemplate, InstancedCriterionTemplate } from "@entity-space/criteria";
 import { Observable } from "rxjs";
 import { EntitySet } from "../entity/data-structures/entity-set";
-import { EntitySelection } from "../expansion/expansion";
+import { EntitySelection } from "../query/entity-selection";
 import { QueryPaging } from "../query/query-paging";
 
 export type EntityApiEndpointData<T extends Entity = Entity> = T | T[] | EntitySet<T>;

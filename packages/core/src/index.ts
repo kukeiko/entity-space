@@ -20,7 +20,7 @@ export * from "./lib/execution/entity-api-endpoint";
 export * from "./lib/execution/entity-api-endpoint-builder";
 export * from "./lib/execution/entity-stream";
 export * from "./lib/execution/entity-stream-packet";
-export * from "./lib/expansion/expansion";
+export * from "./lib/query/entity-selection";
 export * from "./lib/query/merge-queries.fn";
 export * from "./lib/query/merge-query.fn";
 export * from "./lib/query/entity-query";

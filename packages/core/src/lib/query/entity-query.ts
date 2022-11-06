@@ -1,6 +1,6 @@
 import { EntitySelectionValue, IEntitySchema } from "@entity-space/common";
 import { any, AnyCriterion, Criterion, NamedCriteria, never, NeverCriterion } from "@entity-space/criteria";
-import { EntitySelection } from "../expansion/expansion";
+import { EntitySelection } from "./entity-selection";
 import { QueryPaging } from "./query-paging";
 import { subtractQueries } from "./subtract-queries.fn";
 

@@ -13,7 +13,7 @@ import {
 import { cloneJson, groupBy, isDefined, readPath } from "@entity-space/utils";
 import { flatten } from "lodash";
 import { Observable, Subject } from "rxjs";
-import { EntitySelection } from "../expansion/expansion";
+import { EntitySelection } from "../query/entity-selection";
 import { EntityQuery } from "../query/entity-query";
 import { mergeQueries } from "../query/merge-queries.fn";
 import { QueryPaging } from "../query/query-paging";

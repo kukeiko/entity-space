@@ -10,7 +10,7 @@ import {
     neverTemplate,
 } from "@entity-space/criteria";
 import { size } from "lodash";
-import { EntitySelection } from "../expansion/expansion";
+import { EntitySelection } from "../query/entity-selection";
 import { EntityApiEndpoint, EntityApiEndpointInvoke } from "./entity-api-endpoint";
 
 type AddFieldsArgument<T> = {

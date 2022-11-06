@@ -1,6 +1,6 @@
 import { EntitySchema, EntitySelectionValue } from "@entity-space/common";
 import { inRange, matches, or } from "@entity-space/criteria";
-import { EntitySelection } from "../../lib/expansion/expansion";
+import { EntitySelection } from "../../lib/query/entity-selection";
 import { EntityQuery } from "../../lib/query/entity-query";
 import { subtractQuery } from "../../lib/query/subtract-query.fn";
 

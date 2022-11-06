@@ -4,7 +4,7 @@ import { isNotFalse, writePath } from "@entity-space/utils";
 import { map, merge, of, switchMap, takeLast, tap } from "rxjs";
 import { EntitySet } from "../../entity/data-structures/entity-set";
 import { createCriterionFromEntities } from "../../entity/functions/create-criterion-from-entities.fn";
-import { EntitySelection } from "../../expansion/expansion";
+import { EntitySelection } from "../../query/entity-selection";
 import { EntityQuery } from "../../query/entity-query";
 import { mergeQueries } from "../../query/merge-queries.fn";
 import { subtractQueries } from "../../query/subtract-queries.fn";

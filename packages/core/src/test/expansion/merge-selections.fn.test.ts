@@ -1,5 +1,5 @@
 import { EntitySchema, EntitySelectionValue } from "@entity-space/common";
-import { EntitySelection } from "../../lib/expansion/expansion";
+import { EntitySelection } from "../../lib/query/entity-selection";
 
 function mergeIntersections(...objects: EntitySelectionValue[]): boolean | EntitySelectionValue {
     const rootSchema = new EntitySchema("foo");

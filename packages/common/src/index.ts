@@ -1,5 +1,5 @@
 export * from "./lib/entity.type";
-export * from "./lib/expand.type";
+export * from "./lib/select.type";
 export * from "./lib/entity-selection-value.type";
 export * from "./lib/schema/array-schema";
 export * from "./lib/schema/blueprint";

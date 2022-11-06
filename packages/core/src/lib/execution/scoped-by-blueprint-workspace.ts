@@ -9,7 +9,7 @@ import { fromDeepBag, MatchesBagArgument } from "@entity-space/criteria";
 import { Class, readPath, writePath } from "@entity-space/utils";
 import { map, Observable } from "rxjs";
 import { Workspace } from "../entity/workspace";
-import { EntitySelection } from "../expansion/expansion";
+import { EntitySelection } from "../query/entity-selection";
 
 export class ScopedByBlueprintWorkspace<T> {
     constructor({
