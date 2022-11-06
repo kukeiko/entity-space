@@ -38,26 +38,26 @@ interface Artist {
 }
 
 // $ExpectType true
-type Artist_IsUndefined_BeforeExpand = IsExact<Song["artist"], Artist | undefined>;
+type Artist_IsUndefined_BeforeSelect = IsExact<Song["artist"], Artist | undefined>;
 
 // $ExpectType true
-type Artist_IsDefined_AfterExpand = IsExact<Select<Song, { artist: true }>["artist"], Artist>;
+type Artist_IsDefined_AfterSelect = IsExact<Select<Song, { artist: true }>["artist"], Artist>;
 
 // $ExpectType true
-type Duration_IsUndefinedOrNull_BeforeExpand = IsExact<Song["duration"], number | undefined | null>;
+type Duration_IsUndefinedOrNull_BeforeSelect = IsExact<Song["duration"], number | undefined | null>;
 
 // $ExpectType true
-type Duration_KeepsBeingNull_AfterExpand = IsExact<Select<Song, { duration: true }>["duration"], number | null>;
+type Duration_KeepsBeingNull_AfterSelect = IsExact<Select<Song, { duration: true }>["duration"], number | null>;
 
 // $ExpectType true
-type CanExpandDeeply = IsExact<
+type CanSelectDeeply = IsExact<
     Select<Song, { album: { songs: { artist: true } } }>,
     // [todo] using Array<...> notation only because TSlint complained
     Song & { album: Album & { songs: Array<Song & { artist: Artist }> } }
 >;
 
 // $ExpectType true
-type CanExpandAcrossUnions = IsExact<
+type CanSelectAcrossUnions = IsExact<
     Select<Song, { locations: { url: true; path: true } }>,
     Song & {
         // [todo] using Array<...> notation only because TSlint complained
@@ -66,7 +66,7 @@ type CanExpandAcrossUnions = IsExact<
 >;
 
 // $ExpectType true
-type CanExpandArrayOfPrimitives = IsExact<Select<Song, { tags: true }>, Song & { tags: string[] }>;
+type CanSelectArrayOfPrimitives = IsExact<Select<Song, { tags: true }>, Song & { tags: string[] }>;
 
 // $ExpectType true
-type CanExpandBooleans = IsExact<Select<Song, { isFavorite: true }>, Song & { isFavorite: boolean }>;
+type CanSelectBooleans = IsExact<Select<Song, { isFavorite: true }>, Song & { isFavorite: boolean }>;

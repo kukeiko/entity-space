@@ -127,7 +127,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
             // [todo] dirty to do it here?
             // [todo] this way of cloning is quite slow.
             entities = cloneJson(entities);
-            this.expandEntities(query.getEntitySchema(), query.getSelection(), entities);
+            this.hydrateEntities(query.getEntitySchema(), query.getSelection(), entities);
             entities = query.getCriteria().filter(entities);
         }
 
@@ -276,9 +276,9 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         return store;
     }
 
-    private expandEntities(schema: IEntitySchema, selection: EntitySelection, entities: Entity[]): void {
+    private hydrateEntities(schema: IEntitySchema, selection: EntitySelection, entities: Entity[]): void {
         // [todo] dirty
-        const isExpanded = (propertyKey: string): boolean => {
+        const isHydrated = (propertyKey: string): boolean => {
             const first = entities[0];
 
             if (first === void 0) return false;
@@ -301,8 +301,8 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
 
             const relation = schema.findRelation(propertyKey);
 
-            if (relation !== void 0 && !isExpanded(relation.getPropertyName())) {
-                this.expandRelation(
+            if (relation !== void 0 && !isHydrated(relation.getPropertyName())) {
+                this.hydrateRelation(
                     entities,
                     relation,
                     selectionValueProperty === true ? void 0 : selectionValueProperty
@@ -322,7 +322,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
                 }
 
                 const entitySchema = property.getUnboxedEntitySchema();
-                this.expandEntities(
+                this.hydrateEntities(
                     entitySchema,
                     new EntitySelection({ schema: entitySchema, value: selectionValueProperty }),
                     referencedItems
@@ -331,7 +331,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         }
     }
 
-    private expandRelation(
+    private hydrateRelation(
         entities: Entity[],
         relation: IEntitySchemaRelation,
         selection?: EntitySelectionValue

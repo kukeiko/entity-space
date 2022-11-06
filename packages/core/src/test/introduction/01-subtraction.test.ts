@@ -135,14 +135,14 @@ describe("what's reduction for?", () => {
         expect(difference).toEqual(expected);
     });
 
-    it("selection reduction", () => {
+    it("selection subtraction", () => {
         /**
          * So we have a mechanism to figure out the data we're missing on the criteria level - but what about the property level?
          *
          * We want our app to be able to only load what's needed, i.e. pick the properties we want. And sometimes we want to load
          * additional properties later on - so we'll need the same reduction mechanism to figure out what we already have in cache.
          *
-         * We call an object that tells us which properties to load a "Expansion". Our initial selection of our products will contain
+         * We call an object that tells us which properties to load a "Selection". Our initial selection of our products will contain
          * the id, the name, the price and the rating.
          */
         const basic_properties: EntitySelectionValue = {
@@ -167,12 +167,16 @@ describe("what's reduction for?", () => {
             reviews: true,
         };
 
-        const actual = EntitySelection.subtractValue(new EntitySchema("foo"), basic_properties_with_reviews, basic_properties);
+        const actual = EntitySelection.subtractValue(
+            new EntitySchema("foo"),
+            basic_properties_with_reviews,
+            basic_properties
+        );
 
         expect(actual).toEqual(expected);
     });
 
-    it("query reduction", () => {
+    it("query subtraction", () => {
         /**
          * Let's now combine both concepts: criteria + selection reduction.
          *
