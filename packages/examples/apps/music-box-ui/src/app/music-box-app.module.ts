@@ -4,7 +4,7 @@ import { FormsModule } from "@angular/forms";
 import { BrowserModule } from "@angular/platform-browser";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import { EntitySchemaCatalog } from "@entity-space/common";
-import { EntityQueryTracing, Workspace } from "@entity-space/core";
+import { EntityQueryTracing, EntityWorkspace } from "@entity-space/core";
 import { SongBlueprint, SongLocationEntitySchema } from "@entity-space/examples/libs/music-model";
 import { ButtonModule } from "primeng/button";
 import { DialogModule } from "primeng/dialog";
@@ -92,7 +92,7 @@ import { MusicBoxClientSideEntityApi } from "./music-box-client-side-entity-api"
         //     },
         // },
         {
-            provide: Workspace,
+            provide: EntityWorkspace,
             deps: [MusicBoxClientSideEntityApi, EntitySchemaCatalog, EntityQueryTracing],
             useFactory: (
                 api: MusicBoxClientSideEntityApi,
@@ -100,7 +100,7 @@ import { MusicBoxClientSideEntityApi } from "./music-box-client-side-entity-api"
                 tracing: EntityQueryTracing
             ) => {
                 console.log("🏭 new workspace");
-                const workspace = new Workspace(tracing);
+                const workspace = new EntityWorkspace(tracing);
                 workspace.interceptors = [api];
                 workspace.setStore(api);
                 workspace.setSchemaCatalog(schemas);

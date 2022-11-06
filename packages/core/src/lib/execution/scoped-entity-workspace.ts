@@ -8,10 +8,10 @@ import {
 import { fromDeepBag, MatchesBagArgument } from "@entity-space/criteria";
 import { Class, readPath, writePath } from "@entity-space/utils";
 import { map, Observable } from "rxjs";
-import { Workspace } from "./workspace";
+import { EntityWorkspace } from "./entity-workspace";
 import { EntitySelection } from "../query/entity-selection";
 
-export class ScopedByBlueprintWorkspace<T> {
+export class ScopedEntityWorkspace<T> {
     constructor({
         blueprint,
         schemas,
@@ -19,7 +19,7 @@ export class ScopedByBlueprintWorkspace<T> {
     }: {
         blueprint: Class<T>;
         schemas: EntitySchemaCatalog;
-        workspace: Workspace;
+        workspace: EntityWorkspace;
     }) {
         // this.blueprint = blueprint;
         this.schema = schemas.resolve(blueprint);
@@ -30,7 +30,7 @@ export class ScopedByBlueprintWorkspace<T> {
     // private readonly blueprint: Class<T>;
     private readonly schema: IEntitySchema;
     // private readonly schemas: EntitySchemaCatalog;
-    private readonly workspace: Workspace;
+    private readonly workspace: EntityWorkspace;
     private defaultHydrate: EntitySelectionValue<BlueprintInstance<T>> = true;
 
     oneById(

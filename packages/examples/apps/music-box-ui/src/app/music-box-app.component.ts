@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from "@angular/core";
 import { Blueprint, BlueprintInstance, define, Entity, EntitySchemaCatalog } from "@entity-space/common";
-import { EntityQuery, Workspace } from "@entity-space/core";
+import { EntityQuery, EntityWorkspace } from "@entity-space/core";
 import { inRange, matches, some } from "@entity-space/criteria";
 import {
     Artist,
@@ -50,7 +50,7 @@ type MusicBoxUiState = BlueprintInstance<MusicBoxUiStateBlueprint>;
 export class MusicAppComponent implements OnInit, OnDestroy {
     constructor(
         private primengConfig: PrimeNGConfig,
-        private readonly workspace: Workspace,
+        private readonly workspace: EntityWorkspace,
         private readonly schemas: EntitySchemaCatalog
     ) {}
 

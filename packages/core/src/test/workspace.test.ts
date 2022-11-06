@@ -1,12 +1,12 @@
 import { EntitySchema, EntitySelectionValue, IEntitySchema } from "@entity-space/common";
 import { Criterion, inSet, matches } from "@entity-space/criteria";
 import { firstValueFrom, take, tap, toArray } from "rxjs";
-import { Workspace } from "../lib/execution/workspace";
+import { EntityWorkspace } from "../lib/execution/entity-workspace";
 import { EntityQuery } from "../lib/query/entity-query";
 import { EntityQueryTracing } from "../lib/tracing/entity-query-tracing";
 
-function createWorkspace(): Workspace {
-    return new Workspace(new EntityQueryTracing());
+function createWorkspace(): EntityWorkspace {
+    return new EntityWorkspace(new EntityQueryTracing());
 }
 
 function createQuery(entitySchema: IEntitySchema, criteria: Criterion, expansion: EntitySelectionValue = {}): EntityQuery {

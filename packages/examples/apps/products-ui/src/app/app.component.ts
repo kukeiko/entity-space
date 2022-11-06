@@ -1,5 +1,5 @@
 import { Component, OnInit } from "@angular/core";
-import { EntitySourceGateway, ExpansionObject, EntityQuery, Workspace } from "@entity-space/core";
+import { EntitySourceGateway, ExpansionObject, EntityQuery, EntityWorkspace } from "@entity-space/core";
 import { Criterion, inRange, matches } from "@entity-space/criteria";
 import { Product, ProductsSchemaCatalog } from "@entity-space/examples/libs/products-model";
 import { merge } from "rxjs";
@@ -24,12 +24,12 @@ export class AppComponent implements OnInit {
         this.gateway.addSource(brandEntitySource.getEntitySchema(), brandEntitySource);
         this.gateway.addSource(userEntitySource.getEntitySchema(), userEntitySource);
 
-        this.workspace = new Workspace();
+        this.workspace = new EntityWorkspace();
         this.workspace.setSource(this.gateway);
     }
 
     gateway: EntitySourceGateway;
-    workspace: Workspace;
+    workspace: EntityWorkspace;
     queriesIssuedAgainstApi: EntityQuery[] = [];
     queriesInWorkspaceCache: EntityQuery[] = [];
     products: Product[] = [];

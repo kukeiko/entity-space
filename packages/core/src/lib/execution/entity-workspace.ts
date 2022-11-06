@@ -31,7 +31,7 @@ import { SchemaRelationBasedHydrator } from "./interceptors/schema-relation-base
 import { EntityStream } from "./entity-stream";
 import { EntityStreamPacket } from "./entity-stream-packet";
 import { runInterceptors } from "./run-interceptors.fn";
-import { ScopedByBlueprintWorkspace } from "./scoped-by-blueprint-workspace";
+import { ScopedEntityWorkspace } from "./scoped-entity-workspace";
 import { EntityQuery } from "../query/entity-query";
 import { QueryPaging } from "../query/query-paging";
 import { subtractQueries } from "../query/subtract-queries.fn";
@@ -44,7 +44,7 @@ import { IEntityStore } from "../entity/i-entity-store";
 import { InMemoryEntityDatabase } from "../entity/in-memory-entity-database";
 
 // [todo] move to "execution" folder
-export class Workspace implements IEntityStore, IEntityStreamInterceptor {
+export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
     constructor(private readonly tracing: EntityQueryTracing) {}
 
     private store?: IEntityStore;
@@ -468,12 +468,12 @@ export class Workspace implements IEntityStore, IEntityStreamInterceptor {
         return schema;
     }
 
-    scopeByBlueprint<T>(blueprint: Class<T>): ScopedByBlueprintWorkspace<T> {
+    scopeByBlueprint<T>(blueprint: Class<T>): ScopedEntityWorkspace<T> {
         // [todo] to be removed by making schemas not undefined
         if (!this.schemas) {
             throw new Error("this.schemas is falsy");
         }
 
-        return new ScopedByBlueprintWorkspace({ blueprint, schemas: this.schemas, workspace: this });
+        return new ScopedEntityWorkspace({ blueprint, schemas: this.schemas, workspace: this });
     }
 }

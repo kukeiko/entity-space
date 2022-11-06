@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, Input, OnInit } from "@angular/core";
 import { Blueprint, define, EntitySchemaCatalog } from "@entity-space/common";
-import { Workspace } from "@entity-space/core";
+import { EntityWorkspace } from "@entity-space/core";
 import { Artist, ArtistBlueprint } from "@entity-space/examples/libs/music-model";
 import { combineLatest, of } from "rxjs";
 import { map, switchMap } from "rxjs/operators";
@@ -18,7 +18,7 @@ class ArtistTableInputBlueprint {
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ArtistTableComponent implements OnInit {
-    constructor(private readonly workspace: Workspace, private readonly schemas: EntitySchemaCatalog) {}
+    constructor(private readonly workspace: EntityWorkspace, private readonly schemas: EntitySchemaCatalog) {}
 
     columns: { field: string; header: string }[] = [{ field: "name", header: "Name" }];
     stateId = 1;

@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from "@angular/core";
 import { Blueprint, define, EntitySchemaCatalog } from "@entity-space/common";
-import { Workspace } from "@entity-space/core";
+import { EntityWorkspace } from "@entity-space/core";
 import { Artist, ArtistBlueprint, Song, SongBlueprint, WebSongLocation } from "@entity-space/examples/libs/music-model";
 import { combineLatest, map, shareReplay, switchMap } from "rxjs";
 
@@ -25,7 +25,7 @@ interface SongTableState {
 })
 export class SongTableComponent {
     constructor(
-        private readonly workspace: Workspace,
+        private readonly workspace: EntityWorkspace,
         private readonly schemas: EntitySchemaCatalog,
         private readonly changeDetector: ChangeDetectorRef
     ) {}
