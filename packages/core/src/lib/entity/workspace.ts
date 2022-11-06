@@ -25,6 +25,7 @@ import { SchemaRelationBasedHydrator } from "../execution/interceptors/schema-re
 import { QueryStream } from "../execution/query-stream";
 import { QueryStreamPacket } from "../execution/query-stream-packet";
 import { runInterceptors } from "../execution/run-interceptors.fn";
+import { ScopedByBlueprintWorkspace } from "../execution/scoped-by-blueprint-workspace";
 import { Query } from "../query/query";
 import { QueryPaging } from "../query/query-paging";
 import { reduceQueries } from "../query/reduce-queries.fn";
@@ -36,6 +37,7 @@ import { normalizeEntities } from "./functions/normalize-entities.fn";
 import { IEntityStore } from "./i-entity-store";
 import { InMemoryEntityDatabase } from "./in-memory-entity-database";
 
+// [todo] move to "execution" folder
 export class Workspace implements IEntityStore, IEntityStreamInterceptor {
     constructor(private readonly tracing: EntityQueryTracing) {}
 
@@ -452,5 +454,14 @@ export class Workspace implements IEntityStore, IEntityStreamInterceptor {
         }
 
         return schema;
+    }
+
+    scopeByBlueprint<T>(blueprint: Class<T>): ScopedByBlueprintWorkspace<T> {
+        // [todo] to be removed by making schemas not undefined
+        if (!this.schemas) {
+            throw new Error("this.schemas is falsy");
+        }
+
+        return new ScopedByBlueprintWorkspace({ blueprint, schemas: this.schemas, workspace: this });
     }
 }

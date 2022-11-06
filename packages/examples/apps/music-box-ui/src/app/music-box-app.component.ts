@@ -11,9 +11,9 @@ import {
     SongLocationType,
     SongLocationTypeBlueprint,
 } from "@entity-space/examples/libs/music-model";
-import { pluckId, writePath } from "@entity-space/utils";
+import { isDefined, pluckId, writePath } from "@entity-space/utils";
 import { PrimeNGConfig } from "primeng/api";
-import { combineLatest, debounceTime, map, of, shareReplay, Subject, switchMap, takeUntil } from "rxjs";
+import { combineLatest, debounceTime, filter, map, of, shareReplay, Subject, switchMap, takeUntil } from "rxjs";
 
 interface MusicBoxAppState {
     data: {
@@ -59,50 +59,29 @@ export class MusicAppComponent implements OnInit, OnDestroy {
     cachedQueries: Query[] = [];
 
     stateId = 1;
+    uiState = this.workspace.scopeByBlueprint(MusicBoxUiStateBlueprint).oneById(this.stateId).pipe(filter(isDefined));
+    artists = this.workspace.scopeByBlueprint(ArtistBlueprint);
+    songLocationTypes = this.workspace.scopeByBlueprint(SongLocationTypeBlueprint);
+    songs = this.workspace.scopeByBlueprint(SongBlueprint).withDefaultHydration({
+        id: true,
+        artistId: true,
+        duration: true,
+        name: true,
+        // locations: { id: true, url: true, songLocationType: true },
+        locations: { songLocationType: true },
+    });
 
-    state$ = this.workspace.queryOneByKey$(MusicBoxUiStateBlueprint, this.stateId).pipe(
+    state$ = this.uiState.pipe(
         switchMap(ui =>
             combineLatest([
                 of(ui),
-                this.workspace.query$(ArtistBlueprint, void 0, { id: true, name: true }),
-                this.workspace.query$(SongLocationTypeBlueprint),
-                this.workspace.query$(
-                    SongBlueprint,
-                    {
-                        artistId: pluckId(ui.filter.artists),
-                        locations: some(matches<SongLocation>({ songLocationType: pluckId(ui.filter.locationTypes) })),
-                        duration: inRange(ui.filter.duration[0] ?? void 0, ui.filter.duration[1] ?? void 0),
-                    },
-                    {
-                        id: true,
-                        artistId: true,
-                        duration: true,
-                        name: true,
-                        locations: { id: true, songLocationType: true },
-                    }
-                    // ui.filter.searchText ? { searchText: ui.filter.searchText } : void 0
-                ),
-                // ui.filter.searchText
-                //     ? this.workspace.query$(
-                //           SongBlueprint,
-                //           {
-                //               artistId: pluckId(ui.filter.artists),
-                //               locations: some(
-                //                   matches<SongLocation>({ songLocationType: pluckId(ui.filter.locationTypes) })
-                //               ),
-                //               duration: inRange(ui.filter.duration[0] ?? void 0, ui.filter.duration[1] ?? void 0),
-                //           },
-                //           {
-                //               id: true,
-                //               artistId: true,
-                //               duration: true,
-                //               name: true,
-                //               locations: { id: true, songLocationType: true },
-                //           },
-                //           { searchText: ui.filter.searchText },
-                //           { from: ui.filter.paging[0], to: ui.filter.paging[1] }
-                //       )
-                //     : of([]),
+                this.artists.all(),
+                this.songLocationTypes.all(),
+                this.songs.many({
+                    artistId: pluckId(ui.filter.artists),
+                    locations: some(matches<SongLocation>({ songLocationType: pluckId(ui.filter.locationTypes) })),
+                    duration: inRange(ui.filter.duration[0] ?? void 0, ui.filter.duration[1] ?? void 0),
+                }),
             ])
         ),
         map(([ui, artists, songLocationTypes, songs]) => this.toState(ui, songs, artists, songLocationTypes)),
