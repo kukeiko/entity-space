@@ -8,7 +8,7 @@ import { InMemoryEntityDatabase } from "../entity/in-memory-entity-database";
 import { EntityQueryShape } from "../query/entity-query-shape";
 import { EntityQuery } from "../query/entity-query";
 import { subtractQueries } from "../query/subtract-queries.fn";
-import { EntityQueryTracing } from "../tracing/entity-query-tracing";
+import { EntityQueryTracing } from "./entity-query-tracing";
 import { EntityApiEndpoint, EntityApiEndpointData, EntityApiEndpointInvoke } from "./entity-api-endpoint";
 import { EntityApiEndpointBuilder } from "./entity-api-endpoint-builder";
 import { IEntityStreamInterceptor } from "./i-entity-stream-interceptor";

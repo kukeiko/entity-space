@@ -8,7 +8,7 @@ import { EntitySelection } from "../../query/entity-selection";
 import { EntityQuery } from "../../query/entity-query";
 import { mergeQueries } from "../../query/merge-queries.fn";
 import { subtractQueries } from "../../query/subtract-queries.fn";
-import { EntityQueryTracing } from "../../tracing/entity-query-tracing";
+import { EntityQueryTracing } from "../entity-query-tracing";
 import { IEntityStreamInterceptor } from "../i-entity-stream-interceptor";
 import { EntityStream } from "../entity-stream";
 import { EntityStreamPacket } from "../entity-stream-packet";

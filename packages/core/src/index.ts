@@ -25,4 +25,4 @@ export * from "./lib/query/merge-query.fn";
 export * from "./lib/query/entity-query";
 export * from "./lib/query/subtract-queries.fn";
 export * from "./lib/query/subtract-query.fn";
-export * from "./lib/tracing/entity-query-tracing";
+export * from "./lib/execution/entity-query-tracing";

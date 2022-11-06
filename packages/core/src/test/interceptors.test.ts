@@ -8,7 +8,7 @@ import { SchemaRelationBasedHydrator } from "../lib/execution/interceptors/schem
 import { EntityStreamPacket } from "../lib/execution/entity-stream-packet";
 import { runInterceptors } from "../lib/execution/run-interceptors.fn";
 import { EntityQuery } from "../lib/query/entity-query";
-import { EntityQueryTracing } from "../lib/tracing/entity-query-tracing";
+import { EntityQueryTracing } from "../lib/execution/entity-query-tracing";
 import { TestContentData, TestContentDatabase, TestContentEntityApi, User, UserBlueprint } from "./content";
 import { TestContentCatalog } from "./content/test-content-catalog";
 import { createQuery } from "./tools/create-query.fn";

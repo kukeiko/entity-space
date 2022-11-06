@@ -1,5 +1,5 @@
 import { ICriterionShape } from "@entity-space/criteria";
-import { EntityStreamPacket } from "../execution/entity-stream-packet";
+import { EntityStreamPacket } from "./entity-stream-packet";
 import { EntityQuery } from "../query/entity-query";
 
 export class EntityQueryTracing {

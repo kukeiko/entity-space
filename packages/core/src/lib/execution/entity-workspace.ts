@@ -35,7 +35,7 @@ import { ScopedEntityWorkspace } from "./scoped-entity-workspace";
 import { EntityQuery } from "../query/entity-query";
 import { QueryPaging } from "../query/query-paging";
 import { subtractQueries } from "../query/subtract-queries.fn";
-import { EntityQueryTracing } from "../tracing/entity-query-tracing";
+import { EntityQueryTracing } from "./entity-query-tracing";
 import { EntitySet } from "../entity/data-structures/entity-set";
 import { createCriterionFromEntities } from "../entity/functions/create-criterion-from-entities.fn";
 import { createIdQueryFromEntities } from "../entity/functions/create-id-query-from-entities.fn";

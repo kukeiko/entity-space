@@ -3,7 +3,7 @@ import { Criterion, inSet, matches } from "@entity-space/criteria";
 import { firstValueFrom, take, tap, toArray } from "rxjs";
 import { EntityWorkspace } from "../lib/execution/entity-workspace";
 import { EntityQuery } from "../lib/query/entity-query";
-import { EntityQueryTracing } from "../lib/tracing/entity-query-tracing";
+import { EntityQueryTracing } from "../lib/execution/entity-query-tracing";
 
 function createWorkspace(): EntityWorkspace {
     return new EntityWorkspace(new EntityQueryTracing());

@@ -1,6 +1,6 @@
 import { isValueShape } from "@entity-space/criteria";
 import { EntityApi } from "../../index";
-import { EntityQueryTracing } from "../../lib/tracing/entity-query-tracing";
+import { EntityQueryTracing } from "../../lib/execution/entity-query-tracing";
 import { UserBlueprint } from "./common/user.model";
 import { TestContentCatalog } from "./test-content-catalog";
 import { TestContentDatabase } from "./test-content-database";
