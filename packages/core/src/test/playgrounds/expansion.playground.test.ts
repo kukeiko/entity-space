@@ -1,4 +1,4 @@
-import { BlueprintInstance, define, Expand, ExpansionValue } from "@entity-space/common";
+import { BlueprintInstance, define, Select, EntitySelectionValue } from "@entity-space/common";
 import { Unbox } from "@entity-space/utils";
 import { Canvas, CanvasBlueprint, ProductBlueprint, ShapeBlueprints, Square } from "../content";
 
@@ -9,7 +9,7 @@ import { Canvas, CanvasBlueprint, ProductBlueprint, ShapeBlueprints, Square } fr
 
 xdescribe("playground: expansion", () => {
     it("simple expand w/ union types", () => {
-        function takesExpansion<E extends ExpansionValue<Canvas>>(expansion: E): typeof expansion {
+        function takesExpansion<E extends EntitySelectionValue<Canvas>>(expansion: E): typeof expansion {
             return {} as any;
         }
 
@@ -62,13 +62,13 @@ xdescribe("playground: expansion", () => {
             },
         };
 
-        function takesUserExpansion<E extends ExpansionValue<CustomUser>>(expansion: E): typeof expansion {
+        function takesUserExpansion<E extends EntitySelectionValue<CustomUser>>(expansion: E): typeof expansion {
             return {} as any;
         }
 
         const simpleExpansion = takesUserExpansion({ updatedBy: true, children: { shapes: true } });
 
-        type SimpleExpandedUser = Expand<CustomUser, typeof simpleExpansion>;
+        type SimpleExpandedUser = Select<CustomUser, typeof simpleExpansion>;
 
         const simpleExpandedUser: SimpleExpandedUser = {
             id: 1,
@@ -76,7 +76,7 @@ xdescribe("playground: expansion", () => {
             children: [{ id: 2, shapes: [{ id: 3, type: "circle", radius: 3 }] }],
         };
 
-        type Foo = ExpansionValue<Square[]>;
+        type Foo = EntitySelectionValue<Square[]>;
 
         const deepExpansion = takesUserExpansion({
             id: true,
@@ -86,7 +86,7 @@ xdescribe("playground: expansion", () => {
             children: {},
         });
 
-        type ExpandedUserInstance = Expand<CustomUser, typeof deepExpansion>;
+        type ExpandedUserInstance = Select<CustomUser, typeof deepExpansion>;
 
         const expandedUser: ExpandedUserInstance = {
             id: 1,
@@ -138,7 +138,7 @@ xdescribe("playground: expansion", () => {
 
         type Baz = BazA | BazB;
 
-        function isExpanded<T, E extends ExpansionValue<T>>(entity: T, expansion: E): entity is T & Expand<T, E> {
+        function isExpanded<T, E extends ExpansionValue<T>>(entity: T, expansion: E): entity is T & Select<T, E> {
             return true;
         }
 

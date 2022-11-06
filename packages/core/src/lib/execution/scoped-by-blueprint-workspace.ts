@@ -1,9 +1,15 @@
-import { BlueprintInstance, Entity, EntitySchemaCatalog, ExpansionValue, IEntitySchema } from "@entity-space/common";
+import {
+    BlueprintInstance,
+    Entity,
+    EntitySchemaCatalog,
+    EntitySelectionValue,
+    IEntitySchema,
+} from "@entity-space/common";
 import { fromDeepBag, MatchesBagArgument } from "@entity-space/criteria";
 import { Class, readPath, writePath } from "@entity-space/utils";
-import { map, Observable, of } from "rxjs";
+import { map, Observable } from "rxjs";
 import { Workspace } from "../entity/workspace";
-import { Expansion } from "../expansion/expansion";
+import { EntitySelection } from "../expansion/expansion";
 
 export class ScopedByBlueprintWorkspace<T> {
     constructor({
@@ -25,11 +31,11 @@ export class ScopedByBlueprintWorkspace<T> {
     private readonly schema: IEntitySchema;
     // private readonly schemas: EntitySchemaCatalog;
     private readonly workspace: Workspace;
-    private defaultHydrate: ExpansionValue<BlueprintInstance<T>> = true;
+    private defaultHydrate: EntitySelectionValue<BlueprintInstance<T>> = true;
 
     oneById(
         id: number | string | Entity,
-        hydrate: ExpansionValue<BlueprintInstance<T>> = true
+        hydrate: EntitySelectionValue<BlueprintInstance<T>> = true
     ): Observable<BlueprintInstance<T> | undefined> {
         let bag: Record<string, any>;
         const keyPaths = this.schema.getKey().getPath();
@@ -50,7 +56,7 @@ export class ScopedByBlueprintWorkspace<T> {
 
         const criterion = fromDeepBag(bag);
 
-        hydrate = Expansion.mergeValues(this.schema, hydrate, this.defaultHydrate) as ExpansionValue<
+        hydrate = EntitySelection.mergeValues(this.schema, hydrate, this.defaultHydrate) as EntitySelectionValue<
             BlueprintInstance<T>
         >;
 
@@ -59,8 +65,8 @@ export class ScopedByBlueprintWorkspace<T> {
             .pipe(map(entities => entities[0]));
     }
 
-    all(hydrate: ExpansionValue<BlueprintInstance<T>> = true): Observable<BlueprintInstance<T>[]> {
-        hydrate = Expansion.mergeValues(this.schema, hydrate, this.defaultHydrate) as ExpansionValue<
+    all(hydrate: EntitySelectionValue<BlueprintInstance<T>> = true): Observable<BlueprintInstance<T>[]> {
+        hydrate = EntitySelection.mergeValues(this.schema, hydrate, this.defaultHydrate) as EntitySelectionValue<
             BlueprintInstance<T>
         >;
 
@@ -69,16 +75,16 @@ export class ScopedByBlueprintWorkspace<T> {
 
     many(
         criteria: MatchesBagArgument<BlueprintInstance<T>>,
-        hydrate: ExpansionValue<BlueprintInstance<T>> = true
+        hydrate: EntitySelectionValue<BlueprintInstance<T>> = true
     ): Observable<BlueprintInstance<T>[]> {
-        hydrate = Expansion.mergeValues(this.schema, hydrate, this.defaultHydrate) as ExpansionValue<
+        hydrate = EntitySelection.mergeValues(this.schema, hydrate, this.defaultHydrate) as EntitySelectionValue<
             BlueprintInstance<T>
         >;
 
         return this.workspace.query$<BlueprintInstance<T>>(this.schema, criteria, hydrate);
     }
 
-    withDefaultHydration(hydrate: ExpansionValue<BlueprintInstance<T>>): this {
+    withDefaultHydration(hydrate: EntitySelectionValue<BlueprintInstance<T>>): this {
         this.defaultHydrate = hydrate;
         return this;
     }

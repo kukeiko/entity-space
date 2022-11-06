@@ -1,4 +1,4 @@
-import { BlueprintInstance, Entity, EntitySchemaCatalog, ExpansionValue, IEntitySchema } from "@entity-space/common";
+import { BlueprintInstance, Entity, EntitySchemaCatalog, EntitySelectionValue, IEntitySchema } from "@entity-space/common";
 import { any, Criterion, fromDeepBag, isValue, matches, MatchesBagArgument, never } from "@entity-space/criteria";
 import { Class, DeepPartial, isDefined, isNotFalse, writePath } from "@entity-space/utils";
 import { flatMap, isEqual, xor, xorWith } from "lodash";
@@ -154,7 +154,7 @@ export class Workspace implements IEntityStore, IEntityStreamInterceptor {
     hydrate$<T>(
         blueprint: Class<T>,
         entities: BlueprintInstance<T>[],
-        expansion: ExpansionValue<BlueprintInstance<T>>
+        expansion: EntitySelectionValue<BlueprintInstance<T>>
     ): Observable<BlueprintInstance<T>[]> {
         if (!entities.length) {
             return of([]);
@@ -211,19 +211,19 @@ export class Workspace implements IEntityStore, IEntityStreamInterceptor {
     query$<T extends Entity>(
         schema: IEntitySchema,
         criterion?: Criterion | MatchesBagArgument<T>,
-        expansion?: ExpansionValue<T>
+        expansion?: EntitySelectionValue<T>
     ): Observable<T[]>;
     query$<T extends Entity>(
         schema: Class<T>,
         criterion?: MatchesBagArgument<T>,
-        expansion?: ExpansionValue<BlueprintInstance<T>>,
+        expansion?: EntitySelectionValue<BlueprintInstance<T>>,
         options?: MatchesBagArgument<Entity>,
         paging?: { skip?: number; top?: number; from?: number; to?: number }
     ): Observable<BlueprintInstance<T>[]>;
     query$<T extends Entity>(
         schema: IEntitySchema | Class<T>,
         criterion: any = any(),
-        expansion: ExpansionValue<T> = {},
+        expansion: EntitySelectionValue<T> = {},
         options: any = never(),
         paging?: { skip?: number; top?: number; from?: number; to?: number }
     ): Observable<T[]> {
@@ -349,17 +349,17 @@ export class Workspace implements IEntityStore, IEntityStreamInterceptor {
     queryOneByKey$<T extends Entity>(
         schema: IEntitySchema,
         key: number | string,
-        expansion?: ExpansionValue<T>
+        expansion?: EntitySelectionValue<T>
     ): Observable<T>;
     queryOneByKey$<T>(
         schema: Class<T>,
         key: number | string,
-        expansion?: ExpansionValue<BlueprintInstance<T>>
+        expansion?: EntitySelectionValue<BlueprintInstance<T>>
     ): Observable<BlueprintInstance<T>>;
     queryOneByKey$<T extends Entity>(
         schema: IEntitySchema | Class<T>,
         key: number | string,
-        expansion: ExpansionValue<T> = {}
+        expansion: EntitySelectionValue<T> = {}
     ): Observable<T> {
         if (!("getId" in schema)) {
             const resolvedSchema = this.schemas?.resolve(schema);

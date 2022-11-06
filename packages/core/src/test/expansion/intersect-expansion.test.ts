@@ -1,9 +1,9 @@
-import { EntitySchema, ExpansionValue } from "@entity-space/common";
-import { Expansion } from "../../lib/expansion/expansion";
+import { EntitySchema, EntitySelectionValue } from "@entity-space/common";
+import { EntitySelection } from "../../lib/expansion/expansion";
 
-function intersectExpansion(a: ExpansionValue, b: ExpansionValue): boolean | ExpansionValue {
+function intersectExpansion(a: EntitySelectionValue, b: EntitySelectionValue): boolean | EntitySelectionValue {
     const schema = new EntitySchema("foo");
-    const intersected = new Expansion({ schema, value: b }).intersect(new Expansion({ schema, value: a }));
+    const intersected = new EntitySelection({ schema, value: b }).intersect(new EntitySelection({ schema, value: a }));
 
     if (typeof intersected === "boolean") {
         return intersected;
@@ -15,9 +15,9 @@ function intersectExpansion(a: ExpansionValue, b: ExpansionValue): boolean | Exp
 describe("expansion: intersect", () => {
     it("{ foo, bar } intersected with { foo } should be { foo }", () => {
         // arrange
-        const a: ExpansionValue = { foo: true, bar: true };
-        const b: ExpansionValue = { foo: true };
-        const expected: ExpansionValue = { foo: true };
+        const a: EntitySelectionValue = { foo: true, bar: true };
+        const b: EntitySelectionValue = { foo: true };
+        const expected: EntitySelectionValue = { foo: true };
 
         // act
         const intersected_A_with_B = intersectExpansion(a, b);
@@ -30,9 +30,9 @@ describe("expansion: intersect", () => {
 
     it("{ foo, bar: { baz, khaz } } intersected with { bar } should be { bar: { baz, khaz } }", () => {
         // arrange
-        const a: ExpansionValue = { foo: true, bar: { baz: true, khaz: true } };
-        const b: ExpansionValue = { bar: true };
-        const expected: ExpansionValue = { bar: { baz: true, khaz: true } };
+        const a: EntitySelectionValue = { foo: true, bar: { baz: true, khaz: true } };
+        const b: EntitySelectionValue = { bar: true };
+        const expected: EntitySelectionValue = { bar: { baz: true, khaz: true } };
 
         // act
         const intersected_A_with_B = intersectExpansion(a, b);
@@ -45,8 +45,8 @@ describe("expansion: intersect", () => {
 
     it("{ foo } intersected with { bar } should be false", () => {
         // arrange
-        const a: ExpansionValue = { foo: true };
-        const b: ExpansionValue = { bar: true };
+        const a: EntitySelectionValue = { foo: true };
+        const b: EntitySelectionValue = { bar: true };
         const expected = false;
 
         // act

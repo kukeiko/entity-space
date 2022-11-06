@@ -1,13 +1,13 @@
 import { IEntitySchema } from "@entity-space/common";
 import { anyTemplate, Criterion, ICriterionTemplate, neverTemplate } from "@entity-space/criteria";
 import { permutateEntries } from "@entity-space/utils";
-import { Expansion } from "../expansion/expansion";
+import { EntitySelection } from "../expansion/expansion";
 import { EntityQuery } from "./entity-query";
 
 type RemappedParts = {
     options: false | Criterion[];
     criterion: false | Criterion[];
-    expansion: false | Expansion;
+    expansion: false | EntitySelection;
 };
 
 type WithoutFalse<T> = {
@@ -28,18 +28,18 @@ export class EntityQueryTemplate {
         schema: IEntitySchema;
         options?: ICriterionTemplate;
         criterion?: ICriterionTemplate;
-        expansion?: Expansion;
+        expansion?: EntitySelection;
     }) {
         this.schema = schema;
         this.options = options ?? neverTemplate();
         this.criterion = criterion ?? anyTemplate();
-        this.expansion = expansion ?? new Expansion({ schema, value: true });
+        this.expansion = expansion ?? new EntitySelection({ schema, value: true });
     }
 
     private readonly schema: IEntitySchema;
     private readonly options: ICriterionTemplate;
     private readonly criterion: ICriterionTemplate;
-    private readonly expansion: Expansion;
+    private readonly expansion: EntitySelection;
 
     remap(query: EntityQuery): false | EntityQuery[] {
         // [todo] can be removed if i decide to make remap() result of ICriterionTemplate just an array

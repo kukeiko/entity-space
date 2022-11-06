@@ -1,6 +1,6 @@
-import { ExpansionValue, IEntitySchema } from "@entity-space/common";
+import { EntitySelectionValue, IEntitySchema } from "@entity-space/common";
 import { any, AnyCriterion, Criterion, NamedCriteria, never, NeverCriterion } from "@entity-space/criteria";
-import { Expansion } from "../expansion/expansion";
+import { EntitySelection } from "../expansion/expansion";
 import { QueryPaging } from "./query-paging";
 import { subtractQueries } from "./subtract-queries.fn";
 
@@ -8,7 +8,7 @@ export interface EntityQueryCtorArg {
     entitySchema: IEntitySchema;
     criteria?: Criterion;
     options?: Criterion;
-    expansion?: Expansion | ExpansionValue;
+    expansion?: EntitySelection | EntitySelectionValue;
     paging?: QueryPaging;
 }
 
@@ -19,17 +19,17 @@ export class EntityQuery {
         this.criteria = criteria;
         this.expansion =
             expansion === void 0
-                ? new Expansion({ schema: entitySchema, value: true })
-                : expansion instanceof Expansion
+                ? new EntitySelection({ schema: entitySchema, value: true })
+                : expansion instanceof EntitySelection
                 ? expansion
-                : new Expansion({ schema: entitySchema, value: expansion });
+                : new EntitySelection({ schema: entitySchema, value: expansion });
         this.paging = paging;
     }
 
     private readonly entitySchema: IEntitySchema;
     private readonly criteria: Criterion;
     private readonly options: Criterion;
-    private readonly expansion: Expansion;
+    private readonly expansion: EntitySelection;
     private readonly paging?: QueryPaging;
 
     getEntitySchema(): IEntitySchema {
@@ -52,7 +52,7 @@ export class EntityQuery {
         return new EntityQuery({ entitySchema: this.entitySchema, criteria, expansion: this.expansion });
     }
 
-    getExpansion(): Expansion {
+    getExpansion(): EntitySelection {
         return this.expansion;
     }
 
@@ -64,7 +64,7 @@ export class EntityQuery {
         return new EntityQuery({ entitySchema: this.entitySchema, criteria: this.criteria });
     }
 
-    withExpansion(expansion: Expansion | ExpansionValue): EntityQuery {
+    withExpansion(expansion: EntitySelection | EntitySelectionValue): EntityQuery {
         return new EntityQuery({ entitySchema: this.entitySchema, criteria: this.criteria, expansion });
     }
 

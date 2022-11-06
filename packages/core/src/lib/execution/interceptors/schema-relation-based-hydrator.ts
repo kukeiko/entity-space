@@ -1,10 +1,10 @@
-import { ExpansionValue, IEntitySchemaRelation } from "@entity-space/common";
+import { EntitySelectionValue, IEntitySchemaRelation } from "@entity-space/common";
 import { and, fromDeepBag } from "@entity-space/criteria";
 import { isNotFalse, writePath } from "@entity-space/utils";
 import { map, merge, of, switchMap, takeLast, tap } from "rxjs";
 import { EntitySet } from "../../entity/data-structures/entity-set";
 import { createCriterionFromEntities } from "../../entity/functions/create-criterion-from-entities.fn";
-import { Expansion } from "../../expansion/expansion";
+import { EntitySelection } from "../../expansion/expansion";
 import { EntityQuery } from "../../query/entity-query";
 import { mergeQueries } from "../../query/merge-queries.fn";
 import { subtractQueries } from "../../query/subtract-queries.fn";
@@ -90,7 +90,7 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
     private toHydrateRelationQuery(
         entitySet: EntitySet,
         key: string,
-        expansionValue: ExpansionValue
+        expansionValue: EntitySelectionValue
     ): false | [EntityQuery, IEntitySchemaRelation] {
         if (expansionValue === void 0) {
             return false;
@@ -189,7 +189,7 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
                             writePath(
                                 relation.getPropertyName(),
                                 {},
-                                Expansion.mergeValues(
+                                EntitySelection.mergeValues(
                                     hydrationQuery.getEntitySchema(),
                                     ...accepted.map(q => q.getExpansionValue())
                                 )
@@ -201,7 +201,7 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
                             writePath(
                                 relation.getPropertyName(),
                                 {},
-                                Expansion.mergeValues(
+                                EntitySelection.mergeValues(
                                     hydrationQuery.getEntitySchema(),
                                     ...rejected.map(q => q.getExpansionValue())
                                 )
@@ -214,7 +214,7 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
                     [
                         hydrationQuery.withExpansion(
                             hydrationQuery.getExpansion().merge(
-                                new Expansion({
+                                new EntitySelection({
                                     schema: hydrationQuery.getEntitySchema(),
                                     value: { [relation.getPropertyName()]: relationQuery.getExpansionValue() },
                                 })
@@ -229,7 +229,7 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
                     [
                         hydrationQuery.withExpansion(
                             hydrationQuery.getExpansion().merge(
-                                new Expansion({
+                                new EntitySelection({
                                     schema: hydrationQuery.getEntitySchema(),
                                     value: { [relation.getPropertyName()]: relationQuery.getExpansionValue() },
                                 })

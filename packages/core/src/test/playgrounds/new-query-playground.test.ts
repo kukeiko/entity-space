@@ -1,4 +1,4 @@
-import { BlueprintInstance, Expand, ExpansionValue } from "@entity-space/common";
+import { BlueprintInstance, Select, EntitySelectionValue } from "@entity-space/common";
 import { NamedCriteriaBag } from "@entity-space/criteria";
 import { Class } from "@entity-space/utils";
 import { CanvasBlueprint, Product, ShapeBlueprints, User, UserBlueprint } from "../content";
@@ -7,7 +7,7 @@ xdescribe("new query playground", () => {
     it("working example #1", () => {
         // [todo] i don't need "E extends Expansion<T>", but can instead just do "E = Expansion<T>" and intellisense fully works. what?
         // i want to understand why
-        function query<T, E = ExpansionValue<T>>(type: T, criteria: NamedCriteriaBag, expansion: E): Expand<T, E> {
+        function query<T, E = EntitySelectionValue<T>>(type: T, criteria: NamedCriteriaBag, expansion: E): Select<T, E> {
             return {} as any;
         }
 
@@ -17,11 +17,11 @@ xdescribe("new query playground", () => {
     });
 
     it("working example #2", () => {
-        function query<T, E = ExpansionValue<BlueprintInstance<T>>>(
+        function query<T, E = EntitySelectionValue<BlueprintInstance<T>>>(
             type: Class<T>,
             criteria: NamedCriteriaBag,
             expansion: E
-        ): Expand<BlueprintInstance<T>, E> {
+        ): Select<BlueprintInstance<T>, E> {
             return {} as any;
         }
 
@@ -36,11 +36,11 @@ xdescribe("new query playground", () => {
     });
 
     it("working example #3", () => {
-        function query<T, E = ExpansionValue<BlueprintInstance<T>>>(
+        function query<T, E = EntitySelectionValue<BlueprintInstance<T>>>(
             type: Class<T>,
             criteria: NamedCriteriaBag,
             expansion: E
-        ): Expand<BlueprintInstance<T>, E> {
+        ): Select<BlueprintInstance<T>, E> {
             return {} as any;
         }
 
@@ -62,11 +62,11 @@ xdescribe("new query playground", () => {
     });
 
     it("working example #4", () => {
-        function query<U extends Class[], E = ExpansionValue<BlueprintInstance<InstanceType<U[number]>>>>(
+        function query<U extends Class[], E = EntitySelectionValue<BlueprintInstance<InstanceType<U[number]>>>>(
             type: U,
             criteria: NamedCriteriaBag,
             expansion: E
-        ): Expand<BlueprintInstance<InstanceType<U[number]>>, E> {
+        ): Select<BlueprintInstance<InstanceType<U[number]>>, E> {
             return {} as any;
         }
 

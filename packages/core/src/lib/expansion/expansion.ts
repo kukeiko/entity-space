@@ -1,20 +1,20 @@
-import { ExpansionValue, IEntitySchema } from "@entity-space/common";
+import { EntitySelectionValue, IEntitySchema } from "@entity-space/common";
 
 // [todo] implement toUnfoldedExpansion()
-export class Expansion {
-    static create({ schema, value }: { value: ExpansionValue; schema: IEntitySchema }): Expansion {
-        return new Expansion({ schema, value });
+export class EntitySelection {
+    static create({ schema, value }: { value: EntitySelectionValue; schema: IEntitySchema }): EntitySelection {
+        return new EntitySelection({ schema, value });
     }
 
-    constructor({ schema, value }: { value: ExpansionValue; schema: IEntitySchema }) {
+    constructor({ schema, value }: { value: EntitySelectionValue; schema: IEntitySchema }) {
         this.value = value;
         this.schema = schema;
     }
 
-    private readonly value: ExpansionValue;
+    private readonly value: EntitySelectionValue;
     private readonly schema: IEntitySchema;
 
-    getValue(): ExpansionValue {
+    getValue(): EntitySelectionValue {
         return this.value;
     }
 
@@ -23,10 +23,10 @@ export class Expansion {
     }
 
     toString(): string {
-        return Expansion.toString(this.value);
+        return EntitySelection.toString(this.value);
     }
 
-    static toString(value?: ExpansionValue): string {
+    static toString(value?: EntitySelectionValue): string {
         // [todo] expansion value allowing undefined is a bit of a pain, gotta fix that somehow.
         if (value === true || value === void 0) {
             return "";
@@ -37,32 +37,32 @@ export class Expansion {
             .join(", ")} }`;
     }
 
-    subtractFrom(other: Expansion): boolean | Expansion {
+    subtractFrom(other: EntitySelection): boolean | EntitySelection {
         if (other.isEmpty()) {
             return true;
         }
 
-        const subtracted = Expansion.subtractValue(this.schema, other.getValue(), this.getValue());
+        const subtracted = EntitySelection.subtractValue(this.schema, other.getValue(), this.getValue());
 
         if (typeof subtracted == "boolean") {
             return subtracted;
         } else {
-            return new Expansion({ schema: this.schema, value: subtracted });
+            return new EntitySelection({ schema: this.schema, value: subtracted });
         }
     }
 
-    intersect(other: Expansion): false | Expansion {
-        const intersection = Expansion.intersectValues(this.schema, this.getValue(), other.getValue());
+    intersect(other: EntitySelection): false | EntitySelection {
+        const intersection = EntitySelection.intersectValues(this.schema, this.getValue(), other.getValue());
 
-        return intersection ? new Expansion({ schema: this.schema, value: intersection }) : false;
+        return intersection ? new EntitySelection({ schema: this.schema, value: intersection }) : false;
     }
 
-    equivalent(other: Expansion): boolean {
+    equivalent(other: EntitySelection): boolean {
         return other.subtractFrom(this) === true && this.subtractFrom(other) === true;
     }
 
-    static intersectValues(schema: IEntitySchema, a: ExpansionValue, b: ExpansionValue): false | ExpansionValue {
-        const intersection: ExpansionValue = {};
+    static intersectValues(schema: IEntitySchema, a: EntitySelectionValue, b: EntitySelectionValue): false | EntitySelectionValue {
+        const intersection: EntitySelectionValue = {};
 
         if (a === true) {
             a = schema.getDefaultExpansion();
@@ -103,19 +103,19 @@ export class Expansion {
         return Object.keys(intersection).length ? intersection : false;
     }
 
-    merge(other: Expansion): Expansion {
-        return new Expansion({
+    merge(other: EntitySelection): EntitySelection {
+        return new EntitySelection({
             schema: this.schema,
-            value: Expansion.mergeValues(this.schema, this.getValue(), other.getValue()),
+            value: EntitySelection.mergeValues(this.schema, this.getValue(), other.getValue()),
         });
     }
 
-    static copyValue(schema: IEntitySchema, object: ExpansionValue): Exclude<ExpansionValue, true> {
+    static copyValue(schema: IEntitySchema, object: EntitySelectionValue): Exclude<EntitySelectionValue, true> {
         return this.mergeValues(schema, object);
     }
 
-    static mergeValues(schema: IEntitySchema, ...objects: ExpansionValue[]): Exclude<ExpansionValue, true> {
-        const merged: ExpansionValue = {};
+    static mergeValues(schema: IEntitySchema, ...objects: EntitySelectionValue[]): Exclude<EntitySelectionValue, true> {
+        const merged: EntitySelectionValue = {};
 
         for (let selection of objects) {
             if (selection === true) {
@@ -145,12 +145,12 @@ export class Expansion {
         return merged;
     }
 
-    static subtractValue(schema: IEntitySchema, what: ExpansionValue, by: ExpansionValue): boolean | ExpansionValue {
+    static subtractValue(schema: IEntitySchema, what: EntitySelectionValue, by: EntitySelectionValue): boolean | EntitySelectionValue {
         if (Object.keys(what).length === 0) {
             return true;
         }
 
-        const reduced: Exclude<ExpansionValue, true> = this.copyValue(schema, what);
+        const reduced: Exclude<EntitySelectionValue, true> = this.copyValue(schema, what);
         let didReduce = false;
 
         if (what === true) {

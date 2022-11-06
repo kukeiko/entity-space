@@ -1,11 +1,11 @@
-import { EntitySchema, EntitySchemaCatalog, ExpansionValue } from "@entity-space/common";
+import { EntitySchema, EntitySchemaCatalog, EntitySelectionValue } from "@entity-space/common";
 import { Criterion, inRange, matches, or } from "@entity-space/criteria";
 import { mergeQueries } from "../../lib/query/merge-queries.fn";
 import { mergeQuery } from "../../lib/query/merge-query.fn";
 import { parseQuery } from "../../lib/query/parse-query.fn";
 import { EntityQuery } from "../../lib/query/entity-query";
 
-function createQuery(criteria: Criterion, expansion: ExpansionValue = {}): EntityQuery {
+function createQuery(criteria: Criterion, expansion: EntitySelectionValue = {}): EntityQuery {
     return new EntityQuery({ entitySchema: new EntitySchema("user"), criteria, expansion });
 }
 

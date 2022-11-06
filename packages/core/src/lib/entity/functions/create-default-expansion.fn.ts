@@ -1,6 +1,6 @@
-import { ExpansionValue, IEntitySchema } from "@entity-space/common";
+import { EntitySelectionValue, IEntitySchema } from "@entity-space/common";
 
-export function createDefaultExpansion(schema: IEntitySchema): ExpansionValue {
+export function createDefaultExpansion(schema: IEntitySchema): EntitySelectionValue {
     return schema
         .getProperties()
         .filter(property => !schema.findRelation(property.getName()))

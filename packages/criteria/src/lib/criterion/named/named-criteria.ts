@@ -1,4 +1,4 @@
-import { ExpansionValue } from "@entity-space/common";
+import { EntitySelectionValue } from "@entity-space/common";
 import { AndCriteria } from "../and/and-criteria";
 import { AnyCriterion } from "../any/any";
 import { Criteria } from "../criteria";
@@ -287,7 +287,7 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag, R exte
         }
     }
 
-    static omitExpansion(criterion: Criterion, expansion: ExpansionValue): Criterion {
+    static omitExpansion(criterion: Criterion, expansion: EntitySelectionValue): Criterion {
         if (expansion === true) {
             throw new Error("omitting by expansion value 'true' not supported");
         }

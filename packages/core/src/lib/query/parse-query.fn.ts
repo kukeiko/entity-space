@@ -1,4 +1,4 @@
-import { EntitySchemaCatalog, ExpansionValue } from "@entity-space/common";
+import { EntitySchemaCatalog, EntitySelectionValue } from "@entity-space/common";
 import { criteriaTokenParser, Criterion } from "@entity-space/criteria";
 import { lex, Token, TokenType } from "@entity-space/lexer";
 import { EntityQuery } from "./entity-query";
@@ -44,7 +44,7 @@ interface QueryParts {
     options?: Criterion;
     criteria?: Criterion;
     paging?: QueryPaging;
-    expansion?: ExpansionValue;
+    expansion?: EntitySelectionValue;
 }
 
 type QueryPartsParser = Generator<unknown, false | QueryParts, Token>;
@@ -110,14 +110,14 @@ function* queryParser(terminator: Token): QueryPartsParser {
     }
 }
 
-function* expansionParser(): Generator<unknown, false | ExpansionValue, Token> {
+function* expansionParser(): Generator<unknown, false | EntitySelectionValue, Token> {
     let token = yield;
 
     if (!(token.type === TokenType.Special && token.value === "{")) {
         return false;
     }
 
-    let expansion: ExpansionValue = {};
+    let expansion: EntitySelectionValue = {};
 
     while (true) {
         token = yield;

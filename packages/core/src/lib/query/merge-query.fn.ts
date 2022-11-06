@@ -1,5 +1,5 @@
 import { or } from "@entity-space/criteria";
-import { Expansion } from "../expansion/expansion";
+import { EntitySelection } from "../expansion/expansion";
 import { EntityQuery } from "./entity-query";
 import { QueryPaging } from "./query-paging";
 
@@ -87,7 +87,7 @@ export function mergeQuery(a: EntityQuery, b: EntityQuery): false | EntityQuery 
         return new EntityQuery({
             entitySchema,
             criteria: a.getCriteria(),
-            expansion: Expansion.mergeValues(a.getEntitySchema(), a.getExpansionValue(), b.getExpansionValue()),
+            expansion: EntitySelection.mergeValues(a.getEntitySchema(), a.getExpansionValue(), b.getExpansionValue()),
             options,
             paging,
         });

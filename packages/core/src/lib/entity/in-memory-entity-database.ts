@@ -1,4 +1,4 @@
-import { ExpansionValue, IEntitySchema, IEntitySchemaRelation } from "@entity-space/common";
+import { EntitySelectionValue, IEntitySchema, IEntitySchemaRelation } from "@entity-space/common";
 import {
     any,
     AnyCriterion,
@@ -13,7 +13,7 @@ import {
 import { cloneJson, groupBy, isDefined, readPath } from "@entity-space/utils";
 import { flatten } from "lodash";
 import { Observable, Subject } from "rxjs";
-import { Expansion } from "../expansion/expansion";
+import { EntitySelection } from "../expansion/expansion";
 import { EntityQuery } from "../query/entity-query";
 import { mergeQueries } from "../query/merge-queries.fn";
 import { QueryPaging } from "../query/query-paging";
@@ -276,7 +276,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         return store;
     }
 
-    private expandEntities(schema: IEntitySchema, expansion: Expansion, entities: Entity[]): void {
+    private expandEntities(schema: IEntitySchema, expansion: EntitySelection, entities: Entity[]): void {
         // [todo] dirty
         const isExpanded = (propertyKey: string): boolean => {
             const first = entities[0];
@@ -320,14 +320,14 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
                 const entitySchema = property.getUnboxedEntitySchema();
                 this.expandEntities(
                     entitySchema,
-                    new Expansion({ schema: entitySchema, value: expansionValue }),
+                    new EntitySelection({ schema: entitySchema, value: expansionValue }),
                     referencedItems
                 );
             }
         }
     }
 
-    private expandRelation(entities: Entity[], relation: IEntitySchemaRelation, expansion?: ExpansionValue): void {
+    private expandRelation(entities: Entity[], relation: IEntitySchemaRelation, expansion?: EntitySelectionValue): void {
         const relatedSchema = relation.getRelatedEntitySchema();
         // [todo] what about dictionaries?
         const isArray = relation.getProperty().getValueSchema().schemaType === "array";

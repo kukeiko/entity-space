@@ -13,7 +13,7 @@ import {
     IPropertyValueSchema,
 } from "./schema.interface";
 import { Entity } from "../entity.type";
-import { UnfoldedExpansion } from "../unfolded-expansion.type";
+import { UnfoldedEntitySelection } from "../unfolded-entity-selection.type";
 
 // [todo] rename to "EntityTypeSchema"
 export class EntitySchema<T extends Entity = Entity> implements IEntitySchema<T> {
@@ -37,7 +37,7 @@ export class EntitySchema<T extends Entity = Entity> implements IEntitySchema<T>
         throw new Error("not implemented");
     }
 
-    getDefaultExpansion(): UnfoldedExpansion {
+    getDefaultExpansion(): UnfoldedEntitySelection {
         return this.getProperties()
             .filter(property => property.isRequired())
             .reduce((acc, property) => {
@@ -46,9 +46,9 @@ export class EntitySchema<T extends Entity = Entity> implements IEntitySchema<T>
                 if (valueSchema.schemaType === "entity") {
                     return { ...acc, [property.getName()]: valueSchema.getDefaultExpansion() };
                 } else {
-                    return { ...acc, [property.getName()]: true } as UnfoldedExpansion;
+                    return { ...acc, [property.getName()]: true } as UnfoldedEntitySelection;
                 }
-            }, {} as UnfoldedExpansion);
+            }, {} as UnfoldedEntitySelection);
     }
 
     addAllOf(schema: IEntitySchema): this {

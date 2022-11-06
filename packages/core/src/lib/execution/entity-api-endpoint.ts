@@ -1,8 +1,8 @@
-import { Entity, ExpansionValue, IEntitySchema } from "@entity-space/common";
+import { Entity, EntitySelectionValue, IEntitySchema } from "@entity-space/common";
 import { Criterion, ICriterionTemplate, InstancedCriterionTemplate } from "@entity-space/criteria";
 import { Observable } from "rxjs";
 import { EntitySet } from "../entity/data-structures/entity-set";
-import { Expansion } from "../expansion/expansion";
+import { EntitySelection } from "../expansion/expansion";
 import { QueryPaging } from "../query/query-paging";
 
 export type EntityApiEndpointData<T extends Entity = Entity> = T | T[] | EntitySet<T>;
@@ -15,7 +15,7 @@ export type EntityApiEndpointInvoke<
     criterion: InstancedCriterionTemplate<C>;
     options: InstancedCriterionTemplate<O>;
     // expansion: UnfoldedExpansion<T>;
-    expansion: ExpansionValue<T>; // [todo] want to use unfolded instead
+    expansion: EntitySelectionValue<T>; // [todo] want to use unfolded instead
     paging?: QueryPaging;
 }) => Observable<EntityApiEndpointData<T>> | Promise<EntityApiEndpointData<T>> | EntityApiEndpointData<T>;
 
@@ -34,7 +34,7 @@ export class EntityApiEndpoint {
         schema: IEntitySchema;
         optionsTemplate: ICriterionTemplate;
         criterionTemplate: ICriterionTemplate;
-        expansion: Expansion;
+        expansion: EntitySelection;
         invoke: EntityApiEndpointInvoke;
         acceptCriterion?: (criterion: Criterion) => boolean;
         sortableFields?: string[];
@@ -55,7 +55,7 @@ export class EntityApiEndpoint {
     private readonly schema: IEntitySchema;
     private readonly optionsTemplate: ICriterionTemplate;
     private readonly criterionTemplate: ICriterionTemplate;
-    private readonly expansion: Expansion;
+    private readonly expansion: EntitySelection;
     private readonly invoke: EntityApiEndpointInvoke;
     private readonly acceptCriterionFn: (criterion: Criterion) => boolean;
     private readonly pagingRequired: boolean;
@@ -74,7 +74,7 @@ export class EntityApiEndpoint {
         return this.optionsTemplate;
     }
 
-    getExpansion(): Expansion {
+    getExpansion(): EntitySelection {
         return this.expansion;
     }
 

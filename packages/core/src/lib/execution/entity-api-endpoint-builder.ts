@@ -1,4 +1,4 @@
-import { Entity, ExpansionValue, IEntitySchema } from "@entity-space/common";
+import { Entity, EntitySelectionValue, IEntitySchema } from "@entity-space/common";
 import {
     anyTemplate,
     Criterion,
@@ -10,7 +10,7 @@ import {
     neverTemplate,
 } from "@entity-space/criteria";
 import { size } from "lodash";
-import { Expansion } from "../expansion/expansion";
+import { EntitySelection } from "../expansion/expansion";
 import { EntityApiEndpoint, EntityApiEndpointInvoke } from "./entity-api-endpoint";
 
 type AddFieldsArgument<T> = {
@@ -39,7 +39,7 @@ export class EntityApiEndpointBuilder<
     private pagingRequired = false;
     private pagingSupported = false;
 
-    private supportedExpansion: ExpansionValue;
+    private supportedExpansion: EntitySelectionValue;
     private loadEntities?: EntityApiEndpointInvoke;
     private acceptCriterion: (criterion: Criterion) => boolean = () => true;
 
@@ -116,7 +116,7 @@ export class EntityApiEndpointBuilder<
     }
 
     supportsExpansion(
-        expansion: ExpansionValue<T>
+        expansion: EntitySelectionValue<T>
     ): EntityApiEndpointBuilder<
         T,
         CriterionRequiredFields,
@@ -124,7 +124,7 @@ export class EntityApiEndpointBuilder<
         OptionsRequiredFields,
         OptionsOptionalFields
     > {
-        this.supportedExpansion = Expansion.mergeValues(this.schema, this.supportedExpansion, expansion);
+        this.supportedExpansion = EntitySelection.mergeValues(this.schema, this.supportedExpansion, expansion);
         return this;
     }
 
@@ -174,7 +174,7 @@ export class EntityApiEndpointBuilder<
         }
 
         return new EntityApiEndpoint({
-            expansion: new Expansion({ schema: this.schema, value: this.supportedExpansion }),
+            expansion: new EntitySelection({ schema: this.schema, value: this.supportedExpansion }),
             invoke: this.loadEntities,
             schema: this.schema,
             criterionTemplate,

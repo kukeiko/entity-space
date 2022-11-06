@@ -1,12 +1,12 @@
 import { Criterion } from "@entity-space/criteria";
-import { Expansion } from "../expansion/expansion";
+import { EntitySelection } from "../expansion/expansion";
 import { EntityQueryCtorArg, EntityQuery } from "./entity-query";
 import { QueryPaging } from "./query-paging";
 
 type ReducedParts = {
     options: true | Criterion;
     criteria: true | Criterion;
-    expansion: true | Expansion;
+    expansion: true | EntitySelection;
     paging: true | QueryPaging[];
 };
 

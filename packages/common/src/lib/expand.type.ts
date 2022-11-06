@@ -6,8 +6,8 @@
 // [update] the comment is quite old and having it split up isn't really an improvement anymore,
 // but i'd still like to learn why that issue w/ discriminated union types happens (if it even still does)
 
-export type Expand<T, E> = E extends true
+export type Select<T, E> = E extends true
     ? Exclude<T, undefined>
     : T extends any[]
-    ? Expand<T[number], E>[]
-    : T & { [K in keyof (T | E)]-?: Expand<T[K], E[K]> };
+    ? Select<T[number], E>[]
+    : T & { [K in keyof (T | E)]-?: Select<T[K], E[K]> };
