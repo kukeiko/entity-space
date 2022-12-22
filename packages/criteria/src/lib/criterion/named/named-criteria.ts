@@ -258,7 +258,7 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag, R exte
                     continue;
                 } else if (otherBagCriterion === void 0) {
                     return false;
-                } else {
+                } else if (otherBagCriterion instanceof Criterion) {
                     const mergedResult = myBagCriterion.merge(otherBagCriterion);
 
                     if (mergedResult === false) {
@@ -267,7 +267,7 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag, R exte
 
                     // [todo] could we use Criterion.equivalent() here?
                     const isMineSubsetOfOther = myBagCriterion.subtractFrom(otherBagCriterion) === true;
-                    const isOtherSubsetOfMine = otherBagCriterion.reduce(myBagCriterion) === true;
+                    const isOtherSubsetOfMine = otherBagCriterion.subtractFrom(myBagCriterion) === true;
 
                     if (!(isMineSubsetOfOther && isOtherSubsetOfMine)) {
                         if (mergedOne) {
