@@ -64,7 +64,7 @@ describe("scanners", () => {
     // literals
     shouldScanLiteral("abc123", "abc");
     shouldScanLiteral("a-b_c123", "a-b_c");
-    shouldScanLiteral("a-b_c.", "a-b_c");
+    shouldScanLiteral("a-b_c.", "a-b_c.");
     shouldScanLiteral("_foo", "_foo");
     shouldScanLiteral("-foo", "-foo");
 });
