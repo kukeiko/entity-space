@@ -13,6 +13,9 @@ import { TestContentData, TestContentDatabase, TestContentEntityApi, User, UserB
 import { TestContentCatalog } from "./content/test-content-catalog";
 import { createQuery } from "./tools/create-query.fn";
 
+const LOG_PACKETS = false;
+const LOG_TRACING = false;
+
 function expectPacketEqual(actual: EntityStreamPacket, expected: EntityStreamPacket): void {
     expect(actual.getErrors().map(error => error.getErrorMessage())).toEqual(
         expected.getErrors().map(error => error.getErrorMessage())
@@ -42,11 +45,11 @@ describe("interceptors", () => {
         const database = new TestContentDatabase(data);
         const tracing = new EntityQueryTracing();
         const catalog = new TestContentCatalog();
-        tracing.enableConsole();
+        tracing.enableConsole(LOG_TRACING);
 
         const interceptors: IEntityStreamInterceptor[] = [
             new TestContentEntityApi(database, catalog, tracing).withGetAllUsers(),
-            new LogPacketsInterceptor(true),
+            new LogPacketsInterceptor(LOG_PACKETS),
             new MergePacketsTakeLastInterceptor(),
         ];
 
@@ -70,11 +73,11 @@ describe("interceptors", () => {
         const database = new TestContentDatabase(data);
         const tracing = new EntityQueryTracing();
         const catalog = new TestContentCatalog();
-        tracing.enableConsole();
+        tracing.enableConsole(LOG_TRACING);
 
         const interceptors: IEntityStreamInterceptor[] = [
             new TestContentEntityApi(database, catalog, tracing).withGetUserById(),
-            new LogPacketsInterceptor(true),
+            new LogPacketsInterceptor(LOG_PACKETS),
             new MergePacketsTakeLastInterceptor(),
         ];
 
@@ -98,14 +101,14 @@ describe("interceptors", () => {
         const database = new TestContentDatabase(data);
         const tracing = new EntityQueryTracing();
         const catalog = new TestContentCatalog();
-        tracing.enableConsole();
+        tracing.enableConsole(LOG_TRACING);
 
         const interceptors: IEntityStreamInterceptor[] = [
             new TestContentEntityApi(database, catalog, tracing).withGetUserById(),
             new SchemaRelationBasedHydrator(tracing, [
                 new TestContentEntityApi(database, catalog, tracing).withGetUserById(),
             ]),
-            new LogPacketsInterceptor(true),
+            new LogPacketsInterceptor(LOG_PACKETS),
             new MergePacketsTakeLastInterceptor(),
         ];
 
@@ -134,14 +137,14 @@ describe("interceptors", () => {
         const database = new TestContentDatabase(data);
         const tracing = new EntityQueryTracing();
         const catalog = new TestContentCatalog();
-        tracing.enableConsole();
+        tracing.enableConsole(LOG_TRACING);
 
         const interceptors: IEntityStreamInterceptor[] = [
             new TestContentEntityApi(database, catalog, tracing).withGetUserById(),
             new SchemaRelationBasedHydrator(tracing, [
                 new TestContentEntityApi(database, catalog, tracing).withGetUserById(),
             ]),
-            new LogPacketsInterceptor(true),
+            new LogPacketsInterceptor(LOG_PACKETS),
             new MergePacketsTakeLastInterceptor(),
         ];
 
@@ -178,14 +181,14 @@ describe("interceptors", () => {
         const database = new TestContentDatabase(data);
         const tracing = new EntityQueryTracing();
         const catalog = new TestContentCatalog();
-        tracing.enableConsole();
+        tracing.enableConsole(LOG_TRACING);
 
         const interceptors: IEntityStreamInterceptor[] = [
             new TestContentEntityApi(database, catalog, tracing).withGetAllUsers(),
             new SchemaRelationBasedHydrator(tracing, [
                 new TestContentEntityApi(database, catalog, tracing).withGetUserById(),
             ]),
-            new LogPacketsInterceptor(true),
+            new LogPacketsInterceptor(LOG_PACKETS),
             new MergePacketsTakeLastInterceptor(),
         ];
 
@@ -221,7 +224,7 @@ describe("interceptors", () => {
         const database = new TestContentDatabase(data);
         const tracing = new EntityQueryTracing();
         const catalog = new TestContentCatalog();
-        tracing.enableConsole();
+        tracing.enableConsole(LOG_TRACING);
 
         const interceptors: IEntityStreamInterceptor[] = [
             new TestContentEntityApi(database, catalog, tracing).withGetUserById(),
@@ -234,7 +237,7 @@ describe("interceptors", () => {
                     ]),
                 ]),
             ]),
-            new LogPacketsInterceptor(true),
+            new LogPacketsInterceptor(LOG_PACKETS),
             new MergePacketsTakeLastInterceptor(),
         ];
 
@@ -280,7 +283,7 @@ describe("interceptors", () => {
         const database = new TestContentDatabase(data);
         const tracing = new EntityQueryTracing();
         const catalog = new TestContentCatalog();
-        tracing.enableConsole();
+        tracing.enableConsole(LOG_TRACING);
 
         const interceptors: IEntityStreamInterceptor[] = [
             new TestContentEntityApi(database, catalog, tracing).withGetAllUsers(),
@@ -294,7 +297,7 @@ describe("interceptors", () => {
                 ]),
             ]),
             new MergePacketsTakeLastInterceptor(),
-            new LogPacketsInterceptor(true),
+            new LogPacketsInterceptor(LOG_PACKETS),
         ];
 
         const query: EntityQuery = createQuery(

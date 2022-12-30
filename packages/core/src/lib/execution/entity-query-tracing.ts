@@ -5,8 +5,8 @@ import { EntityQuery } from "../query/entity-query";
 export class EntityQueryTracing {
     private consoleEnabled = false;
 
-    enableConsole(): void {
-        this.consoleEnabled = true;
+    enableConsole(flag = true): void {
+        this.consoleEnabled = flag;
     }
 
     querySpawned(query: EntityQuery): void {

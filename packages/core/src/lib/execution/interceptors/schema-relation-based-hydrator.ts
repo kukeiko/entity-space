@@ -145,17 +145,6 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
                     relationQuery,
                 });
 
-                // [todo] remove these
-                console.log(
-                    "🌵",
-                    finalAccepted.map(q => q.toString())
-                );
-
-                console.log(
-                    "🎃",
-                    finalRejected.map(q => q.toString())
-                );
-
                 return new EntityStreamPacket({
                     accepted: finalAccepted,
                     rejected: finalRejected,

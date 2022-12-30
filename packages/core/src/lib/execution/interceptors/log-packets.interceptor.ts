@@ -4,7 +4,7 @@ import { IEntityStreamInterceptor } from "../i-entity-stream-interceptor";
 import { EntityStream } from "../entity-stream";
 import { EntityStreamPacket } from "../entity-stream-packet";
 
-export type LogPacketsInterceptorOptions = { logEach?: boolean; logFinal?: boolean } | true;
+export type LogPacketsInterceptorOptions = { logEach?: boolean; logFinal?: boolean } | boolean;
 
 export class LogPacketsInterceptor implements IEntityStreamInterceptor {
     constructor(private readonly options: LogPacketsInterceptorOptions) {}
@@ -14,6 +14,8 @@ export class LogPacketsInterceptor implements IEntityStreamInterceptor {
 
         if (options === true) {
             options = { logEach: true, logFinal: true };
+        } else if(options === false) {
+            options = { logEach: false, logFinal: false };
         }
 
         const { logEach, logFinal } = options;
