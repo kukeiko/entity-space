@@ -9,11 +9,15 @@ function createWorkspace(): EntityWorkspace {
     return new EntityWorkspace(new EntityQueryTracing());
 }
 
-function createQuery(entitySchema: IEntitySchema, criteria: Criterion, expansion: EntitySelectionValue = {}): EntityQuery {
+function createQuery(
+    entitySchema: IEntitySchema,
+    criteria: Criterion,
+    expansion: EntitySelectionValue = {}
+): EntityQuery {
     return new EntityQuery({ entitySchema, criteria, selection: expansion });
 }
 
-describe("workspace", () => {
+describe("EntityWorkspace", () => {
     describe("queryAgainstCache()", () => {
         it("should execute query w/ 1 simple index", async () => {
             // arrange
