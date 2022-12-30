@@ -9,13 +9,31 @@ export class SomeCriterion<T extends Criterion = Criterion> extends Criterion {
     private readonly criterion: T;
 
     subtractFrom(other: Criterion): boolean | Criterion {
-        const reduced = this.criterion.subtractFrom(other);
-
-        if (typeof reduced == "boolean") {
-            return reduced;
+        if (!(other instanceof SomeCriterion)) {
+            return false;
         }
 
-        return new SomeCriterion(reduced);
+        const subtracted = this.criterion.subtractFrom(other.criterion);
+
+        if (typeof subtracted == "boolean") {
+            return subtracted;
+        }
+
+        return new SomeCriterion(subtracted);
+    }
+
+    override intersect(other: Criterion): false | Criterion {
+        if (!(other instanceof SomeCriterion)) {
+            return false;
+        }
+
+        const intersected = this.criterion.intersect(other.criterion);
+
+        if (typeof intersected == "boolean") {
+            return intersected;
+        }
+
+        return new SomeCriterion(intersected);
     }
 
     toString(): string {
