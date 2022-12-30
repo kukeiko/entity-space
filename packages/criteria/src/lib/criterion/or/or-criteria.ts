@@ -87,6 +87,8 @@ export class OrCriteria<T extends Criterion = Criterion> extends Criteria<T> {
         return intersected.length === 1 ? intersected[0] : new OrCriteria(intersected);
     }
 
+    // [todo] can't remember why i added this implementation :(
+    // was used in NamedCriteria.intersect(), but that was imo wrong.
     intersectBy(other: Criterion): false | Criterion {
         let intersection = other;
 

@@ -1,6 +1,6 @@
-import { intersecting } from "../tools/intersecting.fn";
+import { fintersecting, intersecting } from "../tools/intersecting.fn";
 
-describe("intersecting criteria", () => {
+describe("Criterion.intersect(A, B)", () => {
     // is-value
     intersecting("true").with("true").shouldBe("true");
     intersecting("true").with("false").shouldBe(false);
@@ -25,6 +25,14 @@ describe("intersecting criteria", () => {
     intersecting("[1, 7]").with("[8, 10]").shouldBe(false);
     intersecting("[1, 7]").with("(3, 5)").shouldBe("(3, 5)");
 
+    intersecting("{ price: [100, 300], rating: [3, 7] }")
+        .with("{ price: [100, 200], rating: [3, 5] }")
+        .shouldBe("{ price: [100, 200], rating: [3, 5] }");
+
+    intersecting("{ price: [100, 300], rating: [3, 7] }")
+        .with("{ price: [100, 200], rating: [3, 5] } | { price: (200, 300], rating: [3, 5] }")
+        .shouldBe("{ price: [100, 200], rating: [3, 5] } | { price: (200, 300], rating: [3, 5] }");
+
     // or-criteria
     intersecting("[1, 7] | [10, 13]").with("[3, 9]").shouldBe("[3, 7]");
     intersecting("[1, 7] | [10, 13]").with("[3, 11]").shouldBe("[3, 7] | [10, 11]");
@@ -34,4 +42,8 @@ describe("intersecting criteria", () => {
     intersecting("{ foo:{1,2,3} }").with("{ foo:{2} }").shouldBe("{ foo:{2} }");
     intersecting("{ foo:{1,2,3} }").with("{ bar:{2} }").shouldBe("{ foo:{1,2,3}, bar:{2} }");
     intersecting("{ foo:{1,2,3} }").with("{ foo:{4,5,6} }").shouldBe(false);
+
+    intersecting("{ foo: 1, bar: 2 }")
+        .with("{ foo: 1 } | { bar: 2 }")
+        .shouldBe("{ foo: 1, bar: 2 } | { bar: 2, foo: 1 }");
 });

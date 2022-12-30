@@ -137,11 +137,13 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag, R exte
 
     override intersect(other: Criterion): false | Criterion {
         if (other instanceof AnyCriterion) {
-            // [todo] apply this to all other criteria
+            // [todo] apply this to all other criteria [update] => what did i mean by this?
             return this;
         } else if (other instanceof OrCriteria) {
-            // [todo] apply this to all other criteria
-            return other.intersectBy(this);
+            return other.intersect(this);
+            // [todo] apply this to all other criteria [update] => what did i mean by this?
+            // [todo] i don't remember why i implemented "intersectBy()" :(
+            // return other.intersectBy(this);
         } else if (!(other instanceof NamedCriteria)) {
             return false;
         }
