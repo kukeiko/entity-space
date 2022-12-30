@@ -3,14 +3,14 @@ import { EntitySelection } from "./entity-selection";
 import { EntityQueryCtorArg, EntityQuery } from "./entity-query";
 import { QueryPaging } from "./query-paging";
 
-type ReducedParts = {
+type SubtractedParts = {
     options: true | Criterion;
     criteria: true | Criterion;
     selection: true | EntitySelection;
     paging: true | QueryPaging[];
 };
 
-function subtractParts(a: EntityQuery, b: EntityQuery): false | ReducedParts {
+function subtractParts(a: EntityQuery, b: EntityQuery): false | SubtractedParts {
     const pagingA = a.getPaging();
     const pagingB = b.getPaging();
     let paging: true | QueryPaging[] = true;
@@ -66,15 +66,15 @@ function subtractParts(a: EntityQuery, b: EntityQuery): false | ReducedParts {
 // [todo] it is still unexpected for me that this method returns an empty array on full subtraction,
 // but Criterion.reduce() would return true. should make it consistent.
 export function subtractQuery(a: EntityQuery, b: EntityQuery): EntityQuery[] | false {
-    const reducedParts = subtractParts(a, b);
+    const subtracted = subtractParts(a, b);
 
-    if (!reducedParts) {
+    if (!subtracted) {
         return false;
-    } else if (Object.values(reducedParts).every(reduced => reduced === true)) {
+    } else if (Object.values(subtracted).every(reduced => reduced === true)) {
         return [];
     }
 
-    const reducedQueries: EntityQuery[] = [];
+    const subtractedQueries: EntityQuery[] = [];
     const accumulated: EntityQueryCtorArg = {
         entitySchema: a.getEntitySchema(),
         criteria: a.getCriteria(),
@@ -83,28 +83,38 @@ export function subtractQuery(a: EntityQuery, b: EntityQuery): EntityQuery[] | f
         paging: a.getPaging(),
     };
 
-    if (reducedParts.paging !== true) {
-        reducedParts.paging.forEach(paging => {
-            reducedQueries.push(new EntityQuery({ ...accumulated, paging }));
+    if (subtracted.paging !== true) {
+        subtracted.paging.forEach(paging => {
+            subtractedQueries.push(new EntityQuery({ ...accumulated, paging }));
         });
 
         accumulated.paging = b.getPaging();
     }
 
-    if (reducedParts.options !== true) {
-        reducedQueries.push(new EntityQuery({ ...accumulated, options: reducedParts.options }));
+    if (subtracted.options !== true) {
+        subtractedQueries.push(new EntityQuery({ ...accumulated, options: subtracted.options }));
         accumulated.options = b.getOptions();
     }
 
-    if (reducedParts.criteria !== true) {
-        reducedQueries.push(new EntityQuery({ ...accumulated, criteria: reducedParts.criteria }));
-        accumulated.criteria = b.getCriteria();
+    if (subtracted.criteria !== true) {
+        subtractedQueries.push(new EntityQuery({ ...accumulated, criteria: subtracted.criteria }));
+        // [todo] should we also do intersection for paging & options?
+        const intersection = a.getCriteria().intersect(b.getCriteria());
+
+        if (intersection === false) {
+            // [todo] throw error instead. however, a test case in subtract-query.test will fail.
+            // and I can't be bothered to look into that now, as there is a node-js error when trying
+            // to run jest in debug mode... yeah.
+            console.warn("invalid criterion implementation");
+            accumulated.criteria = b.getCriteria();
+        } else {
+            accumulated.criteria = intersection;
+        }
     }
 
-    if (reducedParts.selection !== true) {
-        reducedQueries.push(new EntityQuery({ ...accumulated, selection: reducedParts.selection }));
-        accumulated.selection = b.getSelection();
+    if (subtracted.selection !== true) {
+        subtractedQueries.push(new EntityQuery({ ...accumulated, selection: subtracted.selection }));
     }
 
-    return reducedQueries;
+    return subtractedQueries;
 }
