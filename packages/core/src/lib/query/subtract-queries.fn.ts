@@ -1,32 +1,32 @@
 import { EntityQuery } from "./entity-query";
 import { subtractQuery } from "./subtract-query.fn";
 
-export function subtractQueries(a: EntityQuery[], b: EntityQuery[]): EntityQuery[] | false {
-    if (!a.length && !b.length) {
+export function subtractQueries(queriesA: EntityQuery[], queriesB: EntityQuery[]): EntityQuery[] | false {
+    if (!queriesA.length && !queriesB.length) {
         return [];
     }
 
-    let reduced = a.slice();
-    let didReduceAny = false;
+    let totalSubtracted = queriesA.slice();
+    let didSubtract = false;
 
-    // for each query in B, pick each query in A and try to reduce it by B.
-    // queries in A are updated with the reduced results as we go.
-    for (const queryB of b) {
-        const nextReduced: EntityQuery[] = [];
+    // for each query in B, pick each query in A and try to subtract it by B.
+    // queries in A are updated with the subtracted results as we go.
+    for (const queryB of queriesB) {
+        const nextSubtracted: EntityQuery[] = [];
 
-        for (const queryA of reduced) {
-            const reducedQueries = subtractQuery(queryA, queryB);
+        for (const queryA of totalSubtracted) {
+            const subtracted = subtractQuery(queryA, queryB);
 
-            if (reducedQueries) {
-                nextReduced.push(...reducedQueries);
-                didReduceAny = true;
+            if (subtracted) {
+                nextSubtracted.push(...subtracted);
+                didSubtract = true;
             } else {
-                nextReduced.push(queryA);
+                nextSubtracted.push(queryA);
             }
         }
 
-        reduced = nextReduced;
+        totalSubtracted = nextSubtracted;
     }
 
-    return didReduceAny ? reduced : false;
+    return didSubtract ? totalSubtracted : false;
 }
