@@ -102,11 +102,7 @@ export function subtractQuery(a: EntityQuery, b: EntityQuery): EntityQuery[] | f
         const intersection = a.getCriteria().intersect(b.getCriteria());
 
         if (intersection === false) {
-            // [todo] throw error instead. however, a test case in subtract-query.test will fail.
-            // and I can't be bothered to look into that now, as there is a node-js error when trying
-            // to run jest in debug mode... yeah.
-            console.warn("invalid criterion implementation");
-            accumulated.criteria = b.getCriteria();
+            throw new Error("invalid criterion implementation");
         } else {
             accumulated.criteria = intersection;
         }
