@@ -1,21 +1,8 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from "@angular/core";
-import { Blueprint, define, EntitySchemaCatalog } from "@entity-space/common";
+import { EntitySchemaCatalog } from "@entity-space/common";
 import { EntityWorkspace } from "@entity-space/core";
-import { Artist, ArtistBlueprint, Song, SongBlueprint, WebSongLocation } from "@entity-space/examples/libs/music-model";
-import { combineLatest, map, shareReplay, switchMap } from "rxjs";
-
-@Blueprint({ id: "song-table-input" })
-class SongTableInputBlueprint {
-    id = define(Number, { id: true, required: true });
-    songs = define(SongBlueprint, { array: true, required: true });
-}
-
-interface SongTableState {
-    data: {
-        artists: Artist[];
-        songs: Song[];
-    };
-}
+import { ArtistBlueprint, Song, SongBlueprint, WebSongLocation } from "@entity-space/examples/libs/music-model";
+import { map, ReplaySubject, switchMap } from "rxjs";
 
 @Component({
     selector: "song-table",
@@ -25,37 +12,28 @@ interface SongTableState {
 })
 export class SongTableComponent {
     constructor(
-        private readonly workspace: EntityWorkspace,
+        private readonly entities: EntityWorkspace,
         private readonly schemas: EntitySchemaCatalog,
         private readonly changeDetector: ChangeDetectorRef
     ) {}
 
-    stateId = 1;
+    artists$ = this.entities
+        .scope(ArtistBlueprint)
+        .all()
+        .pipe(map(items => items.slice().sort((a, b) => a.name.localeCompare(b.name))));
 
-    @Input() set songs(songs: Song[]) {
-        this.workspace.add(SongTableInputBlueprint, [{ id: this.stateId, songs }]);
+    songInput$ = new ReplaySubject<Song[]>(1);
+
+    @Input("songs") set songInput(songs: Song[]) {
+        this.songInput$.next(songs);
     }
 
-    state$ = this.workspace.queryOneByKey$(SongTableInputBlueprint, this.stateId).pipe(
-        switchMap(input =>
-            combineLatest({
-                artists: this.workspace.query$(ArtistBlueprint),
-                songs: this.workspace.hydrate$(SongBlueprint, input.songs, {
-                    artist: true,
-                    // [todo] expanding song here causes all to load all songs,
-                    // expecting it to be cached instead
-                    locations: { id: true, url: true },
-                }),
-            })
+    songs$ = this.songInput$.pipe(
+        switchMap(songs =>
+            this.entities.scope(SongBlueprint).hydrate(songs, { artist: true, locations: { id: true, url: true } })
         ),
-        map(({ artists, songs }) => this.toState(artists, songs)),
-        shareReplay(1)
+        map(songs => songs.slice().sort((a, b) => a.name.localeCompare(b.name)))
     );
-
-    toState(artists: Artist[], songs: Song[]): SongTableState {
-        artists.sort((a, b) => a.name.localeCompare(b.name));
-        return { data: { artists, songs } };
-    }
 
     columns: { field: string; header: string }[] = [
         { field: "id", header: "Id" },
@@ -121,7 +99,7 @@ export class SongTableComponent {
                     | undefined;
 
                 if (!webLocation) {
-                    const createdWebLocation = await this.workspace.create<WebSongLocation>(
+                    const createdWebLocation = await this.entities.create<WebSongLocation>(
                         [{ id: 0, songId: this.editedSong?.id!, songLocationType: "web", url: this.editedWebUrl }],
                         this.schemas.getSchema("song-location")
                     );
@@ -133,20 +111,20 @@ export class SongTableComponent {
                     webLocation = createdWebLocation[0];
                 } else {
                     webLocation.url = this.editedWebUrl;
-                    await this.workspace.update([webLocation], this.schemas.getSchema("song-location"));
+                    await this.entities.update([webLocation], this.schemas.getSchema("song-location"));
                 }
             }
 
             // [todo] make workspace.update() better to use w/ blueprints
-            await this.workspace.update([this.editedSong!], this.schemas.resolve(SongBlueprint));
+            await this.entities.update([this.editedSong!], this.schemas.resolve(SongBlueprint));
         } else {
-            const createdSong = await this.workspace.create([this.editedSong!], this.schemas.resolve(SongBlueprint));
+            const createdSong = await this.entities.create([this.editedSong!], this.schemas.resolve(SongBlueprint));
 
             if (!createdSong) {
                 return alert("could not create song :(");
             }
 
-            await this.workspace.create<WebSongLocation>(
+            await this.entities.create<WebSongLocation>(
                 [{ id: 0, songId: createdSong[0].id, songLocationType: "web", url: this.editedWebUrl }],
                 this.schemas.getSchema("song-location")
             );

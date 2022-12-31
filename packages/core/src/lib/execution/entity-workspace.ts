@@ -157,15 +157,14 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
     }
 
     // [todo] not reactive yet
-    hydrate$<T>(
-        blueprint: Class<T>,
-        entities: BlueprintInstance<T>[],
-        selection: EntitySelectionValue<BlueprintInstance<T>>
-    ): Observable<BlueprintInstance<T>[]> {
+    hydrate$<T extends Entity>(
+        schema: IEntitySchema<T>,
+        entities: T[],
+        selection: EntitySelectionValue<T>
+    ): Observable<T[]> {
         if (!entities.length) {
             return of([]);
         }
-        const schema = this.schemas?.resolve(blueprint);
 
         if (!schema) {
             return EMPTY;
@@ -205,44 +204,22 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
                     this.tracing.queryResolved(hydrationQuery, JSON.stringify(entities));
                     return entities;
                 })
-            ) as Observable<BlueprintInstance<T>[]>;
+            ) as Observable<T[]>;
         } else {
             this.tracing.queryGotFullySubtracted(hydrationQuery, cachedQueries, { byLabel: "by cached" });
             const entities = this.database.querySync(hydrationQuery).getEntities();
             this.tracing.queryResolved(hydrationQuery, JSON.stringify(entities));
-            return of(entities) as Observable<BlueprintInstance<T>[]>;
+            return of(entities) as Observable<T[]>;
         }
     }
 
     query$<T extends Entity>(
         schema: IEntitySchema,
-        criterion?: Criterion | MatchesBagArgument<T>,
-        selection?: EntitySelectionValue<T>
-    ): Observable<T[]>;
-    query$<T extends Entity>(
-        schema: Class<T>,
-        criterion?: MatchesBagArgument<T>,
-        selection?: EntitySelectionValue<BlueprintInstance<T>>,
-        options?: MatchesBagArgument<Entity>,
-        paging?: { skip?: number; top?: number; from?: number; to?: number }
-    ): Observable<BlueprintInstance<T>[]>;
-    query$<T extends Entity>(
-        schema: IEntitySchema | Class<T>,
-        criterion: any = any(),
-        selection: EntitySelectionValue<T> = {},
-        options: any = never(),
+        criterion: Criterion | MatchesBagArgument<T> = any(),
+        selection?: EntitySelectionValue<T>,
+        options: Criterion | MatchesBagArgument<Entity> = never(),
         paging?: { skip?: number; top?: number; from?: number; to?: number }
     ): Observable<T[]> {
-        if (!("getId" in schema)) {
-            const resolvedSchema = this.schemas?.resolve(schema);
-
-            if (!resolvedSchema) {
-                throw new Error(`failed to resolve blueprint to schema for type ${schema.name}`);
-            }
-
-            schema = resolvedSchema;
-        }
-
         if (!(criterion instanceof Criterion)) {
             criterion = matches(criterion);
         }

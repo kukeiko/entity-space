@@ -1,15 +1,9 @@
 import { ChangeDetectionStrategy, Component, Input, OnInit } from "@angular/core";
-import { Blueprint, define, EntitySchemaCatalog } from "@entity-space/common";
+import { EntitySchemaCatalog } from "@entity-space/common";
 import { EntityWorkspace } from "@entity-space/core";
 import { Artist, ArtistBlueprint } from "@entity-space/examples/libs/music-model";
-import { combineLatest, of } from "rxjs";
+import { ReplaySubject } from "rxjs";
 import { map, switchMap } from "rxjs/operators";
-
-@Blueprint({ id: "artist-table-input" })
-class ArtistTableInputBlueprint {
-    id = define(Number, { id: true, required: true });
-    artists = define(ArtistBlueprint, { array: true, required: true });
-}
 
 @Component({
     selector: "artist-table",
@@ -18,24 +12,22 @@ class ArtistTableInputBlueprint {
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ArtistTableComponent implements OnInit {
-    constructor(private readonly workspace: EntityWorkspace, private readonly schemas: EntitySchemaCatalog) {}
+    constructor(private readonly entities: EntityWorkspace, private readonly schemas: EntitySchemaCatalog) {}
 
     columns: { field: string; header: string }[] = [{ field: "name", header: "Name" }];
-    stateId = 1;
     editDialogVisible = false;
     editedEntity?: Artist;
 
-    @Input() set artists(artists: Artist[]) {
-        this.workspace.add(ArtistTableInputBlueprint, [{ id: this.stateId, artists }]);
+    artistsInput$ = new ReplaySubject<Artist[]>(1);
+
+    @Input("artists") set artists(artists: Artist[]) {
+        this.artistsInput$.next(artists);
     }
 
-    state$ = this.workspace.queryOneByKey$(ArtistTableInputBlueprint, this.stateId).pipe(
-        switchMap(input =>
-            combineLatest({
-                artists: of(input.artists),
-            })
-        ),
-        map(data => ({ data }))
+    artists$ = this.artistsInput$.pipe(
+        // [todo] use some meaningful hydration
+        switchMap(artists => this.entities.scope(ArtistBlueprint).hydrate(artists, {})),
+        map(artists => artists.sort((a, b) => a.name.localeCompare(b.name)))
     );
 
     ngOnInit(): void {}
@@ -52,14 +44,14 @@ export class ArtistTableComponent implements OnInit {
         this.editDialogVisible = true;
     }
 
-    async saveSong(): Promise<void> {
+    async saveArtist(): Promise<void> {
         console.log("💾 save entity", this.editedEntity);
 
         if (this.editedEntity?.id ?? 0 > 0) {
             // [todo] make workspace.update() better to use w/ blueprints
-            await this.workspace.update([this.editedEntity!], this.schemas.resolve(ArtistBlueprint));
+            await this.entities.update([this.editedEntity!], this.schemas.resolve(ArtistBlueprint));
         } else {
-            const created = await this.workspace.create([this.editedEntity!], this.schemas.resolve(ArtistBlueprint));
+            const created = await this.entities.create([this.editedEntity!], this.schemas.resolve(ArtistBlueprint));
 
             if (!created) {
                 return alert("could not create entity :(");

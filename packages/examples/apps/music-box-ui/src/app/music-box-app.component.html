@@ -1,78 +1,13 @@
-<!-- <p-slider [(ngModel)]="sliderValue"></p-slider>
-<p>{{ sliderValue | json }}</p> -->
-<p-tabView *ngIf="state$ | async; let state">
+<p-tabView>
     <p-tabPanel header="Songs">
         <ng-template pTemplate="content">
-            <div class="grid p-fluid">
-                <div class="field col-1">
-                    <label for="locationType">Location Type</label>
-                    <p-multiSelect
-                        [options]="state.data.songLocationTypes"
-                        [ngModel]="state.ui.filter.locationTypes"
-                        (ngModelChange)="changeUiState('filter.locationTypes', $event)"
-                        optionLabel="name"
-                        inputId="locationType"
-                        panelStyleClass="min-w-max"
-                    ></p-multiSelect>
-                </div>
-                <div class="field col-1">
-                    <label for="artist">Artist</label>
-                    <p-multiSelect
-                        [options]="state.data.artists"
-                        [ngModel]="state.ui.filter.artists"
-                        (ngModelChange)="changeUiState('filter.artists', $event)"
-                        optionLabel="name"
-                        inputId="artist"
-                        panelStyleClass="min-w-max"
-                    ></p-multiSelect>
-                </div>
-                <div class="field col-1">
-                    <label for="duration">Duration</label>
-                    <p-slider
-                        [ngModel]="state.ui.filter.duration"
-                        (ngModelChange)="changeUiState('filter.duration', $event)"
-                        [range]="true"
-                        [min]="0"
-                        [max]="600"
-                    ></p-slider>
-                </div>
-                <div class="field col-1">
-                    <label for="duration">Paging</label>
-                    <p-slider
-                        [ngModel]="state.ui.filter.paging"
-                        (ngModelChange)="changeUiState('filter.paging', $event)"
-                        [range]="true"
-                        [min]="0"
-                        [max]="10"
-                    ></p-slider>
-                </div>
-                <div class="field col-1">
-                    <label for="searchText">Search</label>
-                    <input
-                        type="text"
-                        name="searchText"
-                        id="searchText"
-                        pInputText
-                        [ngModel]="state.ui.filter.searchText"
-                        (ngModelChange)="changeUiState('filter.searchText', $event)"
-                    />
-                </div>
-                <!-- <div class="col-1 flex align-items-center">
-                    <button
-                        pButton
-                        label="Search"
-                        icon="pi pi-search"
-                        class="p-button-text"
-                        (click)="search()"
-                    ></button>
-                </div> -->
-            </div>
-            <song-table [songs]="state.data.songs"></song-table>
+            <song-filter-bar [(filter)]="filter" (filterChange)="onFilterChange()"></song-filter-bar>
+            <song-table [songs]="(songs$ | async) ?? []"></song-table>
         </ng-template>
     </p-tabPanel>
     <p-tabPanel header="Artists">
         <ng-template pTemplate="content">
-            <artist-table [artists]="state.data.artists"></artist-table>
+            <artist-table [artists]="(artists$ | async) ?? []"></artist-table>
         </ng-template>
     </p-tabPanel>
     <p-tabPanel header="Cached Queries">

@@ -18,6 +18,7 @@ import { TableModule } from "primeng/table";
 import { TabViewModule } from "primeng/tabview";
 import { ArtistTableComponent } from "./components/artist-table/artist-table.component";
 import { QueryCacheTableComponent } from "./components/query-cache-table/query-cache-table.component";
+import { SongFilterBarComponent } from "./components/song-filter-bar/song-filter-bar.component";
 import { SongTableComponent } from "./components/song-table/song-table.component";
 import { MusicAppComponent } from "./music-box-app.component";
 import { MusicBoxClientSideEntityApi } from "./music-box-client-side-entity-api";
@@ -39,7 +40,13 @@ import { MusicBoxClientSideEntityApi } from "./music-box-client-side-entity-api"
         TableModule,
         TabViewModule,
     ],
-    declarations: [MusicAppComponent, SongTableComponent, ArtistTableComponent, QueryCacheTableComponent],
+    declarations: [
+        ArtistTableComponent,
+        MusicAppComponent,
+        QueryCacheTableComponent,
+        SongFilterBarComponent,
+        SongTableComponent,
+    ],
     providers: [
         SongLocationEntitySchema,
         {
@@ -74,23 +81,10 @@ import { MusicBoxClientSideEntityApi } from "./music-box-client-side-entity-api"
                     .withSearchSongs()
                     .withGetAllSongs()
                     .withGetSongById()
-                    .withGetSongLocationsBySongId();
+                    .withGetSongLocationsBySongId()
+                    .withGetAllSongLocationTypes();
             },
         },
-        // {
-        //     provide: Workspace,
-        //     deps: [EntitySourceGateway, EntitySchemaCatalog, EntityQueryTracing],
-        //     useFactory: (gateway: EntitySourceGateway, schemas: EntitySchemaCatalog, tracing: EntityQueryTracing) => {
-        //         console.log("🏭 new workspace");
-        //         const workspace = new Workspace(tracing);
-        //         workspace.setSource(gateway);
-        //         workspace.setHydrator(gateway);
-        //         workspace.setStore(gateway);
-        //         workspace.setSchemaCatalog(schemas);
-
-        //         return workspace;
-        //     },
-        // },
         {
             provide: EntityWorkspace,
             deps: [MusicBoxClientSideEntityApi, EntitySchemaCatalog, EntityQueryTracing],

@@ -1,0 +1,36 @@
+<div class="grid p-fluid">
+    <div class="field col-1">
+        <label for="locationType">Location Type</label>
+        <p-multiSelect
+            [options]="(locationTypes$ | async) ?? []"
+            [(ngModel)]="value.locationTypes"
+            optionLabel="name"
+            inputId="locationType"
+            panelStyleClass="min-w-max"
+        ></p-multiSelect>
+    </div>
+    <div class="field col-2">
+        <label for="artist">Artist</label>
+        <p-multiSelect
+            [options]="(artists$ | async) ?? []"
+            [(ngModel)]="value.artists"
+            optionLabel="name"
+            inputId="artist"
+            panelStyleClass="min-w-max"
+        ></p-multiSelect>
+    </div>
+    <div class="field col-2">
+        <label for="searchText">Search Text</label>
+        <input
+            type="text"
+            name="searchText"
+            id="searchText"
+            pInputText
+            [(ngModel)]="value.searchText"
+            (keyup.enter)="emitChange()"
+        />
+    </div>
+    <div class="col-1 flex align-items-center">
+        <button pButton label="Search" icon="pi pi-search" class="p-button-text" (click)="emitChange()"></button>
+    </div>
+</div>

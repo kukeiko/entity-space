@@ -1,6 +1,6 @@
 import { Entity, EntitySelectionValue, IEntitySchema } from "@entity-space/common";
 import { fromDeepBag, MatchesBagArgument } from "@entity-space/criteria";
-import { readPath, writePath } from "@entity-space/utils";
+import { DeepPartial, readPath, writePath } from "@entity-space/utils";
 import { map, Observable } from "rxjs";
 import { EntitySelection } from "../query/entity-selection";
 import { EntityWorkspace } from "./entity-workspace";
@@ -12,7 +12,7 @@ export class ScopedEntityWorkspace<T extends Entity = Entity> {
     }
 
     // private readonly blueprint: Class<T>;
-    private readonly schema: IEntitySchema;
+    private readonly schema: IEntitySchema<T>;
     // private readonly schemas: EntitySchemaCatalog;
     private readonly workspace: EntityWorkspace;
     private defaultHydrate: EntitySelectionValue<T> = true;
@@ -57,5 +57,14 @@ export class ScopedEntityWorkspace<T extends Entity = Entity> {
     withDefaultHydration(hydrate: EntitySelectionValue<T>): this {
         this.defaultHydrate = hydrate;
         return this;
+    }
+
+    // [todo] not reactive yet
+    hydrate(entities: T[], selection: EntitySelectionValue<T>): Observable<T[]> {
+        return this.workspace.hydrate$(this.schema, entities, selection);
+    }
+
+    async add(entities: DeepPartial<T>[]): Promise<void> {
+        return await this.workspace.add(this.schema, entities);
     }
 }

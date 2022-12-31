@@ -2,7 +2,14 @@ import { HttpClient, HttpParams } from "@angular/common/http";
 import { Entity, EntitySchemaCatalog, IEntitySchema } from "@entity-space/common";
 import { EntityApi, EntityQueryTracing, IEntityStore } from "@entity-space/core";
 import { inSetShape, isValueShape } from "@entity-space/criteria";
-import { Artist, ArtistBlueprint, Song, SongBlueprint, SongLocation } from "@entity-space/examples/libs/music-model";
+import {
+    Artist,
+    ArtistBlueprint,
+    Song,
+    SongBlueprint,
+    SongLocation,
+    SongLocationTypeBlueprint,
+} from "@entity-space/examples/libs/music-model";
 import { firstValueFrom } from "rxjs";
 
 export class MusicBoxClientSideEntityApi extends EntityApi implements IEntityStore {
@@ -141,6 +148,15 @@ export class MusicBoxClientSideEntityApi extends EntityApi implements IEntitySto
                         params: { songId: Array.from(criterion.getBag().songId.getValues()).join(",") },
                     })
                 )
+        );
+    }
+
+    withGetAllSongLocationTypes(): this {
+        return this.addEndpoint(this.schemas.resolve(SongLocationTypeBlueprint), builder =>
+            builder.supportsSelection({ id: true, name: true }).isLoadedBy(() => [
+                { id: "web", name: "Web" },
+                { id: "local", name: "Local" },
+            ])
         );
     }
 }

@@ -1,4 +1,4 @@
-<p-table *ngIf="state$ | async; let state" [columns]="columns" [value]="state.data.artists" [reorderableColumns]="true">
+<p-table [columns]="columns" [value]="(artists$ | async) ?? []" [reorderableColumns]="true">
     <ng-template pTemplate="header" let-columns>
         <tr>
             <th *ngFor="let column of columns" pReorderableColumn>
@@ -48,7 +48,7 @@
             label="Save"
             icon="pi pi-check"
             class="p-button-text p-button-success"
-            (click)="saveSong()"
+            (click)="saveArtist()"
         ></button>
     </ng-template>
 </p-dialog>
