@@ -1,4 +1,4 @@
-import { EntitySelectionValue } from "@entity-space/common";
+import { UnfoldedEntitySelection } from "@entity-space/common";
 import { AndCriteria } from "../and/and-criteria";
 import { AnyCriterion } from "../any/any";
 import { Criteria } from "../criteria";
@@ -289,11 +289,7 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag, R exte
         }
     }
 
-    static omitSelection(criterion: Criterion, selection: EntitySelectionValue): Criterion {
-        if (selection === true) {
-            throw new Error("omitting by selection value 'true' not supported");
-        }
-
+    static omitSelection(criterion: Criterion, selection: UnfoldedEntitySelection): Criterion {
         if (criterion instanceof OrCriteria) {
             // [todo] no clue currently why .getItems() returns any[]
             const omitted = (criterion.getItems() as Criterion[])

@@ -1,4 +1,4 @@
-import { EntitySchema, EntitySelectionValue, UnfoldedEntitySelection } from "@entity-space/common";
+import { EntitySchema, UnfoldedEntitySelection } from "@entity-space/common";
 import { EntitySelection } from "../../lib/query/entity-selection";
 
 function intersectSelection(a: UnfoldedEntitySelection, b: UnfoldedEntitySelection): boolean | UnfoldedEntitySelection {
@@ -15,9 +15,9 @@ function intersectSelection(a: UnfoldedEntitySelection, b: UnfoldedEntitySelecti
 describe("selection: intersect", () => {
     it("{ foo, bar } intersected with { foo } should be { foo }", () => {
         // arrange
-        const a: EntitySelectionValue = { foo: true, bar: true };
-        const b: EntitySelectionValue = { foo: true };
-        const expected: EntitySelectionValue = { foo: true };
+        const a: UnfoldedEntitySelection = { foo: true, bar: true };
+        const b: UnfoldedEntitySelection = { foo: true };
+        const expected: UnfoldedEntitySelection = { foo: true };
 
         // act
         const intersected_A_with_B = intersectSelection(a, b);
@@ -30,9 +30,9 @@ describe("selection: intersect", () => {
 
     it("{ foo, bar: { baz, khaz } } intersected with { bar: { baz } } should be { bar: { baz } }", () => {
         // arrange
-        const a: EntitySelectionValue = { foo: true, bar: { baz: true, khaz: true } };
-        const b: EntitySelectionValue = { bar: { baz: true } };
-        const expected: EntitySelectionValue = { bar: { baz: true } };
+        const a: UnfoldedEntitySelection = { foo: true, bar: { baz: true, khaz: true } };
+        const b: UnfoldedEntitySelection = { bar: { baz: true } };
+        const expected: UnfoldedEntitySelection = { bar: { baz: true } };
 
         // act
         const intersected_A_with_B = intersectSelection(a, b);
@@ -45,8 +45,8 @@ describe("selection: intersect", () => {
 
     it("{ foo } intersected with { bar } should be false", () => {
         // arrange
-        const a: EntitySelectionValue = { foo: true };
-        const b: EntitySelectionValue = { bar: true };
+        const a: UnfoldedEntitySelection = { foo: true };
+        const b: UnfoldedEntitySelection = { bar: true };
         const expected = false;
 
         // act

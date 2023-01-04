@@ -1,4 +1,4 @@
-import { Entity, EntitySelectionValue, IEntitySchema, UnfoldedEntitySelection } from "@entity-space/common";
+import { Entity, IEntitySchema, UnfoldedEntitySelection } from "@entity-space/common";
 import {
     anyShape,
     Criterion,
@@ -130,9 +130,7 @@ export class EntityApiEndpointBuilder<
 
     acceptsCriterion(
         accept: (
-            criterion: InstancedCriterionShape<
-                NamedCriteriaShape<CriterionRequiredFields, CriterionOptionalFields>
-            >
+            criterion: InstancedCriterionShape<NamedCriteriaShape<CriterionRequiredFields, CriterionOptionalFields>>
         ) => boolean
     ): this {
         this.acceptCriterion = accept as (criterion: Criterion) => boolean;

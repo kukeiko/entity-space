@@ -1,4 +1,4 @@
-import { Entity, EntitySelectionValue, IEntitySchema } from "@entity-space/common";
+import { Entity, IEntitySchema, UnfoldedEntitySelection } from "@entity-space/common";
 import { Criterion, ICriterionShape, InstancedCriterionShape } from "@entity-space/criteria";
 import { Observable } from "rxjs";
 import { EntitySet } from "../entity/data-structures/entity-set";
@@ -7,15 +7,10 @@ import { QueryPaging } from "../query/query-paging";
 
 export type EntityApiEndpointData<T extends Entity = Entity> = T | T[] | EntitySet<T>;
 
-export type EntityApiEndpointInvoke<
-    T extends Entity = Entity,
-    C = ICriterionShape,
-    O = ICriterionShape
-> = (query: {
+export type EntityApiEndpointInvoke<T extends Entity = Entity, C = ICriterionShape, O = ICriterionShape> = (query: {
     criterion: InstancedCriterionShape<C>;
     options: InstancedCriterionShape<O>;
-    // expansion: UnfoldedExpansion<T>;
-    selection: EntitySelectionValue<T>; // [todo] want to use unfolded instead
+    selection: UnfoldedEntitySelection<T>;
     paging?: QueryPaging;
 }) => Observable<EntityApiEndpointData<T>> | Promise<EntityApiEndpointData<T>> | EntityApiEndpointData<T>;
 

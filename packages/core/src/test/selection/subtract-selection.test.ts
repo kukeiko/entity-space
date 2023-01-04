@@ -1,7 +1,7 @@
-import { EntitySchema, EntitySelectionValue, UnfoldedEntitySelection } from "@entity-space/common";
+import { EntitySchema, UnfoldedEntitySelection } from "@entity-space/common";
 import { EntitySelection } from "../../lib/query/entity-selection";
 
-function subtractSelection(a: UnfoldedEntitySelection, b: UnfoldedEntitySelection): boolean | EntitySelectionValue {
+function subtractSelection(a: UnfoldedEntitySelection, b: UnfoldedEntitySelection): boolean | UnfoldedEntitySelection {
     const rootSchema = new EntitySchema("foo");
     const fooSchema = new EntitySchema("foo");
     const barSchema = new EntitySchema("bar");
@@ -30,8 +30,8 @@ describe("subtractExpansion()", () => {
     describe("full subtraction", () => {
         it("{ } subtracted by { foo } should be true", () => {
             // arrange
-            const a: EntitySelectionValue = {};
-            const b: EntitySelectionValue = { foo: true };
+            const a: UnfoldedEntitySelection = {};
+            const b: UnfoldedEntitySelection = { foo: true };
 
             // act
             const subtracted = subtractSelection(a, b);
@@ -42,8 +42,8 @@ describe("subtractExpansion()", () => {
 
         it("{ foo, bar } should be completely subtracted by { foo, bar }", () => {
             // arrange
-            const a: EntitySelectionValue = { foo: {}, bar: true };
-            const b: EntitySelectionValue = { foo: true, bar: {} };
+            const a: UnfoldedEntitySelection = { foo: {}, bar: true };
+            const b: UnfoldedEntitySelection = { foo: true, bar: {} };
 
             // act
             const subtracted = subtractSelection(a, b);
@@ -56,8 +56,8 @@ describe("subtractExpansion()", () => {
     describe("partial reduction", () => {
         it("{ foo, bar } subtracted by { foo } should be { bar }", () => {
             // arrange
-            const a: EntitySelectionValue = { foo: true, bar: true };
-            const b: EntitySelectionValue = { foo: true };
+            const a: UnfoldedEntitySelection = { foo: true, bar: true };
+            const b: UnfoldedEntitySelection = { foo: true };
 
             // act
             const subtracted = subtractSelection(a, b);
@@ -68,8 +68,8 @@ describe("subtractExpansion()", () => {
 
         it("{ foo: { bar, baz }, khaz: { mo } } subtracted by { foo: { bar }, khaz: { mo, dan } } should be { foo: { baz } }", () => {
             // arrange
-            const a: EntitySelectionValue = { foo: { bar: true, baz: true }, khaz: { mo: true } };
-            const b: EntitySelectionValue = { foo: { bar: true }, khaz: { mo: true, dan: true } };
+            const a: UnfoldedEntitySelection = { foo: { bar: true, baz: true }, khaz: { mo: true } };
+            const b: UnfoldedEntitySelection = { foo: { bar: true }, khaz: { mo: true, dan: true } };
 
             // act
             const subtracted = subtractSelection(a, b);
@@ -82,8 +82,8 @@ describe("subtractExpansion()", () => {
     describe("no reduction", () => {
         it("{ foo, bar } should not be subtracted by { baz }", () => {
             // arrange
-            const a: EntitySelectionValue = { foo: true, bar: true };
-            const b: EntitySelectionValue = { baz: true };
+            const a: UnfoldedEntitySelection = { foo: true, bar: true };
+            const b: UnfoldedEntitySelection = { baz: true };
 
             // act
             const subtracted = subtractSelection(a, b);
@@ -94,8 +94,8 @@ describe("subtractExpansion()", () => {
 
         it("{ foo } should not be subtracted by { }", () => {
             // arrange
-            const a: EntitySelectionValue = { foo: true };
-            const b: EntitySelectionValue = {};
+            const a: UnfoldedEntitySelection = { foo: true };
+            const b: UnfoldedEntitySelection = {};
 
             // act
             const subtracted = subtractSelection(a, b);

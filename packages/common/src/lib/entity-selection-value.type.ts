@@ -1,7 +1,5 @@
 import { Entity } from "./entity.type";
 
-// [todo] don't really like the name. would rather have just "Expansion" instead,
-// and find another name for the class "Expansion" (in core/../expansion.ts)
 export type EntitySelectionValue<T = Entity> =
     | true
     | {

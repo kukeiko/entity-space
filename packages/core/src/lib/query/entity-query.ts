@@ -1,4 +1,4 @@
-import { EntitySelectionValue, IEntitySchema, UnfoldedEntitySelection } from "@entity-space/common";
+import { IEntitySchema, UnfoldedEntitySelection } from "@entity-space/common";
 import { any, AnyCriterion, Criterion, NamedCriteria, never, NeverCriterion } from "@entity-space/criteria";
 import { EntitySelection } from "./entity-selection";
 import { QueryPaging } from "./query-paging";
