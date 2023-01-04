@@ -1,4 +1,4 @@
-import { EntitySchema, EntitySelectionValue } from "@entity-space/common";
+import { EntitySchema, EntitySelectionValue, UnfoldedEntitySelection } from "@entity-space/common";
 import { inRange, matches, or } from "@entity-space/criteria";
 import { EntitySelection } from "../../lib/query/entity-selection";
 import { EntityQuery } from "../../lib/query/entity-query";
@@ -155,7 +155,7 @@ describe("what's reduction for?", () => {
         /**
          * Later on we also want to load the customer reviews of the product:
          */
-        const basic_properties_with_reviews: EntitySelectionValue = {
+        const basic_properties_with_reviews: UnfoldedEntitySelection = {
             ...basic_properties,
             reviews: true,
         };
@@ -163,15 +163,11 @@ describe("what's reduction for?", () => {
         /**
          * Since we've loaded the basic_properties_only already, the difference should just be the reviews:
          */
-        const expected: EntitySelectionValue = {
+        const expected: UnfoldedEntitySelection = {
             reviews: true,
         };
 
-        const actual = EntitySelection.subtractValue(
-            new EntitySchema("foo"),
-            basic_properties_with_reviews,
-            basic_properties
-        );
+        const actual = EntitySelection.subtractValue(basic_properties_with_reviews, basic_properties);
 
         expect(actual).toEqual(expected);
     });

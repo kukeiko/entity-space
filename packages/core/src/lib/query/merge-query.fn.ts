@@ -87,7 +87,7 @@ export function mergeQuery(a: EntityQuery, b: EntityQuery): false | EntityQuery 
         return new EntityQuery({
             entitySchema,
             criteria: a.getCriteria(),
-            selection: EntitySelection.mergeValues(a.getEntitySchema(), a.getSelectionValue(), b.getSelectionValue()),
+            selection: EntitySelection.mergeValues(a.getSelectionValue(), b.getSelectionValue()),
             options,
             paging,
         });

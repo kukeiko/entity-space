@@ -1,7 +1,7 @@
-import { EntitySchema, EntitySelectionValue } from "@entity-space/common";
+import { EntitySchema, EntitySelectionValue, UnfoldedEntitySelection } from "@entity-space/common";
 import { EntitySelection } from "../../lib/query/entity-selection";
 
-function subtractSelection(a: EntitySelectionValue, b: EntitySelectionValue): boolean | EntitySelectionValue {
+function subtractSelection(a: UnfoldedEntitySelection, b: UnfoldedEntitySelection): boolean | EntitySelectionValue {
     const rootSchema = new EntitySchema("foo");
     const fooSchema = new EntitySchema("foo");
     const barSchema = new EntitySchema("bar");

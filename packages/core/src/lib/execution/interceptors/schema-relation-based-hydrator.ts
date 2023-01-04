@@ -1,4 +1,4 @@
-import { EntitySelectionValue, IEntitySchemaRelation } from "@entity-space/common";
+import { EntitySelectionValue, IEntitySchemaRelation, UnfoldedEntitySelection } from "@entity-space/common";
 import { and, fromDeepBag } from "@entity-space/criteria";
 import { isNotFalse, writePath } from "@entity-space/utils";
 import { map, merge, of, switchMap, takeLast, tap } from "rxjs";
@@ -90,9 +90,9 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
     private toHydrateRelationQuery(
         entitySet: EntitySet,
         key: string,
-        selectionValue: EntitySelectionValue
+        selectionValue?: UnfoldedEntitySelection | true
     ): false | [EntityQuery, IEntitySchemaRelation] {
-        if (selectionValue === void 0) {
+        if (selectionValue === void 0 || selectionValue === true) {
             return false;
         }
 
@@ -110,8 +110,7 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
             relation.getToIndex().getPath()
         );
 
-        const relatedSelection = selectionValue === true ? relatedSchema.getDefaultSelection() : selectionValue;
-        const query = new EntityQuery({ entitySchema: relatedSchema, criteria, selection: relatedSelection });
+        const query = new EntityQuery({ entitySchema: relatedSchema, criteria, selection: selectionValue });
 
         return [query, relation];
     }
@@ -178,10 +177,7 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
                             writePath(
                                 relation.getPropertyName(),
                                 {},
-                                EntitySelection.mergeValues(
-                                    hydrationQuery.getEntitySchema(),
-                                    ...accepted.map(q => q.getSelectionValue())
-                                )
+                                EntitySelection.mergeValues(...accepted.map(q => q.getSelectionValue()))
                             )
                         ),
                     ],
@@ -190,10 +186,7 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
                             writePath(
                                 relation.getPropertyName(),
                                 {},
-                                EntitySelection.mergeValues(
-                                    hydrationQuery.getEntitySchema(),
-                                    ...rejected.map(q => q.getSelectionValue())
-                                )
+                                EntitySelection.mergeValues(...rejected.map(q => q.getSelectionValue()))
                             )
                         ),
                     ],

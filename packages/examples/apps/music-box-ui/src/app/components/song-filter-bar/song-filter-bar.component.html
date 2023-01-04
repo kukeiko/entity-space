@@ -4,6 +4,7 @@
         <p-multiSelect
             [options]="(locationTypes$ | async) ?? []"
             [(ngModel)]="value.locationTypes"
+            dataKey="id"
             optionLabel="name"
             inputId="locationType"
             panelStyleClass="min-w-max"
@@ -14,6 +15,7 @@
         <p-multiSelect
             [options]="(artists$ | async) ?? []"
             [(ngModel)]="value.artists"
+            dataKey="id"
             optionLabel="name"
             inputId="artist"
             panelStyleClass="min-w-max"

@@ -1,15 +1,8 @@
-import { EntitySchema, EntitySelectionValue } from "@entity-space/common";
+import { EntitySelectionValue, UnfoldedEntitySelection } from "@entity-space/common";
 import { EntitySelection } from "../../lib/query/entity-selection";
 
-function mergeIntersections(...objects: EntitySelectionValue[]): boolean | EntitySelectionValue {
-    const rootSchema = new EntitySchema("foo");
-    const fooSchema = new EntitySchema("foo");
-    const barSchema = new EntitySchema("bar");
-    const bazSchema = new EntitySchema("baz");
-    fooSchema.addRelationProperty("bar", barSchema, "barId", "id").addRelationProperty("baz", bazSchema, "bazId", "id");
-    rootSchema.addRelationProperty("foo", fooSchema, "fooId", "id");
-
-    return EntitySelection.mergeValues(rootSchema, ...objects);
+function mergeIntersections(...objects: UnfoldedEntitySelection[]): boolean | UnfoldedEntitySelection {
+    return EntitySelection.mergeValues(...objects);
 }
 
 describe("mergeExpansions()", () => {

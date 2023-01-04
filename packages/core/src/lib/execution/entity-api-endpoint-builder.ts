@@ -1,4 +1,4 @@
-import { Entity, EntitySelectionValue, IEntitySchema } from "@entity-space/common";
+import { Entity, EntitySelectionValue, IEntitySchema, UnfoldedEntitySelection } from "@entity-space/common";
 import {
     anyShape,
     Criterion,
@@ -39,7 +39,7 @@ export class EntityApiEndpointBuilder<
     private pagingRequired = false;
     private pagingSupported = false;
 
-    private supportedSelection: EntitySelectionValue;
+    private supportedSelection: UnfoldedEntitySelection;
     private loadEntities?: EntityApiEndpointInvoke;
     private acceptCriterion: (criterion: Criterion) => boolean = () => true;
 
@@ -116,7 +116,7 @@ export class EntityApiEndpointBuilder<
     }
 
     supportsSelection(
-        selection: EntitySelectionValue<T>
+        selection: UnfoldedEntitySelection<T>
     ): EntityApiEndpointBuilder<
         T,
         CriterionRequiredFields,
@@ -124,7 +124,7 @@ export class EntityApiEndpointBuilder<
         OptionsRequiredFields,
         OptionsOptionalFields
     > {
-        this.supportedSelection = EntitySelection.mergeValues(this.schema, this.supportedSelection, selection);
+        this.supportedSelection = EntitySelection.mergeValues(this.supportedSelection, selection);
         return this;
     }
 

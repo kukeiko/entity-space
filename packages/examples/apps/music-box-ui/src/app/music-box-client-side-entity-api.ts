@@ -133,7 +133,13 @@ export class MusicBoxClientSideEntityApi extends EntityApi implements IEntitySto
         return this.addEndpoint(this.schemas.resolve(SongBlueprint), builder =>
             builder
                 .requiresFields({ id: isValueShape(Number) })
-                .supportsSelection({ id: true, artistId: true, duration: true, locations: true, name: true })
+                .supportsSelection({
+                    id: true,
+                    artistId: true,
+                    duration: true,
+                    locations: { id: true, songId: true, songLocationType: true, url: true },
+                    name: true,
+                })
                 .isLoadedBy(({ criterion }) => this.http.get<Song>(`api/songs/${criterion.getBag().id.getValue()}`))
         );
     }

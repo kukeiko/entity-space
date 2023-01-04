@@ -1,11 +1,11 @@
-import { EntitySchema, EntitySelectionValue } from "@entity-space/common";
+import { EntitySchema, UnfoldedEntitySelection } from "@entity-space/common";
 import { Criterion } from "@entity-space/criteria";
 import { EntityQuery } from "../../lib/query/entity-query";
 import { subtractQueries } from "../../lib/query/subtract-queries.fn";
 
 // [todo] add more tests
 describe("subtractQueries()", () => {
-    function createQuery(criteria: Criterion, selection: EntitySelectionValue = {}): EntityQuery {
+    function createQuery(criteria: Criterion, selection: UnfoldedEntitySelection = {}): EntityQuery {
         return new EntityQuery({ entitySchema: new EntitySchema("foo"), criteria, selection });
     }
 

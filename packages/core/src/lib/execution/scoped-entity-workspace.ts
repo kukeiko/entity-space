@@ -1,4 +1,4 @@
-import { Entity, EntitySelectionValue, IEntitySchema } from "@entity-space/common";
+import { Entity, IEntitySchema, UnfoldedEntitySelection } from "@entity-space/common";
 import { fromDeepBag, MatchesBagArgument } from "@entity-space/criteria";
 import { DeepPartial, readPath, writePath } from "@entity-space/utils";
 import { map, Observable } from "rxjs";
@@ -15,9 +15,9 @@ export class ScopedEntityWorkspace<T extends Entity = Entity> {
     private readonly schema: IEntitySchema<T>;
     // private readonly schemas: EntitySchemaCatalog;
     private readonly workspace: EntityWorkspace;
-    private defaultHydrate: EntitySelectionValue<T> = true;
+    private defaultHydrate?: UnfoldedEntitySelection<T>;
 
-    oneById(id: number | string | Entity, hydrate: EntitySelectionValue<T> = true): Observable<T | undefined> {
+    oneById(id: number | string | Entity, hydrate?: UnfoldedEntitySelection<T>): Observable<T | undefined> {
         let bag: Record<string, any>;
         const keyPaths = this.schema.getKey().getPath();
 
@@ -37,30 +37,39 @@ export class ScopedEntityWorkspace<T extends Entity = Entity> {
 
         const criterion = fromDeepBag(bag);
 
-        hydrate = EntitySelection.mergeValues(this.schema, hydrate, this.defaultHydrate) as EntitySelectionValue<T>;
+        hydrate = EntitySelection.mergeValues(
+            hydrate ?? this.schema.getDefaultSelection(),
+            this.defaultHydrate ?? {}
+        ) as UnfoldedEntitySelection<T>;
 
         return this.workspace.query$<T>(this.schema, criterion, hydrate).pipe(map(entities => entities[0]));
     }
 
-    all(hydrate: EntitySelectionValue<T> = true): Observable<T[]> {
-        hydrate = EntitySelection.mergeValues(this.schema, hydrate, this.defaultHydrate) as EntitySelectionValue<T>;
+    all(hydrate?: UnfoldedEntitySelection<T>): Observable<T[]> {
+        hydrate = EntitySelection.mergeValues(
+            hydrate ?? this.schema.getDefaultSelection(),
+            this.defaultHydrate ?? {}
+        ) as UnfoldedEntitySelection<T>;
 
         return this.workspace.query$<T>(this.schema, void 0, hydrate);
     }
 
-    many(criteria: MatchesBagArgument<T>, hydrate: EntitySelectionValue<T> = true): Observable<T[]> {
-        hydrate = EntitySelection.mergeValues(this.schema, hydrate, this.defaultHydrate) as EntitySelectionValue<T>;
+    many(criteria: MatchesBagArgument<T>, hydrate?: UnfoldedEntitySelection<T>): Observable<T[]> {
+        hydrate = EntitySelection.mergeValues(
+            hydrate ?? this.schema.getDefaultSelection(),
+            this.defaultHydrate ?? {}
+        ) as UnfoldedEntitySelection<T>;
 
         return this.workspace.query$<T>(this.schema, criteria, hydrate);
     }
 
-    withDefaultHydration(hydrate: EntitySelectionValue<T>): this {
+    withDefaultHydration(hydrate: UnfoldedEntitySelection<T>): this {
         this.defaultHydrate = hydrate;
         return this;
     }
 
     // [todo] not reactive yet
-    hydrate(entities: T[], selection: EntitySelectionValue<T>): Observable<T[]> {
+    hydrate(entities: T[], selection: UnfoldedEntitySelection<T>): Observable<T[]> {
         return this.workspace.hydrate$(this.schema, entities, selection);
     }
 

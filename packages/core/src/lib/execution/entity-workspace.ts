@@ -2,11 +2,11 @@ import {
     BlueprintInstance,
     Entity,
     EntitySchemaCatalog,
-    EntitySelectionValue,
     IEntitySchema,
+    UnfoldedEntitySelection
 } from "@entity-space/common";
-import { any, Criterion, fromDeepBag, isValue, matches, MatchesBagArgument, never } from "@entity-space/criteria";
-import { Class, DeepPartial, isDefined, isNotFalse, writePath } from "@entity-space/utils";
+import { any, Criterion, matches, MatchesBagArgument, never } from "@entity-space/criteria";
+import { Class, DeepPartial, isNotFalse } from "@entity-space/utils";
 import { flatMap, isEqual, xor, xorWith } from "lodash";
 import {
     distinctUntilChanged,
@@ -24,24 +24,24 @@ import {
     startWith,
     Subject,
     switchMap,
-    tap,
+    tap
 } from "rxjs";
-import { IEntityStreamInterceptor } from "./i-entity-stream-interceptor";
-import { SchemaRelationBasedHydrator } from "./interceptors/schema-relation-based-hydrator";
-import { EntityStream } from "./entity-stream";
-import { EntityStreamPacket } from "./entity-stream-packet";
-import { runInterceptors } from "./run-interceptors.fn";
-import { ScopedEntityWorkspace } from "./scoped-entity-workspace";
-import { EntityQuery } from "../query/entity-query";
-import { QueryPaging } from "../query/query-paging";
-import { subtractQueries } from "../query/subtract-queries.fn";
-import { EntityQueryTracing } from "./entity-query-tracing";
 import { EntitySet } from "../entity/data-structures/entity-set";
 import { createCriterionFromEntities } from "../entity/functions/create-criterion-from-entities.fn";
 import { createIdQueryFromEntities } from "../entity/functions/create-id-query-from-entities.fn";
 import { normalizeEntities } from "../entity/functions/normalize-entities.fn";
 import { IEntityStore } from "../entity/i-entity-store";
 import { InMemoryEntityDatabase } from "../entity/in-memory-entity-database";
+import { EntityQuery } from "../query/entity-query";
+import { QueryPaging } from "../query/query-paging";
+import { subtractQueries } from "../query/subtract-queries.fn";
+import { EntityQueryTracing } from "./entity-query-tracing";
+import { EntityStream } from "./entity-stream";
+import { EntityStreamPacket } from "./entity-stream-packet";
+import { IEntityStreamInterceptor } from "./i-entity-stream-interceptor";
+import { SchemaRelationBasedHydrator } from "./interceptors/schema-relation-based-hydrator";
+import { runInterceptors } from "./run-interceptors.fn";
+import { ScopedEntityWorkspace } from "./scoped-entity-workspace";
 
 // [todo] move to "execution" folder
 export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
@@ -160,7 +160,7 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
     hydrate$<T extends Entity>(
         schema: IEntitySchema<T>,
         entities: T[],
-        selection: EntitySelectionValue<T>
+        selection: UnfoldedEntitySelection<T>
     ): Observable<T[]> {
         if (!entities.length) {
             return of([]);
@@ -216,7 +216,7 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
     query$<T extends Entity>(
         schema: IEntitySchema,
         criterion: Criterion | MatchesBagArgument<T> = any(),
-        selection?: EntitySelectionValue<T>,
+        selection?: UnfoldedEntitySelection<T>,
         options: Criterion | MatchesBagArgument<Entity> = never(),
         paging?: { skip?: number; top?: number; from?: number; to?: number }
     ): Observable<T[]> {
@@ -332,46 +332,6 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
                     })
                 ) as any as Observable<T[]>;
             })
-        );
-    }
-
-    queryOneByKey$<T extends Entity>(
-        schema: IEntitySchema,
-        key: number | string,
-        selection?: EntitySelectionValue<T>
-    ): Observable<T>;
-    queryOneByKey$<T>(
-        schema: Class<T>,
-        key: number | string,
-        selection?: EntitySelectionValue<BlueprintInstance<T>>
-    ): Observable<BlueprintInstance<T>>;
-    queryOneByKey$<T extends Entity>(
-        schema: IEntitySchema | Class<T>,
-        key: number | string,
-        selection: EntitySelectionValue<T> = {}
-    ): Observable<T> {
-        if (!("getId" in schema)) {
-            const resolvedSchema = this.schemas?.resolve(schema);
-
-            if (!resolvedSchema) {
-                throw new Error(`failed to resolve blueprint to schema for type ${schema.name}`);
-            }
-
-            schema = resolvedSchema;
-        }
-
-        const keyPath = schema.getKey().getPath();
-
-        if (keyPath.length > 1) {
-            throw new Error("composite keys not yet supported");
-        }
-
-        const bag: Record<string, any> = {};
-        writePath(keyPath[0], bag, isValue(key));
-
-        return this.query$(schema, fromDeepBag(bag), selection).pipe(
-            map(result => result[0]),
-            filter(isDefined)
         );
     }
 

@@ -1,7 +1,7 @@
+import { EntitySchema, EntitySchemaCatalog, UnfoldedEntitySelection } from "@entity-space/common";
+import { Criterion, isValue, matches, or } from "@entity-space/criteria";
 import { EntityQuery } from "../../lib/query/entity-query";
 import { parseQuery } from "../../lib/query/parse-query.fn";
-import { EntitySchema, EntitySchemaCatalog, EntitySelectionValue } from "@entity-space/common";
-import { Criterion, isValue, matches, or } from "@entity-space/criteria";
 import { QueryPaging } from "../../lib/query/query-paging";
 
 describe("parseQuery()", () => {
@@ -40,7 +40,7 @@ describe("parseQuery()", () => {
     }: {
         options?: Criterion;
         criteria?: Criterion;
-        selection?: EntitySelectionValue;
+        selection?: UnfoldedEntitySelection;
         paging?: QueryPaging;
     }): EntityQuery {
         return new EntityQuery({ entitySchema: fooSchema, options, criteria, selection, paging });

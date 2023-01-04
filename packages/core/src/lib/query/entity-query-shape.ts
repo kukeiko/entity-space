@@ -28,12 +28,12 @@ export class EntityQueryShape {
         schema: IEntitySchema;
         options?: ICriterionShape;
         criterion?: ICriterionShape;
-        selection?: EntitySelection;
+        selection: EntitySelection;
     }) {
         this.schema = schema;
         this.options = options ?? neverShape();
         this.criterion = criterion ?? anyShape();
-        this.selection = selection ?? new EntitySelection({ schema, value: true });
+        this.selection = selection;
     }
 
     private readonly schema: IEntitySchema;

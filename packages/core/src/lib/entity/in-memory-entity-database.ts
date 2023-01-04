@@ -1,4 +1,4 @@
-import { EntitySelectionValue, IEntitySchema, IEntitySchemaRelation } from "@entity-space/common";
+import { IEntitySchema, IEntitySchemaRelation, UnfoldedEntitySelection } from "@entity-space/common";
 import {
     any,
     AnyCriterion,
@@ -13,8 +13,8 @@ import {
 import { cloneJson, groupBy, isDefined, readPath } from "@entity-space/utils";
 import { flatten } from "lodash";
 import { Observable, Subject } from "rxjs";
-import { EntitySelection } from "../query/entity-selection";
 import { EntityQuery } from "../query/entity-query";
+import { EntitySelection } from "../query/entity-selection";
 import { mergeQueries } from "../query/merge-queries.fn";
 import { QueryPaging } from "../query/query-paging";
 import { subtractQueries } from "../query/subtract-queries.fn";
@@ -235,30 +235,6 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         this.upsertSync(entitySet);
     }
 
-    // [todo] not totally happy with this method also creating the queries from the entities,
-    // but i wanted to prevent normalizing twice when adding entities, so that is why it is here
-    // instead of in the workspace.
-    addEntities(schema: IEntitySchema, entities: Entity[]): EntityQuery[] {
-        entities = cloneJson(entities);
-        const normalized = normalizeEntities(schema, entities);
-        const createdQueries: EntityQuery[] = [];
-
-        for (const schema of normalized.getSchemas()) {
-            const normalizedEntities = normalized.get(schema);
-            this.getOrCreateStore(schema).add(normalizedEntities);
-
-            if (normalizedEntities.length > 0) {
-                const indexQueries = createQueriesFromEntities(schema, normalizedEntities);
-
-                for (const indexQuery of indexQueries) {
-                    createdQueries.push(indexQuery);
-                }
-            }
-        }
-
-        return createdQueries;
-    }
-
     clear(): void {
         this.stores.clear();
         this.cachedQueries.clear();
@@ -287,10 +263,6 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         };
 
         let selectionValue = selection.getValue();
-
-        if (selectionValue === true) {
-            selectionValue = schema.getDefaultSelection();
-        }
 
         for (const propertyKey in selectionValue) {
             const selectionValueProperty = selectionValue[propertyKey];
@@ -334,7 +306,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
     private hydrateRelation(
         entities: Entity[],
         relation: IEntitySchemaRelation,
-        selection?: EntitySelectionValue
+        selection?: UnfoldedEntitySelection
     ): void {
         const relatedSchema = relation.getRelatedEntitySchema();
         // [todo] what about dictionaries?

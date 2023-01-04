@@ -1,20 +1,16 @@
-import { EntitySelectionValue, IEntitySchema } from "@entity-space/common";
+import { UnfoldedEntitySelection, IEntitySchema } from "@entity-space/common";
 
 // [todo] implement toUnfoldedExpansion()
 export class EntitySelection {
-    static create({ schema, value }: { value: EntitySelectionValue; schema: IEntitySchema }): EntitySelection {
-        return new EntitySelection({ schema, value });
-    }
-
-    constructor({ schema, value }: { value: EntitySelectionValue; schema: IEntitySchema }) {
+    constructor({ schema, value }: { value: UnfoldedEntitySelection; schema: IEntitySchema }) {
         this.value = value;
         this.schema = schema;
     }
 
-    private readonly value: EntitySelectionValue;
+    private readonly value: UnfoldedEntitySelection;
     private readonly schema: IEntitySchema;
 
-    getValue(): EntitySelectionValue {
+    getValue(): UnfoldedEntitySelection {
         return this.value;
     }
 
@@ -26,9 +22,9 @@ export class EntitySelection {
         return EntitySelection.toString(this.value);
     }
 
-    static toString(value?: EntitySelectionValue): string {
+    static toString(value?: UnfoldedEntitySelection): string {
         // [todo] expansion value allowing undefined is a bit of a pain, gotta fix that somehow.
-        if (value === true || value === void 0) {
+        if (value === void 0) {
             return "";
         }
 
@@ -42,7 +38,7 @@ export class EntitySelection {
             return true;
         }
 
-        const subtracted = EntitySelection.subtractValue(this.schema, other.getValue(), this.getValue());
+        const subtracted = EntitySelection.subtractValue(other.getValue(), this.getValue());
 
         if (typeof subtracted == "boolean") {
             return subtracted;
@@ -52,7 +48,7 @@ export class EntitySelection {
     }
 
     intersect(other: EntitySelection): false | EntitySelection {
-        const intersection = EntitySelection.intersectValues(this.schema, this.getValue(), other.getValue());
+        const intersection = EntitySelection.intersectValues(this.getValue(), other.getValue());
 
         return intersection ? new EntitySelection({ schema: this.schema, value: intersection }) : false;
     }
@@ -61,16 +57,8 @@ export class EntitySelection {
         return other.subtractFrom(this) === true && this.subtractFrom(other) === true;
     }
 
-    static intersectValues(schema: IEntitySchema, a: EntitySelectionValue, b: EntitySelectionValue): false | EntitySelectionValue {
-        const intersection: EntitySelectionValue = {};
-
-        if (a === true) {
-            a = schema.getDefaultSelection();
-        }
-
-        if (b === true) {
-            b = schema.getDefaultSelection();
-        }
+    static intersectValues(a: UnfoldedEntitySelection, b: UnfoldedEntitySelection): false | UnfoldedEntitySelection {
+        const intersection: UnfoldedEntitySelection = {};
 
         for (const key in a) {
             const myValue = a[key];
@@ -84,14 +72,15 @@ export class EntitySelection {
                 if (otherValue === true) {
                     intersection[key] = true;
                 } else {
-                    intersection[key] = otherValue;
+                    // [todo] better error message
+                    throw new Error("intersection between incompatible selections");
                 }
             } else {
                 if (otherValue === true) {
-                    intersection[key] = myValue;
+                    // [todo] better error message
+                    throw new Error("intersection between incompatible selections");
                 } else {
-                    const relatedSchema = schema.getRelation(key).getRelatedEntitySchema();
-                    const intersectedValue = this.intersectValues(relatedSchema, myValue, otherValue);
+                    const intersectedValue = this.intersectValues(myValue, otherValue);
 
                     if (intersectedValue) {
                         intersection[key] = intersectedValue;
@@ -106,22 +95,18 @@ export class EntitySelection {
     merge(other: EntitySelection): EntitySelection {
         return new EntitySelection({
             schema: this.schema,
-            value: EntitySelection.mergeValues(this.schema, this.getValue(), other.getValue()),
+            value: EntitySelection.mergeValues(this.getValue(), other.getValue()),
         });
     }
 
-    static copyValue(schema: IEntitySchema, object: EntitySelectionValue): Exclude<EntitySelectionValue, true> {
-        return this.mergeValues(schema, object);
+    static copyValue(object: UnfoldedEntitySelection): Exclude<UnfoldedEntitySelection, true> {
+        return this.mergeValues(object);
     }
 
-    static mergeValues(schema: IEntitySchema, ...objects: EntitySelectionValue[]): Exclude<EntitySelectionValue, true> {
-        const merged: EntitySelectionValue = {};
+    static mergeValues(...selections: UnfoldedEntitySelection[]): Exclude<UnfoldedEntitySelection, true> {
+        const merged: UnfoldedEntitySelection = {};
 
-        for (let selection of objects) {
-            if (selection === true) {
-                selection = schema.getDefaultSelection();
-            }
-
+        for (let selection of selections) {
             for (const key in selection) {
                 const left = merged[key];
                 const right = selection[key];
@@ -134,10 +119,10 @@ export class EntitySelection {
                     if (right === true) {
                         merged[key] = true;
                     } else {
-                        merged[key] = this.mergeValues(schema.getRelation(key).getRelatedEntitySchema(), right);
+                        merged[key] = this.mergeValues(right);
                     }
                 } else if (right !== true) {
-                    merged[key] = this.mergeValues(schema.getRelation(key).getRelatedEntitySchema(), left, right);
+                    merged[key] = this.mergeValues(left, right);
                 }
             }
         }
@@ -145,21 +130,16 @@ export class EntitySelection {
         return merged;
     }
 
-    static subtractValue(schema: IEntitySchema, what: EntitySelectionValue, by: EntitySelectionValue): boolean | EntitySelectionValue {
+    static subtractValue(
+        what: UnfoldedEntitySelection,
+        by: UnfoldedEntitySelection
+    ): boolean | UnfoldedEntitySelection {
         if (Object.keys(what).length === 0) {
             return true;
         }
 
-        const reduced: Exclude<EntitySelectionValue, true> = this.copyValue(schema, what);
+        const reduced: Exclude<UnfoldedEntitySelection, true> = this.copyValue(what);
         let didReduce = false;
-
-        if (what === true) {
-            what = schema.getDefaultSelection();
-        }
-
-        if (by === true) {
-            by = schema.getDefaultSelection();
-        }
 
         for (const key in by) {
             const whatValue = what[key];
@@ -173,11 +153,7 @@ export class EntitySelection {
                     didReduce = true;
                 }
             } else if (typeof byValue === "object" && typeof whatValue === "object") {
-                const subReduced = this.subtractValue(
-                    schema.getRelation(key).getRelatedEntitySchema(),
-                    whatValue,
-                    byValue
-                );
+                const subReduced = this.subtractValue(whatValue, byValue);
 
                 if (!subReduced) {
                     continue;

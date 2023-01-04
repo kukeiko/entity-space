@@ -30,7 +30,9 @@ export class SongTableComponent {
 
     songs$ = this.songInput$.pipe(
         switchMap(songs =>
-            this.entities.scope(SongBlueprint).hydrate(songs, { artist: true, locations: { id: true, url: true } })
+            this.entities
+                .scope(SongBlueprint)
+                .hydrate(songs, { artist: { name: true }, locations: { id: true, url: true } })
         ),
         map(songs => songs.slice().sort((a, b) => a.name.localeCompare(b.name)))
     );
