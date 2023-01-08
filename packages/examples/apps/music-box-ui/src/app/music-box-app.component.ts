@@ -28,7 +28,7 @@ export class MusicAppComponent implements OnInit, OnDestroy {
                     artistId: pluckId(this.filter.artists),
                     locations: some(matches<SongLocation>({ songLocationType: pluckId(this.filter.locationTypes) })),
                 },
-                { id: true, artistId: true, duration: true, name: true, locations: { songLocationType: true } }
+                { locations: true }
             )
         ),
         map(songs => songs.slice().sort((a, b) => a.name.localeCompare(b.name)))

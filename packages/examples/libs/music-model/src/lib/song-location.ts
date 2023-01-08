@@ -52,10 +52,10 @@ export class SongLocationEntitySchema extends EntitySchema {
         super("song-location");
         this.setKey("id")
             .addIndex("songId")
-            .addInteger("id")
-            .addInteger("songId")
+            .addInteger("id", true) // [todo] making key required should be done automatically
+            .addInteger("songId", true)
             .addString("url")
             .addString("path")
-            .addString("songLocationType");
+            .addString("songLocationType", true);
     }
 }
