@@ -41,6 +41,8 @@ export class EntitySchemaProperty implements IEntitySchemaProperty {
                 const itemSchema = valueSchema.getItemSchema();
 
                 if (itemSchema.schemaType === "primitive") {
+                    // [todo] why did i decide to throw this error here?
+                    // primitives inside arrays should be fine to have
                     throw new Error(`value schema of property is of type primitive`);
                 }
 

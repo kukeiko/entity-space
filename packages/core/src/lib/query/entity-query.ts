@@ -1,4 +1,4 @@
-import { IEntitySchema, UnfoldedEntitySelection } from "@entity-space/common";
+import { IEntitySchema, UnpackedEntitySelection } from "@entity-space/common";
 import { any, AnyCriterion, Criterion, NamedCriteria, never, NeverCriterion } from "@entity-space/criteria";
 import { EntitySelection } from "./entity-selection";
 import { QueryPaging } from "./query-paging";
@@ -8,7 +8,7 @@ export interface EntityQueryCtorArg {
     entitySchema: IEntitySchema;
     criteria?: Criterion;
     options?: Criterion;
-    selection?: EntitySelection | UnfoldedEntitySelection;
+    selection?: EntitySelection | UnpackedEntitySelection;
     paging?: QueryPaging;
 }
 
@@ -64,7 +64,7 @@ export class EntityQuery {
         return new EntityQuery({ entitySchema: this.entitySchema, criteria: this.criteria });
     }
 
-    withSelection(selection: EntitySelection | UnfoldedEntitySelection): EntityQuery {
+    withSelection(selection: EntitySelection | UnpackedEntitySelection): EntityQuery {
         return new EntityQuery({ entitySchema: this.entitySchema, criteria: this.criteria, selection });
     }
 

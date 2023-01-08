@@ -1,4 +1,4 @@
-import { IEntitySchema, IEntitySchemaRelation, UnfoldedEntitySelection } from "@entity-space/common";
+import { IEntitySchema, IEntitySchemaRelation, UnpackedEntitySelection } from "@entity-space/common";
 import {
     any,
     AnyCriterion,
@@ -306,7 +306,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
     private hydrateRelation(
         entities: Entity[],
         relation: IEntitySchemaRelation,
-        selection?: UnfoldedEntitySelection
+        selection?: UnpackedEntitySelection
     ): void {
         const relatedSchema = relation.getRelatedEntitySchema();
         // [todo] what about dictionaries?

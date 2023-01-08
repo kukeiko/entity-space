@@ -1,16 +1,17 @@
-import { UnfoldedEntitySelection, IEntitySchema } from "@entity-space/common";
+import { UnpackedEntitySelection, IEntitySchema, PackedEntitySelection, Entity } from "@entity-space/common";
+import { toMap } from "@entity-space/utils";
 
 // [todo] implement toUnfoldedExpansion()
 export class EntitySelection {
-    constructor({ schema, value }: { value: UnfoldedEntitySelection; schema: IEntitySchema }) {
+    constructor({ schema, value }: { value: UnpackedEntitySelection; schema: IEntitySchema }) {
         this.value = value;
         this.schema = schema;
     }
 
-    private readonly value: UnfoldedEntitySelection;
+    private readonly value: UnpackedEntitySelection;
     private readonly schema: IEntitySchema;
 
-    getValue(): UnfoldedEntitySelection {
+    getValue(): UnpackedEntitySelection {
         return this.value;
     }
 
@@ -22,7 +23,7 @@ export class EntitySelection {
         return EntitySelection.toString(this.value);
     }
 
-    static toString(value?: UnfoldedEntitySelection): string {
+    static toString(value?: UnpackedEntitySelection): string {
         // [todo] expansion value allowing undefined is a bit of a pain, gotta fix that somehow.
         if (value === void 0) {
             return "";
@@ -57,8 +58,8 @@ export class EntitySelection {
         return other.subtractFrom(this) === true && this.subtractFrom(other) === true;
     }
 
-    static intersectValues(a: UnfoldedEntitySelection, b: UnfoldedEntitySelection): false | UnfoldedEntitySelection {
-        const intersection: UnfoldedEntitySelection = {};
+    static intersectValues(a: UnpackedEntitySelection, b: UnpackedEntitySelection): false | UnpackedEntitySelection {
+        const intersection: UnpackedEntitySelection = {};
 
         for (const key in a) {
             const myValue = a[key];
@@ -99,12 +100,12 @@ export class EntitySelection {
         });
     }
 
-    static copyValue(object: UnfoldedEntitySelection): Exclude<UnfoldedEntitySelection, true> {
+    static copyValue(object: UnpackedEntitySelection): Exclude<UnpackedEntitySelection, true> {
         return this.mergeValues(object);
     }
 
-    static mergeValues(...selections: UnfoldedEntitySelection[]): Exclude<UnfoldedEntitySelection, true> {
-        const merged: UnfoldedEntitySelection = {};
+    static mergeValues(...selections: UnpackedEntitySelection[]): Exclude<UnpackedEntitySelection, true> {
+        const merged: UnpackedEntitySelection = {};
 
         for (let selection of selections) {
             for (const key in selection) {
@@ -131,14 +132,14 @@ export class EntitySelection {
     }
 
     static subtractValue(
-        what: UnfoldedEntitySelection,
-        by: UnfoldedEntitySelection
-    ): boolean | UnfoldedEntitySelection {
+        what: UnpackedEntitySelection,
+        by: UnpackedEntitySelection
+    ): boolean | UnpackedEntitySelection {
         if (Object.keys(what).length === 0) {
             return true;
         }
 
-        const reduced: Exclude<UnfoldedEntitySelection, true> = this.copyValue(what);
+        const reduced: Exclude<UnpackedEntitySelection, true> = this.copyValue(what);
         let didReduce = false;
 
         for (const key in by) {
@@ -179,5 +180,57 @@ export class EntitySelection {
         } else {
             return reduced;
         }
+    }
+
+    static unpack<T extends Entity>(
+        schema: IEntitySchema<T>,
+        selection: PackedEntitySelection
+    ): UnpackedEntitySelection<T> {
+        const unpacked: UnpackedEntitySelection = schema.getDefaultSelection();
+
+        if (selection === true) {
+            return unpacked as UnpackedEntitySelection<T>;
+        }
+
+        const properties = toMap(schema.getProperties(), property => property.getName());
+
+        for (const key in selection) {
+            const value = selection[key];
+
+            if (!value) {
+                continue;
+            }
+
+            const property = properties.get(key);
+
+            if (!property) {
+                // just copy over the value if we don't know about this property,
+                // as users might not have fully described their entities
+                unpacked[key] = value;
+                continue;
+            }
+
+            const valueSchema = property.getUnboxedValueSchema();
+
+            if (value === true) {
+                if (!property.isRequired()) {
+                    if (valueSchema.schemaType === "entity") {
+                        unpacked[key] = valueSchema.getDefaultSelection();
+                    } else {
+                        unpacked[key] = true;
+                    }
+                }
+
+                continue;
+            }
+
+            if (valueSchema.schemaType !== "entity") {
+                throw new Error(`in an EntitySelection, you can only provide "true" for primitive properties`);
+            }
+
+            unpacked[key] = this.unpack(valueSchema, value);
+        }
+
+        return unpacked as UnpackedEntitySelection<T>;
     }
 }

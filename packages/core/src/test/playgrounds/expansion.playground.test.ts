@@ -1,4 +1,4 @@
-import { BlueprintInstance, define, Select, EntitySelectionValue } from "@entity-space/common";
+import { BlueprintInstance, define, Select, PackedEntitySelection } from "@entity-space/common";
 import { Unbox } from "@entity-space/utils";
 import { Canvas, CanvasBlueprint, ProductBlueprint, ShapeBlueprints, Square } from "../content";
 
@@ -9,7 +9,7 @@ import { Canvas, CanvasBlueprint, ProductBlueprint, ShapeBlueprints, Square } fr
 
 xdescribe("playground: selection", () => {
     it("simple expand w/ union types", () => {
-        function takesSelection<E extends EntitySelectionValue<Canvas>>(selection: E): typeof selection {
+        function takesSelection<E extends PackedEntitySelection<Canvas>>(selection: E): typeof selection {
             return {} as any;
         }
 
@@ -62,7 +62,7 @@ xdescribe("playground: selection", () => {
             },
         };
 
-        function takesUserSelection<E extends EntitySelectionValue<CustomUser>>(selection: E): typeof selection {
+        function takesUserSelection<E extends PackedEntitySelection<CustomUser>>(selection: E): typeof selection {
             return {} as any;
         }
 
@@ -76,7 +76,7 @@ xdescribe("playground: selection", () => {
             children: [{ id: 2, shapes: [{ id: 3, type: "circle", radius: 3 }] }],
         };
 
-        type Foo = EntitySelectionValue<Square[]>;
+        type Foo = PackedEntitySelection<Square[]>;
 
         const deepExpansion = takesUserSelection({
             id: true,

@@ -1,6 +1,6 @@
 export * from "./lib/entity.type";
 export * from "./lib/select.type";
-export * from "./lib/entity-selection-value.type";
+export * from "./lib/packed-entity-selection.type";
 export * from "./lib/schema/array-schema";
 export * from "./lib/schema/blueprint";
 export * from "./lib/schema/blueprint-instance";
@@ -16,4 +16,4 @@ export * from "./lib/schema/primitive-schema";
 export * from "./lib/schema/schema.interface";
 export * from "./lib/schema/unused/entity-space-schema";
 export * from "./lib/schema/unused/open-api-schema";
-export * from "./lib/unfolded-entity-selection.type";
+export * from "./lib/unpacked-entity-selection.type";

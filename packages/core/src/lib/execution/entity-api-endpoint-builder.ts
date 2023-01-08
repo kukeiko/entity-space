@@ -1,4 +1,4 @@
-import { Entity, IEntitySchema, UnfoldedEntitySelection } from "@entity-space/common";
+import { Entity, IEntitySchema, UnpackedEntitySelection } from "@entity-space/common";
 import {
     anyShape,
     Criterion,
@@ -39,7 +39,7 @@ export class EntityApiEndpointBuilder<
     private pagingRequired = false;
     private pagingSupported = false;
 
-    private supportedSelection: UnfoldedEntitySelection;
+    private supportedSelection: UnpackedEntitySelection;
     private loadEntities?: EntityApiEndpointInvoke;
     private acceptCriterion: (criterion: Criterion) => boolean = () => true;
 
@@ -116,7 +116,8 @@ export class EntityApiEndpointBuilder<
     }
 
     supportsSelection(
-        selection: UnfoldedEntitySelection<T>
+        selection: UnpackedEntitySelection<T>
+        // selection: PackedEntitySelection<T> // [todo] use this instead
     ): EntityApiEndpointBuilder<
         T,
         CriterionRequiredFields,

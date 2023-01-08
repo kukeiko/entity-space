@@ -1,4 +1,4 @@
-import { IEntitySchemaRelation, UnfoldedEntitySelection } from "@entity-space/common";
+import { IEntitySchemaRelation, UnpackedEntitySelection } from "@entity-space/common";
 import { and, fromDeepBag } from "@entity-space/criteria";
 import { isNotFalse, writePath } from "@entity-space/utils";
 import { map, merge, of, switchMap, takeLast, tap } from "rxjs";
@@ -90,7 +90,7 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
     private toHydrateRelationQuery(
         entitySet: EntitySet,
         key: string,
-        selectionValue?: UnfoldedEntitySelection | true
+        selectionValue?: UnpackedEntitySelection | true
     ): false | [EntityQuery, IEntitySchemaRelation] {
         if (selectionValue === void 0 || selectionValue === true) {
             return false;

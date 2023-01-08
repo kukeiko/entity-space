@@ -1,4 +1,4 @@
-import { BlueprintInstance, Select, EntitySelectionValue } from "@entity-space/common";
+import { BlueprintInstance, PackedEntitySelection, Select } from "@entity-space/common";
 import { NamedCriteriaBag } from "@entity-space/criteria";
 import { Class } from "@entity-space/utils";
 import { CanvasBlueprint, Product, ShapeBlueprints, User, UserBlueprint } from "../content";
@@ -7,7 +7,11 @@ xdescribe("new query playground", () => {
     it("working example #1", () => {
         // [todo] i don't need "E extends Expansion<T>", but can instead just do "E = Expansion<T>" and intellisense fully works. what?
         // i want to understand why
-        function query<T, E = EntitySelectionValue<T>>(type: T, criteria: NamedCriteriaBag, expansion: E): Select<T, E> {
+        function query<T, E = PackedEntitySelection<T>>(
+            type: T,
+            criteria: NamedCriteriaBag,
+            expansion: E
+        ): Select<T, E> {
             return {} as any;
         }
 
@@ -17,7 +21,7 @@ xdescribe("new query playground", () => {
     });
 
     it("working example #2", () => {
-        function query<T, E = EntitySelectionValue<BlueprintInstance<T>>>(
+        function query<T, E = PackedEntitySelection<BlueprintInstance<T>>>(
             type: Class<T>,
             criteria: NamedCriteriaBag,
             expansion: E
@@ -36,15 +40,21 @@ xdescribe("new query playground", () => {
     });
 
     it("working example #3", () => {
-        function query<T, E = EntitySelectionValue<BlueprintInstance<T>>>(
-            type: Class<T>,
-            criteria: NamedCriteriaBag,
-            expansion: E
-        ): Select<BlueprintInstance<T>, E> {
+        function query<
+            T,
+            E extends PackedEntitySelection<BlueprintInstance<T>> = PackedEntitySelection<BlueprintInstance<T>>
+        >(type: Class<T>, criteria: NamedCriteriaBag, expansion: E): Select<BlueprintInstance<T>, E> {
             return {} as any;
         }
 
-        const canvas = query(CanvasBlueprint, {}, { shapes: { area: true, radius: true, length: true } });
+        const canvas = query(
+            CanvasBlueprint,
+            {},
+            {
+                shapes: { area: true, radius: true, length: true },
+                author: { parent: { reviews: { createdBy: { children: true } } } },
+            }
+        );
 
         for (const shape of canvas.shapes) {
             switch (shape.type) {
@@ -62,7 +72,7 @@ xdescribe("new query playground", () => {
     });
 
     it("working example #4", () => {
-        function query<U extends Class[], E = EntitySelectionValue<BlueprintInstance<InstanceType<U[number]>>>>(
+        function query<U extends Class[], E = PackedEntitySelection<BlueprintInstance<InstanceType<U[number]>>>>(
             type: U,
             criteria: NamedCriteriaBag,
             expansion: E

@@ -1,4 +1,4 @@
-import { EntitySchemaCatalog, UnfoldedEntitySelection } from "@entity-space/common";
+import { EntitySchemaCatalog, UnpackedEntitySelection } from "@entity-space/common";
 import { criteriaTokenParser, Criterion } from "@entity-space/criteria";
 import { lex, Token, TokenType } from "@entity-space/lexer";
 import { EntityQuery } from "./entity-query";
@@ -44,7 +44,7 @@ interface QueryParts {
     options?: Criterion;
     criteria?: Criterion;
     paging?: QueryPaging;
-    selection?: UnfoldedEntitySelection;
+    selection?: UnpackedEntitySelection;
 }
 
 type QueryPartsParser = Generator<unknown, false | QueryParts, Token>;
@@ -110,14 +110,14 @@ function* queryParser(terminator: Token): QueryPartsParser {
     }
 }
 
-function* selectionParser(): Generator<unknown, false | UnfoldedEntitySelection, Token> {
+function* selectionParser(): Generator<unknown, false | UnpackedEntitySelection, Token> {
     let token = yield;
 
     if (!(token.type === TokenType.Special && token.value === "{")) {
         return false;
     }
 
-    let selection: UnfoldedEntitySelection = {};
+    let selection: UnpackedEntitySelection = {};
 
     while (true) {
         token = yield;

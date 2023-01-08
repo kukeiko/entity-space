@@ -22,10 +22,10 @@ import { UserBlueprint } from "../common/user.model";
 @Blueprint({ id: "canvases" })
 export class CanvasBlueprint {
     id = define(Number, { id: true, required: true });
-    authorId = define(Number);
-    author = define(UserBlueprint, { relation: true, from: "authorId", to: "id" });
+    authorId = define(Number, { nullable: true });
+    author = define(UserBlueprint, { relation: true, from: "authorId", to: "id", nullable: true });
     name = define(String);
-    shapes = define(ShapeBlueprints, { array: true });
+    shapes = define(ShapeBlueprints, { array: true, nullable: true });
 }
 
 /**

@@ -1,5 +1,5 @@
 import { Entity } from "../entity.type";
-import { UnfoldedEntitySelection } from "../unfolded-entity-selection.type";
+import { UnpackedEntitySelection } from "../unpacked-entity-selection.type";
 
 export type PrimitiveSchemaDataType = "boolean" | "integer" | "number" | "string";
 
@@ -46,7 +46,7 @@ export interface IEntitySchema<T extends Entity = Entity> {
     getRelations(): IEntitySchemaRelation[];
     hasKey(): boolean;
     createDefault(): T;
-    getDefaultSelection(): UnfoldedEntitySelection;
+    getDefaultSelection(): UnpackedEntitySelection<T>;
 }
 
 export interface IEntitySchemaProperty {

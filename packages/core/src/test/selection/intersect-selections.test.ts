@@ -1,7 +1,7 @@
-import { EntitySchema, UnfoldedEntitySelection } from "@entity-space/common";
+import { EntitySchema, UnpackedEntitySelection } from "@entity-space/common";
 import { EntitySelection } from "../../lib/query/entity-selection";
 
-function intersectSelection(a: UnfoldedEntitySelection, b: UnfoldedEntitySelection): boolean | UnfoldedEntitySelection {
+function intersectSelection(a: UnpackedEntitySelection, b: UnpackedEntitySelection): boolean | UnpackedEntitySelection {
     const schema = new EntitySchema("foo");
     const intersected = new EntitySelection({ schema, value: b }).intersect(new EntitySelection({ schema, value: a }));
 
@@ -15,9 +15,9 @@ function intersectSelection(a: UnfoldedEntitySelection, b: UnfoldedEntitySelecti
 describe("selection: intersect", () => {
     it("{ foo, bar } intersected with { foo } should be { foo }", () => {
         // arrange
-        const a: UnfoldedEntitySelection = { foo: true, bar: true };
-        const b: UnfoldedEntitySelection = { foo: true };
-        const expected: UnfoldedEntitySelection = { foo: true };
+        const a: UnpackedEntitySelection = { foo: true, bar: true };
+        const b: UnpackedEntitySelection = { foo: true };
+        const expected: UnpackedEntitySelection = { foo: true };
 
         // act
         const intersected_A_with_B = intersectSelection(a, b);
@@ -30,9 +30,9 @@ describe("selection: intersect", () => {
 
     it("{ foo, bar: { baz, khaz } } intersected with { bar: { baz } } should be { bar: { baz } }", () => {
         // arrange
-        const a: UnfoldedEntitySelection = { foo: true, bar: { baz: true, khaz: true } };
-        const b: UnfoldedEntitySelection = { bar: { baz: true } };
-        const expected: UnfoldedEntitySelection = { bar: { baz: true } };
+        const a: UnpackedEntitySelection = { foo: true, bar: { baz: true, khaz: true } };
+        const b: UnpackedEntitySelection = { bar: { baz: true } };
+        const expected: UnpackedEntitySelection = { bar: { baz: true } };
 
         // act
         const intersected_A_with_B = intersectSelection(a, b);
@@ -45,8 +45,8 @@ describe("selection: intersect", () => {
 
     it("{ foo } intersected with { bar } should be false", () => {
         // arrange
-        const a: UnfoldedEntitySelection = { foo: true };
-        const b: UnfoldedEntitySelection = { bar: true };
+        const a: UnpackedEntitySelection = { foo: true };
+        const b: UnpackedEntitySelection = { bar: true };
         const expected = false;
 
         // act

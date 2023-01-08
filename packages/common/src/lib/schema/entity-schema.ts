@@ -13,7 +13,7 @@ import {
     IPropertyValueSchema,
 } from "./schema.interface";
 import { Entity } from "../entity.type";
-import { UnfoldedEntitySelection } from "../unfolded-entity-selection.type";
+import { UnpackedEntitySelection } from "../unpacked-entity-selection.type";
 
 // [todo] rename to "EntityTypeSchema"
 export class EntitySchema<T extends Entity = Entity> implements IEntitySchema<T> {
@@ -37,18 +37,20 @@ export class EntitySchema<T extends Entity = Entity> implements IEntitySchema<T>
         throw new Error("not implemented");
     }
 
-    getDefaultSelection(): UnfoldedEntitySelection {
+    getDefaultSelection(): UnpackedEntitySelection<T> {
         return this.getProperties()
             .filter(property => property.isRequired())
             .reduce((acc, property) => {
                 const valueSchema = property.getValueSchema();
 
+                // [todo] i think i forgot to deal with array & dictionaries,
+                // fix should be easy though: just use getUnboxedValueSchema()
                 if (valueSchema.schemaType === "entity") {
                     return { ...acc, [property.getName()]: valueSchema.getDefaultSelection() };
                 } else {
-                    return { ...acc, [property.getName()]: true } as UnfoldedEntitySelection;
+                    return { ...acc, [property.getName()]: true } as UnpackedEntitySelection<T>;
                 }
-            }, {} as UnfoldedEntitySelection);
+            }, {} as UnpackedEntitySelection<T>);
     }
 
     addAllOf(schema: IEntitySchema): this {

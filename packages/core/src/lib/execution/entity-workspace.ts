@@ -3,7 +3,7 @@ import {
     Entity,
     EntitySchemaCatalog,
     IEntitySchema,
-    UnfoldedEntitySelection
+    UnpackedEntitySelection
 } from "@entity-space/common";
 import { any, Criterion, matches, MatchesBagArgument, never } from "@entity-space/criteria";
 import { Class, DeepPartial, isNotFalse } from "@entity-space/utils";
@@ -160,7 +160,7 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
     hydrate$<T extends Entity>(
         schema: IEntitySchema<T>,
         entities: T[],
-        selection: UnfoldedEntitySelection<T>
+        selection: UnpackedEntitySelection<T>
     ): Observable<T[]> {
         if (!entities.length) {
             return of([]);
@@ -216,7 +216,7 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
     query$<T extends Entity>(
         schema: IEntitySchema,
         criterion: Criterion | MatchesBagArgument<T> = any(),
-        selection?: UnfoldedEntitySelection<T>,
+        selection?: UnpackedEntitySelection<T>,
         options: Criterion | MatchesBagArgument<Entity> = never(),
         paging?: { skip?: number; top?: number; from?: number; to?: number }
     ): Observable<T[]> {

@@ -1,4 +1,4 @@
-import { EntitySchema, EntitySelectionValue } from "@entity-space/common";
+import { EntitySchema, PackedEntitySelection } from "@entity-space/common";
 import { inRange, matches, or } from "@entity-space/criteria";
 import { EntitySelection } from "../../lib/query/entity-selection";
 import { EntityQuery } from "../../lib/query/entity-query";
@@ -145,7 +145,7 @@ describe("what's reduction for?", () => {
          * We call an object that tells us which properties to load a "Selection". Our initial selection of our products will contain
          * the id, the name, the price and the rating.
          */
-        const basic_properties: EntitySelectionValue = {
+        const basic_properties: PackedEntitySelection = {
             id: true,
             name: true,
             price: true,
@@ -155,7 +155,7 @@ describe("what's reduction for?", () => {
         /**
          * Later on we also want to load the customer reviews of the product:
          */
-        const basic_properties_with_reviews: EntitySelectionValue = {
+        const basic_properties_with_reviews: PackedEntitySelection = {
             ...basic_properties,
             reviews: true,
         };
@@ -163,7 +163,7 @@ describe("what's reduction for?", () => {
         /**
          * Since we've loaded the basic_properties_only already, the difference should just be the reviews:
          */
-        const expected: EntitySelectionValue = {
+        const expected: PackedEntitySelection = {
             reviews: true,
         };
 
@@ -179,14 +179,14 @@ describe("what's reduction for?", () => {
          * We're going to load products with a price range of 100 to 200, rating range of 3 to 5, without reviews.
          * We then load products with price range of 100 to 300, rating range of 2 to 5, including the reviews.
          */
-        const basic_properties: EntitySelectionValue = {
+        const basic_properties: PackedEntitySelection = {
             id: true,
             name: true,
             price: true,
             rating: true,
         };
 
-        const review_property: EntitySelectionValue = {
+        const review_property: PackedEntitySelection = {
             reviews: true,
         };
 

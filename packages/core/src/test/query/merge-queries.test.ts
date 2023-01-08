@@ -1,11 +1,11 @@
-import { EntitySchema, EntitySchemaCatalog, UnfoldedEntitySelection } from "@entity-space/common";
+import { EntitySchema, EntitySchemaCatalog, UnpackedEntitySelection } from "@entity-space/common";
 import { Criterion, inRange, matches, or } from "@entity-space/criteria";
 import { EntityQuery } from "../../lib/query/entity-query";
 import { mergeQueries } from "../../lib/query/merge-queries.fn";
 import { mergeQuery } from "../../lib/query/merge-query.fn";
 import { parseQuery } from "../../lib/query/parse-query.fn";
 
-function createQuery(criteria: Criterion, selection: UnfoldedEntitySelection = {}): EntityQuery {
+function createQuery(criteria: Criterion, selection: UnpackedEntitySelection = {}): EntityQuery {
     return new EntityQuery({ entitySchema: new EntitySchema("user"), criteria, selection });
 }
 

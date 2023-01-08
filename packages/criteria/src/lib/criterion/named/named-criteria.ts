@@ -1,4 +1,4 @@
-import { UnfoldedEntitySelection } from "@entity-space/common";
+import { UnpackedEntitySelection } from "@entity-space/common";
 import { AndCriteria } from "../and/and-criteria";
 import { AnyCriterion } from "../any/any";
 import { Criteria } from "../criteria";
@@ -289,7 +289,7 @@ export class NamedCriteria<T extends NamedCriteriaBag = NamedCriteriaBag, R exte
         }
     }
 
-    static omitSelection(criterion: Criterion, selection: UnfoldedEntitySelection): Criterion {
+    static omitSelection(criterion: Criterion, selection: UnpackedEntitySelection): Criterion {
         if (criterion instanceof OrCriteria) {
             // [todo] no clue currently why .getItems() returns any[]
             const omitted = (criterion.getItems() as Criterion[])

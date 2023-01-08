@@ -1,4 +1,4 @@
-import { EntitySchema, IEntitySchema, UnfoldedEntitySelection } from "@entity-space/common";
+import { EntitySchema, IEntitySchema, UnpackedEntitySelection } from "@entity-space/common";
 import { Criterion, inSet, matches } from "@entity-space/criteria";
 import { firstValueFrom, take, tap, toArray } from "rxjs";
 import { EntityQueryTracing } from "../lib/execution/entity-query-tracing";
@@ -12,7 +12,7 @@ function createWorkspace(): EntityWorkspace {
 function createQuery(
     entitySchema: IEntitySchema,
     criteria: Criterion,
-    expansion: UnfoldedEntitySelection = {}
+    expansion: UnpackedEntitySelection = {}
 ): EntityQuery {
     return new EntityQuery({ entitySchema, criteria, selection: expansion });
 }

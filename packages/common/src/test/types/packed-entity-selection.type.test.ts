@@ -1,11 +1,11 @@
 import { IsExact } from "conditional-type-checks";
-import { EntitySelectionValue } from "../../index";
+import { PackedEntitySelection } from "../../index";
 
 /**
  * A default selection is just "{}".
  */
 // $ExpectType true
-type DefaultIsEmpty = IsExact<EntitySelectionValue, {}>;
+type DefaultIsEmpty = IsExact<PackedEntitySelection, {}>;
 
 interface SomeEntity {
     id: number;
@@ -17,7 +17,7 @@ interface SomeEntity {
  * Only true | undefined is a valid value when expanding primitives.
  */
 // $ExpectType true
-type OnlyTrueIsValidForPrimitives = IsExact<Exclude<EntitySelectionValue<SomeEntity>, true>["id"], true | undefined>;
+type OnlyTrueIsValidForPrimitives = IsExact<Exclude<PackedEntitySelection<SomeEntity>, true>["id"], true | undefined>;
 
 interface Square {
     id: number;
@@ -42,4 +42,4 @@ type DistributedKeyOf<T> = T extends any ? keyof T : never;
  * "radius" for Circle, "length" for Square
  */
 // $ExpectType true
-type MergesUnions = "radius" | "length" extends DistributedKeyOf<EntitySelectionValue<Shape>> ? true : false;
+type MergesUnions = "radius" | "length" extends DistributedKeyOf<PackedEntitySelection<Shape>> ? true : false;
