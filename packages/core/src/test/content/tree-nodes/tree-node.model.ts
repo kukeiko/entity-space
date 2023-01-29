@@ -1,4 +1,6 @@
-import { Blueprint, BlueprintInstance, define } from "@entity-space/common";
+import { Blueprint } from "../../../lib/common/schema/blueprint";
+import { BlueprintInstance } from "../../../lib/common/schema/blueprint-instance";
+import { define } from "../../../lib/common/schema/blueprint-property";
 import { DataEntryBlueprint } from "../common/data-entry.model";
 
 /**

@@ -1,6 +1,6 @@
-import { IEntitySchema } from "@entity-space/common";
+import { Entity } from "../../common/entity.type";
+import { IEntitySchema } from "../../common/schema/schema.interface";
 import { EntityQuery } from "../../query/entity-query";
-import { Entity } from "../entity";
 import { createCriterionFromEntities } from "./create-criterion-from-entities.fn";
 
 export function createIdQueryFromEntities(schema: IEntitySchema, entities: Entity[]): EntityQuery {

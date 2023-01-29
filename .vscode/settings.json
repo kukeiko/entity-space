@@ -34,5 +34,8 @@
         {
             "memberTypes": ["constructors", "publicProperties", "protectedProperties", "privateProperties"]
         }
-    ]
+    ],
+    "files.eol": "\n",
+    "jest.autoRun": "off",
+    "jest.debugMode": true
 }

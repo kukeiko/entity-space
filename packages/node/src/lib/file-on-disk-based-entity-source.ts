@@ -1,5 +1,4 @@
-import { Entity, IEntitySchema } from "@entity-space/common";
-import { EntityQuery, EntitySet, IEntityStore, inSet, matches } from "@entity-space/core";
+import { Entity, EntityQuery, EntitySet, IEntitySchema, IEntityStore, inSet, matches } from "@entity-space/core";
 import { toMap } from "@entity-space/utils";
 import { constants } from "node:fs";
 import { access, readFile, writeFile } from "node:fs/promises";

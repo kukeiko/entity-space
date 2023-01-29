@@ -1,13 +1,21 @@
 import { HttpClient, HttpParams } from "@angular/common/http";
-import { Entity, EntitySchemaCatalog, IEntitySchema } from "@entity-space/common";
-import { EntityApi, EntityQueryTracing, IEntityStore, inSetShape, isValueShape } from "@entity-space/core";
+import {
+    Entity,
+    EntityApi,
+    EntityQueryTracing,
+    EntitySchemaCatalog,
+    IEntitySchema,
+    IEntityStore,
+    inSetShape,
+    isValueShape,
+} from "@entity-space/core";
 import {
     Artist,
     ArtistBlueprint,
     Song,
     SongBlueprint,
     SongLocation,
-    SongLocationTypeBlueprint
+    SongLocationTypeBlueprint,
 } from "@entity-space/examples/libs/music-model";
 import { firstValueFrom } from "rxjs";
 

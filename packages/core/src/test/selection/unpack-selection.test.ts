@@ -1,4 +1,6 @@
-import { EntitySchema, PackedEntitySelection, UnpackedEntitySelection } from "@entity-space/common";
+import { PackedEntitySelection } from "../../lib/common/packed-entity-selection.type";
+import { EntitySchema } from "../../lib/common/schema/entity-schema";
+import { UnpackedEntitySelection } from "../../lib/common/unpacked-entity-selection.type";
 import { EntitySelection } from "../../lib/query/entity-selection";
 
 describe("EntitySelection.unpack()", () => {

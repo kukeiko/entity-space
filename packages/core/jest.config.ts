@@ -12,4 +12,5 @@ export default {
     },
     moduleFileExtensions: ["ts", "tsx", "js", "jsx"],
     coverageDirectory: "../../coverage/packages/core",
+    setupFiles: ["./jest-setup-file.ts"]
 };

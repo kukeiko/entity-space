@@ -1,4 +1,4 @@
-import { UnpackedEntitySelection } from "@entity-space/common";
+import { UnpackedEntitySelection } from "../../../common/unpacked-entity-selection.type";
 import { AndCriteria } from "../and/and-criteria";
 import { AnyCriterion } from "../any/any";
 import { Criteria } from "../criteria";

@@ -1,7 +1,7 @@
+import { Entity } from "../../common/entity.type";
 import { Criterion } from "../../criteria/criterion/criterion";
 import { ReshapedCriterion } from "../../criteria/templates/reshaped-criterion";
 import { ComplexKeyMap } from "../data-structures/complex-key-map";
-import { Entity } from "../entity";
 
 export class EntityStoreCommonIndex<E extends Entity = Entity> {
     constructor(paths: string[]) {

@@ -1,8 +1,8 @@
-import { IEntitySchema } from "@entity-space/common";
 import { Observable } from "rxjs";
+import { Entity } from "../common/entity.type";
+import { IEntitySchema } from "../common/schema/schema.interface";
 import { EntityQuery } from "../query/entity-query";
 import { EntitySet } from "./data-structures/entity-set";
-import { Entity } from "./entity";
 
 export interface IEntityDatabase {
     query(query: EntityQuery): Promise<EntitySet>;

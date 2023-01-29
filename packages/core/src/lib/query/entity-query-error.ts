@@ -1,5 +1,5 @@
-import { Entity } from "@entity-space/common";
 import { hasProperty } from "@entity-space/utils";
+import { Entity } from "../common/entity.type";
 import { EntityQuery } from "./entity-query";
 
 export class EntityQueryError<T extends Entity = Entity> {

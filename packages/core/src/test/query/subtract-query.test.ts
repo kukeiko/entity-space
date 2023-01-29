@@ -1,4 +1,5 @@
-import { EntitySchema, EntitySchemaCatalog } from "@entity-space/common";
+import { EntitySchema } from "../../lib/common/schema/entity-schema";
+import { EntitySchemaCatalog } from "../../lib/common/schema/entity-schema-catalog";
 import { expectQuery } from "../tools/expect-query.fn";
 
 describe("subtractQuery()", () => {

@@ -1,4 +1,4 @@
-import { Blueprint, BlueprintInstance, define, MetadataReference } from "@entity-space/common";
+import { Blueprint, BlueprintInstance, define, MetadataReference } from "@entity-space/core";
 import { ArtistBlueprint } from "./artist";
 import { SongLocation } from "./song-location";
 

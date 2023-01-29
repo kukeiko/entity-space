@@ -1,7 +1,6 @@
 export * from "./lib/entity/data-structures/complex-key-map";
 export * from "./lib/entity/data-structures/entity-set";
 export * from "./lib/entity/data-structures/normalized-entities";
-export * from "./lib/entity/entity";
 export * from "./lib/entity/functions/create-criterion-from-entities.fn";
 export * from "./lib/entity/functions/create-queries-from-entities.fn";
 export * from "./lib/entity/functions/join-entities.fn";
@@ -73,8 +72,27 @@ export * from "./lib/criteria/parser/criterion-token-parser.type";
 export * from "./lib/criteria/parser/criteria.token-parser";
 export * from "./lib/criteria/parser/token-parser";
 
-
 export * from "./lib/lexer/lex.fn";
 export * from "./lib/lexer/token-type.enum";
 export * from "./lib/lexer/token.contract";
 export * from "./lib/lexer/token.fn";
+
+export * from "./lib/common/entity.type";
+export * from "./lib/common/select.type";
+export * from "./lib/common/packed-entity-selection.type";
+export * from "./lib/common/schema/array-schema";
+export * from "./lib/common/schema/blueprint";
+export * from "./lib/common/schema/blueprint-instance";
+export * from "./lib/common/schema/blueprint-property";
+export * from "./lib/common/schema/build-default-index-name.fn";
+export * from "./lib/common/schema/entity-schema";
+export * from "./lib/common/schema/entity-schema-catalog";
+export * from "./lib/common/schema/entity-schema-index";
+export * from "./lib/common/schema/entity-schema-key";
+export * from "./lib/common/schema/entity-schema-property";
+export * from "./lib/common/schema/entity-schema-relation";
+export * from "./lib/common/schema/primitive-schema";
+export * from "./lib/common/schema/schema.interface";
+export * from "./lib/common/schema/unused/entity-space-schema";
+export * from "./lib/common/schema/unused/open-api-schema";
+export * from "./lib/common/unpacked-entity-selection.type";

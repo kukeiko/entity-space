@@ -1,5 +1,5 @@
 import { IsExact } from "conditional-type-checks";
-import { PackedEntitySelection } from "../../index";
+import { PackedEntitySelection } from "../../lib/common/packed-entity-selection.type";
 
 /**
  * A default selection is just "{}".

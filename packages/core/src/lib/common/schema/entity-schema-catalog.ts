@@ -1,5 +1,4 @@
 import { Class } from "@entity-space/utils";
-import "reflect-metadata";
 import { getBlueprintMetadata, getNamedProperties, isBlueprint } from "./blueprint";
 import { BlueprintInstance } from "./blueprint-instance";
 import { BlueprintPropertyValue, hasAttribute } from "./blueprint-property";

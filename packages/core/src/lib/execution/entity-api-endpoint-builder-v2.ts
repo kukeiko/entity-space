@@ -1,4 +1,5 @@
-import { Entity, IEntitySchema } from "@entity-space/common";
+import { Entity } from "../common/entity.type";
+import { IEntitySchema } from "../common/schema/schema.interface";
 import { ICriterionShape } from "../criteria/templates/criterion-shape.interface";
 
 // [todo] accidentally committed this file

@@ -1,4 +1,4 @@
-import { UnpackedEntitySelection } from "@entity-space/common";
+import { UnpackedEntitySelection } from "../../lib/common/unpacked-entity-selection.type";
 import { EntitySelection } from "../../lib/query/entity-selection";
 
 function mergeIntersections(...objects: UnpackedEntitySelection[]): boolean | UnpackedEntitySelection {

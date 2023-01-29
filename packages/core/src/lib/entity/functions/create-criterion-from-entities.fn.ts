@@ -1,4 +1,5 @@
 import { readPath, writePath } from "@entity-space/utils";
+import { Entity } from "../../common/entity.type";
 import { Criterion } from "../../criteria/criterion/criterion";
 import { fromDeepBag } from "../../criteria/criterion/named/from-deep-bag.fn";
 import { or } from "../../criteria/criterion/or/or.fn";
@@ -6,7 +7,6 @@ import { InSetCriterion } from "../../criteria/criterion/set/in-set-criterion";
 import { inSet } from "../../criteria/criterion/set/in-set.fn";
 import { isValue } from "../../criteria/criterion/value/is-value.fn";
 import { ComplexKeyMap } from "../data-structures/complex-key-map";
-import { Entity } from "../entity";
 
 function createCriterionOnePath(entities: Entity[], path: string, writtenPath = path): Criterion {
     const readValue = (entity: Entity): any => readPath(path, entity);

@@ -1,4 +1,4 @@
-import { Blueprint, define, BlueprintInstance } from "@entity-space/common";
+import { Blueprint, BlueprintInstance, define } from "@entity-space/core";
 
 @Blueprint({ id: "artist" })
 export class ArtistBlueprint {

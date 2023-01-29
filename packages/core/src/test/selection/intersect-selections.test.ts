@@ -1,4 +1,5 @@
-import { EntitySchema, UnpackedEntitySelection } from "@entity-space/common";
+import { EntitySchema } from "../../lib/common/schema/entity-schema";
+import { UnpackedEntitySelection } from "../../lib/common/unpacked-entity-selection.type";
 import { EntitySelection } from "../../lib/query/entity-selection";
 
 function intersectSelection(a: UnpackedEntitySelection, b: UnpackedEntitySelection): boolean | UnpackedEntitySelection {

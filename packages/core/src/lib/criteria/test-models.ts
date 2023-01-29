@@ -1,4 +1,4 @@
-import { define } from "@entity-space/common";
+import { define } from "../common/schema/blueprint-property";
 
 export class FooBlueprint {
     // id = define(Number, { id: true, required: true });

@@ -1,4 +1,3 @@
-import { Entity, IEntitySchema } from "@entity-space/common";
 import { isNotFalse } from "@entity-space/utils";
 import { flatten } from "lodash";
 import { filter, from, map, merge, mergeAll, Observable, of, startWith, switchMap, tap } from "rxjs";
@@ -14,6 +13,8 @@ import { EntityApiEndpointBuilder } from "./entity-api-endpoint-builder";
 import { IEntityStreamInterceptor } from "./i-entity-stream-interceptor";
 import { EntityStream } from "./entity-stream";
 import { EntityStreamPacket } from "./entity-stream-packet";
+import { Entity } from "../common/entity.type";
+import { IEntitySchema } from "../common/schema/schema.interface";
 
 export class EntityApi implements IEntityStreamInterceptor {
     constructor(protected readonly tracing: EntityQueryTracing) {}

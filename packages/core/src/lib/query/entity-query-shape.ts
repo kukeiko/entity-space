@@ -1,4 +1,3 @@
-import { IEntitySchema } from "@entity-space/common";
 import { permutateEntries } from "@entity-space/utils";
 import { EntitySelection } from "./entity-selection";
 import { EntityQuery } from "./entity-query";
@@ -6,6 +5,7 @@ import { ICriterionShape } from "../criteria/templates/criterion-shape.interface
 import { neverShape } from "../criteria/templates/never-shape.fn";
 import { anyShape } from "../criteria/templates/any-shape.fn";
 import { Criterion } from "../criteria/criterion/criterion";
+import { IEntitySchema } from "../common/schema/schema.interface";
 
 type RemappedParts = {
     options: false | Criterion[];

@@ -1,4 +1,4 @@
-import { EntitySchema, EntitySchemaCatalog } from "@entity-space/common";
+import { EntitySchema, EntitySchemaCatalog } from "@entity-space/core";
 import { SongBlueprint } from "@entity-space/examples/libs/music-model";
 import { Module } from "@nestjs/common";
 import { ArtistsController } from "./controllers/artists.controller";

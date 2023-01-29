@@ -1,5 +1,5 @@
-import { Entity } from "@entity-space/common";
 import { readPath, writePath } from "@entity-space/utils";
+import { Entity } from "../../common/entity.type";
 import { Criterion } from "../../criteria/criterion/criterion";
 import { InSetCriterion } from "../../criteria/criterion/set/in-set-criterion";
 import { IsValueCriterion } from "../../criteria/criterion/value/is-value-criterion";

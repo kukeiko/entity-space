@@ -1,5 +1,4 @@
-import { EntitySchemaCatalog, IEntitySchema } from "@entity-space/common";
-import { EntityQuery, inSet, matches } from "@entity-space/core";
+import { EntityQuery, EntitySchemaCatalog, IEntitySchema, inSet, matches } from "@entity-space/core";
 import { SongLocation } from "@entity-space/examples/libs/music-model";
 import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Query } from "@nestjs/common";
 import { DiskDbService } from "../disk-db.service";

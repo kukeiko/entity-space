@@ -1,4 +1,5 @@
-import { EntitySchema, EntitySchemaCatalog } from "@entity-space/common";
+import { EntitySchema } from "../../lib/common/schema/entity-schema";
+import { EntitySchemaCatalog } from "../../lib/common/schema/entity-schema-catalog";
 import { expectQuery } from "../tools/expect-query.fn";
 
 describe("mergeQuery()", () => {
@@ -21,13 +22,9 @@ describe("mergeQuery()", () => {
         .plus("foo({ artistId: 13 })/{ id, name }")
         .toBe("foo({ id: 7 } | { artistId: 13 })/{ id, name }");
 
-    expectQuery("foo({ id: 7 })/{ id, name }", schemas)
-        .plus("foo({ artistId: 13 })/{ id }")
-        .toBe(false);
+    expectQuery("foo({ id: 7 })/{ id, name }", schemas).plus("foo({ artistId: 13 })/{ id }").toBe(false);
 
-    expectQuery("foo({ id: 7 })/{ id, name }", schemas)
-        .plus("foo({ id: 3 })/{ id }")
-        .toBe(false);
+    expectQuery("foo({ id: 7 })/{ id, name }", schemas).plus("foo({ id: 3 })/{ id }").toBe(false);
 
     expectQuery("foo({ price: [100, 200], rating: [3, 8] })/{ foo }", schemas)
         .plus("foo({ price: [100, 200], rating: [3, 8] })/{ bar }")

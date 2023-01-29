@@ -1,5 +1,5 @@
-import { IEntitySchema } from "@entity-space/common";
-import { Entity } from "../entity";
+import { Entity } from "../../common/entity.type";
+import { IEntitySchema } from "../../common/schema/schema.interface";
 
 // [todo] just use Map instead?
 export class NormalizedEntities {

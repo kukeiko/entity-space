@@ -1,4 +1,5 @@
-import { EntitySchemaCatalog, UnpackedEntitySelection } from "@entity-space/common";
+import { EntitySchemaCatalog } from "../common/schema/entity-schema-catalog";
+import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
 import { Criterion } from "../criteria/criterion/criterion";
 import { criteriaTokenParser } from "../criteria/parser/criteria.token-parser";
 import { lex } from "../lexer/lex.fn";

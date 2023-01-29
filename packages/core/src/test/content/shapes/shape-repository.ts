@@ -1,4 +1,4 @@
-import { BlueprintInstance } from "@entity-space/common";
+import { BlueprintInstance } from "../../../lib/common/schema/blueprint-instance";
 import { ShapeBlueprint } from "./shape.model";
 
 let id = 1;

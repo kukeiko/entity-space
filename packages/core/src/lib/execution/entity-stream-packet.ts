@@ -1,10 +1,10 @@
-import { Entity } from "@entity-space/common";
 import { flatMap } from "lodash";
 import { EntitySet } from "../entity/data-structures/entity-set";
 import { mergeQueries } from "../query/merge-queries.fn";
 import { EntityQuery } from "../query/entity-query";
 import { subtractQueries } from "../query/subtract-queries.fn";
 import { EntityQueryError } from "../query/entity-query-error";
+import { Entity } from "../common/entity.type";
 
 export class EntityStreamPacket<T extends Entity = Entity> {
     constructor({

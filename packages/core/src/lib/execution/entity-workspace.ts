@@ -1,10 +1,3 @@
-import {
-    BlueprintInstance,
-    Entity,
-    EntitySchemaCatalog,
-    IEntitySchema,
-    UnpackedEntitySelection,
-} from "@entity-space/common";
 import { Class, DeepPartial, isNotFalse } from "@entity-space/utils";
 import { flatMap, isEqual, xor, xorWith } from "lodash";
 import {
@@ -23,8 +16,13 @@ import {
     startWith,
     Subject,
     switchMap,
-    tap,
+    tap
 } from "rxjs";
+import { Entity } from "../common/entity.type";
+import { BlueprintInstance } from "../common/schema/blueprint-instance";
+import { EntitySchemaCatalog } from "../common/schema/entity-schema-catalog";
+import { IEntitySchema } from "../common/schema/schema.interface";
+import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
 import { any } from "../criteria/criterion/any/any.fn";
 import { Criterion } from "../criteria/criterion/criterion";
 import { matches, MatchesBagArgument } from "../criteria/criterion/named/matches.fn";

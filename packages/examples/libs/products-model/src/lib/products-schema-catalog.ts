@@ -1,4 +1,4 @@
-import { ArraySchema, EntitySchema } from "@entity-space/common";
+import { ArraySchema, EntitySchema } from "@entity-space/core";
 
 export class ProductsSchemaCatalog {
     constructor() {

@@ -1,6 +1,5 @@
 import { Injectable } from "@angular/core";
-import { EntitySchemaCatalog } from "@entity-space/common";
-import { EntityQueryBuilder, EntityQueryTracing, EntityWorkspace } from "@entity-space/core";
+import { EntityQueryBuilder, EntityQueryTracing, EntitySchemaCatalog, EntityWorkspace } from "@entity-space/core";
 import {
     Artist,
     ArtistBlueprint,

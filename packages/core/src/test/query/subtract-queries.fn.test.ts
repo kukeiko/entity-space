@@ -1,4 +1,5 @@
-import { EntitySchema, UnpackedEntitySelection } from "@entity-space/common";
+import { EntitySchema } from "../../lib/common/schema/entity-schema";
+import { UnpackedEntitySelection } from "../../lib/common/unpacked-entity-selection.type";
 import { Criterion } from "../../lib/criteria/criterion/criterion";
 import { EntityQuery } from "../../lib/query/entity-query";
 import { subtractQueries } from "../../lib/query/subtract-queries.fn";

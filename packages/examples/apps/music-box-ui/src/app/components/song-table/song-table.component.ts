@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from "@angular/core";
-import { EntitySchemaCatalog } from "@entity-space/common";
-import { ArtistBlueprint, Song, SongBlueprint, WebSongLocation } from "@entity-space/examples/libs/music-model";
+import { EntitySchemaCatalog } from "@entity-space/core";
+import { Song, SongBlueprint, WebSongLocation } from "@entity-space/examples/libs/music-model";
 import { map, ReplaySubject, switchMap } from "rxjs";
 import { MusicBoxWorkspace } from "../../music-box-workspace";
 import { sortByName } from "../../sort-by-name.fn";

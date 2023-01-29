@@ -1,5 +1,5 @@
-import { BlueprintInstance } from "@entity-space/common";
 import { Null, Primitive, Unbox } from "@entity-space/utils";
+import { BlueprintInstance } from "../common/schema/blueprint-instance";
 import { Criterion } from "./criterion/criterion";
 import { FooBlueprint } from "./test-models";
 

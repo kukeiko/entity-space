@@ -1,10 +1,11 @@
-import { EntitySchema, PackedEntitySelection } from "@entity-space/common";
 import { EntitySelection } from "../../lib/query/entity-selection";
 import { EntityQuery } from "../../lib/query/entity-query";
 import { subtractQuery } from "../../lib/query/subtract-query.fn";
 import { inRange } from "../../lib/criteria/criterion/range/in-range.fn";
 import { matches } from "../../lib/criteria/criterion/named/matches.fn";
 import { or } from "../../lib/criteria/criterion/or/or.fn";
+import { PackedEntitySelection } from "../../lib/common/packed-entity-selection.type";
+import { EntitySchema } from "../../lib/common/schema/entity-schema";
 
 /**
  * This file serves as an introduction via code for anyone new and interested in this library.

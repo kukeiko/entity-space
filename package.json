@@ -6,9 +6,8 @@
     "scripts": {
         "postinstall": "ngcc --properties es2020 browser module main",
         "test": "npm run test:types && npm run test:libs",
-        "test:libs": "npx nx run-many --parallel --target=test --projects=utils,common,core --silent --codeCoverage",
-        "test:types": "npm run test:types:common && npm run test:types:core",
-        "test:types:common": "dtslint --localTs node_modules/typescript/lib packages/common/src/test/types",
+        "test:libs": "npx nx run-many --parallel --target=test --projects=utils,core,node --silent --codeCoverage",
+        "test:types": "npm run test:types:core",
         "test:types:core": "dtslint --localTs node_modules/typescript/lib packages/core/src/test/types"
     },
     "repository": {

@@ -1,4 +1,4 @@
-import { EntitySchema } from "@entity-space/common";
+import { EntitySchema } from "../lib/common/schema/entity-schema";
 import { matches } from "../lib/criteria/criterion/named/matches.fn";
 import { or } from "../lib/criteria/criterion/or/or.fn";
 import { isValue } from "../lib/criteria/criterion/value/is-value.fn";

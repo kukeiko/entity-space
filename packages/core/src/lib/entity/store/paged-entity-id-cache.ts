@@ -1,4 +1,4 @@
-import { Entity } from "@entity-space/common";
+import { Entity } from "../../common/entity.type";
 import { QueryPaging } from "../../query/query-paging";
 
 export class PagedEntityIdCache {

@@ -17,6 +17,23 @@
             "request": "launch",
             "program": "${workspaceFolder}/node_modules/@nrwl/cli/bin/nx",
             "args": ["serve", "apps-sandbox-api"]
+        },
+        {
+            "type": "node",
+            "name": "vscode-jest-tests.v2",
+            "request": "launch",
+            "args": [
+                "--runInBand",
+                "--watchAll=false",
+                "--testNamePattern",
+                "${jest.testNamePattern}",
+                "--runTestsByPath",
+                "${jest.testFile}"
+            ],
+            "cwd": "c:\\src\\entity-space",
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            "program": "${workspaceFolder}/node_modules/jest/bin/jest.js"
         }
     ]
 }

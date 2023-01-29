@@ -1,5 +1,5 @@
 import { IsExact } from "conditional-type-checks";
-import { Select } from "../../index";
+import { Select } from "../../lib/common/select.type";
 
 interface Song {
     id: number;

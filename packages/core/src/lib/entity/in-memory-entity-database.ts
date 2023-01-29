@@ -1,7 +1,9 @@
-import { IEntitySchema, IEntitySchemaRelation, UnpackedEntitySelection } from "@entity-space/common";
 import { cloneJson, groupBy, isDefined, readPath } from "@entity-space/utils";
 import { flatten } from "lodash";
 import { Observable, Subject } from "rxjs";
+import { Entity } from "../common/entity.type";
+import { IEntitySchema, IEntitySchemaRelation } from "../common/schema/schema.interface";
+import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
 import { AnyCriterion } from "../criteria/criterion/any/any";
 import { any } from "../criteria/criterion/any/any.fn";
 import { Criterion } from "../criteria/criterion/criterion";
@@ -17,7 +19,6 @@ import { mergeQueries } from "../query/merge-queries.fn";
 import { QueryPaging } from "../query/query-paging";
 import { subtractQueries } from "../query/subtract-queries.fn";
 import { EntitySet } from "./data-structures/entity-set";
-import { Entity } from "./entity";
 import { createCriterionFromEntities } from "./functions/create-criterion-from-entities.fn";
 import { createQueriesFromEntities } from "./functions/create-queries-from-entities.fn";
 import { joinEntities } from "./functions/join-entities.fn";

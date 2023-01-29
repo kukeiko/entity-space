@@ -1,8 +1,8 @@
-import { Entity } from "@entity-space/common";
 import { EMPTY, merge, switchMap, takeLast, tap } from "rxjs";
 import { IEntityStreamInterceptor } from "../i-entity-stream-interceptor";
 import { EntityStream } from "../entity-stream";
 import { EntityStreamPacket } from "../entity-stream-packet";
+import { Entity } from "../../common/entity.type";
 
 export type LogPacketsInterceptorOptions = { logEach?: boolean; logFinal?: boolean } | boolean;
 

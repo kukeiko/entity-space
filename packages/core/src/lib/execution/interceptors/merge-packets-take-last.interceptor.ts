@@ -1,9 +1,9 @@
-import { Entity } from "@entity-space/common";
 import { map, takeLast, tap } from "rxjs";
 import { InMemoryEntityDatabase } from "../../entity/in-memory-entity-database";
 import { IEntityStreamInterceptor } from "../i-entity-stream-interceptor";
 import { EntityStream } from "../entity-stream";
 import { EntityStreamPacket } from "../entity-stream-packet";
+import { Entity } from "../../common/entity.type";
 
 export class MergePacketsTakeLastInterceptor implements IEntityStreamInterceptor {
     intercept(stream: EntityStream<Entity>): EntityStream<Entity> {

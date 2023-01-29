@@ -1,5 +1,5 @@
-import { IEntitySchema } from "@entity-space/common";
-import { Entity } from "./entity";
+import { Entity } from "../common/entity.type";
+import { IEntitySchema } from "../common/schema/schema.interface";
 
 // [todo] we have a class "EntityStore" that doesn't implement this (on purpose),
 // so: the naming is kinda conflicting & confusing.

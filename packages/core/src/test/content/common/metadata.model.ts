@@ -1,6 +1,7 @@
-import { Blueprint, BlueprintInstance, define } from "@entity-space/common";
 import { UserBlueprint } from "./user.model";
-
+import { BlueprintInstance } from "../../../lib/common/schema/blueprint-instance";
+import { Blueprint } from "../../../lib/common/schema/blueprint";
+import { define } from "../../../lib/common/schema/blueprint-property";
 /**
  * Example of a model that has data that exists on a lot of types, but is put into a separate model to reduce repetitiveness.
  * As such, it doesn't have an id, and can not exist without the model that references it.

@@ -1,13 +1,15 @@
-import { IEntitySchema, PackedEntitySelection, UnpackedEntitySelection } from "@entity-space/common";
 import { getInstanceClass, pluckId } from "@entity-space/utils";
 import { map, Observable } from "rxjs";
-import { Entity } from "../entity/entity";
 import { EntityWorkspace } from "./entity-workspace";
 import { EntitySelection } from "../query/entity-selection";
 import { Criterion } from "../criteria/criterion/criterion";
 import { some } from "../criteria/criterion/some/some.fn";
 import { matches, MatchesBagArgument } from "../criteria/criterion/named/matches.fn";
 import { any } from "../criteria/criterion/any/any.fn";
+import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
+import { IEntitySchema } from "../common/schema/schema.interface";
+import { PackedEntitySelection } from "../common/packed-entity-selection.type";
+import { Entity } from "../common/entity.type";
 
 export interface EntityQueryBuilderPatch<T extends Entity> {
     selection?: UnpackedEntitySelection<T>;

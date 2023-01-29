@@ -1,6 +1,6 @@
 import { writePath, readPath } from "@entity-space/utils";
+import { Entity } from "../../common/entity.type";
 import { ComplexKeyMap } from "../data-structures/complex-key-map";
-import { Entity } from "../entity";
 
 function joinEntitiesOnePath(
     fromEntities: Entity[],
