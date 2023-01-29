@@ -12,12 +12,13 @@ export class IsValueCriterionShape<T extends Primitive | typeof Null = Primitive
 {
     constructor(valueTypes?: T[]) {
         this.valueTypes = valueTypes ?? ([Number, String, Boolean, Null] as T[]);
-        this.valueMatches = (value: unknown): value is ReturnType<T> =>
-            isPrimitiveOrNull(value, this.valueTypes.slice());
     }
 
     private readonly valueTypes: readonly T[];
-    private readonly valueMatches: (value: unknown) => value is ReturnType<T>;
+
+    private valueMatches(value: unknown): value is ReturnType<T> {
+        return isPrimitiveOrNull(value, this.valueTypes.slice());
+    }
 
     getValueTypes(): readonly T[] {
         return this.valueTypes;

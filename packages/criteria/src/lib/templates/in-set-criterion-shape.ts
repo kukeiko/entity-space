@@ -12,13 +12,6 @@ export class InSetCriterionShape<T extends Primitive | typeof Null = Primitive |
 {
     constructor(valueTypes: T[]) {
         this.valueTypes = valueTypes;
-
-        if (valueTypes.length > 0) {
-            this.valueMatches = (value: unknown): value is ReturnType<T> =>
-                isPrimitiveOrNull(value, valueTypes.slice());
-        } else {
-            this.valueMatches = (value: unknown): value is ReturnType<T> => isPrimitiveOrNull(value);
-        }
     }
 
     // [todo] get rid of this hack
@@ -26,7 +19,16 @@ export class InSetCriterionShape<T extends Primitive | typeof Null = Primitive |
     // [todo] being able to distinguish between "typeof IsSetCriterionTemplate" and "typeof IsValueCriterionTemplate"
     // might no longer be necessary, as "instanced-criterion-template" has been simplified
     private readonly op: "in-set" = "in-set";
-    private readonly valueMatches: (value: unknown) => value is ReturnType<T>;
+
+    private valueMatches(value: unknown): value is ReturnType<T> {
+        const valueTypes = this.valueTypes;
+
+        if (valueTypes.length > 0) {
+            return isPrimitiveOrNull(value, valueTypes.slice());
+        } else {
+            return isPrimitiveOrNull(value);
+        }
+    }
     private readonly valueTypes: readonly T[];
 
     getValueTypes(): readonly T[] {
