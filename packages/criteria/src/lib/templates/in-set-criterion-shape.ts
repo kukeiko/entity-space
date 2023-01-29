@@ -37,7 +37,9 @@ export class InSetCriterionShape<T extends Primitive | typeof Null = Primitive |
 
     reshape(criterion: Criterion): false | ReshapedCriterion<InSetCriterion<ReturnType<T>>> {
         if (criterion instanceof InSetCriterion) {
-            const valuesMatchingType = new Set(Array.from(criterion.getValues()).filter(this.valueMatches));
+            const valuesMatchingType = new Set(
+                Array.from(criterion.getValues()).filter(value => this.valueMatches(value))
+            );
 
             if (valuesMatchingType.size > 0) {
                 const valuesNotMatchingType = Array.from(criterion.getValues()).filter(
@@ -71,7 +73,7 @@ export class InSetCriterionShape<T extends Primitive | typeof Null = Primitive |
             return false;
         }
 
-        return Array.from(criterion.getValues()).every(this.valueMatches);
+        return Array.from(criterion.getValues()).every(value => this.valueMatches(value));
     }
 
     toString(): string {
