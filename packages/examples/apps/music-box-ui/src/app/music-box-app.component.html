@@ -1,7 +1,7 @@
 <p-tabView>
     <p-tabPanel header="Songs">
         <ng-template pTemplate="content">
-            <song-filter-bar [(filter)]="filter" (filterChange)="onFilterChange()"></song-filter-bar>
+            <song-filter-bar [(filter)]="filter"></song-filter-bar>
             <song-table [songs]="(songs$ | async) ?? []"></song-table>
         </ng-template>
     </p-tabPanel>
@@ -12,7 +12,7 @@
     </p-tabPanel>
     <p-tabPanel header="Cached Queries">
         <ng-template pTemplate="content">
-            <query-cache-table [queries]="cachedQueries"></query-cache-table>
+            <query-cache-table [queries]="(cachedQueries$ | async) ?? []"></query-cache-table>
         </ng-template>
     </p-tabPanel>
 </p-tabView>

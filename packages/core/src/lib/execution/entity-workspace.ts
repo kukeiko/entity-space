@@ -3,7 +3,7 @@ import {
     Entity,
     EntitySchemaCatalog,
     IEntitySchema,
-    UnpackedEntitySelection
+    UnpackedEntitySelection,
 } from "@entity-space/common";
 import { any, Criterion, matches, MatchesBagArgument, never } from "@entity-space/criteria";
 import { Class, DeepPartial, isNotFalse } from "@entity-space/utils";
@@ -24,7 +24,7 @@ import {
     startWith,
     Subject,
     switchMap,
-    tap
+    tap,
 } from "rxjs";
 import { EntitySet } from "../entity/data-structures/entity-set";
 import { createCriterionFromEntities } from "../entity/functions/create-criterion-from-entities.fn";
@@ -35,6 +35,7 @@ import { InMemoryEntityDatabase } from "../entity/in-memory-entity-database";
 import { EntityQuery } from "../query/entity-query";
 import { QueryPaging } from "../query/query-paging";
 import { subtractQueries } from "../query/subtract-queries.fn";
+import { EntityQueryBuilder, EntityQueryBuilderArgument } from "./entity-query-builder";
 import { EntityQueryTracing } from "./entity-query-tracing";
 import { EntityStream } from "./entity-stream";
 import { EntityStreamPacket } from "./entity-stream-packet";
@@ -45,7 +46,9 @@ import { ScopedEntityWorkspace } from "./scoped-entity-workspace";
 
 // [todo] move to "execution" folder
 export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
-    constructor(private readonly tracing: EntityQueryTracing) {}
+    constructor(private readonly tracing: EntityQueryTracing) {
+        console.log("🌵 new workspace instance");
+    }
 
     private store?: IEntityStore;
     private schemas?: EntitySchemaCatalog;
@@ -214,7 +217,7 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
     }
 
     query$<T extends Entity>(
-        schema: IEntitySchema,
+        schema: IEntitySchema<T>,
         criterion: Criterion | MatchesBagArgument<T> = any(),
         selection?: UnpackedEntitySelection<T>,
         options: Criterion | MatchesBagArgument<Entity> = never(),
@@ -414,5 +417,23 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
         const schema = this.schemas.resolve(blueprint);
 
         return new ScopedEntityWorkspace({ schema, workspace: this });
+    }
+
+    from<T extends Entity>(blueprint: Class<T>): EntityQueryBuilder<BlueprintInstance<T>> {
+        // [todo] to be removed by making schemas not undefined
+        if (!this.schemas) {
+            throw new Error("this.schemas is falsy");
+        }
+
+        const schema = this.schemas.resolve(blueprint);
+
+        return new EntityQueryBuilder({ schema, workspace: this });
+    }
+
+    protected getQueryBuilderParts<T extends Entity = Entity>(schema: IEntitySchema<T>): EntityQueryBuilderArgument<T> {
+        return {
+            schema,
+            workspace: this,
+        };
     }
 }

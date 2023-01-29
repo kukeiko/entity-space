@@ -22,6 +22,7 @@ import { SongFilterBarComponent } from "./components/song-filter-bar/song-filter
 import { SongTableComponent } from "./components/song-table/song-table.component";
 import { MusicAppComponent } from "./music-box-app.component";
 import { MusicBoxClientSideEntityApi } from "./music-box-client-side-entity-api";
+import { MusicBoxWorkspace } from "./music-box-workspace";
 
 @NgModule({
     imports: [
@@ -49,6 +50,7 @@ import { MusicBoxClientSideEntityApi } from "./music-box-client-side-entity-api"
     ],
     providers: [
         SongLocationEntitySchema,
+        MusicBoxWorkspace,
         {
             provide: EntityQueryTracing,
             useFactory: () => {
@@ -87,20 +89,8 @@ import { MusicBoxClientSideEntityApi } from "./music-box-client-side-entity-api"
         },
         {
             provide: EntityWorkspace,
-            deps: [MusicBoxClientSideEntityApi, EntitySchemaCatalog, EntityQueryTracing],
-            useFactory: (
-                api: MusicBoxClientSideEntityApi,
-                schemas: EntitySchemaCatalog,
-                tracing: EntityQueryTracing
-            ) => {
-                console.log("🏭 new workspace");
-                const workspace = new EntityWorkspace(tracing);
-                workspace.interceptors = [api];
-                workspace.setStore(api);
-                workspace.setSchemaCatalog(schemas);
-
-                return workspace;
-            },
+            deps: [MusicBoxWorkspace],
+            useFactory: (workspace: MusicBoxWorkspace) => workspace,
         },
     ],
     bootstrap: [MusicAppComponent],

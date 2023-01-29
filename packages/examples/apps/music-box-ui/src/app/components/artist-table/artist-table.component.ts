@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, Input, OnInit } from "@angular/core";
 import { EntitySchemaCatalog } from "@entity-space/common";
-import { EntityWorkspace } from "@entity-space/core";
 import { Artist, ArtistBlueprint } from "@entity-space/examples/libs/music-model";
 import { ReplaySubject } from "rxjs";
 import { map, switchMap } from "rxjs/operators";
+import { MusicBoxWorkspace } from "../../music-box-workspace";
 
 @Component({
     selector: "artist-table",
@@ -12,7 +12,7 @@ import { map, switchMap } from "rxjs/operators";
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ArtistTableComponent implements OnInit {
-    constructor(private readonly entities: EntityWorkspace, private readonly schemas: EntitySchemaCatalog) {}
+    constructor(private readonly entities: MusicBoxWorkspace, private readonly schemas: EntitySchemaCatalog) {}
 
     columns: { field: string; header: string }[] = [{ field: "name", header: "Name" }];
     editDialogVisible = false;

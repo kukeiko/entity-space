@@ -1,8 +1,9 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from "@angular/core";
-import { EntityWorkspace } from "@entity-space/core";
-import { ArtistBlueprint, SongLocationTypeBlueprint } from "@entity-space/examples/libs/music-model";
+import { SongLocationTypeBlueprint } from "@entity-space/examples/libs/music-model";
 import { map } from "rxjs";
 import { copySongFilter, createDefaultSongFilter, SongFilter } from "../../models";
+import { MusicBoxWorkspace } from "../../music-box-workspace";
+import { sortByName } from "../../sort-by-name.fn";
 
 @Component({
     selector: "song-filter-bar",
@@ -11,7 +12,7 @@ import { copySongFilter, createDefaultSongFilter, SongFilter } from "../../model
     changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SongFilterBarComponent {
-    constructor(private readonly entities: EntityWorkspace) {}
+    constructor(private readonly entities: MusicBoxWorkspace) {}
 
     @Input() set filter(value: SongFilter | null | undefined) {
         this.value = value ? copySongFilter(value) : createDefaultSongFilter();
@@ -22,14 +23,20 @@ export class SongFilterBarComponent {
 
     // [todo] support default sort via metadata
     artists$ = this.entities
-        .scope(ArtistBlueprint)
-        .all()
-        .pipe(map(items => items.slice().sort((a, b) => a.name.localeCompare(b.name))));
+        .fromArtists()
+        .findAll()
+        .pipe(
+            map(({ entities }) => entities),
+            map(sortByName)
+        );
 
     locationTypes$ = this.entities
-        .scope(SongLocationTypeBlueprint)
-        .all()
-        .pipe(map(items => items.slice().sort((a, b) => a.name.localeCompare(b.name))));
+        .fromSongLocationTypes()
+        .findAll()
+        .pipe(
+            map(({ entities }) => entities),
+            map(sortByName)
+        );
 
     emitChange(): void {
         this.filterChange.next(this.value);

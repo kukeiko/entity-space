@@ -1,8 +1,9 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from "@angular/core";
 import { EntitySchemaCatalog } from "@entity-space/common";
-import { EntityWorkspace } from "@entity-space/core";
 import { ArtistBlueprint, Song, SongBlueprint, WebSongLocation } from "@entity-space/examples/libs/music-model";
 import { map, ReplaySubject, switchMap } from "rxjs";
+import { MusicBoxWorkspace } from "../../music-box-workspace";
+import { sortByName } from "../../sort-by-name.fn";
 
 @Component({
     selector: "song-table",
@@ -12,15 +13,18 @@ import { map, ReplaySubject, switchMap } from "rxjs";
 })
 export class SongTableComponent {
     constructor(
-        private readonly entities: EntityWorkspace,
+        private readonly entities: MusicBoxWorkspace,
         private readonly schemas: EntitySchemaCatalog,
         private readonly changeDetector: ChangeDetectorRef
     ) {}
 
     artists$ = this.entities
-        .scope(ArtistBlueprint)
-        .all()
-        .pipe(map(items => items.slice().sort((a, b) => a.name.localeCompare(b.name))));
+        .fromArtists()
+        .findAll()
+        .pipe(
+            map(({ entities }) => entities),
+            map(sortByName)
+        );
 
     songInput$ = new ReplaySubject<Song[]>(1);
 
