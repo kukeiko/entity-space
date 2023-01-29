@@ -1,8 +1,9 @@
-import { token, TokenType } from "@entity-space/lexer";
 import { isEven } from "../../lib/criteria/criterion/binary/is-even.fn";
 import { isValue } from "../../lib/criteria/criterion/value/is-value.fn";
 import { notValue } from "../../lib/criteria/criterion/value/not-value.fn";
 import { valueCriterionTokenParser } from "../../lib/criteria/parser/value-criterion.token-parser";
+import { TokenType } from "../../lib/lexer/token-type.enum";
+import { token } from "../../lib/lexer/token.fn";
 import { itShouldParseTokens } from "./utils";
 
 describe("parse-tokens: <value> / !<value>", () => {

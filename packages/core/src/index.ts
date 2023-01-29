@@ -72,3 +72,9 @@ export * from "./lib/criteria/templates/some-shape.fn";
 export * from "./lib/criteria/parser/criterion-token-parser.type";
 export * from "./lib/criteria/parser/criteria.token-parser";
 export * from "./lib/criteria/parser/token-parser";
+
+
+export * from "./lib/lexer/lex.fn";
+export * from "./lib/lexer/token-type.enum";
+export * from "./lib/lexer/token.contract";
+export * from "./lib/lexer/token.fn";

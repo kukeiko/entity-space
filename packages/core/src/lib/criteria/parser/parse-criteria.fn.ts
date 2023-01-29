@@ -1,4 +1,4 @@
-import { lex } from "@entity-space/lexer";
+import { lex } from "../../lexer/lex.fn";
 import { Criteria } from "../criterion/criteria";
 import { Criterion } from "../criterion/criterion";
 import { criteriaTokenParser } from "./criteria.token-parser";

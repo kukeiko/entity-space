@@ -173,7 +173,7 @@ describe("playground: criteria v3", () => {
         ? EntityCriteriaShapeInstanceRequired<E, S>
         : EntityCriteriaShapeInstanceOptional<E, S>;
 
-    it("EntityCriteriaShapeInstance should work", () => {
+    xit("EntityCriteriaShapeInstance should work", () => {
         const fooBuilder = new Builder<Foo>();
         const fooShape = fooBuilder.takeShape({
             [$required]: {

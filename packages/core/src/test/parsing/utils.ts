@@ -1,6 +1,6 @@
-import { Token } from "@entity-space/lexer";
 import { Criterion } from "../../lib/criteria/criterion/criterion";
 import { CriterionTokenParser } from "../../lib/criteria/parser/criterion-token-parser.type";
+import { Token } from "../../lib/lexer/token.contract";
 
 export function itShouldParseTokens(
     makeGenerator: () => CriterionTokenParser,

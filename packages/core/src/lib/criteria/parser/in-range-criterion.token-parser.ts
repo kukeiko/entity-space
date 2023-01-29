@@ -1,4 +1,5 @@
-import { Token, TokenType } from "@entity-space/lexer";
+import { TokenType } from "../../lexer/token-type.enum";
+import { Token } from "../../lexer/token.contract";
 import { inRange } from "../criterion/range/in-range.fn";
 import { CriterionTokenParser } from "./criterion-token-parser.type";
 

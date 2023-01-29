@@ -1,8 +1,9 @@
-import { token, TokenType } from "@entity-space/lexer";
 import { matches } from "../../lib/criteria/criterion/named/matches.fn";
 import { or } from "../../lib/criteria/criterion/or/or.fn";
 import { inRange } from "../../lib/criteria/criterion/range/in-range.fn";
 import { namedCriteriaTokenParser } from "../../lib/criteria/parser/named-criteria.token-parser";
+import { TokenType } from "../../lib/lexer/token-type.enum";
+import { token } from "../../lib/lexer/token.fn";
 import { itShouldParseTokens } from "./utils";
 
 describe("parse-tokens: named-criteria", () => {

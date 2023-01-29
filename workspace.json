@@ -3,7 +3,6 @@
     "projects": {
         "common": "packages/common",
         "core": "packages/core",
-        "criteria": "packages/criteria",
         "examples-common-model": "packages/examples/libs/common-model",
         "examples-music-box-api": "packages/examples/apps/music-box-api",
         "examples-music-box-ui": "packages/examples/apps/music-box-ui",
@@ -11,7 +10,6 @@
         "examples-products-api": "packages/examples/apps/products-api",
         "examples-products-model": "packages/examples/libs/products-model",
         "examples-products-ui": "packages/examples/apps/products-ui",
-        "lexer": "packages/lexer",
         "node": "packages/node",
         "utils": "packages/utils"
     },

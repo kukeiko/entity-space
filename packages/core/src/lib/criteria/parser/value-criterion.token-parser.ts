@@ -1,4 +1,4 @@
-import { TokenType } from "@entity-space/lexer";
+import { TokenType } from "../../lexer/token-type.enum";
 import { isEven } from "../criterion/binary/is-even.fn";
 import { Criterion } from "../criterion/criterion";
 import { isValue } from "../criterion/value/is-value.fn";

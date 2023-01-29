@@ -1,4 +1,5 @@
-import { Token, TokenType } from "@entity-space/lexer";
+import { TokenType } from "../../lexer/token-type.enum";
+import { Token } from "../../lexer/token.contract";
 import { and } from "../criterion/and/and.fn";
 import { Criterion } from "../criterion/criterion";
 import { or } from "../criterion/or/or.fn";
