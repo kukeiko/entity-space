@@ -1,4 +1,3 @@
-import { matches } from "@entity-space/criteria";
 import { lastValueFrom } from "rxjs";
 import { EntitySet } from "../lib/entity/data-structures/entity-set";
 import { IEntityStreamInterceptor } from "../lib/execution/i-entity-stream-interceptor";
@@ -12,6 +11,7 @@ import { EntityQueryTracing } from "../lib/execution/entity-query-tracing";
 import { TestContentData, TestContentDatabase, TestContentEntityApi, User, UserBlueprint } from "./content";
 import { TestContentCatalog } from "./content/test-content-catalog";
 import { createQuery } from "./tools/create-query.fn";
+import { matches } from "../lib/criteria/criterion/named/matches.fn";
 
 const LOG_PACKETS = false;
 const LOG_TRACING = false;

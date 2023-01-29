@@ -1,6 +1,7 @@
 import { EntitySchemaCatalog, UnpackedEntitySelection } from "@entity-space/common";
-import { criteriaTokenParser, Criterion } from "@entity-space/criteria";
 import { lex, Token, TokenType } from "@entity-space/lexer";
+import { Criterion } from "../criteria/criterion/criterion";
+import { criteriaTokenParser } from "../criteria/parser/criteria.token-parser";
 import { EntityQuery } from "./entity-query";
 import { EntityQueryPagingSort, QueryPaging } from "./query-paging";
 

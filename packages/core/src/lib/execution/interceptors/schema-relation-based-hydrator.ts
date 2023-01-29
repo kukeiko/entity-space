@@ -1,7 +1,8 @@
 import { IEntitySchemaRelation, UnpackedEntitySelection } from "@entity-space/common";
-import { and, fromDeepBag } from "@entity-space/criteria";
 import { isNotFalse, writePath } from "@entity-space/utils";
 import { map, merge, of, switchMap, takeLast, tap } from "rxjs";
+import { and } from "../../criteria/criterion/and/and.fn";
+import { fromDeepBag } from "../../criteria/criterion/named/from-deep-bag.fn";
 import { EntitySet } from "../../entity/data-structures/entity-set";
 import { createCriterionFromEntities } from "../../entity/functions/create-criterion-from-entities.fn";
 import { EntityQuery } from "../../query/entity-query";
@@ -226,7 +227,6 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
             return [
                 accepted.map(acceptedQuery =>
                     hydrationQuery
-
                         .withCriteria(
                             and(
                                 hydrationQuery.getCriteria(),
@@ -237,7 +237,6 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
                 ),
                 rejected.map(rejectedQuery =>
                     hydrationQuery
-
                         .withCriteria(
                             and(
                                 hydrationQuery.getCriteria(),

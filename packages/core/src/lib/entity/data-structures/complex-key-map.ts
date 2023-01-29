@@ -1,14 +1,12 @@
 import { Entity } from "@entity-space/common";
-import {
-    Criterion,
-    InSetCriterion,
-    inSetShape,
-    IsValueCriterion,
-    isValueShape,
-    NamedCriteriaShape,
-    ReshapedCriterion,
-} from "@entity-space/criteria";
 import { readPath, writePath } from "@entity-space/utils";
+import { Criterion } from "../../criteria/criterion/criterion";
+import { InSetCriterion } from "../../criteria/criterion/set/in-set-criterion";
+import { IsValueCriterion } from "../../criteria/criterion/value/is-value-criterion";
+import { inSetShape } from "../../criteria/templates/in-set-shape.fn";
+import { isValueShape } from "../../criteria/templates/is-value-shape.fn";
+import { NamedCriteriaShape } from "../../criteria/templates/named-criteria-shape";
+import { ReshapedCriterion } from "../../criteria/templates/reshaped-criterion";
 
 // [todo] wanted to move this to utils, and then i noticed we have a dependency to criteria package,
 // so we can't really do that. maybe we should have a map implementing getting items by criteria

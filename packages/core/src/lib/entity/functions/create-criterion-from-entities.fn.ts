@@ -1,5 +1,10 @@
-import { Criterion, fromDeepBag, inSet, InSetCriterion, isValue, or } from "@entity-space/criteria";
-import { writePath, readPath } from "@entity-space/utils";
+import { readPath, writePath } from "@entity-space/utils";
+import { Criterion } from "../../criteria/criterion/criterion";
+import { fromDeepBag } from "../../criteria/criterion/named/from-deep-bag.fn";
+import { or } from "../../criteria/criterion/or/or.fn";
+import { InSetCriterion } from "../../criteria/criterion/set/in-set-criterion";
+import { inSet } from "../../criteria/criterion/set/in-set.fn";
+import { isValue } from "../../criteria/criterion/value/is-value.fn";
 import { ComplexKeyMap } from "../data-structures/complex-key-map";
 import { Entity } from "../entity";
 

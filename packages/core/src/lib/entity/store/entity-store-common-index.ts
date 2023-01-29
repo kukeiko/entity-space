@@ -1,4 +1,5 @@
-import { Criterion, ReshapedCriterion } from "@entity-space/criteria";
+import { Criterion } from "../../criteria/criterion/criterion";
+import { ReshapedCriterion } from "../../criteria/templates/reshaped-criterion";
 import { ComplexKeyMap } from "../data-structures/complex-key-map";
 import { Entity } from "../entity";
 

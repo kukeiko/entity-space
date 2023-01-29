@@ -1,6 +1,8 @@
 import { EntitySchema, IEntitySchema, UnpackedEntitySelection } from "@entity-space/common";
-import { Criterion, inSet, matches } from "@entity-space/criteria";
 import { firstValueFrom, take, tap, toArray } from "rxjs";
+import { Criterion } from "../lib/criteria/criterion/criterion";
+import { matches } from "../lib/criteria/criterion/named/matches.fn";
+import { inSet } from "../lib/criteria/criterion/set/in-set.fn";
 import { EntityQueryTracing } from "../lib/execution/entity-query-tracing";
 import { EntityWorkspace } from "../lib/execution/entity-workspace";
 import { EntityQuery } from "../lib/query/entity-query";

@@ -1,6 +1,7 @@
 import { BlueprintInstance, EntitySchemaCatalog, UnpackedEntitySelection } from "@entity-space/common";
-import { any, matches, MatchesBagArgument } from "@entity-space/criteria";
 import { Class } from "@entity-space/utils";
+import { any } from "../../lib/criteria/criterion/any/any.fn";
+import { matches, MatchesBagArgument } from "../../lib/criteria/criterion/named/matches.fn";
 import { EntityQuery } from "../../lib/query/entity-query";
 
 export function createQuery<T>(

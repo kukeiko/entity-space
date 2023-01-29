@@ -1,5 +1,5 @@
 import { Entity, IEntitySchema } from "@entity-space/common";
-import { ICriterionShape } from "@entity-space/criteria";
+import { ICriterionShape } from "../criteria/templates/criterion-shape.interface";
 
 // [todo] accidentally committed this file
 type AddFieldsArgument<T> = {

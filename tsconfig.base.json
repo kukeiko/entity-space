@@ -17,7 +17,6 @@
         "paths": {
             "@entity-space/common": ["packages/common/src/index.ts"],
             "@entity-space/core": ["packages/core/src/index.ts"],
-            "@entity-space/criteria": ["packages/criteria/src/index.ts"],
             "@entity-space/examples/libs/common-model": ["packages/examples/libs/common-model/src/index.ts"],
             "@entity-space/examples/libs/music-model": ["packages/examples/libs/music-model/src/index.ts"],
             "@entity-space/examples/libs/products-model": ["packages/examples/libs/products-model/src/index.ts"],

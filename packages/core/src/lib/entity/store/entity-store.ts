@@ -1,5 +1,6 @@
 import { Entity, IEntitySchema } from "@entity-space/common";
-import { Criterion, or } from "@entity-space/criteria";
+import { Criterion } from "../../criteria/criterion/criterion";
+import { or } from "../../criteria/criterion/or/or.fn";
 import { QueryPaging } from "../../query/query-paging";
 import { ComplexKeyMap } from "../data-structures/complex-key-map";
 import { EntityStoreCommonIndex } from "./entity-store-common-index";

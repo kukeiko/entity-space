@@ -5,7 +5,6 @@ import {
     IEntitySchema,
     UnpackedEntitySelection,
 } from "@entity-space/common";
-import { any, Criterion, matches, MatchesBagArgument, never } from "@entity-space/criteria";
 import { Class, DeepPartial, isNotFalse } from "@entity-space/utils";
 import { flatMap, isEqual, xor, xorWith } from "lodash";
 import {
@@ -26,6 +25,10 @@ import {
     switchMap,
     tap,
 } from "rxjs";
+import { any } from "../criteria/criterion/any/any.fn";
+import { Criterion } from "../criteria/criterion/criterion";
+import { matches, MatchesBagArgument } from "../criteria/criterion/named/matches.fn";
+import { never } from "../criteria/criterion/never/never.fn";
 import { EntitySet } from "../entity/data-structures/entity-set";
 import { createCriterionFromEntities } from "../entity/functions/create-criterion-from-entities.fn";
 import { createIdQueryFromEntities } from "../entity/functions/create-id-query-from-entities.fn";

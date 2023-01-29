@@ -1,5 +1,7 @@
 import { EntitySchema } from "@entity-space/common";
-import { isValue, matches, or } from "@entity-space/criteria";
+import { matches } from "../lib/criteria/criterion/named/matches.fn";
+import { or } from "../lib/criteria/criterion/or/or.fn";
+import { isValue } from "../lib/criteria/criterion/value/is-value.fn";
 import { EntityStore } from "../lib/entity/store/entity-store";
 
 interface Vector {

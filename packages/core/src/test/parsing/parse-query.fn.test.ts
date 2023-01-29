@@ -1,5 +1,8 @@
 import { EntitySchema, EntitySchemaCatalog, UnpackedEntitySelection } from "@entity-space/common";
-import { Criterion, isValue, matches, or } from "@entity-space/criteria";
+import { Criterion } from "../../lib/criteria/criterion/criterion";
+import { matches } from "../../lib/criteria/criterion/named/matches.fn";
+import { or } from "../../lib/criteria/criterion/or/or.fn";
+import { isValue } from "../../lib/criteria/criterion/value/is-value.fn";
 import { EntityQuery } from "../../lib/query/entity-query";
 import { parseQuery } from "../../lib/query/parse-query.fn";
 import { QueryPaging } from "../../lib/query/query-paging";

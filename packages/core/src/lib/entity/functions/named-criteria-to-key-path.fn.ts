@@ -1,4 +1,4 @@
-import { NamedCriteria } from "@entity-space/criteria";
+import { NamedCriteria } from "../../criteria/criterion/named/named-criteria";
 
 function namedCriteriaToKeyPathsInternal(namedCriteria: NamedCriteria, prefix: string[]): string[] {
     const bagKeyPaths: string[] = [];

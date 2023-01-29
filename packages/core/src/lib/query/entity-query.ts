@@ -1,5 +1,10 @@
 import { IEntitySchema, UnpackedEntitySelection } from "@entity-space/common";
-import { any, AnyCriterion, Criterion, NamedCriteria, never, NeverCriterion } from "@entity-space/criteria";
+import { AnyCriterion } from "../criteria/criterion/any/any";
+import { any } from "../criteria/criterion/any/any.fn";
+import { Criterion } from "../criteria/criterion/criterion";
+import { NamedCriteria } from "../criteria/criterion/named/named-criteria";
+import { NeverCriterion } from "../criteria/criterion/never/never";
+import { never } from "../criteria/criterion/never/never.fn";
 import { EntitySelection } from "./entity-selection";
 import { QueryPaging } from "./query-paging";
 import { subtractQueries } from "./subtract-queries.fn";

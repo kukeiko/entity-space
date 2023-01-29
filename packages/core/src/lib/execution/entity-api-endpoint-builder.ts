@@ -1,15 +1,13 @@
 import { Entity, IEntitySchema, UnpackedEntitySelection } from "@entity-space/common";
-import {
-    anyShape,
-    Criterion,
-    ICriterionShape,
-    InstancedCriterionShape,
-    NamedCriteriaShape,
-    NamedCriteriaShapeItems,
-    namedShape,
-    neverShape,
-} from "@entity-space/criteria";
+
 import { size } from "lodash";
+import { Criterion } from "../criteria/criterion/criterion";
+import { anyShape } from "../criteria/templates/any-shape.fn";
+import { ICriterionShape } from "../criteria/templates/criterion-shape.interface";
+import { InstancedCriterionShape } from "../criteria/templates/instanced-criterion-shape.type";
+import { NamedCriteriaShape, NamedCriteriaShapeItems } from "../criteria/templates/named-criteria-shape";
+import { namedShape } from "../criteria/templates/named-shape.fn";
+import { neverShape } from "../criteria/templates/never-shape.fn";
 import { EntitySelection } from "../query/entity-selection";
 import { EntityApiEndpoint, EntityApiEndpointInvoke } from "./entity-api-endpoint";
 

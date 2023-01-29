@@ -1,6 +1,5 @@
 import { Entity, EntitySchemaCatalog, IEntitySchema } from "@entity-space/common";
-import { normalizeEntities, EntityQuery } from "@entity-space/core";
-import { isValue, matches } from "@entity-space/criteria";
+import { normalizeEntities, EntityQuery, matches, isValue } from "@entity-space/core";
 import { Song, SongBlueprint, SongLocation } from "@entity-space/examples/libs/music-model";
 import { FileOnDiskBasedEntitySource } from "@entity-space/node";
 import { Injectable } from "@nestjs/common";

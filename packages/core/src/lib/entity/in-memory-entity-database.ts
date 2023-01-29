@@ -1,18 +1,16 @@
 import { IEntitySchema, IEntitySchemaRelation, UnpackedEntitySelection } from "@entity-space/common";
-import {
-    any,
-    AnyCriterion,
-    anyShape,
-    Criterion,
-    NamedCriteriaShape,
-    never,
-    NeverCriterion,
-    or,
-    orShape,
-} from "@entity-space/criteria";
 import { cloneJson, groupBy, isDefined, readPath } from "@entity-space/utils";
 import { flatten } from "lodash";
 import { Observable, Subject } from "rxjs";
+import { AnyCriterion } from "../criteria/criterion/any/any";
+import { any } from "../criteria/criterion/any/any.fn";
+import { Criterion } from "../criteria/criterion/criterion";
+import { NeverCriterion } from "../criteria/criterion/never/never";
+import { never } from "../criteria/criterion/never/never.fn";
+import { or } from "../criteria/criterion/or/or.fn";
+import { anyShape } from "../criteria/templates/any-shape.fn";
+import { NamedCriteriaShape } from "../criteria/templates/named-criteria-shape";
+import { orShape } from "../criteria/templates/or-shape.fn";
 import { EntityQuery } from "../query/entity-query";
 import { EntitySelection } from "../query/entity-selection";
 import { mergeQueries } from "../query/merge-queries.fn";

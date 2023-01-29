@@ -3,7 +3,7 @@ import { Null } from "./null";
 /**
  * A type that has a constructor.
  */
-export type Class<T = any> = new (...args: any) => T; // | (abstract new (...args: any) => T);
+export type Class<T = any> = new (...args: any) => T; // | (abstract new (...args: any) => T); [todo] remove commented out code if no longer relevant
 export type AbstractClass<T = any> = abstract new (...args: any) => T;
 
 export type DeepPartial<T> = T extends object

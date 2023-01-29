@@ -1,5 +1,7 @@
-import { InNumberRangeCriterion, inRange, inRangeShape } from "@entity-space/criteria";
 import { isEqual } from "lodash";
+import { InNumberRangeCriterion } from "../criteria/criterion/range/in-number-range-criterion";
+import { inRange } from "../criteria/criterion/range/in-range.fn";
+import { inRangeShape } from "../criteria/templates/in-range-shape.fn";
 
 export interface EntityQueryPagingSort {
     field: string;

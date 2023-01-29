@@ -1,7 +1,8 @@
 import { Entity, IEntitySchema, PackedEntitySelection, UnpackedEntitySelection } from "@entity-space/common";
-import { fromDeepBag, MatchesBagArgument } from "@entity-space/criteria";
 import { DeepPartial, readPath, writePath } from "@entity-space/utils";
 import { map, Observable } from "rxjs";
+import { fromDeepBag } from "../criteria/criterion/named/from-deep-bag.fn";
+import { MatchesBagArgument } from "../criteria/criterion/named/matches.fn";
 import { EntitySelection } from "../query/entity-selection";
 import { EntityWorkspace } from "./entity-workspace";
 

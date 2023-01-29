@@ -1,7 +1,7 @@
-import { or } from "@entity-space/criteria";
 import { EntitySelection } from "./entity-selection";
 import { EntityQuery } from "./entity-query";
 import { QueryPaging } from "./query-paging";
+import { or } from "../criteria/criterion/or/or.fn";
 
 // [todo] clean up this method, it is really hard to read and hacked together.
 export function mergeQuery(a: EntityQuery, b: EntityQuery): false | EntityQuery {

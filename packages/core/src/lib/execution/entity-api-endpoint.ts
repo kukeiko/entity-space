@@ -1,6 +1,8 @@
 import { Entity, IEntitySchema, UnpackedEntitySelection } from "@entity-space/common";
-import { Criterion, ICriterionShape, InstancedCriterionShape } from "@entity-space/criteria";
 import { Observable } from "rxjs";
+import { Criterion } from "../criteria/criterion/criterion";
+import { ICriterionShape } from "../criteria/templates/criterion-shape.interface";
+import { InstancedCriterionShape } from "../criteria/templates/instanced-criterion-shape.type";
 import { EntitySet } from "../entity/data-structures/entity-set";
 import { EntitySelection } from "../query/entity-selection";
 import { QueryPaging } from "../query/query-paging";

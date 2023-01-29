@@ -1,7 +1,7 @@
-import { Criterion } from "@entity-space/criteria";
 import { EntitySelection } from "./entity-selection";
 import { EntityQueryCtorArg, EntityQuery } from "./entity-query";
 import { QueryPaging } from "./query-paging";
+import { Criterion } from "../criteria/criterion/criterion";
 
 type SubtractedParts = {
     options: true | Criterion;
