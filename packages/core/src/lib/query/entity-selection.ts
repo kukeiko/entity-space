@@ -104,8 +104,10 @@ export class EntitySelection {
         return this.mergeValues(object);
     }
 
-    static mergeValues(...selections: UnpackedEntitySelection[]): Exclude<UnpackedEntitySelection, true> {
-        const merged: UnpackedEntitySelection = {};
+    static mergeValues<T extends Entity = Entity>(
+        ...selections: UnpackedEntitySelection<T>[]
+    ): Exclude<UnpackedEntitySelection<T>, true> {
+        const merged: Exclude<UnpackedEntitySelection, true> = {};
 
         for (let selection of selections) {
             for (const key in selection) {
@@ -128,7 +130,7 @@ export class EntitySelection {
             }
         }
 
-        return merged;
+        return merged as Exclude<UnpackedEntitySelection<T>, true>;
     }
 
     static subtractValue(
