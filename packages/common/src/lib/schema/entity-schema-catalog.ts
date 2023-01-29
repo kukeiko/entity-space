@@ -6,7 +6,7 @@ import { BlueprintPropertyValue, hasAttribute } from "./blueprint-property";
 import { EntitySchema } from "./entity-schema";
 import { ArraySchema } from "./array-schema";
 import { PrimitiveSchema } from "./primitive-schema";
-import { PrimitiveSchemaDataType } from "./schema.interface";
+import { IEntitySchema, PrimitiveSchemaDataType } from "./schema.interface";
 import { Entity } from "../entity.type";
 
 export class EntitySchemaCatalog {
@@ -27,7 +27,7 @@ export class EntitySchemaCatalog {
         return schema as EntitySchema<T>;
     }
 
-    resolve<T>(blueprint: Class<T>): EntitySchema<BlueprintInstance<T>> {
+    resolve<T>(blueprint: Class<T>): IEntitySchema<BlueprintInstance<T>> {
         const metadata = getBlueprintMetadata(blueprint);
         let schema = this.schemas.get(metadata.id);
 
