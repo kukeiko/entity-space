@@ -1,4 +1,4 @@
-import { IEntitySchema } from "../common/schema/schema.interface";
+import { IEntitySchema } from "../schema/schema.interface";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
 import { AnyCriterion } from "../criteria/criterion/any/any";
 import { any } from "../criteria/criterion/any/any.fn";

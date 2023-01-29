@@ -1,4 +1,4 @@
-import { BlueprintInstance } from "../../../lib/common/schema/blueprint-instance";
+import { BlueprintInstance } from "../../../lib/schema/blueprint-instance";
 import { generateTreeNodes } from "./generate-tree-nodes.fn";
 import { TreeNodeBlueprint } from "./tree-node.model";
 

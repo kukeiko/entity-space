@@ -1,4 +1,4 @@
-import { EntitySchemaCatalog } from "../../lib/common/schema/entity-schema-catalog";
+import { EntitySchemaCatalog } from "../../lib/schema/entity-schema-catalog";
 import { mergeQuery } from "../../lib/query/merge-query.fn";
 import { parseQuery } from "../../lib/query/parse-query.fn";
 import { subtractQuery } from "../../lib/query/subtract-query.fn";

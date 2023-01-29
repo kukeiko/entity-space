@@ -1,6 +1,6 @@
 import { isPrimitive, Null, Primitive, Unbox } from "@entity-space/utils";
-import { BlueprintInstance } from "../../lib/common/schema/blueprint-instance";
-import { define } from "../../lib/common/schema/blueprint-property";
+import { BlueprintInstance } from "../../lib/schema/blueprint-instance";
+import { define } from "../../lib/schema/blueprint-property";
 import { ICriterionShape } from "../../lib/criteria/templates/criterion-shape.interface";
 import { inRangeShape } from "../../lib/criteria/templates/in-range-shape.fn";
 import { inSetShape } from "../../lib/criteria/templates/in-set-shape.fn";

@@ -1,5 +1,5 @@
-import { EntitySchema } from "../../lib/common/schema/entity-schema";
-import { EntitySchemaCatalog } from "../../lib/common/schema/entity-schema-catalog";
+import { EntitySchema } from "../../lib/schema/entity-schema";
+import { EntitySchemaCatalog } from "../../lib/schema/entity-schema-catalog";
 import { UnpackedEntitySelection } from "../../lib/common/unpacked-entity-selection.type";
 import { Criterion } from "../../lib/criteria/criterion/criterion";
 import { matches } from "../../lib/criteria/criterion/named/matches.fn";

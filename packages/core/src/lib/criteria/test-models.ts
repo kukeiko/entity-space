@@ -1,4 +1,4 @@
-import { define } from "../common/schema/blueprint-property";
+import { define } from "../schema/blueprint-property";
 
 export class FooBlueprint {
     // id = define(Number, { id: true, required: true });

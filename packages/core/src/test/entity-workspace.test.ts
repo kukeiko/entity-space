@@ -1,6 +1,6 @@
 import { firstValueFrom, take, tap, toArray } from "rxjs";
-import { EntitySchema } from "../lib/common/schema/entity-schema";
-import { IEntitySchema } from "../lib/common/schema/schema.interface";
+import { EntitySchema } from "../lib/schema/entity-schema";
+import { IEntitySchema } from "../lib/schema/schema.interface";
 import { UnpackedEntitySelection } from "../lib/common/unpacked-entity-selection.type";
 import { Criterion } from "../lib/criteria/criterion/criterion";
 import { matches } from "../lib/criteria/criterion/named/matches.fn";

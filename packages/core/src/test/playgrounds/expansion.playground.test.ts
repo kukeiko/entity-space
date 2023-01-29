@@ -1,7 +1,7 @@
 import { Unbox } from "@entity-space/utils";
 import { PackedEntitySelection } from "../../lib/common/packed-entity-selection.type";
-import { BlueprintInstance } from "../../lib/common/schema/blueprint-instance";
-import { define } from "../../lib/common/schema/blueprint-property";
+import { BlueprintInstance } from "../../lib/schema/blueprint-instance";
+import { define } from "../../lib/schema/blueprint-property";
 import { Select } from "../../lib/common/select.type";
 import { Canvas, CanvasBlueprint, ProductBlueprint, ShapeBlueprints, Square } from "../content";
 

@@ -1,7 +1,7 @@
 import { Class } from "@entity-space/utils";
-import { Blueprint } from "../../../lib/common/schema/blueprint";
-import { BlueprintInstance } from "../../../lib/common/schema/blueprint-instance";
-import { define } from "../../../lib/common/schema/blueprint-property";
+import { Blueprint } from "../../../lib/schema/blueprint";
+import { BlueprintInstance } from "../../../lib/schema/blueprint-instance";
+import { define } from "../../../lib/schema/blueprint-property";
 import { DataEntryBlueprint } from "../common/data-entry.model";
 import { UserBlueprint } from "../common/user.model";
 

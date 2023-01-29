@@ -4,7 +4,7 @@ import {
     BlueprintProperty,
     Discriminant,
     NullableAttribute,
-    RequiredAttribute,
+    RequiredAttribute
 } from "./blueprint-property";
 
 export interface Metadata<T = any> {

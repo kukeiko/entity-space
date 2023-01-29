@@ -1,5 +1,5 @@
 import { Entity } from "../../common/entity.type";
-import { IEntitySchema } from "../../common/schema/schema.interface";
+import { IEntitySchema } from "../../schema/schema.interface";
 import { EntityQuery } from "../../query/entity-query";
 
 export class EntitySet<T extends Entity = Entity> {

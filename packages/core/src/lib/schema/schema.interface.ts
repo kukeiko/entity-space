@@ -1,5 +1,5 @@
-import { Entity } from "../entity.type";
-import { UnpackedEntitySelection } from "../unpacked-entity-selection.type";
+import { Entity } from "../common/entity.type";
+import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
 
 export type PrimitiveSchemaDataType = "boolean" | "integer" | "number" | "string";
 

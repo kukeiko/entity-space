@@ -1,4 +1,4 @@
-import { EntitySchemaCatalog } from "../common/schema/entity-schema-catalog";
+import { EntitySchemaCatalog } from "../schema/entity-schema-catalog";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
 import { Criterion } from "../criteria/criterion/criterion";
 import { criteriaTokenParser } from "../criteria/parser/criteria.token-parser";

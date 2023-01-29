@@ -1,6 +1,6 @@
 import { isNotFalse, writePath } from "@entity-space/utils";
 import { map, merge, of, switchMap, takeLast, tap } from "rxjs";
-import { IEntitySchemaRelation } from "../../common/schema/schema.interface";
+import { IEntitySchemaRelation } from "../../schema/schema.interface";
 import { UnpackedEntitySelection } from "../../common/unpacked-entity-selection.type";
 import { and } from "../../criteria/criterion/and/and.fn";
 import { fromDeepBag } from "../../criteria/criterion/named/from-deep-bag.fn";

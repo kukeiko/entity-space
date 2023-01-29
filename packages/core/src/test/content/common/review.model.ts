@@ -1,5 +1,5 @@
-import { BlueprintInstance } from "../../../lib/common/schema/blueprint-instance";
-import { define } from "../../../lib/common/schema/blueprint-property";
+import { BlueprintInstance } from "../../../lib/schema/blueprint-instance";
+import { define } from "../../../lib/schema/blueprint-property";
 import { UserBlueprint } from "./user.model";
 
 export class ReviewBlueprint {

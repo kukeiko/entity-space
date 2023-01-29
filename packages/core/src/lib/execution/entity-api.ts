@@ -14,7 +14,7 @@ import { IEntityStreamInterceptor } from "./i-entity-stream-interceptor";
 import { EntityStream } from "./entity-stream";
 import { EntityStreamPacket } from "./entity-stream-packet";
 import { Entity } from "../common/entity.type";
-import { IEntitySchema } from "../common/schema/schema.interface";
+import { IEntitySchema } from "../schema/schema.interface";
 
 export class EntityApi implements IEntityStreamInterceptor {
     constructor(protected readonly tracing: EntityQueryTracing) {}

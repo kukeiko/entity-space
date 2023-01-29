@@ -1,6 +1,6 @@
 import { size } from "lodash";
 import { Entity } from "../common/entity.type";
-import { IEntitySchema } from "../common/schema/schema.interface";
+import { IEntitySchema } from "../schema/schema.interface";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
 import { Criterion } from "../criteria/criterion/criterion";
 import { anyShape } from "../criteria/templates/any-shape.fn";

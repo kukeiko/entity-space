@@ -1,4 +1,4 @@
-import { EntitySchema } from "../../lib/common/schema/entity-schema";
+import { EntitySchema } from "../../lib/schema/entity-schema";
 import { UnpackedEntitySelection } from "../../lib/common/unpacked-entity-selection.type";
 import { Criterion } from "../../lib/criteria/criterion/criterion";
 import { EntityQuery } from "../../lib/query/entity-query";

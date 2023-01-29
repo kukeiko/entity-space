@@ -1,5 +1,5 @@
-import { EntitySchema } from "../../lib/common/schema/entity-schema";
-import { EntitySchemaCatalog } from "../../lib/common/schema/entity-schema-catalog";
+import { EntitySchema } from "../../lib/schema/entity-schema";
+import { EntitySchemaCatalog } from "../../lib/schema/entity-schema-catalog";
 import { expectQuery } from "../tools/expect-query.fn";
 
 describe("subtractQuery()", () => {

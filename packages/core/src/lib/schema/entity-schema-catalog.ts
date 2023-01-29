@@ -1,12 +1,12 @@
 import { Class } from "@entity-space/utils";
+import { Entity } from "../common/entity.type";
+import { ArraySchema } from "./array-schema";
 import { getBlueprintMetadata, getNamedProperties, isBlueprint } from "./blueprint";
 import { BlueprintInstance } from "./blueprint-instance";
 import { BlueprintPropertyValue, hasAttribute } from "./blueprint-property";
 import { EntitySchema } from "./entity-schema";
-import { ArraySchema } from "./array-schema";
 import { PrimitiveSchema } from "./primitive-schema";
 import { IEntitySchema, PrimitiveSchemaDataType } from "./schema.interface";
-import { Entity } from "../entity.type";
 
 export class EntitySchemaCatalog {
     private readonly schemas = new Map<string, EntitySchema>();

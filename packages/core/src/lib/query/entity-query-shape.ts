@@ -5,7 +5,7 @@ import { ICriterionShape } from "../criteria/templates/criterion-shape.interface
 import { neverShape } from "../criteria/templates/never-shape.fn";
 import { anyShape } from "../criteria/templates/any-shape.fn";
 import { Criterion } from "../criteria/criterion/criterion";
-import { IEntitySchema } from "../common/schema/schema.interface";
+import { IEntitySchema } from "../schema/schema.interface";
 
 type RemappedParts = {
     options: false | Criterion[];

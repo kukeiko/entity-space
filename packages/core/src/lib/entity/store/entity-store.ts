@@ -1,5 +1,5 @@
 import { Entity } from "../../common/entity.type";
-import { IEntitySchema } from "../../common/schema/schema.interface";
+import { IEntitySchema } from "../../schema/schema.interface";
 import { Criterion } from "../../criteria/criterion/criterion";
 import { or } from "../../criteria/criterion/or/or.fn";
 import { QueryPaging } from "../../query/query-paging";

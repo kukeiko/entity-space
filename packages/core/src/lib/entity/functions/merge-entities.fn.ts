@@ -1,6 +1,6 @@
 import { uniq } from "lodash";
 import { Entity } from "../../common/entity.type";
-import { IEntitySchema } from "../../common/schema/schema.interface";
+import { IEntitySchema } from "../../schema/schema.interface";
 import { ComplexKeyMap } from "../data-structures/complex-key-map";
 
 function mergeEntitiesInternal(schema: IEntitySchema, ...entities: Entity[]): Entity {

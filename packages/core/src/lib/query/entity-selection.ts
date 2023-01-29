@@ -1,7 +1,7 @@
 import { toMap } from "@entity-space/utils";
 import { Entity } from "../common/entity.type";
 import { PackedEntitySelection } from "../common/packed-entity-selection.type";
-import { IEntitySchema } from "../common/schema/schema.interface";
+import { IEntitySchema } from "../schema/schema.interface";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
 
 // [todo] implement toUnfoldedExpansion()

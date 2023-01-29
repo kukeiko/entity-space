@@ -7,7 +7,7 @@ import { some } from "../criteria/criterion/some/some.fn";
 import { matches, MatchesBagArgument } from "../criteria/criterion/named/matches.fn";
 import { any } from "../criteria/criterion/any/any.fn";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
-import { IEntitySchema } from "../common/schema/schema.interface";
+import { IEntitySchema } from "../schema/schema.interface";
 import { PackedEntitySelection } from "../common/packed-entity-selection.type";
 import { Entity } from "../common/entity.type";
 

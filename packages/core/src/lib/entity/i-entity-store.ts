@@ -1,5 +1,5 @@
 import { Entity } from "../common/entity.type";
-import { IEntitySchema } from "../common/schema/schema.interface";
+import { IEntitySchema } from "../schema/schema.interface";
 
 // [todo] we have a class "EntityStore" that doesn't implement this (on purpose),
 // so: the naming is kinda conflicting & confusing.

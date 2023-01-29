@@ -1,6 +1,6 @@
 import { Class } from "@entity-space/utils";
-import { BlueprintInstance } from "../../lib/common/schema/blueprint-instance";
-import { EntitySchemaCatalog } from "../../lib/common/schema/entity-schema-catalog";
+import { BlueprintInstance } from "../../lib/schema/blueprint-instance";
+import { EntitySchemaCatalog } from "../../lib/schema/entity-schema-catalog";
 import { UnpackedEntitySelection } from "../../lib/common/unpacked-entity-selection.type";
 import { any } from "../../lib/criteria/criterion/any/any.fn";
 import { matches, MatchesBagArgument } from "../../lib/criteria/criterion/named/matches.fn";

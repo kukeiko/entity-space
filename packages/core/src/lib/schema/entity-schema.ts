@@ -1,8 +1,10 @@
+import { Entity } from "../common/entity.type";
+import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
+import { ArraySchema } from "./array-schema";
 import { EntitySchemaIndex } from "./entity-schema-index";
 import { EntitySchemaKey } from "./entity-schema-key";
 import { EntitySchemaProperty } from "./entity-schema-property";
 import { EntitySchemaRelation } from "./entity-schema-relation";
-import { ArraySchema } from "./array-schema";
 import { PrimitiveSchema } from "./primitive-schema";
 import {
     IEntitySchema,
@@ -12,8 +14,6 @@ import {
     IPrimitiveSchema,
     IPropertyValueSchema,
 } from "./schema.interface";
-import { Entity } from "../entity.type";
-import { UnpackedEntitySelection } from "../unpacked-entity-selection.type";
 
 // [todo] rename to "EntityTypeSchema"
 export class EntitySchema<T extends Entity = Entity> implements IEntitySchema<T> {
