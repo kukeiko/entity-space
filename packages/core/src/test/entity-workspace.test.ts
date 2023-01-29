@@ -327,7 +327,7 @@ describe("EntityWorkspace", () => {
                     name: string;
                 }
 
-                const entitySchema = new EntitySchema("foo").setKey("id");
+                const entitySchema = new EntitySchema<Entity>("foo").setKey("id");
                 const workspace = createWorkspace();
                 const entities: Entity[] = [
                     { id: 1, name: "one" },
