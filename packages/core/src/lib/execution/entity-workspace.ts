@@ -16,7 +16,7 @@ import {
     startWith,
     Subject,
     switchMap,
-    tap
+    tap,
 } from "rxjs";
 import { Entity } from "../common/entity.type";
 import { BlueprintInstance } from "../schema/blueprint-instance";
@@ -47,9 +47,7 @@ import { ScopedEntityWorkspace } from "./scoped-entity-workspace";
 
 // [todo] move to "execution" folder
 export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
-    constructor(private readonly tracing: EntityQueryTracing) {
-        console.log("🌵 new workspace instance");
-    }
+    constructor(private readonly tracing: EntityQueryTracing) {}
 
     private store?: IEntityStore;
     private schemas?: EntitySchemaCatalog;

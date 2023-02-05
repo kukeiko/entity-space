@@ -18,6 +18,7 @@ function namedCriteriaToKeyPathsInternal(namedCriteria: NamedCriteria, prefix: s
 }
 
 // [todo] move to criteria folder :?
+// [todo] not used. did it get replaced by something so it can be removed?
 export function namedCriteriaToKeyPaths(namedCriteria: NamedCriteria): string[] {
     return namedCriteriaToKeyPathsInternal(namedCriteria, []);
 }

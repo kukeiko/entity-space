@@ -2,6 +2,7 @@ import { NamedCriteria } from "../../criteria/criterion/named/named-criteria";
 import { InSetCriterion } from "../../criteria/criterion/set/in-set-criterion";
 
 // [todo] move to criteria folder :?
+// [todo] not used. did it get replaced by something so it can be removed?
 function flattenNamedCriteriaInternal(
     criterion: NamedCriteria,
     bagWithPrimitives: Record<string, any>,

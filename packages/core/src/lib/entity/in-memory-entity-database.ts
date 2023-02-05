@@ -75,7 +75,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
     // [todo] need some tests
     querySync<T extends Entity = Entity>(query: EntityQuery): EntitySet<T> {
         const store = this.getOrCreateStore(query.getEntitySchema());
-        const criterion = this.withoutRetlationalCriteria(query.getCriteria(), query.getEntitySchema());
+        const criterion = this.withoutRelationalCriteria(query.getCriteria(), query.getEntitySchema());
         let entities = store.getByCriterion(criterion) as T[];
 
         const options = query.getOptions();
@@ -139,7 +139,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
     }
 
     // [todo] i think introduction of this broke workspace playground tests
-    private withoutRetlationalCriteria(criterion: Criterion, schema: IEntitySchema): Criterion {
+    private withoutRelationalCriteria(criterion: Criterion, schema: IEntitySchema): Criterion {
         const optionalDeepBag: Record<string, any> = {};
 
         schema.getIndexes().forEach(index => {
