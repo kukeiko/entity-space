@@ -1,21 +1,21 @@
 import { Entity } from "../../common/entity.type";
 import { IEntitySchema } from "../../schema/schema.interface";
-import { EntityQuery } from "../../query/entity-query";
+import { IEntityQuery } from "../../query/entity-query.interface";
 
 export class EntitySet<T extends Entity = Entity> {
-    constructor({ query, entities }: { query: EntityQuery; entities: T[] }) {
+    constructor({ query, entities }: { query: IEntityQuery; entities: T[] }) {
         this.query = query;
         this.entities = entities;
     }
 
     private readonly entities: T[];
-    private readonly query: EntityQuery;
+    private readonly query: IEntityQuery;
 
     getEntities(): T[] {
         return this.entities.slice();
     }
 
-    getQuery(): EntityQuery {
+    getQuery(): IEntityQuery {
         return this.query;
     }
 
@@ -23,7 +23,7 @@ export class EntitySet<T extends Entity = Entity> {
         return this.query.getEntitySchema();
     }
 
-    static empty<T extends Entity = Entity>(query: EntityQuery): EntitySet<T> {
+    static empty<T extends Entity = Entity>(query: IEntityQuery): EntitySet<T> {
         return new EntitySet({ query, entities: [] });
     }
 }

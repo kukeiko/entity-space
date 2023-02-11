@@ -1,9 +1,9 @@
 import { hasProperty } from "@entity-space/utils";
 import { Entity } from "../common/entity.type";
-import { EntityQuery } from "./entity-query";
+import { IEntityQuery } from "./entity-query.interface";
 
 export class EntityQueryError<T extends Entity = Entity> {
-    constructor(query: EntityQuery, public error: unknown) {}
+    constructor(query: IEntityQuery, public error: unknown) {}
 
     getErrorMessage(): string {
         if (hasProperty(this.error, "message")) {

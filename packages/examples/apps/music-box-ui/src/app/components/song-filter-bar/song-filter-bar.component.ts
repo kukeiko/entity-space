@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from "@angular/core";
-import { SongLocationTypeBlueprint } from "@entity-space/examples/libs/music-model";
 import { map } from "rxjs";
 import { copySongFilter, createDefaultSongFilter, SongFilter } from "../../models";
 import { MusicBoxWorkspace } from "../../music-box-workspace";

@@ -1,14 +1,21 @@
-import { EntitySchemaCatalog } from "../schema/entity-schema-catalog";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
-import { Criterion } from "../criteria/criterion/criterion";
-import { criteriaTokenParser } from "../criteria/parser/criteria.token-parser";
+import { ICriterion } from "../criteria/vnext/criterion.interface";
+import { IEntityCriteriaFactory } from "../criteria/vnext/entity-criteria-factory.interface";
+import { criteriaTokenParser } from "../criteria/vnext/parsing/criteria.token-parser";
 import { lex } from "../lexer/lex.fn";
 import { TokenType } from "../lexer/token-type.enum";
 import { Token } from "../lexer/token.contract";
-import { EntityQuery } from "./entity-query";
+import { EntitySchemaCatalog } from "../schema/entity-schema-catalog";
+import { IEntityQueryFactory } from "./entity-query-factory.interface";
+import { IEntityQuery } from "./entity-query.interface";
 import { EntityQueryPagingSort, QueryPaging } from "./query-paging";
 
-export function parseQuery(input: string, schemas: EntitySchemaCatalog): EntityQuery {
+export function parseQuery(
+    factory: IEntityQueryFactory,
+    criteriaFactory: IEntityCriteriaFactory,
+    input: string,
+    schemas: EntitySchemaCatalog
+): IEntityQuery {
     let tokens = lex(input);
 
     if (tokens.length === 0) {
@@ -18,7 +25,7 @@ export function parseQuery(input: string, schemas: EntitySchemaCatalog): EntityQ
     const terminator: Token = { type: TokenType.Special, value: ";" };
     tokens.push(terminator);
 
-    const parser = queryParser(terminator);
+    const parser = queryParser(criteriaFactory, terminator);
     parser.next();
 
     for (const token of tokens) {
@@ -27,7 +34,7 @@ export function parseQuery(input: string, schemas: EntitySchemaCatalog): EntityQ
         if (result.done) {
             if (result.value) {
                 const parts = result.value;
-                return new EntityQuery({
+                return factory.createQuery({
                     entitySchema: schemas.getSchema(parts.schemaName!),
                     options: parts.options,
                     criteria: parts.criteria,
@@ -45,15 +52,15 @@ export function parseQuery(input: string, schemas: EntitySchemaCatalog): EntityQ
 
 interface QueryParts {
     schemaName?: string;
-    options?: Criterion;
-    criteria?: Criterion;
+    options?: ICriterion;
+    criteria?: ICriterion;
     paging?: QueryPaging;
     selection?: UnpackedEntitySelection;
 }
 
 type QueryPartsParser = Generator<unknown, false | QueryParts, Token>;
 
-function* queryParser(terminator: Token): QueryPartsParser {
+function* queryParser(factory: IEntityCriteriaFactory, terminator: Token): QueryPartsParser {
     let token = yield;
 
     if (token.type !== TokenType.Literal) {
@@ -64,7 +71,7 @@ function* queryParser(terminator: Token): QueryPartsParser {
     token = yield;
 
     if (token.type === TokenType.Special && token.value === "<") {
-        const options = yield* criteriaTokenParser(false, { type: TokenType.Special, value: ">" });
+        const options = yield* criteriaTokenParser(factory, false, { type: TokenType.Special, value: ">" });
 
         if (!options) {
             return false;
@@ -75,7 +82,7 @@ function* queryParser(terminator: Token): QueryPartsParser {
     }
 
     if (token.type === TokenType.Special && token.value === "(") {
-        const criteria = yield* criteriaTokenParser(false, { type: TokenType.Special, value: ")" });
+        const criteria = yield* criteriaTokenParser(factory, false, { type: TokenType.Special, value: ")" });
 
         if (!criteria) {
             return false;

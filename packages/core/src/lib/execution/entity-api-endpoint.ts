@@ -1,19 +1,20 @@
 import { Observable } from "rxjs";
 import { Entity } from "../common/entity.type";
-import { IEntitySchema } from "../schema/schema.interface";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
-import { Criterion } from "../criteria/criterion/criterion";
-import { ICriterionShape } from "../criteria/templates/criterion-shape.interface";
-import { InstancedCriterionShape } from "../criteria/templates/instanced-criterion-shape.type";
+import { ICriterionShape } from "../criteria/vnext/criterion-shape.interface";
+import { ICriterion } from "../criteria/vnext/criterion.interface";
 import { EntitySet } from "../entity/data-structures/entity-set";
 import { EntitySelection } from "../query/entity-selection";
 import { QueryPaging } from "../query/query-paging";
+import { IEntitySchema } from "../schema/schema.interface";
 
 export type EntityApiEndpointData<T extends Entity = Entity> = T | T[] | EntitySet<T>;
 
 export type EntityApiEndpointInvoke<T extends Entity = Entity, C = ICriterionShape, O = ICriterionShape> = (query: {
-    criterion: InstancedCriterionShape<C>;
-    options: InstancedCriterionShape<O>;
+    // [todo] fix
+    criterion: any; //InstancedCriterionShape<C>;
+    // [todo] fix
+    options: any; //InstancedCriterionShape<O>;
     selection: UnpackedEntitySelection<T>;
     paging?: QueryPaging;
 }) => Observable<EntityApiEndpointData<T>> | Promise<EntityApiEndpointData<T>> | EntityApiEndpointData<T>;
@@ -31,11 +32,11 @@ export class EntityApiEndpoint {
         pagingSupported,
     }: {
         schema: IEntitySchema;
-        optionsTemplate: ICriterionShape;
+        optionsTemplate?: ICriterionShape;
         criterionTemplate: ICriterionShape;
         selection: EntitySelection;
         invoke: EntityApiEndpointInvoke;
-        acceptCriterion?: (criterion: Criterion) => boolean;
+        acceptCriterion?: (criterion: ICriterion) => boolean;
         sortableFields?: string[];
         pagingRequired?: boolean;
         pagingSupported?: boolean;
@@ -52,11 +53,11 @@ export class EntityApiEndpoint {
     }
 
     private readonly schema: IEntitySchema;
-    private readonly optionsTemplate: ICriterionShape;
+    private readonly optionsTemplate?: ICriterionShape;
     private readonly criterionTemplate: ICriterionShape;
     private readonly selection: EntitySelection;
     private readonly invoke: EntityApiEndpointInvoke;
-    private readonly acceptCriterionFn: (criterion: Criterion) => boolean;
+    private readonly acceptCriterionFn: (criterion: ICriterion) => boolean;
     private readonly pagingRequired: boolean;
     private readonly pagingSupported: boolean;
     private readonly sortableFields: string[];
@@ -69,7 +70,7 @@ export class EntityApiEndpoint {
         return this.criterionTemplate;
     }
 
-    getOptionsTemplate(): ICriterionShape {
+    getOptionsTemplate(): ICriterionShape|undefined {
         return this.optionsTemplate;
     }
 
@@ -81,7 +82,7 @@ export class EntityApiEndpoint {
         return this.invoke;
     }
 
-    acceptCriterion(criterion: Criterion): boolean {
+    acceptCriterion(criterion: ICriterion): boolean {
         return this.acceptCriterionFn(criterion);
     }
 

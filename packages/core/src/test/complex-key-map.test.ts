@@ -1,6 +1,5 @@
 import { cloneJson } from "@entity-space/utils";
-import { matches } from "../lib/criteria/criterion/named/matches.fn";
-import { isValue } from "../lib/criteria/criterion/value/is-value.fn";
+import { EntityCriteriaFactory } from "../lib/criteria/vnext/entity-criteria-factory";
 import { ComplexKeyMap } from "../lib/entity/data-structures/complex-key-map";
 
 interface Vector {
@@ -14,6 +13,8 @@ interface Block {
 }
 
 describe("complex-key-map", () => {
+    const { where, equals } = new EntityCriteriaFactory();
+
     it("should do its thing", () => {
         // arrange
         const map = new ComplexKeyMap<Block, string>(["pos.x", "pos.y", "pos.z"]);
@@ -48,8 +49,8 @@ describe("complex-key-map", () => {
         const map = new ComplexKeyMap<Block, string>(["pos.x", "pos.y", "pos.z"]);
         const key: Block = { pos: { x: 1, y: 0, z: -1 } };
         const value = "near-origin";
-        const criterion = matches<Block>({
-            pos: matches<Block["pos"]>({ x: isValue(1), y: isValue(0), z: isValue(-1) }),
+        const criterion = where<Block>({
+            pos: where<Block["pos"]>({ x: equals(1), y: equals(0), z: equals(-1) }),
         });
 
         // act

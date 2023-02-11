@@ -1,17 +1,17 @@
 import { lastValueFrom } from "rxjs";
+import { EntityCriteriaFactory } from "../lib/criteria/vnext/entity-criteria-factory";
 import { EntitySet } from "../lib/entity/data-structures/entity-set";
+import { EntityQueryTracing } from "../lib/execution/entity-query-tracing";
+import { EntityStreamPacket } from "../lib/execution/entity-stream-packet";
 import { IEntityStreamInterceptor } from "../lib/execution/i-entity-stream-interceptor";
 import { LogPacketsInterceptor } from "../lib/execution/interceptors/log-packets.interceptor";
 import { MergePacketsTakeLastInterceptor } from "../lib/execution/interceptors/merge-packets-take-last.interceptor";
 import { SchemaRelationBasedHydrator } from "../lib/execution/interceptors/schema-relation-based-hydrator";
-import { EntityStreamPacket } from "../lib/execution/entity-stream-packet";
 import { runInterceptors } from "../lib/execution/run-interceptors.fn";
-import { EntityQuery } from "../lib/query/entity-query";
-import { EntityQueryTracing } from "../lib/execution/entity-query-tracing";
+import { IEntityQuery } from "../lib/query/entity-query.interface";
 import { TestContentData, TestContentDatabase, TestContentEntityApi, User, UserBlueprint } from "./content";
 import { TestContentCatalog } from "./content/test-content-catalog";
 import { createQuery } from "./tools/create-query.fn";
-import { matches } from "../lib/criteria/criterion/named/matches.fn";
 
 const LOG_PACKETS = false;
 const LOG_TRACING = false;
@@ -53,7 +53,7 @@ describe("interceptors", () => {
             new MergePacketsTakeLastInterceptor(),
         ];
 
-        const queries: EntityQuery[] = [createQuery(catalog, UserBlueprint, void 0, { id: true })];
+        const queries: IEntityQuery[] = [createQuery(catalog, UserBlueprint, void 0, { id: true })];
 
         const expected = new EntityStreamPacket({
             accepted: queries,
@@ -81,7 +81,7 @@ describe("interceptors", () => {
             new MergePacketsTakeLastInterceptor(),
         ];
 
-        const query: EntityQuery = createQuery(catalog, UserBlueprint, { id: 2 }, { id: true });
+        const query: IEntityQuery = createQuery(catalog, UserBlueprint, { id: 2 }, { id: true });
 
         const expected = new EntityStreamPacket({
             accepted: [query],
@@ -95,6 +95,8 @@ describe("interceptors", () => {
         expectPacketEqual(actual, expected);
     });
 
+    // [todo] wasted 30mins to figure out why this broke. it was an "Methot not implemented" error thrown,
+    // that I did not see. I remember already coming across this, and I didn't fix it then. should fix it soon™
     it("should load data #2 (criteria on root + hydrate parent)", async () => {
         // arrange
         const data: TestContentData = { users: [{ id: 2, parentId: 7 }, { id: 7 }] };
@@ -108,11 +110,11 @@ describe("interceptors", () => {
             new SchemaRelationBasedHydrator(tracing, [
                 new TestContentEntityApi(database, catalog, tracing).withGetUserById(),
             ]),
-            new LogPacketsInterceptor(LOG_PACKETS),
             new MergePacketsTakeLastInterceptor(),
+            new LogPacketsInterceptor(LOG_PACKETS),
         ];
 
-        const query: EntityQuery = createQuery(
+        const query: IEntityQuery = createQuery(
             catalog,
             UserBlueprint,
             { id: 2 },
@@ -137,6 +139,8 @@ describe("interceptors", () => {
         const database = new TestContentDatabase(data);
         const tracing = new EntityQueryTracing();
         const catalog = new TestContentCatalog();
+        const criteriaFactory = new EntityCriteriaFactory();
+
         tracing.enableConsole(LOG_TRACING);
 
         const interceptors: IEntityStreamInterceptor[] = [
@@ -148,10 +152,10 @@ describe("interceptors", () => {
             new MergePacketsTakeLastInterceptor(),
         ];
 
-        const query: EntityQuery = createQuery(
+        const query: IEntityQuery = createQuery(
             catalog,
             UserBlueprint,
-            { id: [2, 3], parent: matches<User>({ id: 7 }) },
+            { id: [2, 3], parent: criteriaFactory.where<User>({ id: 7 }) },
             { id: true, parentId: true, parent: { id: true } }
         );
 
@@ -181,6 +185,7 @@ describe("interceptors", () => {
         const database = new TestContentDatabase(data);
         const tracing = new EntityQueryTracing();
         const catalog = new TestContentCatalog();
+        const criteriaFactory = new EntityCriteriaFactory();
         tracing.enableConsole(LOG_TRACING);
 
         const interceptors: IEntityStreamInterceptor[] = [
@@ -192,10 +197,10 @@ describe("interceptors", () => {
             new MergePacketsTakeLastInterceptor(),
         ];
 
-        const query: EntityQuery = createQuery(
+        const query: IEntityQuery = createQuery(
             catalog,
             UserBlueprint,
-            { parent: matches<User>({ id: 7 }) },
+            { parent: criteriaFactory.where<User>({ id: 7 }) },
             { id: true, parentId: true, parent: { id: true } }
         );
 
@@ -241,7 +246,7 @@ describe("interceptors", () => {
             new MergePacketsTakeLastInterceptor(),
         ];
 
-        const query: EntityQuery = createQuery(
+        const query: IEntityQuery = createQuery(
             catalog,
             UserBlueprint,
             { id: 2 },
@@ -300,7 +305,7 @@ describe("interceptors", () => {
             new LogPacketsInterceptor(LOG_PACKETS),
         ];
 
-        const query: EntityQuery = createQuery(
+        const query: IEntityQuery = createQuery(
             catalog,
             UserBlueprint,
             { id: 2 },

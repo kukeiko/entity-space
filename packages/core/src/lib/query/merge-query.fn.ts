@@ -1,10 +1,14 @@
+import { EntityCriteriaFactory } from "../criteria/vnext/entity-criteria-factory";
+import { EntityQueryFactory } from "./entity-query-factory";
+import { IEntityQuery } from "./entity-query.interface";
 import { EntitySelection } from "./entity-selection";
-import { EntityQuery } from "./entity-query";
 import { QueryPaging } from "./query-paging";
-import { or } from "../criteria/criterion/or/or.fn";
 
 // [todo] clean up this method, it is really hard to read and hacked together.
-export function mergeQuery(a: EntityQuery, b: EntityQuery): false | EntityQuery {
+export function mergeQuery(a: IEntityQuery, b: IEntityQuery): false | IEntityQuery {
+    // [todo] hardcoded
+    const factory = new EntityQueryFactory({ criteriaFactory: new EntityCriteriaFactory() });
+
     if (a.getEntitySchema().getId() !== b.getEntitySchema().getId()) {
         return false;
     }
@@ -37,7 +41,7 @@ export function mergeQuery(a: EntityQuery, b: EntityQuery): false | EntityQuery 
                     if (equivalentSelection) {
                         return a; // could also return b, as everything is equivalent
                     } else {
-                        return new EntityQuery({
+                        return factory.createQuery({
                             entitySchema: a.getEntitySchema(),
                             options: a.getOptions(),
                             criteria: a.getCriteria(),
@@ -51,7 +55,7 @@ export function mergeQuery(a: EntityQuery, b: EntityQuery): false | EntityQuery 
                             const mergedRange = pagingA.mergeRange(pagingB);
 
                             if (mergedRange) {
-                                return new EntityQuery({
+                                return factory.createQuery({
                                     entitySchema: a.getEntitySchema(),
                                     options: a.getOptions(),
                                     criteria: a.getCriteria(),
@@ -84,10 +88,10 @@ export function mergeQuery(a: EntityQuery, b: EntityQuery): false | EntityQuery 
 
     if (equivalentCriteria) {
         // same identity, just merge expansions
-        return new EntityQuery({
+        return factory.createQuery({
             entitySchema,
             criteria: a.getCriteria(),
-            selection: EntitySelection.mergeValues(a.getSelectionValue(), b.getSelectionValue()),
+            selection: EntitySelection.mergeValues(a.getSelection().getValue(), b.getSelection().getValue()),
             options,
             paging,
         });
@@ -97,17 +101,18 @@ export function mergeQuery(a: EntityQuery, b: EntityQuery): false | EntityQuery 
 
     if (equivalentSelection) {
         if (mergedCriteria !== false) {
-            return new EntityQuery({
+            return factory.createQuery({
                 entitySchema,
                 options,
                 criteria: mergedCriteria,
-                selection: a.getSelectionValue(),
+                selection: a.getSelection().getValue(),
             });
         } else {
-            return new EntityQuery({
+            return factory.createQuery({
                 entitySchema,
-                criteria: or(a.getCriteria(), b.getCriteria()),
-                selection: a.getSelectionValue(),
+                // [todo] hardcoded
+                criteria: new EntityCriteriaFactory().or(a.getCriteria(), b.getCriteria()),
+                selection: a.getSelection().getValue(),
                 options,
             });
         }

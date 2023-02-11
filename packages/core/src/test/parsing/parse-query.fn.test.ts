@@ -1,22 +1,24 @@
-import { EntitySchema } from "../../lib/schema/entity-schema";
-import { EntitySchemaCatalog } from "../../lib/schema/entity-schema-catalog";
 import { UnpackedEntitySelection } from "../../lib/common/unpacked-entity-selection.type";
-import { Criterion } from "../../lib/criteria/criterion/criterion";
-import { matches } from "../../lib/criteria/criterion/named/matches.fn";
-import { or } from "../../lib/criteria/criterion/or/or.fn";
-import { isValue } from "../../lib/criteria/criterion/value/is-value.fn";
+import { ICriterion } from "../../lib/criteria/vnext/criterion.interface";
+import { EntityCriteriaFactory } from "../../lib/criteria/vnext/entity-criteria-factory";
 import { EntityQuery } from "../../lib/query/entity-query";
+import { EntityQueryFactory } from "../../lib/query/entity-query-factory";
+import { IEntityQuery } from "../../lib/query/entity-query.interface";
 import { parseQuery } from "../../lib/query/parse-query.fn";
 import { QueryPaging } from "../../lib/query/query-paging";
+import { EntitySchema } from "../../lib/schema/entity-schema";
+import { EntitySchemaCatalog } from "../../lib/schema/entity-schema-catalog";
 
 describe("parseQuery()", () => {
     const catalog = new EntitySchemaCatalog();
     const fooSchema = new EntitySchema("foo");
     catalog.addSchema(fooSchema);
+    const criteriaFactory = new EntityCriteriaFactory();
+    const factory = new EntityQueryFactory({ criteriaFactory });
 
-    function shouldParse(stringified: string, expected: EntityQuery, specFn = it): void {
+    function shouldParse(stringified: string, expected: IEntityQuery, specFn = it): void {
         specFn(`should parse ${stringified} to ${expected.toString()}`, () => {
-            const parse = () => parseQuery(stringified, catalog);
+            const parse = () => parseQuery(factory, criteriaFactory, stringified, catalog);
             expect(parse).not.toThrow();
             expect(parse()).toEqual(expected);
         });
@@ -24,7 +26,7 @@ describe("parseQuery()", () => {
 
     function shouldNotParse(stringified: string, specFn = it): void {
         specFn(`should not parse ${stringified}`, () => {
-            const parse = () => parseQuery(stringified, catalog);
+            const parse = () => parseQuery(factory, criteriaFactory, stringified, catalog);
             expect(parse).toThrow();
         });
     }
@@ -43,25 +45,27 @@ describe("parseQuery()", () => {
         selection,
         paging,
     }: {
-        options?: Criterion;
-        criteria?: Criterion;
+        options?: ICriterion;
+        criteria?: ICriterion;
         selection?: UnpackedEntitySelection;
         paging?: QueryPaging;
-    }): EntityQuery {
-        return new EntityQuery({ entitySchema: fooSchema, options, criteria, selection, paging });
+    }): IEntityQuery {
+        return factory.createQuery({ entitySchema: fooSchema, options, criteria, selection, paging });
     }
+
+    const { where, or, equals } = criteriaFactory;
 
     // schema only
     shouldParse("foo", createFooQuery({}));
     // schema + options
-    shouldParse('foo<{searchText: "bar"}>', createFooQuery({ options: matches({ searchText: "bar" }) }));
+    shouldParse('foo<{searchText: "bar"}>', createFooQuery({ options: where({ searchText: "bar" }) }));
     // schema + criteria
-    shouldParse("foo({artistId:7})", createFooQuery({ criteria: matches({ artistId: 7 }) }));
-    shouldParse("foo({artistId:7} | true)", createFooQuery({ criteria: or(matches({ artistId: 7 }), isValue(true)) }));
+    shouldParse("foo({artistId:7})", createFooQuery({ criteria: where({ artistId: 7 }) }));
+    shouldParse("foo({artistId:7} | true)", createFooQuery({ criteria: or([where({ artistId: 7 }), equals(true)]) }));
     // schema + options + criteria
     shouldParse(
         'foo<{searchText: "bar"}>({artistId:7})',
-        createFooQuery({ options: matches({ searchText: "bar" }), criteria: matches({ artistId: 7 }) })
+        createFooQuery({ options: where({ searchText: "bar" }), criteria: where({ artistId: 7 }) })
     );
     // schema + expansion
     shouldParse(
@@ -72,7 +76,7 @@ describe("parseQuery()", () => {
     shouldParse(
         'foo<{searchText: "bar"}>/{id,name,artist:{id,name}}',
         createFooQuery({
-            options: matches({ searchText: "bar" }),
+            options: where({ searchText: "bar" }),
             selection: { id: true, name: true, artist: { id: true, name: true } },
         })
     );
@@ -80,7 +84,7 @@ describe("parseQuery()", () => {
     shouldParse(
         "foo({artistId:7})/{id,name,artist:{id,name}}",
         createFooQuery({
-            criteria: matches({ artistId: 7 }),
+            criteria: where({ artistId: 7 }),
             selection: { id: true, name: true, artist: { id: true, name: true } },
         })
     );
@@ -88,8 +92,8 @@ describe("parseQuery()", () => {
     shouldParse(
         'foo<{searchText: "bar"}>({artistId:7})/{id,name,artist:{id,name}}',
         createFooQuery({
-            options: matches({ searchText: "bar" }),
-            criteria: matches({ artistId: 7 }),
+            options: where({ searchText: "bar" }),
+            criteria: where({ artistId: 7 }),
             selection: { id: true, name: true, artist: { id: true, name: true } },
         })
     );
@@ -121,8 +125,8 @@ describe("parseQuery()", () => {
     shouldParse(
         `foo<{searchText: "bar"}>({artistId: 7})[name,!artist.name,0,7]/{id,name,artist:{id,name}}`,
         createFooQuery({
-            options: matches({ searchText: "bar" }),
-            criteria: matches({ artistId: 7 }),
+            options: where({ searchText: "bar" }),
+            criteria: where({ artistId: 7 }),
             selection: { id: true, name: true, artist: { id: true, name: true } },
             paging: new QueryPaging({
                 sort: [

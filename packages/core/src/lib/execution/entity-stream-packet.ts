@@ -1,7 +1,7 @@
 import { flatMap } from "lodash";
 import { EntitySet } from "../entity/data-structures/entity-set";
 import { mergeQueries } from "../query/merge-queries.fn";
-import { EntityQuery } from "../query/entity-query";
+import { IEntityQuery } from "../query/entity-query.interface";
 import { subtractQueries } from "../query/subtract-queries.fn";
 import { EntityQueryError } from "../query/entity-query-error";
 import { Entity } from "../common/entity.type";
@@ -13,8 +13,8 @@ export class EntityStreamPacket<T extends Entity = Entity> {
         errors,
         payload,
     }: {
-        accepted?: EntityQuery[];
-        rejected?: EntityQuery[];
+        accepted?: IEntityQuery[];
+        rejected?: IEntityQuery[];
         errors?: EntityQueryError<T>[];
         payload?: EntitySet<T>[];
     } = {}) {
@@ -24,8 +24,8 @@ export class EntityStreamPacket<T extends Entity = Entity> {
         this.payload = payload ?? [];
     }
 
-    private readonly accepted: EntityQuery[];
-    private readonly rejected: EntityQuery[];
+    private readonly accepted: IEntityQuery[];
+    private readonly rejected: IEntityQuery[];
     private readonly errors: EntityQueryError<T>[];
     private readonly payload: EntitySet<T>[];
 
@@ -33,16 +33,16 @@ export class EntityStreamPacket<T extends Entity = Entity> {
         return flatMap(this.payload, queriedEntities => queriedEntities.getEntities());
     }
 
-    getAcceptedQueries(): EntityQuery[] {
+    getAcceptedQueries(): IEntityQuery[] {
         return this.accepted.slice();
     }
 
     // [todo] not (yet?) used
-    getDeliveredQueries(): EntityQuery[] {
+    getDeliveredQueries(): IEntityQuery[] {
         return this.payload.map(payload => payload.getQuery());
     }
 
-    getRejectedQueries(): EntityQuery[] {
+    getRejectedQueries(): IEntityQuery[] {
         return this.rejected.slice();
     }
 
@@ -81,11 +81,11 @@ export class EntityStreamPacket<T extends Entity = Entity> {
         });
     }
 
-    reduceQueries(queries: EntityQuery[]): false | EntityQuery[] {
+    reduceQueries(queries: IEntityQuery[]): false | IEntityQuery[] {
         return subtractQueries(queries, [...this.getAcceptedQueries(), ...this.getRejectedQueries()]);
     }
 
-    reduceQueriesByAccepted(queries: EntityQuery[]): false | EntityQuery[] {
+    reduceQueriesByAccepted(queries: IEntityQuery[]): false | IEntityQuery[] {
         return subtractQueries(queries, this.getAcceptedQueries());
     }
 

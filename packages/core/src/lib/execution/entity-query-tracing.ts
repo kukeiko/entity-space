@@ -1,6 +1,6 @@
 import { EntityStreamPacket } from "./entity-stream-packet";
-import { EntityQuery } from "../query/entity-query";
-import { ICriterionShape } from "../criteria/templates/criterion-shape.interface";
+import { IEntityQuery } from "../query/entity-query.interface";
+import { ICriterionShape } from "../criteria/vnext/criterion-shape.interface";
 
 export class EntityQueryTracing {
     private consoleEnabled = false;
@@ -9,7 +9,7 @@ export class EntityQueryTracing {
         this.consoleEnabled = flag;
     }
 
-    querySpawned(query: EntityQuery): void {
+    querySpawned(query: IEntityQuery): void {
         if (!this.consoleEnabled) {
             return;
         }
@@ -17,7 +17,7 @@ export class EntityQueryTracing {
         console.log(`🥚 query spawned: ${query.toString()}`);
     }
 
-    queryStartedExecution(query: EntityQuery): void {
+    queryStartedExecution(query: IEntityQuery): void {
         if (!this.consoleEnabled) {
             return;
         }
@@ -25,7 +25,7 @@ export class EntityQueryTracing {
         console.log("💎 query started execution:", query.toString());
     }
 
-    queryResolved(query: EntityQuery, result?: string): void {
+    queryResolved(query: IEntityQuery, result?: string): void {
         if (!this.consoleEnabled) {
             return;
         }
@@ -33,7 +33,12 @@ export class EntityQueryTracing {
         console.log(`🐣 query has been resolved: ${query.toString()}${result !== void 0 ? `, result: ${result}` : ""}`);
     }
 
-    queryGotSubtracted(query: EntityQuery, by: EntityQuery[], result: EntityQuery[], options?: { byLabel?: string }): void {
+    queryGotSubtracted(
+        query: IEntityQuery,
+        by: IEntityQuery[],
+        result: IEntityQuery[],
+        options?: { byLabel?: string }
+    ): void {
         if (!this.consoleEnabled) {
             return;
         }
@@ -47,7 +52,7 @@ export class EntityQueryTracing {
         );
     }
 
-    queryGotFullySubtracted(query: EntityQuery, by: EntityQuery[], options?: { byLabel?: string }): void {
+    queryGotFullySubtracted(query: IEntityQuery, by: IEntityQuery[], options?: { byLabel?: string }): void {
         if (!this.consoleEnabled) {
             return;
         }
@@ -59,7 +64,7 @@ export class EntityQueryTracing {
         );
     }
 
-    queryDispatchedToEndpoint(query: EntityQuery, template: ICriterionShape): void {
+    queryDispatchedToEndpoint(query: IEntityQuery, template: ICriterionShape): void {
         if (!this.consoleEnabled) {
             return;
         }
@@ -69,7 +74,7 @@ export class EntityQueryTracing {
         );
     }
 
-    endpointDeliveredPacket(query: EntityQuery, template: ICriterionShape, packet: EntityStreamPacket): void {
+    endpointDeliveredPacket(query: IEntityQuery, template: ICriterionShape, packet: EntityStreamPacket): void {
         if (!this.consoleEnabled) {
             return;
         }
@@ -79,7 +84,7 @@ export class EntityQueryTracing {
         );
     }
 
-    queryReceivedPacket(query: EntityQuery, packet: EntityStreamPacket): void {
+    queryReceivedPacket(query: IEntityQuery, packet: EntityStreamPacket): void {
         if (!this.consoleEnabled) {
             return;
         }
@@ -87,7 +92,7 @@ export class EntityQueryTracing {
         console.log(`📦 query ${query.toString()} received packet ${packet.toString()}`);
     }
 
-    queryGotRejectedByAllSources(query: EntityQuery): void {
+    queryGotRejectedByAllSources(query: IEntityQuery): void {
         if (!this.consoleEnabled) {
             return;
         }
@@ -95,7 +100,7 @@ export class EntityQueryTracing {
         console.log(`❌ query got rejected by all sources: ${query.toString()}`);
     }
 
-    reactiveQueryEmitted(query: EntityQuery): void {
+    reactiveQueryEmitted(query: IEntityQuery): void {
         if (!this.consoleEnabled) {
             return;
         }
@@ -103,7 +108,7 @@ export class EntityQueryTracing {
         console.log(`🔥 reactive query ${query.toString()} caused an emit`);
     }
 
-    reactiveQueryDisposed(query: EntityQuery): void {
+    reactiveQueryDisposed(query: IEntityQuery): void {
         if (!this.consoleEnabled) {
             return;
         }

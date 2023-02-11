@@ -59,7 +59,7 @@ describe("subtractQuery()", () => {
 
         expectQuery("root({ id: { 1, 2 } })/{ foo, bar }", schemas)
             .minus("root({ id: { 1 } })/{ foo }")
-            .toBe(["root({ id: { 2 } })/{ foo, bar }", "root({ id: { 1 } })/{ bar }"]);
+            .toBe(["root({ id: { 2 } })/{ foo, bar }", "root({ id: 1 })/{ bar }"]);
 
         expectQuery("root({ index: [1, 7] })", schemas)
             .minus("root({ index: [3, 4] })")

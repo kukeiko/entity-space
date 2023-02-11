@@ -1,11 +1,11 @@
 import { of } from "rxjs";
-import { EntityQuery } from "../query/entity-query";
-import { IEntityStreamInterceptor } from "./i-entity-stream-interceptor";
+import { IEntityQuery } from "../query/entity-query.interface";
 import { EntityStream } from "./entity-stream";
 import { EntityStreamPacket } from "./entity-stream-packet";
+import { IEntityStreamInterceptor } from "./i-entity-stream-interceptor";
 import { safeWrapEntityStream } from "./safe-wrap-entity-stream.fn";
 
-export function runInterceptors(interceptors: IEntityStreamInterceptor[], queries: EntityQuery[]): EntityStream {
+export function runInterceptors(interceptors: IEntityStreamInterceptor[], queries: IEntityQuery[]): EntityStream {
     let startWith = of(new EntityStreamPacket({ rejected: queries }));
 
     return interceptors.reduce(

@@ -1,12 +1,12 @@
 import { readPath, writePath } from "@entity-space/utils";
 import { Entity } from "../../common/entity.type";
-import { Criterion } from "../../criteria/criterion/criterion";
-import { InSetCriterion } from "../../criteria/criterion/set/in-set-criterion";
-import { IsValueCriterion } from "../../criteria/criterion/value/is-value-criterion";
-import { inSetShape } from "../../criteria/templates/in-set-shape.fn";
-import { isValueShape } from "../../criteria/templates/is-value-shape.fn";
-import { NamedCriteriaShape } from "../../criteria/templates/named-criteria-shape";
-import { ReshapedCriterion } from "../../criteria/templates/reshaped-criterion";
+import { ICriterion } from "../../criteria/vnext/criterion.interface";
+import { EntityCriteriaFactory } from "../../criteria/vnext/entity-criteria-factory";
+import { EntityCriteriaShapeFactory } from "../../criteria/vnext/entity-criteria-shape-factory";
+import { EntityCriteriaShape } from "../../criteria/vnext/entity-criteria/entity-criteria-shape";
+import { IEqualsCriterion } from "../../criteria/vnext/equals/equals-criterion.interface";
+import { IInArrayCriterion } from "../../criteria/vnext/in-array/in-array-criterion.interface";
+import { ReshapedCriterion } from "../../criteria/vnext/reshaped-criterion";
 
 // [todo] wanted to move this to utils, and then i noticed we have a dependency to criteria package,
 // so we can't really do that. maybe we should have a map implementing getting items by criteria
@@ -27,21 +27,23 @@ export class ComplexKeyMap<E extends Entity = Entity, V = unknown> {
 
         this.leadingPaths = leadingPaths;
         this.lastPath = lastPath;
-
+        const shapeFactory = new EntityCriteriaShapeFactory({ criteriaFactory: new EntityCriteriaFactory() });
         const bag: Record<string, any> = {};
 
         for (const path of leadingPaths) {
-            writePath(path, bag, isValueShape());
+            writePath(path, bag, shapeFactory.equals());
         }
 
-        writePath(lastPath, bag, inSetShape());
-        this.criterionTemplate = NamedCriteriaShape.fromDeepBag(bag);
+        writePath(lastPath, bag, shapeFactory.inArray());
+        this.criterionTemplate = new EntityCriteriaShapeFactory({ criteriaFactory: new EntityCriteriaFactory() }).where(
+            bag
+        );
     }
 
     private readonly map = new Map<unknown, unknown>();
     private readonly leadingPaths: string[];
     private readonly lastPath: string;
-    private readonly criterionTemplate: NamedCriteriaShape;
+    private readonly criterionTemplate: EntityCriteriaShape<Entity, any>;
 
     get(entity: E, paths?: string[]): V | undefined {
         let map = this.map;
@@ -134,7 +136,7 @@ export class ComplexKeyMap<E extends Entity = Entity, V = unknown> {
         map.delete(readPath(this.lastPath, entity));
     }
 
-    getByCriterion(criterion: Criterion): false | { values: V[]; remapped: ReshapedCriterion } {
+    getByCriterion(criterion: ICriterion): false | { values: V[]; remapped: ReshapedCriterion<ICriterion> } {
         const remapped = this.criterionTemplate.reshape(criterion);
 
         if (remapped === false) {
@@ -151,7 +153,7 @@ export class ComplexKeyMap<E extends Entity = Entity, V = unknown> {
 
                 for (const path of this.leadingPaths) {
                     // [todo] shouldn't have to split (to provide string[]), but instead just supply arg of type string
-                    const isValueCriterion = criterion.getByPath(path.split(".")) as IsValueCriterion;
+                    const isValueCriterion = criterion.getByPath(path.split(".")) as IEqualsCriterion;
 
                     if (!map.has(isValueCriterion.getValue())) {
                         continue;
@@ -161,7 +163,7 @@ export class ComplexKeyMap<E extends Entity = Entity, V = unknown> {
                 }
             }
 
-            const inSetCriterion = criterion.getByPath(this.lastPath.split(".")) as InSetCriterion;
+            const inSetCriterion = criterion.getByPath(this.lastPath.split(".")) as IInArrayCriterion;
 
             for (const criterionValue of inSetCriterion.getValues().values()) {
                 if (map.has(criterionValue)) {

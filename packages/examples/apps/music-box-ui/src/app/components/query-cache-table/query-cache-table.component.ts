@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, Component, Input } from "@angular/core";
-import { EntityQuery } from "@entity-space/core";
+import { IEntityQuery } from "@entity-space/core";
 
 @Component({
     selector: "query-cache-table",
@@ -9,7 +9,7 @@ import { EntityQuery } from "@entity-space/core";
 })
 export class QueryCacheTableComponent {
     @Input()
-    queries: EntityQuery[] = [];
+    queries: IEntityQuery[] = [];
 
     columns: { field: string; header: string }[] = [{ field: "full", header: "toString()" }];
 }

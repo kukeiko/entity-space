@@ -1,14 +1,11 @@
-import { EntitySchema } from "../../lib/schema/entity-schema";
-import { UnpackedEntitySelection } from "../../lib/common/unpacked-entity-selection.type";
-import { Criterion } from "../../lib/criteria/criterion/criterion";
 import { EntityQuery } from "../../lib/query/entity-query";
 import { subtractQueries } from "../../lib/query/subtract-queries.fn";
 
 // [todo] add more tests
 describe("subtractQueries()", () => {
-    function createQuery(criteria: Criterion, selection: UnpackedEntitySelection = {}): EntityQuery {
-        return new EntityQuery({ entitySchema: new EntitySchema("foo"), criteria, selection });
-    }
+    // function createQuery(criteria: Criterion, selection: UnpackedEntitySelection = {}): EntityQuery {
+    //     return new EntityQuery({ entitySchema: new EntitySchema("foo"), criteria, selection });
+    // }
 
     describe("no subtraction", () => {
         it("[] subtracted by [] should be []", () => {

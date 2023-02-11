@@ -1,52 +1,57 @@
-import { IEntitySchema } from "../schema/schema.interface";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
 import { AnyCriterion } from "../criteria/criterion/any/any";
-import { any } from "../criteria/criterion/any/any.fn";
-import { Criterion } from "../criteria/criterion/criterion";
-import { NamedCriteria } from "../criteria/criterion/named/named-criteria";
-import { NeverCriterion } from "../criteria/criterion/never/never";
-import { never } from "../criteria/criterion/never/never.fn";
+import { ICriterion } from "../criteria/vnext/criterion.interface";
+import { EntityCriteriaFactory } from "../criteria/vnext/entity-criteria-factory";
+import { EntityCriteria } from "../criteria/vnext/entity-criteria/entity-criteria";
+import { INeverCriterion } from "../criteria/vnext/never/never-criterion.interface";
+import { INoneCriterion } from "../criteria/vnext/none/none-criterion.interface";
+import { IEntitySchema } from "../schema/schema.interface";
+import { IEntityQueryFactory } from "./entity-query-factory.interface";
+import { IEntityQuery } from "./entity-query.interface";
 import { EntitySelection } from "./entity-selection";
 import { QueryPaging } from "./query-paging";
 import { subtractQueries } from "./subtract-queries.fn";
 
-export interface EntityQueryCtorArg {
-    entitySchema: IEntitySchema;
-    criteria?: Criterion;
-    options?: Criterion;
-    selection?: EntitySelection | UnpackedEntitySelection;
-    paging?: QueryPaging;
-}
-
-export class EntityQuery {
-    constructor({ entitySchema, criteria = any(), options = never(), selection, paging }: EntityQueryCtorArg) {
+export class EntityQuery implements IEntityQuery {
+    constructor({
+        criteria,
+        entitySchema,
+        factory,
+        options,
+        paging,
+        selection,
+    }: {
+        criteria: ICriterion;
+        entitySchema: IEntitySchema;
+        factory: IEntityQueryFactory;
+        options: ICriterion;
+        paging?: QueryPaging;
+        selection: EntitySelection;
+    }) {
         this.entitySchema = entitySchema;
         this.options = options;
         this.criteria = criteria;
-        this.selection =
-            selection === void 0
-                ? new EntitySelection({ schema: entitySchema, value: entitySchema.getDefaultSelection() })
-                : selection instanceof EntitySelection
-                ? selection
-                : new EntitySelection({ schema: entitySchema, value: selection });
+        this.selection = selection;
         this.paging = paging;
+        this.factory = factory;
     }
 
     private readonly entitySchema: IEntitySchema;
-    private readonly criteria: Criterion;
-    private readonly options: Criterion;
+    private readonly criteria: ICriterion;
+    private readonly options: ICriterion;
     private readonly selection: EntitySelection;
     private readonly paging?: QueryPaging;
+    private readonly factory: IEntityQueryFactory;
 
     getEntitySchema(): IEntitySchema {
         return this.entitySchema;
     }
 
-    getCriteria(): Criterion {
+    getCriteria(): ICriterion {
         return this.criteria;
     }
 
-    getOptions(): Criterion {
+    getOptions(): ICriterion {
         return this.options;
     }
 
@@ -54,8 +59,8 @@ export class EntityQuery {
         return this.paging;
     }
 
-    withCriteria(criteria: Criterion): EntityQuery {
-        return new EntityQuery({ entitySchema: this.entitySchema, criteria, selection: this.selection });
+    withCriteria(criteria: ICriterion): IEntityQuery {
+        return this.factory.createQuery({ entitySchema: this.entitySchema, criteria, selection: this.selection });
     }
 
     getSelection(): EntitySelection {
@@ -66,16 +71,16 @@ export class EntityQuery {
         return this.selection.getValue();
     }
 
-    withoutSelection(): EntityQuery {
-        return new EntityQuery({ entitySchema: this.entitySchema, criteria: this.criteria });
+    withoutSelection(): IEntityQuery {
+        return this.factory.createQuery({ entitySchema: this.entitySchema, criteria: this.criteria });
     }
 
-    withSelection(selection: EntitySelection | UnpackedEntitySelection): EntityQuery {
-        return new EntityQuery({ entitySchema: this.entitySchema, criteria: this.criteria, selection });
+    withSelection(selection: EntitySelection | UnpackedEntitySelection): IEntityQuery {
+        return this.factory.createQuery({ entitySchema: this.entitySchema, criteria: this.criteria, selection });
     }
 
     toString(): string {
-        const options = this.options instanceof NeverCriterion ? "" : `<${this.options.toString()}>`;
+        const options = INeverCriterion.is(this.options) ? "" : `<${this.options.toString()}>`;
         const criterion = this.criteria instanceof AnyCriterion ? "" : `(${this.criteria.toString()})`;
         const paging = this.paging ? this.paging.toString() : "";
         const selection = this.selection.isEmpty() ? "" : "/" + this.selection.toString();
@@ -83,11 +88,11 @@ export class EntityQuery {
         return `${this.entitySchema.getId()}${options}${criterion}${paging}${selection}`;
     }
 
-    subtractBy(others: EntityQuery[]): false | EntityQuery[] {
+    subtractBy(others: IEntityQuery[]): false | IEntityQuery[] {
         return subtractQueries([this], others);
     }
 
-    intersect(other: EntityQuery): false | EntityQuery {
+    intersect(other: IEntityQuery): false | IEntityQuery {
         const criteria = this.getCriteria().intersect(other.getCriteria());
 
         if (criteria === false) {
@@ -100,23 +105,25 @@ export class EntityQuery {
             return false;
         }
 
-        return new EntityQuery({
+        return this.factory.createQuery({
             entitySchema: this.entitySchema,
             criteria,
             selection,
         });
     }
 
-    intersectCriteriaOmitSelection(other: EntityQuery): false | EntityQuery {
+    intersectCriteriaOmitSelection(other: IEntityQuery): false | IEntityQuery {
         const intersectedCriterion = other.getCriteria().intersect(this.getCriteria());
 
         if (!intersectedCriterion) {
             return false;
         }
 
-        const intersectedWithoutDehydrated = NamedCriteria.omitSelection(
+        const intersectedWithoutDehydrated = EntityCriteria.omitSelection(
             intersectedCriterion,
-            other.getSelection().getValue()
+            other.getSelection().getValue(),
+            // [todo] hardcoded
+            new EntityCriteriaFactory()
         );
 
         if (intersectedWithoutDehydrated === intersectedCriterion) {
@@ -126,13 +133,13 @@ export class EntityQuery {
         return this.withCriteria(intersectedWithoutDehydrated);
     }
 
-    static equivalentCriteria(...queries: EntityQuery[]): boolean {
+    static equivalentCriteria(...queries: IEntityQuery[]): boolean {
         const [first, ...others] = queries;
 
         return others.every(other => other.getCriteria().equivalent(first.getCriteria()));
     }
 
-    static equivalent(...queries: EntityQuery[]): boolean {
+    static equivalent(...queries: IEntityQuery[]): boolean {
         const [first, ...others] = queries;
 
         return others.every(

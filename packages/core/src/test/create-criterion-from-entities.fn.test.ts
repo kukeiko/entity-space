@@ -1,5 +1,4 @@
-import { matches } from "../lib/criteria/criterion/named/matches.fn";
-import { inSet } from "../lib/criteria/criterion/set/in-set.fn";
+import { EntityCriteriaFactory } from "../lib/criteria/vnext/entity-criteria-factory";
 import { createCriterionFromEntities } from "../lib/entity/functions/create-criterion-from-entities.fn";
 
 interface Vector {
@@ -14,6 +13,8 @@ interface Block {
 }
 
 describe("createCriterionFromEntities()", () => {
+    const { where, inArray } = new EntityCriteriaFactory();
+
     it("should create criterion for primitive index", () => {
         // arrange
         const blocks: Block[] = [
@@ -21,15 +22,15 @@ describe("createCriterionFromEntities()", () => {
             { position: { x: 0, y: -1, z: 0 }, typeId: "minecraft:dirt" },
             { position: { x: 0, y: 0, z: 0 }, typeId: "minecraft:dirt" },
         ];
-        const expected = matches({
-            id: inSet(["minecraft:grass_block", "minecraft:dirt"]),
+        const expected = where({
+            id: inArray(["minecraft:grass_block", "minecraft:dirt"]),
         });
 
         // act
         const actual = createCriterionFromEntities(blocks, ["typeId"], ["id"]);
 
         // assert
-        expect(actual).toEqual(expected);
+        expect(actual.toString()).toEqual(expected.toString());
     });
 
     it("primitive index", () => {

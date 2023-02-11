@@ -1,15 +1,15 @@
 import { Observable } from "rxjs";
 import { Entity } from "../common/entity.type";
 import { IEntitySchema } from "../schema/schema.interface";
-import { EntityQuery } from "../query/entity-query";
+import { IEntityQuery } from "../query/entity-query.interface";
 import { EntitySet } from "./data-structures/entity-set";
 
 export interface IEntityDatabase {
-    query(query: EntityQuery): Promise<EntitySet>;
+    query(query: IEntityQuery): Promise<EntitySet>;
     upsert(entities: EntitySet): Promise<void>;
-    queryCacheChanged$(): Observable<EntityQuery[]>;
-    getCachedQueries(schema: IEntitySchema): EntityQuery[];
+    queryCacheChanged$(): Observable<IEntityQuery[]>;
+    getCachedQueries(schema: IEntitySchema): IEntityQuery[];
     // [todo] try to get rid of this - had to introduce when switching "InMemoryEntityDatabase"
     // w/ "IEntityDatabase" in EntitySourceGateway
-    querySync<T extends Entity = Entity>(query: EntityQuery): EntitySet<T>;
+    querySync<T extends Entity = Entity>(query: IEntityQuery): EntitySet<T>;
 }

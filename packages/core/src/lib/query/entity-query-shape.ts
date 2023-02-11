@@ -1,15 +1,18 @@
 import { permutateEntries } from "@entity-space/utils";
-import { EntitySelection } from "./entity-selection";
-import { EntityQuery } from "./entity-query";
-import { ICriterionShape } from "../criteria/templates/criterion-shape.interface";
-import { neverShape } from "../criteria/templates/never-shape.fn";
-import { anyShape } from "../criteria/templates/any-shape.fn";
-import { Criterion } from "../criteria/criterion/criterion";
+import { AllCriterionShape } from "../criteria/vnext/all/all-criterion-shape";
+import { ICriterionShape } from "../criteria/vnext/criterion-shape.interface";
+import { ICriterion } from "../criteria/vnext/criterion.interface";
+import { EntityCriteriaFactory } from "../criteria/vnext/entity-criteria-factory";
+import { NeverCriterionShape } from "../criteria/vnext/never/never-criterion-shape";
+import { NoneCriterionShape } from "../criteria/vnext/none/none-criterion-shape";
 import { IEntitySchema } from "../schema/schema.interface";
+import { EntityQueryFactory } from "./entity-query-factory";
+import { IEntityQuery } from "./entity-query.interface";
+import { EntitySelection } from "./entity-selection";
 
 type RemappedParts = {
-    options: false | Criterion[];
-    criterion: false | Criterion[];
+    options: false | ICriterion[];
+    criterion: false | ICriterion[];
     selection: false | EntitySelection;
 };
 
@@ -29,25 +32,28 @@ export class EntityQueryShape {
         selection,
     }: {
         schema: IEntitySchema;
-        options?: ICriterionShape;
-        criterion?: ICriterionShape;
+        options?: ICriterionShape<ICriterion, unknown>;
+        criterion?: ICriterionShape<ICriterion, unknown>;
         selection: EntitySelection;
     }) {
         this.schema = schema;
-        this.options = options ?? neverShape();
-        this.criterion = criterion ?? anyShape();
+        this.options = options ?? new NeverCriterionShape();
+        this.criterion = criterion ?? new AllCriterionShape();
         this.selection = selection;
     }
 
     private readonly schema: IEntitySchema;
-    private readonly options: ICriterionShape;
-    private readonly criterion: ICriterionShape;
+    private readonly options: ICriterionShape<ICriterion, unknown>;
+    private readonly criterion: ICriterionShape<ICriterion, unknown>;
     private readonly selection: EntitySelection;
 
-    reshape(query: EntityQuery): false | EntityQuery[] {
+    reshape(query: IEntityQuery): false | IEntityQuery[] {
         // [todo] can be removed if i decide to make remap() result of ICriterionTemplate just an array
         // of successfully remapped Criteria (instead of also the open ones)
-        const reshapeCriterion = (criterion: Criterion, template: ICriterionShape): false | Criterion[] => {
+        const reshapeCriterion = (
+            criterion: ICriterion,
+            template: ICriterionShape<ICriterion, unknown>
+        ): false | ICriterion[] => {
             const reshaped = template.reshape(criterion);
 
             return reshaped ? reshaped.getReshaped() : false;
@@ -66,7 +72,7 @@ export class EntityQueryShape {
         const permutatedRemappedParts = permutateEntries(remappedParts);
 
         return permutatedRemappedParts.map(parts => {
-            return new EntityQuery({
+            return new EntityQueryFactory({ criteriaFactory: new EntityCriteriaFactory() }).createQuery({
                 entitySchema: this.schema,
                 options: parts.options,
                 criteria: parts.criterion,

@@ -1,13 +1,13 @@
 import { firstValueFrom, take, tap, toArray } from "rxjs";
-import { EntitySchema } from "../lib/schema/entity-schema";
-import { IEntitySchema } from "../lib/schema/schema.interface";
 import { UnpackedEntitySelection } from "../lib/common/unpacked-entity-selection.type";
-import { Criterion } from "../lib/criteria/criterion/criterion";
-import { matches } from "../lib/criteria/criterion/named/matches.fn";
-import { inSet } from "../lib/criteria/criterion/set/in-set.fn";
+import { ICriterion } from "../lib/criteria/vnext/criterion.interface";
+import { EntityCriteriaFactory } from "../lib/criteria/vnext/entity-criteria-factory";
 import { EntityQueryTracing } from "../lib/execution/entity-query-tracing";
 import { EntityWorkspace } from "../lib/execution/entity-workspace";
-import { EntityQuery } from "../lib/query/entity-query";
+import { EntityQueryFactory } from "../lib/query/entity-query-factory";
+import { IEntityQuery } from "../lib/query/entity-query.interface";
+import { EntitySchema } from "../lib/schema/entity-schema";
+import { IEntitySchema } from "../lib/schema/schema.interface";
 
 function createWorkspace(): EntityWorkspace {
     return new EntityWorkspace(new EntityQueryTracing());
@@ -15,13 +15,20 @@ function createWorkspace(): EntityWorkspace {
 
 function createQuery(
     entitySchema: IEntitySchema,
-    criteria: Criterion,
+    criteria: ICriterion,
     expansion: UnpackedEntitySelection = {}
-): EntityQuery {
-    return new EntityQuery({ entitySchema, criteria, selection: expansion });
+): IEntityQuery {
+    return new EntityQueryFactory({ criteriaFactory: new EntityCriteriaFactory() }).createQuery({
+        entitySchema,
+        criteria,
+        selection: expansion,
+    });
 }
 
 describe("EntityWorkspace", () => {
+    const criteriaFactory = new EntityCriteriaFactory();
+    const { where, inArray } = criteriaFactory;
+
     describe("queryAgainstCache()", () => {
         it("should execute query w/ 1 simple index", async () => {
             // arrange
@@ -49,7 +56,7 @@ describe("EntityWorkspace", () => {
             workspace.add(schema, entities);
 
             // act
-            const query = createQuery(schema, matches<Entity>({ bar: inSet([2, 3]) }));
+            const query = createQuery(schema, where<Entity>({ bar: inArray([2, 3]) }));
             const result = await workspace.queryAgainstCache(query);
 
             // assert
@@ -83,7 +90,7 @@ describe("EntityWorkspace", () => {
             workspace.add(schema, entities);
 
             // act
-            const query = createQuery(schema, matches<Entity>({ bar: inSet([2, 3]), baz: inSet([1337]) }));
+            const query = createQuery(schema, where<Entity>({ bar: inArray([2, 3]), baz: inArray([1337]) }));
             const result = await workspace.queryAgainstCache(query);
 
             // assert
@@ -117,7 +124,7 @@ describe("EntityWorkspace", () => {
             workspace.add(schema, entities);
 
             // act
-            const query = createQuery(schema, matches<Entity>({ bar: matches({ baz: inSet([2, 3]) }) }));
+            const query = createQuery(schema, where<Entity>({ bar: where({ baz: inArray([2, 3]) }) }));
             const result = await workspace.queryAgainstCache(query);
 
             // assert
@@ -155,7 +162,7 @@ describe("EntityWorkspace", () => {
             // act
             const query = createQuery(
                 schema,
-                matches<Entity>({ bar: matches({ baz: inSet([2, 3]), moo: inSet([10]) }) })
+                where<Entity>({ bar: where({ baz: inArray([2, 3]), moo: inArray([10]) }) })
             );
             const result = await workspace.queryAgainstCache(query);
 
@@ -198,9 +205,9 @@ describe("EntityWorkspace", () => {
             // act
             const query = createQuery(
                 schema,
-                matches<Entity>({
-                    bar: matches({ baz: inSet([2, 3]), moo: inSet([10]) }),
-                    khaz: matches({ mo: inSet([1]), dan: inSet([2]) }),
+                where<Entity>({
+                    bar: where({ baz: inArray([2, 3]), moo: inArray([10]) }),
+                    khaz: where({ mo: inArray([1]), dan: inArray([2]) }),
                 })
             );
 
@@ -228,7 +235,7 @@ describe("EntityWorkspace", () => {
             workspace.add(fooSchema, [{ id: 1337, secondaryId: 128, name: "i am foo" }]);
             workspace.add(barSchema, [{ id: 64, fooId: 1337, secondaryId: 128, name: "i belong to foo" }]);
 
-            const query = createQuery(fooSchema, matches({ id: inSet([1337]), secondaryId: inSet([128]) }), {
+            const query = createQuery(fooSchema, where({ id: inArray([1337]), secondaryId: inArray([128]) }), {
                 bar: true,
             });
             const fooItems = await workspace.queryAgainstCache(query);
@@ -259,7 +266,7 @@ describe("EntityWorkspace", () => {
             workspace.add(bazSchema, [{ id: 128, name: "i am baz" }]);
 
             // act
-            const query = createQuery(fooSchema, matches({ id: inSet([1337]) }), { bar: { baz: true } });
+            const query = createQuery(fooSchema, where({ id: inArray([1337]) }), { bar: { baz: true } });
             const fooItems = await workspace.queryAgainstCache(query);
 
             // assert
@@ -312,7 +319,7 @@ describe("EntityWorkspace", () => {
         // act
         workspace.add(fooSchema, addedItems);
 
-        const query = createQuery(fooSchema, matches({ id: inSet([1337]) }), { bar: { baz: true } });
+        const query = createQuery(fooSchema, where({ id: inArray([1337]) }), { bar: { baz: true } });
         const queriedItems = await workspace.queryAgainstCache(query);
 
         // assert
@@ -352,7 +359,7 @@ describe("EntityWorkspace", () => {
                 // act / assert
                 let index = 0;
                 const actual = await firstValueFrom(
-                    workspace.query$<Entity>(entitySchema, { id: inSet([1, 2]) }).pipe(
+                    workspace.query$<Entity>(entitySchema, { id: inArray([1, 2]) }).pipe(
                         // [todo] should also make assertion against entities we just received
                         tap(() => workspace.add<Entity>(entitySchema, changes[index++] ?? [])),
                         take(changes.length + 1),

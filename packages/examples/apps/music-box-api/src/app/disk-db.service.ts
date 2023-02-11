@@ -1,11 +1,11 @@
 import {
-    normalizeEntities,
-    EntityQuery,
-    matches,
-    isValue,
-    EntitySchemaCatalog,
-    IEntitySchema,
     Entity,
+    EntityCriteriaFactory,
+    EntityQueryFactory,
+    EntitySchemaCatalog,
+    IEntityQuery,
+    IEntitySchema,
+    normalizeEntities,
 } from "@entity-space/core";
 import { Song, SongBlueprint, SongLocation } from "@entity-space/examples/libs/music-model";
 import { FileOnDiskBasedEntitySource } from "@entity-space/node";
@@ -26,7 +26,10 @@ export class DiskDbService {
 
     async getSong(id: number): Promise<Song | undefined> {
         const results = await this.entitySource.query(
-            new EntityQuery({ entitySchema: this.songSchema, criteria: matches<Song>({ id: isValue(id) }) })
+            new EntityQueryFactory({ criteriaFactory: new EntityCriteriaFactory() }).createQuery({
+                entitySchema: this.songSchema,
+                criteria: new EntityCriteriaFactory().where<Song>({ id: new EntityCriteriaFactory().equals(id) }),
+            })
         );
 
         if (!results) {
@@ -39,7 +42,11 @@ export class DiskDbService {
     }
 
     async getSongs(searchText?: string): Promise<Song[]> {
-        const results = await this.entitySource.query(new EntityQuery({ entitySchema: this.songSchema }));
+        const results = await this.entitySource.query(
+            new EntityQueryFactory({ criteriaFactory: new EntityCriteriaFactory() }).createQuery({
+                entitySchema: this.songSchema,
+            })
+        );
 
         if (!results) {
             return [];
@@ -69,7 +76,11 @@ export class DiskDbService {
     }
 
     async getSongLocations(): Promise<SongLocation[]> {
-        const results = await this.entitySource.query(new EntityQuery({ entitySchema: this.songLocationSchema }));
+        const results = await this.entitySource.query(
+            new EntityQueryFactory({ criteriaFactory: new EntityCriteriaFactory() }).createQuery({
+                entitySchema: this.songLocationSchema,
+            })
+        );
 
         if (!results) {
             return [];
@@ -78,7 +89,7 @@ export class DiskDbService {
         return results.reduce((acc, value) => [...acc, ...value.getEntities()], [] as Entity[]) as SongLocation[];
     }
 
-    async query<T extends Entity>(query: EntityQuery): Promise<T[]> {
+    async query<T extends Entity>(query: IEntityQuery): Promise<T[]> {
         const results = await this.entitySource.query(query);
 
         if (!results) {

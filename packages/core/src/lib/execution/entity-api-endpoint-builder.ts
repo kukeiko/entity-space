@@ -1,15 +1,15 @@
 import { size } from "lodash";
 import { Entity } from "../common/entity.type";
-import { IEntitySchema } from "../schema/schema.interface";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
-import { Criterion } from "../criteria/criterion/criterion";
-import { anyShape } from "../criteria/templates/any-shape.fn";
-import { ICriterionShape } from "../criteria/templates/criterion-shape.interface";
 import { InstancedCriterionShape } from "../criteria/templates/instanced-criterion-shape.type";
 import { NamedCriteriaShape, NamedCriteriaShapeItems } from "../criteria/templates/named-criteria-shape";
-import { namedShape } from "../criteria/templates/named-shape.fn";
-import { neverShape } from "../criteria/templates/never-shape.fn";
+import { ICriterionShape } from "../criteria/vnext/criterion-shape.interface";
+import { ICriterion } from "../criteria/vnext/criterion.interface";
+import { EntityCriteriaFactory } from "../criteria/vnext/entity-criteria-factory";
+import { EntityCriteriaShapeFactory } from "../criteria/vnext/entity-criteria-shape-factory";
+import { $optional, $required } from "../criteria/vnext/entity-criteria/entity-criteria-shape";
 import { EntitySelection } from "../query/entity-selection";
+import { IEntitySchema } from "../schema/schema.interface";
 import { EntityApiEndpoint, EntityApiEndpointInvoke } from "./entity-api-endpoint";
 
 type AddFieldsArgument<T> = {
@@ -30,8 +30,8 @@ export class EntityApiEndpointBuilder<
 
     private readonly schema: IEntitySchema;
     private anyCriteriaSupported = false;
-    private requiredFields: CriterionRequiredFields = {} as CriterionRequiredFields;
-    private optionalFields: CriterionOptionalFields = {} as CriterionOptionalFields;
+    private requiredFields: Record<string, ICriterionShape> = {} as Record<string, ICriterionShape>;
+    private optionalFields: Record<string, ICriterionShape> = {} as Record<string, ICriterionShape>;
     private anyOptionsSupported = false;
     private requiredOptionFields: OptionsRequiredFields = {} as OptionsRequiredFields;
     private optionalOptionFields: OptionsOptionalFields = {} as OptionsOptionalFields;
@@ -40,7 +40,7 @@ export class EntityApiEndpointBuilder<
 
     private supportedSelection: UnpackedEntitySelection;
     private loadEntities?: EntityApiEndpointInvoke;
-    private acceptCriterion: (criterion: Criterion) => boolean = () => true;
+    private acceptCriterion: (criterion: ICriterion) => boolean = () => true;
 
     supportsAnyOptions(): this {
         this.anyOptionsSupported = true;
@@ -130,10 +130,11 @@ export class EntityApiEndpointBuilder<
 
     acceptsCriterion(
         accept: (
-            criterion: InstancedCriterionShape<NamedCriteriaShape<CriterionRequiredFields, CriterionOptionalFields>>
+            // [todo] fix
+            criterion: any // InstancedCriterionShape<NamedCriteriaShape<CriterionRequiredFields, CriterionOptionalFields>>
         ) => boolean
     ): this {
-        this.acceptCriterion = accept as (criterion: Criterion) => boolean;
+        this.acceptCriterion = accept as (criterion: ICriterion) => boolean;
         return this;
     }
 
@@ -153,22 +154,28 @@ export class EntityApiEndpointBuilder<
             throw new Error("isLoadedBy() hasn't been called yet");
         }
 
+        const criteriaFactory = new EntityCriteriaFactory();
+        const factory = new EntityCriteriaShapeFactory({ criteriaFactory });
+
         let optionsTemplate: ICriterionShape;
 
         if (this.anyOptionsSupported) {
-            optionsTemplate = anyShape();
+            optionsTemplate = factory.any();
         } else if (size(this.requiredOptionFields) || (0 && size(this.optionalOptionFields) > 0)) {
-            optionsTemplate = namedShape(this.requiredOptionFields, this.optionalOptionFields);
+            optionsTemplate = factory.where({
+                [$required]: this.requiredOptionFields,
+                [$optional]: this.optionalOptionFields,
+            });
         } else {
-            optionsTemplate = neverShape();
+            optionsTemplate = factory.never();
         }
 
         let criterionTemplate: ICriterionShape;
 
         if (size(this.requiredFields) > 0 || size(this.optionalFields) > 0) {
-            criterionTemplate = namedShape(this.requiredFields, this.optionalFields);
+            criterionTemplate = factory.where({ [$required]: this.requiredFields, [$optional]: this.optionalFields });
         } else {
-            criterionTemplate = anyShape();
+            criterionTemplate = factory.any();
         }
 
         return new EntityApiEndpoint({
@@ -176,7 +183,7 @@ export class EntityApiEndpointBuilder<
             invoke: this.loadEntities,
             schema: this.schema,
             criterionTemplate,
-            optionsTemplate,
+            optionsTemplate: optionsTemplate,
             acceptCriterion: this.acceptCriterion,
             pagingRequired: this.pagingRequired,
             pagingSupported: this.pagingSupported,

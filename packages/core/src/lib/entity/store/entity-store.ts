@@ -1,8 +1,8 @@
 import { Entity } from "../../common/entity.type";
-import { IEntitySchema } from "../../schema/schema.interface";
-import { Criterion } from "../../criteria/criterion/criterion";
-import { or } from "../../criteria/criterion/or/or.fn";
+import { ICriterion } from "../../criteria/vnext/criterion.interface";
+import { EntityCriteriaFactory } from "../../criteria/vnext/entity-criteria-factory";
 import { QueryPaging } from "../../query/query-paging";
+import { IEntitySchema } from "../../schema/schema.interface";
 import { ComplexKeyMap } from "../data-structures/complex-key-map";
 import { EntityStoreCommonIndex } from "./entity-store-common-index";
 import { EntityStoreUniqueIndex } from "./entity-store-unique-index";
@@ -25,12 +25,12 @@ export class EntityStore {
     private readonly uniqueIndexes = new Map<string, EntityStoreUniqueIndex>();
     private readonly commonIndexes = new Map<string, EntityStoreCommonIndex>();
     private readonly noOptionsPageCache = new PagedEntityIdCache();
-    private readonly optionsCache: { options: Criterion; ids: Entity[] }[] = [];
-    private readonly optionsPageCache: { options: Criterion; cache: PagedEntityIdCache }[] = [];
+    private readonly optionsCache: { options: ICriterion; ids: Entity[] }[] = [];
+    private readonly optionsPageCache: { options: ICriterion; cache: PagedEntityIdCache }[] = [];
     private entities: (Entity | undefined)[] = [];
 
     // [todo] indexing needs to be crash safe (transactional safety)
-    add(entities: Entity[], options?: Criterion, page?: QueryPaging): void {
+    add(entities: Entity[], options?: ICriterion, page?: QueryPaging): void {
         if (this.entitySchema.hasKey()) {
             const key = this.entitySchema.getKey();
             entities = this.dedupeEntities(entities, key.getPath());
@@ -94,7 +94,7 @@ export class EntityStore {
         return this.entities[slot];
     }
 
-    getByCriterion(criterion: Criterion, options?: Criterion, page?: QueryPaging): Entity[] {
+    getByCriterion(criterion: ICriterion, options?: ICriterion, page?: QueryPaging): Entity[] {
         const entities: Entity[] = [];
         const result = this.getSlotsByCriterion(criterion, options, page);
 
@@ -105,7 +105,7 @@ export class EntityStore {
         return entities;
     }
 
-    private getSlotsByCriterion(criterion: Criterion, options?: Criterion, page?: QueryPaging): Set<number> {
+    private getSlotsByCriterion(criterion: ICriterion, options?: ICriterion, page?: QueryPaging): Set<number> {
         const uniqueIndexes = [...this.uniqueIndexes.values()].sort(
             (a, b) => b.getPaths().length - a.getPaths().length
         );
@@ -126,7 +126,7 @@ export class EntityStore {
                 if (open.length === 1) {
                     criterion = open[0];
                 } else {
-                    criterion = or(open);
+                    criterion = new EntityCriteriaFactory().or(open);
                 }
             } else {
                 return slots;
@@ -151,7 +151,7 @@ export class EntityStore {
                 if (open.length === 1) {
                     criterion = open[0];
                 } else {
-                    criterion = or(open);
+                    criterion = new EntityCriteriaFactory().or(open);
                 }
             } else {
                 return slots;
@@ -161,7 +161,7 @@ export class EntityStore {
         // if we are here, we couldn't fully rely on using indexes alone.
         // have to make a full scan for the criteria that are still open.
         for (let slot = 0; slot < this.entities.length; ++slot) {
-            if (!criterion.matches(this.entities[slot])) {
+            if (!criterion.contains(this.entities[slot])) {
                 continue;
             }
 

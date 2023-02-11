@@ -1,16 +1,17 @@
+import { ICriterion } from "../criteria/vnext/criterion.interface";
+import { EntityQueryCreate, IEntityQueryFactory } from "./entity-query-factory.interface";
+import { IEntityQuery } from "./entity-query.interface";
 import { EntitySelection } from "./entity-selection";
-import { EntityQueryCtorArg, EntityQuery } from "./entity-query";
 import { QueryPaging } from "./query-paging";
-import { Criterion } from "../criteria/criterion/criterion";
 
 type SubtractedParts = {
-    options: true | Criterion;
-    criteria: true | Criterion;
+    options: true | ICriterion;
+    criteria: true | ICriterion;
     selection: true | EntitySelection;
     paging: true | QueryPaging[];
 };
 
-function subtractParts(a: EntityQuery, b: EntityQuery): false | SubtractedParts {
+function subtractParts(a: IEntityQuery, b: IEntityQuery): false | SubtractedParts {
     const pagingA = a.getPaging();
     const pagingB = b.getPaging();
     let paging: true | QueryPaging[] = true;
@@ -65,7 +66,7 @@ function subtractParts(a: EntityQuery, b: EntityQuery): false | SubtractedParts 
 // [todo] shouldn't be able to reduce queries w/ different entity-schemas
 // [todo] it is still unexpected for me that this method returns an empty array on full subtraction,
 // but Criterion.reduce() would return true. should make it consistent.
-export function subtractQuery(a: EntityQuery, b: EntityQuery): EntityQuery[] | false {
+export function subtractQuery(factory: IEntityQueryFactory, a: IEntityQuery, b: IEntityQuery): IEntityQuery[] | false {
     const subtracted = subtractParts(a, b);
 
     if (!subtracted) {
@@ -74,8 +75,8 @@ export function subtractQuery(a: EntityQuery, b: EntityQuery): EntityQuery[] | f
         return [];
     }
 
-    const subtractedQueries: EntityQuery[] = [];
-    const accumulated: EntityQueryCtorArg = {
+    const subtractedQueries: IEntityQuery[] = [];
+    const accumulated: EntityQueryCreate = {
         entitySchema: a.getEntitySchema(),
         criteria: a.getCriteria(),
         selection: a.getSelection(),
@@ -85,19 +86,19 @@ export function subtractQuery(a: EntityQuery, b: EntityQuery): EntityQuery[] | f
 
     if (subtracted.paging !== true) {
         subtracted.paging.forEach(paging => {
-            subtractedQueries.push(new EntityQuery({ ...accumulated, paging }));
+            subtractedQueries.push(factory.createQuery({ ...accumulated, paging }));
         });
 
         accumulated.paging = b.getPaging();
     }
 
     if (subtracted.options !== true) {
-        subtractedQueries.push(new EntityQuery({ ...accumulated, options: subtracted.options }));
+        subtractedQueries.push(factory.createQuery({ ...accumulated, options: subtracted.options }));
         accumulated.options = b.getOptions();
     }
 
     if (subtracted.criteria !== true) {
-        subtractedQueries.push(new EntityQuery({ ...accumulated, criteria: subtracted.criteria }));
+        subtractedQueries.push(factory.createQuery({ ...accumulated, criteria: subtracted.criteria }));
         // [todo] should we also do intersection for paging & options?
         const intersection = a.getCriteria().intersect(b.getCriteria());
 
@@ -109,7 +110,7 @@ export function subtractQuery(a: EntityQuery, b: EntityQuery): EntityQuery[] | f
     }
 
     if (subtracted.selection !== true) {
-        subtractedQueries.push(new EntityQuery({ ...accumulated, selection: subtracted.selection }));
+        subtractedQueries.push(factory.createQuery({ ...accumulated, selection: subtracted.selection }));
     }
 
     return subtractedQueries;

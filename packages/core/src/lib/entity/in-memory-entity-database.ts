@@ -13,7 +13,6 @@ import { or } from "../criteria/criterion/or/or.fn";
 import { anyShape } from "../criteria/templates/any-shape.fn";
 import { NamedCriteriaShape } from "../criteria/templates/named-criteria-shape";
 import { orShape } from "../criteria/templates/or-shape.fn";
-import { EntityQuery } from "../query/entity-query";
 import { EntitySelection } from "../query/entity-selection";
 import { mergeQueries } from "../query/merge-queries.fn";
 import { QueryPaging } from "../query/query-paging";
@@ -26,37 +25,45 @@ import { normalizeEntities } from "./functions/normalize-entities.fn";
 import { IEntityDatabase } from "./i-entity-database";
 import { EntityStore } from "./store/entity-store";
 import { PagedEntityIdCache } from "./store/paged-entity-id-cache";
+import { IEntityQuery } from "../query/entity-query.interface";
+import { ICriterion } from "../criteria/vnext/criterion.interface";
+import { EntityCriteriaShape } from "../criteria/vnext/entity-criteria/entity-criteria-shape";
+import { EntityCriteriaShapeFactory } from "../criteria/vnext/entity-criteria-shape-factory";
+import { EntityCriteriaFactory } from "../criteria/vnext/entity-criteria-factory";
+import { EntityQueryFactory } from "../query/entity-query-factory";
+import { INeverCriterion } from "../criteria/vnext/never/never-criterion.interface";
+import { IAllCriterion } from "../criteria/vnext/all/all-criterion.interface";
 
 export class InMemoryEntityDatabase implements IEntityDatabase {
     private readonly stores = new Map<string, EntityStore>();
-    private readonly cachedQueries = new Map<string, EntityQuery[]>();
-    private readonly queryCacheChanged = new Subject<EntityQuery[]>();
-    private readonly optionsCache: { options?: Criterion; paging?: QueryPaging; ids: Criterion }[] = [];
+    private readonly cachedQueries = new Map<string, IEntityQuery[]>();
+    private readonly queryCacheChanged = new Subject<IEntityQuery[]>();
+    private readonly optionsCache: { options?: ICriterion; paging?: QueryPaging; ids: ICriterion }[] = [];
     // private
 
-    private readonly noOptionsPageCache: { criteria: Criterion; cache: PagedEntityIdCache }[] = [];
-    private readonly optionsCache_v2: { options: Criterion; criteria: Criterion; ids: Entity[] }[] = [];
-    private readonly optionsPageCache: { options: Criterion; criteria: Criterion; cache: PagedEntityIdCache }[] = [];
+    private readonly noOptionsPageCache: { criteria: ICriterion; cache: PagedEntityIdCache }[] = [];
+    private readonly optionsCache_v2: { options: ICriterion; criteria: ICriterion; ids: Entity[] }[] = [];
+    private readonly optionsPageCache: { options: ICriterion; criteria: ICriterion; cache: PagedEntityIdCache }[] = [];
 
-    queryCacheChanged$(): Observable<EntityQuery[]> {
+    queryCacheChanged$(): Observable<IEntityQuery[]> {
         return this.queryCacheChanged.asObservable();
     }
 
-    async query(query: EntityQuery): Promise<EntitySet> {
+    async query(query: IEntityQuery): Promise<EntitySet> {
         return this.querySync(query);
     }
 
-    reduceByCached(query: EntityQuery): EntityQuery[] | false {
+    reduceByCached(query: IEntityQuery): IEntityQuery[] | false {
         const cached = this.getCachedQueries(query.getEntitySchema());
         return subtractQueries([query], cached);
     }
 
     // [todo] not used; but i did not want to delete it already.
     // if i don't find a use soonish™, i should remove it
-    reduceManyByCached(queries: EntityQuery[]): EntityQuery[] {
+    reduceManyByCached(queries: IEntityQuery[]): IEntityQuery[] {
         const groupedBySchema = groupBy(queries, query => query.getEntitySchema());
 
-        const reduced: EntityQuery[] = [];
+        const reduced: IEntityQuery[] = [];
 
         for (const [schema, queries] of groupedBySchema.entries()) {
             const result = subtractQueries(queries, this.getCachedQueries(schema));
@@ -73,7 +80,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
     }
 
     // [todo] need some tests
-    querySync<T extends Entity = Entity>(query: EntityQuery): EntitySet<T> {
+    querySync<T extends Entity = Entity>(query: IEntityQuery): EntitySet<T> {
         const store = this.getOrCreateStore(query.getEntitySchema());
         const criterion = this.withoutRelationalCriteria(query.getCriteria(), query.getEntitySchema());
         let entities = store.getByCriterion(criterion) as T[];
@@ -82,7 +89,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         const page = query.getPaging();
         const criteria = query.getCriteria();
 
-        if (!(options instanceof NeverCriterion) && !(options instanceof AnyCriterion)) {
+        if (!INeverCriterion.is(options) && !IAllCriterion.is(options)) {
             if (page) {
                 const match = this.optionsPageCache.find(
                     item => item.options.equivalent(options) && item.criteria.equivalent(criteria)
@@ -130,7 +137,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
             entities = query.getCriteria().filter(entities);
         }
 
-        if (criterion instanceof AnyCriterion && !(query.getCriteria() instanceof AnyCriterion)) {
+        if (IAllCriterion.is(criterion) && !IAllCriterion.is(query.getCriteria())) {
             // [todo] hotfix for non-related, but nested criteria
             entities = query.getCriteria().filter(entities);
         }
@@ -139,21 +146,25 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
     }
 
     // [todo] i think introduction of this broke workspace playground tests
-    private withoutRelationalCriteria(criterion: Criterion, schema: IEntitySchema): Criterion {
+    private withoutRelationalCriteria(criterion: ICriterion, schema: IEntitySchema): ICriterion {
         const optionalDeepBag: Record<string, any> = {};
 
         schema.getIndexes().forEach(index => {
             index.getPath().forEach(path => (optionalDeepBag[path] = anyShape()));
         });
 
-        const template = orShape(NamedCriteriaShape.fromRequiredAndOptionalDeepBags({}, optionalDeepBag));
+        const criteriaFactory = new EntityCriteriaFactory();
+        const factory = new EntityCriteriaShapeFactory({ criteriaFactory });
+        const template = factory.or([factory.where(optionalDeepBag)]);
         const remapped = template.reshape(criterion);
 
         if (remapped === false) {
-            return any();
+            return criteriaFactory.all();
         }
 
-        return remapped.getReshaped().length === 1 ? remapped.getReshaped()[0] : or(remapped.getReshaped());
+        return remapped.getReshaped().length === 1
+            ? remapped.getReshaped()[0]
+            : criteriaFactory.or(remapped.getReshaped());
     }
 
     upsertSync(entitySet: EntitySet<Entity>): void {
@@ -164,7 +175,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         const page = entitySet.getQuery().getPaging();
         const criteria = entitySet.getQuery().getCriteria();
 
-        if (!(options instanceof NeverCriterion) && !(options instanceof AnyCriterion) && page) {
+        if (!INeverCriterion.is(options) && !IAllCriterion.is(options) && page) {
             const match = this.optionsPageCache.find(
                 item => item.options.equivalent(options) && item.criteria.equivalent(criteria)
             );
@@ -176,7 +187,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
                 cache.add(entities, page);
                 this.optionsPageCache.push({ options, cache, criteria });
             }
-        } else if (!(options instanceof NeverCriterion) && !(options instanceof AnyCriterion)) {
+        } else if (!INeverCriterion.is(options) && !IAllCriterion.is(options)) {
             const match = this.optionsCache_v2.find(
                 item => item.options.equivalent(options) && item.criteria.equivalent(criteria)
             );
@@ -198,13 +209,13 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
             }
         }
 
-        if (!(options instanceof NeverCriterion) && !(options instanceof AnyCriterion)) {
+        if (!INeverCriterion.is(options) && !IAllCriterion.is(options)) {
             if (entitySet.getEntities().length) {
                 const key = entitySet.getSchema().getKey();
                 const keyCriterion = createCriterionFromEntities(entitySet.getEntities(), key.getPath());
                 this.optionsCache.push({ options, paging: page, ids: keyCriterion });
             } else {
-                this.optionsCache.push({ options, paging: page, ids: never() });
+                this.optionsCache.push({ options, paging: page, ids: new EntityCriteriaFactory().never() });
             }
         } else if (page) {
             if (entitySet.getEntities().length) {
@@ -212,7 +223,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
                 const keyCriterion = createCriterionFromEntities(entitySet.getEntities(), key.getPath());
                 this.optionsCache.push({ paging: page, ids: keyCriterion });
             } else {
-                this.optionsCache.push({ paging: page, ids: never() });
+                this.optionsCache.push({ paging: page, ids: new EntityCriteriaFactory().never() });
             }
         }
 
@@ -313,7 +324,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         const fromIndex = relation.getFromIndex();
         const toIndex = relation.getToIndex();
         const criteria = createCriterionFromEntities(entities, fromIndex.getPath(), toIndex.getPath());
-        const query = new EntityQuery({
+        const query = new EntityQueryFactory({ criteriaFactory: new EntityCriteriaFactory() }).createQuery({
             entitySchema: relatedSchema,
             criteria,
             selection: selection ?? relatedSchema.getDefaultSelection(),
@@ -331,13 +342,13 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         );
     }
 
-    addQueryToCached(query: EntityQuery): void {
+    addQueryToCached(query: IEntityQuery): void {
         const cachedQueries = this.getCachedQueries(query.getEntitySchema());
         this.cachedQueries.set(query.getEntitySchema().getId(), mergeQueries(query, ...cachedQueries));
         this.queryCacheChanged.next(flatten(Array.from(this.cachedQueries.values())));
     }
 
-    getCachedQueries(schema: IEntitySchema): EntityQuery[] {
+    getCachedQueries(schema: IEntitySchema): IEntityQuery[] {
         return this.cachedQueries.get(schema.getId()) ?? [];
     }
 }

@@ -1,20 +1,22 @@
 import { Class } from "@entity-space/utils";
+import { UnpackedEntitySelection } from "../../lib/common/unpacked-entity-selection.type";
+import { EntityCriteriaFactory } from "../../lib/criteria/vnext/entity-criteria-factory";
+import { EntityWhere } from "../../lib/criteria/vnext/entity-criteria-factory.interface";
+import { EntityQueryFactory } from "../../lib/query/entity-query-factory";
+import { IEntityQuery } from "../../lib/query/entity-query.interface";
 import { BlueprintInstance } from "../../lib/schema/blueprint-instance";
 import { EntitySchemaCatalog } from "../../lib/schema/entity-schema-catalog";
-import { UnpackedEntitySelection } from "../../lib/common/unpacked-entity-selection.type";
-import { any } from "../../lib/criteria/criterion/any/any.fn";
-import { matches, MatchesBagArgument } from "../../lib/criteria/criterion/named/matches.fn";
-import { EntityQuery } from "../../lib/query/entity-query";
 
 export function createQuery<T>(
     schemas: EntitySchemaCatalog,
     blueprint: Class<T>,
-    criteria?: MatchesBagArgument<BlueprintInstance<T>>,
+    criteria?: EntityWhere<BlueprintInstance<T>>,
     selection?: UnpackedEntitySelection<BlueprintInstance<T>>
-): EntityQuery {
-    return new EntityQuery({
+): IEntityQuery {
+    const criteriaFactory = new EntityCriteriaFactory();
+    return new EntityQueryFactory({ criteriaFactory }).createQuery({
         entitySchema: schemas.resolve(blueprint),
-        criteria: criteria ? matches(criteria) : any(),
+        criteria: criteria ? criteriaFactory.where(criteria) : criteriaFactory.all(),
         selection,
     });
 }

@@ -1,13 +1,13 @@
+import { IEntityQuery } from "./entity-query.interface";
 import { mergeQuery } from "./merge-query.fn";
-import { EntityQuery } from "./entity-query";
 
-export function mergeQueries(...queries: EntityQuery[]): EntityQuery[] {
+export function mergeQueries(...queries: IEntityQuery[]): IEntityQuery[] {
     if (!queries.length) {
         return [];
     }
 
-    let merged: EntityQuery[] = queries.slice();
-    let nextMerged: EntityQuery[] = [];
+    let merged: IEntityQuery[] = queries.slice();
+    let nextMerged: IEntityQuery[] = [];
 
     for (let i = 0; i < merged.length; ++i) {
         let query = merged[i];

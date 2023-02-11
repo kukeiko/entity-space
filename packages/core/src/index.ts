@@ -93,3 +93,7 @@ export * from "./lib/query/merge-queries.fn";
 export * from "./lib/query/merge-query.fn";
 export * from "./lib/query/subtract-queries.fn";
 export * from "./lib/query/subtract-query.fn";
+export * from "./lib/query/entity-query-factory";
+export * from "./lib/criteria/vnext/entity-criteria-factory";
+export * from "./lib/criteria/vnext/entity-criteria-shape-factory";
+export * from "./lib/query/entity-query.interface";

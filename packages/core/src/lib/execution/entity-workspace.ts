@@ -16,26 +16,26 @@ import {
     startWith,
     Subject,
     switchMap,
-    tap,
+    tap
 } from "rxjs";
 import { Entity } from "../common/entity.type";
-import { BlueprintInstance } from "../schema/blueprint-instance";
-import { EntitySchemaCatalog } from "../schema/entity-schema-catalog";
-import { IEntitySchema } from "../schema/schema.interface";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
-import { any } from "../criteria/criterion/any/any.fn";
-import { Criterion } from "../criteria/criterion/criterion";
-import { matches, MatchesBagArgument } from "../criteria/criterion/named/matches.fn";
-import { never } from "../criteria/criterion/never/never.fn";
+import { ICriterion } from "../criteria/vnext/criterion.interface";
+import { EntityCriteriaFactory } from "../criteria/vnext/entity-criteria-factory";
+import { EntityWhere } from "../criteria/vnext/entity-criteria-factory.interface";
 import { EntitySet } from "../entity/data-structures/entity-set";
 import { createCriterionFromEntities } from "../entity/functions/create-criterion-from-entities.fn";
 import { createIdQueryFromEntities } from "../entity/functions/create-id-query-from-entities.fn";
 import { normalizeEntities } from "../entity/functions/normalize-entities.fn";
 import { IEntityStore } from "../entity/i-entity-store";
 import { InMemoryEntityDatabase } from "../entity/in-memory-entity-database";
-import { EntityQuery } from "../query/entity-query";
+import { EntityQueryFactory } from "../query/entity-query-factory";
+import { IEntityQuery } from "../query/entity-query.interface";
 import { QueryPaging } from "../query/query-paging";
 import { subtractQueries } from "../query/subtract-queries.fn";
+import { BlueprintInstance } from "../schema/blueprint-instance";
+import { EntitySchemaCatalog } from "../schema/entity-schema-catalog";
+import { IEntitySchema } from "../schema/schema.interface";
 import { EntityQueryBuilder, EntityQueryBuilderArgument } from "./entity-query-builder";
 import { EntityQueryTracing } from "./entity-query-tracing";
 import { EntityStream } from "./entity-stream";
@@ -52,8 +52,10 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
     private store?: IEntityStore;
     private schemas?: EntitySchemaCatalog;
     private readonly database = new InMemoryEntityDatabase();
-    private readonly watchedQueries = new Map<EntityQuery, Subject<Entity[]>>();
+    private readonly watchedQueries = new Map<IEntityQuery, Subject<Entity[]>>();
     interceptors: IEntityStreamInterceptor[] = [];
+    private readonly criteriaFactory = new EntityCriteriaFactory();
+    private readonly queryFactory = new EntityQueryFactory({ criteriaFactory: this.criteriaFactory });
 
     // [todo] rename to upsert()?
     // [todo] we allow partials, but types don't reflect that (same @ cache and store)
@@ -105,7 +107,7 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
     }
 
     // [todo] T not used yet; need to add it to QueriedEntities
-    async query<T extends Entity = Entity>(query: EntityQuery): Promise<false | EntitySet<T>[]> {
+    async query<T extends Entity = Entity>(query: IEntityQuery): Promise<false | EntitySet<T>[]> {
         const sources = [...this.interceptors, new SchemaRelationBasedHydrator(this.tracing, [this])];
         const cachedQueries = this.database.getCachedQueries(query.getEntitySchema());
         const reduced = subtractQueries([query], cachedQueries);
@@ -172,13 +174,13 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
             return EMPTY;
         }
         const criteria = createCriterionFromEntities(entities, schema.getKey().getPath());
-        const entitySetQuery = new EntityQuery({
+        const entitySetQuery = this.queryFactory.createQuery({
             entitySchema: schema,
             criteria,
             // [todo] selection missing
         });
 
-        const hydrationQuery = new EntityQuery({ entitySchema: schema, criteria, selection });
+        const hydrationQuery = this.queryFactory.createQuery({ entitySchema: schema, criteria, selection });
         const cachedQueries = this.database.getCachedQueries(hydrationQuery.getEntitySchema());
         const reduced = subtractQueries([hydrationQuery], cachedQueries);
         const queriesAgainstSource = reduced === false ? [hydrationQuery] : reduced;
@@ -217,22 +219,22 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
 
     query$<T extends Entity>(
         schema: IEntitySchema<T>,
-        criterion: Criterion | MatchesBagArgument<T> = any(),
+        criterion: ICriterion | EntityWhere<T> = this.criteriaFactory.all(),
         selection?: UnpackedEntitySelection<T>,
-        options: Criterion | MatchesBagArgument<Entity> = never(),
+        // options: ICriterion | MatchesBagArgument<Entity> = never(),
         paging?: { skip?: number; top?: number; from?: number; to?: number }
     ): Observable<T[]> {
-        if (!(criterion instanceof Criterion)) {
-            criterion = matches(criterion);
+        if (!ICriterion.is(criterion)) {
+            criterion = this.criteriaFactory.where(criterion);
         }
 
-        if (!(options instanceof Criterion)) {
-            if (Object.keys(options).length) {
-                options = matches(options);
-            } else {
-                options = never();
-            }
-        }
+        // if (!(options instanceof Criterion)) {
+        //     if (Object.keys(options).length) {
+        //         options = matches(options);
+        //     } else {
+        //         options = never();
+        //     }
+        // }
 
         let queryPaging: QueryPaging | undefined;
 
@@ -253,11 +255,12 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
             }
         }
 
-        const query = new EntityQuery({
+        const query = this.queryFactory.createQuery({
             entitySchema: schema,
-            criteria: criterion,
+            // [todo] type assertion
+            criteria: criterion as ICriterion,
             selection: selection,
-            options,
+            // options,
             paging: queryPaging,
         });
 
@@ -339,11 +342,11 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
 
     // [todo] should stay async because at one point i want to make use of service-workers
     // [todo] should not exist at all? (or be private)
-    async queryAgainstCache(query: EntityQuery): Promise<Entity[]> {
+    async queryAgainstCache(query: IEntityQuery): Promise<Entity[]> {
         return this.database.querySync(query).getEntities();
     }
 
-    queryCacheChanged$(): Observable<EntityQuery[]> {
+    queryCacheChanged$(): Observable<IEntityQuery[]> {
         return this.database.queryCacheChanged$();
     }
 

@@ -1,6 +1,6 @@
 import { Entity } from "../../common/entity.type";
-import { Criterion } from "../../criteria/criterion/criterion";
-import { ReshapedCriterion } from "../../criteria/templates/reshaped-criterion";
+import { ICriterion } from "../../criteria/vnext/criterion.interface";
+import { ReshapedCriterion } from "../../criteria/vnext/reshaped-criterion";
 import { ComplexKeyMap } from "../data-structures/complex-key-map";
 
 export class EntityStoreUniqueIndex<E extends Entity = Entity> {
@@ -26,7 +26,7 @@ export class EntityStoreUniqueIndex<E extends Entity = Entity> {
         return this;
     }
 
-    getByCriterion(criterion: Criterion): false | { values: number[]; remapped: ReshapedCriterion<Criterion> } {
+    getByCriterion(criterion: ICriterion): false | { values: number[]; remapped: ReshapedCriterion<ICriterion> } {
         return this.map.getByCriterion(criterion);
     }
 

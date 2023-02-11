@@ -3,6 +3,7 @@ import { matches } from "../lib/criteria/criterion/named/matches.fn";
 import { or } from "../lib/criteria/criterion/or/or.fn";
 import { isValue } from "../lib/criteria/criterion/value/is-value.fn";
 import { EntityStore } from "../lib/entity/store/entity-store";
+import { EntityCriteriaFactory } from "../lib/criteria/vnext/entity-criteria-factory";
 
 interface Vector {
     x: number;
@@ -81,6 +82,7 @@ describe("entity-store", () => {
         entitySchema.addIndex("position.z");
         entitySchema.addIndex("typeId");
         const entityStore = new EntityStore(entitySchema);
+        const criteriaFactory = new EntityCriteriaFactory();
 
         const blocks: Block[] = [
             { position: { x: 0, y: 0, z: 0 }, typeId: "minecraft:grass_block" },
@@ -97,28 +99,34 @@ describe("entity-store", () => {
         // assert
         expect(
             entityStore.getByCriterion(
-                matches<Block>({
-                    typeId: isValue("minecraft:dirt"),
+                criteriaFactory.where<Block>({
+                    typeId: criteriaFactory.equals("minecraft:dirt"),
                 })
             )
         ).toEqual(blocks.filter(block => block.typeId === "minecraft:dirt"));
 
         expect(
             entityStore.getByCriterion(
-                matches<Block>({
-                    position: matches<Vector>({ x: isValue(0), z: isValue(0) }),
+                criteriaFactory.where<Block>({
+                    position: criteriaFactory.where<Vector>({
+                        x: criteriaFactory.equals(0),
+                        z: criteriaFactory.equals(0),
+                    }),
                 })
             )
         ).toEqual(blocks.filter(block => block.position.x === 0 && block.position.z === 0));
 
         expect(
             entityStore.getByCriterion(
-                or([
-                    matches<Block>({
-                        position: matches<Vector>({ x: isValue(0), z: isValue(0) }),
+                criteriaFactory.or([
+                    criteriaFactory.where<Block>({
+                        position: criteriaFactory.where<Vector>({
+                            x: criteriaFactory.equals(0),
+                            z: criteriaFactory.equals(0),
+                        }),
                     }),
-                    matches<Block>({
-                        typeId: isValue("minecraft:dirt"),
+                    criteriaFactory.where<Block>({
+                        typeId: criteriaFactory.equals("minecraft:dirt"),
                     }),
                 ])
             )

@@ -1,4 +1,12 @@
-import { EntityQuery, EntitySchemaCatalog, IEntitySchema, inSet, matches } from "@entity-space/core";
+import {
+    EntityCriteriaFactory,
+    EntityQuery,
+    EntityQueryFactory,
+    EntitySchemaCatalog,
+    IEntitySchema,
+    inSet,
+    matches,
+} from "@entity-space/core";
 import { SongLocation } from "@entity-space/examples/libs/music-model";
 import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Query } from "@nestjs/common";
 import { DiskDbService } from "../disk-db.service";
@@ -18,21 +26,29 @@ export class SongLocationsController {
         @Query("songId", ParseIntsPipe) songId: number[]
     ): Promise<SongLocation[]> {
         if (id.length > 0) {
-            const query = new EntityQuery({
+            const query = new EntityQueryFactory({ criteriaFactory: new EntityCriteriaFactory() }).createQuery({
                 entitySchema: this.schema,
-                criteria: matches<SongLocation>({ id: inSet(id) }),
+                criteria: new EntityCriteriaFactory().where<SongLocation>({
+                    id: new EntityCriteriaFactory().inArray(id),
+                }),
             });
 
             return this.diskDbService.query(query);
         } else if (songId.length > 0) {
-            const query = new EntityQuery({
+            const query = new EntityQueryFactory({ criteriaFactory: new EntityCriteriaFactory() }).createQuery({
                 entitySchema: this.schema,
-                criteria: matches<SongLocation>({ songId: inSet(songId) }),
+                criteria: new EntityCriteriaFactory().where<SongLocation>({
+                    songId: new EntityCriteriaFactory().inArray(songId),
+                }),
             });
 
             return this.diskDbService.query(query);
         } else {
-            return this.diskDbService.query(new EntityQuery({ entitySchema: this.schema }));
+            return this.diskDbService.query(
+                new EntityQueryFactory({ criteriaFactory: new EntityCriteriaFactory() }).createQuery({
+                    entitySchema: this.schema,
+                })
+            );
         }
     }
 
