@@ -70,7 +70,7 @@ export class WhereEntityTools {
         const $optional_ = shape.$optional ?? {};
 
         for (const key in $optional_) {
-            const itemShape = this.toPrimitiveCriteriaShapeFromShorthand(shape[key]);
+            const itemShape = this.toPrimitiveCriteriaShapeFromShorthand($optional_[key]);
 
             if (!itemShape) {
                 throw new Error(`shape not yet supported: ${JSON.stringify(itemShape)}`);
@@ -118,10 +118,15 @@ export class WhereEntityTools {
         const publicCriterion: WhereEntitySingle = {};
 
         for (const key in criteria) {
-            const criterionShape = shape[key];
+            let criterionShape = shape[key];
 
             if (criterionShape === void 0) {
-                continue;
+                // [todo] this is a very quick hack to make $optional work, can't stay this way.
+                criterionShape = (shape.$optional ?? {})[key];
+
+                if (criterionShape === void 0) {
+                    continue;
+                }
             }
 
             const shorthandInstance = this.privateCriterionToPublicFromShorthandShape(criteria[key], criterionShape);

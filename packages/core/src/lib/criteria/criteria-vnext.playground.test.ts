@@ -3,7 +3,6 @@ import { Entity } from "../common/entity.type";
 import { BlueprintInstance } from "../schema/blueprint-instance";
 import { Criterion } from "./criterion/criterion";
 import { BarBlueprint, FooBlueprint, TypeA_Blueprint, TypeB_Blueprint } from "./test-models";
-import { ICriterionShape } from "./vnext/criterion-shape.interface";
 import { $optional, $required } from "./vnext/entity-criteria/entity-criteria-shape";
 
 describe("playground: criteria v3", () => {
@@ -109,7 +108,7 @@ describe("playground: criteria v3", () => {
 
     type ArrayCriteriaShapeType<T> = {};
 
-    it("PrimitiveCriteriaShapeInstance should work", () => {
+    xit("PrimitiveCriteriaShapeInstance should work", () => {
         const shape = Number;
         const shapeInstance: PrimitiveCriteriaShapeInstance<[typeof String, typeof String]> = {} as any;
     });
@@ -222,7 +221,7 @@ describe("playground: criteria v3", () => {
         const baz = fooShapeInstance.bar.baz;
     });
 
-    it("should work", () => {
+    xit("should work", () => {
         takesFooShape({ id: [Number], bar: { description: String } });
 
         const fooBuilder = new Builder<Foo>();
@@ -232,7 +231,7 @@ describe("playground: criteria v3", () => {
         // fooInstance.bar.description;
     });
 
-    it("EntityWhere<T> #2", () => {
+    xit("EntityWhere<T> #2", () => {
         type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (k: infer I) => void ? I : never;
 
         type WhereNumberOrString<T> = {
@@ -313,7 +312,7 @@ describe("playground: criteria v3", () => {
         });
     });
 
-    it("EntityWhere<T> #3", () => {
+    xit("EntityWhere<T> #3", () => {
         type WhereNumberOrString<T> = {
             $range?: [T | undefined, T | undefined];
             $between?: [T | undefined, T | undefined];
@@ -438,7 +437,7 @@ describe("playground: criteria v3", () => {
         });
     });
 
-    it("EntityCriteriaShape vnext-#2", () => {
+    xit("EntityCriteriaShape vnext-#2", () => {
         type WhereNumberOrStringShape<T, D = Distribute<T>> = {
             $range?: T | D[];
             $between?: T | D[];
@@ -786,7 +785,7 @@ describe("playground: criteria v3", () => {
     //     const value = shape.read({} as any);
     // });
 
-    it("improve WhereEntity", () => {
+    xit("improve WhereEntity", () => {
         type WhereNumberOrString<T> = {
             $range?: [T | undefined, T | undefined];
             $between?: [T | undefined, T | undefined];

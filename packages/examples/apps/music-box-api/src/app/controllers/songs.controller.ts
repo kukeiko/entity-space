@@ -15,9 +15,10 @@ export class SongsController {
     async getSongs(
         @Query("searchText") searchText?: string,
         @Query("from") from?: string,
-        @Query("to") to?: string
+        @Query("to") to?: string,
+        @Query("artistId") artistId?: string
     ): Promise<Song[]> {
-        let songs = await this.diskDbService.getSongs(searchText);
+        let songs = await this.diskDbService.getSongs(searchText, artistId);
 
         if (from || to) {
             const parsedFrom = parseInt(from || "0");

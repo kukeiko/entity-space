@@ -41,10 +41,18 @@ export class DiskDbService {
         return entities[0];
     }
 
-    async getSongs(searchText?: string): Promise<Song[]> {
+    async getSongs(searchText?: string, artistId?: string): Promise<Song[]> {
+        const criteriaFactory = new EntityCriteriaFactory();
+
         const results = await this.entitySource.query(
-            new EntityQueryFactory({ criteriaFactory: new EntityCriteriaFactory() }).createQuery({
+            new EntityQueryFactory({ criteriaFactory }).createQuery({
                 entitySchema: this.songSchema,
+                criteria:
+                    artistId !== void 0
+                        ? criteriaFactory.where<Song>({
+                              artistId: criteriaFactory.inArray(artistId.split(",").map(id => +id)),
+                          })
+                        : void 0,
             })
         );
 

@@ -7,9 +7,7 @@ import {
     EntityQueryTracing,
     EntitySchemaCatalog,
     IEntitySchema,
-    IEntityStore,
-    inSetShape,
-    isValueShape,
+    IEntityStore
 } from "@entity-space/core";
 import {
     Artist,
@@ -17,8 +15,9 @@ import {
     Song,
     SongBlueprint,
     SongLocation,
-    SongLocationTypeBlueprint,
+    SongLocationTypeBlueprint
 } from "@entity-space/examples/libs/music-model";
+import { isDefined } from "@entity-space/utils";
 import { firstValueFrom } from "rxjs";
 
 export class MusicBoxClientSideEntityApi extends EntityApi implements IEntityStore {
@@ -30,60 +29,6 @@ export class MusicBoxClientSideEntityApi extends EntityApi implements IEntitySto
         super(tracing);
     }
 
-    create(entities: Entity[], schema: IEntitySchema<Entity>): Promise<false | Entity[]> {
-        switch (schema.getId()) {
-            case "song-location":
-                return Promise.all(
-                    (entities as SongLocation[]).map(entity =>
-                        firstValueFrom(this.http.post<SongLocation>(`api/song-locations`, entity))
-                    )
-                );
-
-            case "song":
-                return Promise.all(
-                    (entities as Song[]).map(entity => firstValueFrom(this.http.post<Song>(`api/songs`, entity)))
-                );
-
-            case "artist":
-                return Promise.all(
-                    (entities as Artist[]).map(entity => firstValueFrom(this.http.post<Artist>(`api/artists`, entity)))
-                );
-        }
-
-        throw new Error(`create() not implemented for schema ${schema.getId()}`);
-    }
-
-    update(entities: Entity[], schema: IEntitySchema<Entity>): Promise<false | Entity[]> {
-        switch (schema.getId()) {
-            case "song":
-                return Promise.all(
-                    (entities as Song[]).map(entity =>
-                        firstValueFrom(this.http.patch<Song>(`api/songs/${entity.id}`, entity))
-                    )
-                );
-
-            case "artist":
-                return Promise.all(
-                    (entities as Artist[]).map(entity =>
-                        firstValueFrom(this.http.patch<Artist>(`api/artists/${entity.id}`, entity))
-                    )
-                );
-
-            case "song-location":
-                return Promise.all(
-                    (entities as SongLocation[]).map(entity =>
-                        firstValueFrom(this.http.patch<SongLocation>(`api/song-locations/${entity.id}`, entity))
-                    )
-                );
-        }
-
-        throw new Error(`update() not implemented for schema ${schema.getId()}`);
-    }
-
-    delete(entities: Entity[], schema: IEntitySchema<Entity>): Promise<boolean> {
-        throw new Error(`delete() not implemented for schema ${schema.getId()}`);
-    }
-
     withGetAllArtists(): this {
         return this.addEndpoint(this.schemas.resolve(ArtistBlueprint), builder =>
             builder.supportsSelection({ id: true, name: true }).isLoadedBy(() => this.http.get<Artist[]>("api/artists"))
@@ -93,9 +38,10 @@ export class MusicBoxClientSideEntityApi extends EntityApi implements IEntitySto
     withGetAllSongs(): this {
         return this.addEndpoint(this.schemas.resolve(SongBlueprint), builder =>
             builder
+                .where({ $optional: { artistId: [Number] } })
                 .supportsPaging()
                 .supportsSelection({ id: true, artistId: true, duration: true, name: true })
-                .isLoadedBy(({ paging }) => {
+                .isLoadedBy(({ paging, criterion_v2: { artistId } }) => {
                     const [from, to] = [paging?.getFrom(), paging?.getTo()];
 
                     let params = new HttpParams({});
@@ -106,6 +52,11 @@ export class MusicBoxClientSideEntityApi extends EntityApi implements IEntitySto
 
                     if (to) {
                         params = params.set("to", to);
+                    }
+
+                    if (artistId) {
+                        // [todo] artistId can be array that contains "undefined", seems wrong
+                        params = params.set("artistId", artistId.filter(isDefined).join(","));
                     }
 
                     return this.http.get<Song[]>("api/songs", { params });
@@ -175,5 +126,59 @@ export class MusicBoxClientSideEntityApi extends EntityApi implements IEntitySto
                 { id: "local", name: "Local" },
             ])
         );
+    }
+
+    create(entities: Entity[], schema: IEntitySchema<Entity>): Promise<false | Entity[]> {
+        switch (schema.getId()) {
+            case "song-location":
+                return Promise.all(
+                    (entities as SongLocation[]).map(entity =>
+                        firstValueFrom(this.http.post<SongLocation>(`api/song-locations`, entity))
+                    )
+                );
+
+            case "song":
+                return Promise.all(
+                    (entities as Song[]).map(entity => firstValueFrom(this.http.post<Song>(`api/songs`, entity)))
+                );
+
+            case "artist":
+                return Promise.all(
+                    (entities as Artist[]).map(entity => firstValueFrom(this.http.post<Artist>(`api/artists`, entity)))
+                );
+        }
+
+        throw new Error(`create() not implemented for schema ${schema.getId()}`);
+    }
+
+    update(entities: Entity[], schema: IEntitySchema<Entity>): Promise<false | Entity[]> {
+        switch (schema.getId()) {
+            case "song":
+                return Promise.all(
+                    (entities as Song[]).map(entity =>
+                        firstValueFrom(this.http.patch<Song>(`api/songs/${entity.id}`, entity))
+                    )
+                );
+
+            case "artist":
+                return Promise.all(
+                    (entities as Artist[]).map(entity =>
+                        firstValueFrom(this.http.patch<Artist>(`api/artists/${entity.id}`, entity))
+                    )
+                );
+
+            case "song-location":
+                return Promise.all(
+                    (entities as SongLocation[]).map(entity =>
+                        firstValueFrom(this.http.patch<SongLocation>(`api/song-locations/${entity.id}`, entity))
+                    )
+                );
+        }
+
+        throw new Error(`update() not implemented for schema ${schema.getId()}`);
+    }
+
+    delete(entities: Entity[], schema: IEntitySchema<Entity>): Promise<boolean> {
+        throw new Error(`delete() not implemented for schema ${schema.getId()}`);
     }
 }
