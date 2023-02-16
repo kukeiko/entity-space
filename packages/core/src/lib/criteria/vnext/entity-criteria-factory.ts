@@ -20,8 +20,8 @@ import { IInNumberRangeCriterion } from "./in-range/in-number-range-criterion.in
 import { InNumberRangeCriterion } from "./in-range/in-number-range-criterion";
 import { InStringRangeCriterion } from "./in-range/in-string-range-criterion";
 import { IInStringRangeCriterion } from "./in-range/in-string-range-criterion.interface";
-import { INotEqualsCriterion } from "./not-equals-value/not-equals-criterion.interface";
-import { NotEqualsCriterion } from "./not-equals-value/not-equals-criterion";
+import { INotEqualsCriterion } from "./not-equals/not-equals-criterion.interface";
+import { NotEqualsCriterion } from "./not-equals/not-equals-criterion";
 import { NotInArrayCriterion } from "./not-in-array/not-in-array-criterion";
 import { INotInArrayCriterion } from "./not-in-array/not-in-array-criterion.interface";
 import { NoneCriterion } from "./none/none-criterion";

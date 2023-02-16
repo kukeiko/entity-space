@@ -44,6 +44,7 @@ export class WhereEntityTools {
         private readonly criteriaTools: IEntityCriteriaFactory
     ) {}
 
+    // [todo] should potentially be WhereEntitySingleShape instead of WhereEntityShape
     mapPublicShapeToPrivate(shape: WhereEntityShape, schema: IEntitySchema): ICriterionShape {
         return this.toEntityCriteriaShape(shape);
     }

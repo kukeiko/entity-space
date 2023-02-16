@@ -4,7 +4,9 @@ import { IEntityCriteriaFactory } from "../entity-criteria-factory.interface";
 import { ReshapedCriterion } from "../reshaped-criterion";
 import { IOrCriterion } from "./or-criterion.interface";
 
-export class OrCriterionShape<T extends ICriterionShape<ICriterion, any>> implements ICriterionShape<IOrCriterion, any> {
+export class OrCriterionShape<T extends ICriterionShape<ICriterion, any>>
+    implements ICriterionShape<IOrCriterion, any>
+{
     static create<T extends ICriterionShape<ICriterion, any>>(
         shapes: T[],
         factory: IEntityCriteriaFactory
@@ -54,6 +56,9 @@ export class OrCriterionShape<T extends ICriterionShape<ICriterion, any>> implem
         if (remapped.length > 0) {
             // [todo] can we replace Criterion[] w/ just Criterion @ RemapCriterionResult?
             // in this case, a single OrCriteria() which is not nested in a 1-element array
+            // [todo] confusing at first that we supply "criterion" for the "open" parameter,
+            // as it is the argument given to this function. you have to read the code of this
+            // function to see that it is reassigned; very smelly.
             return new ReshapedCriterion([this.factory.or(remapped)], [criterion]);
         }
 

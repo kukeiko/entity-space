@@ -11,7 +11,7 @@ import { IEqualsCriterion } from "./equals/equals-criterion.interface";
 import { IInArrayCriterion } from "./in-array/in-array-criterion.interface";
 import { IInNumberRangeCriterion } from "./in-range/in-number-range-criterion.interface";
 import { IInStringRangeCriterion } from "./in-range/in-string-range-criterion.interface";
-import { INotEqualsCriterion } from "./not-equals-value/not-equals-criterion.interface";
+import { INotEqualsCriterion } from "./not-equals/not-equals-criterion.interface";
 import { INotInArrayCriterion } from "./not-in-array/not-in-array-criterion.interface";
 import { INoneCriterion } from "./none/none-criterion.interface";
 import { IOrCriterion } from "./or/or-criterion.interface";
