@@ -1,4 +1,3 @@
-// [todo] want to move to @entity-space/lexer eventually
 export function* tokenParser(createGenerators: (() => Generator)[]): Generator {
     let generators = createGenerators.map(create => create());
     generators.forEach(gen => gen.next());
