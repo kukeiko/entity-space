@@ -2,21 +2,19 @@ import { cloneJson, groupBy, isDefined, readPath } from "@entity-space/utils";
 import { flatten } from "lodash";
 import { Observable, Subject } from "rxjs";
 import { Entity } from "../common/entity.type";
-import { IEntitySchema, IEntitySchemaRelation } from "../schema/schema.interface";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
-import { AnyCriterion } from "../criteria/criterion/any/any";
-import { any } from "../criteria/criterion/any/any.fn";
-import { Criterion } from "../criteria/criterion/criterion";
-import { NeverCriterion } from "../criteria/criterion/never/never";
-import { never } from "../criteria/criterion/never/never.fn";
-import { or } from "../criteria/criterion/or/or.fn";
-import { anyShape } from "../criteria/templates/any-shape.fn";
-import { NamedCriteriaShape } from "../criteria/templates/named-criteria-shape";
-import { orShape } from "../criteria/templates/or-shape.fn";
+import { IAllCriterion } from "../criteria/vnext/all/all-criterion.interface";
+import { ICriterion } from "../criteria/vnext/criterion.interface";
+import { EntityCriteriaFactory } from "../criteria/vnext/entity-criteria-factory";
+import { EntityCriteriaShapeFactory } from "../criteria/vnext/entity-criteria-shape-factory";
+import { INeverCriterion } from "../criteria/vnext/never/never-criterion.interface";
+import { EntityQueryFactory } from "../query/entity-query-factory";
+import { IEntityQuery } from "../query/entity-query.interface";
 import { EntitySelection } from "../query/entity-selection";
 import { mergeQueries } from "../query/merge-queries.fn";
 import { QueryPaging } from "../query/query-paging";
 import { subtractQueries } from "../query/subtract-queries.fn";
+import { IEntitySchema, IEntitySchemaRelation } from "../schema/schema.interface";
 import { EntitySet } from "./data-structures/entity-set";
 import { createCriterionFromEntities } from "./functions/create-criterion-from-entities.fn";
 import { createQueriesFromEntities } from "./functions/create-queries-from-entities.fn";
@@ -25,22 +23,12 @@ import { normalizeEntities } from "./functions/normalize-entities.fn";
 import { IEntityDatabase } from "./i-entity-database";
 import { EntityStore } from "./store/entity-store";
 import { PagedEntityIdCache } from "./store/paged-entity-id-cache";
-import { IEntityQuery } from "../query/entity-query.interface";
-import { ICriterion } from "../criteria/vnext/criterion.interface";
-import { EntityCriteriaShape } from "../criteria/vnext/entity-criteria/entity-criteria-shape";
-import { EntityCriteriaShapeFactory } from "../criteria/vnext/entity-criteria-shape-factory";
-import { EntityCriteriaFactory } from "../criteria/vnext/entity-criteria-factory";
-import { EntityQueryFactory } from "../query/entity-query-factory";
-import { INeverCriterion } from "../criteria/vnext/never/never-criterion.interface";
-import { IAllCriterion } from "../criteria/vnext/all/all-criterion.interface";
 
 export class InMemoryEntityDatabase implements IEntityDatabase {
     private readonly stores = new Map<string, EntityStore>();
     private readonly cachedQueries = new Map<string, IEntityQuery[]>();
     private readonly queryCacheChanged = new Subject<IEntityQuery[]>();
     private readonly optionsCache: { options?: ICriterion; paging?: QueryPaging; ids: ICriterion }[] = [];
-    // private
-
     private readonly noOptionsPageCache: { criteria: ICriterion; cache: PagedEntityIdCache }[] = [];
     private readonly optionsCache_v2: { options: ICriterion; criteria: ICriterion; ids: Entity[] }[] = [];
     private readonly optionsPageCache: { options: ICriterion; criteria: ICriterion; cache: PagedEntityIdCache }[] = [];
@@ -150,21 +138,26 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         const optionalDeepBag: Record<string, any> = {};
 
         schema.getIndexes().forEach(index => {
-            index.getPath().forEach(path => (optionalDeepBag[path] = anyShape()));
+            index.getPath().forEach(
+                path =>
+                    (optionalDeepBag[path] = new EntityCriteriaShapeFactory({
+                        criteriaFactory: new EntityCriteriaFactory(),
+                    }).any())
+            );
         });
 
         const criteriaFactory = new EntityCriteriaFactory();
         const factory = new EntityCriteriaShapeFactory({ criteriaFactory });
-        const template = factory.or([factory.where(optionalDeepBag)]);
-        const remapped = template.reshape(criterion);
+        const shape = factory.or([factory.where(optionalDeepBag)]);
+        const reshaped = shape.reshape(criterion);
 
-        if (remapped === false) {
+        if (reshaped === false) {
             return criteriaFactory.all();
         }
 
-        return remapped.getReshaped().length === 1
-            ? remapped.getReshaped()[0]
-            : criteriaFactory.or(remapped.getReshaped());
+        return reshaped.getReshaped().length === 1
+            ? reshaped.getReshaped()[0]
+            : criteriaFactory.or(reshaped.getReshaped());
     }
 
     upsertSync(entitySet: EntitySet<Entity>): void {

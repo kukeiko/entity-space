@@ -1,7 +1,8 @@
 import { isEqual } from "lodash";
-import { InNumberRangeCriterion } from "../criteria/criterion/range/in-number-range-criterion";
-import { inRange } from "../criteria/criterion/range/in-range.fn";
-import { inRangeShape } from "../criteria/templates/in-range-shape.fn";
+import { EntityCriteriaFactory } from "../criteria/vnext/entity-criteria-factory";
+import { EntityCriteriaShapeFactory } from "../criteria/vnext/entity-criteria-shape-factory";
+import { IInNumberRangeCriterion } from "../criteria/vnext/in-range/in-number-range-criterion.interface";
+import { ReshapedCriterion } from "../criteria/vnext/reshaped-criterion";
 
 export interface EntityQueryPagingSort {
     field: string;
@@ -11,14 +12,16 @@ export interface EntityQueryPagingSort {
 export class QueryPaging {
     constructor({ sort, from, to }: { sort: EntityQueryPagingSort[]; from?: number; to?: number }) {
         this.sort = sort;
+        const tools = new EntityCriteriaFactory();
 
         if (from !== void 0 || to !== void 0) {
-            this.range = new InNumberRangeCriterion([from, to]);
+            // [todo] type assertion
+            this.range = tools.inRange(from, to) as IInNumberRangeCriterion;
         }
     }
 
     private readonly sort: EntityQueryPagingSort[];
-    private readonly range?: InNumberRangeCriterion;
+    private readonly range?: IInNumberRangeCriterion;
 
     getSort(): EntityQueryPagingSort[] {
         return this.sort;
@@ -54,7 +57,7 @@ export class QueryPaging {
         return isEqual(this.sort, other.sort);
     }
 
-    mergeRange(other: QueryPaging): false | InNumberRangeCriterion {
+    mergeRange(other: QueryPaging): false | IInNumberRangeCriterion {
         if (!this.range || !other.range) {
             // [todo] not sure if correct
             return false;
@@ -62,7 +65,7 @@ export class QueryPaging {
 
         const merged = this.range.merge(other.range);
 
-        if (!(merged instanceof InNumberRangeCriterion)) {
+        if (!IInNumberRangeCriterion.is(merged)) {
             return false;
         }
 
@@ -82,8 +85,12 @@ export class QueryPaging {
             if (typeof subtractedRange === "boolean") {
                 return subtractedRange;
             }
-
-            const remapped = inRangeShape(Number).reshape(subtractedRange);
+            const criteriaTools = new EntityCriteriaFactory();
+            const shapeTools = new EntityCriteriaShapeFactory({ criteriaFactory: criteriaTools });
+            // [todo] type assertion
+            const remapped = shapeTools.inRange(Number).reshape(subtractedRange) as
+                | false
+                | ReshapedCriterion<IInNumberRangeCriterion>;
 
             if (remapped === false) {
                 return false;
@@ -103,7 +110,8 @@ export class QueryPaging {
                     to = to - 1;
                 }
 
-                return inRange(from, to) as InNumberRangeCriterion;
+                // [todo] type assertion
+                return criteriaTools.inRange(from, to) as IInNumberRangeCriterion;
             });
 
             return toInclusiveRemapped.map(

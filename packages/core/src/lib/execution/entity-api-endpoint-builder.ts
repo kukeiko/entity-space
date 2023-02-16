@@ -1,6 +1,5 @@
 import { Entity } from "../common/entity.type";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
-import { NamedCriteriaShape, NamedCriteriaShapeItems } from "../criteria/templates/named-criteria-shape";
 import { ICriterion } from "../criteria/vnext/criterion.interface";
 import { EntityCriteriaFactory } from "../criteria/vnext/entity-criteria-factory";
 import { EntityCriteriaShapeFactory } from "../criteria/vnext/entity-criteria-shape-factory";

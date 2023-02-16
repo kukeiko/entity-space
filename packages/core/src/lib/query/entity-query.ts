@@ -1,10 +1,9 @@
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
-import { AnyCriterion } from "../criteria/criterion/any/any";
+import { IAllCriterion } from "../criteria/vnext/all/all-criterion.interface";
 import { ICriterion } from "../criteria/vnext/criterion.interface";
 import { EntityCriteriaFactory } from "../criteria/vnext/entity-criteria-factory";
 import { EntityCriteria } from "../criteria/vnext/entity-criteria/entity-criteria";
 import { INeverCriterion } from "../criteria/vnext/never/never-criterion.interface";
-import { INoneCriterion } from "../criteria/vnext/none/none-criterion.interface";
 import { IEntitySchema } from "../schema/schema.interface";
 import { IEntityQueryFactory } from "./entity-query-factory.interface";
 import { IEntityQuery } from "./entity-query.interface";
@@ -81,7 +80,7 @@ export class EntityQuery implements IEntityQuery {
 
     toString(): string {
         const options = INeverCriterion.is(this.options) ? "" : `<${this.options.toString()}>`;
-        const criterion = this.criteria instanceof AnyCriterion ? "" : `(${this.criteria.toString()})`;
+        const criterion = IAllCriterion.is(this.criteria) ? "" : `(${this.criteria.toString()})`;
         const paging = this.paging ? this.paging.toString() : "";
         const selection = this.selection.isEmpty() ? "" : "/" + this.selection.toString();
 

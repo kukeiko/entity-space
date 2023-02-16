@@ -6,8 +6,6 @@ import {
     IEntityQuery,
     IEntitySchema,
     IEntityStore,
-    inSet,
-    matches,
 } from "@entity-space/core";
 import { toMap } from "@entity-space/utils";
 import { constants } from "node:fs";
