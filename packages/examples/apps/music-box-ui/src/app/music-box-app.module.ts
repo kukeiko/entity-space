@@ -77,13 +77,16 @@ import { MusicBoxWorkspace } from "./music-box-workspace";
             useFactory: (http: HttpClient, schemas: EntitySchemaCatalog, tracing: EntityQueryTracing) => {
                 const controller = new MusicBoxClientSideEntityApi(http, schemas, tracing);
 
-                return controller
-                    .withGetAllArtists()
-                    .withSearchSongs()
-                    .withGetSongById()
-                    .withGetAllSongs()
-                    .withGetSongLocationsBySongId()
-                    .withGetAllSongLocationTypes();
+                return (
+                    controller
+                        .withGetAllArtists()
+                        // [todo] re-add once re-implemented
+                        // .withSearchSongs()
+                        .withGetSongById()
+                        .withGetAllSongs()
+                        .withGetSongLocationsBySongId()
+                        .withGetAllSongLocationTypes()
+                );
             },
         },
         {

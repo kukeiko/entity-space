@@ -135,21 +135,18 @@ export class EntityApi implements IEntityStreamInterceptor {
         );
 
         const initialPacket = new EntityStreamPacket({ accepted: acceptedRemapped });
-        // console.log("✔️ ", acceptedRemapped.join(", "));
-
-        const publicCriterionShape = endpoint.getPublicCriterionShape();
+        const whereEntityShape = endpoint.getWhereEntityShape();
         const criteriaTools = new EntityCriteriaFactory();
         const shapeTools = new EntityCriteriaShapeFactory({ criteriaFactory: criteriaTools });
         const tools = new WhereEntityTools(shapeTools, criteriaTools);
         const stream = merge(
             ...acceptedRemapped.map(query => {
                 const invoked = endpoint.getInvoke()({
-                    criterion: query.getCriteria(),
+                    query,
                     selection: query.getSelection().getValue(),
-                    options: query.getOptions(),
                     paging: query.getPaging(),
-                    criterion_v2: publicCriterionShape
-                        ? tools.mapPrivateCriterionToPublic(query.getCriteria(), publicCriterionShape)
+                    criteria: whereEntityShape
+                        ? tools.toWhereEntitySingleFromCriterion(query.getCriteria(), whereEntityShape)
                         : {},
                 });
 

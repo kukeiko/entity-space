@@ -5,7 +5,6 @@ import { PackedEntitySelection } from "../common/packed-entity-selection.type";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
 import { ICriterion } from "../criteria/vnext/criterion.interface";
 import { EntityCriteriaFactory } from "../criteria/vnext/entity-criteria-factory";
-import { EntityWhere } from "../criteria/vnext/entity-criteria-factory.interface";
 import { EntityCriteriaShapeFactory } from "../criteria/vnext/entity-criteria-shape-factory";
 import { WhereEntityTools } from "../criteria/vnext/where-entity/where-entity-tools";
 import { WhereEntitySingle } from "../criteria/vnext/where-entity/where-entity.types";
@@ -21,17 +20,6 @@ export interface EntityQueryBuilderPatch<T extends Entity> {
 export interface EntityQueryBuilderArgument<T extends Entity> extends EntityQueryBuilderPatch<T> {
     schema: IEntitySchema<T>;
     workspace: EntityWorkspace;
-}
-
-const factory = new EntityCriteriaFactory();
-
-class WhereHelper {
-    inIds<T extends { id: any }>(items: T[]): T["id"][] {
-        return pluckId(items);
-    }
-
-    some = factory.some;
-    where = factory.where;
 }
 
 export class EntityQueryBuilder<T extends Entity = Entity> {

@@ -30,7 +30,7 @@ export class TestContentEntityApi extends EntityApi {
             builder
                 .where({ id: Number })
                 .supportsSelection({ id: true, name: true, parentId: true })
-                .isLoadedBy(({ criterion }) => criterion.filter(this.data.get("users")))
+                .isLoadedBy(({ query }) => query.getCriteria().filter(this.data.get("users")))
         );
     }
 }

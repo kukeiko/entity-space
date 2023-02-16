@@ -45,11 +45,11 @@ export class WhereEntityTools {
     ) {}
 
     // [todo] should potentially be WhereEntitySingleShape instead of WhereEntityShape
-    mapPublicShapeToPrivate(shape: WhereEntityShape, schema: IEntitySchema): ICriterionShape {
-        return this.toEntityCriteriaShape(shape);
+    toCriterionShapeFromWhereEntityShape(shape: WhereEntityShape, schema: IEntitySchema): ICriterionShape {
+        return this.toEntityCriteriaShapeFromWhereEntityShape(shape);
     }
 
-    private toEntityCriteriaShape(shape: WhereEntityShape): EntityCriteriaShape<Entity, unknown> {
+    private toEntityCriteriaShapeFromWhereEntityShape(shape: WhereEntityShape): EntityCriteriaShape<Entity, unknown> {
         let required: Record<string, ICriterionShape> = {};
         let optional: Record<string, ICriterionShape> = {};
 
@@ -105,7 +105,7 @@ export class WhereEntityTools {
     }
 
     // [todo] might need schema here
-    mapPrivateCriterionToPublic(criterion: ICriterion, shape: WhereEntityShape): WhereEntitySingle {
+    toWhereEntitySingleFromCriterion(criterion: ICriterion, shape: WhereEntityShape): WhereEntitySingle {
         if (!this.criteriaTools.isEntityCriteria(criterion)) {
             throw new Error(`unexpected type`);
         }

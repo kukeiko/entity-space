@@ -7,7 +7,7 @@ import {
     EntityQueryTracing,
     EntitySchemaCatalog,
     IEntitySchema,
-    IEntityStore
+    IEntityStore,
 } from "@entity-space/core";
 import {
     Artist,
@@ -15,7 +15,7 @@ import {
     Song,
     SongBlueprint,
     SongLocation,
-    SongLocationTypeBlueprint
+    SongLocationTypeBlueprint,
 } from "@entity-space/examples/libs/music-model";
 import { isDefined } from "@entity-space/utils";
 import { firstValueFrom } from "rxjs";
@@ -41,7 +41,7 @@ export class MusicBoxClientSideEntityApi extends EntityApi implements IEntitySto
                 .where({ $optional: { artistId: [Number] } })
                 .supportsPaging()
                 .supportsSelection({ id: true, artistId: true, duration: true, name: true })
-                .isLoadedBy(({ paging, criterion_v2: { artistId } }) => {
+                .isLoadedBy(({ paging, criteria: { artistId } }) => {
                     const [from, to] = [paging?.getFrom(), paging?.getTo()];
 
                     let params = new HttpParams({});
@@ -65,30 +65,32 @@ export class MusicBoxClientSideEntityApi extends EntityApi implements IEntitySto
     }
 
     withSearchSongs(): this {
-        const factory = new EntityCriteriaShapeFactory({ criteriaFactory: new EntityCriteriaFactory() });
+        // [todo] re-implement
+        throw new Error("search-songs endpoint borko for now");
+        // const factory = new EntityCriteriaShapeFactory({ criteriaFactory: new EntityCriteriaFactory() });
 
-        return this.addEndpoint(this.schemas.resolve(SongBlueprint), builder =>
-            builder
-                .requiresOptions({ searchText: factory.equals([String]) })
-                .supportsPaging()
-                .supportsSelection({ id: true, artistId: true, duration: true, name: true })
-                .isLoadedBy(({ options, paging }) => {
-                    const [from, to] = [paging?.getFrom(), paging?.getTo()];
+        // return this.addEndpoint(this.schemas.resolve(SongBlueprint), builder =>
+        //     builder
+        //         .requiresOptions({ searchText: factory.equals([String]) })
+        //         .supportsPaging()
+        //         .supportsSelection({ id: true, artistId: true, duration: true, name: true })
+        //         .isLoadedBy(({ options, paging }) => {
+        //             const [from, to] = [paging?.getFrom(), paging?.getTo()];
 
-                    let params = new HttpParams({});
-                    params = params.set("searchText", options.getBag().searchText.getValue());
+        //             let params = new HttpParams({});
+        //             params = params.set("searchText", options.getBag().searchText.getValue());
 
-                    if (from) {
-                        params = params.set("from", from);
-                    }
+        //             if (from) {
+        //                 params = params.set("from", from);
+        //             }
 
-                    if (to) {
-                        params = params.set("to", to);
-                    }
+        //             if (to) {
+        //                 params = params.set("to", to);
+        //             }
 
-                    return this.http.get<Song[]>("api/songs", { params });
-                })
-        );
+        //             return this.http.get<Song[]>("api/songs", { params });
+        //         })
+        // );
     }
 
     withGetSongById(): this {
@@ -102,7 +104,7 @@ export class MusicBoxClientSideEntityApi extends EntityApi implements IEntitySto
                     locations: { id: true, songId: true, songLocationType: true, url: true },
                     name: true,
                 })
-                .isLoadedBy(({ criterion_v2: { id } }) => this.http.get<Song>(`api/songs/${id}`))
+                .isLoadedBy(({ criteria: { id } }) => this.http.get<Song>(`api/songs/${id}`))
         );
     }
 
@@ -111,7 +113,7 @@ export class MusicBoxClientSideEntityApi extends EntityApi implements IEntitySto
             builder
                 .where({ songId: [Number] })
                 .supportsSelection({ id: true, path: true, songId: true, songLocationType: true, url: true })
-                .isLoadedBy(({ criterion_v2: { songId } }) => {
+                .isLoadedBy(({ criteria: { songId } }) => {
                     return this.http.get<SongLocation[]>("api/song-locations", {
                         params: { songId: songId.join(",") },
                     });

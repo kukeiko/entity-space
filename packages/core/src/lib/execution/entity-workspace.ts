@@ -16,7 +16,7 @@ import {
     startWith,
     Subject,
     switchMap,
-    tap
+    tap,
 } from "rxjs";
 import { Entity } from "../common/entity.type";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
@@ -221,20 +221,12 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
         schema: IEntitySchema<T>,
         criterion: ICriterion | EntityWhere<T> = this.criteriaFactory.all(),
         selection?: UnpackedEntitySelection<T>,
-        // options: ICriterion | MatchesBagArgument<Entity> = never(),
+        options: ICriterion = this.criteriaFactory.never(),
         paging?: { skip?: number; top?: number; from?: number; to?: number }
     ): Observable<T[]> {
         if (!ICriterion.is(criterion)) {
             criterion = this.criteriaFactory.where(criterion);
         }
-
-        // if (!(options instanceof Criterion)) {
-        //     if (Object.keys(options).length) {
-        //         options = matches(options);
-        //     } else {
-        //         options = never();
-        //     }
-        // }
 
         let queryPaging: QueryPaging | undefined;
 
@@ -260,7 +252,7 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
             // [todo] type assertion
             criteria: criterion as ICriterion,
             selection: selection,
-            // options,
+            options,
             paging: queryPaging,
         });
 

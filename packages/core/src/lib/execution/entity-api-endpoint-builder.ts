@@ -1,13 +1,10 @@
-import { size } from "lodash";
 import { Entity } from "../common/entity.type";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
 import { NamedCriteriaShape, NamedCriteriaShapeItems } from "../criteria/templates/named-criteria-shape";
-import { ICriterionShape } from "../criteria/vnext/criterion-shape.interface";
 import { ICriterion } from "../criteria/vnext/criterion.interface";
 import { EntityCriteriaFactory } from "../criteria/vnext/entity-criteria-factory";
 import { EntityCriteriaShapeFactory } from "../criteria/vnext/entity-criteria-shape-factory";
 import { IEntityCriteriaShapeFactory } from "../criteria/vnext/entity-criteria-shape-factory.interface";
-import { $optional, $required } from "../criteria/vnext/entity-criteria/entity-criteria-shape";
 import { WhereEntityShapeInstance } from "../criteria/vnext/where-entity/where-entity-shape-instance.types";
 import { WhereEntityShape } from "../criteria/vnext/where-entity/where-entity-shape.types";
 import { WhereEntityTools } from "../criteria/vnext/where-entity/where-entity-tools";
@@ -15,18 +12,7 @@ import { EntitySelection } from "../query/entity-selection";
 import { IEntitySchema } from "../schema/schema.interface";
 import { EntityApiEndpoint, EntityApiEndpointInvoke } from "./entity-api-endpoint";
 
-type AddFieldsArgument<T> = {
-    [K in keyof T]?: ICriterionShape;
-};
-
-export class EntityApiEndpointBuilder<
-    T extends Entity = Entity,
-    CriterionRequiredFields extends NamedCriteriaShapeItems = {},
-    CriterionOptionalFields extends NamedCriteriaShapeItems = {},
-    OptionsRequiredFields extends NamedCriteriaShapeItems = {},
-    OptionsOptionalFields extends NamedCriteriaShapeItems = {},
-    S = {}
-> {
+export class EntityApiEndpointBuilder<T extends Entity = Entity, S = {}> {
     constructor(schema: IEntitySchema) {
         this.schema = schema;
         this.supportedSelection = schema.getDefaultSelection();
@@ -38,50 +24,13 @@ export class EntityApiEndpointBuilder<
     private readonly schema: IEntitySchema;
     private readonly shapeFactory: IEntityCriteriaShapeFactory;
     private readonly whereEntityTools: WhereEntityTools;
-    private shape?: WhereEntityShape;
-    private anyCriteriaSupported = false;
-    private requiredFields: Record<string, ICriterionShape> = {} as Record<string, ICriterionShape>;
-    private optionalFields: Record<string, ICriterionShape> = {} as Record<string, ICriterionShape>;
-    private anyOptionsSupported = false;
-    private requiredOptionFields: OptionsRequiredFields = {} as OptionsRequiredFields;
-    private optionalOptionFields: OptionsOptionalFields = {} as OptionsOptionalFields;
+    private whereEntityShape?: WhereEntityShape;
     private pagingRequired = false;
     private pagingSupported = false;
 
     private supportedSelection: UnpackedEntitySelection;
     private loadEntities?: EntityApiEndpointInvoke;
     private acceptCriterion: (criterion: ICriterion) => boolean = () => true;
-
-    supportsAnyOptions(): this {
-        this.anyOptionsSupported = true;
-        return this;
-    }
-
-    requiresOptions<F extends AddFieldsArgument<Entity>>(
-        fields: F
-    ): EntityApiEndpointBuilder<
-        T,
-        CriterionRequiredFields,
-        CriterionOptionalFields,
-        OptionsRequiredFields & F,
-        OptionsOptionalFields
-    > {
-        this.requiredOptionFields = { ...this.requiredOptionFields, ...fields };
-        return this as any;
-    }
-
-    supportsOptions<F extends AddFieldsArgument<Entity>>(
-        fields: F
-    ): EntityApiEndpointBuilder<
-        T,
-        CriterionRequiredFields,
-        CriterionOptionalFields,
-        OptionsRequiredFields,
-        OptionsOptionalFields & Partial<F>
-    > {
-        this.optionalOptionFields = { ...this.optionalOptionFields, ...fields };
-        return this as any;
-    }
 
     requiresPaging(): this {
         this.pagingRequired = true;
@@ -93,64 +42,15 @@ export class EntityApiEndpointBuilder<
         return this;
     }
 
-    supportsAnyFields(): this {
-        this.anyCriteriaSupported = true;
-        return this;
-    }
-
-    where<S extends WhereEntityShape<T>>(
-        shape: S | WhereEntityShape<T>
-    ): EntityApiEndpointBuilder<
-        T,
-        CriterionRequiredFields,
-        CriterionOptionalFields,
-        OptionsRequiredFields,
-        OptionsOptionalFields,
-        S
-    > {
-        this.shape = shape;
-        return this as any;
-    }
-
-    requiresFields<F extends AddFieldsArgument<T>>(
-        fields: F
-    ): EntityApiEndpointBuilder<
-        T,
-        CriterionRequiredFields & F,
-        CriterionOptionalFields,
-        OptionsRequiredFields,
-        OptionsOptionalFields,
-        S
-    > {
-        this.requiredFields = { ...this.requiredFields, ...fields };
-        return this as any;
-    }
-
-    supportsFields<F extends AddFieldsArgument<T>>(
-        fields: F
-    ): EntityApiEndpointBuilder<
-        T,
-        CriterionRequiredFields,
-        CriterionOptionalFields & Partial<F>,
-        OptionsRequiredFields,
-        OptionsOptionalFields,
-        S
-    > {
-        this.optionalFields = { ...this.optionalFields, ...fields };
+    where<S extends WhereEntityShape<T>>(shape: S | WhereEntityShape<T>): EntityApiEndpointBuilder<T, S> {
+        this.whereEntityShape = shape;
         return this as any;
     }
 
     supportsSelection(
         selection: UnpackedEntitySelection<T>
         // selection: PackedEntitySelection<T> // [todo] use this instead
-    ): EntityApiEndpointBuilder<
-        T,
-        CriterionRequiredFields,
-        CriterionOptionalFields,
-        OptionsRequiredFields,
-        OptionsOptionalFields,
-        S
-    > {
+    ): EntityApiEndpointBuilder<T, S> {
         this.supportedSelection = EntitySelection.mergeValues(this.supportedSelection, selection);
         return this;
     }
@@ -165,14 +65,7 @@ export class EntityApiEndpointBuilder<
         return this;
     }
 
-    isLoadedBy(
-        load: EntityApiEndpointInvoke<
-            T,
-            NamedCriteriaShape<CriterionRequiredFields, CriterionOptionalFields>,
-            NamedCriteriaShape<OptionsRequiredFields, OptionsOptionalFields>,
-            WhereEntityShapeInstance<T, S>
-        >
-    ): this {
+    isLoadedBy(load: EntityApiEndpointInvoke<T, WhereEntityShapeInstance<T, S>>): this {
         this.loadEntities = load as any;
         return this;
     }
@@ -182,47 +75,20 @@ export class EntityApiEndpointBuilder<
             throw new Error("isLoadedBy() hasn't been called yet");
         }
 
-        const criteriaFactory = new EntityCriteriaFactory();
-        const factory = new EntityCriteriaShapeFactory({ criteriaFactory });
-
-        let optionsTemplate: ICriterionShape;
-
-        if (this.anyOptionsSupported) {
-            optionsTemplate = factory.any();
-        } else if (size(this.requiredOptionFields) || (0 && size(this.optionalOptionFields) > 0)) {
-            optionsTemplate = factory.where({
-                [$required]: this.requiredOptionFields,
-                [$optional]: this.optionalOptionFields,
-            });
-        } else {
-            optionsTemplate = factory.never();
-        }
-
-        let criterionTemplate: ICriterionShape;
-
-        if (this.shape !== void 0) {
-            criterionTemplate = this.whereEntityTools.mapPublicShapeToPrivate(this.shape, this.schema);
-        } else {
-            if (size(this.requiredFields) > 0 || size(this.optionalFields) > 0) {
-                criterionTemplate = factory.where({
-                    [$required]: this.requiredFields,
-                    [$optional]: this.optionalFields,
-                });
-            } else {
-                criterionTemplate = factory.any();
-            }
-        }
+        const criterionShape =
+            this.whereEntityShape === void 0
+                ? this.shapeFactory.any()
+                : this.whereEntityTools.toCriterionShapeFromWhereEntityShape(this.whereEntityShape, this.schema);
 
         return new EntityApiEndpoint({
             selection: new EntitySelection({ schema: this.schema, value: this.supportedSelection }),
             invoke: this.loadEntities,
             schema: this.schema,
-            criterionTemplate,
-            optionsTemplate: optionsTemplate,
+            criterionShape,
             acceptCriterion: this.acceptCriterion,
             pagingRequired: this.pagingRequired,
             pagingSupported: this.pagingSupported,
-            publicCriterionShape: this.shape,
+            whereEntityShape: this.whereEntityShape,
         });
     }
 }
