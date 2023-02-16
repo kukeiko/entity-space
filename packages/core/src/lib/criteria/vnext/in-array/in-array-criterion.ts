@@ -75,6 +75,14 @@ export class InArrayCriterion extends CriterionBase implements IInArrayCriterion
         }
     }
 
+    override simplify(): ICriterion {
+        if (!this.values.size) {
+            return this.factory.all();
+        }
+
+        return this;
+    }
+
     subtractFrom(other: ICriterion): boolean | ICriterion {
         if (IOrCriterion.is(other) || IAndCriterion.is(other)) {
             return other.minus(this);

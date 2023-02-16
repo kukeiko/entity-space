@@ -32,6 +32,8 @@ import { NeverCriterion } from "./never/never-criterion";
 import { INeverCriterion } from "./never/never-criterion.interface";
 import { ISomeCriterion } from "./some/some-criterion.interface";
 import { SomeCriterion } from "./some/some-criterion";
+import { EveryCriterion } from "./every/every-criterion";
+import { IEveryCriterion } from "./every/every-criterion.interface";
 
 function isStringOrVoid(value: unknown): value is string | undefined {
     return value === void 0 || typeof value === "string";
@@ -67,6 +69,8 @@ export class EntityCriteriaFactory implements IEntityCriteriaFactory {
     equals = (value: PrimitiveValue): IEqualsCriterion => {
         return new EqualsCriterion({ value, factory: this });
     };
+
+    every = (criterion: ICriterion): IEveryCriterion => new EveryCriterion({ criterion, factory: this });
 
     never = (): INeverCriterion => new NeverCriterion({ factory: this });
 
@@ -127,4 +131,28 @@ export class EntityCriteriaFactory implements IEntityCriteriaFactory {
 
         return new EntityCriteria({ criteria: built, factory: this });
     };
+
+    isAllCriterion(value: unknown): value is IAllCriterion {
+        return IAllCriterion.is(value);
+    }
+
+    isEntityCriteria(value: unknown): value is IEntityCriteria {
+        return IEntityCriteria.is(value);
+    }
+
+    isEqualsCriterion(value: unknown): value is IEqualsCriterion {
+        return IEqualsCriterion.is(value);
+    }
+
+    isEveryCriterion(value: unknown): value is IEveryCriterion {
+        return IEveryCriterion.is(value);
+    }
+
+    isInArrayCriterion(value: unknown): value is IInArrayCriterion {
+        return IInArrayCriterion.is(value);
+    }
+
+    isSomeCriterion(value: unknown): value is ISomeCriterion {
+        return ISomeCriterion.is(value);
+    }
 }

@@ -9,6 +9,11 @@ export interface IPrimitiveSchema {
     readonly schemaType: "primitive";
 
     getDataType(): PrimitiveSchemaDataType;
+    isArray(): this is IArraySchema;
+    isEntity(): this is IEntitySchema;
+    isPrimitive(): this is IPrimitiveSchema;
+    isNullable(): boolean;
+    supportsValue(value: unknown): boolean;
 }
 
 export interface IEntitySchemaIndex {
@@ -47,6 +52,10 @@ export interface IEntitySchema<T extends Entity = Entity> {
     hasKey(): boolean;
     createDefault(): T;
     getDefaultSelection(): UnpackedEntitySelection<T>;
+    isArray(): this is IArraySchema;
+    isEntity(): this is IEntitySchema;
+    isPrimitive(): this is IPrimitiveSchema;
+    isNullable(): boolean;
 }
 
 export interface IEntitySchemaProperty {
@@ -65,12 +74,20 @@ export interface IDictionarySchema {
     readonly schemaType: "dictionary";
 
     getItemSchema(): IEntitySchema | IPrimitiveSchema;
+    isArray(): this is IArraySchema;
+    isEntity(): this is IEntitySchema;
+    isPrimitive(): this is IPrimitiveSchema;
+    isNullable(): boolean;
 }
 
 export interface IArraySchema {
     readonly schemaType: "array";
 
     getItemSchema(): IEntitySchema | IPrimitiveSchema;
+    isArray(): this is IArraySchema;
+    isEntity(): this is IEntitySchema;
+    isPrimitive(): this is IPrimitiveSchema;
+    isNullable(): boolean;
 }
 
 export type IPropertyValueSchema = IArraySchema | IDictionarySchema | IEntitySchema | IPrimitiveSchema;

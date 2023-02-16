@@ -141,11 +141,9 @@ export class MusicBoxClientSideEntityApi extends EntityApi implements IEntitySto
     }
 
     withGetSongById(): this {
-        const factory = new EntityCriteriaShapeFactory({ criteriaFactory: new EntityCriteriaFactory() });
-
         return this.addEndpoint(this.schemas.resolve(SongBlueprint), builder =>
             builder
-                .requiresFields({ id: factory.equals([Number]) })
+                .where({ id: Number })
                 .supportsSelection({
                     id: true,
                     artistId: true,
@@ -153,21 +151,18 @@ export class MusicBoxClientSideEntityApi extends EntityApi implements IEntitySto
                     locations: { id: true, songId: true, songLocationType: true, url: true },
                     name: true,
                 })
-                .isLoadedBy(({ criterion }) => this.http.get<Song>(`api/songs/${criterion.getBag().id.getValue()}`))
+                .isLoadedBy(({ criterion_v2: { id } }) => this.http.get<Song>(`api/songs/${id}`))
         );
     }
 
     withGetSongLocationsBySongId(): this {
-        const factory = new EntityCriteriaShapeFactory({ criteriaFactory: new EntityCriteriaFactory() });
-
         return this.addEndpoint(this.schemas.getSchema<SongLocation>("song-location"), builder =>
             builder
-                .requiresFields({ songId: factory.inArray([Number]) })
+                .where({ songId: [Number] })
                 .supportsSelection({ id: true, path: true, songId: true, songLocationType: true, url: true })
-                .isLoadedBy(({ criterion }) => {
-                    // [todo] criterion is any
+                .isLoadedBy(({ criterion_v2: { songId } }) => {
                     return this.http.get<SongLocation[]>("api/song-locations", {
-                        params: { songId: Array.from(criterion.getCriteria().songId.getValues()).join(",") },
+                        params: { songId: songId.join(",") },
                     });
                 })
         );

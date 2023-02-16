@@ -80,8 +80,8 @@ import { MusicBoxWorkspace } from "./music-box-workspace";
                 return controller
                     .withGetAllArtists()
                     .withSearchSongs()
-                    .withGetAllSongs()
                     .withGetSongById()
+                    .withGetAllSongs()
                     .withGetSongLocationsBySongId()
                     .withGetAllSongLocationTypes();
             },

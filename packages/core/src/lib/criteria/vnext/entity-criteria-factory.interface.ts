@@ -17,13 +17,15 @@ import { INoneCriterion } from "./none/none-criterion.interface";
 import { IOrCriterion } from "./or/or-criterion.interface";
 import { INeverCriterion } from "./never/never-criterion.interface";
 import { ISomeCriterion } from "./some/some-criterion.interface";
+import { IEveryCriterion } from "./every/every-criterion.interface";
 
+// [todo] rename (clashes with WhereEntity)
 export type EntityWhere<T> = {
     [K in keyof T]?:
-        | ICriterion
+        | EntityWhere<Unbox<T[K]>>
         | ReturnType<Primitive | typeof Null>
         | ReturnType<Primitive | typeof Null>[]
-        | EntityWhere<Unbox<T[K]>>;
+        | ICriterion;
 };
 
 export interface IEntityCriteriaFactory {
@@ -32,6 +34,7 @@ export interface IEntityCriteriaFactory {
     and(...criteria: ICriterion[] | ICriterion[][]): IAndCriterion;
     or(...criteria: ICriterion[] | ICriterion[][]): IOrCriterion;
     equals(value: ReturnType<Primitive | typeof Null>): IEqualsCriterion;
+    every(criterion: ICriterion): IEveryCriterion;
     never(): INeverCriterion;
     notEquals(value: ReturnType<Primitive | typeof Null>): INotEqualsCriterion;
     isEven(): IIsEvenCriterion;
@@ -45,4 +48,10 @@ export interface IEntityCriteriaFactory {
     notInArray(values: Iterable<ReturnType<Primitive | typeof Null>>): INotInArrayCriterion;
     some(criterion: ICriterion): ISomeCriterion;
     where<T extends Entity = Entity>(criteria: EntityWhere<T>): IEntityCriteria;
+    isAllCriterion(value: unknown): value is IAllCriterion;
+    isEntityCriteria(value: unknown): value is IEntityCriteria;
+    isEqualsCriterion(value: unknown): value is IEqualsCriterion;
+    isEveryCriterion(value: unknown): value is IEveryCriterion;
+    isInArrayCriterion(value: unknown): value is IInArrayCriterion;
+    isSomeCriterion(value: unknown): value is ISomeCriterion;
 }

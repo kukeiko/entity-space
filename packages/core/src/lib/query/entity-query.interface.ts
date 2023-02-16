@@ -14,4 +14,5 @@ export interface IEntityQuery {
     intersectCriteriaOmitSelection(other: IEntityQuery): false | IEntityQuery;
     withSelection(selection: EntitySelection | UnpackedEntitySelection): IEntityQuery;
     withCriteria(criteria: ICriterion): IEntityQuery;
+    toString(): string;
 }

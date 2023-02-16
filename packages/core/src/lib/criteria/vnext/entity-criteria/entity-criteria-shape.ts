@@ -100,9 +100,9 @@ type EntityCriteriaShapeInstance<E, S, R = true> = S extends EntityCriteriaShape
     ? EntityCriteriaShapeInstanceRequired<E, S>
     : EntityCriteriaShapeInstanceOptional<E, S>;
 
-type EntityCriteriaInternalShapeType = {
-    [$required]: Record<string, ICriterionShape<ICriterion, unknown>>;
-    [$optional]: Record<string, ICriterionShape<ICriterion, unknown>>;
+export type EntityCriteriaInternalShapeType = {
+    [$required]: Record<string, ICriterionShape>;
+    [$optional]: Record<string, ICriterionShape>;
 };
 
 // [todo] not used
@@ -254,23 +254,13 @@ export class EntityCriteriaShape<E extends Entity, S>
         return new EntityCriteriaShape({ factory, shape: toInternalShape(shape, factory) });
     }
 
-    private constructor({
-        factory,
-        // schema,
-        shape,
-    }: {
-        factory: IEntityCriteriaFactory;
-        // schema: IEntitySchema<E>;
-        shape: EntityCriteriaInternalShapeType;
-    }) {
+    constructor({ factory, shape }: { factory: IEntityCriteriaFactory; shape: EntityCriteriaInternalShapeType }) {
         this.factory = factory;
-        // this.schema = schema;
         this.shape = shape;
     }
 
     readonly [ICriterionShape$] = true;
     private readonly factory: IEntityCriteriaFactory;
-    // private readonly schema: IEntitySchema<E>;
     private readonly shape: EntityCriteriaInternalShapeType;
 
     private getRequiredShapes(): Record<string, ICriterionShape<ICriterion, unknown>> {

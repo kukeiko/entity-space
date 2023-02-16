@@ -185,6 +185,20 @@ export class EntityCriteria extends CriterionBase implements IEntityCriteria {
         throw new Error("Method not implemented.");
     }
 
+    override simplify(): ICriterion {
+        const simplifiedWithoutAll = Object.fromEntries(
+            Object.entries(this.criteria)
+                .map(([key, criterion]) => [key, criterion.simplify()])
+                .filter(([, criterion]) => !this.factory.isAllCriterion(criterion))
+        );
+
+        if (!Object.keys(simplifiedWithoutAll).length) {
+            return this.factory.all();
+        }
+
+        return this.factory.where(simplifiedWithoutAll);
+    }
+
     subtractFrom(other: ICriterion): boolean | ICriterion {
         if (IOrCriterion.is(other) || IAndCriterion.is(other)) {
             return other.minus(this);

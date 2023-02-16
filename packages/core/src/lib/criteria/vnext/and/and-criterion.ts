@@ -74,6 +74,19 @@ export class AndCriterion extends CriterionBase implements IAndCriterion {
         return items.length === 1 ? items[0] : this.factory.and(items);
     }
 
+    override simplify(): ICriterion {
+        const simplified = this.criteria.map(criterion => criterion.simplify());
+        const withoutAll = simplified.filter(criterion => !this.factory.isAllCriterion(criterion));
+
+        if (!withoutAll.length) {
+            return this.factory.all();
+        } else if (withoutAll.length === 1) {
+            return withoutAll[0];
+        } else {
+            return this.factory.and(withoutAll);
+        }
+    }
+
     subtractFrom(other: ICriterion): boolean | ICriterion {
         const items = this.criteria.map(criterion => ({ criterion, result: criterion.subtractFrom(other) }));
 

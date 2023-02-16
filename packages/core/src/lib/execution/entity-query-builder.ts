@@ -6,6 +6,9 @@ import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.typ
 import { ICriterion } from "../criteria/vnext/criterion.interface";
 import { EntityCriteriaFactory } from "../criteria/vnext/entity-criteria-factory";
 import { EntityWhere } from "../criteria/vnext/entity-criteria-factory.interface";
+import { EntityCriteriaShapeFactory } from "../criteria/vnext/entity-criteria-shape-factory";
+import { WhereEntityTools } from "../criteria/vnext/where-entity/where-entity-tools";
+import { WhereEntitySingle } from "../criteria/vnext/where-entity/where-entity.types";
 import { EntitySelection } from "../query/entity-selection";
 import { IEntitySchema } from "../schema/schema.interface";
 import { EntityWorkspace } from "./entity-workspace";
@@ -38,6 +41,9 @@ export class EntityQueryBuilder<T extends Entity = Entity> {
         this.selection = args.selection ?? args.schema.getDefaultSelection();
         this.workspace = args.workspace;
         this.criteria = args.criteria ?? new EntityCriteriaFactory().all();
+        this.criteriaTools = new EntityCriteriaFactory();
+        this.shapeTools = new EntityCriteriaShapeFactory({ criteriaFactory: this.criteriaTools });
+        this.whereEntityTools = new WhereEntityTools(this.shapeTools, this.criteriaTools);
     }
 
     private readonly copyArgs: EntityQueryBuilderArgument<T>;
@@ -45,6 +51,9 @@ export class EntityQueryBuilder<T extends Entity = Entity> {
     private readonly workspace: EntityWorkspace;
     private readonly selection: UnpackedEntitySelection<T>;
     private readonly criteria: ICriterion;
+    private readonly criteriaTools: EntityCriteriaFactory;
+    private readonly shapeTools: EntityCriteriaShapeFactory;
+    private readonly whereEntityTools: WhereEntityTools;
 
     copy(patch?: EntityQueryBuilderPatch<T>): this {
         return new (getInstanceClass(this))({ ...this.copyArgs, ...(patch ?? {}) });
@@ -58,12 +67,14 @@ export class EntityQueryBuilder<T extends Entity = Entity> {
     }
 
     // [todo] currently replaces any previously set criteria, should instead allow combining them with and/or
-    where(criteria: EntityWhere<T> | ((helper: WhereHelper) => EntityWhere<T>)): this {
-        if (typeof criteria === "function") {
-            return this.copy({ criteria: new EntityCriteriaFactory().where(criteria(new WhereHelper())) });
-        } else {
-            return this.copy({ criteria: new EntityCriteriaFactory().where(criteria) });
-        }
+    where(criteria: WhereEntitySingle<T>): this {
+        const criterion = this.whereEntityTools.toCriterionFromWhereEntitySingle(this.schema, criteria);
+        const simplified = criterion.simplify();
+
+        console.log("🌵 criterion", criterion.toString());
+        console.log("🍌 simplified", simplified.toString());
+
+        return this.copy({ criteria: simplified });
     }
 
     findAll(): Observable<{ entities: T[] }> {

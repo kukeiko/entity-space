@@ -18,7 +18,10 @@ export type PrimitiveIncludingNull = Primitive | typeof Null;
 
 /**
  * The union of all native constructors that return a primitive.
+ * [todo] according to MDN, null & undefined are both primitives, so we should consider adding them.
  */
 export type Primitive = typeof Boolean | typeof Number | typeof String;
 
 export type Unbox<T> = T extends any[] ? T[number] : T;
+
+export type Distribute<T> = T extends any ? T : never;

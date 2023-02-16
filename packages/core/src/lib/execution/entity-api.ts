@@ -1,20 +1,23 @@
 import { isNotFalse } from "@entity-space/utils";
 import { flatten } from "lodash";
 import { filter, from, map, merge, mergeAll, Observable, of, startWith, switchMap, tap } from "rxjs";
+import { Entity } from "../common/entity.type";
+import { EntityCriteriaFactory } from "../criteria/vnext/entity-criteria-factory";
+import { EntityCriteriaShapeFactory } from "../criteria/vnext/entity-criteria-shape-factory";
+import { WhereEntityTools } from "../criteria/vnext/where-entity/where-entity-tools";
 import { EntitySet } from "../entity/data-structures/entity-set";
 import { IEntityDatabase } from "../entity/i-entity-database";
 import { InMemoryEntityDatabase } from "../entity/in-memory-entity-database";
 import { EntityQueryShape } from "../query/entity-query-shape";
+import { IEntityQuery } from "../query/entity-query.interface";
 import { subtractQueries } from "../query/subtract-queries.fn";
-import { EntityQueryTracing } from "./entity-query-tracing";
+import { IEntitySchema } from "../schema/schema.interface";
 import { EntityApiEndpoint, EntityApiEndpointData, EntityApiEndpointInvoke } from "./entity-api-endpoint";
 import { EntityApiEndpointBuilder } from "./entity-api-endpoint-builder";
-import { IEntityStreamInterceptor } from "./i-entity-stream-interceptor";
+import { EntityQueryTracing } from "./entity-query-tracing";
 import { EntityStream } from "./entity-stream";
 import { EntityStreamPacket } from "./entity-stream-packet";
-import { Entity } from "../common/entity.type";
-import { IEntitySchema } from "../schema/schema.interface";
-import { IEntityQuery } from "../query/entity-query.interface";
+import { IEntityStreamInterceptor } from "./i-entity-stream-interceptor";
 
 export class EntityApi implements IEntityStreamInterceptor {
     constructor(protected readonly tracing: EntityQueryTracing) {}
@@ -134,6 +137,10 @@ export class EntityApi implements IEntityStreamInterceptor {
         const initialPacket = new EntityStreamPacket({ accepted: acceptedRemapped });
         // console.log("✔️ ", acceptedRemapped.join(", "));
 
+        const publicCriterionShape = endpoint.getPublicCriterionShape();
+        const criteriaTools = new EntityCriteriaFactory();
+        const shapeTools = new EntityCriteriaShapeFactory({ criteriaFactory: criteriaTools });
+        const tools = new WhereEntityTools(shapeTools, criteriaTools);
         const stream = merge(
             ...acceptedRemapped.map(query => {
                 const invoked = endpoint.getInvoke()({
@@ -141,6 +148,9 @@ export class EntityApi implements IEntityStreamInterceptor {
                     selection: query.getSelection().getValue(),
                     options: query.getOptions(),
                     paging: query.getPaging(),
+                    criterion_v2: publicCriterionShape
+                        ? tools.mapPrivateCriterionToPublic(query.getCriteria(), publicCriterionShape)
+                        : {},
                 });
 
                 return this.invokedToDataStream(invoked).pipe(

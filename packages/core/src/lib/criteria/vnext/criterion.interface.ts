@@ -12,6 +12,7 @@ export interface ICriterion {
     // [todo] rename to plus?
     merge(other: ICriterion): false | ICriterion;
     minus(other: ICriterion): boolean | ICriterion;
+    simplify() : ICriterion;
     // [todo] to be removed in favor of minus()
     subtractFrom(other: ICriterion): boolean | ICriterion;
     toString(): string;

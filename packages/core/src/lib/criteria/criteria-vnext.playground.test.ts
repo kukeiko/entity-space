@@ -1,7 +1,8 @@
 import { Null, Primitive, Unbox } from "@entity-space/utils";
+import { Entity } from "../common/entity.type";
 import { BlueprintInstance } from "../schema/blueprint-instance";
 import { Criterion } from "./criterion/criterion";
-import { BarBlueprint, FooBlueprint } from "./test-models";
+import { BarBlueprint, FooBlueprint, TypeA_Blueprint, TypeB_Blueprint } from "./test-models";
 import { ICriterionShape } from "./vnext/criterion-shape.interface";
 import { $optional, $required } from "./vnext/entity-criteria/entity-criteria-shape";
 
@@ -784,4 +785,118 @@ describe("playground: criteria v3", () => {
     //     const shape = EntityCriteriaShape.create(fooSchema, { [$required]: { id: Number } });
     //     const value = shape.read({} as any);
     // });
+
+    it("improve WhereEntity", () => {
+        type WhereNumberOrString<T> = {
+            $range?: [T | undefined, T | undefined];
+            $between?: [T | undefined, T | undefined];
+            $greater?: T;
+            $greaterEquals?: T;
+            $lesser?: T;
+            $lesserEquals?: T;
+        };
+
+        type WherePrimitiveShorthand<T> = T | T[];
+
+        // [todo] if we allow "$equals: T[]", which maps to in-array, we have a potential source of confusion
+        // when it is used on an array of primitives - you would expect the array to perfectly equal
+        // the array in the criterion, but since it is "in-array", it would only do an intersection check instead.
+        type WherePrimitiveCommon<T> = {
+            $equals?: T | T[];
+        };
+
+        type WherePrimitiveSpecific<T> = T extends string | number
+            ? WhereNumberOrString<Exclude<T, typeof Boolean>>
+            : {};
+
+        type WherePrimitiveSingle<T> =
+            | WherePrimitiveShorthand<T>
+            | (WherePrimitiveCommon<T> &
+                  WherePrimitiveSpecific<T> & {
+                      $and?: WherePrimitiveSingle<T>[];
+                      $or?: WherePrimitiveSingle<T>;
+                  });
+
+        type WherePrimitiveArray<T> =
+            | WherePrimitiveShorthand<T>
+            | (WherePrimitiveCommon<T> &
+                  WherePrimitiveSpecific<T> & {
+                      $and?: WherePrimitiveArray<T>[];
+                      $or?: WherePrimitiveArray<T>[];
+                      $some?: WherePrimitiveArray<T>;
+                      $every?: WherePrimitiveArray<T>;
+                  });
+
+        type WhereEntitySingle<T> = WhereEntity<T> & {
+            $and?: WhereEntitySingle<T>[];
+            $or?: WhereEntitySingle<T>[];
+        };
+
+        type WhereEntityArray<T> = WhereEntity<T> & {
+            $and?: WhereEntityArray<T>[];
+            $or?: WhereEntityArray<T>[];
+            $some?: WhereEntityArray<T>;
+            $every?: WhereEntityArray<T>;
+        };
+
+        // [todo] make sure we really dont need D = Distribute<U>
+        // type WhereEntityProperty<T, U = Unbox<T>, D = Distribute<U>> = Unbox<T> extends ReturnType<
+        // [todo] if i keep the () => undefined, maybe it would make sense to introduce it like i did with "Null"?
+        type WhereEntityProperty<T, U = Exclude<T, undefined | null>> =
+            | ([U] extends [ReturnType<Primitive | typeof Null>]
+                  ? [U] extends [unknown[]]
+                      ? WherePrimitiveArray<U[number]>
+                      : WherePrimitiveSingle<U>
+                  : [U] extends [unknown[]]
+                  ? WhereEntityArray<[U][0][number]>
+                  : WhereEntitySingle<[U][0]>)
+            | (T extends null ? null : never);
+
+        // [todo] do we want to be able to filter entities where bar === void 0?
+        // if yes, there currently is no way to express it.
+        // one option would be to introduce "$isUndefined" (at which point we should also add "$isNull")
+        type WhereEntity<T = Entity, U extends [T] = [T]> =
+            | {
+                  [K in keyof U[0]]?: WhereEntityProperty<U[0][K]>;
+              }
+            | { [K in keyof T]?: WhereEntityProperty<T[K]> };
+
+        interface A {
+            type: "A";
+        }
+
+        interface B {
+            type: "B";
+        }
+
+        // type Testitest = WhereEntity<BlueprintInstance<TypeA_Blueprint | TypeB_Blueprint>>;
+        type Testitest = WhereEntityProperty<
+            BlueprintInstance<TypeA_Blueprint>["type"] | BlueprintInstance<TypeB_Blueprint>["type"]
+        >;
+
+        const testitest: Testitest = ["A", "B"];
+
+        const barCriteria: WhereEntity<A | B> = {};
+
+        const criteria: WhereEntity<Foo> = {
+            id: 3,
+            primitive: [1, true],
+            types: {
+                number: 3,
+                string: "",
+
+                type: ["A", "B"],
+                sameNameDifferentType: [1, "2"],
+            },
+            bar: null,
+            // bar: {
+            //     id: 3,
+
+            //     // primitives: {
+            //     //     $range: [1, 1],
+            //     // },
+            //     types: { $some: { type: ["A", "B"] } },
+            // },
+        };
+    });
 });

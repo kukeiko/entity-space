@@ -7,6 +7,7 @@ import { EntitySchemaProperty } from "./entity-schema-property";
 import { EntitySchemaRelation } from "./entity-schema-relation";
 import { PrimitiveSchema } from "./primitive-schema";
 import {
+    IArraySchema,
     IEntitySchema,
     IEntitySchemaIndex,
     IEntitySchemaProperty,
@@ -191,5 +192,21 @@ export class EntitySchema<T extends Entity = Entity> implements IEntitySchema<T>
     setKey(path: string | string[], options?: { name?: string }): this {
         this.key = new EntitySchemaKey(this, path, options);
         return this;
+    }
+
+    isArray(): this is IArraySchema {
+        return false;
+    }
+
+    isEntity(): this is IEntitySchema {
+        return true;
+    }
+
+    isPrimitive(): this is IPrimitiveSchema {
+        return false;
+    }
+
+    isNullable(): boolean {
+        return false;
     }
 }

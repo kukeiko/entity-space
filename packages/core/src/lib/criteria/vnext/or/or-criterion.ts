@@ -106,6 +106,19 @@ export class OrCriterion extends CriterionBase implements IOrCriterion {
         return items.length === 0 ? true : items.length === 1 ? items[0] : this.factory.or(items);
     }
 
+    override simplify(): ICriterion {
+        const simplified = this.criteria.map(criterion => criterion.simplify());
+        const withoutAll = simplified.filter(criterion => !this.factory.isAllCriterion(criterion));
+
+        if (!withoutAll.length) {
+            return this.factory.all();
+        } else if (withoutAll.length === 1) {
+            return withoutAll[0];
+        } else {
+            return this.factory.or(withoutAll);
+        }
+    }
+
     subtractFrom(other: ICriterion): boolean | ICriterion {
         let reduced = other;
 

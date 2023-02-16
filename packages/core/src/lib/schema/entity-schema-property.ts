@@ -1,4 +1,4 @@
-import { IEntitySchema, IEntitySchemaProperty, IPrimitiveSchema, IPropertyValueSchema } from "./schema.interface";
+import { IArraySchema, IEntitySchema, IEntitySchemaProperty, IPrimitiveSchema, IPropertyValueSchema } from "./schema.interface";
 
 export class EntitySchemaProperty implements IEntitySchemaProperty {
     constructor(entitySchema: IEntitySchema, name: string, valueSchema: IPropertyValueSchema, required = false) {
@@ -81,5 +81,9 @@ export class EntitySchemaProperty implements IEntitySchemaProperty {
 
     setWriteOnly(flag: boolean): void {
         this.writeOnly = flag;
+    }
+
+    isArray(): this is IArraySchema {
+        return false;
     }
 }
