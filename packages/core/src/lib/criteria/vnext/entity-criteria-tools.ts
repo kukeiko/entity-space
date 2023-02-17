@@ -160,6 +160,10 @@ export class EntityCriteriaTools implements IEntityCriteriaTools {
         return IInArrayCriterion.is(value);
     };
 
+    isNeverCriterion = (value: unknown): value is INeverCriterion => {
+        return INeverCriterion.is(value);
+    };
+
     isSomeCriterion = (value: unknown): value is ISomeCriterion => {
         return ISomeCriterion.is(value);
     };

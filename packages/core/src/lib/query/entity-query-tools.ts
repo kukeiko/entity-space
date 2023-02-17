@@ -28,7 +28,7 @@ export class EntityQueryTools implements IEntityQueryTools {
         let { entitySchema, criteria, options, paging, selection } = args;
 
         return new EntityQuery({
-            factory: this,
+            queryTools: this,
             entitySchema,
             criteria: criteria ?? this.criteriaTools.all(),
             options: options ?? this.criteriaTools.never(),

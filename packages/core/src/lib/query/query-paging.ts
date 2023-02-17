@@ -3,6 +3,8 @@ import { EntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools";
 import { EntityCriteriaShapeTools } from "../criteria/vnext/entity-criteria-shape-tools";
 import { IInNumberRangeCriterion } from "../criteria/vnext/in-range/in-number-range-criterion.interface";
 import { ReshapedCriterion } from "../criteria/vnext/reshaped-criterion";
+import { IEntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools.interface";
+import { IEntityCriteriaShapeTools } from "../criteria/vnext/entity-criteria-shape-tools.interface";
 
 export interface EntityQueryPagingSort {
     field: string;
@@ -12,16 +14,19 @@ export interface EntityQueryPagingSort {
 export class QueryPaging {
     constructor({ sort, from, to }: { sort: EntityQueryPagingSort[]; from?: number; to?: number }) {
         this.sort = sort;
-        const tools = new EntityCriteriaTools();
 
         if (from !== void 0 || to !== void 0) {
             // [todo] type assertion
-            this.range = tools.inRange(from, to) as IInNumberRangeCriterion;
+            this.range = this.criteriaTools.inRange(from, to) as IInNumberRangeCriterion;
         }
     }
 
     private readonly sort: EntityQueryPagingSort[];
     private readonly range?: IInNumberRangeCriterion;
+    private readonly criteriaTools: IEntityCriteriaTools = new EntityCriteriaTools();
+    private readonly shapeTools: IEntityCriteriaShapeTools = new EntityCriteriaShapeTools({
+        criteriaTools: this.criteriaTools,
+    });
 
     getSort(): EntityQueryPagingSort[] {
         return this.sort;
@@ -85,10 +90,9 @@ export class QueryPaging {
             if (typeof subtractedRange === "boolean") {
                 return subtractedRange;
             }
-            const criteriaTools = new EntityCriteriaTools();
-            const shapeTools = new EntityCriteriaShapeTools({ criteriaTools: criteriaTools });
+
             // [todo] type assertion
-            const remapped = shapeTools.inRange(Number).reshape(subtractedRange) as
+            const remapped = this.shapeTools.inRange(Number).reshape(subtractedRange) as
                 | false
                 | ReshapedCriterion<IInNumberRangeCriterion>;
 
@@ -111,7 +115,7 @@ export class QueryPaging {
                 }
 
                 // [todo] type assertion
-                return criteriaTools.inRange(from, to) as IInNumberRangeCriterion;
+                return this.criteriaTools.inRange(from, to) as IInNumberRangeCriterion;
             });
 
             return toInclusiveRemapped.map(

@@ -1,9 +1,8 @@
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
-import { IAllCriterion } from "../criteria/vnext/all/all-criterion.interface";
 import { ICriterion } from "../criteria/vnext/criterion.interface";
 import { EntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools";
+import { IEntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools.interface";
 import { EntityCriteria } from "../criteria/vnext/entity-criteria/entity-criteria";
-import { INeverCriterion } from "../criteria/vnext/never/never-criterion.interface";
 import { IEntitySchema } from "../schema/schema.interface";
 import { IEntityQueryTools } from "./entity-query-tools.interface";
 import { IEntityQuery } from "./entity-query.interface";
@@ -14,14 +13,14 @@ export class EntityQuery implements IEntityQuery {
     constructor({
         criteria,
         entitySchema,
-        factory,
+        queryTools,
         options,
         paging,
         selection,
     }: {
         criteria: ICriterion;
         entitySchema: IEntitySchema;
-        factory: IEntityQueryTools;
+        queryTools: IEntityQueryTools;
         options: ICriterion;
         paging?: QueryPaging;
         selection: EntitySelection;
@@ -31,7 +30,7 @@ export class EntityQuery implements IEntityQuery {
         this.criteria = criteria;
         this.selection = selection;
         this.paging = paging;
-        this.queryTools = factory;
+        this.queryTools = queryTools;
     }
 
     private readonly entitySchema: IEntitySchema;
@@ -39,6 +38,7 @@ export class EntityQuery implements IEntityQuery {
     private readonly options: ICriterion;
     private readonly selection: EntitySelection;
     private readonly paging?: QueryPaging;
+    private readonly criteriaTools: IEntityCriteriaTools = new EntityCriteriaTools();
     private readonly queryTools: IEntityQueryTools;
 
     getEntitySchema(): IEntitySchema {
@@ -78,8 +78,8 @@ export class EntityQuery implements IEntityQuery {
     }
 
     toString(): string {
-        const options = INeverCriterion.is(this.options) ? "" : `<${this.options.toString()}>`;
-        const criterion = IAllCriterion.is(this.criteria) ? "" : `(${this.criteria.toString()})`;
+        const options = this.criteriaTools.isNeverCriterion(this.options) ? "" : `<${this.options.toString()}>`;
+        const criterion = this.criteriaTools.isAllCriterion(this.criteria) ? "" : `(${this.criteria.toString()})`;
         const paging = this.paging ? this.paging.toString() : "";
         const selection = this.selection.isEmpty() ? "" : "/" + this.selection.toString();
 
@@ -120,8 +120,7 @@ export class EntityQuery implements IEntityQuery {
         const intersectedWithoutDehydrated = EntityCriteria.omitSelection(
             intersectedCriterion,
             other.getSelection().getValue(),
-            // [todo] hardcoded
-            new EntityCriteriaTools()
+            this.criteriaTools
         );
 
         if (intersectedWithoutDehydrated === intersectedCriterion) {

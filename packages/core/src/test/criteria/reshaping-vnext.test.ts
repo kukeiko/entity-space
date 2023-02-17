@@ -8,9 +8,9 @@ import { expectCriteria } from "./expect-criteria.fn";
 
 // [todo] all tests should ignore order of remapped / open criteria
 describe("criteria: reshaping", () => {
-    const criteriaFactory: IEntityCriteriaTools = new EntityCriteriaTools();
-    const shapeFactory: IEntityCriteriaShapeTools = new EntityCriteriaShapeTools({ criteriaTools: criteriaFactory });
-    const { inRange, or, inArray, equals, where } = shapeFactory;
+    const criteriaTools: IEntityCriteriaTools = new EntityCriteriaTools();
+    const shapeTools: IEntityCriteriaShapeTools = new EntityCriteriaShapeTools({ criteriaTools: criteriaTools });
+    const { inRange, or, inArray, equals, where } = shapeTools;
 
     const dummySchema: IEntitySchema<any> = {
         getProperties() {

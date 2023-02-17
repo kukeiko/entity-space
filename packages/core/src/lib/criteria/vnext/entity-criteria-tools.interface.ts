@@ -53,6 +53,7 @@ export interface IEntityCriteriaTools {
     isEqualsCriterion(value: unknown): value is IEqualsCriterion;
     isEveryCriterion(value: unknown): value is IEveryCriterion;
     isInArrayCriterion(value: unknown): value is IInArrayCriterion;
+    isNeverCriterion(value: unknown): value is INeverCriterion;
     isSomeCriterion(value: unknown): value is ISomeCriterion;
     createCriterionFromEntities(entities: Entity[], paths: string[], writtenPaths?: string[]): ICriterion;
 }

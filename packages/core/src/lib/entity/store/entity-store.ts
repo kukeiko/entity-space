@@ -28,6 +28,7 @@ export class EntityStore {
     private readonly optionsCache: { options: ICriterion; ids: Entity[] }[] = [];
     private readonly optionsPageCache: { options: ICriterion; cache: PagedEntityIdCache }[] = [];
     private entities: (Entity | undefined)[] = [];
+    private readonly criteriaTools = new EntityCriteriaTools();
 
     // [todo] indexing needs to be crash safe (transactional safety)
     add(entities: Entity[], options?: ICriterion, page?: QueryPaging): void {
@@ -126,7 +127,7 @@ export class EntityStore {
                 if (open.length === 1) {
                     criterion = open[0];
                 } else {
-                    criterion = new EntityCriteriaTools().or(open);
+                    criterion = this.criteriaTools.or(open);
                 }
             } else {
                 return slots;
@@ -151,7 +152,7 @@ export class EntityStore {
                 if (open.length === 1) {
                     criterion = open[0];
                 } else {
-                    criterion = new EntityCriteriaTools().or(open);
+                    criterion = this.criteriaTools.or(open);
                 }
             } else {
                 return slots;
