@@ -20,7 +20,7 @@ describe("parseQuery()", () => {
         specFn(`should parse ${stringified} to ${expected.toString()}`, () => {
             const parse = () => parseQuery(stringified, catalog);
             expect(parse).not.toThrow();
-            expect(parse()).toEqual(expected);
+            expect(parse().toString()).toEqual(expected.toString());
         });
     }
 
@@ -29,14 +29,6 @@ describe("parseQuery()", () => {
             const parse = () => parseQuery(stringified, catalog);
             expect(parse).toThrow();
         });
-    }
-
-    function fshouldParse(stringified: string, expected: EntityQuery): void {
-        shouldParse(stringified, expected, fit);
-    }
-
-    function xshouldParse(stringified: string, expected: EntityQuery): void {
-        shouldParse(stringified, expected, xit);
     }
 
     function createFooQuery({

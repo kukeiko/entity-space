@@ -140,37 +140,37 @@ export class EntityCriteriaTools implements IEntityCriteriaTools {
         return new EntityCriteria({ criteria: built, tools: this });
     };
 
-    isAllCriterion(value: unknown): value is IAllCriterion {
+    isAllCriterion = (value: unknown): value is IAllCriterion => {
         return IAllCriterion.is(value);
-    }
+    };
 
-    isEntityCriteria(value: unknown): value is IEntityCriteria {
+    isEntityCriteria = (value: unknown): value is IEntityCriteria => {
         return IEntityCriteria.is(value);
-    }
+    };
 
-    isEqualsCriterion(value: unknown): value is IEqualsCriterion {
+    isEqualsCriterion = (value: unknown): value is IEqualsCriterion => {
         return IEqualsCriterion.is(value);
-    }
+    };
 
-    isEveryCriterion(value: unknown): value is IEveryCriterion {
+    isEveryCriterion = (value: unknown): value is IEveryCriterion => {
         return IEveryCriterion.is(value);
-    }
+    };
 
-    isInArrayCriterion(value: unknown): value is IInArrayCriterion {
+    isInArrayCriterion = (value: unknown): value is IInArrayCriterion => {
         return IInArrayCriterion.is(value);
-    }
+    };
 
-    isSomeCriterion(value: unknown): value is ISomeCriterion {
+    isSomeCriterion = (value: unknown): value is ISomeCriterion => {
         return ISomeCriterion.is(value);
-    }
+    };
 
-    createCriterionFromEntities(entities: Entity[], paths: string[], writtenPaths?: string[]): ICriterion {
+    createCriterionFromEntities = (entities: Entity[], paths: string[], writtenPaths?: string[]): ICriterion => {
         if (paths.length === 1) {
             return this.createCriterionOnePath(entities, paths[0], writtenPaths ? writtenPaths[0] : void 0);
         } else {
             return this.createCriterionManyPaths(entities, paths, writtenPaths);
         }
-    }
+    };
 
     private createCriterionOnePath(entities: Entity[], path: string, writtenPath = path): ICriterion {
         const readValue = (entity: Entity): any => readPath(path, entity);

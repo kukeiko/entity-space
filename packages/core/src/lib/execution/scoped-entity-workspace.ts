@@ -3,7 +3,6 @@ import { map, Observable } from "rxjs";
 import { Entity } from "../common/entity.type";
 import { PackedEntitySelection } from "../common/packed-entity-selection.type";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
-import { MatchesBagArgument } from "../criteria/criterion/named/matches.fn";
 import { EntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools";
 import { EntitySelection } from "../query/entity-selection";
 import { IEntitySchema } from "../schema/schema.interface";
@@ -41,14 +40,6 @@ export class ScopedEntityWorkspace<T extends Entity = Entity> {
         return this.workspace
             .query$<T>(this.schema, criterion, EntitySelection.unpack(this.schema, hydrate ?? true))
             .pipe(map(entities => entities[0]));
-    }
-
-    all(hydrate?: UnpackedEntitySelection<T>): Observable<T[]> {
-        return this.workspace.query$<T>(this.schema, void 0, EntitySelection.unpack(this.schema, hydrate ?? true));
-    }
-
-    many(criteria: MatchesBagArgument<T>, hydrate?: PackedEntitySelection<T>): Observable<T[]> {
-        return this.workspace.query$<T>(this.schema, criteria, EntitySelection.unpack(this.schema, hydrate ?? true));
     }
 
     // [todo] not reactive yet

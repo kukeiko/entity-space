@@ -1,6 +1,6 @@
 import { ICriterion } from "../../lib/criteria/vnext/criterion.interface";
 import { EntityCriteriaTools } from "../../lib/criteria/vnext/entity-criteria-tools";
-import { parseCriteria_vnext } from "../../lib/criteria/vnext/parsing/parse-criteria.fn";
+import { parseCriteria } from "../../lib/criteria/vnext/parsing/parse-criteria.fn";
 
 describe("criteria: parsing", () => {
     const factory = new EntityCriteriaTools();
@@ -8,7 +8,7 @@ describe("criteria: parsing", () => {
 
     function shouldParse(stringified: string, expected: ICriterion, specFn = it): void {
         specFn(`should parse ${stringified}`, () => {
-            const parse = () => parseCriteria_vnext(factory, stringified);
+            const parse = () => parseCriteria(factory, stringified);
             expect(parse).not.toThrow();
             expect(parse()).toEqual(expected);
         });

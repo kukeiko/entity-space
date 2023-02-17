@@ -24,7 +24,7 @@ export class EntityQueryTools implements IEntityQueryTools {
 
     private readonly criteriaTools: IEntityCriteriaTools;
 
-    createQuery(args: Omit<EntityQueryCreate, "factory">): IEntityQuery {
+    createQuery = (args: Omit<EntityQueryCreate, "factory">): IEntityQuery => {
         let { entitySchema, criteria, options, paging, selection } = args;
 
         return new EntityQuery({
@@ -40,18 +40,18 @@ export class EntityQueryTools implements IEntityQueryTools {
                     ? selection
                     : new EntitySelection({ schema: entitySchema, value: selection }),
         });
-    }
+    };
 
-    createIdQueryFromEntities(schema: IEntitySchema, entities: Entity[]): IEntityQuery {
+    createIdQueryFromEntities = (schema: IEntitySchema, entities: Entity[]): IEntityQuery => {
         const indexCriteria = this.criteriaTools.createCriterionFromEntities(entities, schema.getKey().getPath());
 
         return this.createQuery({
             entitySchema: schema,
             criteria: indexCriteria,
         });
-    }
+    };
 
-    createQueriesFromEntities(schema: IEntitySchema, entities: Entity[]): IEntityQuery[] {
+    createQueriesFromEntities = (schema: IEntitySchema, entities: Entity[]): IEntityQuery[] => {
         const queries: IEntityQuery[] = [];
 
         // [todo] also implement other indexes
@@ -60,9 +60,9 @@ export class EntityQueryTools implements IEntityQueryTools {
         }
 
         return queries;
-    }
+    };
 
-    mergeQueries(...queries: IEntityQuery[]): IEntityQuery[] {
+    mergeQueries = (...queries: IEntityQuery[]): IEntityQuery[] => {
         if (!queries.length) {
             return [];
         }
@@ -102,10 +102,10 @@ export class EntityQueryTools implements IEntityQueryTools {
         }
 
         return merged;
-    }
+    };
 
     // [todo] clean up this method, it is really hard to read and hacked together.
-    mergeQuery(a: IEntityQuery, b: IEntityQuery): false | IEntityQuery {
+    mergeQuery = (a: IEntityQuery, b: IEntityQuery): false | IEntityQuery => {
         if (a.getEntitySchema().getId() !== b.getEntitySchema().getId()) {
             return false;
         }
@@ -216,9 +216,9 @@ export class EntityQueryTools implements IEntityQueryTools {
         }
 
         return false;
-    }
+    };
 
-    subtractQueries(queriesA: IEntityQuery[], queriesB: IEntityQuery[]): IEntityQuery[] | false {
+    subtractQueries = (queriesA: IEntityQuery[], queriesB: IEntityQuery[]): IEntityQuery[] | false => {
         if (!queriesA.length && !queriesB.length) {
             return [];
         }
@@ -246,12 +246,12 @@ export class EntityQueryTools implements IEntityQueryTools {
         }
 
         return didSubtract ? totalSubtracted : false;
-    }
+    };
 
     // [todo] shouldn't be able to reduce queries w/ different entity-schemas
     // [todo] it is still unexpected for me that this method returns an empty array on full subtraction,
     // but Criterion.reduce() would return true. should make it consistent.
-    subtractQuery(factory: IEntityQueryTools, a: IEntityQuery, b: IEntityQuery): IEntityQuery[] | false {
+    subtractQuery = (factory: IEntityQueryTools, a: IEntityQuery, b: IEntityQuery): IEntityQuery[] | false => {
         const subtracted = this.subtractParts(a, b);
 
         if (!subtracted) {
@@ -299,7 +299,7 @@ export class EntityQueryTools implements IEntityQueryTools {
         }
 
         return subtractedQueries;
-    }
+    };
 
     private subtractParts(a: IEntityQuery, b: IEntityQuery): false | SubtractedParts {
         const pagingA = a.getPaging();
@@ -353,7 +353,7 @@ export class EntityQueryTools implements IEntityQueryTools {
         return { options, criteria, selection, paging };
     }
 
-    parseQuery(input: string, schemas: EntitySchemaCatalog): IEntityQuery {
+    parseQuery = (input: string, schemas: EntitySchemaCatalog): IEntityQuery => {
         return parseQuery(this, this.criteriaTools, input, schemas);
-    }
+    };
 }

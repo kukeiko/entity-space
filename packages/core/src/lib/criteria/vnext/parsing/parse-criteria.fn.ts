@@ -5,7 +5,7 @@ import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
 import { IOrCriterion } from "../or/or-criterion.interface";
 import { criteriaTokenParser } from "./criteria.token-parser";
 
-export function parseCriteria_vnext(tools: IEntityCriteriaTools, input: string): ICriterion {
+export function parseCriteria(tools: IEntityCriteriaTools, input: string): ICriterion {
     let tokens = lex(input);
 
     if (tokens.length === 0) {
