@@ -4,20 +4,20 @@ import { IAllCriterion } from "../all/all-criterion.interface";
 import { IAndCriterion } from "../and/and-criterion.interface";
 import { CriterionBase } from "../criterion-base";
 import { ICriterion, ICriterion$ } from "../criterion.interface";
-import { IEntityCriteriaFactory } from "../entity-criteria-factory.interface";
+import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
 import { IOrCriterion } from "../or/or-criterion.interface";
 import { IEntityCriteria, IEntityCriteria$ } from "./entity-criteria.interface";
 
 export class EntityCriteria extends CriterionBase implements IEntityCriteria {
-    constructor({ criteria, factory }: { criteria: Record<string, ICriterion>; factory: IEntityCriteriaFactory }) {
+    constructor({ criteria, tools }: { criteria: Record<string, ICriterion>; tools: IEntityCriteriaTools }) {
         super();
         this.criteria = Object.freeze(criteria);
-        this.factory = factory;
+        this.tools = tools;
     }
 
     readonly [IEntityCriteria$] = true;
     readonly [ICriterion$] = true;
-    private readonly factory: IEntityCriteriaFactory;
+    private readonly tools: IEntityCriteriaTools;
     private readonly criteria: Readonly<Record<string, ICriterion>>;
 
     getCriteria(): Readonly<Record<string, ICriterion>> {
@@ -81,7 +81,7 @@ export class EntityCriteria extends CriterionBase implements IEntityCriteria {
             }
         }
 
-        return this.factory.where(bag);
+        return this.tools.where(bag);
     }
 
     invert(): false | ICriterion {
@@ -112,9 +112,7 @@ export class EntityCriteria extends CriterionBase implements IEntityCriteria {
             accumulator[key] = this.criteria[key]!;
         }
 
-        return built.length === 1
-            ? this.factory.where(built[0])
-            : this.factory.or(built.map(bag => this.factory.where(bag)));
+        return built.length === 1 ? this.tools.where(built[0]) : this.tools.or(built.map(bag => this.tools.where(bag)));
     }
 
     contains(value: unknown): boolean {
@@ -175,7 +173,7 @@ export class EntityCriteria extends CriterionBase implements IEntityCriteria {
                 }
             }
 
-            return this.factory.where(mergedBag);
+            return this.tools.where(mergedBag);
         } else {
             return false;
         }
@@ -189,14 +187,14 @@ export class EntityCriteria extends CriterionBase implements IEntityCriteria {
         const simplifiedWithoutAll = Object.fromEntries(
             Object.entries(this.criteria)
                 .map(([key, criterion]) => [key, criterion.simplify()])
-                .filter(([, criterion]) => !this.factory.isAllCriterion(criterion))
+                .filter(([, criterion]) => !this.tools.isAllCriterion(criterion))
         );
 
         if (!Object.keys(simplifiedWithoutAll).length) {
-            return this.factory.all();
+            return this.tools.all();
         }
 
-        return this.factory.where(simplifiedWithoutAll);
+        return this.tools.where(simplifiedWithoutAll);
     }
 
     subtractFrom(other: ICriterion): boolean | ICriterion {
@@ -280,8 +278,8 @@ export class EntityCriteria extends CriterionBase implements IEntityCriteria {
             }
 
             return built.length === 1
-                ? this.factory.where(built[0])
-                : this.factory.or(built.map(bag => this.factory.where(bag)));
+                ? this.tools.where(built[0])
+                : this.tools.or(built.map(bag => this.tools.where(bag)));
         }
 
         return false;
@@ -296,7 +294,7 @@ export class EntityCriteria extends CriterionBase implements IEntityCriteria {
     static omitSelection(
         criterion: ICriterion,
         selection: UnpackedEntitySelection,
-        factory: IEntityCriteriaFactory
+        factory: IEntityCriteriaTools
     ): ICriterion {
         if (IOrCriterion.is(criterion)) {
             const omitted = criterion

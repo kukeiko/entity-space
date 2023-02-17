@@ -1,6 +1,6 @@
 import { ICriterionShape, ICriterionShape$ } from "../criterion-shape.interface";
 import { ICriterion } from "../criterion.interface";
-import { IEntityCriteriaFactory } from "../entity-criteria-factory.interface";
+import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
 import { ReshapedCriterion } from "../reshaped-criterion";
 import { IOrCriterion } from "./or-criterion.interface";
 
@@ -9,18 +9,18 @@ export class OrCriterionShape<T extends ICriterionShape<ICriterion, any>>
 {
     static create<T extends ICriterionShape<ICriterion, any>>(
         shapes: T[],
-        factory: IEntityCriteriaFactory
+        tools: IEntityCriteriaTools
     ): OrCriterionShape<T> {
-        return new OrCriterionShape({ shapes, factory });
+        return new OrCriterionShape({ shapes, tools });
     }
 
-    constructor({ shapes, factory }: { shapes: T[]; factory: IEntityCriteriaFactory }) {
+    constructor({ shapes, tools }: { shapes: T[]; tools: IEntityCriteriaTools }) {
         this.shapes = shapes;
-        this.factory = factory;
+        this.tools = tools;
     }
 
     readonly [ICriterionShape$] = true;
-    private readonly factory: IEntityCriteriaFactory;
+    private readonly tools: IEntityCriteriaTools;
     private readonly shapes: T[];
 
     read(criterion: IOrCriterion) {
@@ -47,10 +47,10 @@ export class OrCriterionShape<T extends ICriterionShape<ICriterion, any>>
             }
 
             if (result.getOpen().length === 0) {
-                return new ReshapedCriterion([this.factory.or(remapped)]);
+                return new ReshapedCriterion([this.tools.or(remapped)]);
             }
 
-            criterion = this.factory.or(result.getOpen());
+            criterion = this.tools.or(result.getOpen());
         }
 
         if (remapped.length > 0) {
@@ -59,7 +59,7 @@ export class OrCriterionShape<T extends ICriterionShape<ICriterion, any>>
             // [todo] confusing at first that we supply "criterion" for the "open" parameter,
             // as it is the argument given to this function. you have to read the code of this
             // function to see that it is reassigned; very smelly.
-            return new ReshapedCriterion([this.factory.or(remapped)], [criterion]);
+            return new ReshapedCriterion([this.tools.or(remapped)], [criterion]);
         }
 
         return false;

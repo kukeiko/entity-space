@@ -5,19 +5,15 @@ import { Entity } from "../common/entity.type";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
 import { IAllCriterion } from "../criteria/vnext/all/all-criterion.interface";
 import { ICriterion } from "../criteria/vnext/criterion.interface";
-import { EntityCriteriaFactory } from "../criteria/vnext/entity-criteria-factory";
-import { EntityCriteriaShapeFactory } from "../criteria/vnext/entity-criteria-shape-factory";
+import { EntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools";
+import { EntityCriteriaShapeTools } from "../criteria/vnext/entity-criteria-shape-tools";
 import { INeverCriterion } from "../criteria/vnext/never/never-criterion.interface";
-import { EntityQueryFactory } from "../query/entity-query-factory";
+import { EntityQueryTools } from "../query/entity-query-tools";
 import { IEntityQuery } from "../query/entity-query.interface";
 import { EntitySelection } from "../query/entity-selection";
-import { mergeQueries } from "../query/merge-queries.fn";
 import { QueryPaging } from "../query/query-paging";
-import { subtractQueries } from "../query/subtract-queries.fn";
 import { IEntitySchema, IEntitySchemaRelation } from "../schema/schema.interface";
 import { EntitySet } from "./data-structures/entity-set";
-import { createCriterionFromEntities } from "./functions/create-criterion-from-entities.fn";
-import { createQueriesFromEntities } from "./functions/create-queries-from-entities.fn";
 import { joinEntities } from "./functions/join-entities.fn";
 import { normalizeEntities } from "./functions/normalize-entities.fn";
 import { IEntityDatabase } from "./i-entity-database";
@@ -32,6 +28,9 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
     private readonly noOptionsPageCache: { criteria: ICriterion; cache: PagedEntityIdCache }[] = [];
     private readonly optionsCache_v2: { options: ICriterion; criteria: ICriterion; ids: Entity[] }[] = [];
     private readonly optionsPageCache: { options: ICriterion; criteria: ICriterion; cache: PagedEntityIdCache }[] = [];
+    private readonly criteriaTools = new EntityCriteriaTools();
+    private readonly criteriaShapeTools = new EntityCriteriaShapeTools({ criteriaTools: this.criteriaTools });
+    private readonly queryTools = new EntityQueryTools({ criteriaFactory: this.criteriaTools });
 
     queryCacheChanged$(): Observable<IEntityQuery[]> {
         return this.queryCacheChanged.asObservable();
@@ -43,7 +42,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
 
     reduceByCached(query: IEntityQuery): IEntityQuery[] | false {
         const cached = this.getCachedQueries(query.getEntitySchema());
-        return subtractQueries([query], cached);
+        return this.queryTools.subtractQueries([query], cached);
     }
 
     // [todo] not used; but i did not want to delete it already.
@@ -54,7 +53,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         const reduced: IEntityQuery[] = [];
 
         for (const [schema, queries] of groupedBySchema.entries()) {
-            const result = subtractQueries(queries, this.getCachedQueries(schema));
+            const result = this.queryTools.subtractQueries(queries, this.getCachedQueries(schema));
 
             if (!result) {
                 reduced.push(...queries);
@@ -136,28 +135,22 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
     // [todo] i think introduction of this broke workspace playground tests
     private withoutRelationalCriteria(criterion: ICriterion, schema: IEntitySchema): ICriterion {
         const optionalDeepBag: Record<string, any> = {};
+        const { any, where, or } = this.criteriaShapeTools;
 
         schema.getIndexes().forEach(index => {
-            index.getPath().forEach(
-                path =>
-                    (optionalDeepBag[path] = new EntityCriteriaShapeFactory({
-                        criteriaFactory: new EntityCriteriaFactory(),
-                    }).any())
-            );
+            index.getPath().forEach(path => (optionalDeepBag[path] = any()));
         });
 
-        const criteriaFactory = new EntityCriteriaFactory();
-        const factory = new EntityCriteriaShapeFactory({ criteriaFactory });
-        const shape = factory.or([factory.where(optionalDeepBag)]);
+        const shape = or([where(optionalDeepBag)]);
         const reshaped = shape.reshape(criterion);
 
         if (reshaped === false) {
-            return criteriaFactory.all();
+            return this.criteriaTools.all();
         }
 
         return reshaped.getReshaped().length === 1
             ? reshaped.getReshaped()[0]
-            : criteriaFactory.or(reshaped.getReshaped());
+            : this.criteriaTools.or(reshaped.getReshaped());
     }
 
     upsertSync(entitySet: EntitySet<Entity>): void {
@@ -205,18 +198,24 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         if (!INeverCriterion.is(options) && !IAllCriterion.is(options)) {
             if (entitySet.getEntities().length) {
                 const key = entitySet.getSchema().getKey();
-                const keyCriterion = createCriterionFromEntities(entitySet.getEntities(), key.getPath());
+                const keyCriterion = this.criteriaTools.createCriterionFromEntities(
+                    entitySet.getEntities(),
+                    key.getPath()
+                );
                 this.optionsCache.push({ options, paging: page, ids: keyCriterion });
             } else {
-                this.optionsCache.push({ options, paging: page, ids: new EntityCriteriaFactory().never() });
+                this.optionsCache.push({ options, paging: page, ids: this.criteriaTools.never() });
             }
         } else if (page) {
             if (entitySet.getEntities().length) {
                 const key = entitySet.getSchema().getKey();
-                const keyCriterion = createCriterionFromEntities(entitySet.getEntities(), key.getPath());
+                const keyCriterion = this.criteriaTools.createCriterionFromEntities(
+                    entitySet.getEntities(),
+                    key.getPath()
+                );
                 this.optionsCache.push({ paging: page, ids: keyCriterion });
             } else {
-                this.optionsCache.push({ paging: page, ids: new EntityCriteriaFactory().never() });
+                this.optionsCache.push({ paging: page, ids: this.criteriaTools.never() });
             }
         }
 
@@ -225,7 +224,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
             this.getOrCreateStore(schema).add(normalizedEntities);
 
             if (normalizedEntities.length > 0) {
-                const indexQueries = createQueriesFromEntities(schema, normalizedEntities);
+                const indexQueries = this.queryTools.createQueriesFromEntities(schema, normalizedEntities);
 
                 for (const indexQuery of indexQueries) {
                     this.addQueryToCached(indexQuery);
@@ -316,8 +315,12 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         const isArray = relation.getProperty().getValueSchema().schemaType === "array";
         const fromIndex = relation.getFromIndex();
         const toIndex = relation.getToIndex();
-        const criteria = createCriterionFromEntities(entities, fromIndex.getPath(), toIndex.getPath());
-        const query = new EntityQueryFactory({ criteriaFactory: new EntityCriteriaFactory() }).createQuery({
+        const criteria = this.criteriaTools.createCriterionFromEntities(
+            entities,
+            fromIndex.getPath(),
+            toIndex.getPath()
+        );
+        const query = this.queryTools.createQuery({
             entitySchema: relatedSchema,
             criteria,
             selection: selection ?? relatedSchema.getDefaultSelection(),
@@ -337,7 +340,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
 
     addQueryToCached(query: IEntityQuery): void {
         const cachedQueries = this.getCachedQueries(query.getEntitySchema());
-        this.cachedQueries.set(query.getEntitySchema().getId(), mergeQueries(query, ...cachedQueries));
+        this.cachedQueries.set(query.getEntitySchema().getId(), this.queryTools.mergeQueries(query, ...cachedQueries));
         this.queryCacheChanged.next(flatten(Array.from(this.cachedQueries.values())));
     }
 

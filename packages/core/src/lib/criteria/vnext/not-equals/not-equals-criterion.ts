@@ -1,22 +1,22 @@
 import { Null, Primitive } from "@entity-space/utils";
 import { CriterionBase } from "../criterion-base";
 import { ICriterion, ICriterion$ } from "../criterion.interface";
-import { IEntityCriteriaFactory } from "../entity-criteria-factory.interface";
+import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
 import { INotEqualsCriterion, INotEqualsCriterion$ } from "./not-equals-criterion.interface";
 
 type PrimitiveValue = ReturnType<Primitive | typeof Null>;
 
 export class NotEqualsCriterion extends CriterionBase implements INotEqualsCriterion {
-    constructor({ value, factory }: { value: PrimitiveValue; factory: IEntityCriteriaFactory }) {
+    constructor({ value, tools }: { value: PrimitiveValue; tools: IEntityCriteriaTools }) {
         super();
         this.value = value;
-        this.factory = factory;
+        this.tools = tools;
     }
 
     readonly [INotEqualsCriterion$] = true;
     readonly [ICriterion$] = true;
     private readonly value: PrimitiveValue;
-    private readonly factory: IEntityCriteriaFactory;
+    private readonly tools: IEntityCriteriaTools;
 
     getValue(): PrimitiveValue {
         return this.value;
@@ -31,7 +31,7 @@ export class NotEqualsCriterion extends CriterionBase implements INotEqualsCrite
     }
 
     invert(): false | ICriterion {
-        return this.factory.equals(this.value);
+        return this.tools.equals(this.value);
     }
 
     contains(value: unknown): boolean {

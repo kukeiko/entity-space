@@ -1,9 +1,9 @@
 import { Entity } from "../common/entity.type";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
 import { ICriterion } from "../criteria/vnext/criterion.interface";
-import { EntityCriteriaFactory } from "../criteria/vnext/entity-criteria-factory";
-import { EntityCriteriaShapeFactory } from "../criteria/vnext/entity-criteria-shape-factory";
-import { IEntityCriteriaShapeFactory } from "../criteria/vnext/entity-criteria-shape-factory.interface";
+import { EntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools";
+import { EntityCriteriaShapeTools } from "../criteria/vnext/entity-criteria-shape-tools";
+import { IEntityCriteriaShapeTools } from "../criteria/vnext/entity-criteria-shape-tools.interface";
 import { WhereEntityShapeInstance } from "../criteria/vnext/where-entity/where-entity-shape-instance.types";
 import { WhereEntityShape } from "../criteria/vnext/where-entity/where-entity-shape.types";
 import { WhereEntityTools } from "../criteria/vnext/where-entity/where-entity-tools";
@@ -15,13 +15,13 @@ export class EntityApiEndpointBuilder<T extends Entity = Entity, S = {}> {
     constructor(schema: IEntitySchema) {
         this.schema = schema;
         this.supportedSelection = schema.getDefaultSelection();
-        const criteriaFactory = new EntityCriteriaFactory();
-        this.shapeFactory = new EntityCriteriaShapeFactory({ criteriaFactory });
-        this.whereEntityTools = new WhereEntityTools(this.shapeFactory, criteriaFactory);
+        const criteriaTools = new EntityCriteriaTools();
+        this.shapeTools = new EntityCriteriaShapeTools({ criteriaTools });
+        this.whereEntityTools = new WhereEntityTools(this.shapeTools, criteriaTools);
     }
 
     private readonly schema: IEntitySchema;
-    private readonly shapeFactory: IEntityCriteriaShapeFactory;
+    private readonly shapeTools: IEntityCriteriaShapeTools;
     private readonly whereEntityTools: WhereEntityTools;
     private whereEntityShape?: WhereEntityShape;
     private pagingRequired = false;
@@ -76,7 +76,7 @@ export class EntityApiEndpointBuilder<T extends Entity = Entity, S = {}> {
 
         const criterionShape =
             this.whereEntityShape === void 0
-                ? this.shapeFactory.any()
+                ? this.shapeTools.any()
                 : this.whereEntityTools.toCriterionShapeFromWhereEntityShape(this.whereEntityShape, this.schema);
 
         return new EntityApiEndpoint({

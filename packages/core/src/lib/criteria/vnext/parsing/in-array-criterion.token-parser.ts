@@ -1,5 +1,5 @@
 import { TokenType } from "../../../lexer/token-type.enum";
-import { IEntityCriteriaFactory } from "../entity-criteria-factory.interface";
+import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
 import { CriterionTokenParser } from "./criterion-token-parser.type";
 
 const literalsMap = new Map([
@@ -8,7 +8,7 @@ const literalsMap = new Map([
     ["null", null],
 ]);
 
-export function* setCriterionTokenParser(factory: IEntityCriteriaFactory): CriterionTokenParser {
+export function* setCriterionTokenParser(tools: IEntityCriteriaTools): CriterionTokenParser {
     let token = yield;
     let isNegated = false;
 
@@ -43,7 +43,7 @@ export function* setCriterionTokenParser(factory: IEntityCriteriaFactory): Crite
             token = yield;
 
             if (token.type === TokenType.Special && token.value === "}") {
-                return () => (isNegated ? factory.notInArray(items) : factory.inArray(items));
+                return () => (isNegated ? tools.notInArray(items) : tools.inArray(items));
             } else if (!(token.type === TokenType.Special && token.value === ",")) {
                 return false;
             }

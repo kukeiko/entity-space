@@ -1,18 +1,18 @@
 import { lex } from "../../../lexer/lex.fn";
 import { IAndCriterion } from "../and/and-criterion.interface";
 import { ICriterion } from "../criterion.interface";
-import { IEntityCriteriaFactory } from "../entity-criteria-factory.interface";
+import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
 import { IOrCriterion } from "../or/or-criterion.interface";
 import { criteriaTokenParser } from "./criteria.token-parser";
 
-export function parseCriteria_vnext(factory: IEntityCriteriaFactory, input: string): ICriterion {
+export function parseCriteria_vnext(tools: IEntityCriteriaTools, input: string): ICriterion {
     let tokens = lex(input);
 
     if (tokens.length === 0) {
         throw new Error("no tokens provided");
     }
 
-    const generator = criteriaTokenParser(factory, false);
+    const generator = criteriaTokenParser(tools, false);
     generator.next();
     let createCriterion: (() => ICriterion) | undefined;
 

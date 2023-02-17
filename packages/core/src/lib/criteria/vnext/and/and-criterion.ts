@@ -1,19 +1,19 @@
 import { CriterionBase } from "../criterion-base";
 import { ICriterion, ICriterion$ } from "../criterion.interface";
-import { IEntityCriteriaFactory } from "../entity-criteria-factory.interface";
+import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
 import { IOrCriterion } from "../or/or-criterion.interface";
 import { IAndCriterion, IAndCriterion$ } from "./and-criterion.interface";
 
 export class AndCriterion extends CriterionBase implements IAndCriterion {
-    constructor({ criteria, factory }: { criteria: ICriterion[]; factory: IEntityCriteriaFactory }) {
+    constructor({ criteria, tools }: { criteria: ICriterion[]; tools: IEntityCriteriaTools }) {
         super();
         this.criteria = Object.freeze(criteria);
-        this.factory = factory;
+        this.tools = tools;
     }
 
     readonly [IAndCriterion$] = true;
     readonly [ICriterion$] = true;
-    private readonly factory: IEntityCriteriaFactory;
+    private readonly tools: IEntityCriteriaTools;
     private readonly criteria: Readonly<ICriterion[]>;
 
     getCriteria(): ICriterion[] {
@@ -36,7 +36,7 @@ export class AndCriterion extends CriterionBase implements IAndCriterion {
                 .map(criterion => (IOrCriterion.is(criterion) ? [...criterion.getCriteria()] : [criterion]))
                 .reduce((acc, value) => [...acc, ...value], []);
 
-            return this.factory.or(flattenedInverted);
+            return this.tools.or(flattenedInverted);
         }
 
         return false;
@@ -71,19 +71,19 @@ export class AndCriterion extends CriterionBase implements IAndCriterion {
             return false;
         }
 
-        return items.length === 1 ? items[0] : this.factory.and(items);
+        return items.length === 1 ? items[0] : this.tools.and(items);
     }
 
     override simplify(): ICriterion {
         const simplified = this.criteria.map(criterion => criterion.simplify());
-        const withoutAll = simplified.filter(criterion => !this.factory.isAllCriterion(criterion));
+        const withoutAll = simplified.filter(criterion => !this.tools.isAllCriterion(criterion));
 
         if (!withoutAll.length) {
-            return this.factory.all();
+            return this.tools.all();
         } else if (withoutAll.length === 1) {
             return withoutAll[0];
         } else {
-            return this.factory.and(withoutAll);
+            return this.tools.and(withoutAll);
         }
     }
 
@@ -129,9 +129,7 @@ export class AndCriterion extends CriterionBase implements IAndCriterion {
             return true;
         }
 
-        return this.factory.or(
-            reduced.map(criteria => (criteria.length === 1 ? criteria[0] : this.factory.and(criteria)))
-        );
+        return this.tools.or(reduced.map(criteria => (criteria.length === 1 ? criteria[0] : this.tools.and(criteria))));
     }
 
     override toString(): string {

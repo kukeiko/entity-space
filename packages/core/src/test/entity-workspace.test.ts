@@ -1,10 +1,10 @@
 import { firstValueFrom, take, tap, toArray } from "rxjs";
 import { UnpackedEntitySelection } from "../lib/common/unpacked-entity-selection.type";
 import { ICriterion } from "../lib/criteria/vnext/criterion.interface";
-import { EntityCriteriaFactory } from "../lib/criteria/vnext/entity-criteria-factory";
+import { EntityCriteriaTools } from "../lib/criteria/vnext/entity-criteria-tools";
 import { EntityQueryTracing } from "../lib/execution/entity-query-tracing";
 import { EntityWorkspace } from "../lib/execution/entity-workspace";
-import { EntityQueryFactory } from "../lib/query/entity-query-factory";
+import { EntityQueryTools } from "../lib/query/entity-query-tools";
 import { IEntityQuery } from "../lib/query/entity-query.interface";
 import { EntitySchema } from "../lib/schema/entity-schema";
 import { IEntitySchema } from "../lib/schema/schema.interface";
@@ -18,7 +18,7 @@ function createQuery(
     criteria: ICriterion,
     expansion: UnpackedEntitySelection = {}
 ): IEntityQuery {
-    return new EntityQueryFactory({ criteriaFactory: new EntityCriteriaFactory() }).createQuery({
+    return new EntityQueryTools({ criteriaFactory: new EntityCriteriaTools() }).createQuery({
         entitySchema,
         criteria,
         selection: expansion,
@@ -26,7 +26,7 @@ function createQuery(
 }
 
 describe("EntityWorkspace", () => {
-    const criteriaFactory = new EntityCriteriaFactory();
+    const criteriaFactory = new EntityCriteriaTools();
     const { where, inArray } = criteriaFactory;
 
     describe("queryAgainstCache()", () => {

@@ -2,7 +2,7 @@ import { Null, Primitive, subtractSets } from "@entity-space/utils";
 import { IAndCriterion } from "../and/and-criterion.interface";
 import { CriterionBase } from "../criterion-base";
 import { ICriterion, ICriterion$ } from "../criterion.interface";
-import { IEntityCriteriaFactory } from "../entity-criteria-factory.interface";
+import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
 import { IInArrayCriterion } from "../in-array/in-array-criterion.interface";
 import { IOrCriterion } from "../or/or-criterion.interface";
 import { INotInArrayCriterion, INotInArrayCriterion$ } from "./not-in-array-criterion.interface";
@@ -10,15 +10,15 @@ import { INotInArrayCriterion, INotInArrayCriterion$ } from "./not-in-array-crit
 type PrimitiveValue = ReturnType<Primitive | typeof Null>;
 
 export class NotInArrayCriterion extends CriterionBase implements INotInArrayCriterion {
-    constructor({ values, factory }: { values: ReadonlySet<PrimitiveValue>; factory: IEntityCriteriaFactory }) {
+    constructor({ values, tools }: { values: ReadonlySet<PrimitiveValue>; tools: IEntityCriteriaTools }) {
         super();
         this.values = values;
-        this.factory = factory;
+        this.tools = tools;
     }
 
     readonly [ICriterion$] = true;
     readonly [INotInArrayCriterion$] = true;
-    private readonly factory: IEntityCriteriaFactory;
+    private readonly tools: IEntityCriteriaTools;
     private readonly values: ReadonlySet<PrimitiveValue>;
 
     getValues(): PrimitiveValue[] {
@@ -34,7 +34,7 @@ export class NotInArrayCriterion extends CriterionBase implements INotInArrayCri
     }
 
     invert(): false | ICriterion {
-        return this.factory.inArray(this.values);
+        return this.tools.inArray(this.values);
     }
 
     contains(value: unknown): boolean {
@@ -43,7 +43,7 @@ export class NotInArrayCriterion extends CriterionBase implements INotInArrayCri
 
     merge(other: ICriterion): false | ICriterion {
         if (INotInArrayCriterion.is(other)) {
-            return this.factory.notInArray([...this.values, ...other.getValues()]);
+            return this.tools.notInArray([...this.values, ...other.getValues()]);
         }
 
         throw new Error("Method not implemented.");
@@ -70,7 +70,7 @@ export class NotInArrayCriterion extends CriterionBase implements INotInArrayCri
             } else if (copy.size === 0) {
                 return true;
             } else {
-                return this.factory.inArray(copy);
+                return this.tools.inArray(copy);
             }
         } else if (INotInArrayCriterion.is(other)) {
             const remaining = subtractSets(this.values, new Set(other.getValues()));
@@ -78,7 +78,7 @@ export class NotInArrayCriterion extends CriterionBase implements INotInArrayCri
                 return true;
             }
 
-            return this.factory.inArray(remaining);
+            return this.tools.inArray(remaining);
         }
 
         return false;

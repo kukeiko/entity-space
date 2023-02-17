@@ -28,7 +28,7 @@ export type EntityWhere<T> = {
         | ICriterion;
 };
 
-export interface IEntityCriteriaFactory {
+export interface IEntityCriteriaTools {
     all(): IAllCriterion;
     none(): INoneCriterion;
     and(...criteria: ICriterion[] | ICriterion[][]): IAndCriterion;
@@ -54,4 +54,5 @@ export interface IEntityCriteriaFactory {
     isEveryCriterion(value: unknown): value is IEveryCriterion;
     isInArrayCriterion(value: unknown): value is IInArrayCriterion;
     isSomeCriterion(value: unknown): value is ISomeCriterion;
+    createCriterionFromEntities(entities: Entity[], paths: string[], writtenPaths?: string[]): ICriterion;
 }

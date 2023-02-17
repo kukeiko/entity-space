@@ -1,8 +1,8 @@
-import { EntityCriteriaFactory } from "../../lib/criteria/vnext/entity-criteria-factory";
+import { EntityCriteriaTools } from "../../lib/criteria/vnext/entity-criteria-tools";
 import { expectCriteria } from "./expect-criteria.fn";
 
 describe("criteria: subtractions", () => {
-    const factory = new EntityCriteriaFactory();
+    const factory = new EntityCriteriaTools();
     let { inRange, where } = factory;
 
     {

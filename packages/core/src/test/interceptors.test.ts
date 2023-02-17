@@ -1,5 +1,5 @@
 import { lastValueFrom } from "rxjs";
-import { EntityCriteriaFactory } from "../lib/criteria/vnext/entity-criteria-factory";
+import { EntityCriteriaTools } from "../lib/criteria/vnext/entity-criteria-tools";
 import { EntitySet } from "../lib/entity/data-structures/entity-set";
 import { EntityQueryTracing } from "../lib/execution/entity-query-tracing";
 import { EntityStreamPacket } from "../lib/execution/entity-stream-packet";
@@ -139,7 +139,7 @@ describe("interceptors", () => {
         const database = new TestContentDatabase(data);
         const tracing = new EntityQueryTracing();
         const catalog = new TestContentCatalog();
-        const criteriaFactory = new EntityCriteriaFactory();
+        const criteriaFactory = new EntityCriteriaTools();
 
         tracing.enableConsole(LOG_TRACING);
 
@@ -185,7 +185,7 @@ describe("interceptors", () => {
         const database = new TestContentDatabase(data);
         const tracing = new EntityQueryTracing();
         const catalog = new TestContentCatalog();
-        const criteriaFactory = new EntityCriteriaFactory();
+        const criteriaFactory = new EntityCriteriaTools();
         tracing.enableConsole(LOG_TRACING);
 
         const interceptors: IEntityStreamInterceptor[] = [

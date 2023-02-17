@@ -1,8 +1,8 @@
 import { Class } from "@entity-space/utils";
 import { UnpackedEntitySelection } from "../../lib/common/unpacked-entity-selection.type";
-import { EntityCriteriaFactory } from "../../lib/criteria/vnext/entity-criteria-factory";
-import { EntityWhere } from "../../lib/criteria/vnext/entity-criteria-factory.interface";
-import { EntityQueryFactory } from "../../lib/query/entity-query-factory";
+import { EntityCriteriaTools } from "../../lib/criteria/vnext/entity-criteria-tools";
+import { EntityWhere } from "../../lib/criteria/vnext/entity-criteria-tools.interface";
+import { EntityQueryTools } from "../../lib/query/entity-query-tools";
 import { IEntityQuery } from "../../lib/query/entity-query.interface";
 import { BlueprintInstance } from "../../lib/schema/blueprint-instance";
 import { EntitySchemaCatalog } from "../../lib/schema/entity-schema-catalog";
@@ -13,8 +13,8 @@ export function createQuery<T>(
     criteria?: EntityWhere<BlueprintInstance<T>>,
     selection?: UnpackedEntitySelection<BlueprintInstance<T>>
 ): IEntityQuery {
-    const criteriaFactory = new EntityCriteriaFactory();
-    return new EntityQueryFactory({ criteriaFactory }).createQuery({
+    const criteriaFactory = new EntityCriteriaTools();
+    return new EntityQueryTools({ criteriaFactory }).createQuery({
         entitySchema: schemas.resolve(blueprint),
         criteria: criteria ? criteriaFactory.where(criteria) : criteriaFactory.all(),
         selection,

@@ -11,8 +11,8 @@ import { Entity } from "../../../common/entity.type";
 import { IEntitySchema, IPrimitiveSchema } from "../../../schema/schema.interface";
 import { ICriterionShape } from "../criterion-shape.interface";
 import { ICriterion } from "../criterion.interface";
-import { IEntityCriteriaFactory } from "../entity-criteria-factory.interface";
-import { IEntityCriteriaShapeFactory } from "../entity-criteria-shape-factory.interface";
+import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
+import { IEntityCriteriaShapeTools } from "../entity-criteria-shape-tools.interface";
 import { $optional, $required, EntityCriteriaShape } from "../entity-criteria/entity-criteria-shape";
 import { IEntityCriteria } from "../entity-criteria/entity-criteria.interface";
 import { WhereEntityShape } from "./where-entity-shape.types";
@@ -40,8 +40,8 @@ function isStringOrNumberOrUndefined(value: unknown): value is string | number |
 
 export class WhereEntityTools {
     constructor(
-        private readonly shapeFactory: IEntityCriteriaShapeFactory,
-        private readonly criteriaTools: IEntityCriteriaFactory
+        private readonly shapeFactory: IEntityCriteriaShapeTools,
+        private readonly criteriaTools: IEntityCriteriaTools
     ) {}
 
     // [todo] should potentially be WhereEntitySingleShape instead of WhereEntityShape
@@ -80,7 +80,7 @@ export class WhereEntityTools {
         }
 
         return new EntityCriteriaShape({
-            factory: this.criteriaTools,
+            tools: this.criteriaTools,
             shape: { [$required]: required, [$optional]: optional },
         });
     }

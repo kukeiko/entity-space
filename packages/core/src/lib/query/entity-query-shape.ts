@@ -2,11 +2,11 @@ import { permutateEntries } from "@entity-space/utils";
 import { AllCriterionShape } from "../criteria/vnext/all/all-criterion-shape";
 import { ICriterionShape } from "../criteria/vnext/criterion-shape.interface";
 import { ICriterion } from "../criteria/vnext/criterion.interface";
-import { EntityCriteriaFactory } from "../criteria/vnext/entity-criteria-factory";
+import { EntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools";
 import { NeverCriterionShape } from "../criteria/vnext/never/never-criterion-shape";
 import { NoneCriterionShape } from "../criteria/vnext/none/none-criterion-shape";
 import { IEntitySchema } from "../schema/schema.interface";
-import { EntityQueryFactory } from "./entity-query-factory";
+import { EntityQueryTools } from "./entity-query-tools";
 import { IEntityQuery } from "./entity-query.interface";
 import { EntitySelection } from "./entity-selection";
 
@@ -72,7 +72,7 @@ export class EntityQueryShape {
         const permutatedRemappedParts = permutateEntries(remappedParts);
 
         return permutatedRemappedParts.map(parts => {
-            return new EntityQueryFactory({ criteriaFactory: new EntityCriteriaFactory() }).createQuery({
+            return new EntityQueryTools({ criteriaFactory: new EntityCriteriaTools() }).createQuery({
                 entitySchema: this.schema,
                 options: parts.options,
                 criteria: parts.criterion,

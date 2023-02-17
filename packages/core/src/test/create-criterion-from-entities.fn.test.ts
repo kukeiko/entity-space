@@ -1,4 +1,4 @@
-import { EntityCriteriaFactory } from "../lib/criteria/vnext/entity-criteria-factory";
+import { EntityCriteriaTools } from "../lib/criteria/vnext/entity-criteria-tools";
 import { createCriterionFromEntities } from "../lib/entity/functions/create-criterion-from-entities.fn";
 
 interface Vector {
@@ -13,7 +13,7 @@ interface Block {
 }
 
 describe("createCriterionFromEntities()", () => {
-    const { where, inArray } = new EntityCriteriaFactory();
+    const { where, inArray } = new EntityCriteriaTools();
 
     it("should create criterion for primitive index", () => {
         // arrange

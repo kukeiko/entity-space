@@ -1,7 +1,7 @@
 import {
     Entity,
-    EntityCriteriaFactory,
-    EntityQueryFactory,
+    EntityCriteriaTools,
+    EntityQueryTools,
     EntitySet,
     IEntityQuery,
     IEntitySchema,
@@ -22,9 +22,9 @@ export class FileOnDiskBasedEntitySource implements IEntityStore {
     async query(query: IEntityQuery): Promise<false | EntitySet[]> {
         const entities = query.getCriteria().filter(await this.loadEntitiesFromFile(query.getEntitySchema()));
         const ids = entities.map(entity => entity["id"]);
-        const actualQuery = new EntityQueryFactory({ criteriaFactory: new EntityCriteriaFactory() }).createQuery({
+        const actualQuery = new EntityQueryTools({ criteriaFactory: new EntityCriteriaTools() }).createQuery({
             entitySchema: query.getEntitySchema(),
-            criteria: new EntityCriteriaFactory().where({ id: new EntityCriteriaFactory().inArray(ids) }),
+            criteria: new EntityCriteriaTools().where({ id: new EntityCriteriaTools().inArray(ids) }),
         });
         const result = new EntitySet({ query: actualQuery, entities });
 

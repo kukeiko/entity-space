@@ -2,15 +2,15 @@ import { isNotFalse } from "@entity-space/utils";
 import { flatten } from "lodash";
 import { filter, from, map, merge, mergeAll, Observable, of, startWith, switchMap, tap } from "rxjs";
 import { Entity } from "../common/entity.type";
-import { EntityCriteriaFactory } from "../criteria/vnext/entity-criteria-factory";
-import { EntityCriteriaShapeFactory } from "../criteria/vnext/entity-criteria-shape-factory";
+import { EntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools";
+import { EntityCriteriaShapeTools } from "../criteria/vnext/entity-criteria-shape-tools";
 import { WhereEntityTools } from "../criteria/vnext/where-entity/where-entity-tools";
 import { EntitySet } from "../entity/data-structures/entity-set";
 import { IEntityDatabase } from "../entity/i-entity-database";
 import { InMemoryEntityDatabase } from "../entity/in-memory-entity-database";
+import { EntityQueryTools } from "../query/entity-query-tools";
 import { EntityQueryShape } from "../query/entity-query-shape";
 import { IEntityQuery } from "../query/entity-query.interface";
-import { subtractQueries } from "../query/subtract-queries.fn";
 import { IEntitySchema } from "../schema/schema.interface";
 import { EntityApiEndpoint, EntityApiEndpointData, EntityApiEndpointInvoke } from "./entity-api-endpoint";
 import { EntityApiEndpointBuilder } from "./entity-api-endpoint-builder";
@@ -23,6 +23,10 @@ export class EntityApi implements IEntityStreamInterceptor {
     constructor(protected readonly tracing: EntityQueryTracing) {}
 
     protected endpoints: EntityApiEndpoint[] = [];
+    protected readonly criteriaTools = new EntityCriteriaTools();
+    protected readonly queryTools = new EntityQueryTools({ criteriaFactory: this.criteriaTools });
+    protected readonly shapeTools = new EntityCriteriaShapeTools({ criteriaTools: this.criteriaTools });
+    protected readonly whereEntityTools = new WhereEntityTools(this.shapeTools, this.criteriaTools);
 
     addEndpoint<T extends Entity>(
         schema: IEntitySchema<T>,
@@ -55,7 +59,7 @@ export class EntityApi implements IEntityStreamInterceptor {
         const streams = queries.map(query => {
             const endpoints = this.getEndpointsAcceptingSchema(query.getEntitySchema());
             const [delegatedStreams, acceptedQueries] = this.dispatchToEndpoints(query, endpoints, database);
-            const rejectedQueries = subtractQueries(queries, acceptedQueries);
+            const rejectedQueries = this.queryTools.subtractQueries(queries, acceptedQueries);
             const initialPackets: EntityStreamPacket[] = [];
 
             if (!rejectedQueries || rejectedQueries.length) {
@@ -86,7 +90,7 @@ export class EntityApi implements IEntityStreamInterceptor {
 
             delegatedStreams.push(dispatched[0]);
             acceptedQueries.push(...dispatched[1]);
-            open = subtractQueries(open, dispatched[1]) || open;
+            open = this.queryTools.subtractQueries(open, dispatched[1]) || open;
 
             if (!open.length) {
                 break;
@@ -136,9 +140,7 @@ export class EntityApi implements IEntityStreamInterceptor {
 
         const initialPacket = new EntityStreamPacket({ accepted: acceptedRemapped });
         const whereEntityShape = endpoint.getWhereEntityShape();
-        const criteriaTools = new EntityCriteriaFactory();
-        const shapeTools = new EntityCriteriaShapeFactory({ criteriaFactory: criteriaTools });
-        const tools = new WhereEntityTools(shapeTools, criteriaTools);
+
         const stream = merge(
             ...acceptedRemapped.map(query => {
                 const invoked = endpoint.getInvoke()({
@@ -146,7 +148,7 @@ export class EntityApi implements IEntityStreamInterceptor {
                     selection: query.getSelection().getValue(),
                     paging: query.getPaging(),
                     criteria: whereEntityShape
-                        ? tools.toWhereEntitySingleFromCriterion(query.getCriteria(), whereEntityShape)
+                        ? this.whereEntityTools.toWhereEntitySingleFromCriterion(query.getCriteria(), whereEntityShape)
                         : {},
                 });
 

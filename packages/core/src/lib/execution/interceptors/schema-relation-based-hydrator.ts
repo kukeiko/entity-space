@@ -1,27 +1,27 @@
 import { isNotFalse, writePath } from "@entity-space/utils";
 import { map, merge, of, switchMap, takeLast, tap } from "rxjs";
-import { IEntitySchemaRelation } from "../../schema/schema.interface";
 import { UnpackedEntitySelection } from "../../common/unpacked-entity-selection.type";
+import { EntityCriteriaTools } from "../../criteria/vnext/entity-criteria-tools";
 import { EntitySet } from "../../entity/data-structures/entity-set";
-import { createCriterionFromEntities } from "../../entity/functions/create-criterion-from-entities.fn";
+import { EntityQuery } from "../../query/entity-query";
+import { EntityQueryTools } from "../../query/entity-query-tools";
+import { IEntityQuery } from "../../query/entity-query.interface";
 import { EntitySelection } from "../../query/entity-selection";
-import { mergeQueries } from "../../query/merge-queries.fn";
-import { subtractQueries } from "../../query/subtract-queries.fn";
+import { IEntitySchemaRelation } from "../../schema/schema.interface";
 import { EntityQueryTracing } from "../entity-query-tracing";
 import { EntityStream } from "../entity-stream";
 import { EntityStreamPacket } from "../entity-stream-packet";
 import { IEntityStreamInterceptor } from "../i-entity-stream-interceptor";
 import { runInterceptors } from "../run-interceptors.fn";
-import { IEntityQuery } from "../../query/entity-query.interface";
-import { EntityQueryFactory } from "../../query/entity-query-factory";
-import { EntityCriteriaFactory } from "../../criteria/vnext/entity-criteria-factory";
-import { EntityQuery } from "../../query/entity-query";
 
 export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
     constructor(
         private readonly tracing: EntityQueryTracing,
         private readonly interceptors: IEntityStreamInterceptor[]
     ) {}
+
+    private readonly criteriaTools = new EntityCriteriaTools();
+    private readonly queryTools = new EntityQueryTools({ criteriaFactory: this.criteriaTools });
 
     intercept(stream: EntityStream): EntityStream {
         const rejected: IEntityQuery[] = [];
@@ -107,13 +107,13 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
 
         const relatedSchema = relation.getRelatedEntitySchema();
 
-        const criteria = createCriterionFromEntities(
+        const criteria = this.criteriaTools.createCriterionFromEntities(
             entitySet.getEntities(),
             relation.getFromIndex().getPath(),
             relation.getToIndex().getPath()
         );
 
-        const query = new EntityQueryFactory({ criteriaFactory: new EntityCriteriaFactory() }).createQuery({
+        const query = this.queryTools.createQuery({
             entitySchema: relatedSchema,
             criteria,
             selection: selectionValue,
@@ -141,7 +141,7 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
             map(() => {
                 // [todo] see if any deeper expansions have been rejected
                 // [update] is this comment still relevant?
-                const rejected = subtractQueries([relationQuery], accepted) || [relationQuery];
+                const rejected = this.queryTools.subtractQueries([relationQuery], accepted) || [relationQuery];
 
                 const [finalAccepted, finalRejected] = this.toMappedAcceptedAndRejectedQueries({
                     accepted,
@@ -176,7 +176,7 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
         relation: IEntitySchemaRelation;
     }): [IEntityQuery[], IEntityQuery[]] {
         // [todo] should not check for equivalency, but instead if accepted criteria are a superset
-        if (EntityQuery.equivalentCriteria(relationQuery, ...mergeQueries(...accepted))) {
+        if (EntityQuery.equivalentCriteria(relationQuery, ...this.queryTools.mergeQueries(...accepted))) {
             if (rejected.length && accepted.length) {
                 return [
                     [
@@ -230,15 +230,13 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
                 return [[], []];
             }
         } else {
-            const factory = new EntityCriteriaFactory();
-
             return [
                 accepted.map(acceptedQuery =>
                     hydrationQuery
                         .withCriteria(
-                            factory.and(
+                            this.criteriaTools.and(
                                 hydrationQuery.getCriteria(),
-                                factory.where({ [relation.getPropertyName()]: acceptedQuery.getCriteria() })
+                                this.criteriaTools.where({ [relation.getPropertyName()]: acceptedQuery.getCriteria() })
                             )
                         )
                         .withSelection(
@@ -248,9 +246,9 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
                 rejected.map(rejectedQuery =>
                     hydrationQuery
                         .withCriteria(
-                            factory.and(
+                            this.criteriaTools.and(
                                 hydrationQuery.getCriteria(),
-                                factory.where({ [relation.getPropertyName()]: rejectedQuery.getCriteria() })
+                                this.criteriaTools.where({ [relation.getPropertyName()]: rejectedQuery.getCriteria() })
                             )
                         )
                         .withSelection(

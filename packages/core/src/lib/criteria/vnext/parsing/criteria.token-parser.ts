@@ -1,12 +1,12 @@
 import { TokenType } from "../../../lexer/token-type.enum";
 import { Token } from "../../../lexer/token.contract";
 import { ICriterion } from "../criterion.interface";
-import { IEntityCriteriaFactory } from "../entity-criteria-factory.interface";
+import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
 import { CriterionTokenParser } from "./criterion-token-parser.type";
 import { criterionTokenParser } from "./criterion.token-parser";
 
 export function* criteriaTokenParser(
-    factory: IEntityCriteriaFactory,
+    tools: IEntityCriteriaTools,
     requireBrackets = true,
     endWith?: Token
 ): CriterionTokenParser {
@@ -28,7 +28,7 @@ export function* criteriaTokenParser(
         }
 
         const andedItems = items.slice(-(andCount + 1));
-        items = [...items.slice(0, -(andCount + 1)), factory.and(andedItems)];
+        items = [...items.slice(0, -(andCount + 1)), tools.and(andedItems)];
         andCount = 0;
     };
 
@@ -38,12 +38,12 @@ export function* criteriaTokenParser(
         if (items.length === 1) {
             return items[0];
         } else {
-            return factory.or(items);
+            return tools.or(items);
         }
     };
 
     while (true) {
-        let valueResult = yield* criterionTokenParser(factory);
+        let valueResult = yield* criterionTokenParser(tools);
 
         if (valueResult === false) {
             return false;

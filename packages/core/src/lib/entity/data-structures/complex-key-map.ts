@@ -1,8 +1,8 @@
 import { readPath, writePath } from "@entity-space/utils";
 import { Entity } from "../../common/entity.type";
 import { ICriterion } from "../../criteria/vnext/criterion.interface";
-import { EntityCriteriaFactory } from "../../criteria/vnext/entity-criteria-factory";
-import { EntityCriteriaShapeFactory } from "../../criteria/vnext/entity-criteria-shape-factory";
+import { EntityCriteriaShapeTools } from "../../criteria/vnext/entity-criteria-shape-tools";
+import { EntityCriteriaTools } from "../../criteria/vnext/entity-criteria-tools";
 import { EntityCriteriaShape } from "../../criteria/vnext/entity-criteria/entity-criteria-shape";
 import { IEqualsCriterion } from "../../criteria/vnext/equals/equals-criterion.interface";
 import { IInArrayCriterion } from "../../criteria/vnext/in-array/in-array-criterion.interface";
@@ -27,17 +27,16 @@ export class ComplexKeyMap<E extends Entity = Entity, V = unknown> {
 
         this.leadingPaths = leadingPaths;
         this.lastPath = lastPath;
-        const shapeFactory = new EntityCriteriaShapeFactory({ criteriaFactory: new EntityCriteriaFactory() });
+        const criteriaTools = new EntityCriteriaTools();
+        const shapeTools = new EntityCriteriaShapeTools({ criteriaTools });
         const bag: Record<string, any> = {};
 
         for (const path of leadingPaths) {
-            writePath(path, bag, shapeFactory.equals());
+            writePath(path, bag, shapeTools.equals());
         }
 
-        writePath(lastPath, bag, shapeFactory.inArray());
-        this.criterionTemplate = new EntityCriteriaShapeFactory({ criteriaFactory: new EntityCriteriaFactory() }).where(
-            bag
-        );
+        writePath(lastPath, bag, shapeTools.inArray());
+        this.criterionTemplate = shapeTools.where(bag);
     }
 
     private readonly map = new Map<unknown, unknown>();

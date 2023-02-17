@@ -1,22 +1,19 @@
-import { Null, Primitive } from "@entity-space/utils";
 import { CriterionBase } from "../criterion-base";
 import { ICriterion, ICriterion$ } from "../criterion.interface";
-import { IEntityCriteriaFactory } from "../entity-criteria-factory.interface";
+import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
 import { ISomeCriterion, ISomeCriterion$ } from "./some-criterion.interface";
 
-type PrimitiveValue = ReturnType<Primitive | typeof Null>;
-
 export class SomeCriterion extends CriterionBase implements ISomeCriterion {
-    constructor({ criterion, factory }: { criterion: ICriterion; factory: IEntityCriteriaFactory }) {
+    constructor({ criterion, tools }: { criterion: ICriterion; tools: IEntityCriteriaTools }) {
         super();
         this.criterion = criterion;
-        this.factory = factory;
+        this.factory = tools;
     }
 
     readonly [ISomeCriterion$] = true;
     readonly [ICriterion$] = true;
     private readonly criterion: ICriterion;
-    private readonly factory: IEntityCriteriaFactory;
+    private readonly factory: IEntityCriteriaTools;
 
     getCriterion(): ICriterion {
         return this.criterion;

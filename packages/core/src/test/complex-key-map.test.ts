@@ -1,5 +1,5 @@
 import { cloneJson } from "@entity-space/utils";
-import { EntityCriteriaFactory } from "../lib/criteria/vnext/entity-criteria-factory";
+import { EntityCriteriaTools } from "../lib/criteria/vnext/entity-criteria-tools";
 import { ComplexKeyMap } from "../lib/entity/data-structures/complex-key-map";
 
 interface Vector {
@@ -13,7 +13,7 @@ interface Block {
 }
 
 describe("complex-key-map", () => {
-    const { where, equals } = new EntityCriteriaFactory();
+    const { where, equals } = new EntityCriteriaTools();
 
     it("should do its thing", () => {
         // arrange

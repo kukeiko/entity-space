@@ -1,15 +1,15 @@
-import { EntityCriteriaFactory } from "../../lib/criteria/vnext/entity-criteria-factory";
-import { IEntityCriteriaFactory } from "../../lib/criteria/vnext/entity-criteria-factory.interface";
-import { EntityCriteriaShapeFactory } from "../../lib/criteria/vnext/entity-criteria-shape-factory";
-import { IEntityCriteriaShapeFactory } from "../../lib/criteria/vnext/entity-criteria-shape-factory.interface";
+import { EntityCriteriaTools } from "../../lib/criteria/vnext/entity-criteria-tools";
+import { IEntityCriteriaTools } from "../../lib/criteria/vnext/entity-criteria-tools.interface";
+import { EntityCriteriaShapeTools } from "../../lib/criteria/vnext/entity-criteria-shape-tools";
+import { IEntityCriteriaShapeTools } from "../../lib/criteria/vnext/entity-criteria-shape-tools.interface";
 import { $optional, $required } from "../../lib/criteria/vnext/entity-criteria/entity-criteria-shape";
 import { IEntitySchema } from "../../lib/schema/schema.interface";
 import { expectCriteria } from "./expect-criteria.fn";
 
 // [todo] all tests should ignore order of remapped / open criteria
 describe("criteria: reshaping", () => {
-    const criteriaFactory: IEntityCriteriaFactory = new EntityCriteriaFactory();
-    const shapeFactory: IEntityCriteriaShapeFactory = new EntityCriteriaShapeFactory({ criteriaFactory });
+    const criteriaFactory: IEntityCriteriaTools = new EntityCriteriaTools();
+    const shapeFactory: IEntityCriteriaShapeTools = new EntityCriteriaShapeTools({ criteriaTools: criteriaFactory });
     const { inRange, or, inArray, equals, where } = shapeFactory;
 
     const dummySchema: IEntitySchema<any> = {

@@ -17,12 +17,12 @@ export class InNumberRangeCriterion extends InRangeCriterion<number> implements 
             // [todo] do the "otherFrom?.op !== selfTo?.op" & "otherTo?.op !== selfFrom?.op" checks even make sense?
             // busy with other stuff right now, so i'll look into it later™.
             if (otherFrom?.value === selfTo?.value && otherFrom?.op !== selfTo?.op) {
-                return this.factory.inRange(selfFrom?.value, otherTo?.value, [
+                return this.tools.inRange(selfFrom?.value, otherTo?.value, [
                     selfFrom?.op === ">=",
                     otherTo?.op === "<=",
                 ]);
             } else if (otherTo?.value === selfFrom?.value && otherTo?.op !== selfFrom?.op) {
-                return this.factory.inRange(otherFrom?.value, selfTo?.value, [
+                return this.tools.inRange(otherFrom?.value, selfTo?.value, [
                     otherFrom?.op === ">=",
                     selfTo?.op === "<=",
                 ]);
@@ -34,7 +34,7 @@ export class InNumberRangeCriterion extends InRangeCriterion<number> implements 
                 otherFrom.value - 1 === selfTo.value
             ) {
                 // [todo] only tested in mergeQuery(), should write test within criteria pkg as well
-                return this.factory.inRange(selfFrom?.value, otherTo?.value, [
+                return this.tools.inRange(selfFrom?.value, otherTo?.value, [
                     selfFrom?.op === ">=",
                     otherTo?.op === "<=",
                 ]);
@@ -46,7 +46,7 @@ export class InNumberRangeCriterion extends InRangeCriterion<number> implements 
                 selfFrom.value - 1 === otherTo.value
             ) {
                 // [todo] only tested in mergeQuery(), should write test within criteria pkg as well
-                return this.factory.inRange(otherFrom?.value, selfTo?.value, [
+                return this.tools.inRange(otherFrom?.value, selfTo?.value, [
                     otherFrom?.op === ">=",
                     selfTo?.op === "<=",
                 ]);

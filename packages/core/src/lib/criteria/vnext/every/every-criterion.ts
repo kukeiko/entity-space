@@ -1,22 +1,19 @@
-import { Null, Primitive } from "@entity-space/utils";
 import { CriterionBase } from "../criterion-base";
 import { ICriterion, ICriterion$ } from "../criterion.interface";
-import { IEntityCriteriaFactory } from "../entity-criteria-factory.interface";
+import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
 import { IEveryCriterion, IEveryCriterion$ } from "./every-criterion.interface";
 
-type PrimitiveValue = ReturnType<Primitive | typeof Null>;
-
 export class EveryCriterion extends CriterionBase implements IEveryCriterion {
-    constructor({ criterion, factory }: { criterion: ICriterion; factory: IEntityCriteriaFactory }) {
+    constructor({ criterion, tools }: { criterion: ICriterion; tools: IEntityCriteriaTools }) {
         super();
         this.criterion = criterion;
-        this.factory = factory;
+        this.tools = tools;
     }
 
     readonly [IEveryCriterion$] = true;
     readonly [ICriterion$] = true;
     private readonly criterion: ICriterion;
-    private readonly factory: IEntityCriteriaFactory;
+    private readonly tools: IEntityCriteriaTools;
 
     getCriterion(): ICriterion {
         return this.criterion;
@@ -57,7 +54,7 @@ export class EveryCriterion extends CriterionBase implements IEveryCriterion {
     override simplify(): ICriterion {
         const simplified = this.criterion.simplify();
 
-        if (this.factory.isEveryCriterion(simplified) || this.factory.isAllCriterion(simplified)) {
+        if (this.tools.isEveryCriterion(simplified) || this.tools.isAllCriterion(simplified)) {
             return simplified;
         }
 

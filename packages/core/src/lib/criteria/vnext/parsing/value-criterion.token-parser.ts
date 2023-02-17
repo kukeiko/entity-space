@@ -1,9 +1,9 @@
 import { TokenType } from "../../../lexer/token-type.enum";
 import { ICriterion } from "../criterion.interface";
-import { IEntityCriteriaFactory } from "../entity-criteria-factory.interface";
+import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
 import { CriterionTokenParser } from "./criterion-token-parser.type";
 
-const binaryCriterionMapping: Record<string, (factory: IEntityCriteriaFactory, truthy: boolean) => ICriterion> = {
+const binaryCriterionMapping: Record<string, (tools: IEntityCriteriaTools, truthy: boolean) => ICriterion> = {
     true: (factory, truthy) => (truthy ? factory.equals(true) : factory.notEquals(true)),
     false: (factory, truthy) => (truthy ? factory.equals(false) : factory.notEquals(false)),
     null: (factory, truthy) => (truthy ? factory.equals(null) : factory.notEquals(null)),
@@ -11,7 +11,7 @@ const binaryCriterionMapping: Record<string, (factory: IEntityCriteriaFactory, t
     odd: (factory, truthy) => (truthy ? factory.isOdd() : factory.isEven()),
 };
 
-export function* valueCriterionTokenParser(factory: IEntityCriteriaFactory): CriterionTokenParser {
+export function* valueCriterionTokenParser(tools: IEntityCriteriaTools): CriterionTokenParser {
     let token = yield;
     let not = false;
 
@@ -21,14 +21,14 @@ export function* valueCriterionTokenParser(factory: IEntityCriteriaFactory): Cri
     }
 
     if (token.type === TokenType.String) {
-        return () => (not ? factory.notEquals(token.value) : factory.equals(token.value));
+        return () => (not ? tools.notEquals(token.value) : tools.equals(token.value));
     } else if (token.type === TokenType.Number) {
-        return () => (not ? factory.notEquals(parseFloat(token.value)) : factory.equals(parseFloat(token.value)));
+        return () => (not ? tools.notEquals(parseFloat(token.value)) : tools.equals(parseFloat(token.value)));
     } else if (token.type === TokenType.Literal) {
         const mapping = binaryCriterionMapping[token.value];
 
         if (mapping !== void 0) {
-            return () => mapping(factory, !not);
+            return () => mapping(tools, !not);
         }
     }
 

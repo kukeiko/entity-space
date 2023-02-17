@@ -1,9 +1,9 @@
 import { ICriterionShape } from "../../lib/criteria/vnext/criterion-shape.interface";
 import { ICriterion } from "../../lib/criteria/vnext/criterion.interface";
-import { EntityCriteriaFactory } from "../../lib/criteria/vnext/entity-criteria-factory";
+import { EntityCriteriaTools } from "../../lib/criteria/vnext/entity-criteria-tools";
 import { parseCriteria_vnext } from "../../lib/criteria/vnext/parsing/parse-criteria.fn";
 
-const factory = new EntityCriteriaFactory();
+const factory = new EntityCriteriaTools();
 const parse = (input: string) => parseCriteria_vnext(factory, input);
 
 export function expectCriteria(

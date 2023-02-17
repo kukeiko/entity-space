@@ -4,8 +4,8 @@ import { Entity } from "../common/entity.type";
 import { PackedEntitySelection } from "../common/packed-entity-selection.type";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
 import { ICriterion } from "../criteria/vnext/criterion.interface";
-import { EntityCriteriaFactory } from "../criteria/vnext/entity-criteria-factory";
-import { EntityCriteriaShapeFactory } from "../criteria/vnext/entity-criteria-shape-factory";
+import { EntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools";
+import { EntityCriteriaShapeTools } from "../criteria/vnext/entity-criteria-shape-tools";
 import { WhereEntityTools } from "../criteria/vnext/where-entity/where-entity-tools";
 import { WhereEntitySingle } from "../criteria/vnext/where-entity/where-entity.types";
 import { EntitySelection } from "../query/entity-selection";
@@ -28,9 +28,9 @@ export class EntityQueryBuilder<T extends Entity = Entity> {
         this.schema = args.schema;
         this.selection = args.selection ?? args.schema.getDefaultSelection();
         this.workspace = args.workspace;
-        this.criteria = args.criteria ?? new EntityCriteriaFactory().all();
-        this.criteriaTools = new EntityCriteriaFactory();
-        this.shapeTools = new EntityCriteriaShapeFactory({ criteriaFactory: this.criteriaTools });
+        this.criteria = args.criteria ?? new EntityCriteriaTools().all();
+        this.criteriaTools = new EntityCriteriaTools();
+        this.shapeTools = new EntityCriteriaShapeTools({ criteriaTools: this.criteriaTools });
         this.whereEntityTools = new WhereEntityTools(this.shapeTools, this.criteriaTools);
     }
 
@@ -39,8 +39,8 @@ export class EntityQueryBuilder<T extends Entity = Entity> {
     private readonly workspace: EntityWorkspace;
     private readonly selection: UnpackedEntitySelection<T>;
     private readonly criteria: ICriterion;
-    private readonly criteriaTools: EntityCriteriaFactory;
-    private readonly shapeTools: EntityCriteriaShapeFactory;
+    private readonly criteriaTools: EntityCriteriaTools;
+    private readonly shapeTools: EntityCriteriaShapeTools;
     private readonly whereEntityTools: WhereEntityTools;
 
     copy(patch?: EntityQueryBuilderPatch<T>): this {

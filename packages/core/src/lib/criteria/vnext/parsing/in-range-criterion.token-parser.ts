@@ -1,6 +1,6 @@
 import { TokenType } from "../../../lexer/token-type.enum";
 import { Token } from "../../../lexer/token.contract";
-import { IEntityCriteriaFactory } from "../entity-criteria-factory.interface";
+import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
 import { CriterionTokenParser } from "./criterion-token-parser.type";
 
 function* valueParser(): Generator<
@@ -28,7 +28,7 @@ function* valueParser(): Generator<
     }
 }
 
-export function* inRangeCriterionTokenParser(factory: IEntityCriteriaFactory): CriterionTokenParser {
+export function* inRangeCriterionTokenParser(tools: IEntityCriteriaTools): CriterionTokenParser {
     let token = yield;
 
     // in-range has to start with either an inclusive "[" or exclusive "(" bracket
@@ -52,7 +52,7 @@ export function* inRangeCriterionTokenParser(factory: IEntityCriteriaFactory): C
         token = yield;
 
         if (token.type === TokenType.Special && ")]".includes(token.value)) {
-            return () => factory.inRange(fromValue, toValue, [fromInclusive, token.value === "]"]);
+            return () => tools.inRange(fromValue, toValue, [fromInclusive, token.value === "]"]);
         } else {
             return false;
         }

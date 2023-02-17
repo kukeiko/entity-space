@@ -1,17 +1,17 @@
 import { CriterionBase } from "../criterion-base";
 import { ICriterion, ICriterion$ } from "../criterion.interface";
-import { IEntityCriteriaFactory } from "../entity-criteria-factory.interface";
+import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
 import { INoneCriterion, INoneCriterion$ } from "./none-criterion.interface";
 
 export class NoneCriterion extends CriterionBase implements INoneCriterion {
-    constructor({ factory }: { factory: IEntityCriteriaFactory }) {
+    constructor({ tools }: { tools: IEntityCriteriaTools }) {
         super();
-        this.factory = factory;
+        this.tools = tools;
     }
 
     readonly [ICriterion$] = true;
     readonly [INoneCriterion$] = true;
-    private readonly factory: IEntityCriteriaFactory;
+    private readonly tools: IEntityCriteriaTools;
 
     equivalent(other: ICriterion): boolean {
         return this.subtractFrom(other) === true && other.subtractFrom(this) === true;
@@ -22,7 +22,7 @@ export class NoneCriterion extends CriterionBase implements INoneCriterion {
     }
 
     invert(): false | ICriterion {
-        return this.factory.all();
+        return this.tools.all();
     }
 
     contains(_: unknown): boolean {

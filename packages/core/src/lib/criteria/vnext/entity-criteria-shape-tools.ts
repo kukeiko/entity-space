@@ -4,8 +4,8 @@ import { AllCriterionShape } from "./all/all-criterion-shape";
 import { AnyCriterionShape } from "./any-criterion-shape";
 import { ICriterionShape } from "./criterion-shape.interface";
 import { ICriterion } from "./criterion.interface";
-import { IEntityCriteriaFactory } from "./entity-criteria-factory.interface";
-import { IEntityCriteriaShapeFactory } from "./entity-criteria-shape-factory.interface";
+import { IEntityCriteriaTools } from "./entity-criteria-tools.interface";
+import { IEntityCriteriaShapeTools } from "./entity-criteria-shape-tools.interface";
 import { EntityCriteriaShape, EntityCriteriaShapeType } from "./entity-criteria/entity-criteria-shape";
 import { EqualsCriterionShape } from "./equals/equals-criterion-shape";
 import { InArrayCriterionShape } from "./in-array/in-array-criterion-shape";
@@ -13,12 +13,12 @@ import { InRangeCriterionShape } from "./in-range/in-range-criterion-shape";
 import { NeverCriterionShape } from "./never/never-criterion-shape";
 import { OrCriterionShape } from "./or/or-criterion-shape";
 
-export class EntityCriteriaShapeFactory implements IEntityCriteriaShapeFactory {
-    constructor({ criteriaFactory }: { criteriaFactory: IEntityCriteriaFactory }) {
-        this.criteriaFactory = criteriaFactory;
+export class EntityCriteriaShapeTools implements IEntityCriteriaShapeTools {
+    constructor({ criteriaTools }: { criteriaTools: IEntityCriteriaTools }) {
+        this.criteriaTools = criteriaTools;
     }
 
-    private readonly criteriaFactory: IEntityCriteriaFactory;
+    private readonly criteriaTools: IEntityCriteriaTools;
 
     any = (): AnyCriterionShape => {
         return new AnyCriterionShape();
@@ -32,7 +32,7 @@ export class EntityCriteriaShapeFactory implements IEntityCriteriaShapeFactory {
         // [todo] type assertion
         return new EqualsCriterionShape({
             valueTypes: valueTypes ?? ([Number, String, Boolean, Null] as T[]),
-            factory: this.criteriaFactory,
+            tools: this.criteriaTools,
         });
     };
 
@@ -40,7 +40,7 @@ export class EntityCriteriaShapeFactory implements IEntityCriteriaShapeFactory {
         // [todo] type assertion
         return new InArrayCriterionShape({
             valueTypes: valueTypes ?? ([Number, String, Boolean, Null] as T[]),
-            factory: this.criteriaFactory,
+            tools: this.criteriaTools,
         });
     };
 
@@ -49,13 +49,13 @@ export class EntityCriteriaShapeFactory implements IEntityCriteriaShapeFactory {
     };
 
     or = <T extends ICriterionShape<ICriterion, unknown>>(shapes: T[]): OrCriterionShape<T> => {
-        return new OrCriterionShape({ factory: this.criteriaFactory, shapes });
+        return new OrCriterionShape({ tools: this.criteriaTools, shapes });
     };
 
     never = (): NeverCriterionShape => new NeverCriterionShape();
 
     where = <S extends EntityCriteriaShapeType<Entity>>(shape: S): EntityCriteriaShape<Entity, S> => {
         // [todo] reconsider requiring a schema to create a shape
-        return EntityCriteriaShape.create(this.criteriaFactory, shape);
+        return EntityCriteriaShape.create(this.criteriaTools, shape);
     };
 }

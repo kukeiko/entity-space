@@ -1,6 +1,6 @@
 import { Entity } from "../../common/entity.type";
 import { ICriterion } from "../../criteria/vnext/criterion.interface";
-import { EntityCriteriaFactory } from "../../criteria/vnext/entity-criteria-factory";
+import { EntityCriteriaTools } from "../../criteria/vnext/entity-criteria-tools";
 import { QueryPaging } from "../../query/query-paging";
 import { IEntitySchema } from "../../schema/schema.interface";
 import { ComplexKeyMap } from "../data-structures/complex-key-map";
@@ -59,27 +59,27 @@ export class EntityStore {
             }
         }
 
-        // if (options && page) {
-        //     const match = this.optionsPageCache.find(item => item.options.equivalent(options));
+        if (options && page) {
+            const match = this.optionsPageCache.find(item => item.options.equivalent(options));
 
-        //     if (match) {
-        //         match.cache.add(entities, page);
-        //     } else {
-        //         const cache = new PagedEntityIdCache();
-        //         cache.add(entities, page);
-        //         this.optionsPageCache.push({ options, cache });
-        //     }
-        // } else if (options) {
-        //     const match = this.optionsCache.find(item => item.options.equivalent(options));
+            if (match) {
+                match.cache.add(entities, page);
+            } else {
+                const cache = new PagedEntityIdCache();
+                cache.add(entities, page);
+                this.optionsPageCache.push({ options, cache });
+            }
+        } else if (options) {
+            const match = this.optionsCache.find(item => item.options.equivalent(options));
 
-        //     if (match) {
-        //         match.ids = entities;
-        //     } else {
-        //         this.optionsCache.push({ ids: entities, options });
-        //     }
-        // } else if (page) {
-        //     this.noOptionsPageCache.add(entities, page);
-        // }
+            if (match) {
+                match.ids = entities;
+            } else {
+                this.optionsCache.push({ ids: entities, options });
+            }
+        } else if (page) {
+            this.noOptionsPageCache.add(entities, page);
+        }
     }
 
     get(entity: Entity): Entity | undefined {
@@ -126,7 +126,7 @@ export class EntityStore {
                 if (open.length === 1) {
                     criterion = open[0];
                 } else {
-                    criterion = new EntityCriteriaFactory().or(open);
+                    criterion = new EntityCriteriaTools().or(open);
                 }
             } else {
                 return slots;
@@ -151,7 +151,7 @@ export class EntityStore {
                 if (open.length === 1) {
                     criterion = open[0];
                 } else {
-                    criterion = new EntityCriteriaFactory().or(open);
+                    criterion = new EntityCriteriaTools().or(open);
                 }
             } else {
                 return slots;

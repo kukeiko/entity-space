@@ -1,10 +1,10 @@
 import { flatMap } from "lodash";
-import { EntitySet } from "../entity/data-structures/entity-set";
-import { mergeQueries } from "../query/merge-queries.fn";
-import { IEntityQuery } from "../query/entity-query.interface";
-import { subtractQueries } from "../query/subtract-queries.fn";
-import { EntityQueryError } from "../query/entity-query-error";
 import { Entity } from "../common/entity.type";
+import { EntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools";
+import { EntitySet } from "../entity/data-structures/entity-set";
+import { EntityQueryError } from "../query/entity-query-error";
+import { EntityQueryTools } from "../query/entity-query-tools";
+import { IEntityQuery } from "../query/entity-query.interface";
 
 export class EntityStreamPacket<T extends Entity = Entity> {
     constructor({
@@ -24,6 +24,7 @@ export class EntityStreamPacket<T extends Entity = Entity> {
         this.payload = payload ?? [];
     }
 
+    private readonly queryTools = new EntityQueryTools({ criteriaFactory: new EntityCriteriaTools() });
     private readonly accepted: IEntityQuery[];
     private readonly rejected: IEntityQuery[];
     private readonly errors: EntityQueryError<T>[];
@@ -72,21 +73,21 @@ export class EntityStreamPacket<T extends Entity = Entity> {
 
     merge(other: EntityStreamPacket<T>): EntityStreamPacket<T> {
         return new EntityStreamPacket<T>({
-            accepted: mergeQueries(...this.getAcceptedQueries(), ...other.getAcceptedQueries()),
+            accepted: this.queryTools.mergeQueries(...this.getAcceptedQueries(), ...other.getAcceptedQueries()),
             // [todo] just concatenated, not actually merged
             errors: [...this.getErrors(), ...other.getErrors()],
             // [todo] just concatenated, not actually merged
             payload: [...this.getPayload(), ...other.getPayload()],
-            rejected: mergeQueries(...this.getRejectedQueries(), ...other.getRejectedQueries()),
+            rejected: this.queryTools.mergeQueries(...this.getRejectedQueries(), ...other.getRejectedQueries()),
         });
     }
 
     reduceQueries(queries: IEntityQuery[]): false | IEntityQuery[] {
-        return subtractQueries(queries, [...this.getAcceptedQueries(), ...this.getRejectedQueries()]);
+        return this.queryTools.subtractQueries(queries, [...this.getAcceptedQueries(), ...this.getRejectedQueries()]);
     }
 
     reduceQueriesByAccepted(queries: IEntityQuery[]): false | IEntityQuery[] {
-        return subtractQueries(queries, this.getAcceptedQueries());
+        return this.queryTools.subtractQueries(queries, this.getAcceptedQueries());
     }
 
     static isEmpty<T extends Entity>(packet: EntityStreamPacket<T>): boolean {

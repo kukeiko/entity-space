@@ -1,19 +1,19 @@
 import { IAndCriterion } from "../and/and-criterion.interface";
 import { CriterionBase } from "../criterion-base";
 import { ICriterion, ICriterion$ } from "../criterion.interface";
-import { IEntityCriteriaFactory } from "../entity-criteria-factory.interface";
+import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
 import { IOrCriterion } from "../or/or-criterion.interface";
 import { IIsEvenCriterion, IIsEvenCriterion$ } from "./is-even-criterion.interface";
 
 export class IsEvenCriterion extends CriterionBase implements IIsEvenCriterion {
-    constructor({ factory }: { factory: IEntityCriteriaFactory }) {
+    constructor({ tools: tools }: { tools: IEntityCriteriaTools }) {
         super();
-        this.factory = factory;
+        this.tools = tools;
     }
 
     readonly [ICriterion$] = true;
     readonly [IIsEvenCriterion$] = true;
-    private readonly factory: IEntityCriteriaFactory;
+    private readonly tools: IEntityCriteriaTools;
 
     equivalent(other: ICriterion): boolean {
         return this.subtractFrom(other) === true && other.subtractFrom(this) === true;
@@ -28,7 +28,7 @@ export class IsEvenCriterion extends CriterionBase implements IIsEvenCriterion {
     }
 
     invert(): false | ICriterion {
-        return this.factory.isOdd();
+        return this.tools.isOdd();
     }
 
     contains(value: unknown): boolean {

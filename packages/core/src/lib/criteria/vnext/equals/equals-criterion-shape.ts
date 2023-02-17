@@ -1,7 +1,7 @@
 import { isPrimitiveOrNull, Null, Primitive } from "@entity-space/utils";
 import { ICriterionShape, ICriterionShape$ } from "../criterion-shape.interface";
 import { ICriterion } from "../criterion.interface";
-import { IEntityCriteriaFactory } from "../entity-criteria-factory.interface";
+import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
 import { getPrimitiveTypeName } from "../get-primitive-type-name.fn";
 import { IInArrayCriterion } from "../in-array/in-array-criterion.interface";
 import { IOrCriterion } from "../or/or-criterion.interface";
@@ -13,23 +13,23 @@ export class EqualsCriterionShape<T extends Primitive | typeof Null>
     implements ICriterionShape<IEqualsCriterion<T>, ReturnType<T>>
 {
     static create<T extends Primitive | typeof Null>(
-        factory: IEntityCriteriaFactory,
+        tools: IEntityCriteriaTools,
         valueTypes?: T[]
     ): EqualsCriterionShape<T> {
         return new EqualsCriterionShape({
             valueTypes: valueTypes ?? ([Number, String, Boolean, Null] as T[]),
-            factory,
+            tools: tools,
         });
     }
 
-    constructor({ valueTypes, factory }: { valueTypes: T[]; factory: IEntityCriteriaFactory }) {
+    constructor({ valueTypes, tools }: { valueTypes: T[]; tools: IEntityCriteriaTools }) {
         this.valueTypes = valueTypes;
-        this.factory = factory;
+        this.tools = tools;
     }
 
     readonly [ICriterionShape$] = true;
     private readonly valueTypes: readonly T[];
-    private readonly factory: IEntityCriteriaFactory;
+    private readonly tools: IEntityCriteriaTools;
 
     private valueMatchesType(value: unknown): value is ReturnType<T> {
         return isPrimitiveOrNull(value, this.valueTypes.slice());
@@ -56,8 +56,8 @@ export class EqualsCriterionShape<T extends Primitive | typeof Null>
                 const valuesSet = new Set(values);
                 // [todo] type assertion
                 const openValues = Array.from(criterion.getValues()).filter(value => !valuesSet.has(value as any));
-                const open = openValues.length > 0 ? [this.factory.inArray(openValues as any)] : [];
-                const remapped = values.map(value => this.factory.equals(value));
+                const open = openValues.length > 0 ? [this.tools.inArray(openValues as any)] : [];
+                const remapped = values.map(value => this.tools.equals(value));
 
                 return new ReshapedCriterion(remapped, open);
             }

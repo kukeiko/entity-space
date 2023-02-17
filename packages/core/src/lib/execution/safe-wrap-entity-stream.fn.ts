@@ -1,9 +1,10 @@
 import { isNotFalse } from "@entity-space/utils";
 import { flatMap } from "lodash";
 import { catchError, defaultIfEmpty, EMPTY, map, merge, of, shareReplay, switchMap, takeLast, tap } from "rxjs";
+import { EntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools";
 import { EntityQueryError } from "../query/entity-query-error";
+import { EntityQueryTools } from "../query/entity-query-tools";
 import { IEntityQuery } from "../query/entity-query.interface";
-import { subtractQueries } from "../query/subtract-queries.fn";
 import { EntityStream } from "./entity-stream";
 import { EntityStreamPacket } from "./entity-stream-packet";
 
@@ -44,6 +45,9 @@ export function safeWrapEntityStream(stream: EntityStream, queries: IEntityQuery
         }),
         switchMap(() => EMPTY)
     );
+
+    const queryTools = new EntityQueryTools({ criteriaFactory: new EntityCriteriaTools() });
+    const { subtractQueries } = queryTools;
 
     // make sure we're not missing any rejections
     const ensureProperRejection = safelyWrapped.pipe(

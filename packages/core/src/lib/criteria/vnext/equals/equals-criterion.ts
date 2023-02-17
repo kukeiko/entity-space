@@ -2,7 +2,7 @@ import { Null, Primitive } from "@entity-space/utils";
 import { IAndCriterion } from "../and/and-criterion.interface";
 import { CriterionBase } from "../criterion-base";
 import { ICriterion, ICriterion$ } from "../criterion.interface";
-import { IEntityCriteriaFactory } from "../entity-criteria-factory.interface";
+import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
 import { IInArrayCriterion } from "../in-array/in-array-criterion.interface";
 import { IOrCriterion } from "../or/or-criterion.interface";
 import { IEqualsCriterion, IEqualsCriterion$ } from "./equals-criterion.interface";
@@ -10,16 +10,16 @@ import { IEqualsCriterion, IEqualsCriterion$ } from "./equals-criterion.interfac
 type PrimitiveValue = ReturnType<Primitive | typeof Null>;
 
 export class EqualsCriterion extends CriterionBase implements IEqualsCriterion {
-    constructor({ value, factory }: { value: PrimitiveValue; factory: IEntityCriteriaFactory }) {
+    constructor({ value, tools }: { value: PrimitiveValue; tools: IEntityCriteriaTools }) {
         super();
         this.value = value;
-        this.factory = factory;
+        this.tools = tools;
     }
 
     readonly [IEqualsCriterion$] = true;
     readonly [ICriterion$] = true;
     private readonly value: PrimitiveValue;
-    private readonly factory: IEntityCriteriaFactory;
+    private readonly tools: IEntityCriteriaTools;
 
     getValue(): PrimitiveValue {
         return this.value;
@@ -38,7 +38,7 @@ export class EqualsCriterion extends CriterionBase implements IEqualsCriterion {
     }
 
     invert(): false | ICriterion {
-        return this.factory.notEquals(this.value);
+        return this.tools.notEquals(this.value);
     }
 
     contains(value: unknown): boolean {
@@ -50,14 +50,14 @@ export class EqualsCriterion extends CriterionBase implements IEqualsCriterion {
             if (this.value === other.getValue()) {
                 return this;
             } else {
-                return this.factory.inArray([this.value, other.getValue()]);
+                return this.tools.inArray([this.value, other.getValue()]);
             }
         } else if (IInArrayCriterion.is(other)) {
             if (other.contains(this.value)) {
                 return other;
             } else {
                 // [todo] type assertion
-                return this.factory.inArray([...other.getValues(), this.value] as any);
+                return this.tools.inArray([...other.getValues(), this.value] as any);
             }
         }
 
@@ -90,7 +90,7 @@ export class EqualsCriterion extends CriterionBase implements IEqualsCriterion {
             }
 
             // [todo] type assertion
-            return this.factory.inArray(withoutMyValue as any);
+            return this.tools.inArray(withoutMyValue as any);
         }
 
         return false;

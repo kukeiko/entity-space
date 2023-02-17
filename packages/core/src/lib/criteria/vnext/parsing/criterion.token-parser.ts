@@ -6,15 +6,15 @@ import { namedCriteriaTokenParser } from "./entity-criteria.token-parser";
 import { setCriterionTokenParser } from "./in-array-criterion.token-parser";
 import { tokenParser } from "./token-parser";
 import { valueCriterionTokenParser } from "./value-criterion.token-parser";
-import { IEntityCriteriaFactory } from "../entity-criteria-factory.interface";
+import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
 
-export function criterionTokenParser(factory: IEntityCriteriaFactory): CriterionTokenParser {
+export function criterionTokenParser(tools: IEntityCriteriaTools): CriterionTokenParser {
     return tokenParser([
-        () => criteriaTokenParser(factory),
-        () => inRangeCriterionTokenParser(factory),
-        () => setCriterionTokenParser(factory),
-        () => namedCriteriaTokenParser(factory),
-        () => valueCriterionTokenParser(factory),
-        () => allCriterionTokenParser(factory),
+        () => criteriaTokenParser(tools),
+        () => inRangeCriterionTokenParser(tools),
+        () => setCriterionTokenParser(tools),
+        () => namedCriteriaTokenParser(tools),
+        () => valueCriterionTokenParser(tools),
+        () => allCriterionTokenParser(tools),
     ]) as CriterionTokenParser;
 }

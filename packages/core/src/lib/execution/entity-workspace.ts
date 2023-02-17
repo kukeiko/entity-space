@@ -21,18 +21,15 @@ import {
 import { Entity } from "../common/entity.type";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
 import { ICriterion } from "../criteria/vnext/criterion.interface";
-import { EntityCriteriaFactory } from "../criteria/vnext/entity-criteria-factory";
-import { EntityWhere } from "../criteria/vnext/entity-criteria-factory.interface";
+import { EntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools";
+import { EntityWhere } from "../criteria/vnext/entity-criteria-tools.interface";
 import { EntitySet } from "../entity/data-structures/entity-set";
-import { createCriterionFromEntities } from "../entity/functions/create-criterion-from-entities.fn";
-import { createIdQueryFromEntities } from "../entity/functions/create-id-query-from-entities.fn";
 import { normalizeEntities } from "../entity/functions/normalize-entities.fn";
 import { IEntityStore } from "../entity/i-entity-store";
 import { InMemoryEntityDatabase } from "../entity/in-memory-entity-database";
-import { EntityQueryFactory } from "../query/entity-query-factory";
+import { EntityQueryTools } from "../query/entity-query-tools";
 import { IEntityQuery } from "../query/entity-query.interface";
 import { QueryPaging } from "../query/query-paging";
-import { subtractQueries } from "../query/subtract-queries.fn";
 import { BlueprintInstance } from "../schema/blueprint-instance";
 import { EntitySchemaCatalog } from "../schema/entity-schema-catalog";
 import { IEntitySchema } from "../schema/schema.interface";
@@ -54,8 +51,8 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
     private readonly database = new InMemoryEntityDatabase();
     private readonly watchedQueries = new Map<IEntityQuery, Subject<Entity[]>>();
     interceptors: IEntityStreamInterceptor[] = [];
-    private readonly criteriaFactory = new EntityCriteriaFactory();
-    private readonly queryFactory = new EntityQueryFactory({ criteriaFactory: this.criteriaFactory });
+    private readonly criteriaTools = new EntityCriteriaTools();
+    private readonly queryTools = new EntityQueryTools({ criteriaFactory: this.criteriaTools });
 
     // [todo] rename to upsert()?
     // [todo] we allow partials, but types don't reflect that (same @ cache and store)
@@ -82,7 +79,7 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
         await this.database.upsert(
             new EntitySet({
                 // [todo] adding the overloads to support both schemas & blueprints caused having to add this "as Entity[]" assertion, no idea why
-                query: createIdQueryFromEntities(schema, entities as Entity[]),
+                query: this.queryTools.createIdQueryFromEntities(schema, entities as Entity[]),
                 entities: entities as Entity[],
             })
         );
@@ -110,7 +107,7 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
     async query<T extends Entity = Entity>(query: IEntityQuery): Promise<false | EntitySet<T>[]> {
         const sources = [...this.interceptors, new SchemaRelationBasedHydrator(this.tracing, [this])];
         const cachedQueries = this.database.getCachedQueries(query.getEntitySchema());
-        const reduced = subtractQueries([query], cachedQueries);
+        const reduced = this.queryTools.subtractQueries([query], cachedQueries);
         const queriesAgainstSource = reduced === false ? [query] : reduced;
 
         if (queriesAgainstSource.length) {
@@ -173,16 +170,16 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
         if (!schema) {
             return EMPTY;
         }
-        const criteria = createCriterionFromEntities(entities, schema.getKey().getPath());
-        const entitySetQuery = this.queryFactory.createQuery({
+        const criteria = this.criteriaTools.createCriterionFromEntities(entities, schema.getKey().getPath());
+        const entitySetQuery = this.queryTools.createQuery({
             entitySchema: schema,
             criteria,
             // [todo] selection missing
         });
 
-        const hydrationQuery = this.queryFactory.createQuery({ entitySchema: schema, criteria, selection });
+        const hydrationQuery = this.queryTools.createQuery({ entitySchema: schema, criteria, selection });
         const cachedQueries = this.database.getCachedQueries(hydrationQuery.getEntitySchema());
-        const reduced = subtractQueries([hydrationQuery], cachedQueries);
+        const reduced = this.queryTools.subtractQueries([hydrationQuery], cachedQueries);
         const queriesAgainstSource = reduced === false ? [hydrationQuery] : reduced;
 
         this.tracing.querySpawned(hydrationQuery);
@@ -219,13 +216,13 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
 
     query$<T extends Entity>(
         schema: IEntitySchema<T>,
-        criterion: ICriterion | EntityWhere<T> = this.criteriaFactory.all(),
+        criterion: ICriterion | EntityWhere<T> = this.criteriaTools.all(),
         selection?: UnpackedEntitySelection<T>,
-        options: ICriterion = this.criteriaFactory.never(),
+        options: ICriterion = this.criteriaTools.never(),
         paging?: { skip?: number; top?: number; from?: number; to?: number }
     ): Observable<T[]> {
         if (!ICriterion.is(criterion)) {
-            criterion = this.criteriaFactory.where(criterion);
+            criterion = this.criteriaTools.where(criterion);
         }
 
         let queryPaging: QueryPaging | undefined;
@@ -247,7 +244,7 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
             }
         }
 
-        const query = this.queryFactory.createQuery({
+        const query = this.queryTools.createQuery({
             entitySchema: schema,
             // [todo] type assertion
             criteria: criterion as ICriterion,
@@ -351,7 +348,7 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
 
         await this.database.upsert(
             new EntitySet({
-                query: createIdQueryFromEntities(schema, result),
+                query: this.queryTools.createIdQueryFromEntities(schema, result),
                 entities: result as T[],
             })
         );
@@ -370,7 +367,7 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
 
         await this.database.upsert(
             new EntitySet({
-                query: createIdQueryFromEntities(schema, entities),
+                query: this.queryTools.createIdQueryFromEntities(schema, entities),
                 entities,
             })
         );

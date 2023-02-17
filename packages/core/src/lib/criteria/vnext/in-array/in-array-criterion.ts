@@ -2,7 +2,7 @@ import { Null, Primitive } from "@entity-space/utils";
 import { IAndCriterion } from "../and/and-criterion.interface";
 import { CriterionBase } from "../criterion-base";
 import { ICriterion, ICriterion$ } from "../criterion.interface";
-import { IEntityCriteriaFactory } from "../entity-criteria-factory.interface";
+import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
 import { IEqualsCriterion } from "../equals/equals-criterion.interface";
 import { IInNumberRangeCriterion } from "../in-range/in-number-range-criterion.interface";
 import { INotInArrayCriterion } from "../not-in-array/not-in-array-criterion.interface";
@@ -12,15 +12,15 @@ import { IInArrayCriterion, IInArrayCriterion$ } from "./in-array-criterion.inte
 type PrimitiveValue = ReturnType<Primitive | typeof Null>;
 
 export class InArrayCriterion extends CriterionBase implements IInArrayCriterion {
-    constructor({ values, factory }: { values: ReadonlySet<PrimitiveValue>; factory: IEntityCriteriaFactory }) {
+    constructor({ values, tools }: { values: ReadonlySet<PrimitiveValue>; tools: IEntityCriteriaTools }) {
         super();
         this.values = values;
-        this.factory = factory;
+        this.tools = tools;
     }
 
     readonly [ICriterion$] = true;
     readonly [IInArrayCriterion$] = true;
-    private readonly factory: IEntityCriteriaFactory;
+    private readonly tools: IEntityCriteriaTools;
     private readonly values: ReadonlySet<PrimitiveValue>;
 
     getValues(): PrimitiveValue[] {
@@ -37,14 +37,14 @@ export class InArrayCriterion extends CriterionBase implements IInArrayCriterion
         if (!intersection.length) {
             return false;
         } else if (intersection.length === 1) {
-            return this.factory.equals(intersection[0]);
+            return this.tools.equals(intersection[0]);
         } else {
-            return this.factory.inArray(intersection);
+            return this.tools.inArray(intersection);
         }
     }
 
     invert(): false | ICriterion {
-        return this.factory.notInArray(this.values);
+        return this.tools.notInArray(this.values);
     }
 
     contains(value: unknown): boolean {
@@ -54,9 +54,9 @@ export class InArrayCriterion extends CriterionBase implements IInArrayCriterion
 
     merge(other: ICriterion): false | ICriterion {
         if (IInArrayCriterion.is(other)) {
-            return this.factory.inArray([...this.values, ...other.getValues()]);
+            return this.tools.inArray([...this.values, ...other.getValues()]);
         } else if (IEqualsCriterion.is(other)) {
-            return this.factory.inArray([...this.values, other.getValue()]);
+            return this.tools.inArray([...this.values, other.getValue()]);
         }
 
         return false;
@@ -69,7 +69,7 @@ export class InArrayCriterion extends CriterionBase implements IInArrayCriterion
         if (!open.length) {
             return true;
         } else if (open.length !== values.length) {
-            return this.factory.inArray(open);
+            return this.tools.inArray(open);
         } else {
             return false;
         }
@@ -77,7 +77,7 @@ export class InArrayCriterion extends CriterionBase implements IInArrayCriterion
 
     override simplify(): ICriterion {
         if (!this.values.size) {
-            return this.factory.all();
+            return this.tools.all();
         }
 
         return this;
@@ -98,12 +98,12 @@ export class InArrayCriterion extends CriterionBase implements IInArrayCriterion
             } else if (copy.size === 0) {
                 return true;
             } else {
-                return this.factory.inArray(copy);
+                return this.tools.inArray(copy);
             }
         } else if (INotInArrayCriterion.is(other)) {
             const merged = new Set([...other.getValues(), ...this.values]);
 
-            return this.factory.notInArray(merged);
+            return this.tools.notInArray(merged);
         } else if (IInNumberRangeCriterion.is(other)) {
             let otherFrom = other.getFrom();
             let otherTo = other.getTo();
@@ -122,7 +122,7 @@ export class InArrayCriterion extends CriterionBase implements IInArrayCriterion
             }
 
             if (didReduce) {
-                return this.factory.inRange(otherFrom?.value, otherTo?.value, [
+                return this.tools.inRange(otherFrom?.value, otherTo?.value, [
                     otherFrom?.op === ">=",
                     otherTo?.op === "<=",
                 ]);

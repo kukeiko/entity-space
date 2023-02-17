@@ -4,7 +4,7 @@ import { Entity } from "../common/entity.type";
 import { PackedEntitySelection } from "../common/packed-entity-selection.type";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
 import { MatchesBagArgument } from "../criteria/criterion/named/matches.fn";
-import { EntityCriteriaFactory } from "../criteria/vnext/entity-criteria-factory";
+import { EntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools";
 import { EntitySelection } from "../query/entity-selection";
 import { IEntitySchema } from "../schema/schema.interface";
 import { EntityWorkspace } from "./entity-workspace";
@@ -36,7 +36,7 @@ export class ScopedEntityWorkspace<T extends Entity = Entity> {
             bag = writePath(keyPaths[0], {}, id);
         }
 
-        const criterion = new EntityCriteriaFactory().where(bag);
+        const criterion = new EntityCriteriaTools().where(bag);
 
         return this.workspace
             .query$<T>(this.schema, criterion, EntitySelection.unpack(this.schema, hydrate ?? true))

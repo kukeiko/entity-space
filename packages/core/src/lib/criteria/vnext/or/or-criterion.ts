@@ -1,18 +1,18 @@
 import { CriterionBase } from "../criterion-base";
 import { ICriterion, ICriterion$ } from "../criterion.interface";
-import { IEntityCriteriaFactory } from "../entity-criteria-factory.interface";
+import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
 import { IOrCriterion, IOrCriterion$ } from "./or-criterion.interface";
 
 export class OrCriterion extends CriterionBase implements IOrCriterion {
-    constructor({ criteria, factory }: { criteria: ICriterion[]; factory: IEntityCriteriaFactory }) {
+    constructor({ criteria, tools }: { criteria: ICriterion[]; tools: IEntityCriteriaTools }) {
         super();
         this.criteria = Object.freeze(criteria);
-        this.factory = factory;
+        this.tools = tools;
     }
 
     readonly [IOrCriterion$] = true;
     readonly [ICriterion$] = true;
-    private readonly factory: IEntityCriteriaFactory;
+    private readonly tools: IEntityCriteriaTools;
     private readonly criteria: Readonly<ICriterion[]>;
 
     getCriteria(): ICriterion[] {
@@ -42,7 +42,7 @@ export class OrCriterion extends CriterionBase implements IOrCriterion {
             return false;
         }
 
-        return intersected.length === 1 ? intersected[0] : this.factory.or(intersected);
+        return intersected.length === 1 ? intersected[0] : this.tools.or(intersected);
     }
 
     invert(): false | ICriterion {
@@ -53,7 +53,7 @@ export class OrCriterion extends CriterionBase implements IOrCriterion {
                 .map(criterion => (IOrCriterion.is(criterion) ? [...criterion.getCriteria()] : [criterion]))
                 .reduce((acc, value) => [...acc, ...value], []);
 
-            return this.factory.or(flattenedInverted);
+            return this.tools.or(flattenedInverted);
         }
 
         return false;
@@ -79,7 +79,7 @@ export class OrCriterion extends CriterionBase implements IOrCriterion {
 
         const items = [merged, ...unmerged];
 
-        return items.length === 1 ? items[0] : this.factory.or(items);
+        return items.length === 1 ? items[0] : this.tools.or(items);
     }
 
     minus(other: ICriterion): boolean | ICriterion {
@@ -103,19 +103,19 @@ export class OrCriterion extends CriterionBase implements IOrCriterion {
             return false;
         }
 
-        return items.length === 0 ? true : items.length === 1 ? items[0] : this.factory.or(items);
+        return items.length === 0 ? true : items.length === 1 ? items[0] : this.tools.or(items);
     }
 
     override simplify(): ICriterion {
         const simplified = this.criteria.map(criterion => criterion.simplify());
-        const withoutAll = simplified.filter(criterion => !this.factory.isAllCriterion(criterion));
+        const withoutAll = simplified.filter(criterion => !this.tools.isAllCriterion(criterion));
 
         if (!withoutAll.length) {
-            return this.factory.all();
+            return this.tools.all();
         } else if (withoutAll.length === 1) {
             return withoutAll[0];
         } else {
-            return this.factory.or(withoutAll);
+            return this.tools.or(withoutAll);
         }
     }
 

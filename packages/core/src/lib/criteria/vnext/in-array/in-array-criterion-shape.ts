@@ -1,36 +1,33 @@
 import { isPrimitiveOrNull, Null, Primitive } from "@entity-space/utils";
-import { partition, unzip } from "lodash";
+import { partition } from "lodash";
 import { ICriterionShape, ICriterionShape$ } from "../criterion-shape.interface";
 import { ICriterion } from "../criterion.interface";
-import { IEntityCriteriaFactory } from "../entity-criteria-factory.interface";
+import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
 import { IEqualsCriterion } from "../equals/equals-criterion.interface";
 import { getPrimitiveTypeName } from "../get-primitive-type-name.fn";
 import { IOrCriterion } from "../or/or-criterion.interface";
 import { reshapeOrCriteria } from "../reshape-or-criteria.fn";
 import { ReshapedCriterion } from "../reshaped-criterion";
-import { InArrayCriterion } from "./in-array-criterion";
 import { IInArrayCriterion } from "./in-array-criterion.interface";
-
-// export type SetCriterionShapeType = [Primitive | typeof Null] | [(Primitive | typeof Null)[]];
 
 export class InArrayCriterionShape<T extends Primitive | typeof Null>
     implements ICriterionShape<IInArrayCriterion, ReturnType<T>[]>
 {
     static create<T extends Primitive | typeof Null>(
         valueTypes: T[],
-        factory: IEntityCriteriaFactory
+        tools: IEntityCriteriaTools
     ): InArrayCriterionShape<T> {
-        return new InArrayCriterionShape({ valueTypes, factory });
+        return new InArrayCriterionShape({ valueTypes, tools });
     }
 
-    constructor({ valueTypes, factory }: { valueTypes: T[]; factory: IEntityCriteriaFactory }) {
+    constructor({ valueTypes, tools }: { valueTypes: T[]; tools: IEntityCriteriaTools }) {
         this.valueTypes = valueTypes;
-        this.factory = factory;
+        this.tools = tools;
     }
 
     readonly [ICriterionShape$] = true;
     private readonly valueTypes: readonly T[];
-    private readonly factory: IEntityCriteriaFactory;
+    private readonly tools: IEntityCriteriaTools;
 
     read(criterion: IInArrayCriterion): ReturnType<T>[] {
         return criterion.getValues() as ReturnType<T>[];
@@ -58,23 +55,21 @@ export class InArrayCriterionShape<T extends Primitive | typeof Null>
         }
 
         // [todo] type assertion
-        const remapped = this.factory.inArray(valuesMatchingType as any);
+        const remapped = this.tools.inArray(valuesMatchingType as any);
         // [todo] type assertion
-        const open = valuesNotMatchingType.length ? [this.factory.inArray(valuesNotMatchingType as any)] : [];
+        const open = valuesNotMatchingType.length ? [this.tools.inArray(valuesNotMatchingType as any)] : [];
 
         return new ReshapedCriterion([remapped], open);
     }
 
-    private reshapeEqualsValueCriterion(
-        criterion: IEqualsCriterion
-    ): false | ReshapedCriterion<IInArrayCriterion> {
+    private reshapeEqualsValueCriterion(criterion: IEqualsCriterion): false | ReshapedCriterion<IInArrayCriterion> {
         const value = criterion.getValue();
 
         if (!isPrimitiveOrNull(value, this.valueTypes.slice())) {
             return false;
         }
 
-        return new ReshapedCriterion([this.factory.inArray([value])]);
+        return new ReshapedCriterion([this.tools.inArray([value])]);
     }
 
     toString(): string {

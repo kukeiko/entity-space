@@ -1,17 +1,14 @@
 import { UnpackedEntitySelection } from "../../lib/common/unpacked-entity-selection.type";
 import { ICriterion } from "../../lib/criteria/vnext/criterion.interface";
-import { EntityCriteriaFactory } from "../../lib/criteria/vnext/entity-criteria-factory";
+import { EntityCriteriaTools } from "../../lib/criteria/vnext/entity-criteria-tools";
 import { EntityQuery } from "../../lib/query/entity-query";
-import { EntityQueryFactory } from "../../lib/query/entity-query-factory";
+import { EntityQueryTools } from "../../lib/query/entity-query-tools";
 import { IEntityQuery } from "../../lib/query/entity-query.interface";
-import { mergeQueries } from "../../lib/query/merge-queries.fn";
-import { mergeQuery } from "../../lib/query/merge-query.fn";
-import { parseQuery } from "../../lib/query/parse-query.fn";
 import { EntitySchema } from "../../lib/schema/entity-schema";
 import { EntitySchemaCatalog } from "../../lib/schema/entity-schema-catalog";
 
 function createQuery(criteria: ICriterion, selection: UnpackedEntitySelection = {}): IEntityQuery {
-    return new EntityQueryFactory({ criteriaFactory: new EntityCriteriaFactory() }).createQuery({
+    return new EntityQueryTools({ criteriaFactory: new EntityCriteriaTools() }).createQuery({
         entitySchema: new EntitySchema("user"),
         criteria,
         selection,
@@ -24,9 +21,10 @@ interface Product {
 }
 
 describe("mergeQueries()", () => {
-    const criteriaFactory = new EntityCriteriaFactory();
-    const queryFactory = new EntityQueryFactory({ criteriaFactory });
+    const criteriaFactory = new EntityCriteriaTools();
+    const queryTools = new EntityQueryTools({ criteriaFactory });
     const { where, inRange, or } = criteriaFactory;
+    const { mergeQueries, mergeQuery, parseQuery } = queryTools;
 
     it(`
         { price: [100, 200], rating: [3, 5] }
@@ -167,24 +165,9 @@ describe("mergeQueries()", () => {
         userSchema.addRelationProperty("parent", userSchema, "parentId", "id");
         schemas.addSchema(userSchema);
 
-        const A = parseQuery(
-            queryFactory,
-            criteriaFactory,
-            "users({ id: {2, 3}, parent: { id: 7 } })/{ id, parentId }",
-            schemas
-        );
-        const B = parseQuery(
-            queryFactory,
-            criteriaFactory,
-            "users({ id: 2, parent: { id: 7 } })/{ id, parentId, parent: { id } }",
-            schemas
-        );
-        const C = parseQuery(
-            queryFactory,
-            criteriaFactory,
-            "users({ id: 3, parent: { id: 7 } })/{ id, parentId, parent: { id } }",
-            schemas
-        );
+        const A = parseQuery("users({ id: {2, 3}, parent: { id: 7 } })/{ id, parentId }", schemas);
+        const B = parseQuery("users({ id: 2, parent: { id: 7 } })/{ id, parentId, parent: { id } }", schemas);
+        const C = parseQuery("users({ id: 3, parent: { id: 7 } })/{ id, parentId, parent: { id } }", schemas);
         const expected = "users({ id: {2, 3}, parent: { id: 7 } })/{ id, parentId, parent: { id } }";
 
         expect(mergeQuery(A, B)).toBe(false);

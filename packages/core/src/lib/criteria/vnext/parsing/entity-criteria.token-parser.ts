@@ -1,11 +1,10 @@
 import { TokenType } from "../../../lexer/token-type.enum";
 import { ICriterion } from "../criterion.interface";
-import { IEntityCriteriaFactory } from "../entity-criteria-factory.interface";
-import { EntityCriteria } from "../entity-criteria/entity-criteria";
+import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
 import { criteriaTokenParser } from "./criteria.token-parser";
 import { CriterionTokenParser } from "./criterion-token-parser.type";
 
-export function* namedCriteriaTokenParser(factory: IEntityCriteriaFactory): CriterionTokenParser {
+export function* namedCriteriaTokenParser(tools: IEntityCriteriaTools): CriterionTokenParser {
     let token = yield;
 
     if (!(token.type === TokenType.Special && token.value === "{")) {
@@ -29,7 +28,7 @@ export function* namedCriteriaTokenParser(factory: IEntityCriteriaFactory): Crit
             return false;
         }
 
-        const criterionTokenParser = criteriaTokenParser(factory, false);
+        const criterionTokenParser = criteriaTokenParser(tools, false);
         criterionTokenParser.next();
 
         while (true) {
@@ -43,7 +42,7 @@ export function* namedCriteriaTokenParser(factory: IEntityCriteriaFactory): Crit
                 bag[propertyName] = result.value();
 
                 if (token.type === TokenType.Special && token.value === "}") {
-                    return () => factory.where(bag);
+                    return () => tools.where(bag);
                 } else if (!(token.type === TokenType.Special && token.value === ",")) {
                     return false;
                 } else {

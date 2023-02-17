@@ -1,18 +1,18 @@
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
 import { ICriterion } from "../criteria/vnext/criterion.interface";
-import { IEntityCriteriaFactory } from "../criteria/vnext/entity-criteria-factory.interface";
+import { IEntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools.interface";
 import { criteriaTokenParser } from "../criteria/vnext/parsing/criteria.token-parser";
 import { lex } from "../lexer/lex.fn";
 import { TokenType } from "../lexer/token-type.enum";
 import { Token } from "../lexer/token.contract";
 import { EntitySchemaCatalog } from "../schema/entity-schema-catalog";
-import { IEntityQueryFactory } from "./entity-query-factory.interface";
+import { IEntityQueryTools } from "./entity-query-tools.interface";
 import { IEntityQuery } from "./entity-query.interface";
 import { EntityQueryPagingSort, QueryPaging } from "./query-paging";
 
 export function parseQuery(
-    factory: IEntityQueryFactory,
-    criteriaFactory: IEntityCriteriaFactory,
+    factory: IEntityQueryTools,
+    criteriaFactory: IEntityCriteriaTools,
     input: string,
     schemas: EntitySchemaCatalog
 ): IEntityQuery {
@@ -60,7 +60,7 @@ interface QueryParts {
 
 type QueryPartsParser = Generator<unknown, false | QueryParts, Token>;
 
-function* queryParser(factory: IEntityCriteriaFactory, terminator: Token): QueryPartsParser {
+function* queryParser(factory: IEntityCriteriaTools, terminator: Token): QueryPartsParser {
     let token = yield;
 
     if (token.type !== TokenType.Literal) {

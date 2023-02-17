@@ -2,7 +2,7 @@ import { Class, getInstanceClass } from "@entity-space/utils";
 import { IAndCriterion } from "../and/and-criterion.interface";
 import { CriterionBase } from "../criterion-base";
 import { ICriterion, ICriterion$ } from "../criterion.interface";
-import { IEntityCriteriaFactory } from "../entity-criteria-factory.interface";
+import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
 import { IOrCriterion } from "../or/or-criterion.interface";
 
 export type FromCriterion<T> = {
@@ -19,7 +19,7 @@ export abstract class InRangeCriterion<T> extends CriterionBase implements ICrit
     constructor(
         values: [T | undefined, T | undefined],
         inclusive: boolean | [boolean, boolean] = true,
-        protected readonly factory: IEntityCriteriaFactory
+        protected readonly tools: IEntityCriteriaTools
     ) {
         super();
         if (typeof inclusive === "boolean") {
@@ -145,7 +145,7 @@ export abstract class InRangeCriterion<T> extends CriterionBase implements ICrit
                     return new this.selfClass(
                         [selfTo.value, otherTo?.value],
                         [selfTo.op === "<", otherTo?.op === "<="],
-                        this.factory
+                        this.tools
                     );
                 }
             } else if (otherToInsideMe) {
@@ -155,23 +155,23 @@ export abstract class InRangeCriterion<T> extends CriterionBase implements ICrit
                     return new this.selfClass(
                         [otherFrom?.value, selfFrom.value],
                         [otherFrom?.op === ">=", selfFrom.op === ">"],
-                        this.factory
+                        this.tools
                     );
                 }
             } else if (
                 InRangeCriterion.isFromInsideRange(selfFrom, other) &&
                 InRangeCriterion.isToInsideRange(selfTo, other)
             ) {
-                return this.factory.or([
+                return this.tools.or([
                     new this.selfClass(
                         [otherFrom?.value, selfFrom?.value],
                         [otherFrom?.op === ">=", selfFrom?.op === ">"],
-                        this.factory
+                        this.tools
                     ),
                     new this.selfClass(
                         [selfTo?.value, otherTo?.value],
                         [selfTo?.op === "<", otherTo?.op === "<="],
-                        this.factory
+                        this.tools
                     ),
                 ]);
             }
@@ -197,26 +197,26 @@ export abstract class InRangeCriterion<T> extends CriterionBase implements ICrit
                 return new this.selfClass(
                     [selfFrom?.value, selfTo?.value],
                     [selfFrom?.op === ">=", selfTo?.op === "<="],
-                    this.factory
+                    this.tools
                 );
             } else if (otherFromInsideMe) {
                 if (selfTo === null) {
-                    return new this.selfClass([selfFrom?.value, void 0], selfFrom?.op === ">=", this.factory);
+                    return new this.selfClass([selfFrom?.value, void 0], selfFrom?.op === ">=", this.tools);
                 } else {
                     return new this.selfClass(
                         [selfFrom?.value, otherTo?.value],
                         [selfFrom?.op === ">=", otherTo?.op === "<="],
-                        this.factory
+                        this.tools
                     );
                 }
             } else if (otherToInsideMe) {
                 if (selfFrom === null) {
-                    return new this.selfClass([void 0, selfTo?.value], selfTo?.op === "<=", this.factory);
+                    return new this.selfClass([void 0, selfTo?.value], selfTo?.op === "<=", this.tools);
                 } else {
                     return new this.selfClass(
                         [otherFrom?.value, selfTo?.value],
                         [otherFrom?.op === ">=", selfTo?.op === "<="],
-                        this.factory
+                        this.tools
                     );
                 }
             } else if (
@@ -227,7 +227,7 @@ export abstract class InRangeCriterion<T> extends CriterionBase implements ICrit
                 return new this.selfClass(
                     [otherFrom?.value, otherTo?.value],
                     [otherFrom?.op === ">=", otherTo?.op === "<="],
-                    this.factory
+                    this.tools
                 );
             }
         }
@@ -252,26 +252,26 @@ export abstract class InRangeCriterion<T> extends CriterionBase implements ICrit
                 return new this.selfClass(
                     [otherFrom?.value, otherTo?.value],
                     [otherFrom?.op === ">=", otherTo?.op === "<="],
-                    this.factory
+                    this.tools
                 );
             } else if (otherFromInsideMe) {
                 if (selfTo === null) {
-                    return new this.selfClass([otherFrom?.value, void 0], otherFrom?.op === ">=", this.factory);
+                    return new this.selfClass([otherFrom?.value, void 0], otherFrom?.op === ">=", this.tools);
                 } else {
                     return new this.selfClass(
                         [otherFrom?.value, selfTo.value],
                         [otherFrom?.op === ">=", selfTo.op === "<="],
-                        this.factory
+                        this.tools
                     );
                 }
             } else if (otherToInsideMe) {
                 if (selfFrom === null) {
-                    return new this.selfClass([void 0, otherTo?.value], otherTo?.op === "<=", this.factory);
+                    return new this.selfClass([void 0, otherTo?.value], otherTo?.op === "<=", this.tools);
                 } else {
                     return new this.selfClass(
                         [selfFrom.value, otherTo?.value],
                         [selfFrom.op === ">=", otherTo?.op === "<="],
-                        this.factory
+                        this.tools
                     );
                 }
             } else if (
@@ -281,7 +281,7 @@ export abstract class InRangeCriterion<T> extends CriterionBase implements ICrit
                 return new this.selfClass(
                     [selfFrom?.value, selfTo?.value],
                     [selfFrom?.op === ">=", selfTo?.op === "<="],
-                    this.factory
+                    this.tools
                 );
             }
         }
@@ -293,14 +293,14 @@ export abstract class InRangeCriterion<T> extends CriterionBase implements ICrit
         const inverted: ICriterion[] = [];
 
         if (this.from?.op !== void 0) {
-            inverted.push(new this.selfClass([void 0, this.from.value], this.from.op === ">", this.factory));
+            inverted.push(new this.selfClass([void 0, this.from.value], this.from.op === ">", this.tools));
         }
 
         if (this.to?.op !== void 0) {
-            inverted.push(new this.selfClass([this.to.value, void 0], this.to.op === "<", this.factory));
+            inverted.push(new this.selfClass([this.to.value, void 0], this.to.op === "<", this.tools));
         }
 
-        return inverted.length === 1 ? inverted[0] : this.factory.or(inverted);
+        return inverted.length === 1 ? inverted[0] : this.tools.or(inverted);
     }
 
     override toString(): string {

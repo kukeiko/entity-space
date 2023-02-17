@@ -1,10 +1,9 @@
 import { UnpackedEntitySelection } from "../../lib/common/unpacked-entity-selection.type";
 import { ICriterion } from "../../lib/criteria/vnext/criterion.interface";
-import { EntityCriteriaFactory } from "../../lib/criteria/vnext/entity-criteria-factory";
+import { EntityCriteriaTools } from "../../lib/criteria/vnext/entity-criteria-tools";
 import { EntityQuery } from "../../lib/query/entity-query";
-import { EntityQueryFactory } from "../../lib/query/entity-query-factory";
+import { EntityQueryTools } from "../../lib/query/entity-query-tools";
 import { IEntityQuery } from "../../lib/query/entity-query.interface";
-import { parseQuery } from "../../lib/query/parse-query.fn";
 import { QueryPaging } from "../../lib/query/query-paging";
 import { EntitySchema } from "../../lib/schema/entity-schema";
 import { EntitySchemaCatalog } from "../../lib/schema/entity-schema-catalog";
@@ -13,12 +12,13 @@ describe("parseQuery()", () => {
     const catalog = new EntitySchemaCatalog();
     const fooSchema = new EntitySchema("foo");
     catalog.addSchema(fooSchema);
-    const criteriaFactory = new EntityCriteriaFactory();
-    const factory = new EntityQueryFactory({ criteriaFactory });
+    const criteriaFactory = new EntityCriteriaTools();
+    const queryTools = new EntityQueryTools({ criteriaFactory });
+    const { parseQuery } = queryTools;
 
     function shouldParse(stringified: string, expected: IEntityQuery, specFn = it): void {
         specFn(`should parse ${stringified} to ${expected.toString()}`, () => {
-            const parse = () => parseQuery(factory, criteriaFactory, stringified, catalog);
+            const parse = () => parseQuery(stringified, catalog);
             expect(parse).not.toThrow();
             expect(parse()).toEqual(expected);
         });
@@ -26,7 +26,7 @@ describe("parseQuery()", () => {
 
     function shouldNotParse(stringified: string, specFn = it): void {
         specFn(`should not parse ${stringified}`, () => {
-            const parse = () => parseQuery(factory, criteriaFactory, stringified, catalog);
+            const parse = () => parseQuery(stringified, catalog);
             expect(parse).toThrow();
         });
     }
@@ -50,7 +50,7 @@ describe("parseQuery()", () => {
         selection?: UnpackedEntitySelection;
         paging?: QueryPaging;
     }): IEntityQuery {
-        return factory.createQuery({ entitySchema: fooSchema, options, criteria, selection, paging });
+        return queryTools.createQuery({ entitySchema: fooSchema, options, criteria, selection, paging });
     }
 
     const { where, or, equals } = criteriaFactory;

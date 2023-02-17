@@ -1,9 +1,9 @@
 import { ICriterion } from "../../lib/criteria/vnext/criterion.interface";
-import { EntityCriteriaFactory } from "../../lib/criteria/vnext/entity-criteria-factory";
+import { EntityCriteriaTools } from "../../lib/criteria/vnext/entity-criteria-tools";
 import { parseCriteria_vnext } from "../../lib/criteria/vnext/parsing/parse-criteria.fn";
 
 describe("criteria: parsing", () => {
-    const factory = new EntityCriteriaFactory();
+    const factory = new EntityCriteriaTools();
     let { all, and, or, equals, notEquals, isOdd, isEven, inRange, inArray, notInArray, where } = factory;
 
     function shouldParse(stringified: string, expected: ICriterion, specFn = it): void {

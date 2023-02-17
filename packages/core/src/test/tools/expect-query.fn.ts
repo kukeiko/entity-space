@@ -1,8 +1,5 @@
-import { EntityCriteriaFactory } from "../../lib/criteria/vnext/entity-criteria-factory";
-import { EntityQueryFactory } from "../../lib/query/entity-query-factory";
-import { mergeQuery } from "../../lib/query/merge-query.fn";
-import { parseQuery } from "../../lib/query/parse-query.fn";
-import { subtractQuery } from "../../lib/query/subtract-query.fn";
+import { EntityCriteriaTools } from "../../lib/criteria/vnext/entity-criteria-tools";
+import { EntityQueryTools } from "../../lib/query/entity-query-tools";
 import { EntitySchemaCatalog } from "../../lib/schema/entity-schema-catalog";
 
 export function expectQuery(
@@ -17,8 +14,9 @@ export function expectQuery(
         toBe(expected: false | string): void;
     };
 } {
-    const criteriaFactory = new EntityCriteriaFactory();
-    const factory = new EntityQueryFactory({ criteriaFactory });
+    const criteriaTools = new EntityCriteriaTools();
+    const queryTools = new EntityQueryTools({ criteriaFactory: criteriaTools });
+    const { subtractQuery, mergeQuery, parseQuery } = queryTools;
 
     return {
         minus(other) {
@@ -27,9 +25,9 @@ export function expectQuery(
                     if (expected === true) {
                         specFn(`${query} should be fully subtracted by ${other}`, () => {
                             const result = subtractQuery(
-                                factory,
-                                parseQuery(factory, criteriaFactory, query, schemas),
-                                parseQuery(factory, criteriaFactory, other, schemas)
+                                queryTools,
+                                parseQuery(query, schemas),
+                                parseQuery(other, schemas)
                             );
                             expect(result).toEqual([]);
                         });
@@ -37,26 +35,24 @@ export function expectQuery(
                         specFn(`${query} should not be subtracted by ${other}`, () => {
                             expect(
                                 subtractQuery(
-                                    factory,
-                                    parseQuery(factory, criteriaFactory, query, schemas),
-                                    parseQuery(factory, criteriaFactory, other, schemas)
+                                    queryTools,
+                                    parseQuery(query, schemas),
+                                    parseQuery(other, schemas)
                                 ).toString()
                             ).toEqual("false");
                         });
                     } else {
                         specFn(`${query} minus ${other} should be ${expected}`, () => {
                             const result = subtractQuery(
-                                factory,
-                                parseQuery(factory, criteriaFactory, query, schemas),
-                                parseQuery(factory, criteriaFactory, other, schemas)
+                                queryTools,
+                                parseQuery(query, schemas),
+                                parseQuery(other, schemas)
                             );
 
                             if (Array.isArray(expected)) {
-                                expected = expected
-                                    .map(query => parseQuery(factory, criteriaFactory, query, schemas))
-                                    .join(",") as string;
+                                expected = expected.map(query => parseQuery(query, schemas)).join(",") as string;
                             } else if (typeof expected === "string") {
-                                expected = parseQuery(factory, criteriaFactory, expected, schemas).toString();
+                                expected = parseQuery(expected, schemas).toString();
                             } else {
                                 throw new Error(
                                     "kinda weird that 'expected' can be a boolean here, just because we reassign it"
@@ -75,20 +71,14 @@ export function expectQuery(
                     if (expected === false) {
                         specFn(`${query} should not be addable with ${other}`, () => {
                             expect(
-                                mergeQuery(
-                                    parseQuery(factory, criteriaFactory, query, schemas),
-                                    parseQuery(factory, criteriaFactory, other, schemas)
-                                ).toString()
+                                mergeQuery(parseQuery(query, schemas), parseQuery(other, schemas)).toString()
                             ).toEqual("false");
                         });
                     } else {
                         specFn(`${query} plus ${other} should be ${expected}`, () => {
                             expect(
-                                mergeQuery(
-                                    parseQuery(factory, criteriaFactory, query, schemas),
-                                    parseQuery(factory, criteriaFactory, other, schemas)
-                                ).toString()
-                            ).toEqual(parseQuery(factory, criteriaFactory, expected, schemas).toString());
+                                mergeQuery(parseQuery(query, schemas), parseQuery(other, schemas)).toString()
+                            ).toEqual(parseQuery(expected, schemas).toString());
                         });
                     }
                 },

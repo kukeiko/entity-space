@@ -1,4 +1,4 @@
-import { EntityCriteriaFactory } from "../lib/criteria/vnext/entity-criteria-factory";
+import { EntityCriteriaTools } from "../lib/criteria/vnext/entity-criteria-tools";
 import { EntityStore } from "../lib/entity/store/entity-store";
 import { EntitySchema } from "../lib/schema/entity-schema";
 
@@ -79,7 +79,7 @@ describe("entity-store", () => {
         entitySchema.addIndex("position.z");
         entitySchema.addIndex("typeId");
         const entityStore = new EntityStore(entitySchema);
-        const criteriaFactory = new EntityCriteriaFactory();
+        const criteriaFactory = new EntityCriteriaTools();
 
         const blocks: Block[] = [
             { position: { x: 0, y: 0, z: 0 }, typeId: "minecraft:grass_block" },

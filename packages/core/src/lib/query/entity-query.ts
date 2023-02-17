@@ -1,15 +1,14 @@
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
 import { IAllCriterion } from "../criteria/vnext/all/all-criterion.interface";
 import { ICriterion } from "../criteria/vnext/criterion.interface";
-import { EntityCriteriaFactory } from "../criteria/vnext/entity-criteria-factory";
+import { EntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools";
 import { EntityCriteria } from "../criteria/vnext/entity-criteria/entity-criteria";
 import { INeverCriterion } from "../criteria/vnext/never/never-criterion.interface";
 import { IEntitySchema } from "../schema/schema.interface";
-import { IEntityQueryFactory } from "./entity-query-factory.interface";
+import { IEntityQueryTools } from "./entity-query-tools.interface";
 import { IEntityQuery } from "./entity-query.interface";
 import { EntitySelection } from "./entity-selection";
 import { QueryPaging } from "./query-paging";
-import { subtractQueries } from "./subtract-queries.fn";
 
 export class EntityQuery implements IEntityQuery {
     constructor({
@@ -22,7 +21,7 @@ export class EntityQuery implements IEntityQuery {
     }: {
         criteria: ICriterion;
         entitySchema: IEntitySchema;
-        factory: IEntityQueryFactory;
+        factory: IEntityQueryTools;
         options: ICriterion;
         paging?: QueryPaging;
         selection: EntitySelection;
@@ -32,7 +31,7 @@ export class EntityQuery implements IEntityQuery {
         this.criteria = criteria;
         this.selection = selection;
         this.paging = paging;
-        this.factory = factory;
+        this.queryTools = factory;
     }
 
     private readonly entitySchema: IEntitySchema;
@@ -40,7 +39,7 @@ export class EntityQuery implements IEntityQuery {
     private readonly options: ICriterion;
     private readonly selection: EntitySelection;
     private readonly paging?: QueryPaging;
-    private readonly factory: IEntityQueryFactory;
+    private readonly queryTools: IEntityQueryTools;
 
     getEntitySchema(): IEntitySchema {
         return this.entitySchema;
@@ -59,7 +58,7 @@ export class EntityQuery implements IEntityQuery {
     }
 
     withCriteria(criteria: ICriterion): IEntityQuery {
-        return this.factory.createQuery({ entitySchema: this.entitySchema, criteria, selection: this.selection });
+        return this.queryTools.createQuery({ entitySchema: this.entitySchema, criteria, selection: this.selection });
     }
 
     getSelection(): EntitySelection {
@@ -71,11 +70,11 @@ export class EntityQuery implements IEntityQuery {
     }
 
     withoutSelection(): IEntityQuery {
-        return this.factory.createQuery({ entitySchema: this.entitySchema, criteria: this.criteria });
+        return this.queryTools.createQuery({ entitySchema: this.entitySchema, criteria: this.criteria });
     }
 
     withSelection(selection: EntitySelection | UnpackedEntitySelection): IEntityQuery {
-        return this.factory.createQuery({ entitySchema: this.entitySchema, criteria: this.criteria, selection });
+        return this.queryTools.createQuery({ entitySchema: this.entitySchema, criteria: this.criteria, selection });
     }
 
     toString(): string {
@@ -88,7 +87,7 @@ export class EntityQuery implements IEntityQuery {
     }
 
     subtractBy(others: IEntityQuery[]): false | IEntityQuery[] {
-        return subtractQueries([this], others);
+        return this.queryTools.subtractQueries([this], others);
     }
 
     intersect(other: IEntityQuery): false | IEntityQuery {
@@ -104,7 +103,7 @@ export class EntityQuery implements IEntityQuery {
             return false;
         }
 
-        return this.factory.createQuery({
+        return this.queryTools.createQuery({
             entitySchema: this.entitySchema,
             criteria,
             selection,
@@ -122,7 +121,7 @@ export class EntityQuery implements IEntityQuery {
             intersectedCriterion,
             other.getSelection().getValue(),
             // [todo] hardcoded
-            new EntityCriteriaFactory()
+            new EntityCriteriaTools()
         );
 
         if (intersectedWithoutDehydrated === intersectedCriterion) {

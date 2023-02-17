@@ -11,7 +11,7 @@ import { InRangeCriterionShape } from "./in-range/in-range-criterion-shape";
 import { NeverCriterionShape } from "./never/never-criterion-shape";
 import { OrCriterionShape } from "./or/or-criterion-shape";
 
-export interface IEntityCriteriaShapeFactory {
+export interface IEntityCriteriaShapeTools {
     any(): AnyCriterionShape;
     all(): AllCriterionShape;
     equals<T extends Primitive | typeof Null>(valueTypes?: T[]): EqualsCriterionShape<T>;

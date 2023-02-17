@@ -1,6 +1,6 @@
 import { isEqual } from "lodash";
-import { EntityCriteriaFactory } from "../criteria/vnext/entity-criteria-factory";
-import { EntityCriteriaShapeFactory } from "../criteria/vnext/entity-criteria-shape-factory";
+import { EntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools";
+import { EntityCriteriaShapeTools } from "../criteria/vnext/entity-criteria-shape-tools";
 import { IInNumberRangeCriterion } from "../criteria/vnext/in-range/in-number-range-criterion.interface";
 import { ReshapedCriterion } from "../criteria/vnext/reshaped-criterion";
 
@@ -12,7 +12,7 @@ export interface EntityQueryPagingSort {
 export class QueryPaging {
     constructor({ sort, from, to }: { sort: EntityQueryPagingSort[]; from?: number; to?: number }) {
         this.sort = sort;
-        const tools = new EntityCriteriaFactory();
+        const tools = new EntityCriteriaTools();
 
         if (from !== void 0 || to !== void 0) {
             // [todo] type assertion
@@ -85,8 +85,8 @@ export class QueryPaging {
             if (typeof subtractedRange === "boolean") {
                 return subtractedRange;
             }
-            const criteriaTools = new EntityCriteriaFactory();
-            const shapeTools = new EntityCriteriaShapeFactory({ criteriaFactory: criteriaTools });
+            const criteriaTools = new EntityCriteriaTools();
+            const shapeTools = new EntityCriteriaShapeTools({ criteriaTools: criteriaTools });
             // [todo] type assertion
             const remapped = shapeTools.inRange(Number).reshape(subtractedRange) as
                 | false

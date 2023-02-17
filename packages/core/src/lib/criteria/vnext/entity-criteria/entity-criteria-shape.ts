@@ -2,8 +2,8 @@ import { isPrimitive, Null, permutateEntries, Primitive, Unbox } from "@entity-s
 import { Entity } from "../../../common/entity.type";
 import { ICriterionShape, ICriterionShape$ } from "../criterion-shape.interface";
 import { ICriterion } from "../criterion.interface";
-import { EntityCriteriaFactory } from "../entity-criteria-factory";
-import { IEntityCriteriaFactory } from "../entity-criteria-factory.interface";
+import { EntityCriteriaTools } from "../entity-criteria-tools";
+import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
 import { EqualsCriterionShape } from "../equals/equals-criterion-shape";
 import { InArrayCriterionShape } from "../in-array/in-array-criterion-shape";
 import { IOrCriterion } from "../or/or-criterion.interface";
@@ -138,7 +138,7 @@ function isPrimitiveCriteriaJsonShape(value: unknown): value is PrimitiveCriteri
 
 function primitiveShapeToClassShape(
     shape: PrimitiveCriteriaShapeType<unknown>,
-    factory: IEntityCriteriaFactory
+    factory: IEntityCriteriaTools
 ): ICriterionShape<ICriterion, unknown> {
     const isPrimitiveOrNull = (item: unknown): item is Primitive | typeof Null => isPrimitive(item) || item === Null;
 
@@ -146,7 +146,7 @@ function primitiveShapeToClassShape(
         item === String || item === Number;
 
     if (isPrimitiveOrNull(shape)) {
-        return EqualsCriterionShape.create(new EntityCriteriaFactory(), [shape]);
+        return EqualsCriterionShape.create(new EntityCriteriaTools(), [shape]);
     } else if (Array.isArray(shape) && shape.length == 1 && isPrimitiveOrNull(shape[0])) {
         return InArrayCriterionShape.create([shape[0]], factory);
     } else if (
@@ -165,7 +165,7 @@ function primitiveShapeToClassShape(
     ) {
         return InArrayCriterionShape.create(shape[0], factory);
     } else if (Array.isArray(shape) && (shape as any[]).every(isPrimitiveOrNull)) {
-        return EqualsCriterionShape.create(new EntityCriteriaFactory(), shape);
+        return EqualsCriterionShape.create(new EntityCriteriaTools(), shape);
     }
 
     // [todo] need to first implement "and" criteria shape, and probably a few criteria math for "and"
@@ -180,7 +180,7 @@ function primitiveShapeToClassShape(
 function toCriterionShape(
     // property: IEntitySchemaProperty,
     shape: EntityCriteriaShapePropertyType<unknown>,
-    factory: IEntityCriteriaFactory
+    factory: IEntityCriteriaTools
 ): ICriterionShape<any, any> {
     // [todo] hastily added this here so that I don't have to provide actual IEntitySchemas
     // in reshaping tests, as I don't make use of any shortcut-primitive shape types there
@@ -209,7 +209,7 @@ function toCriterionShape(
 function toInternalShape(
     // schema: IEntitySchema,
     shape: EntityCriteriaShapeType<any>,
-    factory: IEntityCriteriaFactory
+    factory: IEntityCriteriaTools
 ): EntityCriteriaInternalShapeType {
     let required: EntityCriteriaShapePropertiesType<any>;
     let optional: EntityCriteriaShapePropertiesType<any>;
@@ -247,20 +247,20 @@ export class EntityCriteriaShape<E extends Entity, S>
     implements ICriterionShape<IEntityCriteria, EntityCriteriaShapeInstance<E, S>>
 {
     static create<E extends Entity, S extends EntityCriteriaShapeType<E>>(
-        factory: IEntityCriteriaFactory,
+        tools: IEntityCriteriaTools,
         // schema: IEntitySchema<E>,
         shape: S | EntityCriteriaShapeType<E>
     ): EntityCriteriaShape<E, S> {
-        return new EntityCriteriaShape({ factory, shape: toInternalShape(shape, factory) });
+        return new EntityCriteriaShape({ tools, shape: toInternalShape(shape, tools) });
     }
 
-    constructor({ factory, shape }: { factory: IEntityCriteriaFactory; shape: EntityCriteriaInternalShapeType }) {
-        this.factory = factory;
+    constructor({ tools, shape }: { tools: IEntityCriteriaTools; shape: EntityCriteriaInternalShapeType }) {
+        this.tools = tools;
         this.shape = shape;
     }
 
     readonly [ICriterionShape$] = true;
-    private readonly factory: IEntityCriteriaFactory;
+    private readonly tools: IEntityCriteriaTools;
     private readonly shape: EntityCriteriaInternalShapeType;
 
     private getRequiredShapes(): Record<string, ICriterionShape<ICriterion, unknown>> {
@@ -333,10 +333,10 @@ export class EntityCriteriaShape<E extends Entity, S>
             return false;
         }
 
-        const reshaped = permutateEntries(criteriaToPermutate).map(criteria => this.factory.where(criteria));
+        const reshaped = permutateEntries(criteriaToPermutate).map(criteria => this.tools.where(criteria));
 
         const open = Object.entries(openCriteria).map(([key, openCriteria]) =>
-            this.factory.where({ ...criteria, [key]: this.factory.or(openCriteria) })
+            this.tools.where({ ...criteria, [key]: this.tools.or(openCriteria) })
         );
 
         return new ReshapedCriterion(reshaped, open);
