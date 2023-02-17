@@ -14,7 +14,7 @@ export function createQuery<T>(
     selection?: UnpackedEntitySelection<BlueprintInstance<T>>
 ): IEntityQuery {
     const criteriaFactory = new EntityCriteriaTools();
-    return new EntityQueryTools({ criteriaFactory }).createQuery({
+    return new EntityQueryTools({ criteriaTools: criteriaFactory }).createQuery({
         entitySchema: schemas.resolve(blueprint),
         criteria: criteria ? criteriaFactory.where(criteria) : criteriaFactory.all(),
         selection,

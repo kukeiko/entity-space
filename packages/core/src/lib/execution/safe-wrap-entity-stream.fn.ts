@@ -46,7 +46,7 @@ export function safeWrapEntityStream(stream: EntityStream, queries: IEntityQuery
         switchMap(() => EMPTY)
     );
 
-    const queryTools = new EntityQueryTools({ criteriaFactory: new EntityCriteriaTools() });
+    const queryTools = new EntityQueryTools({ criteriaTools: new EntityCriteriaTools() });
     const { subtractQueries } = queryTools;
 
     // make sure we're not missing any rejections

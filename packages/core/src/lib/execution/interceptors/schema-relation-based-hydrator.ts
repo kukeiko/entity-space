@@ -21,7 +21,7 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
     ) {}
 
     private readonly criteriaTools = new EntityCriteriaTools();
-    private readonly queryTools = new EntityQueryTools({ criteriaFactory: this.criteriaTools });
+    private readonly queryTools = new EntityQueryTools({ criteriaTools: this.criteriaTools });
 
     intercept(stream: EntityStream): EntityStream {
         const rejected: IEntityQuery[] = [];

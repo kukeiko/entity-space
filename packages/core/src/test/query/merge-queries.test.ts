@@ -8,7 +8,7 @@ import { EntitySchema } from "../../lib/schema/entity-schema";
 import { EntitySchemaCatalog } from "../../lib/schema/entity-schema-catalog";
 
 function createQuery(criteria: ICriterion, selection: UnpackedEntitySelection = {}): IEntityQuery {
-    return new EntityQueryTools({ criteriaFactory: new EntityCriteriaTools() }).createQuery({
+    return new EntityQueryTools({ criteriaTools: new EntityCriteriaTools() }).createQuery({
         entitySchema: new EntitySchema("user"),
         criteria,
         selection,
@@ -22,7 +22,7 @@ interface Product {
 
 describe("mergeQueries()", () => {
     const criteriaFactory = new EntityCriteriaTools();
-    const queryTools = new EntityQueryTools({ criteriaFactory });
+    const queryTools = new EntityQueryTools({ criteriaTools: criteriaFactory });
     const { where, inRange, or } = criteriaFactory;
     const { mergeQueries, mergeQuery, parseQuery } = queryTools;
 

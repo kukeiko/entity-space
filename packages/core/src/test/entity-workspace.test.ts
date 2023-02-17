@@ -18,7 +18,7 @@ function createQuery(
     criteria: ICriterion,
     expansion: UnpackedEntitySelection = {}
 ): IEntityQuery {
-    return new EntityQueryTools({ criteriaFactory: new EntityCriteriaTools() }).createQuery({
+    return new EntityQueryTools({ criteriaTools: new EntityCriteriaTools() }).createQuery({
         entitySchema,
         criteria,
         selection: expansion,

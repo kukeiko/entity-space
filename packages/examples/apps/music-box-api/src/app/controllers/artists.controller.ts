@@ -1,8 +1,6 @@
-import { EntityQuery, EntitySchemaCatalog, IEntitySchema } from "@entity-space/core";
+import { EntityCriteriaTools, EntityQueryTools, EntitySchemaCatalog, IEntitySchema } from "@entity-space/core";
 import { Artist, ArtistBlueprint } from "@entity-space/examples/libs/music-model";
 import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post } from "@nestjs/common";
-import { EntityCriteriaFactory } from "packages/core/src/lib/criteria/vnext/entity-criteria-factory";
-import { EntityQueryFactory } from "packages/core/src/lib/query/entity-query-factory";
 import { DiskDbService } from "../disk-db.service";
 
 @Controller("artists")
@@ -12,14 +10,12 @@ export class ArtistsController {
     }
 
     private readonly schema: IEntitySchema;
+    private readonly criteriaTools = new EntityCriteriaTools();
+    private readonly queryTools = new EntityQueryTools({ criteriaTools: this.criteriaTools });
 
     @Get()
     all(): Promise<Artist[]> {
-        return this.diskDbService.query(
-            new EntityQueryFactory({ criteriaFactory: new EntityCriteriaFactory() }).createQuery({
-                entitySchema: this.schema,
-            })
-        );
+        return this.diskDbService.query(this.queryTools.createQuery({ entitySchema: this.schema }));
     }
 
     @Get(":id")

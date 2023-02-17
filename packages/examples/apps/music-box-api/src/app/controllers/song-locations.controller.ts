@@ -1,12 +1,4 @@
-import {
-    EntityCriteriaFactory,
-    EntityQuery,
-    EntityQueryFactory,
-    EntitySchemaCatalog,
-    IEntitySchema,
-    inSet,
-    matches,
-} from "@entity-space/core";
+import { EntityCriteriaTools, EntityQueryTools, EntitySchemaCatalog, IEntitySchema } from "@entity-space/core";
 import { SongLocation } from "@entity-space/examples/libs/music-model";
 import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Query } from "@nestjs/common";
 import { DiskDbService } from "../disk-db.service";
@@ -19,36 +11,37 @@ export class SongLocationsController {
     }
 
     private readonly schema: IEntitySchema;
+    private readonly criteriaTools = new EntityCriteriaTools();
+    private readonly queryTools = new EntityQueryTools({ criteriaTools: this.criteriaTools });
 
     @Get()
     async getSongLocations(
         @Query("id", ParseIntsPipe) id: number[],
         @Query("songId", ParseIntsPipe) songId: number[]
     ): Promise<SongLocation[]> {
+        const { createQuery } = this.queryTools;
+        const { where, inArray } = this.criteriaTools;
+
         if (id.length > 0) {
-            const query = new EntityQueryFactory({ criteriaFactory: new EntityCriteriaFactory() }).createQuery({
+            const query = createQuery({
                 entitySchema: this.schema,
-                criteria: new EntityCriteriaFactory().where<SongLocation>({
-                    id: new EntityCriteriaFactory().inArray(id),
+                criteria: where<SongLocation>({
+                    id: inArray(id),
                 }),
             });
 
             return this.diskDbService.query(query);
         } else if (songId.length > 0) {
-            const query = new EntityQueryFactory({ criteriaFactory: new EntityCriteriaFactory() }).createQuery({
+            const query = createQuery({
                 entitySchema: this.schema,
-                criteria: new EntityCriteriaFactory().where<SongLocation>({
-                    songId: new EntityCriteriaFactory().inArray(songId),
+                criteria: where<SongLocation>({
+                    songId: inArray(songId),
                 }),
             });
 
             return this.diskDbService.query(query);
         } else {
-            return this.diskDbService.query(
-                new EntityQueryFactory({ criteriaFactory: new EntityCriteriaFactory() }).createQuery({
-                    entitySchema: this.schema,
-                })
-            );
+            return this.diskDbService.query(createQuery({ entitySchema: this.schema }));
         }
     }
 

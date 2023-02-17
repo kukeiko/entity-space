@@ -24,7 +24,7 @@ export class EntityStreamPacket<T extends Entity = Entity> {
         this.payload = payload ?? [];
     }
 
-    private readonly queryTools = new EntityQueryTools({ criteriaFactory: new EntityCriteriaTools() });
+    private readonly queryTools = new EntityQueryTools({ criteriaTools: new EntityCriteriaTools() });
     private readonly accepted: IEntityQuery[];
     private readonly rejected: IEntityQuery[];
     private readonly errors: EntityQueryError<T>[];

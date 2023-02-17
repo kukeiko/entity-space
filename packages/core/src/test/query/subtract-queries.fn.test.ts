@@ -7,7 +7,7 @@ describe("subtractQueries()", () => {
     // function createQuery(criteria: Criterion, selection: UnpackedEntitySelection = {}): EntityQuery {
     //     return new EntityQuery({ entitySchema: new EntitySchema("foo"), criteria, selection });
     // }
-    const queryTools = new EntityQueryTools({ criteriaFactory: new EntityCriteriaTools() });
+    const queryTools = new EntityQueryTools({ criteriaTools: new EntityCriteriaTools() });
     const { subtractQueries } = queryTools;
 
     describe("no subtraction", () => {

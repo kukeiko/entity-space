@@ -13,7 +13,7 @@ describe("parseQuery()", () => {
     const fooSchema = new EntitySchema("foo");
     catalog.addSchema(fooSchema);
     const criteriaFactory = new EntityCriteriaTools();
-    const queryTools = new EntityQueryTools({ criteriaFactory });
+    const queryTools = new EntityQueryTools({ criteriaTools: criteriaFactory });
     const { parseQuery } = queryTools;
 
     function shouldParse(stringified: string, expected: IEntityQuery, specFn = it): void {

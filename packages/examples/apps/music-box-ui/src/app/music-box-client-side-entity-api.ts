@@ -2,8 +2,6 @@ import { HttpClient, HttpParams } from "@angular/common/http";
 import {
     Entity,
     EntityApi,
-    EntityCriteriaFactory,
-    EntityCriteriaShapeFactory,
     EntityQueryTracing,
     EntitySchemaCatalog,
     IEntitySchema,

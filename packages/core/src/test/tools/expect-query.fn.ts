@@ -15,7 +15,7 @@ export function expectQuery(
     };
 } {
     const criteriaTools = new EntityCriteriaTools();
-    const queryTools = new EntityQueryTools({ criteriaFactory: criteriaTools });
+    const queryTools = new EntityQueryTools({ criteriaTools: criteriaTools });
     const { subtractQuery, mergeQuery, parseQuery } = queryTools;
 
     return {

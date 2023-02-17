@@ -18,13 +18,19 @@ export class FileOnDiskBasedEntitySource implements IEntityStore {
     }
 
     private readonly filePath: string;
+    private readonly criteriaTools = new EntityCriteriaTools();
+    private readonly queryTools = new EntityQueryTools({ criteriaTools: this.criteriaTools });
 
     async query(query: IEntityQuery): Promise<false | EntitySet[]> {
-        const entities = query.getCriteria().filter(await this.loadEntitiesFromFile(query.getEntitySchema()));
+        const { where, inArray } = this.criteriaTools;
+        const { createQuery } = this.queryTools;
+
+        const entitiesFromFile = await this.loadEntitiesFromFile(query.getEntitySchema());
+        const entities = query.getCriteria().filter(entitiesFromFile);
         const ids = entities.map(entity => entity["id"]);
-        const actualQuery = new EntityQueryTools({ criteriaFactory: new EntityCriteriaTools() }).createQuery({
+        const actualQuery = createQuery({
             entitySchema: query.getEntitySchema(),
-            criteria: new EntityCriteriaTools().where({ id: new EntityCriteriaTools().inArray(ids) }),
+            criteria: where({ id: inArray(ids) }),
         });
         const result = new EntitySet({ query: actualQuery, entities });
 

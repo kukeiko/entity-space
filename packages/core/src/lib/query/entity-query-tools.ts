@@ -18,8 +18,8 @@ type SubtractedParts = {
 };
 
 export class EntityQueryTools implements IEntityQueryTools {
-    constructor({ criteriaFactory }: { criteriaFactory: IEntityCriteriaTools }) {
-        this.criteriaTools = criteriaFactory;
+    constructor({ criteriaTools }: { criteriaTools: IEntityCriteriaTools }) {
+        this.criteriaTools = criteriaTools;
     }
 
     private readonly criteriaTools: IEntityCriteriaTools;

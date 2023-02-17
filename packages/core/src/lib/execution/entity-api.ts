@@ -24,7 +24,7 @@ export class EntityApi implements IEntityStreamInterceptor {
 
     protected endpoints: EntityApiEndpoint[] = [];
     protected readonly criteriaTools = new EntityCriteriaTools();
-    protected readonly queryTools = new EntityQueryTools({ criteriaFactory: this.criteriaTools });
+    protected readonly queryTools = new EntityQueryTools({ criteriaTools: this.criteriaTools });
     protected readonly shapeTools = new EntityCriteriaShapeTools({ criteriaTools: this.criteriaTools });
     protected readonly whereEntityTools = new WhereEntityTools(this.shapeTools, this.criteriaTools);
 

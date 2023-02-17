@@ -1,7 +1,7 @@
 import {
     Entity,
-    EntityCriteriaFactory,
-    EntityQueryFactory,
+    EntityCriteriaTools,
+    EntityQueryTools,
     EntitySchemaCatalog,
     IEntityQuery,
     IEntitySchema,
@@ -23,12 +23,14 @@ export class DiskDbService {
     private readonly songLocationSchema: IEntitySchema;
     private readonly entitySource: FileOnDiskBasedEntitySource;
     private readonly filePath = "./assets/entities.json";
+    private readonly criteriaTools = new EntityCriteriaTools();
+    private readonly queryTools = new EntityQueryTools({ criteriaTools: this.criteriaTools });
 
     async getSong(id: number): Promise<Song | undefined> {
         const results = await this.entitySource.query(
-            new EntityQueryFactory({ criteriaFactory: new EntityCriteriaFactory() }).createQuery({
+            this.queryTools.createQuery({
                 entitySchema: this.songSchema,
-                criteria: new EntityCriteriaFactory().where<Song>({ id: new EntityCriteriaFactory().equals(id) }),
+                criteria: this.criteriaTools.where<Song>({ id: this.criteriaTools.equals(id) }),
             })
         );
 
@@ -42,15 +44,15 @@ export class DiskDbService {
     }
 
     async getSongs(searchText?: string, artistId?: string): Promise<Song[]> {
-        const criteriaFactory = new EntityCriteriaFactory();
+        const { where, inArray } = this.criteriaTools;
 
         const results = await this.entitySource.query(
-            new EntityQueryFactory({ criteriaFactory }).createQuery({
+            this.queryTools.createQuery({
                 entitySchema: this.songSchema,
                 criteria:
                     artistId !== void 0
-                        ? criteriaFactory.where<Song>({
-                              artistId: criteriaFactory.inArray(artistId.split(",").map(id => +id)),
+                        ? where<Song>({
+                              artistId: inArray(artistId.split(",").map(id => +id)),
                           })
                         : void 0,
             })
@@ -85,7 +87,7 @@ export class DiskDbService {
 
     async getSongLocations(): Promise<SongLocation[]> {
         const results = await this.entitySource.query(
-            new EntityQueryFactory({ criteriaFactory: new EntityCriteriaFactory() }).createQuery({
+            this.queryTools.createQuery({
                 entitySchema: this.songLocationSchema,
             })
         );

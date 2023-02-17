@@ -52,7 +52,7 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
     private readonly watchedQueries = new Map<IEntityQuery, Subject<Entity[]>>();
     interceptors: IEntityStreamInterceptor[] = [];
     private readonly criteriaTools = new EntityCriteriaTools();
-    private readonly queryTools = new EntityQueryTools({ criteriaFactory: this.criteriaTools });
+    private readonly queryTools = new EntityQueryTools({ criteriaTools: this.criteriaTools });
 
     // [todo] rename to upsert()?
     // [todo] we allow partials, but types don't reflect that (same @ cache and store)

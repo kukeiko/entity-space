@@ -30,7 +30,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
     private readonly optionsPageCache: { options: ICriterion; criteria: ICriterion; cache: PagedEntityIdCache }[] = [];
     private readonly criteriaTools = new EntityCriteriaTools();
     private readonly criteriaShapeTools = new EntityCriteriaShapeTools({ criteriaTools: this.criteriaTools });
-    private readonly queryTools = new EntityQueryTools({ criteriaFactory: this.criteriaTools });
+    private readonly queryTools = new EntityQueryTools({ criteriaTools: this.criteriaTools });
 
     queryCacheChanged$(): Observable<IEntityQuery[]> {
         return this.queryCacheChanged.asObservable();

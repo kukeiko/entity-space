@@ -72,7 +72,7 @@ export class EntityQueryShape {
         const permutatedRemappedParts = permutateEntries(remappedParts);
 
         return permutatedRemappedParts.map(parts => {
-            return new EntityQueryTools({ criteriaFactory: new EntityCriteriaTools() }).createQuery({
+            return new EntityQueryTools({ criteriaTools: new EntityCriteriaTools() }).createQuery({
                 entitySchema: this.schema,
                 options: parts.options,
                 criteria: parts.criterion,
