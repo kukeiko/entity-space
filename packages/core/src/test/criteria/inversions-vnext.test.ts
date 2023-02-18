@@ -1,6 +1,8 @@
 import { expectCriteria } from "./expect-criteria.fn";
 
 describe("criteria: inversions", () => {
+    expectCriteria("all").inverted().toEqual("none");
+
     // binary
     expectCriteria("even").inverted().toEqual("odd");
     expectCriteria("odd").inverted().toEqual("even");

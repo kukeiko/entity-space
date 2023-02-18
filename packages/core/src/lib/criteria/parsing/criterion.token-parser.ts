@@ -1,4 +1,4 @@
-import { allCriterionTokenParser } from "./all-criterion.token-parser";
+import { allNoneOrNeverCriterionTokenParser } from "./all-none-or-never-criterion.token-parser";
 import { criteriaTokenParser } from "./criteria.token-parser";
 import { CriterionTokenParser } from "./criterion-token-parser.type";
 import { inRangeCriterionTokenParser } from "./in-range-criterion.token-parser";
@@ -15,6 +15,6 @@ export function criterionTokenParser(tools: IEntityCriteriaTools): CriterionToke
         () => setCriterionTokenParser(tools),
         () => namedCriteriaTokenParser(tools),
         () => valueCriterionTokenParser(tools),
-        () => allCriterionTokenParser(tools),
+        () => allNoneOrNeverCriterionTokenParser(tools),
     ]) as CriterionTokenParser;
 }

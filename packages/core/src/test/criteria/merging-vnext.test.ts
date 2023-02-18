@@ -1,6 +1,12 @@
 import { expectCriteria } from "./expect-criteria.fn";
 
 describe("criteria: merging", () => {
+    // all
+    expectCriteria("all").mergedWith("all").toEqual("all");
+    expectCriteria("all").mergedWith("7").toEqual("all");
+    expectCriteria("all").mergedWith("{7}").toEqual("all");
+    expectCriteria("all").mergedWith("{ foo: 1 }").toEqual("all");
+
     // value
     expectCriteria("true").mergedWith("true").toEqual("true");
     expectCriteria("true").mergedWith("false").toEqual("{true, false}");

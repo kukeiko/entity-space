@@ -10,13 +10,16 @@ import { expectCriteria } from "./expect-criteria.fn";
 describe("criteria: reshaping", () => {
     const criteriaTools: IEntityCriteriaTools = new EntityCriteriaTools();
     const shapeTools: IEntityCriteriaShapeTools = new EntityCriteriaShapeTools({ criteriaTools: criteriaTools });
-    const { inRange, or, inArray, equals, where } = shapeTools;
+    const { inRange, or, inArray, equals, where, all } = shapeTools;
 
     const dummySchema: IEntitySchema<any> = {
         getProperties() {
             return [];
         },
     } as any;
+
+    expectCriteria("all").remappedUsing(all(), "all").toEqual("all");
+    expectCriteria("[1, 7]").remappedUsing(all(), "all").toEqual(false);
 
     expectCriteria("[1, 7]").remappedUsing(inRange(Number), "in-range:number").toEqual("[1, 7]");
 

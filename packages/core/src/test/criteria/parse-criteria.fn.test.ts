@@ -2,7 +2,7 @@ import { ICriterion } from "../../lib/criteria/criterion.interface";
 import { EntityCriteriaTools } from "../../lib/criteria/entity-criteria-tools";
 import { parseCriteria } from "../../lib/criteria/parsing/parse-criteria.fn";
 
-describe("parse-criteria", () => {
+describe("parseCriteria()", () => {
     const tools = new EntityCriteriaTools();
     const { equals, notEquals, and, or, isOdd, all, inRange, inArray, notInArray, none, never, where } = tools;
 
@@ -23,7 +23,9 @@ describe("parse-criteria", () => {
     shouldParse("true | odd", or([equals(true), isOdd()]));
     shouldParse("true | odd & false", or([equals(true), and(isOdd(), equals(false))]));
     shouldParse("true & odd | false", or([and(equals(true), isOdd()), equals(false)]));
-    shouldParse("true & odd | false", or([and(equals(true), isOdd()), equals(false)]));
+    shouldParse("all", all());
+    shouldParse("none", none());
+    shouldParse("never", never());
     shouldParse(
         "1 | 2 & 3 & 4 | 5 & 6 | 7",
         or(equals(1), and(equals(2), equals(3), equals(4)), and(equals(5), equals(6)), equals(7))
@@ -48,9 +50,6 @@ describe("parse-criteria", () => {
     shouldParse("[1, 7] | [3, 4]", or([inRange(1, 7), inRange(3, 4)]));
     shouldParse("{1, 2}", inArray([1, 2]));
     shouldParse("!{1, 2}", notInArray([1, 2]));
-    shouldParse("all", all());
-    shouldParse("none", none(), xit); // [todo] implement
-    shouldParse("never", never(), xit); // [todo] implement
 
     interface FooBar {
         foo: number;
