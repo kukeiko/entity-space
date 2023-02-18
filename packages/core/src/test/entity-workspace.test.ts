@@ -1,7 +1,7 @@
 import { firstValueFrom, take, tap, toArray } from "rxjs";
 import { UnpackedEntitySelection } from "../lib/common/unpacked-entity-selection.type";
-import { ICriterion } from "../lib/criteria/vnext/criterion.interface";
-import { EntityCriteriaTools } from "../lib/criteria/vnext/entity-criteria-tools";
+import { ICriterion } from "../lib/criteria/criterion.interface";
+import { EntityCriteriaTools } from "../lib/criteria/entity-criteria-tools";
 import { EntityQueryTracing } from "../lib/execution/entity-query-tracing";
 import { EntityWorkspace } from "../lib/execution/entity-workspace";
 import { EntityQueryTools } from "../lib/query/entity-query-tools";

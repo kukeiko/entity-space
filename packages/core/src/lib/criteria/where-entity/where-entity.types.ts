@@ -1,5 +1,5 @@
 import { Null, Primitive } from "@entity-space/utils";
-import { Entity } from "../../../common/entity.type";
+import { Entity } from "../../common/entity.type";
 
 export type WhereNumberOrString<T> = {
     $range?: [T | undefined, T | undefined];

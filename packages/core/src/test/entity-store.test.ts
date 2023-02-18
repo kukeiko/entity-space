@@ -1,4 +1,4 @@
-import { EntityCriteriaTools } from "../lib/criteria/vnext/entity-criteria-tools";
+import { EntityCriteriaTools } from "../lib/criteria/entity-criteria-tools";
 import { EntityStore } from "../lib/entity/store/entity-store";
 import { EntitySchema } from "../lib/schema/entity-schema";
 

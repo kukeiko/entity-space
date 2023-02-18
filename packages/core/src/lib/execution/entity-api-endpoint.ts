@@ -1,9 +1,9 @@
 import { Observable } from "rxjs";
 import { Entity } from "../common/entity.type";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
-import { ICriterionShape } from "../criteria/vnext/criterion-shape.interface";
-import { ICriterion } from "../criteria/vnext/criterion.interface";
-import { WhereEntityShape } from "../criteria/vnext/where-entity/where-entity-shape.types";
+import { ICriterionShape } from "../criteria/criterion-shape.interface";
+import { ICriterion } from "../criteria/criterion.interface";
+import { WhereEntityShape } from "../criteria/where-entity/where-entity-shape.types";
 import { EntitySet } from "../entity/data-structures/entity-set";
 import { IEntityQuery } from "../query/entity-query.interface";
 import { EntitySelection } from "../query/entity-selection";

@@ -3,11 +3,11 @@ import { flatten } from "lodash";
 import { Observable, Subject } from "rxjs";
 import { Entity } from "../common/entity.type";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
-import { ICriterion } from "../criteria/vnext/criterion.interface";
-import { EntityCriteriaShapeTools } from "../criteria/vnext/entity-criteria-shape-tools";
-import { IEntityCriteriaShapeTools } from "../criteria/vnext/entity-criteria-shape-tools.interface";
-import { EntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools";
-import { IEntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools.interface";
+import { ICriterion } from "../criteria/criterion.interface";
+import { EntityCriteriaShapeTools } from "../criteria/entity-criteria-shape-tools";
+import { IEntityCriteriaShapeTools } from "../criteria/entity-criteria-shape-tools.interface";
+import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
+import { IEntityCriteriaTools } from "../criteria/entity-criteria-tools.interface";
 import { EntityQueryTools } from "../query/entity-query-tools";
 import { IEntityQueryTools } from "../query/entity-query-tools.interface";
 import { IEntityQuery } from "../query/entity-query.interface";
@@ -17,7 +17,7 @@ import { IEntitySchema, IEntitySchemaRelation } from "../schema/schema.interface
 import { EntitySet } from "./data-structures/entity-set";
 import { joinEntities } from "./functions/join-entities.fn";
 import { normalizeEntities } from "./functions/normalize-entities.fn";
-import { IEntityDatabase } from "./i-entity-database";
+import { IEntityDatabase } from "./entity-database.interface";
 import { EntityStore } from "./store/entity-store";
 import { PagedEntityIdCache } from "./store/paged-entity-id-cache";
 

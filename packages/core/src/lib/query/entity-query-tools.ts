@@ -1,6 +1,6 @@
 import { Entity } from "../common/entity.type";
-import { ICriterion } from "../criteria/vnext/criterion.interface";
-import { IEntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools.interface";
+import { ICriterion } from "../criteria/criterion.interface";
+import { IEntityCriteriaTools } from "../criteria/entity-criteria-tools.interface";
 import { EntitySchemaCatalog } from "../schema/entity-schema-catalog";
 import { IEntitySchema } from "../schema/schema.interface";
 import { EntityQuery } from "./entity-query";

@@ -1,7 +1,7 @@
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
-import { ICriterion } from "../criteria/vnext/criterion.interface";
-import { IEntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools.interface";
-import { criteriaTokenParser } from "../criteria/vnext/parsing/criteria.token-parser";
+import { ICriterion } from "../criteria/criterion.interface";
+import { IEntityCriteriaTools } from "../criteria/entity-criteria-tools.interface";
+import { criteriaTokenParser } from "../criteria/parsing/criteria.token-parser";
 import { lex } from "../lexer/lex.fn";
 import { TokenType } from "../lexer/token-type.enum";
 import { Token } from "../lexer/token.contract";

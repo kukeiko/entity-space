@@ -1,4 +1,4 @@
-import { lex } from "../../../lexer/lex.fn";
+import { lex } from "../../lexer/lex.fn";
 import { ICriterion } from "../criterion.interface";
 import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
 import { criteriaTokenParser } from "./criteria.token-parser";

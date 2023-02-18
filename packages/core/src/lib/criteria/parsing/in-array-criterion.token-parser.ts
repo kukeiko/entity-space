@@ -1,4 +1,4 @@
-import { TokenType } from "../../../lexer/token-type.enum";
+import { TokenType } from "../../lexer/token-type.enum";
 import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
 import { CriterionTokenParser } from "./criterion-token-parser.type";
 

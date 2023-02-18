@@ -2,11 +2,11 @@ import { isNotFalse } from "@entity-space/utils";
 import { flatten } from "lodash";
 import { filter, from, map, merge, mergeAll, Observable, of, startWith, switchMap, tap } from "rxjs";
 import { Entity } from "../common/entity.type";
-import { EntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools";
-import { EntityCriteriaShapeTools } from "../criteria/vnext/entity-criteria-shape-tools";
-import { WhereEntityTools } from "../criteria/vnext/where-entity/where-entity-tools";
+import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
+import { EntityCriteriaShapeTools } from "../criteria/entity-criteria-shape-tools";
+import { WhereEntityTools } from "../criteria/where-entity/where-entity-tools";
 import { EntitySet } from "../entity/data-structures/entity-set";
-import { IEntityDatabase } from "../entity/i-entity-database";
+import { IEntityDatabase } from "../entity/entity-database.interface";
 import { InMemoryEntityDatabase } from "../entity/in-memory-entity-database";
 import { EntityQueryTools } from "../query/entity-query-tools";
 import { EntityQueryShape } from "../query/entity-query-shape";
@@ -17,7 +17,7 @@ import { EntityApiEndpointBuilder } from "./entity-api-endpoint-builder";
 import { EntityQueryTracing } from "./entity-query-tracing";
 import { EntityStream } from "./entity-stream";
 import { EntityStreamPacket } from "./entity-stream-packet";
-import { IEntityStreamInterceptor } from "./i-entity-stream-interceptor";
+import { IEntityStreamInterceptor } from "./entity-stream-interceptor.interface";
 
 export class EntityApi implements IEntityStreamInterceptor {
     constructor(protected readonly tracing: EntityQueryTracing) {}

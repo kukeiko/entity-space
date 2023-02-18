@@ -1,10 +1,10 @@
 import { permutateEntries } from "@entity-space/utils";
-import { AllCriterionShape } from "../criteria/vnext/all/all-criterion-shape";
-import { ICriterionShape } from "../criteria/vnext/criterion-shape.interface";
-import { ICriterion } from "../criteria/vnext/criterion.interface";
-import { EntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools";
-import { IEntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools.interface";
-import { NeverCriterionShape } from "../criteria/vnext/never/never-criterion-shape";
+import { AllCriterionShape } from "../criteria/all/all-criterion-shape";
+import { ICriterionShape } from "../criteria/criterion-shape.interface";
+import { ICriterion } from "../criteria/criterion.interface";
+import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
+import { IEntityCriteriaTools } from "../criteria/entity-criteria-tools.interface";
+import { NeverCriterionShape } from "../criteria/never/never-criterion-shape";
 import { IEntitySchema } from "../schema/schema.interface";
 import { EntityQueryTools } from "./entity-query-tools";
 import { IEntityQuery } from "./entity-query.interface";

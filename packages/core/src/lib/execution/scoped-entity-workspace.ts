@@ -3,7 +3,7 @@ import { map, Observable } from "rxjs";
 import { Entity } from "../common/entity.type";
 import { PackedEntitySelection } from "../common/packed-entity-selection.type";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
-import { EntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools";
+import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
 import { EntitySelection } from "../query/entity-selection";
 import { IEntitySchema } from "../schema/schema.interface";
 import { EntityWorkspace } from "./entity-workspace";

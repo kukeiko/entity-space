@@ -1,4 +1,4 @@
-import { EntityCriteriaTools } from "../../lib/criteria/vnext/entity-criteria-tools";
+import { EntityCriteriaTools } from "../../lib/criteria/entity-criteria-tools";
 import { expectCriteria } from "./expect-criteria.fn";
 
 describe("criteria: subtractions", () => {

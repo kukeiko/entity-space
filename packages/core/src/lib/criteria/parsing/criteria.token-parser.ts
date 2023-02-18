@@ -1,5 +1,5 @@
-import { TokenType } from "../../../lexer/token-type.enum";
-import { Token } from "../../../lexer/token.contract";
+import { TokenType } from "../../lexer/token-type.enum";
+import { Token } from "../../lexer/token.contract";
 import { ICriterion } from "../criterion.interface";
 import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
 import { CriterionTokenParser } from "./criterion-token-parser.type";

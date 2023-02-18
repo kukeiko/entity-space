@@ -1,12 +1,11 @@
 import { isPrimitive, Null, permutateEntries, Primitive, Unbox } from "@entity-space/utils";
-import { Entity } from "../../../common/entity.type";
+import { Entity } from "../../common/entity.type";
 import { ICriterionShape, ICriterionShape$ } from "../criterion-shape.interface";
 import { ICriterion } from "../criterion.interface";
 import { EntityCriteriaTools } from "../entity-criteria-tools";
 import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
 import { EqualsCriterionShape } from "../equals/equals-criterion-shape";
 import { InArrayCriterionShape } from "../in-array/in-array-criterion-shape";
-import { IOrCriterion } from "../or/or-criterion.interface";
 import { reshapeOrCriteria } from "../reshape-or-criteria.fn";
 import { ReshapedCriterion } from "../reshaped-criterion";
 import { IEntityCriteria } from "./entity-criteria.interface";

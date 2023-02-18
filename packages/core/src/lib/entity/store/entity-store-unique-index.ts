@@ -1,6 +1,6 @@
 import { Entity } from "../../common/entity.type";
-import { ICriterion } from "../../criteria/vnext/criterion.interface";
-import { ReshapedCriterion } from "../../criteria/vnext/reshaped-criterion";
+import { ICriterion } from "../../criteria/criterion.interface";
+import { ReshapedCriterion } from "../../criteria/reshaped-criterion";
 import { ComplexKeyMap } from "../data-structures/complex-key-map";
 
 export class EntityStoreUniqueIndex<E extends Entity = Entity> {

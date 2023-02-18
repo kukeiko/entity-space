@@ -1,5 +1,5 @@
 import { Distribute, Null, Primitive, Unbox } from "@entity-space/utils";
-import { Entity } from "../../../common/entity.type";
+import { Entity } from "../../common/entity.type";
 
 type WhereNumberOrStringShape<T, D = Distribute<T>> = {
     $range?: T | D[];

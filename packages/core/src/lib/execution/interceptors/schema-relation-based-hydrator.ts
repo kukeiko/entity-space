@@ -1,7 +1,7 @@
 import { isNotFalse, writePath } from "@entity-space/utils";
 import { map, merge, of, switchMap, takeLast, tap } from "rxjs";
 import { UnpackedEntitySelection } from "../../common/unpacked-entity-selection.type";
-import { EntityCriteriaTools } from "../../criteria/vnext/entity-criteria-tools";
+import { EntityCriteriaTools } from "../../criteria/entity-criteria-tools";
 import { EntitySet } from "../../entity/data-structures/entity-set";
 import { EntityQuery } from "../../query/entity-query";
 import { EntityQueryTools } from "../../query/entity-query-tools";
@@ -11,7 +11,7 @@ import { IEntitySchemaRelation } from "../../schema/schema.interface";
 import { EntityQueryTracing } from "../entity-query-tracing";
 import { EntityStream } from "../entity-stream";
 import { EntityStreamPacket } from "../entity-stream-packet";
-import { IEntityStreamInterceptor } from "../i-entity-stream-interceptor";
+import { IEntityStreamInterceptor } from "../entity-stream-interceptor.interface";
 import { runInterceptors } from "../run-interceptors.fn";
 
 export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {

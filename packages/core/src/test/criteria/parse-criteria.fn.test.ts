@@ -1,6 +1,6 @@
-import { ICriterion } from "../../lib/criteria/vnext/criterion.interface";
-import { EntityCriteriaTools } from "../../lib/criteria/vnext/entity-criteria-tools";
-import { parseCriteria } from "../../lib/criteria/vnext/parsing/parse-criteria.fn";
+import { ICriterion } from "../../lib/criteria/criterion.interface";
+import { EntityCriteriaTools } from "../../lib/criteria/entity-criteria-tools";
+import { parseCriteria } from "../../lib/criteria/parsing/parse-criteria.fn";
 
 describe("parse-criteria", () => {
     const tools = new EntityCriteriaTools();

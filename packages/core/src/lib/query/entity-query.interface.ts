@@ -1,5 +1,5 @@
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
-import { ICriterion } from "../criteria/vnext/criterion.interface";
+import { ICriterion } from "../criteria/criterion.interface";
 import { IEntitySchema } from "../schema/schema.interface";
 import { EntitySelection } from "./entity-selection";
 import { QueryPaging } from "./query-paging";

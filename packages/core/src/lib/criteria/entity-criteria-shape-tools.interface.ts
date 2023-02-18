@@ -1,5 +1,5 @@
 import { Null, Primitive } from "@entity-space/utils";
-import { Entity } from "../../common/entity.type";
+import { Entity } from "../common/entity.type";
 import { AllCriterionShape } from "./all/all-criterion-shape";
 import { AnyCriterionShape } from "./any-criterion-shape";
 import { ICriterionShape } from "./criterion-shape.interface";

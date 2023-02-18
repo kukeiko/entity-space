@@ -1,4 +1,4 @@
-import { EntityCriteriaTools } from "../../lib/criteria/vnext/entity-criteria-tools";
+import { EntityCriteriaTools } from "../../lib/criteria/entity-criteria-tools";
 import { EntityQuery } from "../../lib/query/entity-query";
 import { EntityQueryTools } from "../../lib/query/entity-query-tools";
 

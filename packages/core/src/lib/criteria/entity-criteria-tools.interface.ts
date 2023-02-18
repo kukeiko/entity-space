@@ -1,5 +1,5 @@
 import { Null, Primitive, Unbox } from "@entity-space/utils";
-import { Entity } from "../../common/entity.type";
+import { Entity } from "../common/entity.type";
 import { IAllCriterion } from "./all/all-criterion.interface";
 import { IAndCriterion } from "./and/and-criterion.interface";
 import { IIsEvenCriterion } from "./binary/is-even-criterion.interface";

@@ -1,11 +1,8 @@
 import { isPrimitiveOrNull } from "@entity-space/utils";
-import { UnpackedEntitySelection } from "../../../common/unpacked-entity-selection.type";
-import { IAllCriterion } from "../all/all-criterion.interface";
-import { IAndCriterion } from "../and/and-criterion.interface";
+import { UnpackedEntitySelection } from "../../common/unpacked-entity-selection.type";
 import { CriterionBase } from "../criterion-base";
 import { ICriterion, ICriterion$ } from "../criterion.interface";
 import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
-import { IOrCriterion } from "../or/or-criterion.interface";
 import { IEntityCriteria, IEntityCriteria$ } from "./entity-criteria.interface";
 
 export class EntityCriteria extends CriterionBase implements IEntityCriteria {

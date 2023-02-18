@@ -1,10 +1,10 @@
 import { isEqual } from "lodash";
-import { EntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools";
-import { EntityCriteriaShapeTools } from "../criteria/vnext/entity-criteria-shape-tools";
-import { IInNumberRangeCriterion } from "../criteria/vnext/in-range/in-number-range-criterion.interface";
-import { ReshapedCriterion } from "../criteria/vnext/reshaped-criterion";
-import { IEntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools.interface";
-import { IEntityCriteriaShapeTools } from "../criteria/vnext/entity-criteria-shape-tools.interface";
+import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
+import { EntityCriteriaShapeTools } from "../criteria/entity-criteria-shape-tools";
+import { IInNumberRangeCriterion } from "../criteria/in-range/in-number-range-criterion.interface";
+import { ReshapedCriterion } from "../criteria/reshaped-criterion";
+import { IEntityCriteriaTools } from "../criteria/entity-criteria-tools.interface";
+import { IEntityCriteriaShapeTools } from "../criteria/entity-criteria-shape-tools.interface";
 
 export interface EntityQueryPagingSort {
     field: string;

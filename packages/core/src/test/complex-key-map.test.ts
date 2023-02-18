@@ -1,5 +1,5 @@
 import { cloneJson } from "@entity-space/utils";
-import { EntityCriteriaTools } from "../lib/criteria/vnext/entity-criteria-tools";
+import { EntityCriteriaTools } from "../lib/criteria/entity-criteria-tools";
 import { ComplexKeyMap } from "../lib/entity/data-structures/complex-key-map";
 
 interface Vector {

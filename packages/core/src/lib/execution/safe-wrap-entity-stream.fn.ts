@@ -1,7 +1,7 @@
 import { isNotFalse } from "@entity-space/utils";
 import { flatMap } from "lodash";
 import { catchError, defaultIfEmpty, EMPTY, map, merge, of, shareReplay, switchMap, takeLast, tap } from "rxjs";
-import { EntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools";
+import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
 import { EntityQueryError } from "../query/entity-query-error";
 import { EntityQueryTools } from "../query/entity-query-tools";
 import { IEntityQuery } from "../query/entity-query.interface";

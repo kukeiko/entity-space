@@ -7,8 +7,8 @@ import {
     Primitive,
 } from "@entity-space/utils";
 import { uniq, isPlainObject } from "lodash";
-import { Entity } from "../../../common/entity.type";
-import { IEntitySchema, IPrimitiveSchema } from "../../../schema/schema.interface";
+import { Entity } from "../../common/entity.type";
+import { IEntitySchema, IPrimitiveSchema } from "../../schema/schema.interface";
 import { ICriterionShape } from "../criterion-shape.interface";
 import { ICriterion } from "../criterion.interface";
 import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";

@@ -1,6 +1,6 @@
 import { flatMap } from "lodash";
 import { Entity } from "../common/entity.type";
-import { EntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools";
+import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
 import { EntitySet } from "../entity/data-structures/entity-set";
 import { EntityQueryError } from "../query/entity-query-error";
 import { EntityQueryTools } from "../query/entity-query-tools";

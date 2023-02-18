@@ -1,5 +1,5 @@
 import { EMPTY, merge, switchMap, takeLast, tap } from "rxjs";
-import { IEntityStreamInterceptor } from "../i-entity-stream-interceptor";
+import { IEntityStreamInterceptor } from "../entity-stream-interceptor.interface";
 import { EntityStream } from "../entity-stream";
 import { EntityStreamPacket } from "../entity-stream-packet";
 import { Entity } from "../../common/entity.type";

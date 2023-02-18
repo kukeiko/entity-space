@@ -20,12 +20,12 @@ import {
 } from "rxjs";
 import { Entity } from "../common/entity.type";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
-import { ICriterion } from "../criteria/vnext/criterion.interface";
-import { EntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools";
-import { EntityWhere, IEntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools.interface";
+import { ICriterion } from "../criteria/criterion.interface";
+import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
+import { EntityWhere, IEntityCriteriaTools } from "../criteria/entity-criteria-tools.interface";
 import { EntitySet } from "../entity/data-structures/entity-set";
 import { normalizeEntities } from "../entity/functions/normalize-entities.fn";
-import { IEntityStore } from "../entity/i-entity-store";
+import { IEntityStore } from "../entity/entity-store.interface";
 import { InMemoryEntityDatabase } from "../entity/in-memory-entity-database";
 import { EntityQueryTools } from "../query/entity-query-tools";
 import { IEntityQueryTools } from "../query/entity-query-tools.interface";
@@ -38,7 +38,7 @@ import { EntityQueryBuilder, EntityQueryBuilderArgument } from "./entity-query-b
 import { EntityQueryTracing } from "./entity-query-tracing";
 import { EntityStream } from "./entity-stream";
 import { EntityStreamPacket } from "./entity-stream-packet";
-import { IEntityStreamInterceptor } from "./i-entity-stream-interceptor";
+import { IEntityStreamInterceptor } from "./entity-stream-interceptor.interface";
 import { SchemaRelationBasedHydrator } from "./interceptors/schema-relation-based-hydrator";
 import { runInterceptors } from "./run-interceptors.fn";
 import { ScopedEntityWorkspace } from "./scoped-entity-workspace";

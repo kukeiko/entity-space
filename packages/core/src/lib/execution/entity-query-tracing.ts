@@ -1,6 +1,6 @@
 import { EntityStreamPacket } from "./entity-stream-packet";
 import { IEntityQuery } from "../query/entity-query.interface";
-import { ICriterionShape } from "../criteria/vnext/criterion-shape.interface";
+import { ICriterionShape } from "../criteria/criterion-shape.interface";
 
 export class EntityQueryTracing {
     private consoleEnabled = false;

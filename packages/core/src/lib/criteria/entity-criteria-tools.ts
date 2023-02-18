@@ -6,7 +6,7 @@ import {
     readPath,
     writePath,
 } from "@entity-space/utils";
-import { Entity } from "../../common/entity.type";
+import { Entity } from "../common/entity.type";
 import { AllCriterion } from "./all/all-criterion";
 import { IAllCriterion, IAllCriterion$ } from "./all/all-criterion.interface";
 import { AndCriterion } from "./and/and-criterion";
@@ -41,7 +41,7 @@ import { ISomeCriterion, ISomeCriterion$ } from "./some/some-criterion.interface
 import { SomeCriterion } from "./some/some-criterion";
 import { EveryCriterion } from "./every/every-criterion";
 import { IEveryCriterion, IEveryCriterion$ } from "./every/every-criterion.interface";
-import { ComplexKeyMap } from "../../entity/data-structures/complex-key-map";
+import { ComplexKeyMap } from "../entity/data-structures/complex-key-map";
 import { hasInterfaceMarker } from "./has-interface-marker.fn";
 
 function isStringOrVoid(value: unknown): value is string | undefined {

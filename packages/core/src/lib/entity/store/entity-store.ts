@@ -1,6 +1,6 @@
 import { Entity } from "../../common/entity.type";
-import { ICriterion } from "../../criteria/vnext/criterion.interface";
-import { EntityCriteriaTools } from "../../criteria/vnext/entity-criteria-tools";
+import { ICriterion } from "../../criteria/criterion.interface";
+import { EntityCriteriaTools } from "../../criteria/entity-criteria-tools";
 import { QueryPaging } from "../../query/query-paging";
 import { IEntitySchema } from "../../schema/schema.interface";
 import { ComplexKeyMap } from "../data-structures/complex-key-map";

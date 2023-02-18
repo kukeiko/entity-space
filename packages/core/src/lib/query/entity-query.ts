@@ -1,8 +1,8 @@
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
-import { ICriterion } from "../criteria/vnext/criterion.interface";
-import { EntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools";
-import { IEntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools.interface";
-import { EntityCriteria } from "../criteria/vnext/entity-criteria/entity-criteria";
+import { ICriterion } from "../criteria/criterion.interface";
+import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
+import { IEntityCriteriaTools } from "../criteria/entity-criteria-tools.interface";
+import { EntityCriteria } from "../criteria/entity-criteria/entity-criteria";
 import { IEntitySchema } from "../schema/schema.interface";
 import { IEntityQueryTools } from "./entity-query-tools.interface";
 import { IEntityQuery } from "./entity-query.interface";

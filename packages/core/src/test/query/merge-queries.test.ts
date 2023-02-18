@@ -1,6 +1,6 @@
 import { UnpackedEntitySelection } from "../../lib/common/unpacked-entity-selection.type";
-import { ICriterion } from "../../lib/criteria/vnext/criterion.interface";
-import { EntityCriteriaTools } from "../../lib/criteria/vnext/entity-criteria-tools";
+import { ICriterion } from "../../lib/criteria/criterion.interface";
+import { EntityCriteriaTools } from "../../lib/criteria/entity-criteria-tools";
 import { EntityQuery } from "../../lib/query/entity-query";
 import { EntityQueryTools } from "../../lib/query/entity-query-tools";
 import { IEntityQuery } from "../../lib/query/entity-query.interface";

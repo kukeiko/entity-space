@@ -1,7 +1,7 @@
 import { Class } from "@entity-space/utils";
 import { UnpackedEntitySelection } from "../../lib/common/unpacked-entity-selection.type";
-import { EntityCriteriaTools } from "../../lib/criteria/vnext/entity-criteria-tools";
-import { EntityWhere } from "../../lib/criteria/vnext/entity-criteria-tools.interface";
+import { EntityCriteriaTools } from "../../lib/criteria/entity-criteria-tools";
+import { EntityWhere } from "../../lib/criteria/entity-criteria-tools.interface";
 import { EntityQueryTools } from "../../lib/query/entity-query-tools";
 import { IEntityQuery } from "../../lib/query/entity-query.interface";
 import { BlueprintInstance } from "../../lib/schema/blueprint-instance";
