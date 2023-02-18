@@ -26,7 +26,7 @@ export class EntityStoreCommonIndex<E extends Entity = Entity> {
         return this;
     }
 
-    getByCriterion(criterion: ICriterion): false | { values: Set<number>[]; remapped: ReshapedCriterion<ICriterion> } {
+    getByCriterion(criterion: ICriterion): false | { values: Set<number>[]; reshaped: ReshapedCriterion<ICriterion> } {
         return this.map.getByCriterion(criterion);
     }
 

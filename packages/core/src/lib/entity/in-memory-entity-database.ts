@@ -138,8 +138,8 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
 
     // [todo] i think introduction of this broke workspace playground tests
     private withoutRelationalCriteria(criterion: ICriterion, schema: IEntitySchema): ICriterion {
-        const optionalDeepBag: Record<string, any> = {};
         const { any, where, or } = this.criteriaShapeTools;
+        const optionalDeepBag: Record<string, any> = {};
 
         schema.getIndexes().forEach(index => {
             index.getPath().forEach(path => (optionalDeepBag[path] = any()));

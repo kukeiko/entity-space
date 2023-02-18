@@ -121,7 +121,7 @@ export class EntityStore {
             }
 
             result.values.forEach(slot => slots.add(slot));
-            const open = result.remapped.getOpen();
+            const open = result.reshaped.getOpen();
 
             if (open.length > 0) {
                 if (open.length === 1) {
@@ -146,7 +146,7 @@ export class EntityStore {
             }
 
             result.values.forEach(slotSet => slotSet.forEach(slot => slots.add(slot)));
-            const open = result.remapped.getOpen();
+            const open = result.reshaped.getOpen();
 
             if (open.length > 0) {
                 if (open.length === 1) {

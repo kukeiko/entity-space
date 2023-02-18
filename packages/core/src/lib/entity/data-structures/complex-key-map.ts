@@ -11,13 +11,17 @@ import { ReshapedCriterion } from "../../criteria/reshaped-criterion";
 // [todo] wanted to move this to utils, and then i noticed we have a dependency to criteria package,
 // so we can't really do that. maybe we should have a map implementing getting items by criteria
 // as an extending class?
-export class ComplexKeyMap<E extends Entity = Entity, V = unknown> {
+export class ComplexKeyMap<E extends Entity = Entity, V = E> {
     constructor(paths: string[]) {
         let leadingPaths: string[], lastPath: string;
 
-        if (paths.length === 0) {
-            throw new Error("paths is empty");
-        } else if (paths.length === 1) {
+        if (!paths.length) {
+            throw new Error("paths can not be empty");
+        } else if (paths.some(path => !path.length)) {
+            throw new Error("paths can not contain an empty path");
+        }
+
+        if (paths.length === 1) {
             leadingPaths = [];
             lastPath = paths[0];
         } else {
@@ -36,23 +40,31 @@ export class ComplexKeyMap<E extends Entity = Entity, V = unknown> {
         }
 
         writePath(lastPath, bag, shapeTools.inArray());
-        this.criterionTemplate = shapeTools.where(bag);
+        this.criterionShape = shapeTools.where(bag);
     }
 
     private readonly map = new Map<unknown, unknown>();
     private readonly leadingPaths: string[];
     private readonly lastPath: string;
-    private readonly criterionTemplate: EntityCriteriaShape<Entity, any>;
+    private readonly criterionShape: EntityCriteriaShape<Entity, any>;
 
-    get(entity: E, paths?: string[]): V | undefined {
+    get(entity: E | Entity, paths?: string[]): V | undefined {
         let map = this.map;
 
         let leadingPaths = this.leadingPaths;
         let lastPath = this.lastPath;
 
         if (paths) {
+            if (paths.some(path => !path.length)) {
+                throw new Error("custom path can not contain empty elements");
+            }
+
             leadingPaths = paths.slice(0, -1);
             lastPath = paths[paths.length - 1];
+
+            if (leadingPaths.length !== this.leadingPaths.length || lastPath === void 0) {
+                throw new Error("custom path must have same length as original path");
+            }
         }
 
         for (const path of leadingPaths) {
@@ -135,16 +147,16 @@ export class ComplexKeyMap<E extends Entity = Entity, V = unknown> {
         map.delete(readPath(this.lastPath, entity));
     }
 
-    getByCriterion(criterion: ICriterion): false | { values: V[]; remapped: ReshapedCriterion<ICriterion> } {
-        const remapped = this.criterionTemplate.reshape(criterion);
+    getByCriterion(criterion: ICriterion): false | { values: V[]; reshaped: ReshapedCriterion<ICriterion> } {
+        const reshaped = this.criterionShape.reshape(criterion);
 
-        if (remapped === false) {
+        if (reshaped === false) {
             return false;
         }
 
         const values: V[] = [];
 
-        for (const criterion of remapped.getReshaped()) {
+        for (const criterion of reshaped.getReshaped()) {
             let map = this.map;
 
             if (this.leadingPaths.length > 0) {
@@ -152,13 +164,13 @@ export class ComplexKeyMap<E extends Entity = Entity, V = unknown> {
 
                 for (const path of this.leadingPaths) {
                     // [todo] shouldn't have to split (to provide string[]), but instead just supply arg of type string
-                    const isValueCriterion = criterion.getByPath(path.split(".")) as IEqualsCriterion;
+                    const equals = criterion.getByPath(path.split(".")) as IEqualsCriterion;
 
-                    if (!map.has(isValueCriterion.getValue())) {
+                    if (!map.has(equals.getValue())) {
                         continue;
                     }
 
-                    map = map.get(isValueCriterion.getValue()) as Map<unknown, unknown>;
+                    map = map.get(equals.getValue()) as Map<unknown, unknown>;
                 }
             }
 
@@ -171,7 +183,7 @@ export class ComplexKeyMap<E extends Entity = Entity, V = unknown> {
             }
         }
 
-        return { values, remapped };
+        return { values, reshaped };
     }
 
     private getOrSet<K, V>(map: Map<K, any>, key: K, createValue: () => V): V {
