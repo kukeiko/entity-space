@@ -35,7 +35,7 @@ export class EntityCriteria extends CriterionBase implements IEntityCriteria {
             return criterion;
         }
 
-        if (IEntityCriteria.is(criterion)) {
+        if (this.tools.isEntityCriteria(criterion)) {
             return criterion.getByPath(path.slice(1));
         } else {
             throw new Error("not an entity-criteria");
@@ -47,15 +47,15 @@ export class EntityCriteria extends CriterionBase implements IEntityCriteria {
     }
 
     intersect(other: ICriterion): false | ICriterion {
-        if (IAllCriterion.is(other)) {
+        if (this.tools.isAllCriterion(other)) {
             // [todo] apply this to all other criteria [update] => what did i mean by this?
             return this;
-        } else if (IOrCriterion.is(other)) {
+        } else if (this.tools.isOrCriterion(other)) {
             return other.intersect(this);
             // [todo] apply this to all other criteria [update] => what did i mean by this?
             // [todo] i don't remember why i implemented "intersectBy()" :(
             // return other.intersectBy(this);
-        } else if (!IEntityCriteria.is(other)) {
+        } else if (!this.tools.isEntityCriteria(other)) {
             return false;
         }
 
@@ -130,9 +130,9 @@ export class EntityCriteria extends CriterionBase implements IEntityCriteria {
             return other;
         } else if (this.subtractFrom(other) === true) {
             return this;
-        } else if (IOrCriterion.is(other) || IAndCriterion.is(other)) {
+        } else if (this.tools.isOrCriterion(other) || this.tools.isAndCriterion(other)) {
             return other.merge(this);
-        } else if (IEntityCriteria.is(other)) {
+        } else if (this.tools.isEntityCriteria(other)) {
             const mergedBag: Record<string, ICriterion> = {};
             const otherBag = other.getCriteria();
             let mergedOne = false;
@@ -150,7 +150,7 @@ export class EntityCriteria extends CriterionBase implements IEntityCriteria {
                     continue;
                 } else if (otherBagCriterion === void 0) {
                     return false;
-                } else if (ICriterion.is(otherBagCriterion)) {
+                } else if (this.tools.isCriterion(otherBagCriterion)) {
                     const mergedResult = myBagCriterion.merge(otherBagCriterion);
 
                     if (mergedResult === false) {
@@ -198,9 +198,9 @@ export class EntityCriteria extends CriterionBase implements IEntityCriteria {
     }
 
     subtractFrom(other: ICriterion): boolean | ICriterion {
-        if (IOrCriterion.is(other) || IAndCriterion.is(other)) {
+        if (this.tools.isOrCriterion(other) || this.tools.isAndCriterion(other)) {
             return other.minus(this);
-        } else if (IEntityCriteria.is(other)) {
+        } else if (this.tools.isEntityCriteria(other)) {
             // same reduction mechanics as found in and-criteria.ts
             const otherBag = other.getCriteria();
             const reductions: (
@@ -294,31 +294,31 @@ export class EntityCriteria extends CriterionBase implements IEntityCriteria {
     static omitSelection(
         criterion: ICriterion,
         selection: UnpackedEntitySelection,
-        factory: IEntityCriteriaTools
+        tools: IEntityCriteriaTools
     ): ICriterion {
-        if (IOrCriterion.is(criterion)) {
+        if (tools.isOrCriterion(criterion)) {
             const omitted = criterion
                 .getCriteria()
-                .map(criterion => this.omitSelection(criterion, selection, factory))
-                .filter(criterion => !IAllCriterion.is(criterion));
+                .map(criterion => this.omitSelection(criterion, selection, tools))
+                .filter(criterion => !tools.isAllCriterion(criterion));
 
             if (omitted.length == 0) {
-                return factory.all();
+                return tools.all();
             } else {
-                return factory.or(omitted);
+                return tools.or(omitted);
             }
-        } else if (IAndCriterion.is(criterion)) {
+        } else if (tools.isAndCriterion(criterion)) {
             const omitted = criterion
                 .getCriteria()
-                .map(criterion => this.omitSelection(criterion, selection, factory))
-                .filter(criterion => !IAllCriterion.is(criterion));
+                .map(criterion => this.omitSelection(criterion, selection, tools))
+                .filter(criterion => !tools.isAllCriterion(criterion));
 
             if (omitted.length == 0) {
-                return factory.all();
+                return tools.all();
             } else {
-                return factory.and(omitted);
+                return tools.and(omitted);
             }
-        } else if (IEntityCriteria.is(criterion)) {
+        } else if (tools.isEntityCriteria(criterion)) {
             const omittedBag: Record<string, ICriterion> = { ...criterion.getCriteria() };
 
             for (const key in selection) {
@@ -329,10 +329,10 @@ export class EntityCriteria extends CriterionBase implements IEntityCriteria {
                 } else if (selectionItem) {
                     const bagItem = omittedBag[key];
 
-                    if (IEntityCriteria.is(bagItem)) {
-                        const omitted = this.omitSelection(bagItem, selectionItem, factory);
+                    if (tools.isEntityCriteria(bagItem)) {
+                        const omitted = this.omitSelection(bagItem, selectionItem, tools);
 
-                        if (IAllCriterion.is(omitted)) {
+                        if (tools.isAllCriterion(omitted)) {
                             delete omittedBag[key];
                         } else {
                             omittedBag[key] = omitted;
@@ -344,9 +344,9 @@ export class EntityCriteria extends CriterionBase implements IEntityCriteria {
             }
 
             if (Object.keys(omittedBag).length) {
-                return factory.where(omittedBag);
+                return tools.where(omittedBag);
             } else {
-                return factory.all();
+                return tools.all();
             }
         } else {
             return criterion;

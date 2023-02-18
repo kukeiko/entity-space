@@ -22,12 +22,13 @@ import { Entity } from "../common/entity.type";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
 import { ICriterion } from "../criteria/vnext/criterion.interface";
 import { EntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools";
-import { EntityWhere } from "../criteria/vnext/entity-criteria-tools.interface";
+import { EntityWhere, IEntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools.interface";
 import { EntitySet } from "../entity/data-structures/entity-set";
 import { normalizeEntities } from "../entity/functions/normalize-entities.fn";
 import { IEntityStore } from "../entity/i-entity-store";
 import { InMemoryEntityDatabase } from "../entity/in-memory-entity-database";
 import { EntityQueryTools } from "../query/entity-query-tools";
+import { IEntityQueryTools } from "../query/entity-query-tools.interface";
 import { IEntityQuery } from "../query/entity-query.interface";
 import { QueryPaging } from "../query/query-paging";
 import { BlueprintInstance } from "../schema/blueprint-instance";
@@ -51,8 +52,8 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
     private readonly database = new InMemoryEntityDatabase();
     private readonly watchedQueries = new Map<IEntityQuery, Subject<Entity[]>>();
     interceptors: IEntityStreamInterceptor[] = [];
-    private readonly criteriaTools = new EntityCriteriaTools();
-    private readonly queryTools = new EntityQueryTools({ criteriaTools: this.criteriaTools });
+    private readonly criteriaTools: IEntityCriteriaTools = new EntityCriteriaTools();
+    private readonly queryTools: IEntityQueryTools = new EntityQueryTools({ criteriaTools: this.criteriaTools });
 
     // [todo] rename to upsert()?
     // [todo] we allow partials, but types don't reflect that (same @ cache and store)
@@ -221,7 +222,7 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
         options: ICriterion = this.criteriaTools.never(),
         paging?: { skip?: number; top?: number; from?: number; to?: number }
     ): Observable<T[]> {
-        if (!ICriterion.is(criterion)) {
+        if (!this.criteriaTools.isCriterion(criterion)) {
             criterion = this.criteriaTools.where(criterion);
         }
 

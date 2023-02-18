@@ -70,7 +70,7 @@ export class QueryPaging {
 
         const merged = this.range.merge(other.range);
 
-        if (!IInNumberRangeCriterion.is(merged)) {
+        if (!this.criteriaTools.isInNumberRangeCriterion(merged)) {
             return false;
         }
 

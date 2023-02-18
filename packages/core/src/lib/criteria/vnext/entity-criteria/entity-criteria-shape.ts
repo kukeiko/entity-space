@@ -276,9 +276,9 @@ export class EntityCriteriaShape<E extends Entity, S>
     }
 
     reshape(criterion: ICriterion): false | ReshapedCriterion<IEntityCriteria> {
-        if (IEntityCriteria.is(criterion)) {
+        if (this.tools.isEntityCriteria(criterion)) {
             return this.reshapeEntityCriteria(criterion);
-        } else if (IOrCriterion.is(criterion)) {
+        } else if (this.tools.isOrCriterion(criterion)) {
             return reshapeOrCriteria(this, criterion);
         }
 

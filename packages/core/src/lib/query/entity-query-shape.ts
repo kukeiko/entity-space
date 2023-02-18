@@ -3,8 +3,8 @@ import { AllCriterionShape } from "../criteria/vnext/all/all-criterion-shape";
 import { ICriterionShape } from "../criteria/vnext/criterion-shape.interface";
 import { ICriterion } from "../criteria/vnext/criterion.interface";
 import { EntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools";
+import { IEntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools.interface";
 import { NeverCriterionShape } from "../criteria/vnext/never/never-criterion-shape";
-import { NoneCriterionShape } from "../criteria/vnext/none/none-criterion-shape";
 import { IEntitySchema } from "../schema/schema.interface";
 import { EntityQueryTools } from "./entity-query-tools";
 import { IEntityQuery } from "./entity-query.interface";
@@ -37,11 +37,12 @@ export class EntityQueryShape {
         selection: EntitySelection;
     }) {
         this.schema = schema;
-        this.options = options ?? new NeverCriterionShape();
-        this.criterion = criterion ?? new AllCriterionShape();
+        this.options = options ?? new NeverCriterionShape({ tools: this.criteriaTools });
+        this.criterion = criterion ?? new AllCriterionShape({ tools: this.criteriaTools });
         this.selection = selection;
     }
 
+    private readonly criteriaTools: IEntityCriteriaTools = new EntityCriteriaTools();
     private readonly schema: IEntitySchema;
     private readonly options: ICriterionShape<ICriterion, unknown>;
     private readonly criterion: ICriterionShape<ICriterion, unknown>;

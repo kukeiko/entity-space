@@ -1,8 +1,6 @@
-import { IAndCriterion } from "../and/and-criterion.interface";
 import { CriterionBase } from "../criterion-base";
 import { ICriterion, ICriterion$ } from "../criterion.interface";
 import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
-import { IOrCriterion } from "../or/or-criterion.interface";
 import { IIsOddCriterion, IIsOddCriterion$ } from "./is-odd-criterion.interface";
 
 export class IsOddCriterion extends CriterionBase implements IIsOddCriterion {
@@ -20,7 +18,7 @@ export class IsOddCriterion extends CriterionBase implements IIsOddCriterion {
     }
 
     intersect(other: ICriterion): false | ICriterion {
-        if (IIsOddCriterion.is(other)) {
+        if (this.tools.isOddCriterion(other)) {
             return this;
         }
 
@@ -44,17 +42,17 @@ export class IsOddCriterion extends CriterionBase implements IIsOddCriterion {
     }
 
     minus(other: ICriterion): boolean | ICriterion {
-        if (IOrCriterion.is(other) || IAndCriterion.is(other)) {
+        if (this.tools.isOrCriterion(other) || this.tools.isAndCriterion(other)) {
             return other.subtractFrom(this);
         }
 
-        return IIsOddCriterion.is(other);
+        return this.tools.isOddCriterion(other);
     }
 
     subtractFrom(other: ICriterion): boolean | ICriterion {
-        if (IOrCriterion.is(other) || IAndCriterion.is(other)) {
+        if (this.tools.isOrCriterion(other) || this.tools.isAndCriterion(other)) {
             return other.minus(this);
-        } else if (IIsOddCriterion.is(other)) {
+        } else if (this.tools.isOddCriterion(other)) {
             return true;
         }
 

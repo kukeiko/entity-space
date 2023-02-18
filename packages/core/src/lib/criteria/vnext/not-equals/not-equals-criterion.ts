@@ -39,7 +39,7 @@ export class NotEqualsCriterion extends CriterionBase implements INotEqualsCrite
     }
 
     merge(other: ICriterion): false | ICriterion {
-        if (INotEqualsCriterion.is(other) && this.value === other.getValue()) {
+        if (this.tools.isNotEqualsCriterion(other) && this.value === other.getValue()) {
             return this;
         }
 
@@ -49,7 +49,7 @@ export class NotEqualsCriterion extends CriterionBase implements INotEqualsCrite
     // [todo] some reduction cases were missing - seems like i was sloppy? figure out if there are more,
     // and not only here, but in all criterion implementations
     minus(other: ICriterion): boolean | ICriterion {
-        if (INotEqualsCriterion.is(other) && this.value === other.getValue()) {
+        if (this.tools.isNotEqualsCriterion(other) && this.value === other.getValue()) {
             return true;
         }
 
@@ -59,7 +59,7 @@ export class NotEqualsCriterion extends CriterionBase implements INotEqualsCrite
     // [todo] some reduction cases were missing - seems like i was sloppy? figure out if there are more,
     // and not only here, but in all criterion implementations
     subtractFrom(other: ICriterion): boolean | ICriterion {
-        if (INotEqualsCriterion.is(other) && this.value === other.getValue()) {
+        if (this.tools.isNotEqualsCriterion(other) && this.value === other.getValue()) {
             return true;
         }
 

@@ -125,7 +125,7 @@ export abstract class InRangeCriterion<T> extends CriterionBase implements ICrit
     }
 
     subtractFrom(other: ICriterion): boolean | ICriterion {
-        if (IOrCriterion.is(other) || IAndCriterion.is(other)) {
+        if (this.tools.isOrCriterion(other) || this.tools.isAndCriterion(other)) {
             return other.minus(this);
         } else if (other instanceof this.selfClass) {
             const otherFrom = other.getFrom();
@@ -181,7 +181,7 @@ export abstract class InRangeCriterion<T> extends CriterionBase implements ICrit
     }
 
     merge(other: ICriterion): false | ICriterion {
-        if (IOrCriterion.is(other) || IAndCriterion.is(other)) {
+        if (this.tools.isOrCriterion(other) || this.tools.isAndCriterion(other)) {
             return other.merge(this);
         } else if (other instanceof this.selfClass) {
             const otherFrom = other.getFrom();
@@ -236,7 +236,7 @@ export abstract class InRangeCriterion<T> extends CriterionBase implements ICrit
     }
 
     intersect(other: ICriterion): false | ICriterion {
-        if (IOrCriterion.is(other) || IAndCriterion.is(other)) {
+        if (this.tools.isOrCriterion(other) || this.tools.isAndCriterion(other)) {
             return other.intersect(this);
         } else if (other instanceof this.selfClass) {
             const [otherFrom, otherTo, selfFrom, selfTo] = [

@@ -3,8 +3,6 @@ import { ICriterionShape, ICriterionShape$ } from "../criterion-shape.interface"
 import { ICriterion } from "../criterion.interface";
 import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
 import { getPrimitiveTypeName } from "../get-primitive-type-name.fn";
-import { IInArrayCriterion } from "../in-array/in-array-criterion.interface";
-import { IOrCriterion } from "../or/or-criterion.interface";
 import { reshapeOrCriteria } from "../reshape-or-criteria.fn";
 import { ReshapedCriterion } from "../reshaped-criterion";
 import { IEqualsCriterion } from "./equals-criterion.interface";
@@ -41,13 +39,13 @@ export class EqualsCriterionShape<T extends Primitive | typeof Null>
     }
 
     reshape(criterion: ICriterion): false | ReshapedCriterion<IEqualsCriterion<T>> {
-        if (IEqualsCriterion.is(criterion)) {
+        if (this.tools.isEqualsCriterion(criterion)) {
             if (this.valueMatchesType(criterion.getValue())) {
                 return new ReshapedCriterion([criterion]);
             } else {
                 return false;
             }
-        } else if (IInArrayCriterion.is(criterion)) {
+        } else if (this.tools.isInArrayCriterion(criterion)) {
             const values = criterion
                 .getValues()
                 .filter((value): value is ReturnType<T> => this.valueMatchesType(value));
@@ -61,7 +59,7 @@ export class EqualsCriterionShape<T extends Primitive | typeof Null>
 
                 return new ReshapedCriterion(remapped, open);
             }
-        } else if (IOrCriterion.is(criterion)) {
+        } else if (this.tools.isOrCriterion(criterion)) {
             return reshapeOrCriteria(this, criterion);
         }
 

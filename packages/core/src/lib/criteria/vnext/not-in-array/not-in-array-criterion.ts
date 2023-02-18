@@ -1,10 +1,7 @@
 import { Null, Primitive, subtractSets } from "@entity-space/utils";
-import { IAndCriterion } from "../and/and-criterion.interface";
 import { CriterionBase } from "../criterion-base";
 import { ICriterion, ICriterion$ } from "../criterion.interface";
 import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
-import { IInArrayCriterion } from "../in-array/in-array-criterion.interface";
-import { IOrCriterion } from "../or/or-criterion.interface";
 import { INotInArrayCriterion, INotInArrayCriterion$ } from "./not-in-array-criterion.interface";
 
 type PrimitiveValue = ReturnType<Primitive | typeof Null>;
@@ -42,7 +39,7 @@ export class NotInArrayCriterion extends CriterionBase implements INotInArrayCri
     }
 
     merge(other: ICriterion): false | ICriterion {
-        if (INotInArrayCriterion.is(other)) {
+        if (this.tools.isNotInArrayCriterion(other)) {
             return this.tools.notInArray([...this.values, ...other.getValues()]);
         }
 
@@ -54,9 +51,9 @@ export class NotInArrayCriterion extends CriterionBase implements INotInArrayCri
     }
 
     subtractFrom(other: ICriterion): boolean | ICriterion {
-        if (IOrCriterion.is(other) || IAndCriterion.is(other)) {
+        if (this.tools.isOrCriterion(other) || this.tools.isAndCriterion(other)) {
             return other.minus(this);
-        } else if (IInArrayCriterion.is(other)) {
+        } else if (this.tools.isInArrayCriterion(other)) {
             const copy = new Set(other.getValues());
 
             for (const value of other.getValues()) {
@@ -72,7 +69,7 @@ export class NotInArrayCriterion extends CriterionBase implements INotInArrayCri
             } else {
                 return this.tools.inArray(copy);
             }
-        } else if (INotInArrayCriterion.is(other)) {
+        } else if (this.tools.isNotInArrayCriterion(other)) {
             const remaining = subtractSets(this.values, new Set(other.getValues()));
             if (remaining.size === 0) {
                 return true;

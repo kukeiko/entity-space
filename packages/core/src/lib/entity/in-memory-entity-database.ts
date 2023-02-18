@@ -3,12 +3,13 @@ import { flatten } from "lodash";
 import { Observable, Subject } from "rxjs";
 import { Entity } from "../common/entity.type";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
-import { IAllCriterion } from "../criteria/vnext/all/all-criterion.interface";
 import { ICriterion } from "../criteria/vnext/criterion.interface";
-import { EntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools";
 import { EntityCriteriaShapeTools } from "../criteria/vnext/entity-criteria-shape-tools";
-import { INeverCriterion } from "../criteria/vnext/never/never-criterion.interface";
+import { IEntityCriteriaShapeTools } from "../criteria/vnext/entity-criteria-shape-tools.interface";
+import { EntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools";
+import { IEntityCriteriaTools } from "../criteria/vnext/entity-criteria-tools.interface";
 import { EntityQueryTools } from "../query/entity-query-tools";
+import { IEntityQueryTools } from "../query/entity-query-tools.interface";
 import { IEntityQuery } from "../query/entity-query.interface";
 import { EntitySelection } from "../query/entity-selection";
 import { QueryPaging } from "../query/query-paging";
@@ -28,9 +29,11 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
     private readonly noOptionsPageCache: { criteria: ICriterion; cache: PagedEntityIdCache }[] = [];
     private readonly optionsCache_v2: { options: ICriterion; criteria: ICriterion; ids: Entity[] }[] = [];
     private readonly optionsPageCache: { options: ICriterion; criteria: ICriterion; cache: PagedEntityIdCache }[] = [];
-    private readonly criteriaTools = new EntityCriteriaTools();
-    private readonly criteriaShapeTools = new EntityCriteriaShapeTools({ criteriaTools: this.criteriaTools });
-    private readonly queryTools = new EntityQueryTools({ criteriaTools: this.criteriaTools });
+    private readonly criteriaTools: IEntityCriteriaTools = new EntityCriteriaTools();
+    private readonly criteriaShapeTools: IEntityCriteriaShapeTools = new EntityCriteriaShapeTools({
+        criteriaTools: this.criteriaTools,
+    });
+    private readonly queryTools: IEntityQueryTools = new EntityQueryTools({ criteriaTools: this.criteriaTools });
 
     queryCacheChanged$(): Observable<IEntityQuery[]> {
         return this.queryCacheChanged.asObservable();
@@ -75,8 +78,9 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         const options = query.getOptions();
         const page = query.getPaging();
         const criteria = query.getCriteria();
+        const { isAllCriterion, isNeverCriterion } = this.criteriaTools;
 
-        if (!INeverCriterion.is(options) && !IAllCriterion.is(options)) {
+        if (!isNeverCriterion(options) && !isAllCriterion(options)) {
             if (page) {
                 const match = this.optionsPageCache.find(
                     item => item.options.equivalent(options) && item.criteria.equivalent(criteria)
@@ -124,7 +128,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
             entities = query.getCriteria().filter(entities);
         }
 
-        if (IAllCriterion.is(criterion) && !IAllCriterion.is(query.getCriteria())) {
+        if (isAllCriterion(criterion) && !isAllCriterion(query.getCriteria())) {
             // [todo] hotfix for non-related, but nested criteria
             entities = query.getCriteria().filter(entities);
         }
@@ -160,8 +164,9 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         const options = entitySet.getQuery().getOptions();
         const page = entitySet.getQuery().getPaging();
         const criteria = entitySet.getQuery().getCriteria();
+        const { isAllCriterion, isNeverCriterion, createCriterionFromEntities, never } = this.criteriaTools;
 
-        if (!INeverCriterion.is(options) && !IAllCriterion.is(options) && page) {
+        if (!isNeverCriterion(options) && !isAllCriterion(options) && page) {
             const match = this.optionsPageCache.find(
                 item => item.options.equivalent(options) && item.criteria.equivalent(criteria)
             );
@@ -173,7 +178,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
                 cache.add(entities, page);
                 this.optionsPageCache.push({ options, cache, criteria });
             }
-        } else if (!INeverCriterion.is(options) && !IAllCriterion.is(options)) {
+        } else if (!isNeverCriterion(options) && !isAllCriterion(options)) {
             const match = this.optionsCache_v2.find(
                 item => item.options.equivalent(options) && item.criteria.equivalent(criteria)
             );
@@ -195,27 +200,21 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
             }
         }
 
-        if (!INeverCriterion.is(options) && !IAllCriterion.is(options)) {
+        if (!isNeverCriterion(options) && !isAllCriterion(options)) {
             if (entitySet.getEntities().length) {
                 const key = entitySet.getSchema().getKey();
-                const keyCriterion = this.criteriaTools.createCriterionFromEntities(
-                    entitySet.getEntities(),
-                    key.getPath()
-                );
+                const keyCriterion = createCriterionFromEntities(entitySet.getEntities(), key.getPath());
                 this.optionsCache.push({ options, paging: page, ids: keyCriterion });
             } else {
-                this.optionsCache.push({ options, paging: page, ids: this.criteriaTools.never() });
+                this.optionsCache.push({ options, paging: page, ids: never() });
             }
         } else if (page) {
             if (entitySet.getEntities().length) {
                 const key = entitySet.getSchema().getKey();
-                const keyCriterion = this.criteriaTools.createCriterionFromEntities(
-                    entitySet.getEntities(),
-                    key.getPath()
-                );
+                const keyCriterion = createCriterionFromEntities(entitySet.getEntities(), key.getPath());
                 this.optionsCache.push({ paging: page, ids: keyCriterion });
             } else {
-                this.optionsCache.push({ paging: page, ids: this.criteriaTools.never() });
+                this.optionsCache.push({ paging: page, ids: never() });
             }
         }
 

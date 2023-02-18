@@ -25,7 +25,7 @@ export class EntityCriteriaShapeTools implements IEntityCriteriaShapeTools {
     };
 
     all = (): AllCriterionShape => {
-        return new AllCriterionShape();
+        return new AllCriterionShape({ tools: this.criteriaTools });
     };
 
     equals = <T extends Primitive | typeof Null>(valueTypes?: T[] | undefined): EqualsCriterionShape<T> => {
@@ -45,14 +45,14 @@ export class EntityCriteriaShapeTools implements IEntityCriteriaShapeTools {
     };
 
     inRange = <T extends typeof String | typeof Number>(valueType: T): InRangeCriterionShape<T> => {
-        return new InRangeCriterionShape({ valueType });
+        return new InRangeCriterionShape({ valueType, tools: this.criteriaTools });
     };
 
     or = <T extends ICriterionShape<ICriterion, unknown>>(shapes: T[]): OrCriterionShape<T> => {
         return new OrCriterionShape({ tools: this.criteriaTools, shapes });
     };
 
-    never = (): NeverCriterionShape => new NeverCriterionShape();
+    never = (): NeverCriterionShape => new NeverCriterionShape({ tools: this.criteriaTools });
 
     where = <S extends EntityCriteriaShapeType<Entity>>(shape: S): EntityCriteriaShape<Entity, S> => {
         // [todo] reconsider requiring a schema to create a shape

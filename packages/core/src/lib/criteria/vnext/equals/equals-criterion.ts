@@ -1,10 +1,7 @@
 import { Null, Primitive } from "@entity-space/utils";
-import { IAndCriterion } from "../and/and-criterion.interface";
 import { CriterionBase } from "../criterion-base";
 import { ICriterion, ICriterion$ } from "../criterion.interface";
 import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
-import { IInArrayCriterion } from "../in-array/in-array-criterion.interface";
-import { IOrCriterion } from "../or/or-criterion.interface";
 import { IEqualsCriterion, IEqualsCriterion$ } from "./equals-criterion.interface";
 
 type PrimitiveValue = ReturnType<Primitive | typeof Null>;
@@ -46,13 +43,13 @@ export class EqualsCriterion extends CriterionBase implements IEqualsCriterion {
     }
 
     merge(other: ICriterion): false | ICriterion {
-        if (IEqualsCriterion.is(other)) {
+        if (this.tools.isEqualsCriterion(other)) {
             if (this.value === other.getValue()) {
                 return this;
             } else {
                 return this.tools.inArray([this.value, other.getValue()]);
             }
-        } else if (IInArrayCriterion.is(other)) {
+        } else if (this.tools.isInArrayCriterion(other)) {
             if (other.contains(this.value)) {
                 return other;
             } else {
@@ -75,12 +72,12 @@ export class EqualsCriterion extends CriterionBase implements IEqualsCriterion {
     // [todo] some reduction cases were missing - seems like i was sloppy? figure out if there are more,
     // and not only here, but in all criterion implementations
     subtractFrom(other: ICriterion): boolean | ICriterion {
-        if (IOrCriterion.is(other) || IAndCriterion.is(other)) {
+        if (this.tools.isOrCriterion(other) || this.tools.isAndCriterion(other)) {
             // [todo] added this case - write test for it
             return other.minus(this);
-        } else if (IEqualsCriterion.is(other)) {
+        } else if (this.tools.isEqualsCriterion(other)) {
             return this.value === other.getValue();
-        } else if (IInArrayCriterion.is(other) && other.contains(this.value)) {
+        } else if (this.tools.isInArrayCriterion(other) && other.contains(this.value)) {
             // [todo] added this case - write test for it
             const withoutMyValue = new Set(other.getValues());
             withoutMyValue.delete(this.getValue());

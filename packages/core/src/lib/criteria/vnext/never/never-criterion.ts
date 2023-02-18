@@ -38,7 +38,7 @@ export class NeverCriterion extends CriterionBase implements INeverCriterion {
     }
 
     subtractFrom(other: ICriterion): boolean | ICriterion {
-        return INeverCriterion.is(other);
+        return this.tools.isNeverCriterion(other);
     }
 
     override toString(): string {

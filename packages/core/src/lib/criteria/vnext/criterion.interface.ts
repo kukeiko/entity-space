@@ -1,5 +1,3 @@
-import { hasInterfaceMarker } from "./has-interface-marker.fn";
-
 export const ICriterion$ = Symbol();
 
 export interface ICriterion {
@@ -12,14 +10,8 @@ export interface ICriterion {
     // [todo] rename to plus?
     merge(other: ICriterion): false | ICriterion;
     minus(other: ICriterion): boolean | ICriterion;
-    simplify() : ICriterion;
+    simplify(): ICriterion;
     // [todo] to be removed in favor of minus()
     subtractFrom(other: ICriterion): boolean | ICriterion;
     toString(): string;
-}
-
-export module ICriterion {
-    export function is(value: unknown): value is ICriterion {
-        return hasInterfaceMarker(ICriterion$, value);
-    }
 }

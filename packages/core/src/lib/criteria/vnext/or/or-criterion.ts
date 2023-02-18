@@ -30,7 +30,7 @@ export class OrCriterion extends CriterionBase implements IOrCriterion {
             const result = mine.intersect(other);
 
             if (result !== false) {
-                if (IOrCriterion.is(result)) {
+                if (this.tools.isOrCriterion(result)) {
                     intersected.push(...result.getCriteria());
                 } else {
                     intersected.push(result);
@@ -48,9 +48,9 @@ export class OrCriterion extends CriterionBase implements IOrCriterion {
     invert(): false | ICriterion {
         const inverted = this.criteria.map(criterion => criterion.invert());
 
-        if (inverted.every(ICriterion.is)) {
+        if (inverted.every(this.tools.isCriterion)) {
             const flattenedInverted = inverted
-                .map(criterion => (IOrCriterion.is(criterion) ? [...criterion.getCriteria()] : [criterion]))
+                .map(criterion => (this.tools.isOrCriterion(criterion) ? [...criterion.getCriteria()] : [criterion]))
                 .reduce((acc, value) => [...acc, ...value], []);
 
             return this.tools.or(flattenedInverted);

@@ -8,40 +8,41 @@ import {
 } from "@entity-space/utils";
 import { Entity } from "../../common/entity.type";
 import { AllCriterion } from "./all/all-criterion";
-import { IAllCriterion } from "./all/all-criterion.interface";
+import { IAllCriterion, IAllCriterion$ } from "./all/all-criterion.interface";
 import { AndCriterion } from "./and/and-criterion";
-import { IAndCriterion } from "./and/and-criterion.interface";
+import { IAndCriterion, IAndCriterion$ } from "./and/and-criterion.interface";
 import { IsEvenCriterion } from "./binary/is-even-criterion";
-import { IIsEvenCriterion } from "./binary/is-even-criterion.interface";
+import { IIsEvenCriterion, IIsEvenCriterion$ } from "./binary/is-even-criterion.interface";
 import { IsOddCriterion } from "./binary/is-odd-criterion";
-import { IIsOddCriterion } from "./binary/is-odd-criterion.interface";
-import { ICriterion } from "./criterion.interface";
+import { IIsOddCriterion, IIsOddCriterion$ } from "./binary/is-odd-criterion.interface";
+import { ICriterion, ICriterion$ } from "./criterion.interface";
 import { EntityWhere, IEntityCriteriaTools } from "./entity-criteria-tools.interface";
 import { EntityCriteria } from "./entity-criteria/entity-criteria";
-import { IEntityCriteria } from "./entity-criteria/entity-criteria.interface";
-import { IEqualsCriterion } from "./equals/equals-criterion.interface";
+import { IEntityCriteria, IEntityCriteria$ } from "./entity-criteria/entity-criteria.interface";
+import { IEqualsCriterion, IEqualsCriterion$ } from "./equals/equals-criterion.interface";
 import { EqualsCriterion } from "./equals/equals-criterion";
 import { InArrayCriterion } from "./in-array/in-array-criterion";
-import { IInArrayCriterion } from "./in-array/in-array-criterion.interface";
-import { IInNumberRangeCriterion } from "./in-range/in-number-range-criterion.interface";
+import { IInArrayCriterion, IInArrayCriterion$ } from "./in-array/in-array-criterion.interface";
+import { IInNumberRangeCriterion, IInNumberRangeCriterion$ } from "./in-range/in-number-range-criterion.interface";
 import { InNumberRangeCriterion } from "./in-range/in-number-range-criterion";
 import { InStringRangeCriterion } from "./in-range/in-string-range-criterion";
-import { IInStringRangeCriterion } from "./in-range/in-string-range-criterion.interface";
-import { INotEqualsCriterion } from "./not-equals/not-equals-criterion.interface";
+import { IInStringRangeCriterion, IInStringRangeCriterion$ } from "./in-range/in-string-range-criterion.interface";
+import { INotEqualsCriterion, INotEqualsCriterion$ } from "./not-equals/not-equals-criterion.interface";
 import { NotEqualsCriterion } from "./not-equals/not-equals-criterion";
 import { NotInArrayCriterion } from "./not-in-array/not-in-array-criterion";
-import { INotInArrayCriterion } from "./not-in-array/not-in-array-criterion.interface";
+import { INotInArrayCriterion, INotInArrayCriterion$ } from "./not-in-array/not-in-array-criterion.interface";
 import { NoneCriterion } from "./none/none-criterion";
-import { INoneCriterion } from "./none/none-criterion.interface";
+import { INoneCriterion, INoneCriterion$ } from "./none/none-criterion.interface";
 import { OrCriterion } from "./or/or-criterion";
-import { IOrCriterion } from "./or/or-criterion.interface";
+import { IOrCriterion, IOrCriterion$ } from "./or/or-criterion.interface";
 import { NeverCriterion } from "./never/never-criterion";
-import { INeverCriterion } from "./never/never-criterion.interface";
-import { ISomeCriterion } from "./some/some-criterion.interface";
+import { INeverCriterion, INeverCriterion$ } from "./never/never-criterion.interface";
+import { ISomeCriterion, ISomeCriterion$ } from "./some/some-criterion.interface";
 import { SomeCriterion } from "./some/some-criterion";
 import { EveryCriterion } from "./every/every-criterion";
-import { IEveryCriterion } from "./every/every-criterion.interface";
+import { IEveryCriterion, IEveryCriterion$ } from "./every/every-criterion.interface";
 import { ComplexKeyMap } from "../../entity/data-structures/complex-key-map";
+import { hasInterfaceMarker } from "./has-interface-marker.fn";
 
 function isStringOrVoid(value: unknown): value is string | undefined {
     return value === void 0 || typeof value === "string";
@@ -130,7 +131,7 @@ export class EntityCriteriaTools implements IEntityCriteriaTools {
                 built[key] = this.equals(value);
             } else if (Array.isArray(value) && value.every(isPrimitiveOrNullNoCustomArg)) {
                 built[key] = this.inArray(value);
-            } else if (ICriterion.is(value)) {
+            } else if (this.isCriterion(value)) {
                 built[key] = value;
             } else if (value !== void 0) {
                 built[key] = this.where(value);
@@ -140,32 +141,72 @@ export class EntityCriteriaTools implements IEntityCriteriaTools {
         return new EntityCriteria({ criteria: built, tools: this });
     };
 
+    isCriterion = (value: unknown): value is ICriterion => {
+        return hasInterfaceMarker(ICriterion$, value);
+    };
+
     isAllCriterion = (value: unknown): value is IAllCriterion => {
-        return IAllCriterion.is(value);
+        return hasInterfaceMarker(IAllCriterion$, value);
+    };
+
+    isAndCriterion = (value: unknown): value is IAndCriterion => {
+        return hasInterfaceMarker(IAndCriterion$, value);
     };
 
     isEntityCriteria = (value: unknown): value is IEntityCriteria => {
-        return IEntityCriteria.is(value);
+        return hasInterfaceMarker(IEntityCriteria$, value);
     };
 
     isEqualsCriterion = (value: unknown): value is IEqualsCriterion => {
-        return IEqualsCriterion.is(value);
+        return hasInterfaceMarker(IEqualsCriterion$, value);
+    };
+
+    isEvenCriterion = (value: unknown): value is IIsEvenCriterion => {
+        return hasInterfaceMarker(IIsEvenCriterion$, value);
     };
 
     isEveryCriterion = (value: unknown): value is IEveryCriterion => {
-        return IEveryCriterion.is(value);
+        return hasInterfaceMarker(IEveryCriterion$, value);
     };
 
     isInArrayCriterion = (value: unknown): value is IInArrayCriterion => {
-        return IInArrayCriterion.is(value);
+        return hasInterfaceMarker(IInArrayCriterion$, value);
+    };
+
+    isInNumberRangeCriterion = (value: unknown): value is IInNumberRangeCriterion => {
+        return hasInterfaceMarker(IInNumberRangeCriterion$, value);
+    };
+
+    isInStringRangeCriterion = (value: unknown): value is IInStringRangeCriterion => {
+        return hasInterfaceMarker(IInStringRangeCriterion$, value);
     };
 
     isNeverCriterion = (value: unknown): value is INeverCriterion => {
-        return INeverCriterion.is(value);
+        return hasInterfaceMarker(INeverCriterion$, value);
+    };
+
+    isNoneCriterion = (value: unknown): value is INoneCriterion => {
+        return hasInterfaceMarker(INoneCriterion$, value);
+    };
+
+    isNotEqualsCriterion = (value: unknown): value is INotEqualsCriterion => {
+        return hasInterfaceMarker(INotEqualsCriterion$, value);
+    };
+
+    isNotInArrayCriterion = (value: unknown): value is INotInArrayCriterion => {
+        return hasInterfaceMarker(INotInArrayCriterion$, value);
+    };
+
+    isOddCriterion = (value: unknown): value is IIsOddCriterion => {
+        return hasInterfaceMarker(IIsOddCriterion$, value);
+    };
+
+    isOrCriterion = (value: unknown): value is IOrCriterion => {
+        return hasInterfaceMarker(IOrCriterion$, value);
     };
 
     isSomeCriterion = (value: unknown): value is ISomeCriterion => {
-        return ISomeCriterion.is(value);
+        return hasInterfaceMarker(ISomeCriterion$, value);
     };
 
     createCriterionFromEntities = (entities: Entity[], paths: string[], writtenPaths?: string[]): ICriterion => {

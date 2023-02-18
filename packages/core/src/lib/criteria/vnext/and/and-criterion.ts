@@ -31,9 +31,9 @@ export class AndCriterion extends CriterionBase implements IAndCriterion {
     invert(): false | ICriterion {
         const inverted = this.criteria.map(crition => crition.invert());
 
-        if (inverted.every(ICriterion.is)) {
+        if (inverted.every(this.tools.isCriterion)) {
             const flattenedInverted = inverted
-                .map(criterion => (IOrCriterion.is(criterion) ? [...criterion.getCriteria()] : [criterion]))
+                .map(criterion => (this.tools.isOrCriterion(criterion) ? [...criterion.getCriteria()] : [criterion]))
                 .reduce((acc, value) => [...acc, ...value], []);
 
             return this.tools.or(flattenedInverted);

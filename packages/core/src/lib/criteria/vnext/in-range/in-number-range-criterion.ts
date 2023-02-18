@@ -8,7 +8,7 @@ export class InNumberRangeCriterion extends InRangeCriterion<number> implements 
     override merge(other: ICriterion): false | ICriterion {
         const result = super.merge(other);
 
-        if (result === false && IInNumberRangeCriterion.is(other)) {
+        if (result === false && this.tools.isInNumberRangeCriterion(other)) {
             const otherFrom = other.getFrom();
             const otherTo = other.getTo();
             const selfFrom = this.getFrom();

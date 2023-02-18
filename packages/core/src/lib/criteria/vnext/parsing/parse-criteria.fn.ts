@@ -1,8 +1,6 @@
 import { lex } from "../../../lexer/lex.fn";
-import { IAndCriterion } from "../and/and-criterion.interface";
 import { ICriterion } from "../criterion.interface";
 import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
-import { IOrCriterion } from "../or/or-criterion.interface";
 import { criteriaTokenParser } from "./criteria.token-parser";
 
 export function parseCriteria(tools: IEntityCriteriaTools, input: string): ICriterion {
@@ -33,7 +31,10 @@ export function parseCriteria(tools: IEntityCriteriaTools, input: string): ICrit
     if (createCriterion !== void 0) {
         const criterion = createCriterion();
 
-        if ((IOrCriterion.is(criterion) || IAndCriterion.is(criterion)) && criterion.getCriteria().length === 1) {
+        if (
+            (tools.isOrCriterion(criterion) || tools.isAndCriterion(criterion)) &&
+            criterion.getCriteria().length === 1
+        ) {
             return criterion.getCriteria()[0];
         }
 

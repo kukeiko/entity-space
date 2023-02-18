@@ -5,7 +5,6 @@ import { ICriterion } from "../criterion.interface";
 import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
 import { IEqualsCriterion } from "../equals/equals-criterion.interface";
 import { getPrimitiveTypeName } from "../get-primitive-type-name.fn";
-import { IOrCriterion } from "../or/or-criterion.interface";
 import { reshapeOrCriteria } from "../reshape-or-criteria.fn";
 import { ReshapedCriterion } from "../reshaped-criterion";
 import { IInArrayCriterion } from "./in-array-criterion.interface";
@@ -34,11 +33,11 @@ export class InArrayCriterionShape<T extends Primitive | typeof Null>
     }
 
     reshape(criterion: ICriterion): false | ReshapedCriterion<IInArrayCriterion> {
-        if (IInArrayCriterion.is(criterion)) {
+        if (this.tools.isInArrayCriterion(criterion)) {
             return this.reshapeInArrayCriterion(criterion);
-        } else if (IEqualsCriterion.is(criterion)) {
+        } else if (this.tools.isEqualsCriterion(criterion)) {
             return this.reshapeEqualsValueCriterion(criterion);
-        } else if (IOrCriterion.is(criterion)) {
+        } else if (this.tools.isOrCriterion(criterion)) {
             return reshapeOrCriteria(this, criterion);
         }
 

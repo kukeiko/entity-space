@@ -1,12 +1,7 @@
 import { Null, Primitive } from "@entity-space/utils";
-import { IAndCriterion } from "../and/and-criterion.interface";
 import { CriterionBase } from "../criterion-base";
 import { ICriterion, ICriterion$ } from "../criterion.interface";
 import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
-import { IEqualsCriterion } from "../equals/equals-criterion.interface";
-import { IInNumberRangeCriterion } from "../in-range/in-number-range-criterion.interface";
-import { INotInArrayCriterion } from "../not-in-array/not-in-array-criterion.interface";
-import { IOrCriterion } from "../or/or-criterion.interface";
 import { IInArrayCriterion, IInArrayCriterion$ } from "./in-array-criterion.interface";
 
 type PrimitiveValue = ReturnType<Primitive | typeof Null>;
@@ -53,9 +48,9 @@ export class InArrayCriterion extends CriterionBase implements IInArrayCriterion
     }
 
     merge(other: ICriterion): false | ICriterion {
-        if (IInArrayCriterion.is(other)) {
+        if (this.tools.isInArrayCriterion(other)) {
             return this.tools.inArray([...this.values, ...other.getValues()]);
-        } else if (IEqualsCriterion.is(other)) {
+        } else if (this.tools.isEqualsCriterion(other)) {
             return this.tools.inArray([...this.values, other.getValue()]);
         }
 
@@ -84,9 +79,9 @@ export class InArrayCriterion extends CriterionBase implements IInArrayCriterion
     }
 
     subtractFrom(other: ICriterion): boolean | ICriterion {
-        if (IOrCriterion.is(other) || IAndCriterion.is(other)) {
+        if (this.tools.isOrCriterion(other) || this.tools.isAndCriterion(other)) {
             return other.minus(this);
-        } else if (IInArrayCriterion.is(other)) {
+        } else if (this.tools.isInArrayCriterion(other)) {
             const copy = new Set(other.getValues());
 
             for (const value of this.values) {
@@ -100,11 +95,11 @@ export class InArrayCriterion extends CriterionBase implements IInArrayCriterion
             } else {
                 return this.tools.inArray(copy);
             }
-        } else if (INotInArrayCriterion.is(other)) {
+        } else if (this.tools.isNotInArrayCriterion(other)) {
             const merged = new Set([...other.getValues(), ...this.values]);
 
             return this.tools.notInArray(merged);
-        } else if (IInNumberRangeCriterion.is(other)) {
+        } else if (this.tools.isInNumberRangeCriterion(other)) {
             let otherFrom = other.getFrom();
             let otherTo = other.getTo();
             let didReduce = false;
@@ -127,7 +122,7 @@ export class InArrayCriterion extends CriterionBase implements IInArrayCriterion
                     otherTo?.op === "<=",
                 ]);
             }
-        } else if (IEqualsCriterion.is(other) && this.values.has(other.getValue())) {
+        } else if (this.tools.isEqualsCriterion(other) && this.values.has(other.getValue())) {
             return true;
         }
 
