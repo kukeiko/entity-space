@@ -141,7 +141,11 @@ export class ComplexKeyMap<E extends Entity = Entity, V = E> {
         let map = this.map;
 
         for (const path of this.leadingPaths) {
-            map = this.map.get(readPath(path, entity)) as Map<unknown, unknown>;
+            map = map.get(readPath(path, entity)) as Map<unknown, unknown>;
+
+            if (!map) {
+                return;
+            }
         }
 
         map.delete(readPath(this.lastPath, entity));
@@ -159,19 +163,15 @@ export class ComplexKeyMap<E extends Entity = Entity, V = E> {
         for (const criterion of reshaped.getReshaped()) {
             let map = this.map;
 
-            if (this.leadingPaths.length > 0) {
-                const key: Record<string, any> = {};
+            for (const path of this.leadingPaths) {
+                // [todo] shouldn't have to split (to provide string[]), but instead just supply arg of type string
+                const equals = criterion.getByPath(path.split(".")) as IEqualsCriterion;
 
-                for (const path of this.leadingPaths) {
-                    // [todo] shouldn't have to split (to provide string[]), but instead just supply arg of type string
-                    const equals = criterion.getByPath(path.split(".")) as IEqualsCriterion;
-
-                    if (!map.has(equals.getValue())) {
-                        continue;
-                    }
-
-                    map = map.get(equals.getValue()) as Map<unknown, unknown>;
+                if (!map.has(equals.getValue())) {
+                    continue;
                 }
+
+                map = map.get(equals.getValue()) as Map<unknown, unknown>;
             }
 
             const inSetCriterion = criterion.getByPath(this.lastPath.split(".")) as IInArrayCriterion;

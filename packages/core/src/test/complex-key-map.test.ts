@@ -180,39 +180,80 @@ describe("ComplexKeyMap", () => {
         expect(actual).toEqual(expected);
     });
 
-    it("set() should provide update callback", () => {
-        // arrange
-        const map = new ComplexKeyMap<Block, string>(["pos.x", "pos.y", "pos.z"]);
-        const key: Block = { pos: { x: 1, y: 0, z: -1 } };
-        const value = "air";
-        const expected = "stone-air";
+    describe("set()", () => {
+        it("should provide update callback", () => {
+            // arrange
+            const map = new ComplexKeyMap<Block, string>(["pos.x", "pos.y", "pos.z"]);
+            const key: Block = { pos: { x: 1, y: 0, z: -1 } };
+            const value = "air";
+            const expected = "stone-air";
 
-        // act
-        map.set(key, value);
-        map.set(key, "stone", previous => (previous === "air" ? "stone-air" : "stone"));
-        const actual = map.get(key);
+            // act
+            map.set(key, value);
+            map.set(key, "stone", previous => (previous === "air" ? "stone-air" : "stone"));
+            const actual = map.get(key);
 
-        // assert
-        expect(actual).toEqual(expected);
-    });
-
-    it("set() should not set value if return value of update callback is equal to given value", () => {
-        // arrange
-        const map = new ComplexKeyMap<Artist>(["namespace", "id"]);
-        const firstValue: Artist = { id: 1, namespace: "main", name: "foo" };
-        const nextValue: Artist = { id: 1, namespace: "main", name: "bar" };
-
-        // act
-        map.set(firstValue, firstValue);
-        map.set(firstValue, nextValue, previous => {
-            previous.name = nextValue.name;
-            return nextValue;
+            // assert
+            expect(actual).toEqual(expected);
         });
 
-        const actual = map.get(firstValue);
+        it("should not set value if return value of update callback is equal to given value", () => {
+            // arrange
+            const map = new ComplexKeyMap<Artist>(["namespace", "id"]);
+            const firstValue: Artist = { id: 1, namespace: "main", name: "foo" };
+            const nextValue: Artist = { id: 1, namespace: "main", name: "bar" };
 
-        // assert
-        expect(actual).toEqual(nextValue);
-        expect(actual).toBe(firstValue);
+            // act
+            map.set(firstValue, firstValue);
+            map.set(firstValue, nextValue, previous => {
+                previous.name = nextValue.name;
+                return nextValue;
+            });
+
+            const actual = map.get(firstValue);
+
+            // assert
+            expect(actual).toEqual(nextValue);
+            expect(actual).toBe(firstValue);
+        });
+    });
+
+    describe("delete()", () => {
+        it("should remove entities", () => {
+            // arrange
+            const map = new ComplexKeyMap<Vector>(["x", "y", "z"]);
+            const vectors: Vector[] = [
+                { x: 0, y: 0, z: 0 },
+                { x: 1, y: 0, z: 0 },
+                { x: 2, y: 0, z: 0 },
+            ];
+
+            const expectedGetAll = [vectors[0], vectors[2]];
+
+            // act
+            map.setMany(vectors, vectors);
+            map.delete(vectors[1]);
+
+            // assert
+            expect(map.get(vectors[1])).toBeUndefined();
+            expect(map.getAll()).toEqual(expectedGetAll);
+        });
+
+        it("should not throw if entity to delete doesn't exist", () => {
+            // arrange
+            const map = new ComplexKeyMap<Vector>(["x", "y", "z"]);
+            const vectors: Vector[] = [
+                { x: 0, y: 0, z: 0 },
+                { x: 1, y: 0, z: 0 },
+                { x: 2, y: 0, z: 0 },
+            ];
+
+            // act
+            map.setMany(vectors, vectors);
+            const deleteEntity = () => map.delete({ x: 10, y: 20, z: 30 });
+
+            // assert
+            expect(deleteEntity).not.toThrow();
+        });
     });
 });
