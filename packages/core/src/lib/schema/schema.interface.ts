@@ -3,19 +3,6 @@ import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.typ
 
 export type PrimitiveSchemaDataType = "boolean" | "integer" | "number" | "string";
 
-// [todo] can we get rid of the "schemaType" discriminator somehow, and instead
-// find an analogue to c# "instance is ITheInterface"?
-export interface IPrimitiveSchema {
-    readonly schemaType: "primitive";
-
-    getDataType(): PrimitiveSchemaDataType;
-    isArray(): this is IArraySchema;
-    isEntity(): this is IEntitySchema;
-    isPrimitive(): this is IPrimitiveSchema;
-    isNullable(): boolean;
-    supportsValue(value: unknown): boolean;
-}
-
 export interface IEntitySchemaIndex {
     getName(): string;
     // [todo] consider renaming to "getPaths()". i was surprised it is not already named this way.
@@ -32,7 +19,6 @@ export interface IEntitySchemaRelation {
 }
 
 export interface IEntitySchema<T extends Entity = Entity> {
-    readonly schemaType: "entity";
     getAllOf(): IEntitySchema[];
     getAnyOf(): IEntitySchema[];
     getId(): string;
@@ -53,14 +39,13 @@ export interface IEntitySchema<T extends Entity = Entity> {
     createDefault(): T;
     getDefaultSelection(): UnpackedEntitySelection<T>;
     isArray(): this is IArraySchema;
+    isDictionary(): this is IDictionarySchema;
     isEntity(): this is IEntitySchema;
     isPrimitive(): this is IPrimitiveSchema;
     isNullable(): boolean;
 }
 
 export interface IEntitySchemaProperty {
-    readonly schemaType: "property";
-
     getName(): string;
     getUnboxedEntitySchema(): IEntitySchema;
     getUnboxedValueSchema(): IEntitySchema | IPrimitiveSchema;
@@ -70,21 +55,29 @@ export interface IEntitySchemaProperty {
     isRequired(): boolean;
 }
 
-export interface IDictionarySchema {
-    readonly schemaType: "dictionary";
+export interface IPrimitiveSchema {
+    getDataType(): PrimitiveSchemaDataType;
+    isArray(): this is IArraySchema;
+    isDictionary(): this is IDictionarySchema;
+    isEntity(): this is IEntitySchema;
+    isPrimitive(): this is IPrimitiveSchema;
+    isNullable(): boolean;
+    supportsValue(value: unknown): boolean;
+}
 
+export interface IArraySchema {
     getItemSchema(): IEntitySchema | IPrimitiveSchema;
     isArray(): this is IArraySchema;
+    isDictionary(): this is IDictionarySchema;
     isEntity(): this is IEntitySchema;
     isPrimitive(): this is IPrimitiveSchema;
     isNullable(): boolean;
 }
 
-export interface IArraySchema {
-    readonly schemaType: "array";
-
+export interface IDictionarySchema {
     getItemSchema(): IEntitySchema | IPrimitiveSchema;
     isArray(): this is IArraySchema;
+    isDictionary(): this is IDictionarySchema;
     isEntity(): this is IEntitySchema;
     isPrimitive(): this is IPrimitiveSchema;
     isNullable(): boolean;

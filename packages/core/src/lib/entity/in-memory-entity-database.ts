@@ -311,7 +311,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
     ): void {
         const relatedSchema = relation.getRelatedEntitySchema();
         // [todo] what about dictionaries?
-        const isArray = relation.getProperty().getValueSchema().schemaType === "array";
+        const isArray = relation.getProperty().getValueSchema().isArray();
         const fromIndex = relation.getFromIndex();
         const toIndex = relation.getToIndex();
         const criteria = this.criteriaTools.createCriterionFromEntities(

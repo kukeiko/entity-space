@@ -8,6 +8,7 @@ import { EntitySchemaRelation } from "./entity-schema-relation";
 import { PrimitiveSchema } from "./primitive-schema";
 import {
     IArraySchema,
+    IDictionarySchema,
     IEntitySchema,
     IEntitySchemaIndex,
     IEntitySchemaProperty,
@@ -32,8 +33,6 @@ export class EntitySchema<T extends Entity = Entity> implements IEntitySchema<T>
     private readonly properties: IEntitySchemaProperty[] = [];
     private readonly relations: IEntitySchemaRelation[] = [];
 
-    readonly schemaType = "entity";
-
     createDefault(): T {
         throw new Error("not implemented");
     }
@@ -46,7 +45,7 @@ export class EntitySchema<T extends Entity = Entity> implements IEntitySchema<T>
 
                 // [todo] i think i forgot to deal with array & dictionaries,
                 // fix should be easy though: just use getUnboxedValueSchema()
-                if (valueSchema.schemaType === "entity") {
+                if (valueSchema.isEntity()) {
                     return { ...acc, [property.getName()]: valueSchema.getDefaultSelection() };
                 } else {
                     return { ...acc, [property.getName()]: true } as UnpackedEntitySelection<T>;
@@ -195,6 +194,10 @@ export class EntitySchema<T extends Entity = Entity> implements IEntitySchema<T>
     }
 
     isArray(): this is IArraySchema {
+        return false;
+    }
+
+    isDictionary(): this is IDictionarySchema {
         return false;
     }
 

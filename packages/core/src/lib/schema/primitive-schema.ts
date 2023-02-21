@@ -1,4 +1,10 @@
-import { IArraySchema, IEntitySchema, IPrimitiveSchema, PrimitiveSchemaDataType } from "./schema.interface";
+import {
+    IArraySchema,
+    IDictionarySchema,
+    IEntitySchema,
+    IPrimitiveSchema,
+    PrimitiveSchemaDataType,
+} from "./schema.interface";
 
 export class PrimitiveSchema implements IPrimitiveSchema {
     constructor(dataType: PrimitiveSchemaDataType) {
@@ -6,13 +12,16 @@ export class PrimitiveSchema implements IPrimitiveSchema {
     }
 
     private readonly dataType: PrimitiveSchemaDataType;
-    readonly schemaType = "primitive";
 
     getDataType(): PrimitiveSchemaDataType {
         return this.dataType;
     }
 
     isArray(): this is IArraySchema {
+        return false;
+    }
+
+    isDictionary(): this is IDictionarySchema {
         return false;
     }
 

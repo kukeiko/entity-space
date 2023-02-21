@@ -1,4 +1,10 @@
-import { IArraySchema, IEntitySchema, IEntitySchemaProperty, IPrimitiveSchema, IPropertyValueSchema } from "./schema.interface";
+import {
+    IArraySchema,
+    IEntitySchema,
+    IEntitySchemaProperty,
+    IPrimitiveSchema,
+    IPropertyValueSchema,
+} from "./schema.interface";
 
 export class EntitySchemaProperty implements IEntitySchemaProperty {
     constructor(entitySchema: IEntitySchema, name: string, valueSchema: IPropertyValueSchema, required = false) {
@@ -16,8 +22,6 @@ export class EntitySchemaProperty implements IEntitySchemaProperty {
     private readonly name: string;
     private readonly valueSchema: IPropertyValueSchema;
 
-    readonly schemaType = "property";
-
     getName(): string {
         return this.name;
     }
@@ -25,8 +29,8 @@ export class EntitySchemaProperty implements IEntitySchemaProperty {
     getUnboxedEntitySchema(): IEntitySchema {
         const unboxedSchema = this.getUnboxedValueSchema();
 
-        if (unboxedSchema.schemaType !== "entity") {
-            throw new Error(`unboxed value schema was not of type entity: ${unboxedSchema.schemaType}`);
+        if (!unboxedSchema.isEntity()) {
+            throw new Error(`unboxed value schema was not of type entity`);
         }
 
         return unboxedSchema;
@@ -35,24 +39,19 @@ export class EntitySchemaProperty implements IEntitySchemaProperty {
     getUnboxedValueSchema(): IEntitySchema | IPrimitiveSchema {
         const valueSchema = this.getValueSchema();
 
-        switch (valueSchema.schemaType) {
-            case "array":
-            case "dictionary": {
-                const itemSchema = valueSchema.getItemSchema();
+        if (valueSchema.isArray() || valueSchema.isDictionary()) {
+            const itemSchema = valueSchema.getItemSchema();
 
-                if (itemSchema.schemaType === "primitive") {
-                    // [todo] why did i decide to throw this error here?
-                    // primitives inside arrays should be fine to have
-                    throw new Error(`value schema of property is of type primitive`);
-                }
-
-                return itemSchema;
+            if (itemSchema.isPrimitive()) {
+                // [todo] why did i decide to throw this error here?
+                // primitives inside arrays should be fine to have
+                throw new Error(`value schema of property is of type primitive`);
             }
 
-            default: {
-                return valueSchema;
-            }
+            return itemSchema;
         }
+
+        return valueSchema;
     }
 
     getValueSchema(): IPropertyValueSchema {

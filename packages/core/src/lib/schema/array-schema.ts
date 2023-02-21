@@ -1,4 +1,4 @@
-import { IArraySchema, IEntitySchema, IPrimitiveSchema } from "./schema.interface";
+import { IArraySchema, IDictionarySchema, IEntitySchema, IPrimitiveSchema } from "./schema.interface";
 
 export class ArraySchema implements IArraySchema {
     constructor(itemSchema: IEntitySchema | IPrimitiveSchema) {
@@ -7,14 +7,16 @@ export class ArraySchema implements IArraySchema {
 
     private readonly itemSchema: IEntitySchema | IPrimitiveSchema;
 
-    readonly schemaType = "array";
-
     getItemSchema(): IEntitySchema | IPrimitiveSchema {
         return this.itemSchema;
     }
 
     isArray(): this is IArraySchema {
         return true;
+    }
+
+    isDictionary(): this is IDictionarySchema {
+        return false;
     }
 
     isEntity(): this is IEntitySchema {

@@ -219,7 +219,7 @@ export class EntitySelection {
 
             if (value === true) {
                 if (!property.isRequired()) {
-                    if (valueSchema.schemaType === "entity") {
+                    if (valueSchema.isEntity()) {
                         unpacked[key] = valueSchema.getDefaultSelection();
                     } else {
                         unpacked[key] = true;
@@ -229,7 +229,7 @@ export class EntitySelection {
                 continue;
             }
 
-            if (valueSchema.schemaType !== "entity") {
+            if (!valueSchema.isEntity()) {
                 throw new Error(`in an EntitySelection, you can only provide "true" for primitive properties`);
             }
 
