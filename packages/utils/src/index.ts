@@ -21,3 +21,4 @@ export * from "./lib/write-path.fn";
 export * from "./lib/types";
 export * from "./lib/read-path.fn";
 export * from "./lib/has-property.fn";
+export * from "./lib/is-record.fn";

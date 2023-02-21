@@ -1,8 +1,7 @@
-import { EntityCriteriaTools } from "../../lib/criteria/entity-criteria-tools";
-import { IEntityCriteriaTools } from "../../lib/criteria/entity-criteria-tools.interface";
 import { EntityCriteriaShapeTools } from "../../lib/criteria/entity-criteria-shape-tools";
 import { IEntityCriteriaShapeTools } from "../../lib/criteria/entity-criteria-shape-tools.interface";
-import { $optional, $required } from "../../lib/criteria/entity-criteria/entity-criteria-shape";
+import { EntityCriteriaTools } from "../../lib/criteria/entity-criteria-tools";
+import { IEntityCriteriaTools } from "../../lib/criteria/entity-criteria-tools.interface";
 import { IEntitySchema } from "../../lib/schema/schema.interface";
 import { expectCriteria } from "./expect-criteria.fn";
 
@@ -109,12 +108,7 @@ describe("criteria: reshaping", () => {
 
     expectCriteria("{ foo: {1, 2, 3} | [100, 200], bar: {13, 37} | [7, 64] } | { foo: ({4, 5, 6}) }")
         .remappedUsing(
-            where({
-                [$required]: {
-                    foo: inArray([Number]),
-                    [$optional]: { bar: inArray([Number]) },
-                },
-            }),
+            where({ foo: inArray([Number]) }, { bar: inArray([Number]) }),
             "{ foo: in-set:number, bar?: in-set:number }"
         )
         .toEqual(["{ foo: {1, 2, 3} }", "{ foo: {4, 5, 6} }"], ["{ foo: ([100, 200]), bar: ({13, 37} | [7, 64]) }"]);
@@ -122,10 +116,7 @@ describe("criteria: reshaping", () => {
     expectCriteria("{ foo: {1, 2, 3} | [100, 200], bar: {13, 37} | [7, 64] }")
         .remappedUsing(
             or([
-                where({
-                    foo: inArray([Number]),
-                    bar: inArray([Number]),
-                }),
+                where({ foo: inArray([Number]), bar: inArray([Number]) }),
                 where({ foo: inRange(Number), bar: inRange(Number) }),
             ]),
             "or({ foo: in-set:number, bar: in-set:number }, { foo: in-range:number, bar: in-range:number })"
@@ -138,10 +129,7 @@ describe("criteria: reshaping", () => {
     expectCriteria("{ foo: {1, 2, 3} | [100, 200], bar: {13, 37} | [7, 64] }")
         .remappedUsing(
             or([
-                where({
-                    foo: inArray([Number]),
-                    bar: inArray([Number]),
-                }),
+                where({ foo: inArray([Number]), bar: inArray([Number]) }),
                 where({ foo: inRange(Number), bar: inRange(Number) }),
                 where({ foo: inArray([Number]) }),
             ]),

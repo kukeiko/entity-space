@@ -1,5 +1,7 @@
 import { readPath, writePath } from "@entity-space/utils";
 import { Entity } from "../../common/entity.type";
+import { assertValidPaths } from "../../common/validate-paths.fn";
+import { ICriterionShape } from "../../criteria/criterion-shape.interface";
 import { ICriterion } from "../../criteria/criterion.interface";
 import { EntityCriteriaShapeTools } from "../../criteria/entity-criteria-shape-tools";
 import { EntityCriteriaTools } from "../../criteria/entity-criteria-tools";
@@ -15,11 +17,7 @@ export class ComplexKeyMap<E extends Entity = Entity, V = E> {
     constructor(paths: string[]) {
         let leadingPaths: string[], lastPath: string;
 
-        if (!paths.length) {
-            throw new Error("paths can not be empty");
-        } else if (paths.some(path => !path.length)) {
-            throw new Error("paths can not contain an empty path");
-        }
+        assertValidPaths(paths);
 
         if (paths.length === 1) {
             leadingPaths = [];
@@ -33,7 +31,7 @@ export class ComplexKeyMap<E extends Entity = Entity, V = E> {
         this.lastPath = lastPath;
         const criteriaTools = new EntityCriteriaTools();
         const shapeTools = new EntityCriteriaShapeTools({ criteriaTools });
-        const bag: Record<string, any> = {};
+        const bag: Record<string, ICriterionShape> = {};
 
         for (const path of leadingPaths) {
             writePath(path, bag, shapeTools.equals());
@@ -46,7 +44,7 @@ export class ComplexKeyMap<E extends Entity = Entity, V = E> {
     private readonly map = new Map<unknown, unknown>();
     private readonly leadingPaths: string[];
     private readonly lastPath: string;
-    private readonly criterionShape: EntityCriteriaShape<Entity, any>;
+    private readonly criterionShape: EntityCriteriaShape;
 
     get(entity: E | Entity, paths?: string[]): V | undefined {
         let map = this.map;
@@ -174,9 +172,9 @@ export class ComplexKeyMap<E extends Entity = Entity, V = E> {
                 map = map.get(equals.getValue()) as Map<unknown, unknown>;
             }
 
-            const inSetCriterion = criterion.getByPath(this.lastPath.split(".")) as IInArrayCriterion;
+            const inArrayCriterion = criterion.getByPath(this.lastPath.split(".")) as IInArrayCriterion;
 
-            for (const criterionValue of inSetCriterion.getValues().values()) {
+            for (const criterionValue of inArrayCriterion.getValues()) {
                 if (map.has(criterionValue)) {
                     values.push(map.get(criterionValue) as V);
                 }

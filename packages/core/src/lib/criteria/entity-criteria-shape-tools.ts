@@ -1,17 +1,19 @@
-import { Null, Primitive } from "@entity-space/utils";
-import { Entity } from "../common/entity.type";
+import { isRecord, Null, Primitive, writePath } from "@entity-space/utils";
+import { assertValidPaths } from "../common/validate-paths.fn";
 import { AllCriterionShape } from "./all/all-criterion-shape";
 import { AnyCriterionShape } from "./any-criterion-shape";
 import { ICriterionShape } from "./criterion-shape.interface";
 import { IEntityCriteriaShapeTools } from "./entity-criteria-shape-tools.interface";
 import { IEntityCriteriaTools } from "./entity-criteria-tools.interface";
-import { EntityCriteriaShape, EntityCriteriaShapeType } from "./entity-criteria/entity-criteria-shape";
+import { EntityCriteriaShape } from "./entity-criteria/entity-criteria-shape";
 import { EqualsCriterionShape } from "./equals/equals-criterion-shape";
 import { InArrayCriterionShape } from "./in-array/in-array-criterion-shape";
 import { InRangeCriterionShape } from "./in-range/in-range-criterion-shape";
 import { NeverCriterionShape } from "./never/never-criterion-shape";
 import { OrCriterionShape } from "./or/or-criterion-shape";
 
+// [todo] rename "any" to "anyShape", and apply to all others,
+// reason: easier to identify if a shape or a criterion is created when browsing source code
 export class EntityCriteriaShapeTools implements IEntityCriteriaShapeTools {
     constructor({ criteriaTools }: { criteriaTools: IEntityCriteriaTools }) {
         this.criteriaTools = criteriaTools;
@@ -53,8 +55,48 @@ export class EntityCriteriaShapeTools implements IEntityCriteriaShapeTools {
 
     never = (): NeverCriterionShape => new NeverCriterionShape({ tools: this.criteriaTools });
 
-    where = <S extends EntityCriteriaShapeType<Entity>>(shape: S): EntityCriteriaShape<Entity, S> => {
-        // [todo] reconsider requiring a schema to create a shape
-        return EntityCriteriaShape.create(this.criteriaTools, shape);
+    where = (required: Record<string, unknown>, optional?: Record<string, unknown>): EntityCriteriaShape => {
+        const map = (bag: Record<string, unknown>): Record<string, ICriterionShape> => {
+            const keys = Object.keys(bag);
+
+            if (keys.some(key => key.includes("."))) {
+                assertValidPaths(keys);
+                const writtenPathsBag: Record<string, unknown> = {};
+
+                for (const path of keys) {
+                    writePath(path, writtenPathsBag, bag[path]);
+                }
+
+                bag = writtenPathsBag;
+            }
+
+            const shapes: Record<string, ICriterionShape> = {};
+
+            for (const key in bag) {
+                const value = bag[key];
+
+                if (this.isCriterionShape(value)) {
+                    shapes[key] = value;
+                } else if (isRecord(value)) {
+                    shapes[key] = this.where(value);
+                } else if (Array.isArray(value) && value.every(isRecord) && value.length === 2) {
+                    shapes[key] = this.where(value[0], value[1]);
+                } else {
+                    throw new Error(`invalid type; neither a criterion shape nor a record for key ${key}`);
+                }
+            }
+
+            return shapes;
+        };
+
+        return new EntityCriteriaShape({
+            tools: this.criteriaTools,
+            required: map(required),
+            optional: optional ? map(optional) : void 0,
+        });
+    };
+
+    isCriterionShape = (value: unknown): value is ICriterionShape => {
+        return ICriterionShape.is(value);
     };
 }

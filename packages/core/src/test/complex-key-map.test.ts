@@ -126,22 +126,36 @@ describe("ComplexKeyMap", () => {
         const createWithEmptyArray = () => new ComplexKeyMap([]);
         const createWithEmptyPath = () => new ComplexKeyMap([""]);
         const createWithEmptyAndNonEmptyPath = () => new ComplexKeyMap(["foo", "", "bar"]);
+        const createWithPathContainedInAnother = () => new ComplexKeyMap(["foo.bar", "foo"]);
 
         // act & assert
         expect(createWithEmptyArray).toThrow();
         expect(createWithEmptyPath).toThrow();
         expect(createWithEmptyAndNonEmptyPath).toThrow();
+        expect(createWithPathContainedInAnother).toThrow();
     });
 
     it("should throw if custom paths in get() is invalid", () => {
         // arrange
         const map = new ComplexKeyMap(["a", "b", "c"]);
-        const getWithEmptyElements = () => map.get({ d: 1, e: 1, f: 1 }, ["d", "", "f"]);
+        const getWithEmptyArray = () => map.get({ d: 1, e: 1, f: 1 }, []);
+        const getWithEmptyPath = () => map.get({ d: 1, e: 1, f: 1 }, ["d", "", "f"]);
         const getWithDifferentSize = () => map.get({ d: 1, e: 1, f: 1 }, ["d", "e"]);
+        const getWithPathContainedInAnother = () => map.get({ d: 1, e: 1, f: 1 }, ["foo", "foo.bar"]);
 
         // act & assert
-        expect(getWithEmptyElements).toThrow();
+        expect(getWithEmptyArray).toThrow();
+        expect(getWithEmptyPath).toThrow();
         expect(getWithDifferentSize).toThrow();
+        expect(getWithPathContainedInAnother).toThrow();
+    });
+
+    it("should not throw if one path is contained in another, but neither of them contain dots", () => {
+        // arrange
+        const create = () => new ComplexKeyMap(["f", "fo"]);
+
+        // act & assert
+        expect(create).not.toThrow();
     });
 
     it("getAll() should return all stored entites", () => {

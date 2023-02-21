@@ -97,7 +97,7 @@ describe("interceptors", () => {
 
     // [todo] wasted 30mins to figure out why this broke. it was an "Methot not implemented" error thrown,
     // that I did not see. I remember already coming across this, and I didn't fix it then. should fix it soon™
-    it("should load data #2 (criteria on root + hydrate parent)", async () => {
+    it("should load data #2 (criteria on root + hydrate relation)", async () => {
         // arrange
         const data: TestContentData = { users: [{ id: 2, parentId: 7 }, { id: 7 }] };
         const database = new TestContentDatabase(data);
@@ -133,7 +133,7 @@ describe("interceptors", () => {
         expectPacketEqual(actual, expected);
     });
 
-    it("should load data #3 (criteria on both root and parent + hydrate parent)", async () => {
+    it("should load data #3 (criteria on both root and relation + hydrate relation)", async () => {
         // arrange
         const data: TestContentData = { users: [{ id: 2, parentId: 7 }, { id: 7 }, { id: 3, parentId: 7 }] };
         const database = new TestContentDatabase(data);
@@ -179,7 +179,7 @@ describe("interceptors", () => {
         expectPacketEqual(actual, expected);
     });
 
-    it("should load data #4 (criteria on parent only + hydrate parent)", async () => {
+    it("should load data #4 (criteria on relation only + hydrate relation)", async () => {
         // arrange
         const data: TestContentData = { users: [{ id: 2, parentId: 7 }, { id: 7 }] };
         const database = new TestContentDatabase(data);
@@ -221,7 +221,7 @@ describe("interceptors", () => {
         expectPacketEqual(actual, expected);
     });
 
-    it("should load data #5.A (deep selection on parent)", async () => {
+    it("should load data #5.A (deep selection on relation)", async () => {
         // arrange
         const data: TestContentData = {
             users: [{ id: 2, parentId: 7 }, { id: 7, parentId: 13 }, { id: 13, parentId: 64 }, { id: 64 }],
@@ -280,7 +280,7 @@ describe("interceptors", () => {
         expectPacketEqual(actual, expected);
     });
 
-    it("should load data #5.B (deep selection on parent, using getAll() on root)", async () => {
+    it("should load data #5.B (deep selection on relation, using getAll() on root)", async () => {
         // arrange
         const data: TestContentData = {
             users: [{ id: 2, parentId: 7 }, { id: 7, parentId: 13 }, { id: 13, parentId: 64 }, { id: 64 }],

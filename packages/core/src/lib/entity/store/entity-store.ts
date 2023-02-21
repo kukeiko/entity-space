@@ -30,12 +30,22 @@ export class EntityStore {
     private entities: (Entity | undefined)[] = [];
     private readonly criteriaTools = new EntityCriteriaTools();
 
+    getKeyIndex(): EntityStoreUniqueIndex {
+        const keyIndex = this.uniqueIndexes.get(this.entitySchema.getKey().getName());
+
+        if (!keyIndex) {
+            throw new Error("no key index available");
+        }
+
+        return keyIndex;
+    }
+
     // [todo] indexing needs to be crash safe (transactional safety)
     add(entities: Entity[], options?: ICriterion, page?: QueryPaging): void {
         if (this.entitySchema.hasKey()) {
             const key = this.entitySchema.getKey();
             entities = this.dedupeEntities(entities, key.getPath());
-            const keyIndex = this.uniqueIndexes.get(key.getName())!;
+            const keyIndex = this.getKeyIndex();
 
             for (let entity of entities) {
                 const slot = keyIndex.get(entity);
@@ -84,9 +94,7 @@ export class EntityStore {
     }
 
     get(entity: Entity): Entity | undefined {
-        const key = this.entitySchema.getKey();
-        const keyIndex = this.uniqueIndexes.get(key.getName())!;
-        const slot = keyIndex.get(entity);
+        const slot = this.getKeyIndex().get(entity);
 
         if (slot === void 0) {
             return void 0;

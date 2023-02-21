@@ -15,9 +15,9 @@ import { EntitySelection } from "../query/entity-selection";
 import { QueryPaging } from "../query/query-paging";
 import { IEntitySchema, IEntitySchemaRelation } from "../schema/schema.interface";
 import { EntitySet } from "./data-structures/entity-set";
+import { IEntityDatabase } from "./entity-database.interface";
 import { joinEntities } from "./functions/join-entities.fn";
 import { normalizeEntities } from "./functions/normalize-entities.fn";
-import { IEntityDatabase } from "./entity-database.interface";
 import { EntityStore } from "./store/entity-store";
 import { PagedEntityIdCache } from "./store/paged-entity-id-cache";
 
@@ -136,7 +136,8 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         return new EntitySet<T>({ query, entities });
     }
 
-    // [todo] i think introduction of this broke workspace playground tests
+    // [todo] figure out why we have the need of remapping to indexes,
+    // when our store we read from is perfectly capable of doing that itself.
     private withoutRelationalCriteria(criterion: ICriterion, schema: IEntitySchema): ICriterion {
         const { any, where, or } = this.criteriaShapeTools;
         const optionalDeepBag: Record<string, any> = {};
@@ -145,7 +146,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
             index.getPath().forEach(path => (optionalDeepBag[path] = any()));
         });
 
-        const shape = or([where(optionalDeepBag)]);
+        const shape = or([where({}, optionalDeepBag)]);
         const reshaped = shape.reshape(criterion);
 
         if (reshaped === false) {

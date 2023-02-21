@@ -1,9 +1,8 @@
 import { Null, Primitive } from "@entity-space/utils";
-import { Entity } from "../common/entity.type";
 import { AllCriterionShape } from "./all/all-criterion-shape";
 import { AnyCriterionShape } from "./any-criterion-shape";
 import { ICriterionShape } from "./criterion-shape.interface";
-import { EntityCriteriaShape, EntityCriteriaShapeType } from "./entity-criteria/entity-criteria-shape";
+import { EntityCriteriaShape } from "./entity-criteria/entity-criteria-shape";
 import { EqualsCriterionShape } from "./equals/equals-criterion-shape";
 import { InArrayCriterionShape } from "./in-array/in-array-criterion-shape";
 import { InRangeCriterionShape } from "./in-range/in-range-criterion-shape";
@@ -18,5 +17,5 @@ export interface IEntityCriteriaShapeTools {
     inRange<T extends typeof String | typeof Number>(valueType: T): InRangeCriterionShape<T>;
     or<T extends ICriterionShape>(shapes: T[]): OrCriterionShape<T>;
     never(): NeverCriterionShape;
-    where<S extends EntityCriteriaShapeType<Entity>>(shape: S): EntityCriteriaShape<Entity, S>;
+    where(required: Record<string, unknown>, optional?: Record<string, unknown>): EntityCriteriaShape;
 }

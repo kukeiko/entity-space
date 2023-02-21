@@ -3,17 +3,18 @@ import {
     isPrimitiveOrNull,
     isPrimitiveOrNullNoCustomArg,
     isPrimitiveValue,
+    isRecord,
     Null,
     Primitive,
 } from "@entity-space/utils";
-import { uniq, isPlainObject } from "lodash";
+import { isPlainObject, uniq } from "lodash";
 import { Entity } from "../../common/entity.type";
 import { IEntitySchema, IPrimitiveSchema } from "../../schema/schema.interface";
 import { ICriterionShape } from "../criterion-shape.interface";
 import { ICriterion } from "../criterion.interface";
-import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
 import { IEntityCriteriaShapeTools } from "../entity-criteria-shape-tools.interface";
-import { $optional, $required, EntityCriteriaShape } from "../entity-criteria/entity-criteria-shape";
+import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
+import { EntityCriteriaShape } from "../entity-criteria/entity-criteria-shape";
 import { IEntityCriteria } from "../entity-criteria/entity-criteria.interface";
 import { WhereEntityShape } from "./where-entity-shape.types";
 import {
@@ -27,12 +28,6 @@ import {
 } from "./where-entity.types";
 
 const isPrimitiveOrNullType = (item: unknown): item is Primitive | typeof Null => isPrimitive(item) || item === Null;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-    // [todo] potentially not fully correct to use "isPlainObject()" from lodash,
-    // as something like "Map" also satisfied the Record<string, unknown> constraint.
-    return isPlainObject(value);
-}
 
 function isStringOrNumberOrUndefined(value: unknown): value is string | number | undefined {
     return ["string", "number", "undefined"].includes(typeof value);
@@ -51,7 +46,7 @@ export class WhereEntityTools {
         return this.toEntityCriteriaShapeFromWhereEntityShape(shape);
     }
 
-    private toEntityCriteriaShapeFromWhereEntityShape(shape: WhereEntityShape): EntityCriteriaShape<Entity, unknown> {
+    private toEntityCriteriaShapeFromWhereEntityShape(shape: WhereEntityShape): EntityCriteriaShape {
         let required: Record<string, ICriterionShape> = {};
         let optional: Record<string, ICriterionShape> = {};
 
@@ -83,7 +78,8 @@ export class WhereEntityTools {
 
         return new EntityCriteriaShape({
             tools: this.criteriaTools,
-            shape: { [$required]: required, [$optional]: optional },
+            required,
+            optional,
         });
     }
 
