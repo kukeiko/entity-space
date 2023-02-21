@@ -1,5 +1,4 @@
 import { ICriterionShape } from "../../lib/criteria/criterion-shape.interface";
-import { ICriterion } from "../../lib/criteria/criterion.interface";
 import { EntityCriteriaTools } from "../../lib/criteria/entity-criteria-tools";
 import { parseCriteria } from "../../lib/criteria/parsing/parse-criteria.fn";
 
@@ -15,7 +14,7 @@ export function expectCriteria(
     mergedWith(other: string): { toEqual(expected: string | false): void };
     minus(other: string): { toEqual(expected: string | boolean): void };
     remappedUsing(
-        shape: ICriterionShape<ICriterion, unknown>,
+        shape: ICriterionShape,
         label?: string
     ): { toEqual(remapped: string[] | string | false, open?: string[]): void };
 } {

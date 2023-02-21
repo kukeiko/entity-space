@@ -7,9 +7,7 @@ import { reshapeOrCriteria } from "../reshape-or-criteria.fn";
 import { ReshapedCriterion } from "../reshaped-criterion";
 import { IEqualsCriterion } from "./equals-criterion.interface";
 
-export class EqualsCriterionShape<T extends Primitive | typeof Null>
-    implements ICriterionShape<IEqualsCriterion<T>, ReturnType<T>>
-{
+export class EqualsCriterionShape<T extends Primitive | typeof Null> implements ICriterionShape<IEqualsCriterion<T>> {
     static create<T extends Primitive | typeof Null>(
         tools: IEntityCriteriaTools,
         valueTypes?: T[]

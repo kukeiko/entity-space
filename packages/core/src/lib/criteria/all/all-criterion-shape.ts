@@ -4,7 +4,7 @@ import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
 import { ReshapedCriterion } from "../reshaped-criterion";
 import { IAllCriterion } from "./all-criterion.interface";
 
-export class AllCriterionShape implements ICriterionShape<IAllCriterion, IAllCriterion> {
+export class AllCriterionShape implements ICriterionShape<IAllCriterion> {
     constructor({ tools }: { tools: IEntityCriteriaTools }) {
         this.tools = tools;
     }

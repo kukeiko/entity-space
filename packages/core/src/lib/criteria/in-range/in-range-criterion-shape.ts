@@ -7,7 +7,7 @@ import { IInNumberRangeCriterion } from "./in-number-range-criterion.interface";
 import { IInStringRangeCriterion } from "./in-string-range-criterion.interface";
 
 export class InRangeCriterionShape<T extends typeof String | typeof Number>
-    implements ICriterionShape<IInNumberRangeCriterion | IInStringRangeCriterion, any>
+    implements ICriterionShape<IInNumberRangeCriterion | IInStringRangeCriterion>
 {
     constructor({ valueType, tools }: { valueType: T; tools: IEntityCriteriaTools }) {
         this.valueType = valueType;

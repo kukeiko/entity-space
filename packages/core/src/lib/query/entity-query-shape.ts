@@ -32,8 +32,8 @@ export class EntityQueryShape {
         selection,
     }: {
         schema: IEntitySchema;
-        options?: ICriterionShape<ICriterion, unknown>;
-        criterion?: ICriterionShape<ICriterion, unknown>;
+        options?: ICriterionShape;
+        criterion?: ICriterionShape;
         selection: EntitySelection;
     }) {
         this.schema = schema;
@@ -44,8 +44,8 @@ export class EntityQueryShape {
 
     private readonly criteriaTools: IEntityCriteriaTools = new EntityCriteriaTools();
     private readonly schema: IEntitySchema;
-    private readonly options: ICriterionShape<ICriterion, unknown>;
-    private readonly criterion: ICriterionShape<ICriterion, unknown>;
+    private readonly options: ICriterionShape;
+    private readonly criterion: ICriterionShape;
     private readonly selection: EntitySelection;
 
     reshape(query: IEntityQuery): false | IEntityQuery[] {
@@ -53,7 +53,7 @@ export class EntityQueryShape {
         // of successfully remapped Criteria (instead of also the open ones)
         const reshapeCriterion = (
             criterion: ICriterion,
-            template: ICriterionShape<ICriterion, unknown>
+            template: ICriterionShape
         ): false | ICriterion[] => {
             const reshaped = template.reshape(criterion);
 

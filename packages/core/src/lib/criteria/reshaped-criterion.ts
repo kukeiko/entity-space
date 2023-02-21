@@ -1,6 +1,6 @@
 import { ICriterion } from "./criterion.interface";
 
-export class ReshapedCriterion<T extends ICriterion> {
+export class ReshapedCriterion<T extends ICriterion = ICriterion> {
     constructor(reshaped: T[], open?: ICriterion[]) {
         this.reshaped = reshaped;
         this.open = open ?? [];

@@ -4,7 +4,7 @@ import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
 import { ReshapedCriterion } from "../reshaped-criterion";
 import { INoneCriterion } from "./none-criterion.interface";
 
-export class NoneCriterionShape implements ICriterionShape<INoneCriterion, INoneCriterion> {
+export class NoneCriterionShape implements ICriterionShape<INoneCriterion> {
     constructor({ tools }: { tools: IEntityCriteriaTools }) {
         this.tools = tools;
     }

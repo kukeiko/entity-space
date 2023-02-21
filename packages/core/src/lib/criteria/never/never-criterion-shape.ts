@@ -4,7 +4,7 @@ import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
 import { ReshapedCriterion } from "../reshaped-criterion";
 import { INeverCriterion } from "./never-criterion.interface";
 
-export class NeverCriterionShape implements ICriterionShape<INeverCriterion, INeverCriterion> {
+export class NeverCriterionShape implements ICriterionShape<INeverCriterion> {
     constructor({ tools }: { tools: IEntityCriteriaTools }) {
         this.tools = tools;
     }
@@ -21,6 +21,6 @@ export class NeverCriterionShape implements ICriterionShape<INeverCriterion, INe
     }
 
     toString(): string {
-        return "none";
+        return "never";
     }
 }

@@ -4,14 +4,7 @@ import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
 import { ReshapedCriterion } from "../reshaped-criterion";
 import { IOrCriterion } from "./or-criterion.interface";
 
-export class OrCriterionShape<T extends ICriterionShape> implements ICriterionShape<IOrCriterion, any> {
-    static create<T extends ICriterionShape<ICriterion, any>>(
-        shapes: T[],
-        tools: IEntityCriteriaTools
-    ): OrCriterionShape<T> {
-        return new OrCriterionShape({ shapes, tools });
-    }
-
+export class OrCriterionShape<T extends ICriterionShape> implements ICriterionShape<IOrCriterion> {
     constructor({ shapes, tools }: { shapes: T[]; tools: IEntityCriteriaTools }) {
         this.shapes = shapes;
         this.tools = tools;

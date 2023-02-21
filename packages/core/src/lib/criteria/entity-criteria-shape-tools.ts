@@ -3,9 +3,8 @@ import { Entity } from "../common/entity.type";
 import { AllCriterionShape } from "./all/all-criterion-shape";
 import { AnyCriterionShape } from "./any-criterion-shape";
 import { ICriterionShape } from "./criterion-shape.interface";
-import { ICriterion } from "./criterion.interface";
-import { IEntityCriteriaTools } from "./entity-criteria-tools.interface";
 import { IEntityCriteriaShapeTools } from "./entity-criteria-shape-tools.interface";
+import { IEntityCriteriaTools } from "./entity-criteria-tools.interface";
 import { EntityCriteriaShape, EntityCriteriaShapeType } from "./entity-criteria/entity-criteria-shape";
 import { EqualsCriterionShape } from "./equals/equals-criterion-shape";
 import { InArrayCriterionShape } from "./in-array/in-array-criterion-shape";
@@ -48,7 +47,7 @@ export class EntityCriteriaShapeTools implements IEntityCriteriaShapeTools {
         return new InRangeCriterionShape({ valueType, tools: this.criteriaTools });
     };
 
-    or = <T extends ICriterionShape<ICriterion, unknown>>(shapes: T[]): OrCriterionShape<T> => {
+    or = <T extends ICriterionShape>(shapes: T[]): OrCriterionShape<T> => {
         return new OrCriterionShape({ tools: this.criteriaTools, shapes });
     };
 

@@ -9,9 +9,7 @@ import { reshapeOrCriteria } from "../reshape-or-criteria.fn";
 import { ReshapedCriterion } from "../reshaped-criterion";
 import { IInArrayCriterion } from "./in-array-criterion.interface";
 
-export class InArrayCriterionShape<T extends Primitive | typeof Null>
-    implements ICriterionShape<IInArrayCriterion, ReturnType<T>[]>
-{
+export class InArrayCriterionShape<T extends Primitive | typeof Null> implements ICriterionShape<IInArrayCriterion> {
     static create<T extends Primitive | typeof Null>(
         valueTypes: T[],
         tools: IEntityCriteriaTools

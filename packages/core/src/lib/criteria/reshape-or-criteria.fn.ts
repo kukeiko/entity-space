@@ -3,7 +3,7 @@ import { ICriterion } from "./criterion.interface";
 import { IOrCriterion } from "./or/or-criterion.interface";
 import { ReshapedCriterion } from "./reshaped-criterion";
 
-export function reshapeOrCriteria<T extends ICriterionShape<any, any>>(
+export function reshapeOrCriteria<T extends ICriterionShape>(
     template: T,
     criterion: IOrCriterion
 ): ReturnType<T["reshape"]> | false {

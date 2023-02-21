@@ -38,6 +38,8 @@ function isStringOrNumberOrUndefined(value: unknown): value is string | number |
     return ["string", "number", "undefined"].includes(typeof value);
 }
 
+// [todo] consider splitting up into "WhereEntityTools" and "WhereEntityShapeTools", as this class doesn't even
+// yet fully cover shape mapping functionality and it is already ~500 lines
 export class WhereEntityTools {
     constructor(
         private readonly shapeFactory: IEntityCriteriaShapeTools,
