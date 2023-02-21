@@ -12,10 +12,6 @@ export class NeverCriterionShape implements ICriterionShape<INeverCriterion, INe
     readonly [ICriterionShape$] = true;
     private readonly tools: IEntityCriteriaTools;
 
-    read(criterion: INeverCriterion): INeverCriterion {
-        return criterion;
-    }
-
     reshape(criterion: ICriterion): false | ReshapedCriterion<INeverCriterion> {
         if (this.tools.isNeverCriterion(criterion)) {
             return new ReshapedCriterion([criterion]);

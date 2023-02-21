@@ -12,10 +12,6 @@ export class NoneCriterionShape implements ICriterionShape<INoneCriterion, INone
     readonly [ICriterionShape$] = true;
     private readonly tools: IEntityCriteriaTools;
 
-    read(criterion: INoneCriterion): INoneCriterion {
-        return criterion;
-    }
-
     reshape(criterion: ICriterion): false | ReshapedCriterion<INoneCriterion> {
         if (this.tools.isNoneCriterion(criterion)) {
             return new ReshapedCriterion([criterion]);

@@ -4,9 +4,7 @@ import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
 import { ReshapedCriterion } from "../reshaped-criterion";
 import { IOrCriterion } from "./or-criterion.interface";
 
-export class OrCriterionShape<T extends ICriterionShape<ICriterion, any>>
-    implements ICriterionShape<IOrCriterion, any>
-{
+export class OrCriterionShape<T extends ICriterionShape> implements ICriterionShape<IOrCriterion, any> {
     static create<T extends ICriterionShape<ICriterion, any>>(
         shapes: T[],
         tools: IEntityCriteriaTools
@@ -22,10 +20,6 @@ export class OrCriterionShape<T extends ICriterionShape<ICriterion, any>>
     readonly [ICriterionShape$] = true;
     private readonly tools: IEntityCriteriaTools;
     private readonly shapes: T[];
-
-    read(criterion: IOrCriterion) {
-        throw new Error("Method not implemented.");
-    }
 
     reshape(criterion: ICriterion): false | ReshapedCriterion<IOrCriterion> {
         let remapped: ICriterion[] = [];
@@ -66,6 +60,6 @@ export class OrCriterionShape<T extends ICriterionShape<ICriterion, any>>
     }
 
     toString(): string {
-        return `(${this.shapes.map(item => item.toString()).join(" | ")})`;
+        return `(${this.shapes.map(shape => shape.toString()).join(" | ")})`;
     }
 }

@@ -18,10 +18,6 @@ export class InRangeCriterionShape<T extends typeof String | typeof Number>
     private readonly valueType: T;
     private readonly tools: IEntityCriteriaTools;
 
-    read(criterion: IInNumberRangeCriterion | IInStringRangeCriterion) {
-        throw new Error("Method not implemented.");
-    }
-
     reshape(criterion: ICriterion): false | ReshapedCriterion<IInNumberRangeCriterion | IInStringRangeCriterion> {
         if (this.tools.isInNumberRangeCriterion(criterion) && this.valueType === Number) {
             return new ReshapedCriterion([criterion]);

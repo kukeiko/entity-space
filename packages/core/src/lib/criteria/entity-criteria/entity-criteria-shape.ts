@@ -270,10 +270,6 @@ export class EntityCriteriaShape<E extends Entity, S>
         return this.shape[$optional];
     }
 
-    read(criterion: IEntityCriteria): EntityCriteriaShapeInstance<E, S> {
-        throw new Error("Method not implemented.");
-    }
-
     reshape(criterion: ICriterion): false | ReshapedCriterion<IEntityCriteria> {
         if (this.tools.isEntityCriteria(criterion)) {
             return this.reshapeEntityCriteria(criterion);

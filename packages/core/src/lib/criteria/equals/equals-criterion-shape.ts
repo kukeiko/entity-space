@@ -33,11 +33,6 @@ export class EqualsCriterionShape<T extends Primitive | typeof Null>
         return isPrimitiveOrNull(value, this.valueTypes.slice());
     }
 
-    read(criterion: IEqualsCriterion<T>): ReturnType<T> {
-        // [todo] should check value type
-        return criterion.getValue();
-    }
-
     reshape(criterion: ICriterion): false | ReshapedCriterion<IEqualsCriterion<T>> {
         if (this.tools.isEqualsCriterion(criterion)) {
             if (this.valueMatchesType(criterion.getValue())) {

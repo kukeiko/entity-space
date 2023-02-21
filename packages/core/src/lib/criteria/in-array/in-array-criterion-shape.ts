@@ -28,10 +28,6 @@ export class InArrayCriterionShape<T extends Primitive | typeof Null>
     private readonly valueTypes: readonly T[];
     private readonly tools: IEntityCriteriaTools;
 
-    read(criterion: IInArrayCriterion): ReturnType<T>[] {
-        return criterion.getValues() as ReturnType<T>[];
-    }
-
     reshape(criterion: ICriterion): false | ReshapedCriterion<IInArrayCriterion> {
         if (this.tools.isInArrayCriterion(criterion)) {
             return this.reshapeInArrayCriterion(criterion);
