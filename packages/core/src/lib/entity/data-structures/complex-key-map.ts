@@ -48,15 +48,11 @@ export class ComplexKeyMap<E extends Entity = Entity, V = E> {
 
     get(entity: E | Entity, paths?: string[]): V | undefined {
         let map = this.map;
-
         let leadingPaths = this.leadingPaths;
         let lastPath = this.lastPath;
 
         if (paths) {
-            if (paths.some(path => !path.length)) {
-                throw new Error("custom path can not contain empty elements");
-            }
-
+            assertValidPaths(paths);
             leadingPaths = paths.slice(0, -1);
             lastPath = paths[paths.length - 1];
 
