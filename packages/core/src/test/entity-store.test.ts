@@ -14,40 +14,19 @@ interface Block {
 }
 
 describe("entity-store", () => {
+    const criteriaTools = new EntityCriteriaTools();
+    const { where } = criteriaTools;
+
     it("should work", () => {
         // arrange
-        const entitySchema = new EntitySchema("block");
-        entitySchema.setKey(["position.x", "position.y", "position.z"], { name: "id" });
-        entitySchema.addIndex(["position.x", "position.z"]);
-        entitySchema.addIndex("position.x");
-        entitySchema.addIndex("position.y");
-        entitySchema.addIndex("position.z");
-        entitySchema.addIndex("typeId");
-        const entityStore = new EntityStore(entitySchema);
+        const entitySchema = new EntitySchema("block")
+            .setKey(["position.x", "position.y", "position.z"], { name: "id" })
+            .addIndex(["position.x", "position.z"])
+            .addIndex("position.x")
+            .addIndex("position.y")
+            .addIndex("position.z")
+            .addIndex("typeId");
 
-        const blocks: Block[] = [
-            { position: { x: 0, y: 0, z: 0 }, typeId: "minecraft:grass_block" },
-            { position: { x: 0, y: -1, z: 0 }, typeId: "minecraft:dirt" },
-        ];
-
-        // act
-        entityStore.add(blocks);
-        const fetched = blocks.map(block => entityStore.get(block));
-
-        // assert
-        expect(fetched).toEqual(blocks);
-        blocks.forEach((block, index) => expect(fetched[index]).not.toBe(block));
-    });
-
-    it("should work #2", () => {
-        // arrange
-        const entitySchema = new EntitySchema("block");
-        entitySchema.setKey(["position.x", "position.y", "position.z"], { name: "id" });
-        entitySchema.addIndex(["position.x", "position.z"]);
-        entitySchema.addIndex("position.x");
-        entitySchema.addIndex("position.y");
-        entitySchema.addIndex("position.z");
-        entitySchema.addIndex("typeId");
         const entityStore = new EntityStore(entitySchema);
 
         const blocks: Block[] = [
@@ -70,14 +49,15 @@ describe("entity-store", () => {
         blocks.forEach((block, index) => expect(fetched[index]).not.toBe(block));
     });
 
-    fit("should get by criterion", () => {
-        const entitySchema = new EntitySchema("block");
-        entitySchema.setKey(["position.x", "position.y", "position.z"], { name: "id" });
-        entitySchema.addIndex(["position.x", "position.z"]);
-        entitySchema.addIndex("position.x");
-        entitySchema.addIndex("position.y");
-        entitySchema.addIndex("position.z");
-        entitySchema.addIndex("typeId");
+    it("should get by criterion", () => {
+        const entitySchema = new EntitySchema("block")
+            .setKey(["position.x", "position.y", "position.z"], { name: "id" })
+            .addIndex(["position.x", "position.z"])
+            .addIndex("position.x")
+            .addIndex("position.y")
+            .addIndex("position.z")
+            .addIndex("typeId");
+
         const entityStore = new EntityStore(entitySchema);
         const criteriaFactory = new EntityCriteriaTools();
 
@@ -90,47 +70,30 @@ describe("entity-store", () => {
             { position: { x: 0, y: -1, z: 2 }, typeId: "minecraft:dirt" },
         ];
 
+        const byTypeId_expected = blocks.filter(block => block.typeId === "minecraft:dirt");
+        const byTypeId_criterion = where<Block>({ typeId: "minecraft:dirt" });
+
+        const byXandZ_expected = blocks.filter(block => block.position.x === 0 && block.position.z === 0);
+        const byXandZ_criterion = where<Block>({ position: { x: 0, z: 0 } });
+
+        const byXandZ_or_byTypeId_expected = blocks.filter(
+            block => block.typeId === "minecraft:dirt" || (block.position.x === 0 && block.position.z === 0)
+        );
+
+        const byXandZ_or_byTypeId_criterion = criteriaFactory.or([
+            where<Block>({ position: { x: 0, z: 0 } }),
+            where<Block>({ typeId: "minecraft:dirt" }),
+        ]);
+
         // act
         entityStore.add(blocks);
+        const byTypeId_actual = entityStore.getByCriterion(byTypeId_criterion);
+        const byXandZ_actual = entityStore.getByCriterion(byXandZ_criterion);
+        const byXandZ_or_byTypeId_actual = entityStore.getByCriterion(byXandZ_or_byTypeId_criterion);
 
         // assert
-        expect(
-            entityStore.getByCriterion(
-                criteriaFactory.where<Block>({
-                    typeId: criteriaFactory.equals("minecraft:dirt"),
-                })
-            )
-        ).toEqual(blocks.filter(block => block.typeId === "minecraft:dirt"));
-
-        expect(
-            entityStore.getByCriterion(
-                criteriaFactory.where<Block>({
-                    position: criteriaFactory.where<Vector>({
-                        x: criteriaFactory.equals(0),
-                        z: criteriaFactory.equals(0),
-                    }),
-                })
-            )
-        ).toEqual(blocks.filter(block => block.position.x === 0 && block.position.z === 0));
-
-        expect(
-            entityStore.getByCriterion(
-                criteriaFactory.or([
-                    criteriaFactory.where<Block>({
-                        position: criteriaFactory.where<Vector>({
-                            x: criteriaFactory.equals(0),
-                            z: criteriaFactory.equals(0),
-                        }),
-                    }),
-                    criteriaFactory.where<Block>({
-                        typeId: criteriaFactory.equals("minecraft:dirt"),
-                    }),
-                ])
-            )
-        ).toEqual(
-            blocks.filter(
-                block => block.typeId === "minecraft:dirt" || (block.position.x === 0 && block.position.z === 0)
-            )
-        );
+        expect(byTypeId_actual).toEqual(byTypeId_expected);
+        expect(byXandZ_actual).toEqual(byXandZ_expected);
+        expect(byXandZ_or_byTypeId_actual).toEqual(byXandZ_or_byTypeId_expected);
     });
 });
