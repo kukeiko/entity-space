@@ -2,7 +2,6 @@ import { EntityCriteriaShapeTools } from "../../lib/criteria/entity-criteria-sha
 import { IEntityCriteriaShapeTools } from "../../lib/criteria/entity-criteria-shape-tools.interface";
 import { EntityCriteriaTools } from "../../lib/criteria/entity-criteria-tools";
 import { IEntityCriteriaTools } from "../../lib/criteria/entity-criteria-tools.interface";
-import { IEntitySchema } from "../../lib/schema/schema.interface";
 import { expectCriteria } from "./expect-criteria.fn";
 
 // [todo] all tests should ignore order of remapped / open criteria
@@ -10,12 +9,6 @@ describe("criteria: reshaping", () => {
     const criteriaTools: IEntityCriteriaTools = new EntityCriteriaTools();
     const shapeTools: IEntityCriteriaShapeTools = new EntityCriteriaShapeTools({ criteriaTools: criteriaTools });
     const { inRange, or, inArray, equals, where, all } = shapeTools;
-
-    const dummySchema: IEntitySchema<any> = {
-        getProperties() {
-            return [];
-        },
-    } as any;
 
     expectCriteria("all").remappedUsing(all(), "all").toEqual("all");
     expectCriteria("[1, 7]").remappedUsing(all(), "all").toEqual(false);
@@ -49,6 +42,10 @@ describe("criteria: reshaping", () => {
     expectCriteria("{ foo: {1, 2, 3} }")
         .remappedUsing(where({ foo: equals([Number]) }), "{ foo: is-value:number }")
         .toEqual(["{ foo: 1 }", "{ foo: 2 }", "{ foo: 3 }"]);
+
+    expectCriteria("{ foo: 1 }")
+        .remappedUsing(where({}, { bar: equals([Number]) }))
+        .toEqual("{}");
 
     expectCriteria("{ foo: {1, 2}, bar: {4, 5} }")
         .remappedUsing(

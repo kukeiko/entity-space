@@ -29,16 +29,7 @@ export function parseCriteria(tools: IEntityCriteriaTools, input: string): ICrit
     }
 
     if (createCriterion !== void 0) {
-        const criterion = createCriterion();
-
-        if (
-            (tools.isOrCriterion(criterion) || tools.isAndCriterion(criterion)) &&
-            criterion.getCriteria().length === 1
-        ) {
-            return criterion.getCriteria()[0];
-        }
-
-        return criterion;
+        return createCriterion();
     }
 
     throw new Error("syntax error");

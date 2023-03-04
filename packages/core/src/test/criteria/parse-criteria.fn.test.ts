@@ -10,7 +10,7 @@ describe("parseCriteria()", () => {
         specFn(`should parse ${stringified}`, () => {
             const parse = () => parseCriteria(tools, stringified);
             expect(parse).not.toThrow();
-            expect(parse()).toEqual(expected);
+            expect(parse().toString()).toEqual(expected.toString());
         });
     }
 
@@ -67,6 +67,12 @@ describe("parseCriteria()", () => {
         "([1, 7] | [3, 4]) & ({123} | !{456})",
         and(or(inRange(1, 7), inRange(3, 4)), or(inArray([123]), notInArray([456])))
     );
+
+    shouldParse("([1, 7])", or(inRange(1, 7)));
+    shouldParse("(([1, 7]))", or(or(inRange(1, 7))));
+    shouldParse("([1, 7] | true)", or(inRange(1, 7), equals(true)));
+    shouldParse("([1, 7] & true)", and(inRange(1, 7), equals(true)));
+
     shouldParse(
         "(([1, 7] | [3, 4]) & ({123} | !{456} | odd | null)) | ({1,2,3} & [-0.9, ...])",
         or([

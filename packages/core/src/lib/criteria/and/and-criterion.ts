@@ -133,6 +133,6 @@ export class AndCriterion extends CriterionBase implements IAndCriterion {
     }
 
     override toString(): string {
-        return `(${this.criteria.map(criterion => criterion.toString()).join(" | ")})`;
+        return `(${this.criteria.map(criterion => criterion.toString()).join(" & ")})`;
     }
 }

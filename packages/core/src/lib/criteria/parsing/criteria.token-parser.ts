@@ -35,7 +35,7 @@ export function* criteriaTokenParser(
     const createCriterion = () => {
         packAndedItems();
 
-        if (items.length === 1) {
+        if (items.length === 1 && (!requireBrackets || tools.isAndCriterion(items[0]))) {
             return items[0];
         } else {
             return tools.or(items);

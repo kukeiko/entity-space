@@ -16,7 +16,9 @@ export function* namedCriteriaTokenParser(tools: IEntityCriteriaTools): Criterio
     while (true) {
         token = yield;
 
-        if (token.type !== TokenType.Literal) {
+        if (token.type === TokenType.Special && token.value === "}" && !Object.keys(bag).length) {
+            return () => tools.where({});
+        } else if (token.type !== TokenType.Literal) {
             return false;
         }
 

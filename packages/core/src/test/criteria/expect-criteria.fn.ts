@@ -97,7 +97,10 @@ export function expectCriteria(
                             expect(shape.reshape(parse(criteria))).toEqual(false);
                         });
                     } else {
-                        const remappedString = typeof remapped === "string" ? remapped : `${remapped.join(", ")}`;
+                        const remappedString =
+                            typeof remapped === "string"
+                                ? parse(remapped).toString()
+                                : `${remapped.map(x => parse(x)).join(", ")}`;
 
                         if (open.length === 0) {
                             specFn(`${criteria} should fully reshape using ${shapeName} to ${remappedString}`, () => {

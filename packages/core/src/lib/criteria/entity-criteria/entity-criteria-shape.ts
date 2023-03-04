@@ -80,7 +80,7 @@ export class EntityCriteriaShape implements ICriterionShape<IEntityCriteria> {
             criteriaToPermutate[key] = reshaped.getReshaped();
         }
 
-        if (!Object.keys(criteriaToPermutate).length) {
+        if (!Object.keys(criteriaToPermutate).length && Object.keys(this.required).length) {
             return false;
         }
 
