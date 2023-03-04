@@ -43,6 +43,7 @@ import { EveryCriterion } from "./every/every-criterion";
 import { IEveryCriterion, IEveryCriterion$ } from "./every/every-criterion.interface";
 import { ComplexKeyMap } from "../entity/data-structures/complex-key-map";
 import { hasInterfaceMarker } from "./has-interface-marker.fn";
+import { IEntitySchema } from "../schema/schema.interface";
 
 function isStringOrVoid(value: unknown): value is string | undefined {
     return value === void 0 || typeof value === "string";
@@ -285,5 +286,37 @@ export class EntityCriteriaTools implements IEntityCriteriaTools {
 
         // [todo] type assertion
         return this.or(map.getAll().map(bag => this.where(bag as any)));
+    }
+
+    omitRelationalCriteria(criterion: ICriterion, schema: IEntitySchema): ICriterion {
+        if (this.isOrCriterion(criterion)) {
+            return this.or(criterion.getCriteria().map(criterion => this.omitRelationalCriteria(criterion, schema)));
+        } else if (this.isAndCriterion(criterion)) {
+            return this.and(criterion.getCriteria().map(criterion => this.omitRelationalCriteria(criterion, schema)));
+        } else if (this.isEntityCriteria(criterion)) {
+            const criteria = criterion.getCriteria();
+            const omitted: Record<string, ICriterion> = {};
+
+            for (const [key, criterion] of Object.entries(criteria)) {
+                const relation = schema.findRelation(key);
+
+                if (relation !== void 0) {
+                    continue;
+                }
+
+                const property = schema.getProperty(key);
+                const valueSchema = property.getUnboxedValueSchema();
+
+                if (valueSchema.isEntity()) {
+                    omitted[key] = this.omitRelationalCriteria(criterion, valueSchema);
+                } else {
+                    omitted[key] = criterion;
+                }
+            }
+
+            return this.where(omitted);
+        } else {
+            return criterion;
+        }
     }
 }

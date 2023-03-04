@@ -37,7 +37,11 @@ describe("EntityWorkspace", () => {
                 bar: number;
             }
 
-            const schema = new EntitySchema("foo").setKey("id").addIndex("bar");
+            const schema = new EntitySchema("foo")
+                .addInteger("id", true)
+                .setKey("id")
+                .addInteger("bar", true)
+                .addIndex("bar");
             const workspace = createWorkspace();
 
             const entities: Entity[] = [
@@ -72,7 +76,12 @@ describe("EntityWorkspace", () => {
                 baz: number;
             }
 
-            const schema = new EntitySchema("foo").setKey("id").addIndex(["bar", "baz"], { name: "barAndBaz" });
+            const fooSchema = new EntitySchema("foo")
+                .addInteger("id", true)
+                .setKey("id")
+                .addInteger("bar", true)
+                .addInteger("baz", true)
+                .addIndex(["bar", "baz"], { name: "bar-baz" });
             const workspace = createWorkspace();
 
             const entities: Entity[] = [
@@ -87,10 +96,10 @@ describe("EntityWorkspace", () => {
                 { id: 2, bar: 3, baz: 1337 },
             ];
 
-            workspace.add(schema, entities);
+            workspace.add(fooSchema, entities);
 
             // act
-            const query = createQuery(schema, where<Entity>({ bar: inArray([2, 3]), baz: inArray([1337]) }));
+            const query = createQuery(fooSchema, where<Entity>({ bar: inArray([2, 3]), baz: inArray([1337]) }));
             const result = await workspace.queryAgainstCache(query);
 
             // assert
@@ -105,7 +114,10 @@ describe("EntityWorkspace", () => {
                 bar: { baz: number };
             }
 
-            const schema = new EntitySchema("foo").setKey("id").addIndex("bar.baz");
+            const fooSchema = new EntitySchema("foo").addInteger("id", true).setKey("id").addIndex("bar.baz");
+            const barSchema = new EntitySchema("bar").addInteger("baz", true);
+            fooSchema.addProperty("bar", barSchema);
+
             const workspace = createWorkspace();
 
             const entities: Entity[] = [
@@ -121,10 +133,10 @@ describe("EntityWorkspace", () => {
                 { id: 3, bar: { baz: 2 } },
             ];
 
-            workspace.add(schema, entities);
+            workspace.add(fooSchema, entities);
 
             // act
-            const query = createQuery(schema, where<Entity>({ bar: where({ baz: inArray([2, 3]) }) }));
+            const query = createQuery(fooSchema, where<Entity>({ bar: where({ baz: inArray([2, 3]) }) }));
             const result = await workspace.queryAgainstCache(query);
 
             // assert
@@ -141,8 +153,14 @@ describe("EntityWorkspace", () => {
                     moo: number;
                 };
             }
+            const fooSchema = new EntitySchema("foo")
+                .addInteger("id", true)
+                .setKey("id")
+                .addIndex(["bar.baz", "bar.moo"], { name: "bar" });
 
-            const schema = new EntitySchema("foo").setKey("id").addIndex(["bar.baz", "bar.moo"], { name: "bar" });
+            const barSchema = new EntitySchema("bar").addInteger("baz", true).addInteger("moo", true);
+            fooSchema.addProperty("bar", barSchema);
+
             const workspace = createWorkspace();
 
             const entities: Entity[] = [
@@ -157,11 +175,11 @@ describe("EntityWorkspace", () => {
                 { id: 2, bar: { baz: 3, moo: 10 } },
             ];
 
-            workspace.add(schema, entities);
+            workspace.add(fooSchema, entities);
 
             // act
             const query = createQuery(
-                schema,
+                fooSchema,
                 where<Entity>({ bar: where({ baz: inArray([2, 3]), moo: inArray([10]) }) })
             );
             const result = await workspace.queryAgainstCache(query);
@@ -185,9 +203,14 @@ describe("EntityWorkspace", () => {
                 };
             }
 
-            const schema = new EntitySchema("foo")
+            const fooSchema = new EntitySchema("foo")
+                .addInteger("id", true)
                 .setKey("id")
                 .addIndex(["bar.baz", "bar.moo", "khaz.mo", "khaz.dan"], { name: "bar" });
+
+            const barSchema = new EntitySchema("bar").addInteger("baz", true).addInteger("moo", true);
+            const khazSchema = new EntitySchema("khaz").addInteger("mo", true).addInteger("dan", true);
+            fooSchema.addProperty("bar", barSchema).addProperty("khaz", khazSchema);
 
             const workspace = createWorkspace();
 
@@ -200,11 +223,11 @@ describe("EntityWorkspace", () => {
 
             const expectedEntities: Entity[] = [{ id: 1, bar: { baz: 2, moo: 10 }, khaz: { mo: 1, dan: 2 } }];
 
-            workspace.add(schema, entities);
+            workspace.add(fooSchema, entities);
 
             // act
             const query = createQuery(
-                schema,
+                fooSchema,
                 where<Entity>({
                     bar: where({ baz: inArray([2, 3]), moo: inArray([10]) }),
                     khaz: where({ mo: inArray([1]), dan: inArray([2]) }),
@@ -221,9 +244,16 @@ describe("EntityWorkspace", () => {
 
     describe("selections", () => {
         it("selecting on 1x composite index", async () => {
-            const fooSchema = new EntitySchema("foo").setKey(["id", "secondaryId"]);
+            const fooSchema = new EntitySchema("foo")
+                .addInteger("id", true)
+                .addInteger("secondaryId", true)
+                .setKey(["id", "secondaryId"]);
+
             const barSchema = new EntitySchema("bar")
+                .addInteger("id", true)
                 .setKey("id")
+                .addInteger("secondaryId", true)
+                .addInteger("fooId", true)
                 .addIndex(["fooId", "secondaryId"], { name: "fooId" });
 
             fooSchema.addProperty("bar", barSchema);
@@ -254,11 +284,10 @@ describe("EntityWorkspace", () => {
         // but are not part of a relation, i.e. not normalized/joinable/...
         it("expanding on a relation of an entity which itself is not related", async () => {
             // arrange
-            const fooSchema = new EntitySchema("foo").setKey("id");
-            const barSchema = new EntitySchema("bar").addIndex("bazId");
-            const bazSchema = new EntitySchema("baz").setKey("id");
-            barSchema.addProperty("baz", bazSchema);
-            barSchema.addRelation("baz", "bazId", "id");
+            const fooSchema = new EntitySchema("foo").addInteger("id", true).setKey("id");
+            const barSchema = new EntitySchema("bar").addInteger("bazId", true).addIndex("bazId");
+            const bazSchema = new EntitySchema("baz").addInteger("id", true).setKey("id");
+            barSchema.addRelationProperty("baz", bazSchema, "bazId", "id");
             fooSchema.addProperty("bar", barSchema);
 
             const workspace = createWorkspace();
@@ -294,11 +323,21 @@ describe("EntityWorkspace", () => {
             id: number;
         }
 
-        const fooSchema = new EntitySchema("foo").setKey("id").addIndex("barId").addRelation("bar", "barId", "id");
-        const barSchema = new EntitySchema("bar").setKey("id").addIndex("bazId").addRelation("baz", "bazId", "id");
-        fooSchema.addProperty("bar", barSchema);
-        const bazSchema = new EntitySchema("baz").setKey("id");
-        barSchema.addProperty("baz", bazSchema);
+        const fooSchema = new EntitySchema("foo")
+            .addInteger("id", true)
+            .setKey("id")
+            .addIndex("barId")
+            .addInteger("barId", true);
+
+        const barSchema = new EntitySchema("bar")
+            .addInteger("id", true)
+            .setKey("id")
+            .addInteger("bazId", true)
+            .addIndex("bazId");
+
+        const bazSchema = new EntitySchema("baz").addInteger("id").setKey("id");
+        fooSchema.addRelationProperty("bar", barSchema, "barId", "id");
+        barSchema.addRelationProperty("baz", bazSchema, "bazId", "id");
 
         const workspace = createWorkspace();
 
@@ -338,7 +377,10 @@ describe("EntityWorkspace", () => {
                     name: string;
                 }
 
-                const entitySchema = new EntitySchema<Entity>("foo").setKey("id");
+                const entitySchema = new EntitySchema<Entity>("foo")
+                    .addInteger("id", true)
+                    .setKey("id")
+                    .addString("name");
                 const workspace = createWorkspace();
                 const entities: Entity[] = [
                     { id: 1, name: "one" },

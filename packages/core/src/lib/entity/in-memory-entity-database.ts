@@ -43,13 +43,14 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         return this.querySync(query);
     }
 
+    // [todo] unused, can be removed
     reduceByCached(query: IEntityQuery): IEntityQuery[] | false {
         const cached = this.getCachedQueries(query.getEntitySchema());
         return this.queryTools.subtractQueries([query], cached);
     }
 
     // [todo] not used; but i did not want to delete it already.
-    // if i don't find a use soonish™, i should remove it
+    // if i don't find a use soonish™ reason to keep it, i should remove it
     reduceManyByCached(queries: IEntityQuery[]): IEntityQuery[] {
         const groupedBySchema = groupBy(queries, query => query.getEntitySchema());
 
@@ -72,8 +73,9 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
     // [todo] need some tests
     querySync<T extends Entity = Entity>(query: IEntityQuery): EntitySet<T> {
         const store = this.getOrCreateStore(query.getEntitySchema());
-        const criterion = this.withoutRelationalCriteria(query.getCriteria(), query.getEntitySchema());
-        let entities = store.getByCriterion(criterion) as T[];
+        let entities = store.getByCriterion(
+            this.criteriaTools.omitRelationalCriteria(query.getCriteria(), query.getEntitySchema())
+        ) as T[];
 
         const options = query.getOptions();
         const page = query.getPaging();
@@ -128,34 +130,9 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
             entities = query.getCriteria().filter(entities);
         }
 
-        if (isAllCriterion(criterion) && !isAllCriterion(query.getCriteria())) {
-            // [todo] hotfix for non-related, but nested criteria
-            entities = query.getCriteria().filter(entities);
-        }
+        entities = query.getCriteria().filter(entities);
 
         return new EntitySet<T>({ query, entities });
-    }
-
-    // [todo] figure out why we have the need of remapping to indexes,
-    // when our store we read from is perfectly capable of doing that itself.
-    private withoutRelationalCriteria(criterion: ICriterion, schema: IEntitySchema): ICriterion {
-        const { any, where, or } = this.criteriaShapeTools;
-        const optionalDeepBag: Record<string, any> = {};
-
-        schema.getIndexes().forEach(index => {
-            index.getPath().forEach(path => (optionalDeepBag[path] = any()));
-        });
-
-        const shape = or([where({}, optionalDeepBag)]);
-        const reshaped = shape.reshape(criterion);
-
-        if (reshaped === false) {
-            return this.criteriaTools.all();
-        }
-
-        return reshaped.getReshaped().length === 1
-            ? reshaped.getReshaped()[0]
-            : this.criteriaTools.or(reshaped.getReshaped());
     }
 
     upsertSync(entitySet: EntitySet<Entity>): void {

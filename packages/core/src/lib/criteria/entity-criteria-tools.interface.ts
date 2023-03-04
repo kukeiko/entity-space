@@ -1,5 +1,6 @@
 import { Null, Primitive, Unbox } from "@entity-space/utils";
 import { Entity } from "../common/entity.type";
+import { IEntitySchema } from "../schema/schema.interface";
 import { IAllCriterion } from "./all/all-criterion.interface";
 import { IAndCriterion } from "./and/and-criterion.interface";
 import { IIsEvenCriterion } from "./binary/is-even-criterion.interface";
@@ -65,4 +66,5 @@ export interface IEntityCriteriaTools {
     isOrCriterion(value: unknown): value is IOrCriterion;
     isSomeCriterion(value: unknown): value is ISomeCriterion;
     createCriterionFromEntities(entities: Entity[], paths: string[], writtenPaths?: string[]): ICriterion;
+    omitRelationalCriteria(criterion: ICriterion, schema: IEntitySchema): ICriterion;
 }
