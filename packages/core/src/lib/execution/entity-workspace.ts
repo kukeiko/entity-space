@@ -219,30 +219,10 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
         schema: IEntitySchema<T>,
         criterion: ICriterion | EntityWhere<T> = this.criteriaTools.all(),
         selection?: UnpackedEntitySelection<T>,
-        options: ICriterion = this.criteriaTools.never(),
-        paging?: { skip?: number; top?: number; from?: number; to?: number }
+        options: ICriterion = this.criteriaTools.never()
     ): Observable<T[]> {
         if (!this.criteriaTools.isCriterion(criterion)) {
             criterion = this.criteriaTools.where(criterion);
-        }
-
-        let queryPaging: QueryPaging | undefined;
-
-        if (paging) {
-            if (paging.from || paging.to) {
-                queryPaging = new QueryPaging({ sort: [], from: paging.from, to: paging.to });
-            } else {
-                const skip = paging?.skip ?? 0;
-                const top = paging?.top;
-
-                if (skip || top) {
-                    queryPaging = new QueryPaging({
-                        sort: [],
-                        from: skip,
-                        to: top ? top + skip : void 0,
-                    });
-                }
-            }
         }
 
         const query = this.queryTools.createQuery({
@@ -251,7 +231,6 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
             criteria: criterion as ICriterion,
             selection: selection,
             options,
-            paging: queryPaging,
         });
 
         // const subject = new Subject<Entity[]>();

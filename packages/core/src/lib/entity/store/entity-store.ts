@@ -6,7 +6,6 @@ import { IEntitySchema } from "../../schema/schema.interface";
 import { ComplexKeyMap } from "../data-structures/complex-key-map";
 import { EntityStoreCommonIndex } from "./entity-store-common-index";
 import { EntityStoreUniqueIndex } from "./entity-store-unique-index";
-import { PagedEntityIdCache } from "./paged-entity-id-cache";
 
 export class EntityStore {
     constructor(entitySchema: IEntitySchema) {
@@ -24,9 +23,7 @@ export class EntityStore {
     private readonly entitySchema: IEntitySchema;
     private readonly uniqueIndexes = new Map<string, EntityStoreUniqueIndex>();
     private readonly commonIndexes = new Map<string, EntityStoreCommonIndex>();
-    private readonly noOptionsPageCache = new PagedEntityIdCache();
     private readonly optionsCache: { options: ICriterion; ids: Entity[] }[] = [];
-    private readonly optionsPageCache: { options: ICriterion; cache: PagedEntityIdCache }[] = [];
     private entities: (Entity | undefined)[] = [];
     private readonly criteriaTools = new EntityCriteriaTools();
 
@@ -70,17 +67,8 @@ export class EntityStore {
             }
         }
 
-        if (options && page) {
-            const match = this.optionsPageCache.find(item => item.options.equivalent(options));
-
-            if (match) {
-                match.cache.add(entities, page);
-            } else {
-                const cache = new PagedEntityIdCache();
-                cache.add(entities, page);
-                this.optionsPageCache.push({ options, cache });
-            }
-        } else if (options) {
+        // [todo] seems to be unused
+        if (options) {
             const match = this.optionsCache.find(item => item.options.equivalent(options));
 
             if (match) {
@@ -88,8 +76,6 @@ export class EntityStore {
             } else {
                 this.optionsCache.push({ ids: entities, options });
             }
-        } else if (page) {
-            this.noOptionsPageCache.add(entities, page);
         }
     }
 
@@ -142,6 +128,7 @@ export class EntityStore {
             }
         }
 
+        // most narrowing indexes first to potentially increase performance
         const commonIndexes = [...this.commonIndexes.values()].sort(
             (a, b) => b.getPaths().length - a.getPaths().length
         );

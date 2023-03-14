@@ -24,32 +24,23 @@ export class EntityApiEndpoint {
         acceptCriterion,
         criterionShape,
         invoke,
-        pagingRequired,
-        pagingSupported,
         whereEntityShape,
         schema,
         selection,
-        sortableFields,
     }: {
         acceptCriterion?: (criterion: ICriterion) => boolean;
         criterionShape: ICriterionShape;
         invoke: EntityApiEndpointInvoke;
-        pagingRequired?: boolean;
-        pagingSupported?: boolean;
         whereEntityShape?: WhereEntityShape;
         schema: IEntitySchema;
         selection: EntitySelection;
-        sortableFields?: string[];
     }) {
         this.acceptCriterionFn = acceptCriterion ?? (() => true);
         this.criterionTemplate = criterionShape;
         this.invoke = invoke;
-        this.pagingRequired = pagingRequired ?? false;
-        this.pagingSupported = pagingSupported ?? false;
         this.whereEntityShape = whereEntityShape;
         this.schema = schema;
         this.selection = selection;
-        this.sortableFields = sortableFields ?? [];
     }
 
     private readonly schema: IEntitySchema;
@@ -59,9 +50,6 @@ export class EntityApiEndpoint {
     private readonly selection: EntitySelection;
     private readonly invoke: EntityApiEndpointInvoke;
     private readonly acceptCriterionFn: (criterion: ICriterion) => boolean;
-    private readonly pagingRequired: boolean;
-    private readonly pagingSupported: boolean;
-    private readonly sortableFields: string[];
 
     getSchema(): IEntitySchema {
         return this.schema;
@@ -89,17 +77,5 @@ export class EntityApiEndpoint {
 
     acceptCriterion(criterion: ICriterion): boolean {
         return this.acceptCriterionFn(criterion);
-    }
-
-    getSortableFields(): string[] {
-        return this.sortableFields;
-    }
-
-    requiresPaging(): boolean {
-        return this.pagingRequired;
-    }
-
-    supportsPaging(): boolean {
-        return this.pagingSupported;
     }
 }

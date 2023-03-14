@@ -58,7 +58,7 @@ export class EntityCriteriaShapeTools implements IEntityCriteriaShapeTools {
     where = (required: Record<string, unknown>, optional?: Record<string, unknown>): EntityCriteriaShape => {
         const map = (bag: Record<string, unknown>): Record<string, ICriterionShape> => {
             const keys = Object.keys(bag);
-
+            
             if (keys.some(key => key.includes("."))) {
                 assertValidPaths(keys);
                 const writtenPathsBag: Record<string, unknown> = {};

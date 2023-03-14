@@ -4,8 +4,6 @@ import { Observable, Subject } from "rxjs";
 import { Entity } from "../common/entity.type";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
 import { ICriterion } from "../criteria/criterion.interface";
-import { EntityCriteriaShapeTools } from "../criteria/entity-criteria-shape-tools";
-import { IEntityCriteriaShapeTools } from "../criteria/entity-criteria-shape-tools.interface";
 import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
 import { IEntityCriteriaTools } from "../criteria/entity-criteria-tools.interface";
 import { EntityQueryTools } from "../query/entity-query-tools";
@@ -19,20 +17,14 @@ import { IEntityDatabase } from "./entity-database.interface";
 import { joinEntities } from "./functions/join-entities.fn";
 import { normalizeEntities } from "./functions/normalize-entities.fn";
 import { EntityStore } from "./store/entity-store";
-import { PagedEntityIdCache } from "./store/paged-entity-id-cache";
 
 export class InMemoryEntityDatabase implements IEntityDatabase {
     private readonly stores = new Map<string, EntityStore>();
     private readonly cachedQueries = new Map<string, IEntityQuery[]>();
     private readonly queryCacheChanged = new Subject<IEntityQuery[]>();
     private readonly optionsCache: { options?: ICriterion; paging?: QueryPaging; ids: ICriterion }[] = [];
-    private readonly noOptionsPageCache: { criteria: ICriterion; cache: PagedEntityIdCache }[] = [];
     private readonly optionsCache_v2: { options: ICriterion; criteria: ICriterion; ids: Entity[] }[] = [];
-    private readonly optionsPageCache: { options: ICriterion; criteria: ICriterion; cache: PagedEntityIdCache }[] = [];
     private readonly criteriaTools: IEntityCriteriaTools = new EntityCriteriaTools();
-    private readonly criteriaShapeTools: IEntityCriteriaShapeTools = new EntityCriteriaShapeTools({
-        criteriaTools: this.criteriaTools,
-    });
     private readonly queryTools: IEntityQueryTools = new EntityQueryTools({ criteriaTools: this.criteriaTools });
 
     queryCacheChanged$(): Observable<IEntityQuery[]> {
@@ -78,47 +70,18 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         ) as T[];
 
         const options = query.getOptions();
-        const page = query.getPaging();
         const criteria = query.getCriteria();
         const { isAllCriterion, isNeverCriterion } = this.criteriaTools;
 
         if (!isNeverCriterion(options) && !isAllCriterion(options)) {
-            if (page) {
-                const match = this.optionsPageCache.find(
-                    item => item.options.equivalent(options) && item.criteria.equivalent(criteria)
-                );
-
-                if (!match) {
-                    return new EntitySet<T>({ query, entities: [] });
-                } else {
-                    entities = match.cache
-                        .get(page)
-                        .filter(isDefined)
-                        .map(id => store.get(id))
-                        .filter(isDefined) as T[];
-                }
-            } else {
-                const match = this.optionsCache_v2.find(
-                    item => item.options.equivalent(options) && item.criteria.equivalent(criteria)
-                );
-
-                if (!match) {
-                    return new EntitySet<T>({ query, entities: [] });
-                } else {
-                    entities = match.ids.map(id => store.get(id)).filter(isDefined) as T[];
-                }
-            }
-        } else if (page) {
-            const match = this.noOptionsPageCache.find(item => item.criteria.equivalent(criteria));
+            const match = this.optionsCache_v2.find(
+                item => item.options.equivalent(options) && item.criteria.equivalent(criteria)
+            );
 
             if (!match) {
                 return new EntitySet<T>({ query, entities: [] });
             } else {
-                entities = match.cache
-                    .get(page)
-                    .filter(isDefined)
-                    .map(id => store.get(id))
-                    .filter(isDefined) as T[];
+                entities = match.ids.map(id => store.get(id)).filter(isDefined) as T[];
             }
         }
 
@@ -144,19 +107,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         const criteria = entitySet.getQuery().getCriteria();
         const { isAllCriterion, isNeverCriterion, createCriterionFromEntities, never } = this.criteriaTools;
 
-        if (!isNeverCriterion(options) && !isAllCriterion(options) && page) {
-            const match = this.optionsPageCache.find(
-                item => item.options.equivalent(options) && item.criteria.equivalent(criteria)
-            );
-
-            if (match) {
-                match.cache.add(entities, page);
-            } else {
-                const cache = new PagedEntityIdCache();
-                cache.add(entities, page);
-                this.optionsPageCache.push({ options, cache, criteria });
-            }
-        } else if (!isNeverCriterion(options) && !isAllCriterion(options)) {
+        if (!isNeverCriterion(options) && !isAllCriterion(options)) {
             const match = this.optionsCache_v2.find(
                 item => item.options.equivalent(options) && item.criteria.equivalent(criteria)
             );
@@ -165,16 +116,6 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
                 match.ids = entities;
             } else {
                 this.optionsCache_v2.push({ ids: entities, options, criteria });
-            }
-        } else if (page) {
-            const match = this.noOptionsPageCache.find(item => item.criteria.equivalent(criteria));
-
-            if (match) {
-                match.cache.add(entities, page);
-            } else {
-                const cache = new PagedEntityIdCache();
-                cache.add(entities, page);
-                this.noOptionsPageCache.push({ cache, criteria });
             }
         }
 
@@ -185,14 +126,6 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
                 this.optionsCache.push({ options, paging: page, ids: keyCriterion });
             } else {
                 this.optionsCache.push({ options, paging: page, ids: never() });
-            }
-        } else if (page) {
-            if (entitySet.getEntities().length) {
-                const key = entitySet.getSchema().getKey();
-                const keyCriterion = createCriterionFromEntities(entitySet.getEntities(), key.getPath());
-                this.optionsCache.push({ paging: page, ids: keyCriterion });
-            } else {
-                this.optionsCache.push({ paging: page, ids: never() });
             }
         }
 

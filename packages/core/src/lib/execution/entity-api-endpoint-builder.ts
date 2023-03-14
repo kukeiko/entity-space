@@ -1,9 +1,9 @@
 import { Entity } from "../common/entity.type";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
 import { ICriterion } from "../criteria/criterion.interface";
-import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
 import { EntityCriteriaShapeTools } from "../criteria/entity-criteria-shape-tools";
 import { IEntityCriteriaShapeTools } from "../criteria/entity-criteria-shape-tools.interface";
+import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
 import { WhereEntityShapeInstance } from "../criteria/where-entity/where-entity-shape-instance.types";
 import { WhereEntityShape } from "../criteria/where-entity/where-entity-shape.types";
 import { WhereEntityTools } from "../criteria/where-entity/where-entity-tools";
@@ -24,22 +24,9 @@ export class EntityApiEndpointBuilder<T extends Entity = Entity, S = {}> {
     private readonly shapeTools: IEntityCriteriaShapeTools;
     private readonly whereEntityTools: WhereEntityTools;
     private whereEntityShape?: WhereEntityShape;
-    private pagingRequired = false;
-    private pagingSupported = false;
-
     private supportedSelection: UnpackedEntitySelection;
     private loadEntities?: EntityApiEndpointInvoke;
     private acceptCriterion: (criterion: ICriterion) => boolean = () => true;
-
-    requiresPaging(): this {
-        this.pagingRequired = true;
-        return this;
-    }
-
-    supportsPaging(): this {
-        this.pagingSupported = true;
-        return this;
-    }
 
     where<S extends WhereEntityShape<T>>(shape: S | WhereEntityShape<T>): EntityApiEndpointBuilder<T, S> {
         this.whereEntityShape = shape;
@@ -85,8 +72,6 @@ export class EntityApiEndpointBuilder<T extends Entity = Entity, S = {}> {
             schema: this.schema,
             criterionShape,
             acceptCriterion: this.acceptCriterion,
-            pagingRequired: this.pagingRequired,
-            pagingSupported: this.pagingSupported,
             whereEntityShape: this.whereEntityShape,
         });
     }

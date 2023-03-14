@@ -37,20 +37,9 @@ export class MusicBoxClientSideEntityApi extends EntityApi implements IEntitySto
         return this.addEndpoint(this.schemas.resolve(SongBlueprint), builder =>
             builder
                 .where({ $optional: { artistId: [Number] } })
-                .supportsPaging()
                 .supportsSelection({ id: true, artistId: true, duration: true, name: true })
-                .isLoadedBy(({ paging, criteria: { artistId } }) => {
-                    const [from, to] = [paging?.getFrom(), paging?.getTo()];
-
+                .isLoadedBy(({ criteria: { artistId } }) => {
                     let params = new HttpParams({});
-
-                    if (from) {
-                        params = params.set("from", from);
-                    }
-
-                    if (to) {
-                        params = params.set("to", to);
-                    }
 
                     if (artistId) {
                         // [todo] artistId can be array that contains "undefined", seems wrong

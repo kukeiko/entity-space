@@ -119,11 +119,7 @@ export class EntityApi implements IEntityStreamInterceptor {
         }
 
         const acceptedRemapped = remapped.filter(query => {
-            if (query.getPaging() && !(endpoint.requiresPaging() || endpoint.supportsPaging())) {
-                return false;
-            } else if (!query.getPaging() && endpoint.requiresPaging()) {
-                return false;
-            } else if (!endpoint.acceptCriterion(query.getCriteria())) {
+            if (!endpoint.acceptCriterion(query.getCriteria())) {
                 return false;
             }
 
