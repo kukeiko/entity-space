@@ -2,15 +2,21 @@ export function scanString(delimiter: string, iterator: IterableIterator<string>
     let char = delimiter;
     let buffer = "";
     let next = iterator.next();
+    let nextIsEscaped = false;
 
     while (!next.done) {
         char = next.value;
 
-        if (char === delimiter) {
+        if (char === delimiter && !nextIsEscaped) {
             return [buffer, next];
         }
 
-        buffer += char;
+        nextIsEscaped = char === "\\";
+
+        if(!nextIsEscaped) {
+            buffer += char;
+        }
+
         next = iterator.next();
     }
 

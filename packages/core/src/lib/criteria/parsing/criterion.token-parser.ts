@@ -4,12 +4,12 @@ import { CriterionTokenParser } from "./criterion-token-parser.type";
 import { inRangeCriterionTokenParser } from "./in-range-criterion.token-parser";
 import { namedCriteriaTokenParser } from "./entity-criteria.token-parser";
 import { setCriterionTokenParser } from "./in-array-criterion.token-parser";
-import { tokenParser } from "./token-parser";
+import { parallelParser } from "../../lexer/parallel-parser";
 import { valueCriterionTokenParser } from "./value-criterion.token-parser";
 import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
 
 export function criterionTokenParser(tools: IEntityCriteriaTools): CriterionTokenParser {
-    return tokenParser([
+    return parallelParser([
         () => criteriaTokenParser(tools),
         () => inRangeCriterionTokenParser(tools),
         () => setCriterionTokenParser(tools),

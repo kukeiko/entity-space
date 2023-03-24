@@ -1,7 +1,7 @@
-import { lex } from "./lex.fn";
-import { TokenType } from "./token-type.enum";
-import { Token } from "./token.contract";
-import { token } from "./token.fn";
+import { lex } from "../../lib/lexer/lex.fn";
+import { TokenType } from "../../lib/lexer/token-type.enum";
+import { Token } from "../../lib/lexer/token.contract";
+import { token } from "../../lib/lexer/token.fn";
 
 describe("lexer", () => {
     it("should return empty array of tokens when given an empty string", () => {
@@ -64,6 +64,7 @@ describe("lexer", () => {
         token(TokenType.Special, ")"),
     ]);
 
+    shouldLex('"foo"', [token(TokenType.String, "foo")]);
     shouldLex('"foo"', [token(TokenType.String, "foo")]);
     shouldLex("true", [token(TokenType.Literal, "true")]);
     shouldLex("false", [token(TokenType.Literal, "false")]);

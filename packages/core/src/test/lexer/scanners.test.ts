@@ -1,6 +1,6 @@
-import { scanLiteral } from "./scan-literal.fn";
-import { scanNumber } from "./scan-number.fn";
-import { scanString } from "./scan-string.fn";
+import { scanLiteral } from "../../lib/lexer/scan-literal.fn";
+import { scanNumber } from "../../lib/lexer/scan-number.fn";
+import { scanString } from "../../lib/lexer/scan-string.fn";
 
 describe("scanners", () => {
     function shouldScan(
