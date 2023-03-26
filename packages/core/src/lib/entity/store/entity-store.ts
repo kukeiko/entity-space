@@ -1,7 +1,8 @@
+import { isDefined } from "@entity-space/utils";
+import { isEqual } from "lodash";
 import { Entity } from "../../common/entity.type";
 import { ICriterion } from "../../criteria/criterion.interface";
 import { EntityCriteriaTools } from "../../criteria/entity-criteria-tools";
-import { QueryPaging } from "../../query/query-paging";
 import { IEntitySchema } from "../../schema/schema.interface";
 import { ComplexKeyMap } from "../data-structures/complex-key-map";
 import { EntityStoreCommonIndex } from "./entity-store-common-index";
@@ -23,7 +24,7 @@ export class EntityStore {
     private readonly entitySchema: IEntitySchema;
     private readonly uniqueIndexes = new Map<string, EntityStoreUniqueIndex>();
     private readonly commonIndexes = new Map<string, EntityStoreCommonIndex>();
-    private readonly optionsCache: { options: ICriterion; ids: Entity[] }[] = [];
+    private readonly parametersCache: { parameters: Entity; ids: Entity[] }[] = [];
     private entities: (Entity | undefined)[] = [];
     private readonly criteriaTools = new EntityCriteriaTools();
 
@@ -38,7 +39,7 @@ export class EntityStore {
     }
 
     // [todo] indexing needs to be crash safe (transactional safety)
-    add(entities: Entity[], options?: ICriterion, page?: QueryPaging): void {
+    add(entities: Entity[], parameters?: Entity): void {
         if (this.entitySchema.hasKey()) {
             const key = this.entitySchema.getKey();
             entities = this.dedupeEntities(entities, key.getPath());
@@ -67,14 +68,15 @@ export class EntityStore {
             }
         }
 
-        // [todo] seems to be unused
-        if (options) {
-            const match = this.optionsCache.find(item => item.options.equivalent(options));
+        if (parameters) {
+            // [todo] throw error if no id defined; i.e. parameters can't be used if there is no id.
+            const key = this.entitySchema.getKey();
+            const cache = this.parametersCache.find(cache => isEqual(cache.parameters, parameters));
 
-            if (match) {
-                match.ids = entities;
+            if (cache) {
+                cache.ids = this.dedupeEntities([...cache.ids, ...entities], key.getPath());
             } else {
-                this.optionsCache.push({ ids: entities, options });
+                this.parametersCache.push({ ids: entities, parameters });
             }
         }
     }
@@ -180,6 +182,22 @@ export class EntityStore {
         }
 
         return criterion;
+    }
+
+    getByParameters(parameters: Entity, criterion?: ICriterion): Entity[] {
+        const cache = this.parametersCache.find(cache => isEqual(cache.parameters, parameters));
+
+        if (!cache) {
+            return [];
+        }
+
+        const entities = cache.ids.map(id => this.get(id)).filter(isDefined);
+
+        if (criterion) {
+            return entities.filter(entity => criterion.contains(entity));
+        } else {
+            return entities;
+        }
     }
 
     private sortIndexesByComplexity<T extends EntityStoreUniqueIndex | EntityStoreCommonIndex>(
