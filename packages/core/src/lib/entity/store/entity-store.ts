@@ -89,9 +89,9 @@ export class EntityStore {
         return this.entities[slot];
     }
 
-    getByCriterion(criterion: ICriterion, options?: ICriterion, page?: QueryPaging): Entity[] {
+    getByCriterion(criterion: ICriterion): Entity[] {
         const entities: Entity[] = [];
-        const result = this.getSlotsByCriterion(criterion, options, page);
+        const result = this.getSlotsByCriterion(criterion);
 
         for (const slot of result.values()) {
             entities.push(this.entities[slot]!);
@@ -100,12 +100,36 @@ export class EntityStore {
         return entities;
     }
 
-    private getSlotsByCriterion(criterion: ICriterion, options?: ICriterion, page?: QueryPaging): Set<number> {
-        const uniqueIndexes = [...this.uniqueIndexes.values()].sort(
-            (a, b) => b.getPaths().length - a.getPaths().length
-        );
-
+    private getSlotsByCriterion(criterion: ICriterion): Set<number> {
+        let open: ICriterion | undefined = criterion;
         const slots = new Set<number>();
+        open = this.addSlotsByUniqueIndexes(open, slots);
+
+        if (open === void 0) {
+            return slots;
+        }
+
+        open = this.addSlotsByCommonIndexes(open, slots);
+
+        if (open === void 0) {
+            return slots;
+        }
+
+        // if we are here, we couldn't fully rely on using indexes alone.
+        // have to make a full scan for the criteria that are still open.
+        for (let slot = 0; slot < this.entities.length; ++slot) {
+            if (!open.contains(this.entities[slot])) {
+                continue;
+            }
+
+            slots.add(slot);
+        }
+
+        return slots;
+    }
+
+    private addSlotsByUniqueIndexes(criterion: ICriterion, slots: Set<number>): ICriterion | undefined {
+        const uniqueIndexes = this.sortIndexesByComplexity(this.uniqueIndexes.values());
 
         for (const index of uniqueIndexes) {
             const result = index.getByCriterion(criterion);
@@ -124,14 +148,15 @@ export class EntityStore {
                     criterion = this.criteriaTools.or(open);
                 }
             } else {
-                return slots;
+                return void 0;
             }
         }
 
-        // most narrowing indexes first to potentially increase performance
-        const commonIndexes = [...this.commonIndexes.values()].sort(
-            (a, b) => b.getPaths().length - a.getPaths().length
-        );
+        return criterion;
+    }
+
+    private addSlotsByCommonIndexes(criterion: ICriterion, slots: Set<number>): ICriterion | undefined {
+        const commonIndexes = this.sortIndexesByComplexity(this.commonIndexes.values());
 
         for (const index of commonIndexes) {
             const result = index.getByCriterion(criterion);
@@ -150,21 +175,17 @@ export class EntityStore {
                     criterion = this.criteriaTools.or(open);
                 }
             } else {
-                return slots;
+                return void 0;
             }
         }
 
-        // if we are here, we couldn't fully rely on using indexes alone.
-        // have to make a full scan for the criteria that are still open.
-        for (let slot = 0; slot < this.entities.length; ++slot) {
-            if (!criterion.contains(this.entities[slot])) {
-                continue;
-            }
+        return criterion;
+    }
 
-            slots.add(slot);
-        }
-
-        return slots;
+    private sortIndexesByComplexity<T extends EntityStoreUniqueIndex | EntityStoreCommonIndex>(
+        indexes: Iterable<T>
+    ): T[] {
+        return [...indexes].sort((a, b) => b.getPaths().length - a.getPaths().length);
     }
 
     private dedupeEntities(entities: Entity[], keyPaths: string[]): Entity[] {
