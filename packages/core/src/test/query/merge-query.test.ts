@@ -14,7 +14,7 @@ describe("mergeQuery()", () => {
 
     expectQuery("foo", schemas).plus("foo/{ bar }").toBe("foo/{ bar }");
     expectQuery("foo", schemas).plus("song").toBe(false);
-    expectQuery(`foo<{ searchText: "bar" }>`, schemas).plus(`foo<{ searchText: "baz" }>`).toBe(false);
+    expectQuery(`foo<{ "searchText": "bar" }>`, schemas).plus(`foo<{ "searchText": "baz" }>`).toBe(false);
 
     expectQuery("foo({ id: 7 })", schemas).plus("foo({ id: 3 })").toBe("foo({ id: { 7, 3 } })");
     expectQuery("foo({ id: 7 })", schemas).plus("foo({ artistId: 13 })").toBe("foo({ id: 7 } | { artistId: 13 })");

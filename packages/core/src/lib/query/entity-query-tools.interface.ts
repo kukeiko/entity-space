@@ -13,6 +13,7 @@ export interface EntityQueryCreate {
     options?: ICriterion;
     selection?: EntitySelection | UnpackedEntitySelection;
     paging?: QueryPaging;
+    parameters?: Entity;
 }
 
 export interface IEntityQueryTools {

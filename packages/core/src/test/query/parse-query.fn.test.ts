@@ -1,8 +1,6 @@
-import { UnpackedEntitySelection } from "../../lib/common/unpacked-entity-selection.type";
-import { ICriterion } from "../../lib/criteria/criterion.interface";
 import { EntityCriteriaTools } from "../../lib/criteria/entity-criteria-tools";
-import { EntityQuery } from "../../lib/query/entity-query";
 import { EntityQueryTools } from "../../lib/query/entity-query-tools";
+import { EntityQueryCreate } from "../../lib/query/entity-query-tools.interface";
 import { IEntityQuery } from "../../lib/query/entity-query.interface";
 import { QueryPaging } from "../../lib/query/query-paging";
 import { EntitySchema } from "../../lib/schema/entity-schema";
@@ -31,44 +29,34 @@ describe("parseQuery()", () => {
         });
     }
 
-    function createFooQuery({
-        options,
-        criteria,
-        selection,
-        paging,
-    }: {
-        options?: ICriterion;
-        criteria?: ICriterion;
-        selection?: UnpackedEntitySelection;
-        paging?: QueryPaging;
-    }): IEntityQuery {
-        return queryTools.createQuery({ entitySchema: fooSchema, options, criteria, selection, paging });
+    function createFooQuery(parts: Omit<EntityQueryCreate, "entitySchema">): IEntityQuery {
+        return queryTools.createQuery({ entitySchema: fooSchema, ...parts });
     }
 
     const { where, or, equals } = criteriaFactory;
 
     // schema only
     shouldParse("foo", createFooQuery({}));
-    // schema + options
-    shouldParse('foo<{searchText: "bar"}>', createFooQuery({ options: where({ searchText: "bar" }) }));
+    // schema + parameters
+    shouldParse('foo<{"searchText": "bar"}>', createFooQuery({ parameters: { searchText: "bar" } }));
     // schema + criteria
     shouldParse("foo({artistId:7})", createFooQuery({ criteria: where({ artistId: 7 }) }));
     shouldParse("foo({artistId:7} | true)", createFooQuery({ criteria: or([where({ artistId: 7 }), equals(true)]) }));
-    // schema + options + criteria
+    // schema + parameters + criteria
     shouldParse(
-        'foo<{searchText: "bar"}>({artistId:7})',
-        createFooQuery({ options: where({ searchText: "bar" }), criteria: where({ artistId: 7 }) })
+        'foo<{"searchText": "bar"}>({artistId:7})',
+        createFooQuery({ parameters: { searchText: "bar" }, criteria: where({ artistId: 7 }) })
     );
     // schema + expansion
     shouldParse(
         "foo/{id,name,artist:{id,name}}",
         createFooQuery({ selection: { id: true, name: true, artist: { id: true, name: true } } })
     );
-    // schema + options + expansion
+    // schema + parameters + expansion
     shouldParse(
-        'foo<{searchText: "bar"}>/{id,name,artist:{id,name}}',
+        'foo<{"searchText": "bar"}>/{id,name,artist:{id,name}}',
         createFooQuery({
-            options: where({ searchText: "bar" }),
+            parameters: { searchText: "bar" },
             selection: { id: true, name: true, artist: { id: true, name: true } },
         })
     );
@@ -80,11 +68,11 @@ describe("parseQuery()", () => {
             selection: { id: true, name: true, artist: { id: true, name: true } },
         })
     );
-    // schema + options + criteria + expansion
+    // schema + parameters + criteria + expansion
     shouldParse(
-        'foo<{searchText: "bar"}>({artistId:7})/{id,name,artist:{id,name}}',
+        'foo<{"searchText": "bar"}>({artistId:7})/{id,name,artist:{id,name}}',
         createFooQuery({
-            options: where({ searchText: "bar" }),
+            parameters: { searchText: "bar" },
             criteria: where({ artistId: 7 }),
             selection: { id: true, name: true, artist: { id: true, name: true } },
         })
@@ -113,11 +101,11 @@ describe("parseQuery()", () => {
         })
     );
 
-    // schema + options + criteria + paging & multi-sorting + expansion
+    // schema + parameters + criteria + paging & multi-sorting + expansion
     shouldParse(
-        `foo<{searchText: "bar"}>({artistId: 7})[name,!artist.name,0,7]/{id,name,artist:{id,name}}`,
+        `foo<{"searchText": "bar"}>({artistId: 7})[name,!artist.name,0,7]/{id,name,artist:{id,name}}`,
         createFooQuery({
-            options: where({ searchText: "bar" }),
+            parameters: { searchText: "bar" },
             criteria: where({ artistId: 7 }),
             selection: { id: true, name: true, artist: { id: true, name: true } },
             paging: new QueryPaging({

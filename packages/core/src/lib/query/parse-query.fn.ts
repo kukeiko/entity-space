@@ -1,7 +1,10 @@
+import { isRecord } from "@entity-space/utils";
+import { Entity } from "../common/entity.type";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
 import { ICriterion } from "../criteria/criterion.interface";
 import { IEntityCriteriaTools } from "../criteria/entity-criteria-tools.interface";
 import { criteriaTokenParser } from "../criteria/parsing/criteria.token-parser";
+import { jsonParser } from "../lexer/json-parser/json-parser";
 import { lex } from "../lexer/lex.fn";
 import { TokenType } from "../lexer/token-type.enum";
 import { Token } from "../lexer/token.contract";
@@ -36,10 +39,7 @@ export function parseQuery(
                 const parts = result.value;
                 return factory.createQuery({
                     entitySchema: schemas.getSchema(parts.schemaName!),
-                    options: parts.options,
-                    criteria: parts.criteria,
-                    selection: parts.selection,
-                    paging: parts.paging,
+                    ...parts,
                 });
             } else {
                 throw new Error("syntax error");
@@ -56,6 +56,7 @@ interface QueryParts {
     criteria?: ICriterion;
     paging?: QueryPaging;
     selection?: UnpackedEntitySelection;
+    parameters?: Entity;
 }
 
 type QueryPartsParser = Generator<unknown, false | QueryParts, Token>;
@@ -71,13 +72,25 @@ function* queryParser(factory: IEntityCriteriaTools, terminator: Token): QueryPa
     token = yield;
 
     if (token.type === TokenType.Special && token.value === "<") {
-        const options = yield* criteriaTokenParser(factory, false, { type: TokenType.Special, value: ">" });
+        const parameters = yield* jsonParser();
 
-        if (!options) {
+        if (!parameters) {
             return false;
         }
 
-        parts = { ...parts, options: options() };
+        token = yield;
+
+        if (token.type !== TokenType.Special || token.value !== ">") {
+            return false;
+        }
+
+        const json = parameters();
+
+        if (!isRecord(json)) {
+            throw new Error(`expected "parameters" to be a record`);
+        }
+
+        parts = { ...parts, parameters: json };
         token = yield;
     }
 

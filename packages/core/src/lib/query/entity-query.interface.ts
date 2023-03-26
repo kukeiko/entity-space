@@ -1,3 +1,4 @@
+import { Entity } from "../common/entity.type";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
 import { ICriterion } from "../criteria/criterion.interface";
 import { IEntitySchema } from "../schema/schema.interface";
@@ -9,6 +10,7 @@ export interface IEntityQuery {
     getSelection(): EntitySelection;
     getOptions(): ICriterion;
     getPaging(): QueryPaging | undefined;
+    getParameters(): Entity | undefined;
     getEntitySchema(): IEntitySchema;
     intersect(other: IEntityQuery): false | IEntityQuery;
     intersectCriteriaOmitSelection(other: IEntityQuery): false | IEntityQuery;

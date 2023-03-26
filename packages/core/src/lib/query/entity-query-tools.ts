@@ -1,3 +1,4 @@
+import { isEqual } from "lodash";
 import { Entity } from "../common/entity.type";
 import { ICriterion } from "../criteria/criterion.interface";
 import { IEntityCriteriaTools } from "../criteria/entity-criteria-tools.interface";
@@ -15,6 +16,7 @@ type SubtractedParts = {
     criteria: true | ICriterion;
     selection: true | EntitySelection;
     paging: true | QueryPaging[];
+    parameters: true;
 };
 
 export class EntityQueryTools implements IEntityQueryTools {
@@ -24,8 +26,8 @@ export class EntityQueryTools implements IEntityQueryTools {
 
     private readonly criteriaTools: IEntityCriteriaTools;
 
-    createQuery = (args: Omit<EntityQueryCreate, "factory">): IEntityQuery => {
-        let { entitySchema, criteria, options, paging, selection } = args;
+    createQuery = (args: EntityQueryCreate): IEntityQuery => {
+        let { entitySchema, criteria, options, paging, selection, parameters } = args;
 
         return new EntityQuery({
             queryTools: this,
@@ -33,6 +35,7 @@ export class EntityQueryTools implements IEntityQueryTools {
             criteria: criteria ?? this.criteriaTools.all(),
             options: options ?? this.criteriaTools.never(),
             paging,
+            parameters,
             selection:
                 selection === void 0
                     ? new EntitySelection({ schema: entitySchema, value: entitySchema.getDefaultSelection() })
@@ -107,6 +110,10 @@ export class EntityQueryTools implements IEntityQueryTools {
     // [todo] clean up this method, it is really hard to read and hacked together.
     mergeQuery = (a: IEntityQuery, b: IEntityQuery): false | IEntityQuery => {
         if (a.getEntitySchema().getId() !== b.getEntitySchema().getId()) {
+            return false;
+        }
+
+        if (!isEqual(a.getParameters(), b.getParameters())) {
             return false;
         }
 
@@ -267,6 +274,7 @@ export class EntityQueryTools implements IEntityQueryTools {
             selection: a.getSelection(),
             options: a.getOptions(),
             paging: a.getPaging(),
+            parameters: a.getParameters(),
         };
 
         if (subtracted.paging !== true) {
@@ -332,6 +340,10 @@ export class EntityQueryTools implements IEntityQueryTools {
             }
         }
 
+        if (!isEqual(a.getParameters(), b.getParameters())) {
+            return false;
+        }
+
         const options = b.getOptions().subtractFrom(a.getOptions());
 
         if (!options || (options !== true && paging !== true)) {
@@ -350,7 +362,7 @@ export class EntityQueryTools implements IEntityQueryTools {
             return false;
         }
 
-        return { options, criteria, selection, paging };
+        return { options, criteria, selection, paging, parameters: true };
     }
 
     parseQuery = (input: string, schemas: EntitySchemaCatalog): IEntityQuery => {

@@ -37,12 +37,12 @@ describe("subtractQuery()", () => {
             .toBe(true);
 
         expectQuery("song({ artistId: 7 })[0, 10]", schemas).minus("song({ artistId: 7 })[0, 10]").toBe(true);
-        expectQuery(`song<{ searchText: "foo" }>({ artistId: 7 })[0, 10]`, schemas)
-            .minus(`song<{ searchText: "foo" }>({ artistId: 7 })[0, 10]`)
+        expectQuery(`song<{ "searchText": "foo" }>({ artistId: 7 })[0, 10]`, schemas)
+            .minus(`song<{ "searchText": "foo" }>({ artistId: 7 })[0, 10]`)
             .toBe(true);
 
-        expectQuery(`song<{ searchText: "foo" }>({ artistId: 7 })`, schemas)
-            .minus(`song<{ searchText: "foo" }>({ artistId: { 1, 7 } })`)
+        expectQuery(`song<{ "searchText": "foo" }>({ artistId: 7 })`, schemas)
+            .minus(`song<{ "searchText": "foo" }>({ artistId: { 1, 7 } })`)
             .toBe(true);
     });
 
@@ -100,39 +100,36 @@ describe("subtractQuery()", () => {
         expectQuery("song({ artistId: 7 })[0, 10]/{ id, name }", schemas)
             .minus("song({ artistId: 7 })[0, 5]/{ id }")
             .toBe(["song({ artistId: 7 })[6, 10]/{ id, name }", "song({ artistId: 7 })[0, 5]/{ name }"]);
-
-        expectQuery(`foo<{ searchText: { "bar", "baz" } }>`, schemas)
-            .minus(`foo<{ searchText: "baz" }>`)
-            .toBe(`foo<{ searchText: { "bar" } }>`);
-
-        expectQuery(`song<{ searchText: { "bar", "baz" } }>({ artistId: 7 })`, schemas)
-            .minus(`song<{ searchText: "baz" }>`)
-            .toBe(`song<{ searchText: { "bar" } }>({ artistId: 7 })`);
-
-        expectQuery(`song<{ searchText: { "bar", "baz" } }>({ artistId: { 7, 9 } })`, schemas)
-            .minus(`song<{ searchText: "baz" }>({ artistId: 7 })`)
-            .toBe([
-                `song<{ searchText: { "bar" } }>({ artistId: { 7, 9 } })`,
-                `song<{ searchText: "baz" }>({ artistId: { 9 } })`,
-            ]);
     });
 
     describe("no subtraction", () => {
         expectQuery("root({ id: { 1, 2 } })/{ foo }", schemas).minus("root({ id: 1 })").toBe(false);
         expectQuery("song({ artistId: { 7, 9 } })[0, 10]", schemas).minus("song({ artistId: 7 })[0, 10]").toBe(false);
-        expectQuery(`song<{ searchText: "foo" }>({ artistId: 7 })[0, 10]`, schemas)
-            .minus(`song<{ searchText: "bar" }>({ artistId: 7 })[0, 10]`)
+        expectQuery(`song<{ "searchText": "foo" }>({ artistId: 7 })[0, 10]`, schemas)
+            .minus(`song<{ "searchText": "bar" }>({ artistId: 7 })[0, 10]`)
             .toBe(false);
 
-        expectQuery(`song<{ searchText: "foo" }>({ artistId: 7 })[0, 10]`, schemas)
-            .minus(`song<{ searchText: "foo" }>({ artistId: { 1, 7 } })[0, 10]`)
+        expectQuery(`song<{ "searchText": "foo" }>({ artistId: 7 })[0, 10]`, schemas)
+            .minus(`song<{ "searchText": "foo" }>({ artistId: { 1, 7 } })[0, 10]`)
             .toBe(false);
 
         expectQuery("foo({ id: 1 })", schemas).minus("root({ id: 1 })[0, 10]").toBe(false);
         expectQuery("foo[0, 10]", schemas).minus("root[12, 20]").toBe(false);
         expectQuery("foo({ id: 1 })[0, 10]/{ id }", schemas).minus("root({ id: 1 })[0, 10]/{ name }").toBe(false);
-        expectQuery(`foo<{ searchText: { "bar", "baz" } }>[0, 10]`, schemas)
-            .minus(`foo<{ searchText: "baz" }>[0, 10]`)
+        expectQuery(`foo<{ "searchText": ["bar", "baz"] }>[0, 10]`, schemas)
+            .minus(`foo<{ "searchText": "baz" }>[0, 10]`)
+            .toBe(false);
+
+        expectQuery(`foo<{ "searchText": ["bar", "baz"] }>`, schemas)
+            .minus(`foo<{ "searchText": ["baz"] }>`)
+            .toBe(false);
+
+        expectQuery(`song<{ "searchText": ["bar", "baz"] }>({ artistId: 7 })`, schemas)
+            .minus(`song<{ "searchText": "baz" }>`)
+            .toBe(false);
+
+        expectQuery(`song<{ "searchText": ["bar", "baz"] }>({ artistId: { 7, 9 } })`, schemas)
+            .minus(`song<{ "searchText": "baz" }>({ artistId: 7 })`)
             .toBe(false);
     });
 });

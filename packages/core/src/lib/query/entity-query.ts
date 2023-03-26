@@ -1,3 +1,4 @@
+import { Entity } from "../common/entity.type";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
 import { ICriterion } from "../criteria/criterion.interface";
 import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
@@ -16,6 +17,7 @@ export class EntityQuery implements IEntityQuery {
         queryTools,
         options,
         paging,
+        parameters,
         selection,
     }: {
         criteria: ICriterion;
@@ -23,6 +25,7 @@ export class EntityQuery implements IEntityQuery {
         queryTools: IEntityQueryTools;
         options: ICriterion;
         paging?: QueryPaging;
+        parameters?: Entity;
         selection: EntitySelection;
     }) {
         this.entitySchema = entitySchema;
@@ -30,6 +33,7 @@ export class EntityQuery implements IEntityQuery {
         this.criteria = criteria;
         this.selection = selection;
         this.paging = paging;
+        this.parameters = parameters;
         this.queryTools = queryTools;
     }
 
@@ -38,6 +42,7 @@ export class EntityQuery implements IEntityQuery {
     private readonly options: ICriterion;
     private readonly selection: EntitySelection;
     private readonly paging?: QueryPaging;
+    private readonly parameters?: Entity;
     private readonly criteriaTools: IEntityCriteriaTools = new EntityCriteriaTools();
     private readonly queryTools: IEntityQueryTools;
 
@@ -55,6 +60,10 @@ export class EntityQuery implements IEntityQuery {
 
     getPaging(): QueryPaging | undefined {
         return this.paging;
+    }
+
+    getParameters(): Entity | undefined {
+        return this.parameters;
     }
 
     withCriteria(criteria: ICriterion): IEntityQuery {
@@ -78,18 +87,19 @@ export class EntityQuery implements IEntityQuery {
     }
 
     toString(): string {
-        const options = this.criteriaTools.isNeverCriterion(this.options) ? "" : `<${this.options.toString()}>`;
+        const parameters = this.parameters === void 0 ? "" : `<${JSON.stringify(this.parameters)}>`;
         const criterion = this.criteriaTools.isAllCriterion(this.criteria) ? "" : `(${this.criteria.toString()})`;
         const paging = this.paging ? this.paging.toString() : "";
         const selection = this.selection.isEmpty() ? "" : "/" + this.selection.toString();
 
-        return `${this.entitySchema.getId()}${options}${criterion}${paging}${selection}`;
+        return `${this.entitySchema.getId()}${parameters}${criterion}${paging}${selection}`;
     }
 
     subtractBy(others: IEntityQuery[]): false | IEntityQuery[] {
         return this.queryTools.subtractQueries([this], others);
     }
 
+    // [todo] #30 parameters intersection missing
     intersect(other: IEntityQuery): false | IEntityQuery {
         const criteria = this.getCriteria().intersect(other.getCriteria());
 
@@ -136,6 +146,7 @@ export class EntityQuery implements IEntityQuery {
         return others.every(other => other.getCriteria().equivalent(first.getCriteria()));
     }
 
+    // [todo] #30 parameters equivalency missing
     static equivalent(...queries: IEntityQuery[]): boolean {
         const [first, ...others] = queries;
 
