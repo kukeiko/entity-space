@@ -31,6 +31,8 @@ export class EntityCriteriaShape implements ICriterionShape<IEntityCriteria> {
             return this.reshapeEntityCriteria(criterion);
         } else if (this.tools.isOrCriterion(criterion)) {
             return reshapeOrCriteria(this, criterion);
+        } else if (this.tools.isAllCriterion(criterion) && !Object.keys(this.required).length) {
+            return new ReshapedCriterion([this.tools.where({})]);
         }
 
         return false;
