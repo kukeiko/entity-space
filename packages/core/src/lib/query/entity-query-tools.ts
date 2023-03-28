@@ -121,74 +121,8 @@ export class EntityQueryTools implements IEntityQueryTools {
             return false;
         }
 
-        const pagingA = a.getPaging();
-        const pagingB = b.getPaging();
         const equivalentCriteria = a.getCriteria().equivalent(b.getCriteria());
         const equivalentSelection = a.getSelection().equivalent(b.getSelection());
-
-        if (pagingA || pagingB) {
-            if (pagingA && !pagingB) {
-                if (equivalentCriteria && equivalentSelection) {
-                    return b;
-                } else {
-                    return false;
-                }
-            } else if (!pagingA && pagingB) {
-                if (equivalentCriteria && equivalentSelection) {
-                    return a;
-                } else {
-                    return false;
-                }
-            } else if (pagingA && pagingB) {
-                if (equivalentCriteria) {
-                    if (pagingA.equivalent(pagingB)) {
-                        if (equivalentSelection) {
-                            return a; // could also return b, as everything is equivalent
-                        } else {
-                            return this.createQuery({
-                                entitySchema: a.getEntitySchema(),
-                                options: a.getOptions(),
-                                criteria: a.getCriteria(),
-                                selection: a.getSelection().merge(b.getSelection()),
-                                paging: a.getPaging(),
-                                parameters: a.getParameters(),
-                            });
-                        }
-                    } else {
-                        if (pagingA.equivalentSort(pagingB)) {
-                            if (equivalentSelection) {
-                                const mergedRange = pagingA.mergeRange(pagingB);
-
-                                if (mergedRange) {
-                                    return this.createQuery({
-                                        entitySchema: a.getEntitySchema(),
-                                        options: a.getOptions(),
-                                        criteria: a.getCriteria(),
-                                        selection: a.getSelection(),
-                                        paging: new QueryPaging({
-                                            sort: pagingA.getSort(),
-                                            from: mergedRange.getFrom()?.value,
-                                            to: mergedRange.getTo()?.value,
-                                        }),
-                                        parameters: a.getParameters(),
-                                    });
-                                } else {
-                                    return false;
-                                }
-                            } else {
-                                return false;
-                            }
-                        } else {
-                            return false;
-                        }
-                    }
-                } else {
-                    return false;
-                }
-            }
-        }
-
-        const paging = pagingA;
         const options = a.getOptions();
         const entitySchema = a.getEntitySchema();
 
@@ -199,7 +133,6 @@ export class EntityQueryTools implements IEntityQueryTools {
                 criteria: a.getCriteria(),
                 selection: EntitySelection.mergeValues(a.getSelection().getValue(), b.getSelection().getValue()),
                 options,
-                paging,
                 parameters: a.getParameters(),
             });
         }

@@ -34,7 +34,8 @@ describe("mergeQuery()", () => {
         .plus("foo({ price: [100, 200], rating: [3, 8] })/{ foo }")
         .toBe("foo({ price: [100, 200], rating: [3, 8] })/{ foo }");
 
-    describe("paging", () => {
+    // [todo] #21 deactivated due to removal of relevant query merging code. kept as a reference for later™
+    xdescribe("paging", () => {
         {
             // A & B equal
             expectQuery("song({ artistId: 7 })[0, 10]", schemas)
