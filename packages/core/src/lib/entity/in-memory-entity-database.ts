@@ -65,8 +65,16 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
     // [todo] need some tests
     querySync<T extends Entity = Entity>(query: IEntityQuery): EntitySet<T> {
         const store = this.getOrCreateStore(query.getEntitySchema());
-        let entities = store.getByCriterion(
-            this.criteriaTools.omitRelationalCriteria(query.getCriteria(), query.getEntitySchema())
+        const nonRelationalCriterion = this.criteriaTools.omitRelationalCriteria(
+            query.getCriteria(),
+            query.getEntitySchema()
+        );
+
+        const parameters = query.getParameters();
+        let entities = (
+            parameters
+                ? store.getByParameters(parameters, nonRelationalCriterion)
+                : store.getByCriterion(nonRelationalCriterion)
         ) as T[];
 
         const options = query.getOptions();
@@ -102,6 +110,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         this.addQueryToCached(entitySet.getQuery());
         const entities = cloneJson(entitySet.getEntities());
         const normalized = normalizeEntities(entitySet.getQuery().getEntitySchema(), entities);
+        const parameters = entitySet.getQuery().getParameters();
         const options = entitySet.getQuery().getOptions();
         const page = entitySet.getQuery().getPaging();
         const criteria = entitySet.getQuery().getCriteria();
@@ -131,7 +140,13 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
 
         for (const schema of normalized.getSchemas()) {
             const normalizedEntities = normalized.get(schema);
-            this.getOrCreateStore(schema).add(normalizedEntities);
+
+            if (schema.getId() === entitySet.getSchema().getId() && parameters) {
+                // [todo] dirty & buggy. what if entitySet contains that type on both root & related?
+                this.getOrCreateStore(schema).add(normalizedEntities, parameters);
+            } else {
+                this.getOrCreateStore(schema).add(normalizedEntities);
+            }
 
             if (normalizedEntities.length > 0) {
                 const indexQueries = this.queryTools.createQueriesFromEntities(schema, normalizedEntities);
