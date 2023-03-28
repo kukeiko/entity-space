@@ -151,6 +151,7 @@ export class EntityQueryTools implements IEntityQueryTools {
                                 criteria: a.getCriteria(),
                                 selection: a.getSelection().merge(b.getSelection()),
                                 paging: a.getPaging(),
+                                parameters: a.getParameters(),
                             });
                         }
                     } else {
@@ -169,6 +170,7 @@ export class EntityQueryTools implements IEntityQueryTools {
                                             from: mergedRange.getFrom()?.value,
                                             to: mergedRange.getTo()?.value,
                                         }),
+                                        parameters: a.getParameters(),
                                     });
                                 } else {
                                     return false;
@@ -198,6 +200,7 @@ export class EntityQueryTools implements IEntityQueryTools {
                 selection: EntitySelection.mergeValues(a.getSelection().getValue(), b.getSelection().getValue()),
                 options,
                 paging,
+                parameters: a.getParameters(),
             });
         }
 
@@ -210,6 +213,7 @@ export class EntityQueryTools implements IEntityQueryTools {
                     options,
                     criteria: mergedCriteria,
                     selection: a.getSelection().getValue(),
+                    parameters: a.getParameters(),
                 });
             } else {
                 return this.createQuery({
@@ -218,6 +222,7 @@ export class EntityQueryTools implements IEntityQueryTools {
                     criteria: this.criteriaTools.or(a.getCriteria(), b.getCriteria()),
                     selection: a.getSelection().getValue(),
                     options,
+                    parameters: a.getParameters(),
                 });
             }
         }
