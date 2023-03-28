@@ -15,6 +15,7 @@ import { EntityWorkspace } from "./entity-workspace";
 export interface EntityQueryBuilderPatch<T extends Entity> {
     selection?: UnpackedEntitySelection<T>;
     criteria?: ICriterion;
+    parameters?: Entity;
 }
 
 export interface EntityQueryBuilderArgument<T extends Entity> extends EntityQueryBuilderPatch<T> {
@@ -29,6 +30,7 @@ export class EntityQueryBuilder<T extends Entity = Entity> {
         this.selection = args.selection ?? args.schema.getDefaultSelection();
         this.workspace = args.workspace;
         this.criteria = args.criteria ?? new EntityCriteriaTools().all();
+        this.parameters = args.parameters;
         this.criteriaTools = new EntityCriteriaTools();
         this.shapeTools = new EntityCriteriaShapeTools({ criteriaTools: this.criteriaTools });
         this.whereEntityTools = new WhereEntityTools(this.shapeTools, this.criteriaTools);
@@ -39,6 +41,7 @@ export class EntityQueryBuilder<T extends Entity = Entity> {
     private readonly workspace: EntityWorkspace;
     private readonly selection: UnpackedEntitySelection<T>;
     private readonly criteria: ICriterion;
+    private readonly parameters?: Entity;
     private readonly criteriaTools: EntityCriteriaTools;
     private readonly shapeTools: EntityCriteriaShapeTools;
     private readonly whereEntityTools: WhereEntityTools;
@@ -65,13 +68,19 @@ export class EntityQueryBuilder<T extends Entity = Entity> {
         return this.copy({ criteria: simplified });
     }
 
+    using(parameters: Entity): this {
+        return this.copy({ parameters });
+    }
+
     findAll(): Observable<{ entities: T[] }> {
-        return this.workspace.query$(this.schema, this.criteria, this.selection).pipe(map(entities => ({ entities })));
+        return this.workspace
+            .query$(this.schema, this.criteria, this.selection, this.parameters)
+            .pipe(map(entities => ({ entities })));
     }
 
     findOne(): Observable<{ entity: T | undefined }> {
         return this.workspace
-            .query$(this.schema, this.criteria, this.selection)
+            .query$(this.schema, this.criteria, this.selection, this.parameters)
             .pipe(map(entities => ({ entity: entities[0] })));
     }
 }

@@ -105,20 +105,21 @@ export class EntityApi implements IEntityStreamInterceptor {
         queries: IEntityQuery[],
         database: IEntityDatabase
     ): false | [Observable<EntityStreamPacket>, IEntityQuery[]] {
-        const queryTemplate = new EntityQueryShape({
+        const queryShape = new EntityQueryShape({
             schema: endpoint.getSchema(),
             criterion: endpoint.getCriterionTemplate(),
             selection: endpoint.getSelection(),
             options: endpoint.getOptionsTemplate(),
+            parameters: endpoint.getParametersShape(),
         });
 
-        const remapped = flatten(queries.map(query => queryTemplate.reshape(query)).filter(isNotFalse));
+        const reshapedQueries = flatten(queries.map(query => queryShape.reshape(query)).filter(isNotFalse));
 
-        if (!remapped) {
+        if (!reshapedQueries) {
             return false;
         }
 
-        const acceptedRemapped = remapped.filter(query => {
+        const acceptedRemapped = reshapedQueries.filter(query => {
             if (!endpoint.acceptCriterion(query.getCriteria())) {
                 return false;
             }
@@ -143,6 +144,7 @@ export class EntityApi implements IEntityStreamInterceptor {
                     query,
                     selection: query.getSelection().getValue(),
                     paging: query.getPaging(),
+                    parameters: query.getParameters(),
                     criteria: whereEntityShape
                         ? this.whereEntityTools.toWhereEntitySingleFromCriterion(query.getCriteria(), whereEntityShape)
                         : {},

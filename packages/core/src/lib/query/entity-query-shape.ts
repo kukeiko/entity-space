@@ -5,12 +5,13 @@ import { ICriterion } from "../criteria/criterion.interface";
 import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
 import { IEntityCriteriaTools } from "../criteria/entity-criteria-tools.interface";
 import { NeverCriterionShape } from "../criteria/never/never-criterion-shape";
+import { EntityTools } from "../entity/entity-tools";
 import { IEntitySchema } from "../schema/schema.interface";
 import { EntityQueryTools } from "./entity-query-tools";
 import { IEntityQuery } from "./entity-query.interface";
 import { EntitySelection } from "./entity-selection";
 
-type RemappedParts = {
+type ReshapedParts = {
     options: false | ICriterion[];
     criterion: false | ICriterion[];
     selection: false | EntitySelection;
@@ -20,7 +21,12 @@ type WithoutFalse<T> = {
     [K in keyof T]: Exclude<T[K], false>;
 };
 
-function containsNoFalse(parts: RemappedParts): parts is WithoutFalse<RemappedParts> {
+export interface EntityQueryParametersShape {
+    schema: IEntitySchema;
+    required: boolean;
+}
+
+function containsNoFalse(parts: ReshapedParts): parts is WithoutFalse<ReshapedParts> {
     return !Object.values(parts).some(part => part === false);
 }
 
@@ -29,48 +35,64 @@ export class EntityQueryShape {
         schema,
         options,
         criterion,
+        parameters,
         selection,
     }: {
         schema: IEntitySchema;
         options?: ICriterionShape;
         criterion?: ICriterionShape;
+        parameters?: EntityQueryParametersShape;
         selection: EntitySelection;
     }) {
         this.schema = schema;
         this.options = options ?? new NeverCriterionShape({ tools: this.criteriaTools });
         this.criterion = criterion ?? new AllCriterionShape({ tools: this.criteriaTools });
+        this.parameters = parameters;
         this.selection = selection;
     }
 
     private readonly criteriaTools: IEntityCriteriaTools = new EntityCriteriaTools();
     private readonly schema: IEntitySchema;
+    private readonly parameters?: EntityQueryParametersShape;
     private readonly options: ICriterionShape;
     private readonly criterion: ICriterionShape;
     private readonly selection: EntitySelection;
+    private readonly entityTools = new EntityTools();
 
     reshape(query: IEntityQuery): false | IEntityQuery[] {
+        const parameters = query.getParameters();
+
+        if (parameters && !this.parameters) {
+            return false;
+        } else if (!parameters && this.parameters?.required) {
+            return false;
+        } else if (
+            parameters &&
+            this.parameters &&
+            !this.entityTools.matchesSchema(parameters, this.parameters.schema)
+        ) {
+            return false;
+        }
+
         // [todo] can be removed if i decide to make remap() result of ICriterionTemplate just an array
         // of successfully remapped Criteria (instead of also the open ones)
-        const reshapeCriterion = (
-            criterion: ICriterion,
-            template: ICriterionShape
-        ): false | ICriterion[] => {
+        const reshapeCriterion = (criterion: ICriterion, template: ICriterionShape): false | ICriterion[] => {
             const reshaped = template.reshape(criterion);
 
             return reshaped ? reshaped.getReshaped() : false;
         };
 
-        const remappedParts: RemappedParts = {
+        const reshapedParts: ReshapedParts = {
             options: reshapeCriterion(query.getOptions(), this.options),
             criterion: reshapeCriterion(query.getCriteria(), this.criterion),
             selection: this.selection.intersect(query.getSelection()),
         };
 
-        if (!containsNoFalse(remappedParts)) {
+        if (!containsNoFalse(reshapedParts)) {
             return false;
         }
 
-        const permutatedRemappedParts = permutateEntries(remappedParts);
+        const permutatedRemappedParts = permutateEntries(reshapedParts);
 
         return permutatedRemappedParts.map(parts => {
             return new EntityQueryTools({ criteriaTools: new EntityCriteriaTools() }).createQuery({
@@ -79,6 +101,7 @@ export class EntityQueryShape {
                 criteria: parts.criterion,
                 selection: parts.selection,
                 paging: query.getPaging(),
+                parameters,
             });
         });
     }

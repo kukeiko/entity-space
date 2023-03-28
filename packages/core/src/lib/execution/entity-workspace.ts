@@ -219,7 +219,7 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
         schema: IEntitySchema<T>,
         criterion: ICriterion | EntityWhere<T> = this.criteriaTools.all(),
         selection?: UnpackedEntitySelection<T>,
-        options: ICriterion = this.criteriaTools.never()
+        parameters?: Entity
     ): Observable<T[]> {
         if (!this.criteriaTools.isCriterion(criterion)) {
             criterion = this.criteriaTools.where(criterion);
@@ -230,7 +230,7 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
             // [todo] type assertion
             criteria: criterion as ICriterion,
             selection: selection,
-            options,
+            parameters,
         });
 
         // const subject = new Subject<Entity[]>();

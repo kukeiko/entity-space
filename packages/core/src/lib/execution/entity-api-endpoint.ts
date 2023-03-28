@@ -5,6 +5,7 @@ import { ICriterionShape } from "../criteria/criterion-shape.interface";
 import { ICriterion } from "../criteria/criterion.interface";
 import { WhereEntityShape } from "../criteria/where-entity/where-entity-shape.types";
 import { EntitySet } from "../entity/data-structures/entity-set";
+import { EntityQueryParametersShape } from "../query/entity-query-shape";
 import { IEntityQuery } from "../query/entity-query.interface";
 import { EntitySelection } from "../query/entity-selection";
 import { QueryPaging } from "../query/query-paging";
@@ -12,10 +13,15 @@ import { IEntitySchema } from "../schema/schema.interface";
 
 export type EntityApiEndpointData<T extends Entity = Entity> = T | T[] | EntitySet<T>;
 
-export type EntityApiEndpointInvoke<T extends Entity = Entity, C = {}> = (query: {
+export type EntityApiEndpointInvoke<
+    T extends Entity = Entity,
+    C = {},
+    P extends Entity | undefined = Entity | undefined
+> = (query: {
     query: IEntityQuery;
     selection: UnpackedEntitySelection<T>;
     paging?: QueryPaging;
+    parameters: P;
     criteria: C;
 }) => Observable<EntityApiEndpointData<T>> | Promise<EntityApiEndpointData<T>> | EntityApiEndpointData<T>;
 
@@ -26,6 +32,7 @@ export class EntityApiEndpoint {
         invoke,
         whereEntityShape,
         schema,
+        parametersShape,
         selection,
     }: {
         acceptCriterion?: (criterion: ICriterion) => boolean;
@@ -33,6 +40,7 @@ export class EntityApiEndpoint {
         invoke: EntityApiEndpointInvoke;
         whereEntityShape?: WhereEntityShape;
         schema: IEntitySchema;
+        parametersShape?: EntityQueryParametersShape;
         selection: EntitySelection;
     }) {
         this.acceptCriterionFn = acceptCriterion ?? (() => true);
@@ -40,10 +48,12 @@ export class EntityApiEndpoint {
         this.invoke = invoke;
         this.whereEntityShape = whereEntityShape;
         this.schema = schema;
+        this.parametersShape = parametersShape;
         this.selection = selection;
     }
 
     private readonly schema: IEntitySchema;
+    private readonly parametersShape?: EntityQueryParametersShape;
     private readonly whereEntityShape?: WhereEntityShape;
     private readonly optionsTemplate?: ICriterionShape;
     private readonly criterionTemplate: ICriterionShape;
@@ -53,6 +63,10 @@ export class EntityApiEndpoint {
 
     getSchema(): IEntitySchema {
         return this.schema;
+    }
+
+    getParametersShape(): EntityQueryParametersShape | undefined {
+        return this.parametersShape;
     }
 
     getWhereEntityShape(): WhereEntityShape | undefined {

@@ -7,11 +7,16 @@ import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
 import { WhereEntityShapeInstance } from "../criteria/where-entity/where-entity-shape-instance.types";
 import { WhereEntityShape } from "../criteria/where-entity/where-entity-shape.types";
 import { WhereEntityTools } from "../criteria/where-entity/where-entity-tools";
+import { EntityQueryParametersShape } from "../query/entity-query-shape";
 import { EntitySelection } from "../query/entity-selection";
 import { IEntitySchema } from "../schema/schema.interface";
 import { EntityApiEndpoint, EntityApiEndpointInvoke } from "./entity-api-endpoint";
 
-export class EntityApiEndpointBuilder<T extends Entity = Entity, S = {}> {
+export class EntityApiEndpointBuilder<
+    T extends Entity = Entity,
+    S = {},
+    P extends Entity | undefined = Entity | undefined
+> {
     constructor(schema: IEntitySchema) {
         this.schema = schema;
         this.supportedSelection = schema.getDefaultSelection();
@@ -23,20 +28,31 @@ export class EntityApiEndpointBuilder<T extends Entity = Entity, S = {}> {
     private readonly schema: IEntitySchema;
     private readonly shapeTools: IEntityCriteriaShapeTools;
     private readonly whereEntityTools: WhereEntityTools;
+    private parametersShape?: EntityQueryParametersShape;
     private whereEntityShape?: WhereEntityShape;
     private supportedSelection: UnpackedEntitySelection;
     private loadEntities?: EntityApiEndpointInvoke;
     private acceptCriterion: (criterion: ICriterion) => boolean = () => true;
 
-    where<S extends WhereEntityShape<T>>(shape: S | WhereEntityShape<T>): EntityApiEndpointBuilder<T, S> {
+    where<S extends WhereEntityShape<T>>(shape: S | WhereEntityShape<T>): EntityApiEndpointBuilder<T, S, P> {
         this.whereEntityShape = shape;
         return this as any;
+    }
+
+    supportsParameters<P extends Entity>(schema: IEntitySchema<P>): EntityApiEndpointBuilder<T, S, P | undefined> {
+        this.parametersShape = { required: false, schema };
+        return this as any as EntityApiEndpointBuilder<T, S, P | undefined>;
+    }
+
+    requiresParameters<P extends Entity>(schema: IEntitySchema<P>): EntityApiEndpointBuilder<T, S, P> {
+        this.parametersShape = { required: true, schema };
+        return this as any as EntityApiEndpointBuilder<T, S, P>;
     }
 
     supportsSelection(
         selection: UnpackedEntitySelection<T>
         // selection: PackedEntitySelection<T> // [todo] use this instead
-    ): EntityApiEndpointBuilder<T, S> {
+    ): EntityApiEndpointBuilder<T, S, P> {
         this.supportedSelection = EntitySelection.mergeValues(this.supportedSelection, selection);
         return this;
     }
@@ -51,7 +67,7 @@ export class EntityApiEndpointBuilder<T extends Entity = Entity, S = {}> {
         return this;
     }
 
-    isLoadedBy(load: EntityApiEndpointInvoke<T, WhereEntityShapeInstance<T, S>>): this {
+    isLoadedBy(load: EntityApiEndpointInvoke<T, WhereEntityShapeInstance<T, S>, P>): this {
         this.loadEntities = load as any;
         return this;
     }
@@ -70,6 +86,7 @@ export class EntityApiEndpointBuilder<T extends Entity = Entity, S = {}> {
             selection: new EntitySelection({ schema: this.schema, value: this.supportedSelection }),
             invoke: this.loadEntities,
             schema: this.schema,
+            parametersShape: this.parametersShape,
             criterionShape,
             acceptCriterion: this.acceptCriterion,
             whereEntityShape: this.whereEntityShape,
