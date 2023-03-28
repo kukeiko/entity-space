@@ -80,10 +80,9 @@ import { MusicBoxWorkspace } from "./music-box-workspace";
                 return (
                     controller
                         .withGetAllArtists()
-                        // [todo] re-add once re-implemented
-                        // .withSearchSongs()
                         .withGetSongById()
                         .withGetAllSongs()
+                        .withSearchSongs()
                         .withGetSongLocationsBySongId()
                         .withGetAllSongLocationTypes()
                 );

@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit } from "@angular/core";
-import { Song, SongLocation } from "@entity-space/examples/libs/music-model";
+import { SongLocation } from "@entity-space/examples/libs/music-model";
 import { pluckId } from "@entity-space/utils";
 import { PrimeNGConfig } from "primeng/api";
 import { BehaviorSubject, map, skip, Subject, switchMap } from "rxjs";
@@ -33,6 +33,8 @@ export class MusicAppComponent implements OnInit, OnDestroy {
             this.entities
                 .fromSongs()
                 .select({ locations: true })
+                // [todo] no type support yet for parameters
+                .using({ searchText: filter.searchText })
                 .where({
                     artistId: pluckId(filter.artists),
                     locations: {
