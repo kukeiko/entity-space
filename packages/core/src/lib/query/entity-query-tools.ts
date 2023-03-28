@@ -15,7 +15,6 @@ type SubtractedParts = {
     options: true | ICriterion;
     criteria: true | ICriterion;
     selection: true | EntitySelection;
-    paging: true | QueryPaging[];
     parameters: true;
 };
 
@@ -211,17 +210,8 @@ export class EntityQueryTools implements IEntityQueryTools {
             criteria: a.getCriteria(),
             selection: a.getSelection(),
             options: a.getOptions(),
-            paging: a.getPaging(),
             parameters: a.getParameters(),
         };
-
-        if (subtracted.paging !== true) {
-            subtracted.paging.forEach(paging => {
-                subtractedQueries.push(factory.createQuery({ ...accumulated, paging }));
-            });
-
-            accumulated.paging = b.getPaging();
-        }
 
         if (subtracted.options !== true) {
             subtractedQueries.push(factory.createQuery({ ...accumulated, options: subtracted.options }));
@@ -248,49 +238,19 @@ export class EntityQueryTools implements IEntityQueryTools {
     };
 
     private subtractParts(a: IEntityQuery, b: IEntityQuery): false | SubtractedParts {
-        const pagingA = a.getPaging();
-        const pagingB = b.getPaging();
-        let paging: true | QueryPaging[] = true;
-
-        if (!pagingA && pagingB) {
-            return false;
-        } else if (pagingA && pagingB) {
-            const subractedPaging = pagingB.subtract(pagingA);
-
-            if (!subractedPaging) {
-                return false;
-            }
-
-            paging = subractedPaging;
-
-            if (!b.getOptions().equivalent(a.getOptions())) {
-                return false;
-            }
-
-            if (!b.getCriteria().equivalent(a.getCriteria())) {
-                return false;
-            }
-
-            const selection = b.getSelection().subtractFrom(a.getSelection());
-
-            if (!selection) {
-                return false;
-            }
-        }
-
         if (!isEqual(a.getParameters(), b.getParameters())) {
             return false;
         }
 
         const options = b.getOptions().subtractFrom(a.getOptions());
 
-        if (!options || (options !== true && paging !== true)) {
+        if (!options) {
             return false;
         }
 
         const criteria = b.getCriteria().subtractFrom(a.getCriteria());
 
-        if (!criteria || (criteria !== true && paging !== true)) {
+        if (!criteria) {
             return false;
         }
 
@@ -300,7 +260,7 @@ export class EntityQueryTools implements IEntityQueryTools {
             return false;
         }
 
-        return { options, criteria, selection, paging, parameters: true };
+        return { options, criteria, selection, parameters: true };
     }
 
     parseQuery = (input: string, schemas: EntitySchemaCatalog): IEntityQuery => {
