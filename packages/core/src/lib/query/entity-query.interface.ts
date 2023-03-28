@@ -8,7 +8,6 @@ import { QueryPaging } from "./query-paging";
 export interface IEntityQuery {
     getCriteria(): ICriterion;
     getSelection(): EntitySelection;
-    getOptions(): ICriterion;
     getPaging(): QueryPaging | undefined;
     getParameters(): Entity | undefined;
     getEntitySchema(): IEntitySchema;

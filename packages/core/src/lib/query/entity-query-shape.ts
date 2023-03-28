@@ -4,7 +4,6 @@ import { ICriterionShape } from "../criteria/criterion-shape.interface";
 import { ICriterion } from "../criteria/criterion.interface";
 import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
 import { IEntityCriteriaTools } from "../criteria/entity-criteria-tools.interface";
-import { NeverCriterionShape } from "../criteria/never/never-criterion-shape";
 import { EntityTools } from "../entity/entity-tools";
 import { IEntitySchema } from "../schema/schema.interface";
 import { EntityQueryTools } from "./entity-query-tools";
@@ -12,7 +11,6 @@ import { IEntityQuery } from "./entity-query.interface";
 import { EntitySelection } from "./entity-selection";
 
 type ReshapedParts = {
-    options: false | ICriterion[];
     criterion: false | ICriterion[];
     selection: false | EntitySelection;
 };
@@ -33,19 +31,16 @@ function containsNoFalse(parts: ReshapedParts): parts is WithoutFalse<ReshapedPa
 export class EntityQueryShape {
     constructor({
         schema,
-        options,
         criterion,
         parameters,
         selection,
     }: {
         schema: IEntitySchema;
-        options?: ICriterionShape;
         criterion?: ICriterionShape;
         parameters?: EntityQueryParametersShape;
         selection: EntitySelection;
     }) {
         this.schema = schema;
-        this.options = options ?? new NeverCriterionShape({ tools: this.criteriaTools });
         this.criterion = criterion ?? new AllCriterionShape({ tools: this.criteriaTools });
         this.parameters = parameters;
         this.selection = selection;
@@ -54,7 +49,6 @@ export class EntityQueryShape {
     private readonly criteriaTools: IEntityCriteriaTools = new EntityCriteriaTools();
     private readonly schema: IEntitySchema;
     private readonly parameters?: EntityQueryParametersShape;
-    private readonly options: ICriterionShape;
     private readonly criterion: ICriterionShape;
     private readonly selection: EntitySelection;
     private readonly entityTools = new EntityTools();
@@ -74,7 +68,7 @@ export class EntityQueryShape {
             return false;
         }
 
-        // [todo] can be removed if i decide to make remap() result of ICriterionTemplate just an array
+        // [todo] can be removed if i decide to make reshape() result of ICriterionTemplate just an array
         // of successfully remapped Criteria (instead of also the open ones)
         const reshapeCriterion = (criterion: ICriterion, template: ICriterionShape): false | ICriterion[] => {
             const reshaped = template.reshape(criterion);
@@ -83,7 +77,6 @@ export class EntityQueryShape {
         };
 
         const reshapedParts: ReshapedParts = {
-            options: reshapeCriterion(query.getOptions(), this.options),
             criterion: reshapeCriterion(query.getCriteria(), this.criterion),
             selection: this.selection.intersect(query.getSelection()),
         };
@@ -97,10 +90,8 @@ export class EntityQueryShape {
         return permutatedRemappedParts.map(parts => {
             return new EntityQueryTools({ criteriaTools: new EntityCriteriaTools() }).createQuery({
                 entitySchema: this.schema,
-                options: parts.options,
                 criteria: parts.criterion,
                 selection: parts.selection,
-                paging: query.getPaging(),
                 parameters,
             });
         });

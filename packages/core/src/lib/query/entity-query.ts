@@ -15,7 +15,6 @@ export class EntityQuery implements IEntityQuery {
         criteria,
         entitySchema,
         queryTools,
-        options,
         paging,
         parameters,
         selection,
@@ -23,13 +22,11 @@ export class EntityQuery implements IEntityQuery {
         criteria: ICriterion;
         entitySchema: IEntitySchema;
         queryTools: IEntityQueryTools;
-        options: ICriterion;
         paging?: QueryPaging;
         parameters?: Entity;
         selection: EntitySelection;
     }) {
         this.entitySchema = entitySchema;
-        this.options = options;
         this.criteria = criteria;
         this.selection = selection;
         this.paging = paging;
@@ -39,7 +36,6 @@ export class EntityQuery implements IEntityQuery {
 
     private readonly entitySchema: IEntitySchema;
     private readonly criteria: ICriterion;
-    private readonly options: ICriterion;
     private readonly selection: EntitySelection;
     private readonly paging?: QueryPaging;
     private readonly parameters?: Entity;
@@ -52,10 +48,6 @@ export class EntityQuery implements IEntityQuery {
 
     getCriteria(): ICriterion {
         return this.criteria;
-    }
-
-    getOptions(): ICriterion {
-        return this.options;
     }
 
     getPaging(): QueryPaging | undefined {

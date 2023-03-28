@@ -55,7 +55,6 @@ export class EntityApiEndpoint {
     private readonly schema: IEntitySchema;
     private readonly parametersShape?: EntityQueryParametersShape;
     private readonly whereEntityShape?: WhereEntityShape;
-    private readonly optionsTemplate?: ICriterionShape;
     private readonly criterionTemplate: ICriterionShape;
     private readonly selection: EntitySelection;
     private readonly invoke: EntityApiEndpointInvoke;
@@ -75,10 +74,6 @@ export class EntityApiEndpoint {
 
     getCriterionTemplate(): ICriterionShape {
         return this.criterionTemplate;
-    }
-
-    getOptionsTemplate(): ICriterionShape | undefined {
-        return this.optionsTemplate;
     }
 
     getSelection(): EntitySelection {

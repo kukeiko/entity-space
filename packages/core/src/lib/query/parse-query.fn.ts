@@ -52,7 +52,6 @@ export function parseQuery(
 
 interface QueryParts {
     schemaName?: string;
-    options?: ICriterion;
     criteria?: ICriterion;
     paging?: QueryPaging;
     selection?: UnpackedEntitySelection;

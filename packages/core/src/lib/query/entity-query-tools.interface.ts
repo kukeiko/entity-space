@@ -10,7 +10,6 @@ import { QueryPaging } from "./query-paging";
 export interface EntityQueryCreate {
     entitySchema: IEntitySchema;
     criteria?: ICriterion;
-    options?: ICriterion;
     selection?: EntitySelection | UnpackedEntitySelection;
     paging?: QueryPaging;
     parameters?: Entity;

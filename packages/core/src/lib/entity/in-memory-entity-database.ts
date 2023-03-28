@@ -1,16 +1,14 @@
-import { cloneJson, groupBy, isDefined, readPath } from "@entity-space/utils";
+import { cloneJson, groupBy, readPath } from "@entity-space/utils";
 import { flatten } from "lodash";
 import { Observable, Subject } from "rxjs";
 import { Entity } from "../common/entity.type";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
-import { ICriterion } from "../criteria/criterion.interface";
 import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
 import { IEntityCriteriaTools } from "../criteria/entity-criteria-tools.interface";
 import { EntityQueryTools } from "../query/entity-query-tools";
 import { IEntityQueryTools } from "../query/entity-query-tools.interface";
 import { IEntityQuery } from "../query/entity-query.interface";
 import { EntitySelection } from "../query/entity-selection";
-import { QueryPaging } from "../query/query-paging";
 import { IEntitySchema, IEntitySchemaRelation } from "../schema/schema.interface";
 import { EntitySet } from "./data-structures/entity-set";
 import { IEntityDatabase } from "./entity-database.interface";
@@ -22,8 +20,6 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
     private readonly stores = new Map<string, EntityStore>();
     private readonly cachedQueries = new Map<string, IEntityQuery[]>();
     private readonly queryCacheChanged = new Subject<IEntityQuery[]>();
-    private readonly optionsCache: { options?: ICriterion; paging?: QueryPaging; ids: ICriterion }[] = [];
-    private readonly optionsCache_v2: { options: ICriterion; criteria: ICriterion; ids: Entity[] }[] = [];
     private readonly criteriaTools: IEntityCriteriaTools = new EntityCriteriaTools();
     private readonly queryTools: IEntityQueryTools = new EntityQueryTools({ criteriaTools: this.criteriaTools });
 
@@ -77,22 +73,6 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
                 : store.getByCriterion(nonRelationalCriterion)
         ) as T[];
 
-        const options = query.getOptions();
-        const criteria = query.getCriteria();
-        const { isAllCriterion, isNeverCriterion } = this.criteriaTools;
-
-        if (!isNeverCriterion(options) && !isAllCriterion(options)) {
-            const match = this.optionsCache_v2.find(
-                item => item.options.equivalent(options) && item.criteria.equivalent(criteria)
-            );
-
-            if (!match) {
-                return new EntitySet<T>({ query, entities: [] });
-            } else {
-                entities = match.ids.map(id => store.get(id)).filter(isDefined) as T[];
-            }
-        }
-
         if (!query.getSelection().isEmpty() && entities.length > 0) {
             // [todo] dirty to do it here?
             // [todo] this way of cloning is quite slow.
@@ -111,32 +91,6 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         const entities = cloneJson(entitySet.getEntities());
         const normalized = normalizeEntities(entitySet.getQuery().getEntitySchema(), entities);
         const parameters = entitySet.getQuery().getParameters();
-        const options = entitySet.getQuery().getOptions();
-        const page = entitySet.getQuery().getPaging();
-        const criteria = entitySet.getQuery().getCriteria();
-        const { isAllCriterion, isNeverCriterion, createCriterionFromEntities, never } = this.criteriaTools;
-
-        if (!isNeverCriterion(options) && !isAllCriterion(options)) {
-            const match = this.optionsCache_v2.find(
-                item => item.options.equivalent(options) && item.criteria.equivalent(criteria)
-            );
-
-            if (match) {
-                match.ids = entities;
-            } else {
-                this.optionsCache_v2.push({ ids: entities, options, criteria });
-            }
-        }
-
-        if (!isNeverCriterion(options) && !isAllCriterion(options)) {
-            if (entitySet.getEntities().length) {
-                const key = entitySet.getSchema().getKey();
-                const keyCriterion = createCriterionFromEntities(entitySet.getEntities(), key.getPath());
-                this.optionsCache.push({ options, paging: page, ids: keyCriterion });
-            } else {
-                this.optionsCache.push({ options, paging: page, ids: never() });
-            }
-        }
 
         for (const schema of normalized.getSchemas()) {
             const normalizedEntities = normalized.get(schema);

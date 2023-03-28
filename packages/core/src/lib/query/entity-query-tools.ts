@@ -9,10 +9,8 @@ import { EntityQueryCreate, IEntityQueryTools } from "./entity-query-tools.inter
 import { IEntityQuery } from "./entity-query.interface";
 import { EntitySelection } from "./entity-selection";
 import { parseQuery } from "./parse-query.fn";
-import { QueryPaging } from "./query-paging";
 
 type SubtractedParts = {
-    options: true | ICriterion;
     criteria: true | ICriterion;
     selection: true | EntitySelection;
     parameters: true;
@@ -26,13 +24,12 @@ export class EntityQueryTools implements IEntityQueryTools {
     private readonly criteriaTools: IEntityCriteriaTools;
 
     createQuery = (args: EntityQueryCreate): IEntityQuery => {
-        let { entitySchema, criteria, options, paging, selection, parameters } = args;
+        let { entitySchema, criteria, paging, selection, parameters } = args;
 
         return new EntityQuery({
             queryTools: this,
             entitySchema,
             criteria: criteria ?? this.criteriaTools.all(),
-            options: options ?? this.criteriaTools.never(),
             paging,
             parameters,
             selection:
@@ -116,13 +113,8 @@ export class EntityQueryTools implements IEntityQueryTools {
             return false;
         }
 
-        if (!a.getOptions().equivalent(b.getOptions())) {
-            return false;
-        }
-
         const equivalentCriteria = a.getCriteria().equivalent(b.getCriteria());
         const equivalentSelection = a.getSelection().equivalent(b.getSelection());
-        const options = a.getOptions();
         const entitySchema = a.getEntitySchema();
 
         if (equivalentCriteria) {
@@ -131,7 +123,6 @@ export class EntityQueryTools implements IEntityQueryTools {
                 entitySchema,
                 criteria: a.getCriteria(),
                 selection: EntitySelection.mergeValues(a.getSelection().getValue(), b.getSelection().getValue()),
-                options,
                 parameters: a.getParameters(),
             });
         }
@@ -142,7 +133,6 @@ export class EntityQueryTools implements IEntityQueryTools {
             if (mergedCriteria !== false) {
                 return this.createQuery({
                     entitySchema,
-                    options,
                     criteria: mergedCriteria,
                     selection: a.getSelection().getValue(),
                     parameters: a.getParameters(),
@@ -153,7 +143,6 @@ export class EntityQueryTools implements IEntityQueryTools {
                     // [todo] hardcoded
                     criteria: this.criteriaTools.or(a.getCriteria(), b.getCriteria()),
                     selection: a.getSelection().getValue(),
-                    options,
                     parameters: a.getParameters(),
                 });
             }
@@ -209,14 +198,8 @@ export class EntityQueryTools implements IEntityQueryTools {
             entitySchema: a.getEntitySchema(),
             criteria: a.getCriteria(),
             selection: a.getSelection(),
-            options: a.getOptions(),
             parameters: a.getParameters(),
         };
-
-        if (subtracted.options !== true) {
-            subtractedQueries.push(factory.createQuery({ ...accumulated, options: subtracted.options }));
-            accumulated.options = b.getOptions();
-        }
 
         if (subtracted.criteria !== true) {
             subtractedQueries.push(factory.createQuery({ ...accumulated, criteria: subtracted.criteria }));
@@ -242,12 +225,6 @@ export class EntityQueryTools implements IEntityQueryTools {
             return false;
         }
 
-        const options = b.getOptions().subtractFrom(a.getOptions());
-
-        if (!options) {
-            return false;
-        }
-
         const criteria = b.getCriteria().subtractFrom(a.getCriteria());
 
         if (!criteria) {
@@ -260,7 +237,7 @@ export class EntityQueryTools implements IEntityQueryTools {
             return false;
         }
 
-        return { options, criteria, selection, parameters: true };
+        return { criteria, selection, parameters: true };
     }
 
     parseQuery = (input: string, schemas: EntitySchemaCatalog): IEntityQuery => {

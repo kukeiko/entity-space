@@ -109,7 +109,6 @@ export class EntityApi implements IEntityStreamInterceptor {
             schema: endpoint.getSchema(),
             criterion: endpoint.getCriterionTemplate(),
             selection: endpoint.getSelection(),
-            options: endpoint.getOptionsTemplate(),
             parameters: endpoint.getParametersShape(),
         });
 
