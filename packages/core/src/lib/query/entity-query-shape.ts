@@ -68,10 +68,10 @@ export class EntityQueryShape {
             return false;
         }
 
-        // [todo] can be removed if i decide to make reshape() result of ICriterionTemplate just an array
-        // of successfully remapped Criteria (instead of also the open ones)
-        const reshapeCriterion = (criterion: ICriterion, template: ICriterionShape): false | ICriterion[] => {
-            const reshaped = template.reshape(criterion);
+        // [todo] can be removed if i decide to make reshape() result of ICriterionShape just an array
+        // of successfully reshaped Criteria (instead of also the open ones)
+        const reshapeCriterion = (criterion: ICriterion, shape: ICriterionShape): false | ICriterion[] => {
+            const reshaped = shape.reshape(criterion);
 
             return reshaped ? reshaped.getReshaped() : false;
         };
@@ -85,9 +85,9 @@ export class EntityQueryShape {
             return false;
         }
 
-        const permutatedRemappedParts = permutateEntries(reshapedParts);
+        const permutatedReshapedParts = permutateEntries(reshapedParts);
 
-        return permutatedRemappedParts.map(parts => {
+        return permutatedReshapedParts.map(parts => {
             return new EntityQueryTools({ criteriaTools: new EntityCriteriaTools() }).createQuery({
                 entitySchema: this.schema,
                 criteria: parts.criterion,

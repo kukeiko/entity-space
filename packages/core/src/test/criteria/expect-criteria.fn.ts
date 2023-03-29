@@ -13,10 +13,10 @@ export function expectCriteria(
     inverted(): { toEqual(expected: string | false): void };
     mergedWith(other: string): { toEqual(expected: string | false): void };
     minus(other: string): { toEqual(expected: string | boolean): void };
-    remappedUsing(
+    reshapedUsing(
         shape: ICriterionShape,
         label?: string
-    ): { toEqual(remapped: string[] | string | false, open?: string[]): void };
+    ): { toEqual(reshaped: string[] | string | false, open?: string[]): void };
 } {
     return {
         intersectedWith(other) {
@@ -87,41 +87,41 @@ export function expectCriteria(
                 },
             };
         },
-        remappedUsing(shape, label?) {
+        reshapedUsing(shape, label?) {
             return {
-                toEqual(remapped: string[] | string | false, open: string[] = []) {
+                toEqual(reshaped: string[] | string | false, open: string[] = []) {
                     const shapeName = label ?? (shape as any).constructor.name;
 
-                    if (remapped === false) {
+                    if (reshaped === false) {
                         specFn(`${criteria} should not reshape using ${shapeName}`, () => {
                             expect(shape.reshape(parse(criteria))).toEqual(false);
                         });
                     } else {
-                        const remappedString =
-                            typeof remapped === "string"
-                                ? parse(remapped).toString()
-                                : `${remapped.map(x => parse(x)).join(", ")}`;
+                        const reshapedString =
+                            typeof reshaped === "string"
+                                ? parse(reshaped).toString()
+                                : `${reshaped.map(x => parse(x)).join(", ")}`;
 
                         if (open.length === 0) {
-                            specFn(`${criteria} should fully reshape using ${shapeName} to ${remappedString}`, () => {
+                            specFn(`${criteria} should fully reshape using ${shapeName} to ${reshapedString}`, () => {
                                 const result = shape.reshape(parse(criteria));
                                 expect(result).not.toBe(false);
 
                                 if (result !== false) {
-                                    expect(result.getReshaped().join(", ")).toEqual(remappedString);
+                                    expect(result.getReshaped().join(", ")).toEqual(reshapedString);
                                 }
                             });
                         } else {
                             const openString = open.join(", ");
 
                             specFn(
-                                `${criteria} should reshape using ${shapeName} to ${remappedString}, leaving ${openString}`,
+                                `${criteria} should reshape using ${shapeName} to ${reshapedString}, leaving ${openString}`,
                                 () => {
                                     const result = shape.reshape(parse(criteria));
                                     expect(result).not.toBe(false);
 
                                     if (result !== false) {
-                                        expect(result.getReshaped().join(", ")).toEqual(remappedString);
+                                        expect(result.getReshaped().join(", ")).toEqual(reshapedString);
                                         expect(result.getOpen().join(", ")).toEqual(open.join(", "));
                                     }
                                 }

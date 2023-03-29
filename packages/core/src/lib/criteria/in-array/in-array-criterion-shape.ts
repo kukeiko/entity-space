@@ -48,11 +48,11 @@ export class InArrayCriterionShape<T extends Primitive | typeof Null> implements
         }
 
         // [todo] type assertion
-        const remapped = this.tools.inArray(valuesMatchingType as any);
+        const reshaped = this.tools.inArray(valuesMatchingType as any);
         // [todo] type assertion
         const open = valuesNotMatchingType.length ? [this.tools.inArray(valuesNotMatchingType as any)] : [];
 
-        return new ReshapedCriterion([remapped], open);
+        return new ReshapedCriterion([reshaped], open);
     }
 
     private reshapeEqualsValueCriterion(criterion: IEqualsCriterion): false | ReshapedCriterion<IInArrayCriterion> {

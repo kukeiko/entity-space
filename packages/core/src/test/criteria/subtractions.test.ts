@@ -166,7 +166,7 @@ describe("criteria: subtractions", () => {
         expectCriteria("{ foo:[1, 7] }")
             .minus("{ foo:[3, 4], bar:[150, 175] }")
             .toEqual("({ foo:([1, 3) | (4, 7]) } | { foo:[3, 4], bar:([..., 150) | (175, ...]) })");
-        // "({ foo:([1, 3) | (4, 7]) } | { foo:[3, 4], bar:([..., 150) | (175, ...]) })" remapped with "i do not support filtering on property bar" should be "{ foo:[1, 7] }"
+        // "({ foo:([1, 3) | (4, 7]) } | { foo:[3, 4], bar:([..., 150) | (175, ...]) })" reshaped with "i do not support filtering on property bar" should be "{ foo:[1, 7] }"
 
         expectCriteria("{ foo:[1, 7], bar:[100, 200] }")
             .minus("{ foo:[3, 4], bar:[150, 175] }")

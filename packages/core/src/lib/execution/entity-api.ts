@@ -107,7 +107,7 @@ export class EntityApi implements IEntityStreamInterceptor {
     ): false | [Observable<EntityStreamPacket>, IEntityQuery[]] {
         const queryShape = new EntityQueryShape({
             schema: endpoint.getSchema(),
-            criterion: endpoint.getCriterionTemplate(),
+            criterion: endpoint.getCriterionShape(),
             selection: endpoint.getSelection(),
             parameters: endpoint.getParametersShape(),
         });
@@ -118,7 +118,7 @@ export class EntityApi implements IEntityStreamInterceptor {
             return false;
         }
 
-        const acceptedRemapped = reshapedQueries.filter(query => {
+        const acceptedReshaped = reshapedQueries.filter(query => {
             if (!endpoint.acceptCriterion(query.getCriteria())) {
                 return false;
             }
@@ -126,19 +126,17 @@ export class EntityApi implements IEntityStreamInterceptor {
             return true;
         });
 
-        if (!acceptedRemapped.length) {
+        if (!acceptedReshaped.length) {
             return false;
         }
 
-        acceptedRemapped.forEach(query =>
-            this.tracing.queryDispatchedToEndpoint(query, endpoint.getCriterionTemplate())
-        );
+        acceptedReshaped.forEach(query => this.tracing.queryDispatchedToEndpoint(query, endpoint.getCriterionShape()));
 
-        const initialPacket = new EntityStreamPacket({ accepted: acceptedRemapped });
+        const initialPacket = new EntityStreamPacket({ accepted: acceptedReshaped });
         const whereEntityShape = endpoint.getWhereEntityShape();
 
         const stream = merge(
-            ...acceptedRemapped.map(query => {
+            ...acceptedReshaped.map(query => {
                 const invoked = endpoint.getInvoke()({
                     query,
                     selection: query.getSelection().getValue(),
@@ -152,12 +150,12 @@ export class EntityApi implements IEntityStreamInterceptor {
                 return this.invokedToDataStream(invoked).pipe(
                     map(data => this.endpointDataToPacket(query, data)),
                     switchMap(packet => this.addPacketToDatabase(packet, database)),
-                    tap(packet => this.tracePacket(packet, endpoint, acceptedRemapped))
+                    tap(packet => this.tracePacket(packet, endpoint, acceptedReshaped))
                 );
             })
         ).pipe(startWith(initialPacket));
 
-        return [stream, acceptedRemapped];
+        return [stream, acceptedReshaped];
     }
 
     private async addPacketToDatabase(
@@ -175,7 +173,7 @@ export class EntityApi implements IEntityStreamInterceptor {
         );
 
         relevantAccepted.forEach(query =>
-            this.tracing.endpointDeliveredPacket(query, endpoint.getCriterionTemplate(), packet)
+            this.tracing.endpointDeliveredPacket(query, endpoint.getCriterionShape(), packet)
         );
     }
 

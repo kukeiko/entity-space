@@ -48,9 +48,9 @@ export class EqualsCriterionShape<T extends Primitive | typeof Null> implements 
                 // [todo] type assertion
                 const openValues = Array.from(criterion.getValues()).filter(value => !valuesSet.has(value as any));
                 const open = openValues.length > 0 ? [this.tools.inArray(openValues as any)] : [];
-                const remapped = values.map(value => this.tools.equals(value));
+                const reshaped = values.map(value => this.tools.equals(value));
 
-                return new ReshapedCriterion(remapped, open);
+                return new ReshapedCriterion(reshaped, open);
             }
         } else if (this.tools.isOrCriterion(criterion)) {
             return reshapeOrCriteria(this, criterion);

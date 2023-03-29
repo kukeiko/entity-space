@@ -44,7 +44,7 @@ export class EntityApiEndpoint {
         selection: EntitySelection;
     }) {
         this.acceptCriterionFn = acceptCriterion ?? (() => true);
-        this.criterionTemplate = criterionShape;
+        this.criterionShape = criterionShape;
         this.invoke = invoke;
         this.whereEntityShape = whereEntityShape;
         this.schema = schema;
@@ -55,7 +55,7 @@ export class EntityApiEndpoint {
     private readonly schema: IEntitySchema;
     private readonly parametersShape?: EntityQueryParametersShape;
     private readonly whereEntityShape?: WhereEntityShape;
-    private readonly criterionTemplate: ICriterionShape;
+    private readonly criterionShape: ICriterionShape;
     private readonly selection: EntitySelection;
     private readonly invoke: EntityApiEndpointInvoke;
     private readonly acceptCriterionFn: (criterion: ICriterion) => boolean;
@@ -72,8 +72,8 @@ export class EntityApiEndpoint {
         return this.whereEntityShape;
     }
 
-    getCriterionTemplate(): ICriterionShape {
-        return this.criterionTemplate;
+    getCriterionShape(): ICriterionShape {
+        return this.criterionShape;
     }
 
     getSelection(): EntitySelection {

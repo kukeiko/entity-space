@@ -64,23 +64,23 @@ export class EntityQueryTracing {
         );
     }
 
-    queryDispatchedToEndpoint(query: IEntityQuery, template: ICriterionShape): void {
+    queryDispatchedToEndpoint(query: IEntityQuery, shape: ICriterionShape): void {
         if (!this.consoleEnabled) {
             return;
         }
 
         console.log(
-            `🔌 query ${query.toString()} got dispatched to an endpoint accepting criteria ${template.toString()}`
+            `🔌 query ${query.toString()} got dispatched to an endpoint accepting criteria ${shape.toString()}`
         );
     }
 
-    endpointDeliveredPacket(query: IEntityQuery, template: ICriterionShape, packet: EntityStreamPacket): void {
+    endpointDeliveredPacket(query: IEntityQuery, shape: ICriterionShape, packet: EntityStreamPacket): void {
         if (!this.consoleEnabled) {
             return;
         }
 
         console.log(
-            `🔌 📦 query ${query.toString()} got a packet via endpoint ${template.toString()}: ${packet.toString()}`
+            `🔌 📦 query ${query.toString()} got a packet via endpoint ${shape.toString()}: ${packet.toString()}`
         );
     }
 

@@ -15,11 +15,11 @@ export class OrCriterionShape<T extends ICriterionShape> implements ICriterionSh
     private readonly shapes: T[];
 
     reshape(criterion: ICriterion): false | ReshapedCriterion<IOrCriterion> {
-        let remapped: ICriterion[] = [];
+        let reshaped: ICriterion[] = [];
 
-        const addToRemapped = (criterion: ICriterion) => {
-            remapped = remapped.filter(item => criterion.subtractFrom(item) !== true);
-            remapped.push(criterion);
+        const addToReshaped = (criterion: ICriterion) => {
+            reshaped = reshaped.filter(item => criterion.subtractFrom(item) !== true);
+            reshaped.push(criterion);
         };
 
         for (const shape of this.shapes) {
@@ -30,23 +30,23 @@ export class OrCriterionShape<T extends ICriterionShape> implements ICriterionSh
             }
 
             for (const item of result.getReshaped()) {
-                addToRemapped(item);
+                addToReshaped(item);
             }
 
             if (result.getOpen().length === 0) {
-                return new ReshapedCriterion([this.tools.or(remapped)]);
+                return new ReshapedCriterion([this.tools.or(reshaped)]);
             }
 
             criterion = this.tools.or(result.getOpen());
         }
 
-        if (remapped.length > 0) {
-            // [todo] can we replace Criterion[] w/ just Criterion @ RemapCriterionResult?
+        if (reshaped.length > 0) {
+            // [todo] can we replace Criterion[] w/ just Criterion @ ReshapeCriterionResult?
             // in this case, a single OrCriteria() which is not nested in a 1-element array
             // [todo] confusing at first that we supply "criterion" for the "open" parameter,
             // as it is the argument given to this function. you have to read the code of this
             // function to see that it is reassigned; very smelly.
-            return new ReshapedCriterion([this.tools.or(remapped)], [criterion]);
+            return new ReshapedCriterion([this.tools.or(reshaped)], [criterion]);
         }
 
         return false;

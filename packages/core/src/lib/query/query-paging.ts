@@ -92,16 +92,16 @@ export class QueryPaging {
             }
 
             // [todo] type assertion
-            const remapped = this.shapeTools.inRange(Number).reshape(subtractedRange) as
+            const reshaped = this.shapeTools.inRange(Number).reshape(subtractedRange) as
                 | false
                 | ReshapedCriterion<IInNumberRangeCriterion>;
 
-            if (remapped === false) {
+            if (reshaped === false) {
                 return false;
             }
 
-            // [todo] hack - should add option to not map to lt/gt via template
-            const toInclusiveRemapped = remapped.getReshaped().map(criterion => {
+            // [todo] hack - should add option to not map to lt/gt via shape
+            const toInclusiveReshaped = reshaped.getReshaped().map(criterion => {
                 let from = criterion.getFrom()?.value;
 
                 if (from && criterion.getFrom()?.op == ">") {
@@ -118,7 +118,7 @@ export class QueryPaging {
                 return this.criteriaTools.inRange(from, to) as IInNumberRangeCriterion;
             });
 
-            return toInclusiveRemapped.map(
+            return toInclusiveReshaped.map(
                 range =>
                     new QueryPaging({
                         sort: this.sort.slice(),

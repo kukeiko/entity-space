@@ -136,7 +136,6 @@ export class EntityCriteria extends CriterionBase implements IEntityCriteria {
 
             for (const key in this.criteria) {
                 const myBagCriterion = this.criteria[key];
-                // [todo] is any? seems like i broke it without realizing during implementation of criterion templates
                 const otherBagCriterion = otherBag[key];
 
                 if (myBagCriterion === void 0) {
@@ -220,7 +219,6 @@ export class EntityCriteria extends CriterionBase implements IEntityCriteria {
                     continue;
                 }
 
-                // [todo] is any? seems like i broke it without realizing during implementation of criterion templates
                 const otherCriterion = otherBag[key];
 
                 if (otherCriterion === void 0) {

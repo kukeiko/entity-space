@@ -4,25 +4,25 @@ import { IOrCriterion } from "./or/or-criterion.interface";
 import { ReshapedCriterion } from "./reshaped-criterion";
 
 export function reshapeOrCriteria<T extends ICriterionShape>(
-    template: T,
+    shape: T,
     criterion: IOrCriterion
 ): ReturnType<T["reshape"]> | false {
-    const remapped: ICriterion[] = [];
+    const reshaped: ICriterion[] = [];
     const open: ICriterion[] = [];
 
     for (const item of criterion.getCriteria()) {
-        const result = template.reshape(item);
+        const result = shape.reshape(item);
 
         if (result === false) {
             open.push(item);
         } else {
-            remapped.push(...result.getReshaped());
+            reshaped.push(...result.getReshaped());
             open.push(...result.getOpen());
         }
     }
 
-    if (remapped.length > 0) {
-        return new ReshapedCriterion(remapped, open) as ReturnType<T["reshape"]>;
+    if (reshaped.length > 0) {
+        return new ReshapedCriterion(reshaped, open) as ReturnType<T["reshape"]>;
     }
 
     return false;
