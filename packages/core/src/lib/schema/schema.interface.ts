@@ -5,8 +5,7 @@ export type PrimitiveSchemaDataType = "boolean" | "integer" | "number" | "string
 
 export interface IEntitySchemaIndex {
     getName(): string;
-    // [todo] consider renaming to "getPaths()". i was surprised it is not already named this way.
-    getPath(): string[];
+    getPaths(): string[];
     isUnique(): boolean;
 }
 
@@ -18,7 +17,15 @@ export interface IEntitySchemaRelation {
     getToIndex(): IEntitySchemaIndex;
 }
 
-export interface IEntitySchema<T extends Entity = Entity> {
+export interface IPropertyValueCommonSchema {
+    isArray(): this is IArraySchema;
+    isDictionary(): this is IDictionarySchema;
+    isEntity(): this is IEntitySchema;
+    isNullable(): boolean;
+    isPrimitive(): this is IPrimitiveSchema;
+}
+
+export interface IEntitySchema<T extends Entity = Entity> extends IPropertyValueCommonSchema {
     getAllOf(): IEntitySchema[];
     getAnyOf(): IEntitySchema[];
     getId(): string;
@@ -38,11 +45,6 @@ export interface IEntitySchema<T extends Entity = Entity> {
     hasKey(): boolean;
     createDefault(): T;
     getDefaultSelection(): UnpackedEntitySelection<T>;
-    isArray(): this is IArraySchema;
-    isDictionary(): this is IDictionarySchema;
-    isEntity(): this is IEntitySchema;
-    isPrimitive(): this is IPrimitiveSchema;
-    isNullable(): boolean;
 }
 
 export interface IEntitySchemaProperty {
@@ -55,32 +57,17 @@ export interface IEntitySchemaProperty {
     isRequired(): boolean;
 }
 
-export interface IPrimitiveSchema {
+export interface IPrimitiveSchema extends IPropertyValueCommonSchema {
     getDataType(): PrimitiveSchemaDataType;
-    isArray(): this is IArraySchema;
-    isDictionary(): this is IDictionarySchema;
-    isEntity(): this is IEntitySchema;
-    isPrimitive(): this is IPrimitiveSchema;
-    isNullable(): boolean;
     supportsValue(value: unknown): boolean;
 }
 
-export interface IArraySchema {
+export interface IArraySchema extends IPropertyValueCommonSchema {
     getItemSchema(): IEntitySchema | IPrimitiveSchema;
-    isArray(): this is IArraySchema;
-    isDictionary(): this is IDictionarySchema;
-    isEntity(): this is IEntitySchema;
-    isPrimitive(): this is IPrimitiveSchema;
-    isNullable(): boolean;
 }
 
-export interface IDictionarySchema {
+export interface IDictionarySchema extends IPropertyValueCommonSchema {
     getItemSchema(): IEntitySchema | IPrimitiveSchema;
-    isArray(): this is IArraySchema;
-    isDictionary(): this is IDictionarySchema;
-    isEntity(): this is IEntitySchema;
-    isPrimitive(): this is IPrimitiveSchema;
-    isNullable(): boolean;
 }
 
 export type IPropertyValueSchema = IArraySchema | IDictionarySchema | IEntitySchema | IPrimitiveSchema;

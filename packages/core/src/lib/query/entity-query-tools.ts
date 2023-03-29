@@ -42,7 +42,7 @@ export class EntityQueryTools implements IEntityQueryTools {
     };
 
     createIdQueryFromEntities = (schema: IEntitySchema, entities: Entity[]): IEntityQuery => {
-        const indexCriteria = this.criteriaTools.createCriterionFromEntities(entities, schema.getKey().getPath());
+        const indexCriteria = this.criteriaTools.createCriterionFromEntities(entities, schema.getKey().getPaths());
 
         return this.createQuery({
             entitySchema: schema,

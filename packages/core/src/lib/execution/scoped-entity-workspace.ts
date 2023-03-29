@@ -19,7 +19,7 @@ export class ScopedEntityWorkspace<T extends Entity = Entity> {
 
     oneById(id: number | string | Entity, hydrate?: UnpackedEntitySelection<T>): Observable<T | undefined> {
         let bag: Record<string, any>;
-        const keyPaths = this.schema.getKey().getPath();
+        const keyPaths = this.schema.getKey().getPaths();
 
         if (keyPaths.length > 1) {
             if (typeof id !== "object") {

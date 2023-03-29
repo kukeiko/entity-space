@@ -109,8 +109,8 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
 
         const criteria = this.criteriaTools.createCriterionFromEntities(
             entitySet.getEntities(),
-            relation.getFromIndex().getPath(),
-            relation.getToIndex().getPath()
+            relation.getFromIndex().getPaths(),
+            relation.getToIndex().getPaths()
         );
 
         const query = this.queryTools.createQuery({

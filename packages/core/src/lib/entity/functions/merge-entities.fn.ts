@@ -33,7 +33,7 @@ function mergeEntitiesInternal(schema: IEntitySchema, ...entities: Entity[]): En
 }
 
 export function mergeEntities<T extends Entity = Entity>(schema: IEntitySchema, entities: T[]): T[] {
-    const keyMap = new ComplexKeyMap<T, T>(schema.getKey().getPath());
+    const keyMap = new ComplexKeyMap<T, T>(schema.getKey().getPaths());
 
     for (const entity of entities) {
         keyMap.set(entity, entity, (previous, current) => mergeEntitiesInternal(schema, previous, current) as T);

@@ -16,7 +16,7 @@ export class EntitySchemaKey implements IEntitySchemaIndex {
         return this.name ?? buildDefaultIndexName(this.path);
     }
 
-    getPath(): string[] {
+    getPaths(): string[] {
         return this.path.slice();
     }
 

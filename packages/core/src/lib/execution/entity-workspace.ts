@@ -171,7 +171,7 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
         if (!schema) {
             return EMPTY;
         }
-        const criteria = this.criteriaTools.createCriterionFromEntities(entities, schema.getKey().getPath());
+        const criteria = this.criteriaTools.createCriterionFromEntities(entities, schema.getKey().getPaths());
         const entitySetQuery = this.queryTools.createQuery({
             entitySchema: schema,
             criteria,

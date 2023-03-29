@@ -14,9 +14,9 @@ export class EntityStore {
 
         for (const index of entitySchema.getIndexesIncludingKey()) {
             if (index.isUnique()) {
-                this.uniqueIndexes.set(index.getName(), new EntityStoreUniqueIndex(index.getPath()));
+                this.uniqueIndexes.set(index.getName(), new EntityStoreUniqueIndex(index.getPaths()));
             } else {
-                this.commonIndexes.set(index.getName(), new EntityStoreCommonIndex(index.getPath()));
+                this.commonIndexes.set(index.getName(), new EntityStoreCommonIndex(index.getPaths()));
             }
         }
     }
@@ -42,7 +42,7 @@ export class EntityStore {
     add(entities: Entity[], parameters?: Entity): void {
         if (this.entitySchema.hasKey()) {
             const key = this.entitySchema.getKey();
-            entities = this.dedupeEntities(entities, key.getPath());
+            entities = this.dedupeEntities(entities, key.getPaths());
             const keyIndex = this.getKeyIndex();
 
             for (let entity of entities) {
@@ -74,7 +74,7 @@ export class EntityStore {
             const cache = this.parametersCache.find(cache => isEqual(cache.parameters, parameters));
 
             if (cache) {
-                cache.ids = this.dedupeEntities([...cache.ids, ...entities], key.getPath());
+                cache.ids = this.dedupeEntities([...cache.ids, ...entities], key.getPaths());
             } else {
                 this.parametersCache.push({ ids: entities, parameters });
             }

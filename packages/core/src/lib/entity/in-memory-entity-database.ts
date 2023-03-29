@@ -196,8 +196,8 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         const toIndex = relation.getToIndex();
         const criteria = this.criteriaTools.createCriterionFromEntities(
             entities,
-            fromIndex.getPath(),
-            toIndex.getPath()
+            fromIndex.getPaths(),
+            toIndex.getPaths()
         );
         const query = this.queryTools.createQuery({
             entitySchema: relatedSchema,
@@ -211,8 +211,8 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
             entities,
             result.getEntities(),
             relation.getPropertyName(),
-            fromIndex.getPath(),
-            toIndex.getPath(),
+            fromIndex.getPaths(),
+            toIndex.getPaths(),
             isArray
         );
     }
