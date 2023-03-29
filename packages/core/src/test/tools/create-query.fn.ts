@@ -4,14 +4,14 @@ import { EntityCriteriaTools } from "../../lib/criteria/entity-criteria-tools";
 import { EntityWhere } from "../../lib/criteria/entity-criteria-tools.interface";
 import { EntityQueryTools } from "../../lib/query/entity-query-tools";
 import { IEntityQuery } from "../../lib/query/entity-query.interface";
-import { BlueprintInstance } from "../../lib/schema/blueprint-instance";
+import { EntityBlueprintInstance } from "../../lib/schema/entity-blueprint-instance.type";
 import { EntitySchemaCatalog } from "../../lib/schema/entity-schema-catalog";
 
 export function createQuery<T>(
     schemas: EntitySchemaCatalog,
     blueprint: Class<T>,
-    criteria?: EntityWhere<BlueprintInstance<T>>,
-    selection?: UnpackedEntitySelection<BlueprintInstance<T>>
+    criteria?: EntityWhere<EntityBlueprintInstance<T>>,
+    selection?: UnpackedEntitySelection<EntityBlueprintInstance<T>>
 ): IEntityQuery {
     const criteriaFactory = new EntityCriteriaTools();
     return new EntityQueryTools({ criteriaTools: criteriaFactory }).createQuery({

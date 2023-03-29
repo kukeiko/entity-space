@@ -1,7 +1,7 @@
 import { Class } from "@entity-space/utils";
-import { Blueprint } from "../../../lib/schema/blueprint";
-import { BlueprintInstance } from "../../../lib/schema/blueprint-instance";
-import { define } from "../../../lib/schema/blueprint-property";
+import { EntityBlueprint } from "../../../lib/schema/entity-blueprint";
+import { EntityBlueprintInstance } from "../../../lib/schema/entity-blueprint-instance.type";
+import { define } from "../../../lib/schema/entity-blueprint-property";
 import { DataEntryBlueprint } from "../common/data-entry.model";
 import { UserBlueprint } from "../common/user.model";
 
@@ -21,7 +21,7 @@ import { UserBlueprint } from "../common/user.model";
 /**
  * A model that points to an array of unioned models: circles, squares, triangles and grouped shapes.
  */
-@Blueprint({ id: "canvases" })
+@EntityBlueprint({ id: "canvases" })
 export class CanvasBlueprint {
     id = define(Number, { id: true, required: true });
     authorId = define(Number, { nullable: true });
@@ -42,7 +42,7 @@ export abstract class BaseShapeBlueprint extends DataEntryBlueprint {
 /**
  * A circle, based on a shape, with a "type" property as a discriminator to identify it correctly as a circle.
  */
-@Blueprint({ id: "circles" })
+@EntityBlueprint({ id: "circles" })
 export class CircleBlueprint extends BaseShapeBlueprint {
     radius = define(Number);
     type = define("circle" as const, { discriminator: true, required: true });
@@ -51,7 +51,7 @@ export class CircleBlueprint extends BaseShapeBlueprint {
 /**
  * A square, based on a shape, with a "type" property as a discriminator to identify it correctly as a square.
  */
-@Blueprint({ id: "squares" })
+@EntityBlueprint({ id: "squares" })
 export class SquareBlueprint extends BaseShapeBlueprint {
     length = define(Number);
     type = define("square" as const, { discriminator: true, required: true });
@@ -60,7 +60,7 @@ export class SquareBlueprint extends BaseShapeBlueprint {
 /**
  * A triangle, based on a shape, with a "type" property as a discriminator to identify it correctly as a triangle.
  */
-@Blueprint({ id: "triangles" })
+@EntityBlueprint({ id: "triangles" })
 export class TriangleBlueprint extends BaseShapeBlueprint {
     type = define("triangle" as const, { discriminator: true, required: true });
     angleA = define(Number);
@@ -71,7 +71,7 @@ export class TriangleBlueprint extends BaseShapeBlueprint {
 /**
  * A group of shapes, with a "type" property as a discriminator to identify it correctly as a group of shapes.
  */
-@Blueprint({ id: "shape-groups" })
+@EntityBlueprint({ id: "shape-groups" })
 export class ShapeGroupBlueprint extends BaseShapeBlueprint {
     type = define("group" as const, { discriminator: true, required: true });
     shapes = define(ShapeBlueprints, { array: true });
@@ -92,8 +92,8 @@ export const ShapeBlueprints: Class<ShapeBlueprint>[] = [
     ShapeGroupBlueprint,
 ];
 
-export type Shape = BlueprintInstance<ShapeBlueprint>;
-export type Circle = BlueprintInstance<CircleBlueprint>;
-export type Square = BlueprintInstance<SquareBlueprint>;
-export type Triangle = BlueprintInstance<TriangleBlueprint>;
-export type Canvas = BlueprintInstance<CanvasBlueprint>;
+export type Shape = EntityBlueprintInstance<ShapeBlueprint>;
+export type Circle = EntityBlueprintInstance<CircleBlueprint>;
+export type Square = EntityBlueprintInstance<SquareBlueprint>;
+export type Triangle = EntityBlueprintInstance<TriangleBlueprint>;
+export type Canvas = EntityBlueprintInstance<CanvasBlueprint>;

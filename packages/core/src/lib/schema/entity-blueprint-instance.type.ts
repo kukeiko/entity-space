@@ -4,9 +4,10 @@ import {
     BlueprintProperty,
     Discriminant,
     NullableAttribute,
-    RequiredAttribute
-} from "./blueprint-property";
+    RequiredAttribute,
+} from "./entity-blueprint-property";
 
+// [todo] what is this? is it used?
 export interface Metadata<T = any> {
     // in open-api context, its the uri. in indexeddb, its going to be the object store name.
     // we may want to split it up at some point - let's see.
@@ -25,7 +26,7 @@ type InstancePropertyValueType<V> = V extends Primitive
     : V extends Discriminant
     ? V
     : V extends Class
-    ? BlueprintInstance<InstanceType<V>>
+    ? EntityBlueprintInstance<InstanceType<V>>
     : V extends Metadata<infer U>
     ? U
     : V extends MetadataReference<infer U>
@@ -60,4 +61,4 @@ type InstanceRequired<T> = {
         : T[K];
 };
 
-export type BlueprintInstance<T> = InstanceDefault<T> & InstanceRequired<T>;
+export type EntityBlueprintInstance<T> = InstanceDefault<T> & InstanceRequired<T>;

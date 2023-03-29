@@ -1,11 +1,11 @@
-import { Blueprint } from "../../../lib/schema/blueprint";
-import { BlueprintInstance } from "../../../lib/schema/blueprint-instance";
-import { define } from "../../../lib/schema/blueprint-property";
+import { EntityBlueprint } from "../../../lib/schema/entity-blueprint";
+import { EntityBlueprintInstance } from "../../../lib/schema/entity-blueprint-instance.type";
+import { define } from "../../../lib/schema/entity-blueprint-property";
 
-@Blueprint({ id: "tree-node-levels" })
+@EntityBlueprint({ id: "tree-node-levels" })
 export class TreeNodeLevelBlueprint {
     nodeId = define(Number, { id: true, required: true });
     level = define(Number);
 }
 
-export type TreeNodeLevel = BlueprintInstance<TreeNodeLevelBlueprint>;
+export type TreeNodeLevel = EntityBlueprintInstance<TreeNodeLevelBlueprint>;

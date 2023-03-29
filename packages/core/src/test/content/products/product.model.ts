@@ -1,5 +1,5 @@
-import { BlueprintInstance } from "../../../lib/schema/blueprint-instance";
-import { define } from "../../../lib/schema/blueprint-property";
+import { EntityBlueprintInstance } from "../../../lib/schema/entity-blueprint-instance.type";
+import { define } from "../../../lib/schema/entity-blueprint-property";
 import { BrandBlueprint } from "./brand.model";
 import { ProductReviewBlueprint } from "./product-review.model";
 
@@ -13,4 +13,4 @@ export class ProductBlueprint {
     reviews = define(ProductReviewBlueprint, { array: true, relation: true, from: "id", to: "productId" });
 }
 
-export type Product = BlueprintInstance<ProductBlueprint>;
+export type Product = EntityBlueprintInstance<ProductBlueprint>;

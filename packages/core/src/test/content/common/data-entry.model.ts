@@ -1,4 +1,4 @@
-import { define } from "../../../lib/schema/blueprint-property";
+import { define } from "../../../lib/schema/entity-blueprint-property";
 import { DataEntryMetadataBlueprint } from "./metadata.model";
 
 export abstract class DataEntryBlueprint {

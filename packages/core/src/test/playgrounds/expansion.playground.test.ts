@@ -1,7 +1,7 @@
 import { Unbox } from "@entity-space/utils";
 import { PackedEntitySelection } from "../../lib/common/packed-entity-selection.type";
-import { BlueprintInstance } from "../../lib/schema/blueprint-instance";
-import { define } from "../../lib/schema/blueprint-property";
+import { EntityBlueprintInstance } from "../../lib/schema/entity-blueprint-instance.type";
+import { define } from "../../lib/schema/entity-blueprint-property";
 import { Select } from "../../lib/common/select.type";
 import { Canvas, CanvasBlueprint, ProductBlueprint, ShapeBlueprints, Square } from "../content";
 
@@ -33,7 +33,7 @@ xdescribe("playground: selection", () => {
             shapes = define(ShapeBlueprints, { array: true });
         }
 
-        type CustomUser = BlueprintInstance<CustomUserBlueprint>;
+        type CustomUser = EntityBlueprintInstance<CustomUserBlueprint>;
 
         const user: CustomUser = {
             id: 823,

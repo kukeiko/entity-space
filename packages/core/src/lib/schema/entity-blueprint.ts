@@ -1,5 +1,5 @@
 import { Class, isDefined } from "@entity-space/utils";
-import { BlueprintProperty, isProperty } from "./blueprint-property";
+import { BlueprintProperty, isProperty } from "./entity-blueprint-property";
 
 const BLUEPRINT_METADATA_KEY = Symbol("blueprint-metadata");
 
@@ -10,7 +10,7 @@ interface BlueprintMetadata {
 // [todo] investigate alternative to using decorators: special property on each
 // blueprint instance (which would then also exist on each entity). we could
 // put quite a lot of useful stuff in there, like "lastCachedAt", "isPersisted" and more!
-export function Blueprint(args: { id: string }) {
+export function EntityBlueprint(args: { id: string }) {
     return (type: Class) => {
         const metadata: BlueprintMetadata = { id: args.id };
         Reflect.defineMetadata(BLUEPRINT_METADATA_KEY, metadata, type);
@@ -21,7 +21,7 @@ function findBlueprintMetadata(type: Class): BlueprintMetadata | undefined {
     return Reflect.getMetadata(BLUEPRINT_METADATA_KEY, type);
 }
 
-export function getBlueprintMetadata(type: Class): BlueprintMetadata {
+export function getEntityBlueprintMetadata(type: Class): BlueprintMetadata {
     const metadata = findBlueprintMetadata(type);
 
     if (!metadata) {
@@ -31,7 +31,7 @@ export function getBlueprintMetadata(type: Class): BlueprintMetadata {
     return metadata;
 }
 
-export function isBlueprint(value: any): value is Class {
+export function isEntityBlueprint(value: any): value is Class {
     return Reflect.getMetadata(BLUEPRINT_METADATA_KEY, value) !== void 0;
 }
 

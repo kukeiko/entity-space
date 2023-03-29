@@ -1,10 +1,10 @@
-import { Blueprint, BlueprintInstance, define, EntitySchema } from "@entity-space/core";
+import { EntityBlueprint, EntityBlueprintInstance, define, EntitySchema } from "@entity-space/core";
 import { SongBlueprint } from "./song";
 
 export interface BaseSongLocation {
     id: number;
     songId: number;
-    song?: BlueprintInstance<SongBlueprint>;
+    song?: EntityBlueprintInstance<SongBlueprint>;
 }
 
 export interface WebSongLocation extends BaseSongLocation {
@@ -19,13 +19,13 @@ export interface LocalSongLocation extends BaseSongLocation {
 
 export type SongLocation = LocalSongLocation | WebSongLocation;
 
-@Blueprint({ id: "song-location-type" })
+@EntityBlueprint({ id: "song-location-type" })
 export class SongLocationTypeBlueprint {
     id = define(String, { id: true, required: true });
     name = define(String, { required: true });
 }
 
-export type SongLocationType = BlueprintInstance<SongLocationTypeBlueprint>;
+export type SongLocationType = EntityBlueprintInstance<SongLocationTypeBlueprint>;
 
 // [todo] not yet used, need to implement discriminated unions first
 export abstract class BaseSongLocationBlueprint {
@@ -34,14 +34,14 @@ export abstract class BaseSongLocationBlueprint {
 }
 
 // [todo] not yet used, need to implement discriminated unions first
-@Blueprint({ id: "web-song-location" })
+@EntityBlueprint({ id: "web-song-location" })
 export class WebSongLocationBlueprint extends BaseSongLocationBlueprint {
     url = define(String, { required: true });
     songLocationType = define("web", { discriminator: true, required: true });
 }
 
 // [todo] not yet used, need to implement discriminated unions first
-@Blueprint({ id: "local-song-location" })
+@EntityBlueprint({ id: "local-song-location" })
 export class LocalSongLocationBlueprint extends BaseSongLocationBlueprint {
     path = define(String, { required: true });
     songLocationType = define("local", { discriminator: true, required: true });

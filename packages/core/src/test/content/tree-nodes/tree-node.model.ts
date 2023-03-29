@@ -1,6 +1,6 @@
-import { Blueprint } from "../../../lib/schema/blueprint";
-import { BlueprintInstance } from "../../../lib/schema/blueprint-instance";
-import { define } from "../../../lib/schema/blueprint-property";
+import { EntityBlueprint } from "../../../lib/schema/entity-blueprint";
+import { EntityBlueprintInstance } from "../../../lib/schema/entity-blueprint-instance.type";
+import { define } from "../../../lib/schema/entity-blueprint-property";
 import { DataEntryBlueprint } from "../common/data-entry.model";
 
 /**
@@ -9,7 +9,7 @@ import { DataEntryBlueprint } from "../common/data-entry.model";
  * We support loading all the parents by having a single property that contains them all, which in our
  * case is loaded separately using a TreeNodeParentsQuery.
  */
-@Blueprint({ id: "tree-nodes" })
+@EntityBlueprint({ id: "tree-nodes" })
 export class TreeNodeBlueprint extends DataEntryBlueprint {
     id = define(Number, { id: true, required: true, readOnly: true });
     children = define(TreeNodeBlueprint, { array: true, readOnly: true });
@@ -21,4 +21,4 @@ export class TreeNodeBlueprint extends DataEntryBlueprint {
     level = define(Number, { readOnly: true });
 }
 
-export type TreeNode = BlueprintInstance<TreeNodeBlueprint>;
+export type TreeNode = EntityBlueprintInstance<TreeNodeBlueprint>;

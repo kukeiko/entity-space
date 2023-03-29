@@ -1,8 +1,8 @@
-import { Blueprint, BlueprintInstance, define } from "@entity-space/core";
+import { EntityBlueprint, EntityBlueprintInstance, define } from "@entity-space/core";
 
-@Blueprint({ id: "search-songs" })
+@EntityBlueprint({ id: "search-songs" })
 export class SearchSongsBlueprint {
     searchText = define(String, { required: true });
 }
 
-export type SearchSongs = BlueprintInstance<SearchSongsBlueprint>;
+export type SearchSongs = EntityBlueprintInstance<SearchSongsBlueprint>;

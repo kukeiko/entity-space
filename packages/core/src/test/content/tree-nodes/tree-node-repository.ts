@@ -1,15 +1,15 @@
-import { BlueprintInstance } from "../../../lib/schema/blueprint-instance";
+import { EntityBlueprintInstance } from "../../../lib/schema/entity-blueprint-instance.type";
 import { generateTreeNodes } from "./generate-tree-nodes.fn";
 import { TreeNodeBlueprint } from "./tree-node.model";
 
 export class TreeNodeRepository {
     private _data = new Map(generateTreeNodes().map(x => [x.id, x]));
 
-    all(): BlueprintInstance<TreeNodeBlueprint>[] {
+    all(): EntityBlueprintInstance<TreeNodeBlueprint>[] {
         return this._clone(Array.from(this._data.values()));
     }
 
-    get(id: number, numMinParents = 0): BlueprintInstance<TreeNodeBlueprint> | undefined {
+    get(id: number, numMinParents = 0): EntityBlueprintInstance<TreeNodeBlueprint> | undefined {
         const item = this._data.get(id);
 
         if (numMinParents > 0) {
@@ -39,8 +39,8 @@ export class TreeNodeRepository {
         return void 0;
     }
 
-    getMany(ids: number[]): BlueprintInstance<TreeNodeBlueprint>[] {
-        const found: BlueprintInstance<TreeNodeBlueprint>[] = [];
+    getMany(ids: number[]): EntityBlueprintInstance<TreeNodeBlueprint>[] {
+        const found: EntityBlueprintInstance<TreeNodeBlueprint>[] = [];
 
         for (let i = 0; i < ids.length; ++i) {
             const treeNode = this._data.get(ids[i]);
@@ -65,16 +65,16 @@ export class TreeNodeRepository {
         return level;
     }
 
-    getTreeNodeParents(childId: number): BlueprintInstance<TreeNodeBlueprint>[] {
+    getTreeNodeParents(childId: number): EntityBlueprintInstance<TreeNodeBlueprint>[] {
         const child = this.get(childId);
 
         if (child === void 0) {
             return [];
         }
 
-        const parents: BlueprintInstance<TreeNodeBlueprint>[] = [];
+        const parents: EntityBlueprintInstance<TreeNodeBlueprint>[] = [];
 
-        let node: BlueprintInstance<TreeNodeBlueprint> | undefined = child;
+        let node: EntityBlueprintInstance<TreeNodeBlueprint> | undefined = child;
 
         while (node.parentId !== null && (node = this.get(node.parentId)) !== void 0) {
             parents.push(node);
@@ -83,7 +83,7 @@ export class TreeNodeRepository {
         return parents;
     }
 
-    private _clone(items: BlueprintInstance<TreeNodeBlueprint>[]): BlueprintInstance<TreeNodeBlueprint>[] {
+    private _clone(items: EntityBlueprintInstance<TreeNodeBlueprint>[]): EntityBlueprintInstance<TreeNodeBlueprint>[] {
         return JSON.parse(JSON.stringify(items));
     }
 }

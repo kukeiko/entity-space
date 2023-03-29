@@ -1,9 +1,9 @@
-import { Blueprint } from "../../../lib/schema/blueprint";
-import { BlueprintInstance } from "../../../lib/schema/blueprint-instance";
-import { define } from "../../../lib/schema/blueprint-property";
+import { EntityBlueprint } from "../../../lib/schema/entity-blueprint";
+import { EntityBlueprintInstance } from "../../../lib/schema/entity-blueprint-instance.type";
+import { define } from "../../../lib/schema/entity-blueprint-property";
 import { ReviewBlueprint } from "./review.model";
 
-@Blueprint({ id: "users" })
+@EntityBlueprint({ id: "users" })
 export class UserBlueprint {
     id = define(Number, { id: true, required: true, readOnly: true, index: true });
     name = define(String);
@@ -15,4 +15,4 @@ export class UserBlueprint {
     reviews = define(ReviewBlueprint, { array: true, relation: true, from: "id", to: "createdById" });
 }
 
-export type User = BlueprintInstance<UserBlueprint>;
+export type User = EntityBlueprintInstance<UserBlueprint>;

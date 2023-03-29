@@ -24,21 +24,20 @@ import { ICriterion } from "../criteria/criterion.interface";
 import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
 import { EntityWhere, IEntityCriteriaTools } from "../criteria/entity-criteria-tools.interface";
 import { EntitySet } from "../entity/data-structures/entity-set";
-import { normalizeEntities } from "../entity/functions/normalize-entities.fn";
 import { IEntityStore } from "../entity/entity-store.interface";
+import { normalizeEntities } from "../entity/functions/normalize-entities.fn";
 import { InMemoryEntityDatabase } from "../entity/in-memory-entity-database";
 import { EntityQueryTools } from "../query/entity-query-tools";
 import { IEntityQueryTools } from "../query/entity-query-tools.interface";
 import { IEntityQuery } from "../query/entity-query.interface";
-import { QueryPaging } from "../query/query-paging";
-import { BlueprintInstance } from "../schema/blueprint-instance";
+import { EntityBlueprintInstance } from "../schema/entity-blueprint-instance.type";
 import { EntitySchemaCatalog } from "../schema/entity-schema-catalog";
 import { IEntitySchema } from "../schema/schema.interface";
 import { EntityQueryBuilder, EntityQueryBuilderArgument } from "./entity-query-builder";
 import { EntityQueryTracing } from "./entity-query-tracing";
 import { EntityStream } from "./entity-stream";
-import { EntityStreamPacket } from "./entity-stream-packet";
 import { IEntityStreamInterceptor } from "./entity-stream-interceptor.interface";
+import { EntityStreamPacket } from "./entity-stream-packet";
 import { SchemaRelationBasedHydrator } from "./interceptors/schema-relation-based-hydrator";
 import { runInterceptors } from "./run-interceptors.fn";
 import { ScopedEntityWorkspace } from "./scoped-entity-workspace";
@@ -59,7 +58,7 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
     // [todo] we allow partials, but types don't reflect that (same @ cache and store)
     async add<T>(
         schema: Class<T>,
-        entities: DeepPartial<BlueprintInstance<T>>[] | DeepPartial<BlueprintInstance<T>>
+        entities: DeepPartial<EntityBlueprintInstance<T>>[] | DeepPartial<EntityBlueprintInstance<T>>
     ): Promise<void>;
     async add<T extends Entity = Entity>(
         schema: IEntitySchema,
@@ -379,7 +378,7 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
         return schema;
     }
 
-    scope<T extends Entity>(blueprint: Class<T>): ScopedEntityWorkspace<BlueprintInstance<T>> {
+    scope<T extends Entity>(blueprint: Class<T>): ScopedEntityWorkspace<EntityBlueprintInstance<T>> {
         // [todo] to be removed by making schemas not undefined
         if (!this.schemas) {
             throw new Error("this.schemas is falsy");
@@ -390,7 +389,7 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
         return new ScopedEntityWorkspace({ schema, workspace: this });
     }
 
-    from<T extends Entity>(blueprint: Class<T>): EntityQueryBuilder<BlueprintInstance<T>> {
+    from<T extends Entity>(blueprint: Class<T>): EntityQueryBuilder<EntityBlueprintInstance<T>> {
         // [todo] to be removed by making schemas not undefined
         if (!this.schemas) {
             throw new Error("this.schemas is falsy");

@@ -1,5 +1,5 @@
 import { Class, Primitive } from "@entity-space/utils";
-import { Metadata, MetadataReference } from "./blueprint-instance";
+import { Metadata, MetadataReference } from "./entity-blueprint-instance.type";
 
 export type Discriminant = string | number;
 export type MetadataToken = Class | Metadata | MetadataReference;

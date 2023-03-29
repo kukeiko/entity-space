@@ -1,9 +1,9 @@
 import { Class } from "@entity-space/utils";
 import { Entity } from "../common/entity.type";
 import { ArraySchema } from "./array-schema";
-import { getBlueprintMetadata, getNamedProperties, isBlueprint } from "./blueprint";
-import { BlueprintInstance } from "./blueprint-instance";
-import { BlueprintPropertyValue, hasAttribute } from "./blueprint-property";
+import { getEntityBlueprintMetadata, getNamedProperties, isEntityBlueprint } from "./entity-blueprint";
+import { EntityBlueprintInstance } from "./entity-blueprint-instance.type";
+import { BlueprintPropertyValue, hasAttribute } from "./entity-blueprint-property";
 import { EntitySchema } from "./entity-schema";
 import { PrimitiveSchema } from "./primitive-schema";
 import { IEntitySchema, PrimitiveSchemaDataType } from "./schema.interface";
@@ -26,15 +26,14 @@ export class EntitySchemaCatalog {
         return schema as EntitySchema<T>;
     }
 
-    resolve<T>(blueprint: Class<T>): IEntitySchema<BlueprintInstance<T>> {
-        const metadata = getBlueprintMetadata(blueprint);
+    resolve<T>(blueprint: Class<T>): IEntitySchema<EntityBlueprintInstance<T>> {
+        const metadata = getEntityBlueprintMetadata(blueprint);
         let schema = this.schemas.get(metadata.id);
 
         if (schema) {
-            return schema as EntitySchema<BlueprintInstance<T>>;
+            return schema as EntitySchema<EntityBlueprintInstance<T>>;
         }
 
-        // console.log(`🔨 ⏳ building schema ${metadata.id} from blueprint...`);
         schema = new EntitySchema(metadata.id);
         this.schemas.set(metadata.id, schema);
         const properties = getNamedProperties(blueprint);
@@ -65,7 +64,7 @@ export class EntitySchemaCatalog {
                 }
 
                 schema.addRelation(relationProperty.name, relationProperty.from, relationProperty.to);
-            } else if (isBlueprint(relationProperty.valueType)) {
+            } else if (isEntityBlueprint(relationProperty.valueType)) {
                 const relatedSchema = this.resolve(relationProperty.valueType);
 
                 if (hasAttribute("array", relationProperty)) {
@@ -81,7 +80,7 @@ export class EntitySchemaCatalog {
         }
 
         for (const property of properties) {
-            if (hasAttribute("relation", property) || isBlueprint(property.valueType)) {
+            if (hasAttribute("relation", property) || isEntityBlueprint(property.valueType)) {
                 continue;
             }
 
@@ -108,7 +107,7 @@ export class EntitySchemaCatalog {
 
         // console.log(`🔨 ✔️ built schema ${metadata.id}`, schema);
 
-        return schema as EntitySchema<BlueprintInstance<T>>;
+        return schema as EntitySchema<EntityBlueprintInstance<T>>;
     }
 
     private toPrimitiveSchemaDataType(valueType: BlueprintPropertyValue): PrimitiveSchemaDataType {

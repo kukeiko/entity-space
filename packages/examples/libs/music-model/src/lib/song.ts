@@ -1,8 +1,8 @@
-import { Blueprint, BlueprintInstance, define, MetadataReference } from "@entity-space/core";
+import { EntityBlueprint, EntityBlueprintInstance, define, MetadataReference } from "@entity-space/core";
 import { ArtistBlueprint } from "./artist";
 import { SongLocation } from "./song-location";
 
-@Blueprint({ id: "song" })
+@EntityBlueprint({ id: "song" })
 export class SongBlueprint {
     id = define(Number, { id: true, required: true });
     name = define(String, { required: true });
@@ -24,4 +24,4 @@ export class SongBlueprint {
     // });
 }
 
-export type Song = BlueprintInstance<SongBlueprint>;
+export type Song = EntityBlueprintInstance<SongBlueprint>;
