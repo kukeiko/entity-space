@@ -144,8 +144,8 @@ export class EntitySelection {
             return true;
         }
 
-        const reduced: Exclude<UnpackedEntitySelection, true> = this.copyValue(what);
-        let didReduce = false;
+        const subtracted: Exclude<UnpackedEntitySelection, true> = this.copyValue(what);
+        let didSubtract = false;
 
         for (const key in by) {
             const whatValue = what[key];
@@ -155,35 +155,35 @@ export class EntitySelection {
                 continue;
             } else if (byValue === true) {
                 if (whatValue === true || Object.keys(what[key] ?? {}).length === 0) {
-                    delete reduced[key];
-                    didReduce = true;
+                    delete subtracted[key];
+                    didSubtract = true;
                 }
             } else if (typeof byValue === "object" && typeof whatValue === "object") {
-                const subReduced = this.subtractValue(whatValue, byValue);
+                const subSubtracted = this.subtractValue(whatValue, byValue);
 
-                if (!subReduced) {
+                if (!subSubtracted) {
                     continue;
-                } else if (Object.keys(subReduced).length === 0) {
-                    delete reduced[key];
-                    didReduce = true;
+                } else if (Object.keys(subSubtracted).length === 0) {
+                    delete subtracted[key];
+                    didSubtract = true;
                 } else {
-                    reduced[key] = subReduced;
-                    didReduce = true;
+                    subtracted[key] = subSubtracted;
+                    didSubtract = true;
                 }
             } else if (typeof byValue === "object" && whatValue === true) {
                 if (Object.keys(byValue).length == 0) {
-                    delete reduced[key];
-                    didReduce = true;
+                    delete subtracted[key];
+                    didSubtract = true;
                 }
             }
         }
 
-        if (!didReduce) {
+        if (!didSubtract) {
             return false;
-        } else if (Object.keys(reduced).length === 0) {
+        } else if (Object.keys(subtracted).length === 0) {
             return true;
         } else {
-            return reduced;
+            return subtracted;
         }
     }
 

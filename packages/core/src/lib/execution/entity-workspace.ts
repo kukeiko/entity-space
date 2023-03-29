@@ -107,11 +107,11 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
     async query<T extends Entity = Entity>(query: IEntityQuery): Promise<false | EntitySet<T>[]> {
         const sources = [...this.interceptors, new SchemaRelationBasedHydrator(this.tracing, [this])];
         const cachedQueries = this.database.getCachedQueries(query.getEntitySchema());
-        const reduced = this.queryTools.subtractQueries([query], cachedQueries);
-        const queriesAgainstSource = reduced === false ? [query] : reduced;
+        const subtracted = this.queryTools.subtractQueries([query], cachedQueries);
+        const queriesAgainstSource = subtracted === false ? [query] : subtracted;
 
         if (queriesAgainstSource.length) {
-            if (reduced) {
+            if (subtracted) {
                 this.tracing.queryGotSubtracted(query, cachedQueries, queriesAgainstSource);
             }
 
@@ -179,12 +179,12 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
 
         const hydrationQuery = this.queryTools.createQuery({ entitySchema: schema, criteria, selection });
         const cachedQueries = this.database.getCachedQueries(hydrationQuery.getEntitySchema());
-        const reduced = this.queryTools.subtractQueries([hydrationQuery], cachedQueries);
-        const queriesAgainstSource = reduced === false ? [hydrationQuery] : reduced;
+        const subtracted = this.queryTools.subtractQueries([hydrationQuery], cachedQueries);
+        const queriesAgainstSource = subtracted === false ? [hydrationQuery] : subtracted;
 
         this.tracing.querySpawned(hydrationQuery);
         if (queriesAgainstSource.length) {
-            if (reduced) {
+            if (subtracted) {
                 this.tracing.queryGotSubtracted(hydrationQuery, cachedQueries, queriesAgainstSource, {
                     byLabel: "by cached",
                 });

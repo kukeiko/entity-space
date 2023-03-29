@@ -82,11 +82,11 @@ export class EntityStreamPacket<T extends Entity = Entity> {
         });
     }
 
-    reduceQueries(queries: IEntityQuery[]): false | IEntityQuery[] {
+    subtractQueries(queries: IEntityQuery[]): false | IEntityQuery[] {
         return this.queryTools.subtractQueries(queries, [...this.getAcceptedQueries(), ...this.getRejectedQueries()]);
     }
 
-    reduceQueriesByAccepted(queries: IEntityQuery[]): false | IEntityQuery[] {
+    subtractQueriesByAccepted(queries: IEntityQuery[]): false | IEntityQuery[] {
         return this.queryTools.subtractQueries(queries, this.getAcceptedQueries());
     }
 

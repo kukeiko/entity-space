@@ -84,22 +84,22 @@ export class OrCriterion extends CriterionBase implements IOrCriterion {
 
     minus(other: ICriterion): boolean | ICriterion {
         const items: ICriterion[] = [];
-        let didReduceAny = false;
+        let didSubtractAny = false;
 
         for (const mine of this.criteria) {
-            const reduced = other.subtractFrom(mine);
+            const subtracted = other.subtractFrom(mine);
 
-            if (reduced === true) {
-                didReduceAny = true;
-            } else if (reduced !== false) {
-                items.push(reduced);
-                didReduceAny = true;
+            if (subtracted === true) {
+                didSubtractAny = true;
+            } else if (subtracted !== false) {
+                items.push(subtracted);
+                didSubtractAny = true;
             } else {
                 items.push(mine);
             }
         }
 
-        if (!didReduceAny) {
+        if (!didSubtractAny) {
             return false;
         }
 
@@ -120,19 +120,19 @@ export class OrCriterion extends CriterionBase implements IOrCriterion {
     }
 
     subtractFrom(other: ICriterion): boolean | ICriterion {
-        let reduced = other;
+        let subtracted = other;
 
         for (const mine of this.criteria) {
-            const result = mine.subtractFrom(reduced);
+            const result = mine.subtractFrom(subtracted);
 
             if (result === true) {
                 return true;
             } else if (result !== false) {
-                reduced = result;
+                subtracted = result;
             }
         }
 
-        return reduced === other ? false : reduced;
+        return subtracted === other ? false : subtracted;
     }
 
     override toString(): string {

@@ -52,22 +52,22 @@ export class AndCriterion extends CriterionBase implements IAndCriterion {
 
     minus(other: ICriterion): boolean | ICriterion {
         const items: ICriterion[] = [];
-        let didReduceAny = false;
+        let didSubtractAny = false;
 
         for (const mine of this.criteria) {
-            const reduced = other.subtractFrom(mine);
+            const subtracted = other.subtractFrom(mine);
 
-            if (reduced === true) {
+            if (subtracted === true) {
                 return true;
-            } else if (reduced !== false) {
-                items.push(reduced);
-                didReduceAny = true;
+            } else if (subtracted !== false) {
+                items.push(subtracted);
+                didSubtractAny = true;
             } else {
                 items.push(mine);
             }
         }
 
-        if (!didReduceAny) {
+        if (!didSubtractAny) {
             return false;
         }
 
@@ -96,7 +96,7 @@ export class AndCriterion extends CriterionBase implements IAndCriterion {
             return true;
         }
 
-        // we want items that did an actual reduction to be put first
+        // we want items that did an actual subtraction to be put first
         items.sort((a, b) => {
             if (a.result !== false && b.result === false) {
                 return -1;
@@ -107,7 +107,7 @@ export class AndCriterion extends CriterionBase implements IAndCriterion {
             }
         });
 
-        const reduced: ICriterion[][] = [];
+        const subtracted: ICriterion[][] = [];
         const accumulated: ICriterion[] = [];
 
         for (const item of items) {
@@ -115,21 +115,23 @@ export class AndCriterion extends CriterionBase implements IAndCriterion {
                 continue;
             }
 
-            const reducedCriterion = item.result === false ? item.criterion.invert() : item.result;
+            const subtractedCriterion = item.result === false ? item.criterion.invert() : item.result;
 
-            if (reducedCriterion === false) {
+            if (subtractedCriterion === false) {
                 return false;
             }
 
-            reduced.push([...accumulated, reducedCriterion]);
+            subtracted.push([...accumulated, subtractedCriterion]);
             accumulated.push(item.criterion);
         }
 
-        if (reduced.length === 0) {
+        if (subtracted.length === 0) {
             return true;
         }
 
-        return this.tools.or(reduced.map(criteria => (criteria.length === 1 ? criteria[0] : this.tools.and(criteria))));
+        return this.tools.or(
+            subtracted.map(criteria => (criteria.length === 1 ? criteria[0] : this.tools.and(criteria)))
+        );
     }
 
     override toString(): string {

@@ -1,5 +1,6 @@
 import { ICriterion } from "./criterion.interface";
 
+// [todo] finish
 export abstract class CriterionBase {
     abstract contains(item: unknown): boolean;
 

@@ -181,15 +181,15 @@ export class EntityQueryTools implements IEntityQueryTools {
         return didSubtract ? totalSubtracted : false;
     };
 
-    // [todo] shouldn't be able to reduce queries w/ different entity-schemas
+    // [todo] shouldn't be able to resubtractduce queries w/ different entity-schemas
     // [todo] it is still unexpected for me that this method returns an empty array on full subtraction,
-    // but Criterion.reduce() would return true. should make it consistent.
+    // but Criterion.subtractFrom() would return true. should make it consistent.
     subtractQuery = (factory: IEntityQueryTools, a: IEntityQuery, b: IEntityQuery): IEntityQuery[] | false => {
         const subtracted = this.subtractParts(a, b);
 
         if (!subtracted) {
             return false;
-        } else if (Object.values(subtracted).every(reduced => reduced === true)) {
+        } else if (Object.values(subtracted).every(subtracted => subtracted === true)) {
             return [];
         }
 

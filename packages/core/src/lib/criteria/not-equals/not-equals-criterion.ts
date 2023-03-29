@@ -46,7 +46,7 @@ export class NotEqualsCriterion extends CriterionBase implements INotEqualsCrite
         return false;
     }
 
-    // [todo] some reduction cases were missing - seems like i was sloppy? figure out if there are more,
+    // [todo] some subtraction cases were missing - seems like i was sloppy? figure out if there are more,
     // and not only here, but in all criterion implementations
     minus(other: ICriterion): boolean | ICriterion {
         if (this.tools.isNotEqualsCriterion(other) && this.value === other.getValue()) {
@@ -56,7 +56,7 @@ export class NotEqualsCriterion extends CriterionBase implements INotEqualsCrite
         return false;
     }
 
-    // [todo] some reduction cases were missing - seems like i was sloppy? figure out if there are more,
+    // [todo] some subtraction cases were missing - seems like i was sloppy? figure out if there are more,
     // and not only here, but in all criterion implementations
     subtractFrom(other: ICriterion): boolean | ICriterion {
         if (this.tools.isNotEqualsCriterion(other) && this.value === other.getValue()) {

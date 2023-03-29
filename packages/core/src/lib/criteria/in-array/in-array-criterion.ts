@@ -102,21 +102,21 @@ export class InArrayCriterion extends CriterionBase implements IInArrayCriterion
         } else if (this.tools.isInNumberRangeCriterion(other)) {
             let otherFrom = other.getFrom();
             let otherTo = other.getTo();
-            let didReduce = false;
+            let didSubtract = false;
 
             // [todo] get rid of any
             if (otherFrom?.op === ">=" && this.values.has(otherFrom.value as any)) {
                 otherFrom = { op: ">", value: otherFrom.value };
-                didReduce = true;
+                didSubtract = true;
             }
 
             // [todo] get rid of any
             if (otherTo?.op === "<=" && this.values.has(otherTo.value as any)) {
                 otherTo = { op: "<", value: otherTo.value };
-                didReduce = true;
+                didSubtract = true;
             }
 
-            if (didReduce) {
+            if (didSubtract) {
                 return this.tools.inRange(otherFrom?.value, otherTo?.value, [
                     otherFrom?.op === ">=",
                     otherTo?.op === "<=",

@@ -32,30 +32,29 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
     }
 
     // [todo] unused, can be removed
-    reduceByCached(query: IEntityQuery): IEntityQuery[] | false {
+    subtractByCached(query: IEntityQuery): IEntityQuery[] | false {
         const cached = this.getCachedQueries(query.getEntitySchema());
         return this.queryTools.subtractQueries([query], cached);
     }
 
     // [todo] not used; but i did not want to delete it already.
     // if i don't find a use soonish™ reason to keep it, i should remove it
-    reduceManyByCached(queries: IEntityQuery[]): IEntityQuery[] {
+    subtractManyByCached(queries: IEntityQuery[]): IEntityQuery[] {
         const groupedBySchema = groupBy(queries, query => query.getEntitySchema());
-
-        const reduced: IEntityQuery[] = [];
+        const subtracted: IEntityQuery[] = [];
 
         for (const [schema, queries] of groupedBySchema.entries()) {
             const result = this.queryTools.subtractQueries(queries, this.getCachedQueries(schema));
 
             if (!result) {
-                reduced.push(...queries);
+                subtracted.push(...queries);
                 continue;
             }
 
-            reduced.push(...result);
+            subtracted.push(...result);
         }
 
-        return reduced;
+        return subtracted;
     }
 
     // [todo] need some tests

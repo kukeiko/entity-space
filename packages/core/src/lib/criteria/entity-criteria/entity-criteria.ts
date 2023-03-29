@@ -198,9 +198,9 @@ export class EntityCriteria extends CriterionBase implements IEntityCriteria {
         if (this.tools.isOrCriterion(other) || this.tools.isAndCriterion(other)) {
             return other.minus(this);
         } else if (this.tools.isEntityCriteria(other)) {
-            // same reduction mechanics as found in and-criteria.ts
+            // same subtraction mechanics as found in and-criteria.ts
             const otherBag = other.getCriteria();
-            const reductions: (
+            const subtractions: (
                 | {
                       result: ICriterion | true;
                       key: string;
@@ -230,7 +230,7 @@ export class EntityCriteria extends CriterionBase implements IEntityCriteria {
                         return false;
                     }
 
-                    reductions.push({ key, result: false, inverted });
+                    subtractions.push({ key, result: false, inverted });
                 } else {
                     const result = mine.subtractFrom(otherCriterion);
 
@@ -238,18 +238,18 @@ export class EntityCriteria extends CriterionBase implements IEntityCriteria {
                         return false;
                     }
 
-                    reductions.push({ key, result });
+                    subtractions.push({ key, result });
                 }
             }
 
-            if (reductions.every(x => x.result === false)) {
+            if (subtractions.every(x => x.result === false)) {
                 return false;
-            } else if (reductions.every(x => x.result === true)) {
+            } else if (subtractions.every(x => x.result === true)) {
                 return true;
             }
 
-            // we want items that did an actual reduction to be put first
-            reductions.sort((a, b) => {
+            // we want items that did an actual subtraction to be put first
+            subtractions.sort((a, b) => {
                 if (a.result !== false && b.result === false) {
                     return -1;
                 } else if (a.result === false && b.result !== false) {
@@ -262,7 +262,7 @@ export class EntityCriteria extends CriterionBase implements IEntityCriteria {
             const accumulator: Record<string, ICriterion> = { ...other.getCriteria() };
             const built: Record<string, ICriterion>[] = [];
 
-            for (const { key, result, inverted } of reductions) {
+            for (const { key, result, inverted } of subtractions) {
                 if (result === true) {
                     continue;
                 } else if (result === false) {

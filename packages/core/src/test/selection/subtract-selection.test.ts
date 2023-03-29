@@ -54,7 +54,7 @@ describe("subtractExpansion()", () => {
         });
     });
 
-    describe("partial reduction", () => {
+    describe("partial subtraction", () => {
         it("{ foo, bar } subtracted by { foo } should be { bar }", () => {
             // arrange
             const a: UnpackedEntitySelection = { foo: true, bar: true };
@@ -80,7 +80,7 @@ describe("subtractExpansion()", () => {
         });
     });
 
-    describe("no reduction", () => {
+    describe("no subtraction", () => {
         it("{ foo, bar } should not be subtracted by { baz }", () => {
             // arrange
             const a: UnpackedEntitySelection = { foo: true, bar: true };

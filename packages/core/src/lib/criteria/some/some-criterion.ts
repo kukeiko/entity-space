@@ -67,7 +67,7 @@ export class SomeCriterion extends CriterionBase implements ISomeCriterion {
         return this;
     }
 
-    // [todo] some reduction cases were missing - seems like i was sloppy? figure out if there are more,
+    // [todo] some subtraction cases were missing - seems like i was sloppy? figure out if there are more,
     // and not only here, but in all criterion implementations
     subtractFrom(other: ICriterion): boolean | ICriterion {
         if (!this.tools.isSomeCriterion(other)) {
