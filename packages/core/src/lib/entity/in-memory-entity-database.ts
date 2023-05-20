@@ -193,6 +193,15 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         const isArray = relation.getProperty().getValueSchema().isArray();
         const fromIndex = relation.getFromIndex();
         const toIndex = relation.getToIndex();
+
+        if (fromIndex.getPaths().length !== toIndex.getPaths().length) {
+            throw new Error(
+                `can't hydrate relation "${relation.getPropertyName()}" (type: ${relatedSchema.getId()}): length of paths between from & to index are not equal (from: "${fromIndex
+                    .getPaths()
+                    .join(",")}", to: "${toIndex.getPaths().join(", ")}")`
+            );
+        }
+
         const criteria = this.criteriaTools.createCriterionFromEntities(
             entities,
             fromIndex.getPaths(),
