@@ -1,6 +1,6 @@
 import { isNotFalse } from "@entity-space/utils";
 import { flatten } from "lodash";
-import { filter, from, map, merge, mergeAll, Observable, of, startWith, switchMap, tap } from "rxjs";
+import { filter, from, isObservable, map, merge, mergeAll, Observable, of, startWith, switchMap, tap } from "rxjs";
 import { Entity } from "../common/entity.type";
 import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
 import { EntityCriteriaShapeTools } from "../criteria/entity-criteria-shape-tools";
@@ -40,7 +40,7 @@ export class EntityApi implements IEntityStreamInterceptor {
     }
 
     intercept(stream: EntityStream): EntityStream {
-        const db = new InMemoryEntityDatabase(); // [todo] remove
+        const db = new InMemoryEntityDatabase(); // [todo] remove - we only add packets to db, and then do nothing with them
 
         return merge(
             stream.pipe(map(EntityStreamPacket.withoutRejected)),
@@ -180,10 +180,10 @@ export class EntityApi implements IEntityStreamInterceptor {
     private invokedToDataStream(invoked: ReturnType<EntityApiEndpointInvoke>): Observable<EntityApiEndpointData> {
         if (invoked instanceof Promise) {
             return from(invoked);
-        } else if (Array.isArray(invoked) || invoked instanceof EntitySet || !(invoked instanceof Observable)) {
+        } else if (Array.isArray(invoked) || invoked instanceof EntitySet || !isObservable(invoked)) {
             return of(invoked);
         } else {
-            return invoked;
+            return invoked as Observable<EntityApiEndpointData>;
         }
     }
 
