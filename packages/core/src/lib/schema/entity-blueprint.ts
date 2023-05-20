@@ -6,6 +6,7 @@ const BLUEPRINT_METADATA_KEY = Symbol("blueprint-metadata");
 interface BlueprintMetadata {
     id: string;
     key?: string | string[];
+    indexes?: Record<string, string | string[]>;
 }
 
 // [todo] investigate alternative to using decorators: special property on each

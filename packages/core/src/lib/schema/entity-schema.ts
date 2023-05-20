@@ -117,13 +117,17 @@ export class EntitySchema<T extends Entity = Entity> implements IEntitySchema<T>
     }
 
     getIndex(name: string): IEntitySchemaIndex {
-        const index = this.indexes.find(index => index.getName() === name);
+        const index = this.findIndex(name);
 
-        if (index === void 0) {
+        if (index === undefined) {
             throw new Error(`index "${name}" not found on schema ${this.getId()}`);
         }
 
         return index;
+    }
+
+    findIndex(name: string): IEntitySchemaIndex | undefined {
+        return this.indexes.find(index => index.getName() === name);
     }
 
     getIndexOrKey(name: string): IEntitySchemaIndex {

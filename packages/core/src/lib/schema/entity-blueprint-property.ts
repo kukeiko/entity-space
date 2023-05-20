@@ -46,6 +46,10 @@ export interface RequiredAttribute {
     required: true;
 }
 
+export interface UniqueAttribute {
+    unique: true;
+}
+
 // [todo] sadly, we can't support writeOnly yet, as otherwise intellisense for Expansion<Instance<MyModel>> won't work :(
 // reason being that we would have to filter out properties that are write only, so we need a { [K in keyof T] } mapping,
 // which just kills intellisense. not sure why, probably a limitation of typescript?
@@ -63,7 +67,8 @@ export type AllAttributes =
     | NullableAttribute
     | ReadOnlyAttribute
     | RelationAttribute
-    | RequiredAttribute;
+    | RequiredAttribute
+    | UniqueAttribute;
 
 // [todo] user can put anything as O & "find references" doesn't work
 export function define<V extends BlueprintPropertyValue, O extends Partial<AllAttributes>>(

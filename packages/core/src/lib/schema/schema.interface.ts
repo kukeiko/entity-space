@@ -30,6 +30,7 @@ export interface IEntitySchema<T extends Entity = Entity> extends IPropertyValue
     getAnyOf(): IEntitySchema[];
     getId(): string;
     getIndex(name: string): IEntitySchemaIndex;
+    findIndex(name: string): IEntitySchemaIndex | undefined;
     // [todo] every time i come back to working on the project again, i wonder why this method exists
     // and we don't just have getIndex() also return key if found.
     getIndexOrKey(name: string): IEntitySchemaIndex;

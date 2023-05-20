@@ -63,7 +63,10 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
                             });
 
                             const targets = Object.entries(rejectedQuery.getSelection().getValue())
-                                .map(([key, value]) => this.toHydrateRelationQuery(entitySetToHydrate, key, value))
+                                .map(([key, value]) => {
+                                    // [todo] if "key" points to a complex type, go deeper
+                                    return this.toHydrateRelationQuery(entitySetToHydrate, key, value);
+                                })
                                 .filter(isNotFalse);
 
                             targets.forEach(([query]) => this.tracing.querySpawned(query));
@@ -102,6 +105,7 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
         const relation = entitySet.getQuery().getEntitySchema().findRelation(key);
 
         if (relation === void 0) {
+            // [todo] if is complex type, go deeper
             return false;
         }
 
@@ -137,6 +141,7 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
                 accepted.push(...packet.getAcceptedQueries());
                 payloads.push(...packet.getPayload());
             }),
+            // [todo] takeLast(1) should be removed as we might tap into streams that never complete
             takeLast(1),
             map(() => {
                 // [todo] see if any deeper expansions have been rejected

@@ -62,9 +62,6 @@ export class EntityQueryBuilder<T extends Entity = Entity> {
         const criterion = this.whereEntityTools.toCriterionFromWhereEntitySingle(this.schema, criteria);
         const simplified = criterion.simplify();
 
-        console.log("🌵 criterion", criterion.toString());
-        console.log("🍌 simplified", simplified.toString());
-
         return this.copy({ criteria: simplified });
     }
 

@@ -36,11 +36,18 @@ export class EntitySchemaCatalog {
 
         schema = new EntitySchema(metadata.id);
         this.schemas.set(metadata.id, schema);
-        
+
         if (metadata.key) {
             schema.setKey(metadata.key);
         }
-        
+
+        if (metadata.indexes) {
+            for (const name in metadata.indexes) {
+                const path = metadata.indexes[name];
+                schema.addIndex(path, { name });
+            }
+        }
+
         const properties = getNamedProperties(blueprint);
         const idProperties = properties.filter(hasAttribute("id"));
 
@@ -85,18 +92,28 @@ export class EntitySchemaCatalog {
         }
 
         for (const property of properties) {
-            if (hasAttribute("relation", property) || isEntityBlueprint(property.valueType)) {
+            if (hasAttribute("relation", property)) {
                 continue;
             }
 
             const isRequired = hasAttribute("required", property);
 
             if (hasAttribute("array", property)) {
-                schema.addProperty(
-                    property.name,
-                    new ArraySchema(new PrimitiveSchema(this.toPrimitiveSchemaDataType(property.valueType))),
-                    isRequired
-                );
+                if (isEntityBlueprint(property.valueType)) {
+                    const relatedSchema = this.resolve(property.valueType);
+
+                    schema.addProperty(property.name, new ArraySchema(relatedSchema), isRequired);
+                } else {
+                    schema.addProperty(
+                        property.name,
+                        new ArraySchema(new PrimitiveSchema(this.toPrimitiveSchemaDataType(property.valueType))),
+                        isRequired
+                    );
+                }
+            } else if (isEntityBlueprint(property.valueType)) {
+                const relatedSchema = this.resolve(property.valueType);
+
+                schema.addProperty(property.name, relatedSchema, isRequired);
             } else {
                 schema.addProperty(
                     property.name,
@@ -107,10 +124,17 @@ export class EntitySchemaCatalog {
         }
 
         for (const indexedProperty of properties.filter(hasAttribute("index"))) {
-            schema.addIndex(indexedProperty.name);
+            const unique = hasAttribute("unique", indexedProperty);
+            schema.addIndex(indexedProperty.name, { unique });
         }
 
-        // console.log(`🔨 ✔️ built schema ${metadata.id}`, schema);
+        for (const indexedProperty of properties.filter(hasAttribute("unique"))) {
+            if (schema.findIndex(indexedProperty.name)) {
+                continue;
+            }
+
+            schema.addIndex(indexedProperty.name, { unique: true });
+        }
 
         return schema as EntitySchema<EntityBlueprintInstance<T>>;
     }
