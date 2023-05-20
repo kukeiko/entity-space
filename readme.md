@@ -25,10 +25,11 @@ Run tests once including coverage (and type-tests, the only commmand that runs t
 $ npm run test
 ```
 
-Run tests in watch-mode with coverage:
+Run tests in watch-mode with coverage for core lib:
+note: --watchAll makes sure to create coverage for all files, not only the ones that changed since last commit
 
 ```bash
-$ npm run test:watch
+$ nx test core --coverage --watchAll
 ```
 
 Run tests in watch-mode without coverage so that sourcemaps in browser console work:
