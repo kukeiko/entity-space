@@ -5,14 +5,15 @@ const BLUEPRINT_METADATA_KEY = Symbol("blueprint-metadata");
 
 interface BlueprintMetadata {
     id: string;
+    key?: string | string[];
 }
 
 // [todo] investigate alternative to using decorators: special property on each
 // blueprint instance (which would then also exist on each entity). we could
 // put quite a lot of useful stuff in there, like "lastCachedAt", "isPersisted" and more!
-export function EntityBlueprint(args: { id: string }) {
+export function EntityBlueprint(options: BlueprintMetadata) {
     return (type: Class) => {
-        const metadata: BlueprintMetadata = { id: args.id };
+        const metadata: BlueprintMetadata = { ...options };
         Reflect.defineMetadata(BLUEPRINT_METADATA_KEY, metadata, type);
     };
 }

@@ -54,6 +54,7 @@ module.exports = {
         "workspace",
         "typed",
         "intro",
+        "blueprint"
     ],
 
     allowTicketNumber: true,

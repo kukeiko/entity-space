@@ -144,7 +144,7 @@ export class EntitySchema<T extends Entity = Entity> implements IEntitySchema<T>
 
     getKey(): IEntitySchemaIndex {
         if (this.key === void 0) {
-            throw new Error(`there is no key defined on schema ${this.getId()}`);
+            throw new Error(`no key defined on schema "${this.getId()}"`);
         }
 
         return this.key;

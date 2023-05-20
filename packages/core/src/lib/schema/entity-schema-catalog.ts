@@ -36,6 +36,11 @@ export class EntitySchemaCatalog {
 
         schema = new EntitySchema(metadata.id);
         this.schemas.set(metadata.id, schema);
+        
+        if (metadata.key) {
+            schema.setKey(metadata.key);
+        }
+        
         const properties = getNamedProperties(blueprint);
         const idProperties = properties.filter(hasAttribute("id"));
 
