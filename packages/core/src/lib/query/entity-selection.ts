@@ -33,6 +33,7 @@ export class EntitySelection {
         }
 
         return `{ ${Object.entries(value)
+            .sort((a, b) => a[0].localeCompare(b[0]))
             .map(([key, value]) => (value === true ? key : `${key}: ${this.toString(value)}`))
             .join(", ")} }`;
     }

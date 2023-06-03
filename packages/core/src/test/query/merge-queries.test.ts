@@ -168,16 +168,19 @@ describe("mergeQueries()", () => {
         const A = parseQuery("users({ id: {2, 3}, parent: { id: 7 } })/{ id, parentId }", schemas);
         const B = parseQuery("users({ id: 2, parent: { id: 7 } })/{ id, parentId, parent: { id } }", schemas);
         const C = parseQuery("users({ id: 3, parent: { id: 7 } })/{ id, parentId, parent: { id } }", schemas);
-        const expected = "users({ id: {2, 3}, parent: { id: 7 } })/{ id, parentId, parent: { id } }";
+        const expected = parseQuery(
+            "users({ id: {2, 3}, parent: { id: 7 } })/{ id, parentId, parent: { id } }",
+            schemas
+        );
 
         expect(mergeQuery(A, B)).toBe(false);
         expect(mergeQuery(A, C)).toBe(false);
         const BC = mergeQuery(B, C);
         expect(BC).not.toBe(false);
-        expect(BC.toString()).toEqual(expected);
+        expect(BC.toString()).toEqual(expected.toString());
 
-        expect(mergeQuery(A, BC as EntityQuery).toString()).toEqual(expected);
+        expect(mergeQuery(A, BC as EntityQuery).toString()).toEqual(expected.toString());
 
-        expect(mergeQueries(A, B, C).toString()).toEqual(expected);
+        expect(mergeQueries(A, B, C).toString()).toEqual(expected.toString());
     });
 });
