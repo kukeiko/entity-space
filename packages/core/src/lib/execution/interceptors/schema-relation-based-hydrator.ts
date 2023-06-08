@@ -1,5 +1,5 @@
 import { isNotFalse, writePath } from "@entity-space/utils";
-import { map, merge, of, switchMap, takeLast, tap } from "rxjs";
+import { EMPTY, map, merge, of, switchMap, takeLast, tap } from "rxjs";
 import { UnpackedEntitySelection } from "../../common/unpacked-entity-selection.type";
 import { EntityCriteriaTools } from "../../criteria/entity-criteria-tools";
 import { EntitySet } from "../../entity/data-structures/entity-set";
@@ -34,6 +34,7 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
                     rejected.push(...packet.getRejectedQueries());
                     payloads.push(...packet.getPayload());
                 }),
+                // [todo] need to get rid of takeLast()
                 takeLast(1),
                 switchMap(() => {
                     const hydrationStreams: EntityStream[] = [];
@@ -64,7 +65,7 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
 
                             const targets = Object.entries(rejectedQuery.getSelection().getValue())
                                 .map(([key, value]) => {
-                                    // [todo] if "key" points to a complex type, go deeper
+                                    // [todo] we're only checking the "first level" here - should recursively check related entities and complex type properties
                                     return this.toHydrateRelationQuery(entitySetToHydrate, key, value);
                                 })
                                 .filter(isNotFalse);
@@ -84,7 +85,11 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
                     }
 
                     if (!hydrationStreams.length) {
-                        return of(new EntityStreamPacket({ rejected }));
+                        if (rejected.length) {
+                            return of(new EntityStreamPacket({ rejected }));
+                        } else {
+                            return EMPTY;
+                        }
                     }
 
                     return merge(...hydrationStreams);
@@ -131,8 +136,6 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
         relationQuery: IEntityQuery,
         relation: IEntitySchemaRelation
     ): EntityStream {
-        this.tracing.queryStartedExecution(relationQuery);
-
         const accepted: IEntityQuery[] = [];
         const payloads: EntitySet[] = [];
 
@@ -207,12 +210,10 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
                 return [
                     [
                         hydrationQuery.withSelection(
-                            hydrationQuery.getSelection().merge(
-                                new EntitySelection({
-                                    schema: hydrationQuery.getEntitySchema(),
-                                    value: { [relation.getPropertyName()]: relationQuery.getSelection().getValue() },
-                                })
-                            )
+                            new EntitySelection({
+                                schema: hydrationQuery.getEntitySchema(),
+                                value: { [relation.getPropertyName()]: relationQuery.getSelection().getValue() },
+                            })
                         ),
                     ],
                     [],
@@ -222,12 +223,10 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
                     [],
                     [
                         hydrationQuery.withSelection(
-                            hydrationQuery.getSelection().merge(
-                                new EntitySelection({
-                                    schema: hydrationQuery.getEntitySchema(),
-                                    value: { [relation.getPropertyName()]: relationQuery.getSelection().getValue() },
-                                })
-                            )
+                            new EntitySelection({
+                                schema: hydrationQuery.getEntitySchema(),
+                                value: { [relation.getPropertyName()]: relationQuery.getSelection().getValue() },
+                            })
                         ),
                     ],
                 ];
