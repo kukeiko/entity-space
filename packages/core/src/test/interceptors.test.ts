@@ -12,31 +12,10 @@ import { IEntityQuery } from "../lib/query/entity-query.interface";
 import { TestContentData, TestContentDatabase, TestContentEntityApi, User, UserBlueprint } from "./content";
 import { TestContentCatalog } from "./content/test-content-catalog";
 import { createQuery } from "./tools/create-query.fn";
+import { expectPacketEqual } from "./tools/expect-packet-equal.fn";
 
 const LOG_PACKETS = false;
 const LOG_TRACING = false;
-
-function expectPacketEqual(actual: EntityStreamPacket, expected: EntityStreamPacket): void {
-    expect(actual.getErrors().map(error => error.getErrorMessage())).toEqual(
-        expected.getErrors().map(error => error.getErrorMessage())
-    );
-
-    expect(actual.getAcceptedQueries().map(query => query.toString())).toEqual(
-        expected.getAcceptedQueries().map(query => query.toString())
-    );
-
-    expect(actual.getRejectedQueries().map(query => query.toString())).toEqual(
-        expected.getRejectedQueries().map(query => query.toString())
-    );
-
-    expect(actual.getPayload().map(payload => payload.getQuery().toString())).toEqual(
-        expected.getPayload().map(payload => payload.getQuery().toString())
-    );
-
-    expect(actual.getPayload().map(payload => payload.getEntities())).toEqual(
-        expected.getPayload().map(payload => payload.getEntities())
-    );
-}
 
 describe("interceptors", () => {
     it("should load data #1.A (get all)", async () => {
