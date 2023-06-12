@@ -40,8 +40,12 @@ export interface IEntitySchema<T extends Entity = Entity> extends IPropertyValue
     getOneOf(): IEntitySchema[];
     getProperties(): IEntitySchemaProperty[];
     getProperty(path: string): IEntitySchemaProperty;
+    // [todo] remove, and instead, getRelation() should search deeply by default
+    getRelationDeep(relationPath: string[]): IEntitySchemaRelation;
     getRelation(propertyName: string): IEntitySchemaRelation;
     findRelation(propertyName: string): IEntitySchemaRelation | undefined;
+    // [todo] remove, and instead, findRelation() should search deeply by default
+    findRelationDeep(relationPath: string[]): IEntitySchemaRelation | undefined;
     getRelations(): IEntitySchemaRelation[];
     hasKey(): boolean;
     createDefault(): T;

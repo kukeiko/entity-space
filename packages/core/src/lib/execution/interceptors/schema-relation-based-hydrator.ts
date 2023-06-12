@@ -1,5 +1,6 @@
-import { isNotFalse, writePath } from "@entity-space/utils";
+import { isNotFalse, readPathOnObjects, writePath } from "@entity-space/utils";
 import { EMPTY, map, merge, of, switchMap, takeLast, tap } from "rxjs";
+import { Entity } from "../../common/entity.type";
 import { UnpackedEntitySelection } from "../../common/unpacked-entity-selection.type";
 import { EntityCriteriaTools } from "../../criteria/entity-criteria-tools";
 import { EntitySet } from "../../entity/data-structures/entity-set";
@@ -7,12 +8,19 @@ import { EntityQuery } from "../../query/entity-query";
 import { EntityQueryTools } from "../../query/entity-query-tools";
 import { IEntityQuery } from "../../query/entity-query.interface";
 import { EntitySelection } from "../../query/entity-selection";
+import { EntitySelectionTools } from "../../query/entity-selection-tools";
 import { IEntitySchemaRelation } from "../../schema/schema.interface";
 import { EntityQueryTracing } from "../entity-query-tracing";
 import { EntityStream } from "../entity-stream";
-import { EntityStreamPacket } from "../entity-stream-packet";
 import { IEntityStreamInterceptor } from "../entity-stream-interceptor.interface";
+import { EntityStreamPacket } from "../entity-stream-packet";
 import { runInterceptors } from "../run-interceptors.fn";
+
+interface HydrateRelationQuery {
+    entities: EntitySet;
+    relationPath: string[];
+    relationQuery: IEntityQuery;
+}
 
 export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
     constructor(
@@ -22,6 +30,7 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
 
     private readonly criteriaTools = new EntityCriteriaTools();
     private readonly queryTools = new EntityQueryTools({ criteriaTools: this.criteriaTools });
+    private readonly selectionTools = new EntitySelectionTools();
 
     intercept(stream: EntityStream): EntityStream {
         const rejected: IEntityQuery[] = [];
@@ -63,22 +72,28 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
                                 entities: entitiesToHydrate,
                             });
 
-                            const targets = Object.entries(rejectedQuery.getSelection().getValue())
-                                .map(([key, value]) => {
-                                    // [todo] we're only checking the "first level" here - should recursively check related entities and complex type properties
-                                    return this.toHydrateRelationQuery(entitySetToHydrate, key, value);
-                                })
+                            const clipped = this.selectionTools.clip(
+                                rejectedQuery.getSelection().getValue(),
+                                entitySetToHydrate.getQuery().getSelection().getValue()
+                            );
+
+                            const targets = clipped
+                                .map(([relationPath, selectionValue]) =>
+                                    this.toHydrateRelationQuery(entitySetToHydrate, relationPath, selectionValue)
+                                )
                                 .filter(isNotFalse);
 
-                            targets.forEach(([query]) => this.tracing.querySpawned(query));
+                            targets.forEach(({ relationQuery }) =>
+                                this.tracing.querySpawned(relationQuery, "💧 hydration")
+                            );
 
                             if (!targets.length) {
                                 continue;
                             }
 
                             hydrationStreams.push(
-                                ...targets.map(([target, relation]) => {
-                                    return this.startRelationHydration(entitySetToHydrate.getQuery(), target, relation);
+                                ...targets.map(hydrationQuery => {
+                                    return this.startRelationHydration(hydrationQuery);
                                 })
                             );
                         }
@@ -100,24 +115,24 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
 
     private toHydrateRelationQuery(
         entitySet: EntitySet,
-        key: string,
+        relationPath: string[],
         selectionValue?: UnpackedEntitySelection | true
-    ): false | [IEntityQuery, IEntitySchemaRelation] {
+    ): false | HydrateRelationQuery {
         if (selectionValue === void 0 || selectionValue === true) {
             return false;
         }
 
-        const relation = entitySet.getQuery().getEntitySchema().findRelation(key);
+        const relation = entitySet.getQuery().getEntitySchema().findRelationDeep(relationPath);
 
         if (relation === void 0) {
-            // [todo] if is complex type, go deeper
             return false;
         }
 
         const relatedSchema = relation.getRelatedEntitySchema();
+        const entities = readPathOnObjects<Entity[]>(relationPath.slice(0, -1), entitySet.getEntities());
 
         const criteria = this.criteriaTools.createCriterionFromEntities(
-            entitySet.getEntities(),
+            entities,
             relation.getFromIndex().getPaths(),
             relation.getToIndex().getPaths()
         );
@@ -128,14 +143,15 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
             selection: selectionValue,
         });
 
-        return [query, relation];
+        return {
+            entities: entitySet,
+            relationPath,
+            relationQuery: query,
+        };
     }
 
-    private startRelationHydration(
-        hydrationQuery: IEntityQuery,
-        relationQuery: IEntityQuery,
-        relation: IEntitySchemaRelation
-    ): EntityStream {
+    private startRelationHydration(hydrationQuery: HydrateRelationQuery): EntityStream {
+        const relationQuery = hydrationQuery.relationQuery;
         const accepted: IEntityQuery[] = [];
         const payloads: EntitySet[] = [];
 
@@ -153,10 +169,8 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
 
                 const [finalAccepted, finalRejected] = this.toMappedAcceptedAndRejectedQueries({
                     accepted,
-                    hydrationQuery,
                     rejected,
-                    relation,
-                    relationQuery,
+                    hydrationQuery,
                 });
 
                 return new EntityStreamPacket({
@@ -174,32 +188,32 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
         accepted,
         rejected,
         hydrationQuery,
-        relationQuery,
-        relation,
     }: {
         accepted: IEntityQuery[];
         rejected: IEntityQuery[];
-        hydrationQuery: IEntityQuery;
-        relationQuery: IEntityQuery;
-        relation: IEntitySchemaRelation;
+        hydrationQuery: HydrateRelationQuery;
     }): [IEntityQuery[], IEntityQuery[]] {
-        // [todo] should not check for equivalency, but instead if accepted criteria are a superset
+        const relationPath = hydrationQuery.relationPath.join(".");
+        const hydratedEntitiesQuery = hydrationQuery.entities.getQuery();
+        const relationQuery = hydrationQuery.relationQuery;
+
+        // [todo] #208 should not check for equivalency, but instead if accepted criteria are a superset
         if (EntityQuery.equivalentCriteria(relationQuery, ...this.queryTools.mergeQueries(...accepted))) {
             if (rejected.length && accepted.length) {
                 return [
                     [
-                        hydrationQuery.withSelection(
+                        hydratedEntitiesQuery.withSelection(
                             writePath(
-                                relation.getPropertyName(),
+                                relationPath,
                                 {},
                                 EntitySelection.mergeValues(...accepted.map(q => q.getSelection().getValue()))
                             )
                         ),
                     ],
                     [
-                        hydrationQuery.withSelection(
+                        hydratedEntitiesQuery.withSelection(
                             writePath(
-                                relation.getPropertyName(),
+                                relationPath,
                                 {},
                                 EntitySelection.mergeValues(...rejected.map(q => q.getSelection().getValue()))
                             )
@@ -209,10 +223,10 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
             } else if (accepted.length) {
                 return [
                     [
-                        hydrationQuery.withSelection(
+                        hydratedEntitiesQuery.withSelection(
                             new EntitySelection({
-                                schema: hydrationQuery.getEntitySchema(),
-                                value: { [relation.getPropertyName()]: relationQuery.getSelection().getValue() },
+                                schema: hydratedEntitiesQuery.getEntitySchema(),
+                                value: writePath(relationPath, {}, relationQuery.getSelection().getValue()),
                             })
                         ),
                     ],
@@ -222,10 +236,10 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
                 return [
                     [],
                     [
-                        hydrationQuery.withSelection(
+                        hydratedEntitiesQuery.withSelection(
                             new EntitySelection({
-                                schema: hydrationQuery.getEntitySchema(),
-                                value: { [relation.getPropertyName()]: relationQuery.getSelection().getValue() },
+                                schema: hydratedEntitiesQuery.getEntitySchema(),
+                                value: writePath(relationPath, {}, relationQuery.getSelection().getValue()),
                             })
                         ),
                     ],
@@ -236,28 +250,24 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
         } else {
             return [
                 accepted.map(acceptedQuery =>
-                    hydrationQuery
+                    hydratedEntitiesQuery
                         .withCriteria(
                             this.criteriaTools.and(
-                                hydrationQuery.getCriteria(),
-                                this.criteriaTools.where({ [relation.getPropertyName()]: acceptedQuery.getCriteria() })
+                                hydratedEntitiesQuery.getCriteria(),
+                                this.criteriaTools.where(writePath(relationPath, {}, acceptedQuery.getCriteria()))
                             )
                         )
-                        .withSelection(
-                            writePath(relation.getPropertyName(), {}, acceptedQuery.getSelection().getValue())
-                        )
+                        .withSelection(writePath(relationPath, {}, acceptedQuery.getSelection().getValue()))
                 ),
                 rejected.map(rejectedQuery =>
-                    hydrationQuery
+                    hydratedEntitiesQuery
                         .withCriteria(
                             this.criteriaTools.and(
-                                hydrationQuery.getCriteria(),
-                                this.criteriaTools.where({ [relation.getPropertyName()]: rejectedQuery.getCriteria() })
+                                hydratedEntitiesQuery.getCriteria(),
+                                this.criteriaTools.where(writePath(relationPath, {}, rejectedQuery.getCriteria()))
                             )
                         )
-                        .withSelection(
-                            writePath(relation.getPropertyName(), {}, rejectedQuery.getSelection().getValue())
-                        )
+                        .withSelection(writePath(relationPath, {}, rejectedQuery.getSelection().getValue()))
                 ),
             ];
         }

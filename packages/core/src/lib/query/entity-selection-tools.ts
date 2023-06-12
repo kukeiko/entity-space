@@ -11,13 +11,13 @@ export class EntitySelectionTools implements IEntitySelectionTools {
             const clipped: ClippedEntitySelection[] = [];
 
             for (const [key, value] of Object.entries(what)) {
-                if (value === undefined) {
+                if (value === void 0) {
                     continue;
                 }
 
                 const other = by[key];
 
-                if (other === undefined) {
+                if (other === void 0) {
                     clipped.push([[...path, key], value]);
                 } else if (other !== true && value !== true) {
                     clipped.push(...clipInternal(value, other, [...path, key]));

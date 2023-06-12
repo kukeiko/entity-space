@@ -104,6 +104,27 @@ export class EntitySchema<T extends Entity = Entity> implements IEntitySchema<T>
         return this.getRelations().find(relation => relation.getPropertyName() === propertyName);
     }
 
+    findRelationDeep(relationPath: string[]): IEntitySchemaRelation | undefined {
+        const relation = this.findRelation(relationPath[0]);
+
+        if (relation === void 0) {
+            const property = this.findProperty(relationPath[0]);
+
+            if (property) {
+                const schema = property.getUnboxedValueSchema();
+                if (schema.isEntity()) {
+                    return schema.findRelationDeep(relationPath.slice(1));
+                }
+            }
+
+            return undefined;
+        } else if (relationPath.length === 1) {
+            return relation;
+        }
+
+        return relation.getRelatedEntitySchema().findRelationDeep(relationPath.slice(1));
+    }
+
     getAllOf(): IEntitySchema[] {
         return this.allOf.slice();
     }
@@ -119,7 +140,7 @@ export class EntitySchema<T extends Entity = Entity> implements IEntitySchema<T>
     getIndex(name: string): IEntitySchemaIndex {
         const index = this.findIndex(name);
 
-        if (index === undefined) {
+        if (index === void 0) {
             throw new Error(`index "${name}" not found on schema ${this.getId()}`);
         }
 
@@ -128,6 +149,10 @@ export class EntitySchema<T extends Entity = Entity> implements IEntitySchema<T>
 
     findIndex(name: string): IEntitySchemaIndex | undefined {
         return this.indexes.find(index => index.getName() === name);
+    }
+
+    findProperty(name: string): IEntitySchemaProperty | undefined {
+        return this.getProperties().find(property => property.getName() === name);
     }
 
     getIndexOrKey(name: string): IEntitySchemaIndex {
@@ -164,13 +189,23 @@ export class EntitySchema<T extends Entity = Entity> implements IEntitySchema<T>
     }
 
     getProperty(name: string): IEntitySchemaProperty {
-        const property = this.getProperties().find(property => property.getName() === name);
+        const property = this.findProperty(name);
 
         if (property === void 0) {
             throw new Error(`property "${name}" not found on schema ${this.getId()}`);
         }
 
         return property;
+    }
+
+    getRelationDeep(relationPath: string[]): IEntitySchemaRelation {
+        const relation = this.findRelationDeep(relationPath);
+
+        if (relation === void 0) {
+            throw new Error(`relation "${relationPath.join(".")}" not found on schema ${this.getId()}`);
+        }
+
+        return relation;
     }
 
     getRelation(propertyKey: string): IEntitySchemaRelation {
