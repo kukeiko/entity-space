@@ -40,25 +40,20 @@ export class EntityApi implements IEntityStreamInterceptor {
     }
 
     intercept(stream: EntityStream): EntityStream {
-        const db = new InMemoryEntityDatabase(); // [todo] remove - we only add packets to db, and then do nothing with them
-
         return merge(
             stream.pipe(map(EntityStreamPacket.withoutRejected)),
             stream.pipe(
                 filter(EntityStreamPacket.containsRejected),
-                map(packet => this.query$(packet.getRejectedQueries(), db)),
+                map(packet => this.query$(packet.getRejectedQueries())),
                 mergeAll()
             )
         );
     }
 
-    query$<T extends Entity = Entity>(
-        queries: IEntityQuery[],
-        database: IEntityDatabase
-    ): Observable<EntityStreamPacket<T>> {
+    query$<T extends Entity = Entity>(queries: IEntityQuery[]): Observable<EntityStreamPacket<T>> {
         const streams = queries.map(query => {
             const endpoints = this.getEndpointsAcceptingSchema(query.getEntitySchema());
-            const [delegatedStreams, acceptedQueries] = this.dispatchToEndpoints(query, endpoints, database);
+            const [delegatedStreams, acceptedQueries] = this.dispatchToEndpoints(query, endpoints);
             const rejectedQueries = this.queryTools.subtractQueries(queries, acceptedQueries);
             const initialPackets: EntityStreamPacket[] = [];
 
@@ -72,17 +67,13 @@ export class EntityApi implements IEntityStreamInterceptor {
         return merge(...streams) as Observable<EntityStreamPacket<T>>;
     }
 
-    private dispatchToEndpoints(
-        query: IEntityQuery,
-        endpoints: EntityApiEndpoint[],
-        database: IEntityDatabase
-    ): [EntityStream[], IEntityQuery[]] {
+    private dispatchToEndpoints(query: IEntityQuery, endpoints: EntityApiEndpoint[]): [EntityStream[], IEntityQuery[]] {
         let open: IEntityQuery[] = [query];
         const delegatedStreams: EntityStream[] = [];
         const acceptedQueries: IEntityQuery[] = [];
 
         for (const endpoint of endpoints) {
-            const dispatched = this.dispatchToEndpoint(endpoint, open, database);
+            const dispatched = this.dispatchToEndpoint(endpoint, open);
 
             if (!dispatched) {
                 continue;
@@ -102,8 +93,7 @@ export class EntityApi implements IEntityStreamInterceptor {
 
     private dispatchToEndpoint(
         endpoint: EntityApiEndpoint,
-        queries: IEntityQuery[],
-        database: IEntityDatabase
+        queries: IEntityQuery[]
     ): false | [Observable<EntityStreamPacket>, IEntityQuery[]] {
         const queryShape = new EntityQueryShape({
             schema: endpoint.getSchema(),
@@ -149,22 +139,16 @@ export class EntityApi implements IEntityStreamInterceptor {
 
                 return this.invokedToDataStream(invoked).pipe(
                     map(data => this.endpointDataToPacket(query, data)),
-                    switchMap(packet => this.addPacketToDatabase(packet, database)),
+                    // [todo] dirty fix to make it work if data source returns data synchronously
+                    switchMap(
+                        packet => new Promise<EntityStreamPacket>(resolve => setTimeout(() => resolve(packet), 1))
+                    ),
                     tap(packet => this.tracePacket(packet, endpoint, acceptedReshaped))
                 );
             })
         ).pipe(startWith(initialPacket));
 
         return [stream, acceptedReshaped];
-    }
-
-    private async addPacketToDatabase(
-        packet: EntityStreamPacket,
-        database: IEntityDatabase
-    ): Promise<EntityStreamPacket> {
-        await Promise.all(packet.getPayload().map(entitySet => database.upsert(entitySet)));
-
-        return packet;
     }
 
     private tracePacket(packet: EntityStreamPacket, endpoint: EntityApiEndpoint, accepted: IEntityQuery[]): void {
