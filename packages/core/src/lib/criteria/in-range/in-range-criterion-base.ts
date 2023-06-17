@@ -326,7 +326,7 @@ export abstract class InRangeCriterion<T> extends CriterionBase implements ICrit
     }
 
     contains(value: unknown): boolean {
-        if (typeof value !== "string" || typeof value !== "number") {
+        if (typeof value !== "string" && typeof value !== "number") {
             return false;
         }
 
