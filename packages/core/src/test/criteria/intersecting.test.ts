@@ -15,6 +15,7 @@ describe("criteria: intersecting", () => {
 
     // not-in-array
     expectCriteria("!{2}").intersectedWith("!{7}").toEqual("!{2, 7}");
+    expectCriteria("!{2}").intersectedWith("{1, 2, 3}").toEqual("{1, 3}");
 
     // in-range
     expectCriteria("[1, 7]").intersectedWith("[3, 5]").toEqual("[3, 5]");

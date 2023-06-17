@@ -1,4 +1,5 @@
 import { Null, Primitive, subtractSets } from "@entity-space/utils";
+import { intersection } from "lodash";
 import { CriterionBase } from "../criterion-base";
 import { ICriterion, ICriterion$ } from "../criterion.interface";
 import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
@@ -27,7 +28,17 @@ export class NotInArrayCriterion extends CriterionBase implements INotInArrayCri
     }
 
     intersect(other: ICriterion): false | ICriterion {
-        return this.merge(other);
+        if (this.tools.isNotInArrayCriterion(other)) {
+            return this.tools.notInArray([...this.values, ...other.getValues()]);
+        } else if (this.tools.isInArrayCriterion(other)) {
+            const intersected = other.getValues().filter(value => !this.values.has(value));
+
+            if (intersected.length) {
+                return this.tools.inArray(intersected);
+            }
+        }
+
+        return false;
     }
 
     invert(): false | ICriterion {
@@ -40,10 +51,25 @@ export class NotInArrayCriterion extends CriterionBase implements INotInArrayCri
 
     merge(other: ICriterion): false | ICriterion {
         if (this.tools.isNotInArrayCriterion(other)) {
-            return this.tools.notInArray([...this.values, ...other.getValues()]);
+            const intersected = intersection(this.getValues(), other.getValues());
+
+            if (intersected.length) {
+                return this.tools.notInArray(intersected);
+            } else {
+                return this.tools.all();
+            }
+        } else if (this.tools.isInArrayCriterion(other)) {
+            const otherValues = new Set(other.getValues());
+            const remainingValues = this.getValues().filter(value => !otherValues.has(value));
+
+            if (remainingValues.length) {
+                return this.tools.notInArray(remainingValues);
+            } else {
+                return this.tools.all();
+            }
         }
 
-        throw new Error("Method not implemented.");
+        return false;
     }
 
     minus(other: ICriterion): boolean | ICriterion {

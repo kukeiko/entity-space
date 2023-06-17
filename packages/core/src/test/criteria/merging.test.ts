@@ -30,11 +30,15 @@ describe("criteria: merging", () => {
     // [todo] should actually be "all" instead of "[..., ...]"
     expectCriteria("(7, ...]", xit).mergedWith("[..., 10)").toEqual("[..., ...]");
 
-    // in-set
+    // in-array
     expectCriteria("{1, 2, 3}").mergedWith("{4, 5, 6}").toEqual("{1, 2, 3, 4, 5, 6}");
 
-    // not-in-set
-    expectCriteria("!{1, 2, 3}").mergedWith("!{4, 5, 6}").toEqual("!{1, 2, 3, 4, 5, 6}");
+    // not-in-array
+    expectCriteria("!{1, 2, 3}").mergedWith("!{-1, 2, -3}").toEqual("!{2}");
+    expectCriteria("!{1, 2, 3}").mergedWith("!{4, 5, 6}").toEqual("all");
+
+    expectCriteria("!{1, 2, 3}").mergedWith("{1, 2, 3}").toEqual("all");
+    expectCriteria("!{1, 2, 3}").mergedWith("{1, 2}").toEqual("!{3}");
 
     // or-criteria
     expectCriteria("[1, 7] | [10, 20]").mergedWith("[7, 10]").toEqual("[1, 20]");
