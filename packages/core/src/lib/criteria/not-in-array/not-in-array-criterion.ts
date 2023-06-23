@@ -58,6 +58,12 @@ export class NotInArrayCriterion extends CriterionBase implements INotInArrayCri
             } else {
                 return this.tools.all();
             }
+        } else if (this.tools.isNotEqualsCriterion(other)) {
+            if (this.values.has(other.getValue())) {
+                return other;
+            } else {
+                return this.tools.all();
+            }
         } else if (this.tools.isInArrayCriterion(other)) {
             const otherValues = new Set(other.getValues());
             const remainingValues = this.getValues().filter(value => !otherValues.has(value));
@@ -66,6 +72,17 @@ export class NotInArrayCriterion extends CriterionBase implements INotInArrayCri
                 return this.tools.notInArray(remainingValues);
             } else {
                 return this.tools.all();
+            }
+        } else if (this.tools.isEqualsCriterion(other)) {
+            if (this.values.has(other.getValue())) {
+                const values = new Set(this.values);
+                values.delete(other.getValue());
+
+                if (values.size === 0) {
+                    return this.tools.all();
+                } else {
+                    return this.tools.notInArray(values);
+                }
             }
         }
 
