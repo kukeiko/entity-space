@@ -33,6 +33,7 @@ export function safeWrapEntityStream(stream: EntityStream, queries: IEntityQuery
             });
         }),
         // prevent unnecessarily repeating potentially costly calls (e.g. accessing http resources)
+        // [todo] make sure that "1" is correct (as opposed to no argument at all)
         shareReplay(1)
     );
     const accepted: IEntityQuery[] = [];

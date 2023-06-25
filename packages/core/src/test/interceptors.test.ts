@@ -3,7 +3,7 @@ import { EntityCriteriaTools } from "../lib/criteria/entity-criteria-tools";
 import { EntitySet } from "../lib/entity/data-structures/entity-set";
 import { EntityQueryTracing } from "../lib/execution/entity-query-tracing";
 import { EntityStreamPacket } from "../lib/execution/entity-stream-packet";
-import { IEntityStreamInterceptor } from "../lib/execution/entity-stream-interceptor.interface";
+import { IEntityStreamInterceptor } from "../lib/execution/interceptors/entity-stream-interceptor.interface";
 import { LogPacketsInterceptor } from "../lib/execution/interceptors/log-packets.interceptor";
 import { MergePacketsTakeLastInterceptor } from "../lib/execution/interceptors/merge-packets-take-last.interceptor";
 import { SchemaRelationBasedHydrator } from "../lib/execution/interceptors/schema-relation-based-hydrator";

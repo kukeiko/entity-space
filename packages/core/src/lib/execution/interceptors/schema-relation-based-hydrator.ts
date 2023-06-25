@@ -9,12 +9,11 @@ import { EntityQueryTools } from "../../query/entity-query-tools";
 import { IEntityQuery } from "../../query/entity-query.interface";
 import { EntitySelection } from "../../query/entity-selection";
 import { EntitySelectionTools } from "../../query/entity-selection-tools";
-import { IEntitySchemaRelation } from "../../schema/schema.interface";
 import { EntityQueryTracing } from "../entity-query-tracing";
 import { EntityStream } from "../entity-stream";
-import { IEntityStreamInterceptor } from "../entity-stream-interceptor.interface";
 import { EntityStreamPacket } from "../entity-stream-packet";
 import { runInterceptors } from "../run-interceptors.fn";
+import { IEntityStreamInterceptor } from "./entity-stream-interceptor.interface";
 
 interface HydrateRelationQuery {
     entities: EntitySet;

@@ -1,8 +1,8 @@
 import { EMPTY, merge, switchMap, takeLast, tap } from "rxjs";
-import { IEntityStreamInterceptor } from "../entity-stream-interceptor.interface";
+import { Entity } from "../../common/entity.type";
 import { EntityStream } from "../entity-stream";
 import { EntityStreamPacket } from "../entity-stream-packet";
-import { Entity } from "../../common/entity.type";
+import { IEntityStreamInterceptor } from "./entity-stream-interceptor.interface";
 
 export type LogPacketsInterceptorOptions = { logEach?: boolean; logFinal?: boolean } | boolean;
 
@@ -14,7 +14,7 @@ export class LogPacketsInterceptor implements IEntityStreamInterceptor {
 
         if (options === true) {
             options = { logEach: true, logFinal: true };
-        } else if(options === false) {
+        } else if (options === false) {
             options = { logEach: false, logFinal: false };
         }
 
