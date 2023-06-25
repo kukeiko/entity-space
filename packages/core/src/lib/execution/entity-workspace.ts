@@ -314,8 +314,8 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
         return this.database.querySync(query).getEntities();
     }
 
-    queryCacheChanged$(): Observable<IEntityQuery[]> {
-        return this.database.queryCacheChanged$();
+    queryCache$(): Observable<IEntityQuery[]> {
+        return this.database.getQueryCache$();
     }
 
     async create<T extends Entity>(entities: T[], schema: IEntitySchema): Promise<false | T[]> {

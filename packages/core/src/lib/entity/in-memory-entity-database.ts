@@ -1,6 +1,6 @@
 import { cloneJson, groupBy, readPath } from "@entity-space/utils";
 import { flatten } from "lodash";
-import { Observable, Subject } from "rxjs";
+import { Observable, startWith, Subject } from "rxjs";
 import { Entity } from "../common/entity.type";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
 import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
@@ -19,12 +19,12 @@ import { EntityStore } from "./store/entity-store";
 export class InMemoryEntityDatabase implements IEntityDatabase {
     private readonly stores = new Map<string, EntityStore>();
     private readonly cachedQueries = new Map<string, IEntityQuery[]>();
-    private readonly queryCacheChanged = new Subject<IEntityQuery[]>();
+    private readonly queryCache$ = new Subject<IEntityQuery[]>();
     private readonly criteriaTools: IEntityCriteriaTools = new EntityCriteriaTools();
     private readonly queryTools: IEntityQueryTools = new EntityQueryTools({ criteriaTools: this.criteriaTools });
 
-    queryCacheChanged$(): Observable<IEntityQuery[]> {
-        return this.queryCacheChanged.asObservable();
+    getQueryCache$(): Observable<IEntityQuery[]> {
+        return this.queryCache$.asObservable().pipe(startWith(this.getAllCachedQueries()));
     }
 
     async query(query: IEntityQuery): Promise<EntitySet> {
@@ -118,7 +118,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
     clear(): void {
         this.stores.clear();
         this.cachedQueries.clear();
-        this.queryCacheChanged.next([]);
+        this.queryCache$.next([]);
     }
 
     private getOrCreateStore(schema: IEntitySchema): EntityStore {
@@ -228,10 +228,14 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
     addQueryToCached(query: IEntityQuery): void {
         const cachedQueries = this.getCachedQueries(query.getEntitySchema());
         this.cachedQueries.set(query.getEntitySchema().getId(), this.queryTools.mergeQueries(query, ...cachedQueries));
-        this.queryCacheChanged.next(flatten(Array.from(this.cachedQueries.values())));
+        this.queryCache$.next(this.getAllCachedQueries());
     }
 
     getCachedQueries(schema: IEntitySchema): IEntityQuery[] {
         return this.cachedQueries.get(schema.getId()) ?? [];
+    }
+
+    private getAllCachedQueries(): IEntityQuery[] {
+        return flatten(Array.from(this.cachedQueries.values()));
     }
 }

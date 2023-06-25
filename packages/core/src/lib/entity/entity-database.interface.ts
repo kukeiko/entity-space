@@ -7,7 +7,7 @@ import { EntitySet } from "./data-structures/entity-set";
 export interface IEntityDatabase {
     query(query: IEntityQuery): Promise<EntitySet>;
     upsert(entities: EntitySet): Promise<void>;
-    queryCacheChanged$(): Observable<IEntityQuery[]>;
+    getQueryCache$(): Observable<IEntityQuery[]>;
     getCachedQueries(schema: IEntitySchema): IEntityQuery[];
     // [todo] try to get rid of this - had to introduce when switching "InMemoryEntityDatabase"
     // w/ "IEntityDatabase" in EntitySourceGateway

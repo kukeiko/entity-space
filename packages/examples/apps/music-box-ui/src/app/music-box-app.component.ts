@@ -17,7 +17,7 @@ export class MusicAppComponent implements OnInit, OnDestroy {
 
     private readonly destroyed$ = new Subject<void>();
     private filter$ = new BehaviorSubject<SongFilter>(createDefaultSongFilter());
-    cachedQueries$ = this.entities.queryCacheChanged$();
+    cachedQueries$ = this.entities.queryCache$();
 
     get filter(): SongFilter {
         return this.filter$.getValue();
