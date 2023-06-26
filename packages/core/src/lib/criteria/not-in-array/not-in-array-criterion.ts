@@ -114,6 +114,7 @@ export class NotInArrayCriterion extends CriterionBase implements INotInArrayCri
             }
         } else if (this.tools.isNotInArrayCriterion(other)) {
             const remaining = subtractSets(this.values, new Set(other.getValues()));
+
             if (remaining.size === 0) {
                 return true;
             }

@@ -151,17 +151,17 @@ export class EntityQueryTools implements IEntityQueryTools {
         return false;
     };
 
-    subtractQueries = (queriesA: IEntityQuery[], queriesB: IEntityQuery[]): IEntityQuery[] | false => {
-        if (!queriesA.length && !queriesB.length) {
+    subtractQueries = (what: IEntityQuery[], by: IEntityQuery[]): IEntityQuery[] | false => {
+        if (!what.length && !by.length) {
             return [];
         }
 
-        let totalSubtracted = queriesA.slice();
+        let totalSubtracted = what.slice();
         let didSubtract = false;
 
         // for each query in B, pick each query in A and try to subtract it by B.
         // queries in A are updated with the subtracted results as we go.
-        for (const queryB of queriesB) {
+        for (const queryB of by) {
             const nextSubtracted: IEntityQuery[] = [];
 
             for (const queryA of totalSubtracted) {
@@ -181,11 +181,14 @@ export class EntityQueryTools implements IEntityQueryTools {
         return didSubtract ? totalSubtracted : false;
     };
 
-    // [todo] shouldn't be able to resubtractduce queries w/ different entity-schemas
     // [todo] it is still unexpected for me that this method returns an empty array on full subtraction,
     // but Criterion.subtractFrom() would return true. should make it consistent.
-    subtractQuery = (factory: IEntityQueryTools, a: IEntityQuery, b: IEntityQuery): IEntityQuery[] | false => {
-        const subtracted = this.subtractParts(a, b);
+    subtractQuery = (factory: IEntityQueryTools, what: IEntityQuery, by: IEntityQuery): IEntityQuery[] | false => {
+        if (what.getEntitySchema().getId() !== by.getEntitySchema().getId()) {
+            return false;
+        }
+
+        const subtracted = this.subtractParts(what, by);
 
         if (!subtracted) {
             return false;
@@ -195,16 +198,16 @@ export class EntityQueryTools implements IEntityQueryTools {
 
         const subtractedQueries: IEntityQuery[] = [];
         const accumulated: EntityQueryCreate = {
-            entitySchema: a.getEntitySchema(),
-            criteria: a.getCriteria(),
-            selection: a.getSelection(),
-            parameters: a.getParameters(),
+            entitySchema: what.getEntitySchema(),
+            criteria: what.getCriteria(),
+            selection: what.getSelection(),
+            parameters: what.getParameters(),
         };
 
         if (subtracted.criteria !== true) {
             subtractedQueries.push(factory.createQuery({ ...accumulated, criteria: subtracted.criteria }));
             // [todo] should we also do intersection for paging & options?
-            const intersection = a.getCriteria().intersect(b.getCriteria());
+            const intersection = what.getCriteria().intersect(by.getCriteria());
 
             if (intersection === false) {
                 throw new Error("invalid criterion implementation");
@@ -220,18 +223,18 @@ export class EntityQueryTools implements IEntityQueryTools {
         return subtractedQueries;
     };
 
-    private subtractParts(a: IEntityQuery, b: IEntityQuery): false | SubtractedParts {
-        if (!isEqual(a.getParameters(), b.getParameters())) {
+    private subtractParts(what: IEntityQuery, by: IEntityQuery): false | SubtractedParts {
+        if (!isEqual(what.getParameters(), by.getParameters())) {
             return false;
         }
 
-        const criteria = b.getCriteria().subtractFrom(a.getCriteria());
+        const criteria = by.getCriteria().subtractFrom(what.getCriteria());
 
         if (!criteria) {
             return false;
         }
 
-        const selection = b.getSelection().subtractFrom(a.getSelection());
+        const selection = by.getSelection().subtractFrom(what.getSelection());
 
         if (!selection) {
             return false;

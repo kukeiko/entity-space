@@ -61,6 +61,7 @@ describe("criteria: subtractions", () => {
 
         expectCriteria("!{1, 2}").minus("!{1, 2, 3}").toEqual("{3}");
         expectCriteria("!{1}").minus("!{2, 3}").toEqual("{2, 3}");
+        expectCriteria("!{450}").minus("{450}").toEqual(false);
         expectCriteria("!{1, 2}").minus("{2, 3}").toEqual("!{1, 2, 3}");
         expectCriteria("!{1, 2, 3}").minus("[4, 7]").toEqual(false);
     }

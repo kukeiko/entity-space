@@ -98,6 +98,10 @@ export class InArrayCriterion extends CriterionBase implements IInArrayCriterion
         } else if (this.tools.isNotInArrayCriterion(other)) {
             const merged = new Set([...other.getValues(), ...this.values]);
 
+            if (merged.size === other.getValues().length) {
+                return false;
+            }
+
             return this.tools.notInArray(merged);
         } else if (this.tools.isInNumberRangeCriterion(other)) {
             let otherFrom = other.getFrom();
