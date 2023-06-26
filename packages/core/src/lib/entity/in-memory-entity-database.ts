@@ -1,6 +1,6 @@
 import { cloneJson, groupBy, readPath } from "@entity-space/utils";
 import { flatten } from "lodash";
-import { Observable, startWith, Subject } from "rxjs";
+import { from, Observable, of, startWith, Subject } from "rxjs";
 import { Entity } from "../common/entity.type";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
 import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
@@ -25,6 +25,10 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
 
     getQueryCache$(): Observable<IEntityQuery[]> {
         return this.queryCache$.asObservable().pipe(startWith(this.getAllCachedQueries()));
+    }
+
+    query$(query: IEntityQuery): Observable<EntitySet<Entity>> {
+        return from(this.query(query));
     }
 
     async query(query: IEntityQuery): Promise<EntitySet> {
@@ -113,6 +117,10 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
 
     async upsert(entitySet: EntitySet<Entity>): Promise<void> {
         this.upsertSync(entitySet);
+    }
+
+    upsert$<T extends Entity = Entity>(entities: EntitySet<T>): Observable<void> {
+        return from(this.upsert(entities));
     }
 
     clear(): void {
@@ -233,6 +241,10 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
 
     getCachedQueries(schema: IEntitySchema): IEntityQuery[] {
         return this.cachedQueries.get(schema.getId()) ?? [];
+    }
+
+    getCachedQueries$(): Observable<IEntityQuery[]> {
+        return of(this.getAllCachedQueries());
     }
 
     private getAllCachedQueries(): IEntityQuery[] {

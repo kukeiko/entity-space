@@ -1,8 +1,7 @@
 import { ChangeDetectionStrategy, Component, Input, OnInit } from "@angular/core";
 import { EntitySchemaCatalog } from "@entity-space/core";
 import { Artist, ArtistBlueprint } from "@entity-space/examples/libs/music-model";
-import { ReplaySubject } from "rxjs";
-import { map, switchMap } from "rxjs/operators";
+import { map, ReplaySubject, switchMap } from "rxjs";
 import { MusicBoxWorkspace } from "../../music-box-workspace";
 
 @Component({

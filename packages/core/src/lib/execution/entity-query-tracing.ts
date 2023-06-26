@@ -9,12 +9,18 @@ export class EntityQueryTracing {
         this.consoleEnabled = flag;
     }
 
-    querySpawned(query: IEntityQuery): void {
+    querySpawned(query: IEntityQuery, source?: string): void {
         if (!this.consoleEnabled) {
             return;
         }
 
-        console.log(`🥚 query spawned: ${query.toString()}`);
+        let message = `🥚 query spawned: ${query.toString()}`;
+
+        if (source) {
+            message = `${message} (source: ${source})`;
+        }
+
+        console.log(message);
     }
 
     queryStartedExecution(query: IEntityQuery): void {
@@ -57,6 +63,8 @@ export class EntityQueryTracing {
             return;
         }
 
+        return;
+
         console.log(
             `🎀 query got fully subtracted: ${query.toString()}, ${options?.byLabel ?? "by"}: ${by.map(query =>
                 query.toString()
@@ -80,7 +88,7 @@ export class EntityQueryTracing {
         }
 
         console.log(
-            `🔌 📦 query ${query.toString()} got a packet via endpoint ${shape.toString()}: ${packet.toString()}`
+            `🔌 🚚 query ${query.toString()} got a packet via endpoint ${shape.toString()}: ${packet.toString()}`
         );
     }
 
@@ -89,7 +97,7 @@ export class EntityQueryTracing {
             return;
         }
 
-        console.log(`📦 query ${query.toString()} received packet ${packet.toString()}`);
+        console.log(`🚚 query ${query.toString()} received packet ${packet.toString()}`);
     }
 
     queryGotRejectedByAllSources(query: IEntityQuery): void {
@@ -105,6 +113,8 @@ export class EntityQueryTracing {
             return;
         }
 
+        return;
+
         console.log(`🔥 reactive query ${query.toString()} caused an emit`);
     }
 
@@ -112,6 +122,8 @@ export class EntityQueryTracing {
         if (!this.consoleEnabled) {
             return;
         }
+
+        return;
 
         console.log(`🧹 reactive query ${query.toString()} got disposed`);
     }

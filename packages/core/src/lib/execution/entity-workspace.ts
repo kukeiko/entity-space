@@ -1,23 +1,6 @@
 import { Class, DeepPartial, isNotFalse } from "@entity-space/utils";
-import { flatMap, isEqual, xor, xorWith } from "lodash";
-import {
-    distinctUntilChanged,
-    EMPTY,
-    filter,
-    finalize,
-    from,
-    lastValueFrom,
-    map,
-    merge,
-    mergeAll,
-    Observable,
-    of,
-    ReplaySubject,
-    startWith,
-    Subject,
-    switchMap,
-    tap,
-} from "rxjs";
+import { flatten } from "lodash";
+import { EMPTY, filter, from, lastValueFrom, map, merge, mergeAll, Observable, of, Subject, switchMap } from "rxjs";
 import { Entity } from "../common/entity.type";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
 import { ICriterion } from "../criteria/criterion.interface";
@@ -25,7 +8,6 @@ import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
 import { EntityWhere, IEntityCriteriaTools } from "../criteria/entity-criteria-tools.interface";
 import { EntitySet } from "../entity/data-structures/entity-set";
 import { IEntityStore } from "../entity/entity-store.interface";
-import { normalizeEntities } from "../entity/functions/normalize-entities.fn";
 import { InMemoryEntityDatabase } from "../entity/in-memory-entity-database";
 import { EntityQueryTools } from "../query/entity-query-tools";
 import { IEntityQueryTools } from "../query/entity-query-tools.interface";
@@ -38,7 +20,9 @@ import { EntityQueryTracing } from "./entity-query-tracing";
 import { EntityStream } from "./entity-stream";
 import { EntityStreamPacket } from "./entity-stream-packet";
 import { IEntityStreamInterceptor } from "./interceptors/entity-stream-interceptor.interface";
+import { LoadFromCacheInterceptor } from "./interceptors/load-from-cache.interceptor";
 import { SchemaRelationBasedHydrator } from "./interceptors/schema-relation-based-hydrator";
+import { WriteToCacheInterceptor } from "./interceptors/write-to-cache.interceptor";
 import { runInterceptors } from "./run-interceptors.fn";
 import { ScopedEntityWorkspace } from "./scoped-entity-workspace";
 
@@ -49,6 +33,8 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
     private store?: IEntityStore;
     private schemas?: EntitySchemaCatalog;
     private readonly database = new InMemoryEntityDatabase();
+    private readonly loadFromCacheInterceptor = new LoadFromCacheInterceptor(this.database);
+    private readonly writeToCacheInterceptor = new WriteToCacheInterceptor(this.database);
     private readonly watchedQueries = new Map<IEntityQuery, Subject<Entity[]>>();
     interceptors: IEntityStreamInterceptor[] = [];
     private readonly criteriaTools: IEntityCriteriaTools = new EntityCriteriaTools();
@@ -103,36 +89,16 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
         this.schemas = schemas;
     }
 
-    // [todo] T not used yet; need to add it to QueriedEntities
     async query<T extends Entity = Entity>(query: IEntityQuery): Promise<false | EntitySet<T>[]> {
-        const sources = [...this.interceptors, new SchemaRelationBasedHydrator(this.tracing, [this])];
-        const cachedQueries = this.database.getCachedQueries(query.getEntitySchema());
-        const subtracted = this.queryTools.subtractQueries([query], cachedQueries);
-        const queriesAgainstSource = subtracted === false ? [query] : subtracted;
+        const sources = [
+            this.loadFromCacheInterceptor,
+            ...this.interceptors,
+            new SchemaRelationBasedHydrator(this.tracing, [this]),
+            this.writeToCacheInterceptor,
+        ];
 
-        if (queriesAgainstSource.length) {
-            if (subtracted) {
-                this.tracing.queryGotSubtracted(query, cachedQueries, queriesAgainstSource);
-            }
-
-            await lastValueFrom(
-                runInterceptors(sources, queriesAgainstSource).pipe(
-                    switchMap(packet => {
-                        if (!packet.getPayload().length) {
-                            return of(packet);
-                        }
-
-                        // [todo] prevent upserting entities that are loaded from the database we'Re upserting to
-                        // (which should currently happen as we pass this workspace as a source to the hydrator)
-                        return merge(...packet.getPayload().map(entitySet => this.database.upsert(entitySet)));
-                    })
-                )
-            );
-            queriesAgainstSource.forEach(query => this.database.addQueryToCached(query));
-            this.emitAllWatchedQueries();
-        } else {
-            this.tracing.queryGotFullySubtracted(query, cachedQueries, { byLabel: "by cached" });
-        }
+        await lastValueFrom(runInterceptors(sources, [query]));
+        this.emitAllWatchedQueries();
 
         const entities = (await this.queryAgainstCache(query)) as T[];
         this.tracing.queryResolved(query, `${entities.length}x entit${entities.length === 1 ? "y" : "ies"}`);
@@ -232,80 +198,89 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
             parameters,
         });
 
-        // const subject = new Subject<Entity[]>();
-        const subject = new ReplaySubject<Entity[]>(1);
-
-        this.tracing.querySpawned(query);
-
-        return from(this.query(query)).pipe(
-            switchMap(result => {
-                if (result === false) {
-                    return of([]);
+        return from(this.query<T>(query)).pipe(
+            map(results => {
+                if (!results) {
+                    return [];
                 }
 
-                // const keySchema = query.getEntitySchema().getKey();
-                const entities = flatMap(result, x => x.getEntities());
-
-                // [todo] also track:
-                // - related entities
-                // - newly added entities that fit the criteria
-                // const trackedCriterion = createCriterionFromEntities(entities, keySchema.getPath());
-
-                // [todo] remove subject once no longer subscribed to
-                this.watchedQueries.set(
-                    query,
-                    // new Query(query.getEntitySchema(), trackedCriterion, query.getExpansionValue()),
-                    subject
-                );
-
-                return subject.asObservable().pipe(
-                    startWith(entities),
-                    distinctUntilChanged((a, b) => {
-                        const normalizedA = normalizeEntities(query.getEntitySchema(), a);
-                        const normalizedB = normalizeEntities(query.getEntitySchema(), b);
-
-                        const differentFoundSchemas = xor(
-                            normalizedA
-                                .getSchemas()
-                                .filter(schema => normalizedA.get(schema).length > 0)
-                                .map(schema => schema.getId()),
-                            normalizedB
-                                .getSchemas()
-                                .filter(schema => normalizedA.get(schema).length > 0)
-                                .map(schema => schema.getId())
-                        );
-
-                        if (differentFoundSchemas.length > 0) {
-                            return false;
-                        }
-
-                        for (const schema of normalizedA.getSchemas()) {
-                            const diff = xorWith(normalizedA.get(schema), normalizedB.get(schema), isEqual);
-
-                            if (diff.length > 0) {
-                                return false;
-                            }
-                        }
-
-                        // debugger;
-
-                        // return isEqual(a, b);
-                        const equal = xorWith(a, b, isEqual);
-
-                        if (equal.length > 0) {
-                            console.log("not equal", a, b);
-                        }
-
-                        return equal.length == 0;
-                    }),
-                    tap(() => this.tracing.reactiveQueryEmitted(query)),
-                    finalize(() => {
-                        this.tracing.reactiveQueryDisposed(query);
-                        this.watchedQueries.delete(query);
-                    })
-                ) as any as Observable<T[]>;
+                return flatten(results.map(entitySet => entitySet.getEntities()));
             })
         );
+        // const subject = new Subject<Entity[]>();
+        // const subject = new ReplaySubject<Entity[]>(1);
+
+        // this.tracing.querySpawned(query);
+
+        // return from(this.query(query)).pipe(
+        //     switchMap(result => {
+        //         if (result === false) {
+        //             return of([]);
+        //         }
+
+        //         // const keySchema = query.getEntitySchema().getKey();
+        //         const entities = flatMap(result, x => x.getEntities());
+
+        //         // [todo] also track:
+        //         // - related entities
+        //         // - newly added entities that fit the criteria
+        //         // const trackedCriterion = createCriterionFromEntities(entities, keySchema.getPath());
+
+        //         // [todo] remove subject once no longer subscribed to
+        //         this.watchedQueries.set(
+        //             query,
+        //             // new Query(query.getEntitySchema(), trackedCriterion, query.getExpansionValue()),
+        //             subject
+        //         );
+
+        //         return subject.asObservable().pipe(
+        //             startWith(entities),
+        //             distinctUntilChanged((a, b) => {
+        //                 const normalizedA = normalizeEntities(query.getEntitySchema(), a);
+        //                 const normalizedB = normalizeEntities(query.getEntitySchema(), b);
+
+        //                 const differentFoundSchemas = xor(
+        //                     normalizedA
+        //                         .getSchemas()
+        //                         .filter(schema => normalizedA.get(schema).length > 0)
+        //                         .map(schema => schema.getId()),
+        //                     normalizedB
+        //                         .getSchemas()
+        //                         .filter(schema => normalizedA.get(schema).length > 0)
+        //                         .map(schema => schema.getId())
+        //                 );
+
+        //                 if (differentFoundSchemas.length > 0) {
+        //                     return false;
+        //                 }
+
+        //                 for (const schema of normalizedA.getSchemas()) {
+        //                     const diff = xorWith(normalizedA.get(schema), normalizedB.get(schema), isEqual);
+
+        //                     if (diff.length > 0) {
+        //                         return false;
+        //                     }
+        //                 }
+
+        //                 // debugger;
+
+        //                 // return isEqual(a, b);
+        //                 const equal = xorWith(a, b, isEqual);
+
+        //                 if (equal.length > 0) {
+        //                     console.log("not equal", a, b);
+        //                 }
+
+        //                 return equal.length == 0;
+        //             }),
+        //             tap(() => this.tracing.reactiveQueryEmitted(query)),
+        //             finalize(() => {
+        //                 this.tracing.reactiveQueryDisposed(query);
+        //                 this.watchedQueries.delete(query);
+        //             })
+        //         ) as any as Observable<T[]>;
+        //     })
+        // );
     }
 
     // [todo] should stay async because at one point i want to make use of service-workers
