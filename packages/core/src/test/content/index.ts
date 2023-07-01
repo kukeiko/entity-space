@@ -2,6 +2,7 @@ export * from "./common/data-entry.model";
 export * from "./common/metadata.model";
 export * from "./common/review.model";
 export * from "./common/user.model";
+export * from "./test-content-facade";
 export * from "./products/brand.model";
 export * from "./products/product-review.model";
 export * from "./products/product.model";
