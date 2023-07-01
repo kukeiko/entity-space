@@ -1,4 +1,4 @@
-import { filter, flatMap, forkJoin, map, merge, mergeMap, of, switchMap } from "rxjs";
+import { filter, forkJoin, map, merge, of, switchMap } from "rxjs";
 import { Entity } from "../../common/entity.type";
 import { EntityCriteriaTools } from "../../criteria/entity-criteria-tools";
 import { IEntityDatabase } from "../../entity/entity-database.interface";

@@ -21,6 +21,7 @@ export function safeWrapEntityStream(stream: EntityStream, queries: IEntityQuery
                 return packet;
             }
 
+            // [todo] document why I added this intersection
             const intersected = flatMap(packet.getAcceptedQueries(), accepted =>
                 queries.map(query => query.intersect(accepted)).filter(isNotFalse)
             );
