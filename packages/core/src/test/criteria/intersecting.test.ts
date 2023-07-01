@@ -48,5 +48,12 @@ describe("criteria: intersecting", () => {
 
     expectCriteria("{ foo: 1, bar: 2 }")
         .intersectedWith("{ foo: 1 } | { bar: 2 }")
+        // [todo] shouldn't this just be "{ foo: 1, bar: 2 }"?
         .toEqual("{ foo: 1, bar: 2 } | { bar: 2, foo: 1 }");
+
+    expectCriteria("{ foo: 1, bar: 2 }").intersectedWith("{ foo: 1 } | { bar: 3 }").toEqual("{ foo: 1, bar: 2 }");
+    expectCriteria("{ foo: 1, bar: 2 }").intersectedWith("{ foo: 1 } & { bar: 3 }").toEqual(false);
+
+    // [todo] implement this case
+    expectCriteria("{ foo: 1, bar: 2 }", xit).intersectedWith("{ foo: 1 } & { bar: 2 }").toEqual("{ foo: 1, bar: 2 }");
 });
