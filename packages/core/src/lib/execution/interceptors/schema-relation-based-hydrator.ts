@@ -159,6 +159,7 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
                 accepted.push(...packet.getAcceptedQueries());
                 payloads.push(...packet.getPayload());
             }),
+            tap(packet => this.tracing.queryReceivedPacket(relationQuery, packet)),
             // [todo] takeLast(1) should be removed as we might tap into streams that never complete
             takeLast(1),
             map(() => {
@@ -178,7 +179,7 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
                     payload: payloads,
                 });
             }),
-            tap(packet => this.tracing.queryReceivedPacket(relationQuery, packet))
+            tap(packet => this.tracing.queryReceivedPacket(hydrationQuery.entities.getQuery(), packet)),
         );
     }
 

@@ -17,12 +17,18 @@ import { define } from "../../../lib/schema/entity-blueprint-property";
  */
 @EntityBlueprint({ id: "data-entry-metadata" })
 export class DataEntryMetadataBlueprint {
-    createdAt = define(String, { readOnly: true });
-    createdById = define(Number, { readOnly: true });
-    createdBy = define(UserBlueprint, { readOnly: true });
-    updatedAt = define(String, { nullable: true, readOnly: true });
-    updatedById = define(Number, { nullable: true, readOnly: true });
-    updatedBy = define(UserBlueprint, { nullable: true, readOnly: true });
+    createdAt = define(String, { readOnly: true, required: true });
+    createdById = define(Number, { readOnly: true, required: true, index: true });
+    createdBy = define(UserBlueprint, { readOnly: true, relation: true, from: "createdById", to: "id" });
+    updatedAt = define(String, { nullable: true, readOnly: true, required: true });
+    updatedById = define(Number, { nullable: true, readOnly: true, required: true, index: true });
+    updatedBy = define(UserBlueprint, {
+        nullable: true,
+        readOnly: true,
+        relation: true,
+        from: "updatedById",
+        to: "id",
+    });
 }
 
 export type DataEntryMetadata = EntityBlueprintInstance<DataEntryMetadataBlueprint>;

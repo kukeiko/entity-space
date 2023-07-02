@@ -1,10 +1,14 @@
 import { cloneDeep } from "lodash";
 import { Review } from "./common/review.model";
 import { User } from "./common/user.model";
+import { Brand } from "./products/brand.model";
+import { Product } from "./products/product.model";
 
 export interface TestContentData {
+    brands?: Brand[];
     users?: User[];
     reviews?: Review[];
+    products?: Product[];
 }
 
 export class TestContentDatabase {

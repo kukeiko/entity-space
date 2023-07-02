@@ -1,32 +1,14 @@
-import { lastValueFrom } from "rxjs";
 import { Entity } from "../lib/common/entity.type";
-import { EntityCriteriaTools } from "../lib/criteria/entity-criteria-tools";
 import { EntitySet } from "../lib/entity/data-structures/entity-set";
-import { EntityQueryTracing } from "../lib/execution/entity-query-tracing";
 import { EntityStreamPacket } from "../lib/execution/entity-stream-packet";
-import { IEntityStreamInterceptor } from "../lib/execution/interceptors/entity-stream-interceptor.interface";
-import { LogPacketsInterceptor } from "../lib/execution/interceptors/log-packets.interceptor";
-import { MergePacketsTakeLastInterceptor } from "../lib/execution/interceptors/merge-packets-take-last.interceptor";
-import { SchemaRelationBasedHydrator } from "../lib/execution/interceptors/schema-relation-based-hydrator";
-import { runInterceptors } from "../lib/execution/run-interceptors.fn";
 import { IEntityQuery } from "../lib/query/entity-query.interface";
-import {
-    TestContentData,
-    TestContentDatabase,
-    TestContentEntityApi,
-    TestContentFacade,
-    UserBlueprint,
-} from "./content";
-import { TestContentCatalog } from "./content/test-content-catalog";
-import { createQuery } from "./tools/create-query.fn";
+import { Product, ProductBlueprint, TestContentFacade, User, UserBlueprint } from "./content";
 import { expectPacketEqual } from "./tools/expect-packet-equal.fn";
 
 const LOG_PACKETS = false;
 const LOG_TRACING = false;
 
 describe("interceptors", () => {
-    const criteriaTools = new EntityCriteriaTools();
-
     function createFacade({
         logPackets,
         logTracing,
@@ -159,6 +141,38 @@ describe("interceptors", () => {
                 parent: { id: 7, parentId: 13, parent: { id: 13, parentId: 64, parent: { id: 64 } } },
             },
         ]);
+
+        // act
+        const actual = await facade.query(query);
+
+        // assert
+        expectPacketEqual(actual, expected);
+    });
+
+    it("should hydrate one relation of a complex property", async () => {
+        // arrange
+        const product: Product = {
+            id: 7,
+            brandId: 64,
+            name: "tasty waffles",
+            price: 43,
+            metadata: { createdAt: "", createdById: 100, updatedAt: "", updatedById: 200 },
+        };
+        const createdBy: User = { id: 100, name: "i created it" };
+        const updatedBy: User = { id: 200, name: "and i updated it" };
+        const result: Product = { ...product, metadata: { ...product.metadata!, createdBy, updatedBy } };
+
+        const facade = createFacade()
+            .setData("products", [product])
+            .setData("users", [createdBy, updatedBy])
+            .configureApi(api => api.withGetAllProducts().withGetUserById());
+
+        const query = facade.createQuery(ProductBlueprint, undefined, {
+            id: true,
+            metadata: { createdAt: true, createdBy: { id: true, name: true }, updatedBy: { id: true, name: true } },
+        });
+
+        const expected = createExpectedPacket(query, [result]);
 
         // act
         const actual = await facade.query(query);

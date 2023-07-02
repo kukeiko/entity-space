@@ -1,6 +1,6 @@
 import { UnpackedEntitySelection } from "../../lib/common/unpacked-entity-selection.type";
-import { ClippedEntitySelection } from "../../lib/query/entity-selection-tools.interface";
 import { EntitySelectionTools } from "../../lib/query/entity-selection-tools";
+import { ClippedEntitySelection } from "../../lib/query/entity-selection-tools.interface";
 
 describe("selection: clip", () => {
     interface Entity {
@@ -29,7 +29,7 @@ describe("selection: clip", () => {
 
     it("should work #1", () => {
         // arrange
-        const what: UnpackedEntitySelection<Entity> = { foo: { bar: { id: true } } };
+        const what: UnpackedEntitySelection<Entity> = { foo: { id: true, bar: { id: true } } };
         const by: UnpackedEntitySelection<Entity> = { foo: { id: true } };
         const expected: ClippedEntitySelection[] = [[["foo", "bar"], { id: true }]];
 
@@ -42,7 +42,7 @@ describe("selection: clip", () => {
 
     it("should work #2", () => {
         // arrange
-        const what: UnpackedEntitySelection<Entity> = { foo: { bar: { baz: { id: true } } } };
+        const what: UnpackedEntitySelection<Entity> = { foo: { bar: { id: true, baz: { id: true } } } };
         const by: UnpackedEntitySelection<Entity> = { foo: { bar: { id: true } } };
         const expected: ClippedEntitySelection[] = [[["foo", "bar", "baz"], { id: true }]];
 
@@ -56,7 +56,7 @@ describe("selection: clip", () => {
     it("should work #3", () => {
         // arrange
         const what: UnpackedEntitySelection<Entity> = {
-            foo: { bar: { baz: { id: true } } },
+            foo: { bar: { id: true, baz: { id: true } } },
             khaz: { mo: { name: true } },
         };
         const by: UnpackedEntitySelection<Entity> = { foo: { bar: { id: true } } };

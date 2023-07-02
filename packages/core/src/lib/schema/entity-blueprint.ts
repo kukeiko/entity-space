@@ -27,7 +27,7 @@ export function getEntityBlueprintMetadata(type: Class): BlueprintMetadata {
     const metadata = findBlueprintMetadata(type);
 
     if (!metadata) {
-        throw new Error(`no blueprint metadata found for ${type.name}`);
+        throw new Error(`no blueprint metadata found for ${type.name}, please check if the class is decorated`);
     }
 
     return metadata;

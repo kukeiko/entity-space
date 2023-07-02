@@ -44,6 +44,13 @@ xdescribe("playground: selection", () => {
                     id: 123,
                     name: "Gud Stuff",
                     price: 4982,
+                    brandId: 1,
+                    metadata: {
+                        createdAt: "",
+                        createdById: 0,
+                        updatedAt: "",
+                        updatedById: 0,
+                    },
                 },
             ],
             children: [{ id: 8445 }],

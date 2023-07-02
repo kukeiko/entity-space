@@ -125,10 +125,6 @@ export class EntityQuery implements IEntityQuery {
             this.criteriaTools
         );
 
-        if (intersectedWithoutDehydrated === intersectedCriterion) {
-            return false;
-        }
-
         return this.withCriteria(intersectedWithoutDehydrated);
     }
 

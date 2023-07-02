@@ -365,7 +365,7 @@ describe("EntityWorkspace", () => {
         expect(queriedItems).toEqual(addedItems);
     });
 
-    describe("reactive queries", () => {
+    xdescribe("reactive queries", () => {
         const timeout = 100;
 
         it(

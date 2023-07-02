@@ -53,6 +53,10 @@ export class EntitySelection {
     }
 
     intersect(other: EntitySelection): false | EntitySelection {
+        if (this.schema.getId() !== other.schema.getId()) {
+            return false;
+        }
+
         const intersection = EntitySelection.intersectValues(this.getValue(), other.getValue());
 
         return intersection ? new EntitySelection({ schema: this.schema, value: intersection }) : false;

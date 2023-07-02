@@ -12,6 +12,7 @@ import { EntitySelection } from "../query/entity-selection";
 import { IEntitySchema } from "../schema/schema.interface";
 import { EntityApiEndpoint, EntityApiEndpointInvoke } from "./entity-api-endpoint";
 
+// [todo] S is unused me thinks (didn't check too hard)
 export class EntityApiEndpointBuilder<
     T extends Entity = Entity,
     S = {},
@@ -54,6 +55,11 @@ export class EntityApiEndpointBuilder<
         // selection: PackedEntitySelection<T> // [todo] use this instead
     ): EntityApiEndpointBuilder<T, S, P> {
         this.supportedSelection = EntitySelection.mergeValues(this.supportedSelection, selection);
+        return this;
+    }
+
+    supportsDefaultSelection(): EntityApiEndpointBuilder<T, S, P> {
+        this.supportedSelection = this.schema.getDefaultSelection();
         return this;
     }
 
