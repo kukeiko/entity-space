@@ -97,7 +97,7 @@ describe("interceptors", () => {
         expectPacketEqual(actual, expected);
     });
 
-    it("should load users with crriteria on relation only)", async () => {
+    it("should load users with criteria on relation only", async () => {
         // arrange
         const facade = createFacade()
             .setData("users", [{ id: 2, parentId: 7 }, { id: 7 }, { id: 3, parentId: 8 }, { id: 8 }])

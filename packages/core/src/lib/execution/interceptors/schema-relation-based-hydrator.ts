@@ -1,5 +1,5 @@
 import { isNotFalse, readPathOnObjects, writePath } from "@entity-space/utils";
-import { EMPTY, map, merge, of, switchMap, takeLast, tap } from "rxjs";
+import { EMPTY, filter, map, merge, of, switchMap, takeLast, tap } from "rxjs";
 import { Entity } from "../../common/entity.type";
 import { UnpackedEntitySelection } from "../../common/unpacked-entity-selection.type";
 import { EntityCriteriaTools } from "../../criteria/entity-criteria-tools";
@@ -40,7 +40,7 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
         const cache = new InMemoryEntityDatabase();
 
         return merge(
-            stream.pipe(map(EntityStreamPacket.withoutRejected)),
+            stream.pipe(map(EntityStreamPacket.withoutRejected), filter(EntityStreamPacket.isNotEmpty)),
             stream.pipe(
                 tap(packet => {
                     // [note] currently, merging is not necessary to make it work (just pushing also seems to work)
@@ -62,28 +62,13 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
 
                     for (const rejectedQuery of rejected) {
                         for (const acceptedQuery of accepted) {
-                            const entitySet = cache.querySync(acceptedQuery);
-
-                            const entitySetToHydrateQuery = entitySet
-                                .getQuery()
-                                .intersectCriteriaOmitSelection(rejectedQuery);
+                            const entitySetToHydrateQuery = acceptedQuery.intersectCriteriaOmitSelection(rejectedQuery);
 
                             if (!entitySetToHydrateQuery) {
                                 continue;
                             }
 
-                            const entitiesToHydrate = entitySetToHydrateQuery
-                                .getCriteria()
-                                .filter(entitySet.getEntities());
-
-                            if (!entitiesToHydrate.length) {
-                                continue;
-                            }
-
-                            const entitySetToHydrate = new EntitySet({
-                                query: entitySetToHydrateQuery,
-                                entities: entitiesToHydrate,
-                            });
+                            const entitySetToHydrate = cache.querySync(entitySetToHydrateQuery);
 
                             const clipped = this.selectionTools.clip(
                                 rejectedQuery.getSelection().getValue(),

@@ -47,7 +47,7 @@ describe("createCriterionFromEntities()", () => {
 
         const criterion = createCriterionFromEntities(entities, ["foo.bar.baz"]);
 
-        expect(criterion.toString()).toEqual(`{ foo: { bar: { baz: {1, 2, -1, "2"} } } }`);
+        expect(criterion.toString()).toEqual(`{ foo: { bar: { baz: {-1, 1, 2, "2"} } } }`);
     });
 
     it("composite index", () => {

@@ -97,7 +97,10 @@ export class EntityCriteriaTools implements IEntityCriteriaTools {
     };
 
     inArray = (values: Iterable<PrimitiveValue>): IInArrayCriterion => {
-        return new InArrayCriterion({ values: Object.freeze(new Set(values)), tools: this });
+        // [todo] i added sorting the values to prevent failings tests, as there a lot of them that
+        // check for equality by calling .toString() on an EntityQuery (and subsequently on criteria).
+        // should re-evaluate if that way of testing is a good idea
+        return new InArrayCriterion({ values: Object.freeze(new Set(Array.from(values).sort())), tools: this });
     };
 
     notInArray = (values: Iterable<PrimitiveValue>): INotInArrayCriterion => {
