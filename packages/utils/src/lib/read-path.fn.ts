@@ -24,7 +24,7 @@ export function readPathOnObjects<T>(path: string[], objects: Record<string, any
     }
 
     for (const segment of path) {
-        read = flatten(objects.map(object => object[segment]).filter(isDefined));
+        read = flatten(read.map(object => (object as any)[segment]).filter(isDefined));
     }
 
     return read;

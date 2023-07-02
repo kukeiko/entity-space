@@ -4,6 +4,7 @@ import { Entity } from "../../common/entity.type";
 import { UnpackedEntitySelection } from "../../common/unpacked-entity-selection.type";
 import { EntityCriteriaTools } from "../../criteria/entity-criteria-tools";
 import { EntitySet } from "../../entity/data-structures/entity-set";
+import { InMemoryEntityDatabase } from "../../entity/in-memory-entity-database";
 import { EntityQuery } from "../../query/entity-query";
 import { EntityQueryTools } from "../../query/entity-query-tools";
 import { IEntityQuery } from "../../query/entity-query.interface";
@@ -32,24 +33,37 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
     private readonly selectionTools = new EntitySelectionTools();
 
     intercept(stream: EntityStream): EntityStream {
+        let accepted: IEntityQuery[] = [];
+        // const accepted: IEntityQuery[] = [];
         const rejected: IEntityQuery[] = [];
         const payloads: EntitySet[] = [];
+        const cache = new InMemoryEntityDatabase();
 
         return merge(
             stream.pipe(map(EntityStreamPacket.withoutRejected)),
             stream.pipe(
                 tap(packet => {
+                    // [note] currently, merging is not necessary to make it work (just pushing also seems to work)
+                    // currently not sure what difference in impact these two methods have
+                    accepted = this.queryTools.mergeQueries(...accepted, ...packet.getAcceptedQueries());
+                    // accepted.push(...packet.getAcceptedQueries());
                     rejected.push(...packet.getRejectedQueries());
                     payloads.push(...packet.getPayload());
+                    packet.getPayload().forEach(payload => cache.upsertSync(payload));
                 }),
                 // [todo] need to get rid of takeLast()
                 takeLast(1),
                 switchMap(() => {
+                    // console.log(
+                    //     accepted.map(q => q.toString()),
+                    //     (this as any).name
+                    // );
                     const hydrationStreams: EntityStream[] = [];
 
-                    // [todo] move to method & use [].reduce()
-                    for (const entitySet of payloads) {
-                        for (const rejectedQuery of rejected) {
+                    for (const rejectedQuery of rejected) {
+                        for (const acceptedQuery of accepted) {
+                            const entitySet = cache.querySync(acceptedQuery);
+
                             const entitySetToHydrateQuery = entitySet
                                 .getQuery()
                                 .intersectCriteriaOmitSelection(rejectedQuery);
@@ -97,6 +111,57 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
                             );
                         }
                     }
+
+                    // [todo] move to method & use [].reduce()
+                    // for (const entitySet of payloads) {
+                    //     for (const rejectedQuery of rejected) {
+                    //         const entitySetToHydrateQuery = entitySet
+                    //             .getQuery()
+                    //             .intersectCriteriaOmitSelection(rejectedQuery);
+
+                    //         if (!entitySetToHydrateQuery) {
+                    //             continue;
+                    //         }
+
+                    //         const entitiesToHydrate = entitySetToHydrateQuery
+                    //             .getCriteria()
+                    //             .filter(entitySet.getEntities());
+
+                    //         if (!entitiesToHydrate.length) {
+                    //             continue;
+                    //         }
+
+                    //         const entitySetToHydrate = new EntitySet({
+                    //             query: entitySetToHydrateQuery,
+                    //             entities: entitiesToHydrate,
+                    //         });
+
+                    //         const clipped = this.selectionTools.clip(
+                    //             rejectedQuery.getSelection().getValue(),
+                    //             entitySetToHydrate.getQuery().getSelection().getValue()
+                    //         );
+
+                    //         const targets = clipped
+                    //             .map(([relationPath, selectionValue]) =>
+                    //                 this.toHydrateRelationQuery(entitySetToHydrate, relationPath, selectionValue)
+                    //             )
+                    //             .filter(isNotFalse);
+
+                    //         targets.forEach(({ relationQuery }) =>
+                    //             this.tracing.querySpawned(relationQuery, "💧 hydration")
+                    //         );
+
+                    //         if (!targets.length) {
+                    //             continue;
+                    //         }
+
+                    //         hydrationStreams.push(
+                    //             ...targets.map(hydrationQuery => {
+                    //                 return this.startRelationHydration(hydrationQuery);
+                    //             })
+                    //         );
+                    //     }
+                    // }
 
                     if (!hydrationStreams.length) {
                         if (rejected.length) {
@@ -179,7 +244,7 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
                     payload: payloads,
                 });
             }),
-            tap(packet => this.tracing.queryReceivedPacket(hydrationQuery.entities.getQuery(), packet)),
+            tap(packet => this.tracing.queryReceivedPacket(hydrationQuery.entities.getQuery(), packet))
         );
     }
 

@@ -15,6 +15,8 @@ describe("playground: interceptors", () => {
     const criteriaTools = new EntityCriteriaTools();
     const queryTools = new EntityQueryTools({ criteriaTools });
 
+    jest.setTimeout(10000000);
+
     fit("should allow putting two hydrators in sequence", async () => {
         // arrange
         const createdBy: User = { id: 100, name: "i created it" };
@@ -42,7 +44,6 @@ describe("playground: interceptors", () => {
 
         const catalog = new TestContentCatalog();
         const tracing = new EntityQueryTracing();
-        tracing.enableConsole();
         const canLoadProductsApi = new TestContentEntityApi(repository, catalog, tracing).withGetAllProducts();
         const canLoadBrandsApi = new TestContentEntityApi(repository, catalog, tracing).withGetBrandById();
         const canLoadUsersApi = new TestContentEntityApi(repository, catalog, tracing).withGetUserById();
@@ -50,17 +51,24 @@ describe("playground: interceptors", () => {
         const canHydrateBrandsHydrator = new SchemaRelationBasedHydrator(tracing, [
             canLoadBrandsApi,
             // comment below line out to see that putting hydrators in sequence doesn't work yet
-            canHydrateUsersHydrator,
+            // canHydrateUsersHydrator,
         ]);
+
+        const logEach = false;
+        const logFinal = true;
+        // tracing.enableConsole();
+
+        (canHydrateBrandsHydrator as any).name = "canHydrateBrandsHydrator";
+        (canHydrateUsersHydrator as any).name = "canHydrateUsersHydrator";
 
         const interceptors: IEntityStreamInterceptor[] = [
             canLoadProductsApi,
-            new LogPacketsInterceptor({ logEach: true }),
+            // new LogPacketsInterceptor({ logEach }),
             canHydrateBrandsHydrator,
-            new LogPacketsInterceptor({ logEach: true }),
+            new LogPacketsInterceptor({ logEach }),
             canHydrateUsersHydrator,
             new MergePacketsTakeLastInterceptor(),
-            new LogPacketsInterceptor({ logFinal: true }),
+            new LogPacketsInterceptor({ logFinal }),
         ];
 
         const productSchema = catalog.resolve(ProductBlueprint);
