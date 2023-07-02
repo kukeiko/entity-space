@@ -42,7 +42,7 @@ export class TestContentEntityApi extends EntityApi {
         return this.addEndpoint(this.catalog.resolve(BrandBlueprint), builder =>
             builder
                 .where({ id: Number })
-                .supportsSelection({ id: true, name: true })
+                .supportsDefaultSelection()
                 .isLoadedBy(({ query }) => query.getCriteria().filter(this.data.get("brands")))
         );
     }

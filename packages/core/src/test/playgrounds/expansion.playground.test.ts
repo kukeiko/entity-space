@@ -40,7 +40,11 @@ xdescribe("playground: selection", () => {
             updatedBy: null,
             products: [
                 {
-                    brand: { id: 1, name: "WeMakeGudStuff" },
+                    brand: {
+                        id: 1,
+                        name: "WeMakeGudStuff",
+                        metadata: { createdAt: "", createdById: 0, updatedAt: "", updatedById: 0 },
+                    },
                     id: 123,
                     name: "Gud Stuff",
                     price: 4982,

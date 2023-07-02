@@ -11,7 +11,7 @@ export class ProductBlueprint {
     name = define(String, { required: true });
     price = define(Number, { required: true });
     rating = define(Number);
-    brandId = define(Number, { required: true });
+    brandId = define(Number, { required: true, index: true });
     brand = define(BrandBlueprint, { relation: true, from: "brandId", to: "id" });
     reviews = define(ProductReviewBlueprint, { array: true, relation: true, from: "id", to: "productId" });
     metadata = define(DataEntryMetadataBlueprint, { required: true });
