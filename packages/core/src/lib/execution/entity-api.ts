@@ -41,7 +41,7 @@ export class EntityApi implements IEntityStreamInterceptor {
         return merge(
             stream.pipe(map(EntityStreamPacket.withoutRejected)),
             stream.pipe(
-                filter(EntityStreamPacket.containsRejected),
+                filter(EntityStreamPacket.hasRejected),
                 map(packet => this.query$(packet.getRejectedQueries())),
                 mergeAll()
             )
@@ -172,12 +172,11 @@ export class EntityApi implements IEntityStreamInterceptor {
     private endpointDataToPacket(query: IEntityQuery, data: EntityApiEndpointData): EntityStreamPacket {
         if (data instanceof EntitySet) {
             // if we have an EntitySet, the source told us exactly what has been delivered
-            return new EntityStreamPacket({ payload: [data] });
+            return new EntityStreamPacket({ delivered: [data.getQuery()], payload: [data] });
         } else {
             // if instead all we have is just an array of entities, we assume that everything has been delivered
             const entities = Array.isArray(data) ? data : [data];
-
-            return new EntityStreamPacket({ payload: [new EntitySet({ entities, query })] });
+            return new EntityStreamPacket({ delivered: [query], payload: [new EntitySet({ entities, query })] });
         }
     }
 

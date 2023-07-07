@@ -9,6 +9,10 @@ export function expectPacketEqual(actual: EntityStreamPacket, expected: EntitySt
         expected.getAcceptedQueries().map(query => query.toString())
     );
 
+    expect(actual.getDeliveredQueries().map(query => query.toString())).toEqual(
+        expected.getDeliveredQueries().map(query => query.toString())
+    );
+
     expect(actual.getRejectedQueries().map(query => query.toString())).toEqual(
         expected.getRejectedQueries().map(query => query.toString())
     );

@@ -14,6 +14,10 @@ export class EntitySelection {
     private readonly value: UnpackedEntitySelection;
     private readonly schema: IEntitySchema;
 
+    getSchema(): IEntitySchema {
+        return this.schema;
+    }
+
     getValue(): UnpackedEntitySelection {
         return this.value;
     }
@@ -36,6 +40,14 @@ export class EntitySelection {
             .sort((a, b) => a[0].localeCompare(b[0]))
             .map(([key, value]) => (value === true ? key : `${key}: ${this.toString(value)}`))
             .join(", ")} }`;
+    }
+
+    minus(other: EntitySelection): boolean | EntitySelection {
+        return other.subtractFrom(this);
+    }
+
+    isSubsetOf(other: EntitySelection): boolean {
+        return other.subtractFrom(this) === true;
     }
 
     subtractFrom(other: EntitySelection): boolean | EntitySelection {

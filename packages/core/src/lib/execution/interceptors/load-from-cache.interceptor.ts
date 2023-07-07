@@ -17,7 +17,7 @@ export class LoadFromCacheInterceptor implements IEntityStreamInterceptor {
         return merge(
             stream.pipe(map(EntityStreamPacket.withoutRejected)),
             stream.pipe(
-                filter(EntityStreamPacket.containsRejected),
+                filter(EntityStreamPacket.hasRejected),
                 switchMap(packet => forkJoin({ packet: of(packet), cachedQueries: this.database.getCachedQueries$() })),
                 switchMap(({ cachedQueries, packet }) => {
                     const open = this.queryTools.subtractQueries(packet.getRejectedQueries(), cachedQueries);

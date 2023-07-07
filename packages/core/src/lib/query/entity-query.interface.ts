@@ -16,4 +16,5 @@ export interface IEntityQuery {
     withSelection(selection: EntitySelection | UnpackedEntitySelection): IEntityQuery;
     withCriteria(criteria: ICriterion): IEntityQuery;
     toString(): string;
+    subtractBy(others: IEntityQuery[]): false | IEntityQuery[];
 }

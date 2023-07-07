@@ -9,16 +9,19 @@ import { IEntityQuery } from "../query/entity-query.interface";
 export class EntityStreamPacket<T extends Entity = Entity> {
     constructor({
         accepted,
+        delivered,
         rejected,
         errors,
         payload,
     }: {
         accepted?: IEntityQuery[];
+        delivered?: IEntityQuery[];
         rejected?: IEntityQuery[];
         errors?: EntityQueryError<T>[];
         payload?: EntitySet<T>[];
     } = {}) {
         this.accepted = accepted ?? [];
+        this.delivered = delivered ?? [];
         this.rejected = rejected ?? [];
         this.errors = errors ?? [];
         this.payload = payload ?? [];
@@ -26,6 +29,7 @@ export class EntityStreamPacket<T extends Entity = Entity> {
 
     private readonly queryTools = new EntityQueryTools({ criteriaTools: new EntityCriteriaTools() });
     private readonly accepted: IEntityQuery[];
+    private readonly delivered: IEntityQuery[];
     private readonly rejected: IEntityQuery[];
     private readonly errors: EntityQueryError<T>[];
     private readonly payload: EntitySet<T>[];
@@ -38,9 +42,8 @@ export class EntityStreamPacket<T extends Entity = Entity> {
         return this.accepted.slice();
     }
 
-    // [todo] not (yet?) used
     getDeliveredQueries(): IEntityQuery[] {
-        return this.payload.map(payload => payload.getQuery());
+        return this.delivered.slice();
     }
 
     getRejectedQueries(): IEntityQuery[] {
@@ -62,9 +65,10 @@ export class EntityStreamPacket<T extends Entity = Entity> {
     toString(): string {
         const accepted = this.accepted.length == 0 ? "" : "✔️ " + this.accepted.join(",");
         const rejected = this.rejected.length == 0 ? "" : "❌ " + this.rejected.join(",");
+        const delivered = this.delivered.length ? "🚚 " + this.delivered.join(",") : "";
         const entities = this.getEntitiesFlat().length == 0 ? "" : "🎁 " + JSON.stringify(this.getEntitiesFlat());
 
-        return `📦 ${[accepted, rejected, entities].filter(str => str.length > 0).join(", ")}`;
+        return `📦 ${[accepted, delivered, rejected, entities].filter(str => str.length > 0).join(", ")}`;
     }
 
     concat(other: EntityStreamPacket<T>): EntityStreamPacket<T> {
@@ -73,12 +77,13 @@ export class EntityStreamPacket<T extends Entity = Entity> {
 
     merge(other: EntityStreamPacket<T>): EntityStreamPacket<T> {
         return new EntityStreamPacket<T>({
-            accepted: this.queryTools.mergeQueries(...this.getAcceptedQueries(), ...other.getAcceptedQueries()),
+            accepted: this.queryTools.mergeQueries(...this.accepted, ...other.accepted),
+            delivered: this.queryTools.mergeQueries(...this.delivered, ...other.delivered),
             // [todo] just concatenated, not actually merged
-            errors: [...this.getErrors(), ...other.getErrors()],
+            errors: [...this.errors, ...other.errors],
             // [todo] just concatenated, not actually merged
-            payload: [...this.getPayload(), ...other.getPayload()],
-            rejected: this.queryTools.mergeQueries(...this.getRejectedQueries(), ...other.getRejectedQueries()),
+            payload: [...this.payload, ...other.payload],
+            rejected: this.queryTools.mergeQueries(...this.rejected, ...other.rejected),
         });
     }
 
@@ -102,8 +107,20 @@ export class EntityStreamPacket<T extends Entity = Entity> {
         return !EntityStreamPacket.isEmpty(packet);
     }
 
-    static containsRejected<T extends Entity>(packet: EntityStreamPacket<T>): boolean {
-        return packet.rejected.length > 0;
+    static hasRejected<T extends Entity>(packet: EntityStreamPacket<T>): boolean {
+        return packet.hasRejected();
+    }
+
+    hasRejected(): boolean {
+        return this.rejected.length > 0;
+    }
+
+    hasDelivered(): boolean {
+        return this.delivered.length > 0;
+    }
+
+    hasPayload(): boolean {
+        return this.payload.length > 0;
     }
 
     static concat<T extends Entity>(a: EntityStreamPacket<T>, b: EntityStreamPacket<T>): EntityStreamPacket<T> {

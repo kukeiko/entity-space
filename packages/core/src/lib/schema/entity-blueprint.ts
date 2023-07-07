@@ -1,7 +1,12 @@
 import { Class, isDefined } from "@entity-space/utils";
 import { BlueprintProperty, isProperty } from "./entity-blueprint-property";
 
-const BLUEPRINT_METADATA_KEY = Symbol("blueprint-metadata");
+// [todo] changed it to Symbol.for() instead of just Symbol() to fix an issue where, in a test,
+// i imported the decorate via absolute path instead of relative. the test failed because of it,
+// since this file actually existes twice, and there were two distinct symbols for the same blueprint.
+// => i.e. i knew this was going to happen and I wanted to test it failing, now it did, so I need to
+// apply Symbol.for() for all other places where symbols are used
+const BLUEPRINT_METADATA_KEY = Symbol.for("blueprint-metadata");
 
 interface BlueprintMetadata {
     id: string;
