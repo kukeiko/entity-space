@@ -15,7 +15,7 @@ import { IEntityQuery } from "../query/entity-query.interface";
 import { EntityBlueprintInstance } from "../schema/entity-blueprint-instance.type";
 import { EntitySchemaCatalog } from "../schema/entity-schema-catalog";
 import { IEntitySchema } from "../schema/schema.interface";
-import { EntityQueryBuilder, EntityQueryBuilderArgument } from "./entity-query-builder";
+import { EntityQueryBuilder, EntityQueryBuilderCreate } from "./entity-query-builder";
 import { EntityQueryTracing } from "./entity-query-tracing";
 import { EntityStream } from "./entity-stream";
 import { EntityStreamPacket } from "./entity-stream-packet";
@@ -375,7 +375,7 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
         return new EntityQueryBuilder({ schema, workspace: this });
     }
 
-    protected getQueryBuilderParts<T extends Entity = Entity>(schema: IEntitySchema<T>): EntityQueryBuilderArgument<T> {
+    protected getQueryBuilderParts<T extends Entity = Entity>(schema: IEntitySchema<T>): EntityQueryBuilderCreate<T> {
         return {
             schema,
             workspace: this,

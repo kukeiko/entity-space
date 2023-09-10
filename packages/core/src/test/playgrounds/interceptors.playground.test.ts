@@ -26,7 +26,7 @@ import {
     EntityHydratorApi,
     HydrationResult,
     IEntityHydrationEndpoint,
-} from "./entity-hydrator-api";
+} from "../../lib/execution/entity-hydrator-api";
 
 describe("playground: interceptors", () => {
     const criteriaTools = new EntityCriteriaTools();
@@ -134,9 +134,41 @@ describe("playground: interceptors", () => {
         // tracing.enableConsole();
 
         const hydrationEndpoints: IEntityHydrationEndpoint[] = [
+            // ranking hydrator
             {
                 load(entities: EntitySet, selection: EntitySelection): HydrationResult {
-                    console.log("🌵 load was called!", entities.getQuery().toString(), selection.toString());
+                    console.log("🌵 ranking load was called!", entities.getQuery().toString(), selection.toString());
+                    (entities.getEntities() as Brand[]).forEach(brand => (brand.ranking = (brand.rating ?? 0) + 1));
+
+                    return entities.getEntities();
+                },
+                proposeHydration(rejectedQuery: IEntityQuery): false | EntityHydrationProposal {
+                    const supportedSelectionValue: UnpackedEntitySelection<Brand> = { ranking: true };
+                    const supportedSelection = new EntitySelection({
+                        schema: brandSchema,
+                        value: supportedSelectionValue,
+                    });
+
+                    const intersection = rejectedQuery.getSelection().intersect(supportedSelection);
+
+                    if (!intersection) {
+                        return false;
+                    }
+
+                    const requiredSelectionValue: UnpackedEntitySelection<Brand> = { id: true, rating: true };
+
+                    return {
+                        endpoint: this,
+                        hydratedSelection: intersection,
+                        requiredSelection: new EntitySelection({ schema: brandSchema, value: requiredSelectionValue }),
+                        rejectedQuery,
+                    };
+                },
+            },
+            // rating hydrator
+            {
+                load(entities: EntitySet, selection: EntitySelection): HydrationResult {
+                    console.log("🌵 rating load was called!", entities.getQuery().toString(), selection.toString());
                     (entities.getEntities() as Brand[]).forEach(brand => (brand.rating = Math.random()));
 
                     return entities.getEntities();
@@ -183,7 +215,8 @@ describe("playground: interceptors", () => {
             id: true,
             name: true,
             rating: true,
-            metadata: { createdBy: { id: true, name: true } },
+            ranking: true,
+            // metadata: { createdBy: { id: true, name: true } },
         };
 
         const query = queryTools.createQuery({

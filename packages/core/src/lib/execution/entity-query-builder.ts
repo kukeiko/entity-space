@@ -18,14 +18,14 @@ export interface EntityQueryBuilderPatch<T extends Entity> {
     parameters?: Entity;
 }
 
-export interface EntityQueryBuilderArgument<T extends Entity> extends EntityQueryBuilderPatch<T> {
+export interface EntityQueryBuilderCreate<T extends Entity> extends EntityQueryBuilderPatch<T> {
     schema: IEntitySchema<T>;
     workspace: EntityWorkspace;
 }
 
 export class EntityQueryBuilder<T extends Entity = Entity> {
-    constructor(args: EntityQueryBuilderArgument<T>) {
-        this.copyArgs = args;
+    constructor(args: EntityQueryBuilderCreate<T>) {
+        this.createArgs = args;
         this.schema = args.schema;
         this.selection = args.selection ?? args.schema.getDefaultSelection();
         this.workspace = args.workspace;
@@ -36,7 +36,7 @@ export class EntityQueryBuilder<T extends Entity = Entity> {
         this.whereEntityTools = new WhereEntityTools(this.shapeTools, this.criteriaTools);
     }
 
-    private readonly copyArgs: EntityQueryBuilderArgument<T>;
+    private readonly createArgs: EntityQueryBuilderCreate<T>;
     private readonly schema: IEntitySchema<T>;
     private readonly workspace: EntityWorkspace;
     private readonly selection: UnpackedEntitySelection<T>;
@@ -47,7 +47,7 @@ export class EntityQueryBuilder<T extends Entity = Entity> {
     private readonly whereEntityTools: WhereEntityTools;
 
     copy(patch?: EntityQueryBuilderPatch<T>): this {
-        return new (getInstanceClass(this))({ ...this.copyArgs, ...(patch ?? {}) });
+        return new (getInstanceClass(this))({ ...this.createArgs, ...(patch ?? {}) });
     }
 
     select(selection: PackedEntitySelection<T>): this {

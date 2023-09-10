@@ -8,6 +8,7 @@ export class BrandBlueprint {
     id = define(Number, { id: true, required: true });
     name = define(String, { required: true });
     rating = define(Number);
+    ranking = define(Number);
     metadata = define(DataEntryMetadataBlueprint, { required: true });
 }
 
