@@ -35,7 +35,8 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
     intercept(stream: EntityStream): EntityStream {
         let accepted: IEntityQuery[] = [];
         // const accepted: IEntityQuery[] = [];
-        const rejected: IEntityQuery[] = [];
+        let rejected: IEntityQuery[] = [];
+        // const rejected: IEntityQuery[] = [];
         const payloads: EntitySet[] = [];
         const cache = new InMemoryEntityDatabase();
 
@@ -47,17 +48,15 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
                     // currently not sure what difference in impact these two methods have
                     accepted = this.queryTools.mergeQueries(...accepted, ...packet.getAcceptedQueries());
                     // accepted.push(...packet.getAcceptedQueries());
-                    rejected.push(...packet.getRejectedQueries());
+                    rejected = this.queryTools.mergeQueries(...rejected, ...packet.getRejectedQueries());
+                    // rejected.push(...packet.getRejectedQueries());
                     payloads.push(...packet.getPayload());
                     packet.getPayload().forEach(payload => cache.upsertSync(payload));
                 }),
                 // [todo] need to get rid of takeLast()
                 takeLast(1),
+                filter(() => rejected.length > 0),
                 switchMap(() => {
-                    // console.log(
-                    //     accepted.map(q => q.toString()),
-                    //     (this as any).name
-                    // );
                     const hydrationStreams: EntityStream[] = [];
 
                     for (const rejectedQuery of rejected) {
@@ -70,6 +69,10 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
 
                             const entitySetToHydrate = cache.querySync(entitySetToHydrateQuery);
 
+                            if (!entitySetToHydrate.getEntities().length) {
+                                continue;
+                            }
+
                             const clipped = this.selectionTools.clip(
                                 rejectedQuery.getSelection().getValue(),
                                 entitySetToHydrate.getQuery().getSelection().getValue()
@@ -81,9 +84,7 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
                                 )
                                 .filter(isNotFalse);
 
-                            targets.forEach(({ relationQuery }) =>
-                                this.tracing.querySpawned(relationQuery, "💧 hydration")
-                            );
+                            targets.forEach(({ relationQuery }) => this.tracing.hydrationQuerySpawned(relationQuery));
 
                             if (!targets.length) {
                                 continue;

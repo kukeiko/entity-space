@@ -2,11 +2,25 @@ import { EntityStreamPacket } from "./entity-stream-packet";
 import { IEntityQuery } from "../query/entity-query.interface";
 import { ICriterionShape } from "../criteria/criterion-shape.interface";
 
+type EntityQueryTracingFilter = (query: IEntityQuery) => boolean;
+
 export class EntityQueryTracing {
     private consoleEnabled = false;
+    private filters: EntityQueryTracingFilter[] = [];
+
+    private print(query: IEntityQuery, ...message: unknown[]): void {
+        if (this.filters.every(filter => filter(query))) {
+            console.log(...message);
+        }
+    }
 
     enableConsole(flag = true): void {
         this.consoleEnabled = flag;
+    }
+
+    addFilter(filter: EntityQueryTracingFilter): this {
+        this.filters.push(filter);
+        return this;
     }
 
     querySpawned(query: IEntityQuery, source?: string): void {
@@ -20,7 +34,15 @@ export class EntityQueryTracing {
             message = `${message} (source: ${source})`;
         }
 
-        console.log(message);
+        this.print(query, message);
+    }
+
+    hydrationQuerySpawned(query: IEntityQuery): void {
+        if (!this.consoleEnabled) {
+            return;
+        }
+
+        this.print(query, `🥚 💧 hydration query spawned: ${query.toString()}`);
     }
 
     queryStartedExecution(query: IEntityQuery): void {
@@ -28,7 +50,7 @@ export class EntityQueryTracing {
             return;
         }
 
-        console.log("💎 query started execution:", query.toString());
+        this.print(query, "💎 query started execution:", query.toString());
     }
 
     queryResolved(query: IEntityQuery, result?: string): void {
@@ -36,7 +58,10 @@ export class EntityQueryTracing {
             return;
         }
 
-        console.log(`🐣 query has been resolved: ${query.toString()}${result !== void 0 ? `, result: ${result}` : ""}`);
+        this.print(
+            query,
+            `🐣 query has been resolved: ${query.toString()}${result !== void 0 ? `, result: ${result}` : ""}`
+        );
     }
 
     queryGotSubtracted(
@@ -49,7 +74,8 @@ export class EntityQueryTracing {
             return;
         }
 
-        console.log(
+        this.print(
+            query,
             "🎈 query got subtracted:",
             query.toString(),
             (options?.byLabel ?? ", by") + ":",
@@ -64,8 +90,8 @@ export class EntityQueryTracing {
         }
 
         return;
-
-        console.log(
+        this.print(
+            query,
             `🎀 query got fully subtracted: ${query.toString()}, ${options?.byLabel ?? "by"}: ${by.map(query =>
                 query.toString()
             )}`
@@ -77,7 +103,8 @@ export class EntityQueryTracing {
             return;
         }
 
-        console.log(
+        this.print(
+            query,
             `🔌 query ${query.toString()} got dispatched to an endpoint accepting criteria ${shape.toString()}`
         );
     }
@@ -87,7 +114,8 @@ export class EntityQueryTracing {
             return;
         }
 
-        console.log(
+        this.print(
+            query,
             `🔌 🚚 query ${query.toString()} got a packet via endpoint ${shape.toString()}: ${packet.toString()}`
         );
     }
@@ -97,7 +125,7 @@ export class EntityQueryTracing {
             return;
         }
 
-        console.log(`🚚 query ${query.toString()} received packet ${packet.toString()}`);
+        this.print(query, `🚚 query ${query.toString()} received packet ${packet.toString()}`);
     }
 
     queryGotRejectedByAllSources(query: IEntityQuery): void {
@@ -105,7 +133,7 @@ export class EntityQueryTracing {
             return;
         }
 
-        console.log(`❌ query got rejected by all sources: ${query.toString()}`);
+        this.print(query, `❌ query got rejected by all sources: ${query.toString()}`);
     }
 
     reactiveQueryEmitted(query: IEntityQuery): void {
@@ -115,7 +143,7 @@ export class EntityQueryTracing {
 
         return;
 
-        console.log(`🔥 reactive query ${query.toString()} caused an emit`);
+        this.print(query, `🔥 reactive query ${query.toString()} caused an emit`);
     }
 
     reactiveQueryDisposed(query: IEntityQuery): void {
@@ -125,6 +153,10 @@ export class EntityQueryTracing {
 
         return;
 
-        console.log(`🧹 reactive query ${query.toString()} got disposed`);
+        this.print(query, `🧹 reactive query ${query.toString()} got disposed`);
+    }
+
+    fromCache(query: IEntityQuery): void {
+        this.print(query, "💾 from cache", query.toString());
     }
 }

@@ -212,12 +212,16 @@ export class EntityCriteria extends CriterionBase implements IEntityCriteria {
                   }
             )[] = [];
 
+            const otherKeys = new Set(Object.keys(otherBag));
+            let didInvert = false;
             for (const key in this.criteria) {
                 const mine = this.criteria[key];
 
                 if (mine === void 0) {
                     continue;
                 }
+
+                otherKeys.delete(key);
 
                 const otherCriterion = otherBag[key];
 
@@ -228,6 +232,7 @@ export class EntityCriteria extends CriterionBase implements IEntityCriteria {
                         return false;
                     }
 
+                    didInvert = true;
                     subtractions.push({ key, result: false, inverted });
                 } else {
                     const result = mine.subtractFrom(otherCriterion);
@@ -238,6 +243,12 @@ export class EntityCriteria extends CriterionBase implements IEntityCriteria {
 
                     subtractions.push({ key, result });
                 }
+            }
+
+            if (otherKeys.size && didInvert) {
+                // if we had to invert one criteria, and the other has a criteria we don't: do not subtract anything.
+                // this change did not actually break any tests, and it results in a more expected query cache subtraction behaviour.
+                return false;
             }
 
             if (subtractions.every(x => x.result === false)) {

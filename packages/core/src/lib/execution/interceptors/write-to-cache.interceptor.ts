@@ -1,4 +1,4 @@
-import { forkJoin, map, of, switchMap, tap } from "rxjs";
+import { delay, forkJoin, map, mergeMap, of, switchMap, tap } from "rxjs";
 import { Entity } from "../../common/entity.type";
 import { IEntityDatabase } from "../../entity/entity-database.interface";
 import { EntityStream } from "../entity-stream";
@@ -9,13 +9,16 @@ export class WriteToCacheInterceptor implements IEntityStreamInterceptor {
 
     intercept(stream: EntityStream<Entity>): EntityStream<Entity> {
         return stream.pipe(
-            switchMap(packet => {
-                return forkJoin({
-                    packet: of(packet),
-                    upserts: forkJoin(packet.getPayload().map(payload => this.database.upsert$(payload))),
-                });
-            }),
-            map(({ packet }) => packet)
+            mergeMap(packet => {
+                if (packet.hasPayload()) {
+                    return forkJoin({
+                        packet: of(packet),
+                        upserts: forkJoin(packet.getPayload().map(payload => this.database.upsert$(payload))),
+                    }).pipe(map(() => packet));
+                } else {
+                    return of(packet);
+                }
+            })
         );
     }
 }

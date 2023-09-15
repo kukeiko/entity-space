@@ -72,7 +72,7 @@ describe("playground: interceptors", () => {
         ]);
 
         const logEach = false;
-        const logFinal = true;
+        const logFinal = false;
         // tracing.enableConsole();
 
         (canHydrateBrandsHydrator as any).name = "canHydrateBrandsHydrator";
@@ -129,15 +129,15 @@ describe("playground: interceptors", () => {
         const canLoadBrandsApi = new TestContentEntityApi(repository, catalog, tracing).withGetBrandById();
         const brandSchema = catalog.resolve(BrandBlueprint);
 
-        const logEach = true;
-        const logFinal = true;
+        const logEach = false;
+        const logFinal = false;
         // tracing.enableConsole();
 
         const hydrationEndpoints: IEntityHydrationEndpoint[] = [
             // ranking hydrator
             {
                 load(entities: EntitySet, selection: EntitySelection): HydrationResult {
-                    console.log("🌵 ranking load was called!", entities.getQuery().toString(), selection.toString());
+                    // console.log("🌵 ranking load was called!", entities.getQuery().toString(), selection.toString());
                     (entities.getEntities() as Brand[]).forEach(brand => (brand.ranking = (brand.rating ?? 0) + 1));
 
                     return entities.getEntities();
@@ -168,7 +168,7 @@ describe("playground: interceptors", () => {
             // rating hydrator
             {
                 load(entities: EntitySet, selection: EntitySelection): HydrationResult {
-                    console.log("🌵 rating load was called!", entities.getQuery().toString(), selection.toString());
+                    // console.log("🌵 rating load was called!", entities.getQuery().toString(), selection.toString());
                     (entities.getEntities() as Brand[]).forEach(brand => (brand.rating = Math.random()));
 
                     return entities.getEntities();

@@ -31,33 +31,30 @@ export function safeWrapEntityStream(stream: EntityStream, queries: IEntityQuery
                 errors: packet.getErrors(),
                 payload: packet.getPayload(),
                 rejected: packet.getRejectedQueries(),
+                delivered: packet.getDeliveredQueries(),
             });
         }),
         // prevent unnecessarily repeating potentially costly calls (e.g. accessing http resources)
-        // [todo] make sure that "1" is correct (as opposed to no argument at all)
-        shareReplay(1)
+        shareReplay()
     );
+
     const accepted: IEntityQuery[] = [];
     const rejected: IEntityQuery[] = [];
-
-    const trackAcceptedAndRejected = safelyWrapped.pipe(
-        tap(packet => {
-            accepted.push(...packet.getAcceptedQueries());
-            rejected.push(...packet.getRejectedQueries());
-        }),
-        switchMap(() => EMPTY)
-    );
-
     const queryTools = new EntityQueryTools({ criteriaTools: new EntityCriteriaTools() });
     const { subtractQueries } = queryTools;
 
     // make sure we're not missing any rejections
     const ensureProperRejection = safelyWrapped.pipe(
+        tap(packet => {
+            accepted.push(...packet.getAcceptedQueries());
+            rejected.push(...packet.getRejectedQueries());
+        }),
         takeLast(1),
         switchMap(() => {
             const notReportedAsRejected = subtractQueries(queries, [...accepted, ...rejected]);
 
             if (!notReportedAsRejected) {
+                console.log("🐞 original stream didn't report any meaningful rejections", queries.join(", "));
                 // original stream didn't report any meaningful rejections
                 return of(new EntityStreamPacket({ rejected: queries }));
             } else if (!notReportedAsRejected.length) {
@@ -65,10 +62,11 @@ export function safeWrapEntityStream(stream: EntityStream, queries: IEntityQuery
                 return EMPTY;
             } else {
                 // original stream missed to report some rejections
+                console.log("🐞 original stream missed to report some rejections", notReportedAsRejected.join(", "));
                 return of(new EntityStreamPacket({ rejected: notReportedAsRejected }));
             }
         })
     );
 
-    return merge(safelyWrapped, trackAcceptedAndRejected, ensureProperRejection);
+    return merge(safelyWrapped, ensureProperRejection);
 }

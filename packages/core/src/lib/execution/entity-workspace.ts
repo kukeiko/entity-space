@@ -21,6 +21,7 @@ import { EntityStream } from "./entity-stream";
 import { EntityStreamPacket } from "./entity-stream-packet";
 import { IEntityStreamInterceptor } from "./interceptors/entity-stream-interceptor.interface";
 import { LoadFromCacheInterceptor } from "./interceptors/load-from-cache.interceptor";
+import { LogPacketsInterceptor } from "./interceptors/log-packets.interceptor";
 import { SchemaRelationBasedHydrator } from "./interceptors/schema-relation-based-hydrator";
 import { WriteToCacheInterceptor } from "./interceptors/write-to-cache.interceptor";
 import { runInterceptors } from "./run-interceptors.fn";
@@ -33,7 +34,7 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
     private store?: IEntityStore;
     private schemas?: EntitySchemaCatalog;
     private readonly database = new InMemoryEntityDatabase();
-    private readonly loadFromCacheInterceptor = new LoadFromCacheInterceptor(this.database);
+    private readonly loadFromCacheInterceptor = new LoadFromCacheInterceptor(this.database, this.tracing);
     private readonly writeToCacheInterceptor = new WriteToCacheInterceptor(this.database);
     private readonly watchedQueries = new Map<IEntityQuery, Subject<Entity[]>>();
     interceptors: IEntityStreamInterceptor[] = [];
@@ -92,6 +93,7 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
     async query<T extends Entity = Entity>(query: IEntityQuery): Promise<false | EntitySet<T>[]> {
         const sources = [
             this.loadFromCacheInterceptor,
+            // new LogPacketsInterceptor(true),
             ...this.interceptors,
             new SchemaRelationBasedHydrator(this.tracing, [this]),
             this.writeToCacheInterceptor,
@@ -197,6 +199,8 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
             selection: selection,
             parameters,
         });
+
+        this.tracing.querySpawned(query);
 
         return from(this.query<T>(query)).pipe(
             map(results => {
