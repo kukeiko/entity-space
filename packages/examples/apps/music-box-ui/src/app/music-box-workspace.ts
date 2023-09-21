@@ -9,7 +9,7 @@ import {
     SongLocationTypeBlueprint,
 } from "@entity-space/examples/libs/music-model";
 
-@Injectable()
+@Injectable({ providedIn: "root" })
 export class MusicBoxWorkspace extends EntityWorkspace {
     fromArtists(): EntityQueryBuilder<Artist> {
         return super.from(ArtistBlueprint);

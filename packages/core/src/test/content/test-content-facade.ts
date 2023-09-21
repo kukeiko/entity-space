@@ -4,7 +4,7 @@ import { Entity } from "../../lib/common/entity.type";
 import { UnpackedEntitySelection } from "../../lib/common/unpacked-entity-selection.type";
 import { EntityCriteriaTools } from "../../lib/criteria/entity-criteria-tools";
 import { EntityWhere } from "../../lib/criteria/entity-criteria-tools.interface";
-import { EntityQueryTracing } from "../../lib/execution/entity-query-tracing";
+import { EntitySpaceServices } from "../../lib/execution/entity-space-services";
 import { EntityStream } from "../../lib/execution/entity-stream";
 import { EntityStreamPacket } from "../../lib/execution/entity-stream-packet";
 import { IEntityStreamInterceptor } from "../../lib/execution/interceptors/entity-stream-interceptor.interface";
@@ -15,15 +15,13 @@ import { runInterceptors } from "../../lib/execution/run-interceptors.fn";
 import { EntityQueryTools } from "../../lib/query/entity-query-tools";
 import { IEntityQuery } from "../../lib/query/entity-query.interface";
 import { EntityBlueprintInstance } from "../../lib/schema/entity-blueprint-instance.type";
-import { TestContentCatalog } from "./test-content-catalog";
 import { TestContentData, TestContentDatabase } from "./test-content-database";
 import { TestContentEntityApi } from "./test-content.entity-api";
 
 export class TestContentFacade implements IEntityStreamInterceptor {
-    private readonly tracing = new EntityQueryTracing();
-    private readonly catalog = new TestContentCatalog();
+    private readonly services = new EntitySpaceServices();
     private readonly repository = new TestContentDatabase();
-    private readonly api = new TestContentEntityApi(this.repository, this.catalog, this.tracing);
+    private readonly api = new TestContentEntityApi(this.repository, this.services);
     private packetLogging = false;
 
     getName(): string {
@@ -36,7 +34,7 @@ export class TestContentFacade implements IEntityStreamInterceptor {
     }
 
     enableTracing(flag = false): this {
-        this.tracing.enableConsole(flag);
+        this.services.getTracing().enableConsole(flag);
         return this;
     }
 
@@ -58,7 +56,7 @@ export class TestContentFacade implements IEntityStreamInterceptor {
         const criteriaTools = new EntityCriteriaTools();
 
         return new EntityQueryTools({ criteriaTools: criteriaTools }).createQuery({
-            entitySchema: this.catalog.resolve(blueprint),
+            entitySchema: this.services.getCatalog().resolve(blueprint),
             criteria: criteria ? criteriaTools.where(criteria) : criteriaTools.all(),
             selection,
         });
@@ -76,7 +74,7 @@ export class TestContentFacade implements IEntityStreamInterceptor {
     }
 
     async query(query: IEntityQuery): Promise<EntityStreamPacket> {
-        const hydrator = new SchemaRelationBasedHydrator(this.tracing, [this]);
+        const hydrator = new SchemaRelationBasedHydrator(this.services, [this]);
 
         let interceptors: IEntityStreamInterceptor[] = [
             this.api,
@@ -87,7 +85,7 @@ export class TestContentFacade implements IEntityStreamInterceptor {
             new LogPacketsInterceptor(this.packetLogging),
         ];
 
-        const packet = await lastValueFrom(runInterceptors(interceptors, [query], this.tracing));
+        const packet = await lastValueFrom(runInterceptors(interceptors, [query], this.services.getTracing()));
 
         if (packet.getErrors().length) {
             throw new Error(

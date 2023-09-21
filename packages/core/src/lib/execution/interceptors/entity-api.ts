@@ -1,24 +1,24 @@
 import { isNotFalse } from "@entity-space/utils";
 import { flatten } from "lodash";
 import { filter, from, isObservable, map, merge, mergeAll, Observable, of, startWith, switchMap, tap } from "rxjs";
-import { Entity } from "../common/entity.type";
-import { EntityCriteriaShapeTools } from "../criteria/entity-criteria-shape-tools";
-import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
-import { WhereEntityTools } from "../criteria/where-entity/where-entity-tools";
-import { EntitySet } from "../entity/data-structures/entity-set";
-import { EntityQueryShape } from "../query/entity-query-shape";
-import { EntityQueryTools } from "../query/entity-query-tools";
-import { IEntityQuery } from "../query/entity-query.interface";
-import { IEntitySchema } from "../schema/schema.interface";
-import { EntityApiEndpoint, EntityApiEndpointData, EntityApiEndpointInvoke } from "./entity-api-endpoint";
-import { EntityApiEndpointBuilder } from "./entity-api-endpoint-builder";
-import { EntityQueryTracing } from "./entity-query-tracing";
-import { EntityStream } from "./entity-stream";
-import { EntityStreamPacket } from "./entity-stream-packet";
-import { IEntityStreamInterceptor } from "./interceptors/entity-stream-interceptor.interface";
+import { Entity } from "../../common/entity.type";
+import { EntityCriteriaShapeTools } from "../../criteria/entity-criteria-shape-tools";
+import { EntityCriteriaTools } from "../../criteria/entity-criteria-tools";
+import { WhereEntityTools } from "../../criteria/where-entity/where-entity-tools";
+import { EntitySet } from "../../entity/data-structures/entity-set";
+import { EntityQueryShape } from "../../query/entity-query-shape";
+import { EntityQueryTools } from "../../query/entity-query-tools";
+import { IEntityQuery } from "../../query/entity-query.interface";
+import { IEntitySchema } from "../../schema/schema.interface";
+import { EntityApiEndpoint, EntityApiEndpointData, EntityApiEndpointInvoke } from "../entity-api-endpoint";
+import { EntityApiEndpointBuilder } from "../entity-api-endpoint-builder";
+import { EntitySpaceServices } from "../entity-space-services";
+import { EntityStream } from "../entity-stream";
+import { EntityStreamPacket } from "../entity-stream-packet";
+import { IEntityStreamInterceptor } from "./entity-stream-interceptor.interface";
 
 export class EntityApi implements IEntityStreamInterceptor {
-    constructor(protected readonly tracing: EntityQueryTracing) {}
+    constructor(protected readonly services: EntitySpaceServices) {}
 
     protected endpoints: EntityApiEndpoint[] = [];
     protected readonly criteriaTools = new EntityCriteriaTools();
@@ -127,7 +127,9 @@ export class EntityApi implements IEntityStreamInterceptor {
             return false;
         }
 
-        acceptedReshaped.forEach(query => this.tracing.queryDispatchedToEndpoint(query, endpoint.getCriterionShape()));
+        acceptedReshaped.forEach(query =>
+            this.services.getTracing().queryDispatchedToEndpoint(query, endpoint.getCriterionShape())
+        );
 
         const initialPacket = new EntityStreamPacket({ accepted: acceptedReshaped });
         const whereEntityShape = endpoint.getWhereEntityShape();
@@ -146,6 +148,9 @@ export class EntityApi implements IEntityStreamInterceptor {
 
                 return this.invokedToDataStream(invoked).pipe(
                     map(data => this.endpointDataToPacket(query, data)),
+                    tap(packet =>
+                        packet.getPayload().forEach(payload => this.services.getDatabase().upsertSync(payload))
+                    ),
                     // [todo] dirty fix to make it work if data source returns data synchronously
                     switchMap(
                         packet => new Promise<EntityStreamPacket>(resolve => setTimeout(() => resolve(packet), 1))
@@ -164,7 +169,7 @@ export class EntityApi implements IEntityStreamInterceptor {
         );
 
         relevantAccepted.forEach(query =>
-            this.tracing.endpointDeliveredPacket(query, endpoint.getCriterionShape(), packet)
+            this.services.getTracing().endpointDeliveredPacket(query, endpoint.getCriterionShape(), packet)
         );
     }
 

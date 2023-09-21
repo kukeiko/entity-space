@@ -16,16 +16,14 @@ import { IEntityQueryTools } from "../query/entity-query-tools.interface";
 import { IEntityQuery } from "../query/entity-query.interface";
 import { EntitySelection } from "../query/entity-selection";
 import { IEntitySchema } from "../schema/schema.interface";
+import { EntitySpaceServices } from "./entity-space-services";
 import { EntityStream } from "./entity-stream";
 import { EntityStreamPacket } from "./entity-stream-packet";
-import { EntitySpaceServices } from "./entity-space-services";
 import { IEntityStreamInterceptor } from "./interceptors/entity-stream-interceptor.interface";
 import { LoadFromCacheInterceptor } from "./interceptors/load-from-cache.interceptor";
-import { LogPacketsInterceptor } from "./interceptors/log-packets.interceptor";
 import { SchemaRelationBasedHydrator } from "./interceptors/schema-relation-based-hydrator";
 import { WriteToCacheInterceptor } from "./interceptors/write-to-cache.interceptor";
 import { runInterceptors } from "./run-interceptors.fn";
-import { EntityQueryTracing } from "./entity-query-tracing";
 
 export interface EntityQueryBuilderPatch<T extends Entity> {
     selection?: UnpackedEntitySelection<T>;
@@ -139,7 +137,7 @@ export class EntityQueryBuilder<T extends Entity = Entity> implements IEntityStr
             ...this.services.getSources(),
             // new LogPacketsInterceptor(true),
             ...this.services.getHydrators(),
-            new SchemaRelationBasedHydrator(this.services.getTracing(), [this]),
+            new SchemaRelationBasedHydrator(this.services, [this]),
             new WriteToCacheInterceptor(this.services.getDatabase()),
         ];
 

@@ -1,12 +1,6 @@
 import { HttpClient, HttpParams } from "@angular/common/http";
-import {
-    Entity,
-    EntityApi,
-    EntityQueryTracing,
-    EntitySchemaCatalog,
-    IEntitySchema,
-    IEntityStore,
-} from "@entity-space/core";
+import { Injectable } from "@angular/core";
+import { Entity, EntityApi, EntitySpaceServices, IEntitySchema, IEntityStore } from "@entity-space/core";
 import {
     Artist,
     ArtistBlueprint,
@@ -19,23 +13,20 @@ import {
 import { isDefined } from "@entity-space/utils";
 import { firstValueFrom } from "rxjs";
 
+@Injectable({ providedIn: "root" })
 export class MusicBoxClientSideEntityApi extends EntityApi implements IEntityStore {
-    constructor(
-        private readonly http: HttpClient,
-        private readonly schemas: EntitySchemaCatalog,
-        tracing: EntityQueryTracing
-    ) {
-        super(tracing);
+    constructor(private readonly http: HttpClient, private readonly services: EntitySpaceServices) {
+        super(services.getTracing());
     }
 
     withGetAllArtists(): this {
-        return this.addEndpoint(this.schemas.resolve(ArtistBlueprint), builder =>
+        return this.addEndpoint(this.services.getCatalog().resolve(ArtistBlueprint), builder =>
             builder.supportsSelection({ id: true, name: true }).isLoadedBy(() => this.http.get<Artist[]>("api/artists"))
         );
     }
 
     withGetAllSongs(): this {
-        return this.addEndpoint(this.schemas.resolve(SongBlueprint), builder =>
+        return this.addEndpoint(this.services.getCatalog().resolve(SongBlueprint), builder =>
             builder
                 .where({ $optional: { artistId: [Number] } })
                 .supportsSelection({ id: true, artistId: true, duration: true, name: true })
@@ -53,11 +44,11 @@ export class MusicBoxClientSideEntityApi extends EntityApi implements IEntitySto
     }
 
     withSearchSongs(): this {
-        return this.addEndpoint(this.schemas.resolve(SongBlueprint), builder =>
+        return this.addEndpoint(this.services.getCatalog().resolve(SongBlueprint), builder =>
             builder
                 .where({ $optional: { artistId: [Number] } })
                 .supportsSelection({ id: true, artistId: true, duration: true, name: true })
-                .requiresParameters(this.schemas.resolve(SearchSongsBlueprint))
+                .requiresParameters(this.services.getCatalog().resolve(SearchSongsBlueprint))
                 .isLoadedBy(({ criteria: { artistId }, parameters: { searchText } }) => {
                     let params = new HttpParams({});
                     params = params.set("searchText", searchText);
@@ -73,7 +64,7 @@ export class MusicBoxClientSideEntityApi extends EntityApi implements IEntitySto
     }
 
     withGetSongById(): this {
-        return this.addEndpoint(this.schemas.resolve(SongBlueprint), builder =>
+        return this.addEndpoint(this.services.getCatalog().resolve(SongBlueprint), builder =>
             builder
                 .where({ id: Number })
                 .supportsSelection({
@@ -88,7 +79,7 @@ export class MusicBoxClientSideEntityApi extends EntityApi implements IEntitySto
     }
 
     withGetSongLocationsBySongId(): this {
-        return this.addEndpoint(this.schemas.getSchema<SongLocation>("song-location"), builder =>
+        return this.addEndpoint(this.services.getCatalog().getSchema<SongLocation>("song-location"), builder =>
             builder
                 .where({ songId: [Number] })
                 .supportsSelection({ id: true, path: true, songId: true, songLocationType: true, url: true })
@@ -101,7 +92,7 @@ export class MusicBoxClientSideEntityApi extends EntityApi implements IEntitySto
     }
 
     withGetAllSongLocationTypes(): this {
-        return this.addEndpoint(this.schemas.resolve(SongLocationTypeBlueprint), builder =>
+        return this.addEndpoint(this.services.getCatalog().resolve(SongLocationTypeBlueprint), builder =>
             builder.supportsSelection({ id: true, name: true }).isLoadedBy(() => [
                 { id: "web", name: "Web" },
                 { id: "local", name: "Local" },

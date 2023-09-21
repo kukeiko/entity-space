@@ -2,17 +2,15 @@ import { firstValueFrom, take, tap, toArray } from "rxjs";
 import { UnpackedEntitySelection } from "../lib/common/unpacked-entity-selection.type";
 import { ICriterion } from "../lib/criteria/criterion.interface";
 import { EntityCriteriaTools } from "../lib/criteria/entity-criteria-tools";
-import { EntityQueryTracing } from "../lib/execution/entity-query-tracing";
-import { EntityWorkspace } from "../lib/execution/entity-workspace";
 import { EntitySpaceServices } from "../lib/execution/entity-space-services";
+import { EntityWorkspace } from "../lib/execution/entity-workspace";
 import { EntityQueryTools } from "../lib/query/entity-query-tools";
 import { IEntityQuery } from "../lib/query/entity-query.interface";
 import { EntitySchema } from "../lib/schema/entity-schema";
-import { EntitySchemaCatalog } from "../lib/schema/entity-schema-catalog";
 import { IEntitySchema } from "../lib/schema/schema.interface";
 
 function createWorkspace(): EntityWorkspace {
-    return new EntityWorkspace(new EntitySpaceServices(new EntitySchemaCatalog(), new EntityQueryTracing()));
+    return new EntityWorkspace(new EntitySpaceServices());
 }
 
 function createQuery(

@@ -6,8 +6,8 @@ import { IEntityStreamInterceptor } from "./interceptors/entity-stream-intercept
 
 // [todo] I think I want a name unrelated to the EntityWorkspace
 export class EntitySpaceServices {
-    constructor(private readonly catalog: EntitySchemaCatalog, private readonly tracing: EntityQueryTracing) {}
-
+    private readonly tracing = new EntityQueryTracing();
+    private readonly catalog = new EntitySchemaCatalog();
     private readonly database = new InMemoryEntityDatabase();
     private readonly sources: IEntityStreamInterceptor[] = [];
     private readonly hydrators: IEntityStreamInterceptor[] = [];

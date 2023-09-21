@@ -1,14 +1,15 @@
 import { filter, from, map, merge, mergeMap, Observable, of, shareReplay, startWith, takeLast, tap } from "rxjs";
-import { Entity } from "../common/entity.type";
-import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
-import { EntitySet } from "../entity/data-structures/entity-set";
-import { InMemoryEntityDatabase } from "../entity/in-memory-entity-database";
-import { EntityStream } from "./entity-stream";
-import { EntityStreamPacket } from "./entity-stream-packet";
-import { IEntityStreamInterceptor } from "./interceptors/entity-stream-interceptor.interface";
-import { EntityQueryTools } from "../query/entity-query-tools";
-import { IEntityQuery } from "../query/entity-query.interface";
-import { EntitySelection } from "../query/entity-selection";
+import { Entity } from "../../common/entity.type";
+import { EntityCriteriaTools } from "../../criteria/entity-criteria-tools";
+import { EntitySet } from "../../entity/data-structures/entity-set";
+import { InMemoryEntityDatabase } from "../../entity/in-memory-entity-database";
+import { EntityStream } from "../entity-stream";
+import { EntityStreamPacket } from "../entity-stream-packet";
+import { IEntityStreamInterceptor } from "./entity-stream-interceptor.interface";
+import { EntityQueryTools } from "../../query/entity-query-tools";
+import { IEntityQuery } from "../../query/entity-query.interface";
+import { EntitySelection } from "../../query/entity-selection";
+import { EntitySpaceServices } from "../entity-space-services";
 
 export type HydrationResult = Promise<Entity[]> | Entity[] | Observable<Entity[]>;
 
@@ -25,6 +26,8 @@ export interface IEntityHydrationEndpoint {
 }
 
 export class EntityHydratorApi implements IEntityStreamInterceptor {
+    constructor(private readonly services: EntitySpaceServices) {}
+
     private readonly criteriaTools = new EntityCriteriaTools();
     private readonly queryTools = new EntityQueryTools({ criteriaTools: this.criteriaTools });
 
@@ -35,17 +38,11 @@ export class EntityHydratorApi implements IEntityStreamInterceptor {
     }
 
     intercept(stream: EntityStream<Entity>): EntityStream<Entity> {
-        const cache = new InMemoryEntityDatabase();
         let delivered: IEntityQuery[] = [];
         let proposals: EntityHydrationProposal[] = [];
 
         const hydrate = (stream: EntityStream): EntityStream => {
             return stream.pipe(
-                tap(packet => {
-                    if (packet.hasPayload()) {
-                        packet.getPayload().forEach(payload => cache.upsertSync(payload));
-                    }
-                }),
                 filter(packet => packet.hasRejected() || packet.hasDelivered()),
                 mergeMap(packet => {
                     let rejected = packet.getRejectedQueries();
@@ -64,7 +61,11 @@ export class EntityHydratorApi implements IEntityStreamInterceptor {
                         delivered = this.queryTools.mergeQueries(...delivered, ...packet.getDeliveredQueries());
                     }
 
-                    const [nextProposals, streams] = this.drainProposals(proposals, delivered, cache);
+                    const [nextProposals, streams] = this.drainProposals(
+                        proposals,
+                        delivered,
+                        this.services.getDatabase()
+                    );
                     proposals = nextProposals;
 
                     if (streams.length) {
@@ -87,7 +88,7 @@ export class EntityHydratorApi implements IEntityStreamInterceptor {
             stream.pipe(
                 filter(packet => packet.hasPayload()),
                 tap(packet => {
-                    packet.getPayload().forEach(payload => cache.upsertSync(payload));
+                    packet.getPayload().forEach(payload => this.services.getDatabase().upsertSync(payload));
                 })
             ),
             hydrate(stream)

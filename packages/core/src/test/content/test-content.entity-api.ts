@@ -1,22 +1,17 @@
-import { EntityApi } from "../../lib/execution/entity-api";
-import { EntityQueryTracing } from "../../lib/execution/entity-query-tracing";
+import { EntitySpaceServices } from "../../lib/execution/entity-space-services";
+import { EntityApi } from "../../lib/execution/interceptors/entity-api";
 import { UserBlueprint } from "./common/user.model";
 import { BrandBlueprint } from "./products/brand.model";
 import { ProductBlueprint } from "./products/product.model";
-import { TestContentCatalog } from "./test-content-catalog";
 import { TestContentDatabase } from "./test-content-database";
 
 export class TestContentEntityApi extends EntityApi {
-    constructor(
-        private readonly data: TestContentDatabase,
-        private readonly catalog: TestContentCatalog,
-        tracing: EntityQueryTracing
-    ) {
-        super(tracing);
+    constructor(private readonly data: TestContentDatabase, services: EntitySpaceServices) {
+        super(services);
     }
 
     withGetAllUsers(): this {
-        return this.addEndpoint(this.catalog.resolve(UserBlueprint), builder =>
+        return this.addEndpoint(this.services.getCatalog().resolve(UserBlueprint), builder =>
             builder
                 .supportsSelection({
                     id: true,
@@ -28,7 +23,7 @@ export class TestContentEntityApi extends EntityApi {
     }
 
     withGetUserById(): this {
-        return this.addEndpoint(this.catalog.resolve(UserBlueprint), builder =>
+        return this.addEndpoint(this.services.getCatalog().resolve(UserBlueprint), builder =>
             builder
                 .where({ id: Number })
                 .supportsSelection({ id: true, name: true, parentId: true })
@@ -39,7 +34,7 @@ export class TestContentEntityApi extends EntityApi {
     }
 
     withGetBrandById(): this {
-        return this.addEndpoint(this.catalog.resolve(BrandBlueprint), builder =>
+        return this.addEndpoint(this.services.getCatalog().resolve(BrandBlueprint), builder =>
             builder
                 .where({ id: Number })
                 .supportsDefaultSelection()
@@ -48,7 +43,7 @@ export class TestContentEntityApi extends EntityApi {
     }
 
     withGetAllProducts(): this {
-        return this.addEndpoint(this.catalog.resolve(ProductBlueprint), builder =>
+        return this.addEndpoint(this.services.getCatalog().resolve(ProductBlueprint), builder =>
             builder
                 .supportsDefaultSelection()
                 .isLoadedBy(({ query }) => query.getCriteria().filter(this.data.get("products")))

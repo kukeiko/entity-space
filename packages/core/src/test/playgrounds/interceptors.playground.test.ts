@@ -2,7 +2,13 @@ import { lastValueFrom } from "rxjs";
 import { UnpackedEntitySelection } from "../../lib/common/unpacked-entity-selection.type";
 import { EntityCriteriaTools } from "../../lib/criteria/entity-criteria-tools";
 import { EntitySet } from "../../lib/entity/data-structures/entity-set";
-import { EntityQueryTracing } from "../../lib/execution/entity-query-tracing";
+import { EntitySpaceServices } from "../../lib/execution/entity-space-services";
+import {
+    EntityHydrationProposal,
+    EntityHydratorApi,
+    HydrationResult,
+    IEntityHydrationEndpoint,
+} from "../../lib/execution/interceptors/entity-hydrator-api";
 import { IEntityStreamInterceptor } from "../../lib/execution/interceptors/entity-stream-interceptor.interface";
 import { LogPacketsInterceptor } from "../../lib/execution/interceptors/log-packets.interceptor";
 import { MergePacketsTakeLastInterceptor } from "../../lib/execution/interceptors/merge-packets-take-last.interceptor";
@@ -20,13 +26,6 @@ import {
     TestContentEntityApi,
     User,
 } from "../content";
-import { TestContentCatalog } from "../content/test-content-catalog";
-import {
-    EntityHydrationProposal,
-    EntityHydratorApi,
-    HydrationResult,
-    IEntityHydrationEndpoint,
-} from "../../lib/execution/entity-hydrator-api";
 
 describe("playground: interceptors", () => {
     const criteriaTools = new EntityCriteriaTools();
@@ -59,13 +58,12 @@ describe("playground: interceptors", () => {
             users: [createdBy, updatedBy],
         });
 
-        const catalog = new TestContentCatalog();
-        const tracing = new EntityQueryTracing();
-        const canLoadProductsApi = new TestContentEntityApi(repository, catalog, tracing).withGetAllProducts();
-        const canLoadBrandsApi = new TestContentEntityApi(repository, catalog, tracing).withGetBrandById();
-        const canLoadUsersApi = new TestContentEntityApi(repository, catalog, tracing).withGetUserById();
-        const canHydrateUsersHydrator = new SchemaRelationBasedHydrator(tracing, [canLoadUsersApi]);
-        const canHydrateBrandsHydrator = new SchemaRelationBasedHydrator(tracing, [
+        const services = new EntitySpaceServices();
+        const canLoadProductsApi = new TestContentEntityApi(repository, services).withGetAllProducts();
+        const canLoadBrandsApi = new TestContentEntityApi(repository, services).withGetBrandById();
+        const canLoadUsersApi = new TestContentEntityApi(repository, services).withGetUserById();
+        const canHydrateUsersHydrator = new SchemaRelationBasedHydrator(services, [canLoadUsersApi]);
+        const canHydrateBrandsHydrator = new SchemaRelationBasedHydrator(services, [
             canLoadBrandsApi,
             // comment below line out to see that putting hydrators in sequence doesn't work yet
             // canHydrateUsersHydrator,
@@ -88,7 +86,7 @@ describe("playground: interceptors", () => {
             new LogPacketsInterceptor({ logFinal }),
         ];
 
-        const productSchema = catalog.resolve(ProductBlueprint);
+        const productSchema = services.getCatalog().resolve(ProductBlueprint);
         const selection: UnpackedEntitySelection<Product> = {
             id: true,
             name: true,
@@ -110,7 +108,7 @@ describe("playground: interceptors", () => {
         const query = queryTools.createQuery({ entitySchema: productSchema, selection });
 
         // act
-        const actual = await lastValueFrom(runInterceptors(interceptors, [query], tracing));
+        const actual = await lastValueFrom(runInterceptors(interceptors, [query], services.getTracing()));
 
         // assert
     });
@@ -123,11 +121,10 @@ describe("playground: interceptors", () => {
             metadata: { createdAt: "", createdById: 0, updatedAt: "", updatedById: 0 },
         };
 
+        const services = new EntitySpaceServices();
         const repository = new TestContentDatabase({ brands: [brand] });
-        const catalog = new TestContentCatalog();
-        const tracing = new EntityQueryTracing();
-        const canLoadBrandsApi = new TestContentEntityApi(repository, catalog, tracing).withGetBrandById();
-        const brandSchema = catalog.resolve(BrandBlueprint);
+        const canLoadBrandsApi = new TestContentEntityApi(repository, services).withGetBrandById();
+        const brandSchema = services.getCatalog().resolve(BrandBlueprint);
 
         const logEach = false;
         const logFinal = false;
@@ -199,7 +196,7 @@ describe("playground: interceptors", () => {
             },
         ];
 
-        const hydrationInterceptor = new EntityHydratorApi();
+        const hydrationInterceptor = new EntityHydratorApi(services);
         hydrationInterceptor.hydrationEndpoints.push(...hydrationEndpoints);
 
         const interceptors: IEntityStreamInterceptor[] = [
@@ -226,7 +223,7 @@ describe("playground: interceptors", () => {
         });
 
         // act
-        const actual = await lastValueFrom(runInterceptors(interceptors, [query], tracing));
+        const actual = await lastValueFrom(runInterceptors(interceptors, [query], services.getTracing()));
 
         // assert
     });

@@ -1,5 +1,5 @@
 import { HttpClient, HttpClientModule } from "@angular/common/http";
-import { NgModule } from "@angular/core";
+import { NgModule, OnInit } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { BrowserModule } from "@angular/platform-browser";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
@@ -48,64 +48,15 @@ import { MusicBoxWorkspace } from "./music-box-workspace";
         SongTableComponent,
     ],
     providers: [
+        { provide: EntitySchemaCatalog },
+        { provide: EntityQueryTracing },
+        { provide: EntitySpaceServices },
         SongLocationEntitySchema,
-        {
-            provide: EntityQueryTracing,
-            useFactory: () => {
-                const tracing = new EntityQueryTracing();
-                tracing.enableConsole();
-                return tracing;
-            },
-        },
-        {
-            // [todo] copy pasted to music-box-api
-            provide: EntitySchemaCatalog,
-            deps: [SongLocationEntitySchema],
-            useFactory: (songLocationSchema: SongLocationEntitySchema) => {
-                const schemas = new EntitySchemaCatalog();
-                schemas.addSchema(songLocationSchema);
-                songLocationSchema.addProperty("song", schemas.resolve(SongBlueprint));
-                songLocationSchema.addRelation("song", "songId", "id");
-
-                return schemas;
-            },
-        },
-        {
-            provide: MusicBoxClientSideEntityApi,
-            deps: [HttpClient, EntitySchemaCatalog, EntityQueryTracing],
-            useFactory: (http: HttpClient, schemas: EntitySchemaCatalog, tracing: EntityQueryTracing) => {
-                const controller = new MusicBoxClientSideEntityApi(http, schemas, tracing);
-
-                return controller
-                    .withGetAllArtists()
-                    .withGetSongById()
-                    .withGetAllSongs()
-                    .withSearchSongs()
-                    .withGetSongLocationsBySongId()
-                    .withGetAllSongLocationTypes();
-            },
-        },
-        {
-            provide: EntitySpaceServices,
-            deps: [EntitySchemaCatalog, EntityQueryTracing, MusicBoxClientSideEntityApi],
-            useFactory: (
-                catalog: EntitySchemaCatalog,
-                tracing: EntityQueryTracing,
-                clientSideEntityApi: MusicBoxClientSideEntityApi
-            ) => {
-                const context = new EntitySpaceServices(catalog, tracing);
-                context.pushSource(clientSideEntityApi);
-                context.pushStore(clientSideEntityApi);
-
-                return context;
-            },
-        },
-
         {
             provide: MusicBoxWorkspace,
             deps: [EntitySpaceServices],
-            useFactory: (context: EntitySpaceServices) => {
-                return new MusicBoxWorkspace(context);
+            useFactory: (services: EntitySpaceServices) => {
+                return new MusicBoxWorkspace(services);
             },
         },
         {
@@ -116,4 +67,27 @@ import { MusicBoxWorkspace } from "./music-box-workspace";
     ],
     bootstrap: [MusicAppComponent],
 })
-export class AppModule {}
+export class AppModule {
+    constructor(
+        services: EntitySpaceServices,
+        clientSideEntityApi: MusicBoxClientSideEntityApi,
+        songLocationSchema: SongLocationEntitySchema
+    ) {
+        services.getCatalog().addSchema(songLocationSchema);
+        songLocationSchema.addProperty("song", services.getCatalog().resolve(SongBlueprint));
+        songLocationSchema.addRelation("song", "songId", "id");
+        services.pushSource(clientSideEntityApi);
+        services.pushHydrator(clientSideEntityApi);
+        services.getTracing().enableConsole();
+
+        services.pushSource(
+            clientSideEntityApi
+                .withGetAllArtists()
+                .withGetSongById()
+                .withGetAllSongs()
+                .withSearchSongs()
+                .withGetSongLocationsBySongId()
+                .withGetAllSongLocationTypes()
+        );
+    }
+}

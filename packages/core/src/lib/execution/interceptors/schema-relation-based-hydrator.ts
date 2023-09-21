@@ -4,13 +4,12 @@ import { Entity } from "../../common/entity.type";
 import { UnpackedEntitySelection } from "../../common/unpacked-entity-selection.type";
 import { EntityCriteriaTools } from "../../criteria/entity-criteria-tools";
 import { EntitySet } from "../../entity/data-structures/entity-set";
-import { InMemoryEntityDatabase } from "../../entity/in-memory-entity-database";
 import { EntityQuery } from "../../query/entity-query";
 import { EntityQueryTools } from "../../query/entity-query-tools";
 import { IEntityQuery } from "../../query/entity-query.interface";
 import { EntitySelection } from "../../query/entity-selection";
 import { EntitySelectionTools } from "../../query/entity-selection-tools";
-import { EntityQueryTracing } from "../entity-query-tracing";
+import { EntitySpaceServices } from "../entity-space-services";
 import { EntityStream } from "../entity-stream";
 import { EntityStreamPacket } from "../entity-stream-packet";
 import { runInterceptors } from "../run-interceptors.fn";
@@ -24,7 +23,7 @@ interface HydrateRelationQuery {
 
 export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
     constructor(
-        private readonly tracing: EntityQueryTracing,
+        private readonly services: EntitySpaceServices,
         private readonly interceptors: IEntityStreamInterceptor[]
     ) {}
 
@@ -38,24 +37,14 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
 
     intercept(stream: EntityStream): EntityStream {
         let accepted: IEntityQuery[] = [];
-        // const accepted: IEntityQuery[] = [];
         let rejected: IEntityQuery[] = [];
-        // const rejected: IEntityQuery[] = [];
-        const payloads: EntitySet[] = [];
-        const cache = new InMemoryEntityDatabase();
 
         return merge(
             stream.pipe(map(EntityStreamPacket.withoutRejected), filter(EntityStreamPacket.isNotEmpty)),
             stream.pipe(
                 tap(packet => {
-                    // [note] currently, merging is not necessary to make it work (just pushing also seems to work)
-                    // currently not sure what difference in impact these two methods have
                     accepted = this.queryTools.mergeQueries(...accepted, ...packet.getAcceptedQueries());
-                    // accepted.push(...packet.getAcceptedQueries());
                     rejected = this.queryTools.mergeQueries(...rejected, ...packet.getRejectedQueries());
-                    // rejected.push(...packet.getRejectedQueries());
-                    payloads.push(...packet.getPayload());
-                    packet.getPayload().forEach(payload => cache.upsertSync(payload));
                 }),
                 // [todo] need to get rid of takeLast()
                 takeLast(1),
@@ -71,7 +60,7 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
                                 continue;
                             }
 
-                            const entitySetToHydrate = cache.querySync(entitySetToHydrateQuery);
+                            const entitySetToHydrate = this.services.getDatabase().querySync(entitySetToHydrateQuery);
 
                             if (!entitySetToHydrate.getEntities().length) {
                                 continue;
@@ -88,7 +77,9 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
                                 )
                                 .filter(isNotFalse);
 
-                            targets.forEach(({ relationQuery }) => this.tracing.hydrationQuerySpawned(relationQuery));
+                            targets.forEach(({ relationQuery }) =>
+                                this.services.getTracing().hydrationQuerySpawned(relationQuery)
+                            );
 
                             if (!targets.length) {
                                 continue;
@@ -209,12 +200,12 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
         const accepted: IEntityQuery[] = [];
         const payloads: EntitySet[] = [];
 
-        return runInterceptors(this.interceptors, [relationQuery], this.tracing).pipe(
+        return runInterceptors(this.interceptors, [relationQuery], this.services.getTracing()).pipe(
             tap(packet => {
                 accepted.push(...packet.getAcceptedQueries());
                 payloads.push(...packet.getPayload());
             }),
-            tap(packet => this.tracing.queryReceivedPacket(relationQuery, packet)),
+            tap(packet => this.services.getTracing().queryReceivedPacket(relationQuery, packet)),
             // [todo] takeLast(1) should be removed as we might tap into streams that never complete
             takeLast(1),
             map(() => {
@@ -234,7 +225,7 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
                     payload: payloads,
                 });
             }),
-            tap(packet => this.tracing.queryReceivedPacket(hydrationQuery.entities.getQuery(), packet))
+            tap(packet => this.services.getTracing().queryReceivedPacket(hydrationQuery.entities.getQuery(), packet))
         );
     }
 
