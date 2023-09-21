@@ -5,6 +5,7 @@ import { BrowserModule } from "@angular/platform-browser";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
 import { EntityQueryTracing, EntitySchemaCatalog, EntityWorkspace } from "@entity-space/core";
 import { SongBlueprint, SongLocationEntitySchema } from "@entity-space/examples/libs/music-model";
+import { EntityWorkspaceContext } from "packages/core/src/lib/execution/entity-workspace-context";
 import { ButtonModule } from "primeng/button";
 import { DialogModule } from "primeng/dialog";
 import { DropdownModule } from "primeng/dropdown";
@@ -49,7 +50,6 @@ import { MusicBoxWorkspace } from "./music-box-workspace";
     ],
     providers: [
         SongLocationEntitySchema,
-        MusicBoxWorkspace,
         {
             provide: EntityQueryTracing,
             useFactory: () => {
@@ -77,15 +77,36 @@ import { MusicBoxWorkspace } from "./music-box-workspace";
             useFactory: (http: HttpClient, schemas: EntitySchemaCatalog, tracing: EntityQueryTracing) => {
                 const controller = new MusicBoxClientSideEntityApi(http, schemas, tracing);
 
-                return (
-                    controller
-                        .withGetAllArtists()
-                        .withGetSongById()
-                        .withGetAllSongs()
-                        .withSearchSongs()
-                        .withGetSongLocationsBySongId()
-                        .withGetAllSongLocationTypes()
-                );
+                return controller
+                    .withGetAllArtists()
+                    .withGetSongById()
+                    .withGetAllSongs()
+                    .withSearchSongs()
+                    .withGetSongLocationsBySongId()
+                    .withGetAllSongLocationTypes();
+            },
+        },
+        {
+            provide: EntityWorkspaceContext,
+            deps: [EntitySchemaCatalog, EntityQueryTracing, MusicBoxClientSideEntityApi],
+            useFactory: (
+                catalog: EntitySchemaCatalog,
+                tracing: EntityQueryTracing,
+                clientSideEntityApi: MusicBoxClientSideEntityApi
+            ) => {
+                const context = new EntityWorkspaceContext(catalog, tracing);
+                context.pushSource(clientSideEntityApi);
+                context.pushStore(clientSideEntityApi);
+
+                return context;
+            },
+        },
+
+        {
+            provide: MusicBoxWorkspace,
+            deps: [EntityWorkspaceContext],
+            useFactory: (context: EntityWorkspaceContext) => {
+                return new MusicBoxWorkspace(context);
             },
         },
         {

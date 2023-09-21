@@ -4,13 +4,15 @@ import { ICriterion } from "../lib/criteria/criterion.interface";
 import { EntityCriteriaTools } from "../lib/criteria/entity-criteria-tools";
 import { EntityQueryTracing } from "../lib/execution/entity-query-tracing";
 import { EntityWorkspace } from "../lib/execution/entity-workspace";
+import { EntityWorkspaceContext } from "../lib/execution/entity-workspace-context";
 import { EntityQueryTools } from "../lib/query/entity-query-tools";
 import { IEntityQuery } from "../lib/query/entity-query.interface";
 import { EntitySchema } from "../lib/schema/entity-schema";
+import { EntitySchemaCatalog } from "../lib/schema/entity-schema-catalog";
 import { IEntitySchema } from "../lib/schema/schema.interface";
 
 function createWorkspace(): EntityWorkspace {
-    return new EntityWorkspace(new EntityQueryTracing());
+    return new EntityWorkspace(new EntityWorkspaceContext(new EntitySchemaCatalog(), new EntityQueryTracing()));
 }
 
 function createQuery(
@@ -29,8 +31,8 @@ describe("EntityWorkspace", () => {
     const criteriaFactory = new EntityCriteriaTools();
     const { where, inArray } = criteriaFactory;
 
-    describe("queryAgainstCache()", () => {
-        it("should execute query w/ 1 simple index", async () => {
+    describe("querying against cache", () => {
+        it("should work using 1 simple index", () => {
             // arrange
             interface Entity {
                 id: number;
@@ -61,14 +63,14 @@ describe("EntityWorkspace", () => {
 
             // act
             const query = createQuery(schema, where<Entity>({ bar: inArray([2, 3]) }));
-            const result = await workspace.queryAgainstCache(query);
+            const result = workspace.getContext().getDatabase().querySync(query).getEntities();
 
             // assert
             expect(result.length).toEqual(expectedEntities.length);
             expect(result).toEqual(expect.arrayContaining(expectedEntities));
         });
 
-        it("should execute query w/ 1 composite index", async () => {
+        it("should work using 1 composite index", () => {
             // arrange
             interface Entity {
                 id: number;
@@ -100,14 +102,14 @@ describe("EntityWorkspace", () => {
 
             // act
             const query = createQuery(fooSchema, where<Entity>({ bar: inArray([2, 3]), baz: inArray([1337]) }));
-            const result = await workspace.queryAgainstCache(query);
+            const result = workspace.getContext().getDatabase().querySync(query).getEntities();
 
             // assert
             expect(result.length).toEqual(expectedEntities.length);
             expect(result).toEqual(expect.arrayContaining(expectedEntities));
         });
 
-        it("should execute query w/ 1 nested index", async () => {
+        it("should work using 1 nested index", () => {
             // arrange
             interface Entity {
                 id: number;
@@ -137,14 +139,14 @@ describe("EntityWorkspace", () => {
 
             // act
             const query = createQuery(fooSchema, where<Entity>({ bar: where({ baz: inArray([2, 3]) }) }));
-            const result = await workspace.queryAgainstCache(query);
+            const result = workspace.getContext().getDatabase().querySync(query).getEntities();
 
             // assert
             expect(result.length).toEqual(expectedEntities.length);
             expect(result).toEqual(expect.arrayContaining(expectedEntities));
         });
 
-        it("should execute query w/ 1 composite nested index", async () => {
+        it("should work using 1 composite nested index", () => {
             // arrange
             interface Entity {
                 id: number;
@@ -182,14 +184,14 @@ describe("EntityWorkspace", () => {
                 fooSchema,
                 where<Entity>({ bar: where({ baz: inArray([2, 3]), moo: inArray([10]) }) })
             );
-            const result = await workspace.queryAgainstCache(query);
+            const result = workspace.getContext().getDatabase().querySync(query).getEntities();
 
             // assert
             expect(result.length).toEqual(expectedEntities.length);
             expect(result).toEqual(expect.arrayContaining(expectedEntities));
         });
 
-        it("should execute query w/ 1 composite distributed nested index", async () => {
+        it("should work using 1 composite distributed nested index", () => {
             // arrange
             interface Entity {
                 id: number;
@@ -234,7 +236,7 @@ describe("EntityWorkspace", () => {
                 })
             );
 
-            const result = await workspace.queryAgainstCache(query);
+            const result = workspace.getContext().getDatabase().querySync(query).getEntities();
 
             // assert
             expect(result.length).toEqual(expectedEntities.length);
@@ -243,7 +245,7 @@ describe("EntityWorkspace", () => {
     });
 
     describe("selections", () => {
-        it("selecting on 1x composite index", async () => {
+        it("selecting on 1x composite index", () => {
             const fooSchema = new EntitySchema("foo")
                 .addInteger("id", true)
                 .addInteger("secondaryId", true)
@@ -268,7 +270,7 @@ describe("EntityWorkspace", () => {
             const query = createQuery(fooSchema, where({ id: inArray([1337]), secondaryId: inArray([128]) }), {
                 bar: true,
             });
-            const fooItems = await workspace.queryAgainstCache(query);
+            const fooItems = workspace.getContext().getDatabase().querySync(query).getEntities();
 
             expect(fooItems).toEqual([
                 {
@@ -282,7 +284,7 @@ describe("EntityWorkspace", () => {
 
         // [todo] i need a less confusing name for entities that are contained in other entities,
         // but are not part of a relation, i.e. not normalized/joinable/...
-        it("expanding on a relation of an entity which itself is not related", async () => {
+        it("expanding on a relation of an entity which itself is not related", () => {
             // arrange
             const fooSchema = new EntitySchema("foo").addInteger("id", true).setKey("id");
             const barSchema = new EntitySchema("bar").addInteger("bazId", true).addIndex("bazId");
@@ -296,7 +298,7 @@ describe("EntityWorkspace", () => {
 
             // act
             const query = createQuery(fooSchema, where({ id: inArray([1337]) }), { bar: { baz: true } });
-            const fooItems = await workspace.queryAgainstCache(query);
+            const fooItems = workspace.getContext().getDatabase().querySync(query).getEntities();
 
             // assert
             expect(fooItems).toEqual([
@@ -305,7 +307,7 @@ describe("EntityWorkspace", () => {
         });
     });
 
-    it("normalize items, add them to store, then query", async () => {
+    it("normalize items, add them to store, then query", () => {
         // arrange
         interface Foo {
             bar: Bar;
@@ -359,12 +361,14 @@ describe("EntityWorkspace", () => {
         workspace.add(fooSchema, addedItems);
 
         const query = createQuery(fooSchema, where({ id: inArray([1337]) }), { bar: { baz: true } });
-        const queriedItems = await workspace.queryAgainstCache(query);
+        const queriedItems = workspace.getContext().getDatabase().querySync(query).getEntities();
 
         // assert
         expect(queriedItems).toEqual(addedItems);
     });
 
+    // [todo] deactivated because a lot of changes broke it. keeping it as a reference on how to write reactive queries tests in the future,
+    // as it is quite easy to understand how it works.
     xdescribe("reactive queries", () => {
         const timeout = 100;
 
@@ -401,12 +405,17 @@ describe("EntityWorkspace", () => {
                 // act / assert
                 let index = 0;
                 const actual = await firstValueFrom(
-                    workspace.query$<Entity>(entitySchema, { id: inArray([1, 2]) }).pipe(
-                        // [todo] should also make assertion against entities we just received
-                        tap(() => workspace.add<Entity>(entitySchema, changes[index++] ?? [])),
-                        take(changes.length + 1),
-                        toArray()
-                    )
+                    // workspace.query$<Entity>(entitySchema, { id: inArray([1, 2]) }).pipe(
+                    workspace
+                        .fromSchema(entitySchema)
+                        .where({ id: [1, 2] })
+                        .findAll()
+                        .pipe(
+                            // [todo] should also make assertion against entities we just received
+                            tap(() => workspace.add<Entity>(entitySchema, changes[index++] ?? [])),
+                            take(changes.length + 1),
+                            toArray()
+                        )
                 );
 
                 expect(actual).toEqual([entities, expectedEntities]);

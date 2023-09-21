@@ -37,9 +37,14 @@ export class EntityApi implements IEntityStreamInterceptor {
         return this;
     }
 
+    addEndpoint_noBuilder(endpoint: EntityApiEndpoint): this {
+        this.endpoints.push(endpoint);
+        return this;
+    }
+
     intercept(stream: EntityStream): EntityStream {
         return merge(
-            stream.pipe(map(EntityStreamPacket.withoutRejected)),
+            stream.pipe(map(EntityStreamPacket.withoutRejected), filter(EntityStreamPacket.isNotEmpty)),
             stream.pipe(
                 filter(EntityStreamPacket.hasRejected),
                 map(packet => this.query$(packet.getRejectedQueries())),

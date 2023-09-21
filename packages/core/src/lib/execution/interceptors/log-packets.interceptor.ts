@@ -40,10 +40,12 @@ export class LogPacketsInterceptor implements IEntityStreamInterceptor {
                 if (logFinal) {
                     const accepted = mergedPacket.getAcceptedQueries().map(q => q.toString());
                     const rejected = mergedPacket.getRejectedQueries().map(q => q.toString());
+                    const delivered = mergedPacket.getDeliveredQueries().map(q => q.toString());
                     const errors = mergedPacket.getErrors().map(q => q.getErrorMessage());
                     const entities = mergedPacket.getPayload().map(p => p.getEntities());
 
                     console.log("🎯 ✔️ ", JSON.stringify(accepted, void 0, 4));
+                    console.log("🎯 🚚 ", JSON.stringify(delivered, void 0, 4));
                     console.log("🎯 ❌ ", JSON.stringify(rejected, void 0, 4));
                     console.log("🎯 🧨 ", JSON.stringify(errors, void 0, 4));
                     console.log("🎯 🎁 ", JSON.stringify(entities, void 0, 4));

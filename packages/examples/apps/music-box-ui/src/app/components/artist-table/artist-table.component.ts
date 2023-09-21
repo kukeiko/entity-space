@@ -25,7 +25,6 @@ export class ArtistTableComponent implements OnInit {
 
     artists$ = this.artistsInput$.pipe(
         // [todo] use some meaningful hydration
-        switchMap(artists => this.entities.scope(ArtistBlueprint).hydrate(artists, {})),
         map(artists => artists.sort((a, b) => a.name.localeCompare(b.name)))
     );
 

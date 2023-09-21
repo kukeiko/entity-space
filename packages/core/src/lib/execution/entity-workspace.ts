@@ -1,11 +1,8 @@
-import { Class, DeepPartial, isNotFalse } from "@entity-space/utils";
-import { flatten } from "lodash";
-import { EMPTY, filter, from, lastValueFrom, map, merge, mergeAll, Observable, of, Subject, switchMap } from "rxjs";
+import { Class, DeepPartial } from "@entity-space/utils";
+import { Observable } from "rxjs";
 import { Entity } from "../common/entity.type";
-import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
-import { ICriterion } from "../criteria/criterion.interface";
 import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
-import { EntityWhere, IEntityCriteriaTools } from "../criteria/entity-criteria-tools.interface";
+import { IEntityCriteriaTools } from "../criteria/entity-criteria-tools.interface";
 import { EntitySet } from "../entity/data-structures/entity-set";
 import { IEntityStore } from "../entity/entity-store.interface";
 import { InMemoryEntityDatabase } from "../entity/in-memory-entity-database";
@@ -16,28 +13,27 @@ import { EntityBlueprintInstance } from "../schema/entity-blueprint-instance.typ
 import { EntitySchemaCatalog } from "../schema/entity-schema-catalog";
 import { IEntitySchema } from "../schema/schema.interface";
 import { EntityQueryBuilder, EntityQueryBuilderCreate } from "./entity-query-builder";
-import { EntityQueryTracing } from "./entity-query-tracing";
-import { EntityStream } from "./entity-stream";
-import { EntityStreamPacket } from "./entity-stream-packet";
-import { IEntityStreamInterceptor } from "./interceptors/entity-stream-interceptor.interface";
-import { LoadFromCacheInterceptor } from "./interceptors/load-from-cache.interceptor";
-import { LogPacketsInterceptor } from "./interceptors/log-packets.interceptor";
-import { SchemaRelationBasedHydrator } from "./interceptors/schema-relation-based-hydrator";
-import { WriteToCacheInterceptor } from "./interceptors/write-to-cache.interceptor";
-import { runInterceptors } from "./run-interceptors.fn";
-import { ScopedEntityWorkspace } from "./scoped-entity-workspace";
+import { EntityWorkspaceContext } from "./entity-workspace-context";
 
-// [todo] move to "execution" folder
-export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
-    constructor(private readonly tracing: EntityQueryTracing) {}
+export class EntityWorkspace implements IEntityStore {
+    constructor(private readonly context: EntityWorkspaceContext) {
+        this.store = context.getStores()[0]; // [todo] compatibility with music-box app
+    }
 
     private store?: IEntityStore;
-    private schemas?: EntitySchemaCatalog;
-    private readonly database = new InMemoryEntityDatabase();
-    private readonly loadFromCacheInterceptor = new LoadFromCacheInterceptor(this.database, this.tracing);
-    private readonly writeToCacheInterceptor = new WriteToCacheInterceptor(this.database);
-    private readonly watchedQueries = new Map<IEntityQuery, Subject<Entity[]>>();
-    interceptors: IEntityStreamInterceptor[] = [];
+
+    private get catalog(): EntitySchemaCatalog {
+        return this.context.getCatalog();
+    }
+
+    private get database(): InMemoryEntityDatabase {
+        return this.context.getDatabase();
+    }
+
+    getContext(): EntityWorkspaceContext {
+        return this.context;
+    }
+
     private readonly criteriaTools: IEntityCriteriaTools = new EntityCriteriaTools();
     private readonly queryTools: IEntityQueryTools = new EntityQueryTools({ criteriaTools: this.criteriaTools });
 
@@ -70,221 +66,10 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
                 entities: entities as Entity[],
             })
         );
-
-        this.emitAllWatchedQueries();
-    }
-
-    private emitAllWatchedQueries(): void {
-        for (const [watchedQuery, subject] of this.watchedQueries) {
-            new Promise(resolve => setTimeout(resolve, 0))
-                .then(() => this.queryAgainstCache(watchedQuery))
-                .then(value => subject.next(value));
-        }
     }
 
     setStore(store: IEntityStore): void {
         this.store = store;
-    }
-
-    setSchemaCatalog(schemas: EntitySchemaCatalog): void {
-        this.schemas = schemas;
-    }
-
-    async query<T extends Entity = Entity>(query: IEntityQuery): Promise<false | EntitySet<T>[]> {
-        const sources = [
-            this.loadFromCacheInterceptor,
-            // new LogPacketsInterceptor(true),
-            ...this.interceptors,
-            new SchemaRelationBasedHydrator(this.tracing, [this]),
-            this.writeToCacheInterceptor,
-        ];
-
-        await lastValueFrom(runInterceptors(sources, [query]));
-        this.emitAllWatchedQueries();
-
-        const entities = (await this.queryAgainstCache(query)) as T[];
-        this.tracing.queryResolved(query, `${entities.length}x entit${entities.length === 1 ? "y" : "ies"}`);
-
-        return [new EntitySet({ query, entities })];
-    }
-
-    intercept(stream: EntityStream<Entity>): EntityStream<Entity> {
-        return merge(
-            stream.pipe(map(EntityStreamPacket.withoutRejected), filter(EntityStreamPacket.isNotEmpty)),
-            stream.pipe(
-                map(EntityStreamPacket.withOnlyRejected),
-                filter(EntityStreamPacket.isNotEmpty),
-                switchMap(packet =>
-                    merge(...packet.getRejectedQueries().map(query => this.query(query))).pipe(
-                        filter(isNotFalse),
-                        map(payload => of(new EntityStreamPacket({ payload })))
-                    )
-                ),
-                mergeAll()
-            )
-        );
-    }
-
-    // [todo] not reactive yet
-    hydrate$<T extends Entity>(
-        schema: IEntitySchema<T>,
-        entities: T[],
-        selection: UnpackedEntitySelection<T>
-    ): Observable<T[]> {
-        if (!entities.length) {
-            return of([]);
-        }
-
-        if (!schema) {
-            return EMPTY;
-        }
-        const criteria = this.criteriaTools.createCriterionFromEntities(entities, schema.getKey().getPaths());
-        const entitySetQuery = this.queryTools.createQuery({
-            entitySchema: schema,
-            criteria,
-            // [todo] selection missing
-        });
-
-        const hydrationQuery = this.queryTools.createQuery({ entitySchema: schema, criteria, selection });
-        const cachedQueries = this.database.getCachedQueries(hydrationQuery.getEntitySchema());
-        const subtracted = this.queryTools.subtractQueries([hydrationQuery], cachedQueries);
-        const queriesAgainstSource = subtracted === false ? [hydrationQuery] : subtracted;
-
-        this.tracing.querySpawned(hydrationQuery);
-        if (queriesAgainstSource.length) {
-            if (subtracted) {
-                this.tracing.queryGotSubtracted(hydrationQuery, cachedQueries, queriesAgainstSource, {
-                    byLabel: "by cached",
-                });
-            }
-
-            const hydrator = new SchemaRelationBasedHydrator(this.tracing, [this]);
-            const entitySet = new EntitySet({ entities, query: entitySetQuery });
-            const kickstartHydrationSource: IEntityStreamInterceptor = {
-                intercept(stream) {
-                    return merge(stream, of(new EntityStreamPacket({ payload: [entitySet] })));
-                },
-            };
-
-            return runInterceptors([kickstartHydrationSource, hydrator], [hydrationQuery]).pipe(
-                map(() => {
-                    const entities = this.database.querySync(hydrationQuery).getEntities();
-                    // [todo] should only trace "resolved" once
-                    this.tracing.queryResolved(hydrationQuery, JSON.stringify(entities));
-                    return entities;
-                })
-            ) as Observable<T[]>;
-        } else {
-            this.tracing.queryGotFullySubtracted(hydrationQuery, cachedQueries, { byLabel: "by cached" });
-            const entities = this.database.querySync(hydrationQuery).getEntities();
-            this.tracing.queryResolved(hydrationQuery, JSON.stringify(entities));
-            return of(entities) as Observable<T[]>;
-        }
-    }
-
-    query$<T extends Entity>(
-        schema: IEntitySchema<T>,
-        criterion: ICriterion | EntityWhere<T> = this.criteriaTools.all(),
-        selection?: UnpackedEntitySelection<T>,
-        parameters?: Entity
-    ): Observable<T[]> {
-        if (!this.criteriaTools.isCriterion(criterion)) {
-            criterion = this.criteriaTools.where(criterion);
-        }
-
-        const query = this.queryTools.createQuery({
-            entitySchema: schema,
-            // [todo] type assertion
-            criteria: criterion as ICriterion,
-            selection: selection,
-            parameters,
-        });
-
-        this.tracing.querySpawned(query);
-
-        return from(this.query<T>(query)).pipe(
-            map(results => {
-                if (!results) {
-                    return [];
-                }
-
-                return flatten(results.map(entitySet => entitySet.getEntities()));
-            })
-        );
-        // const subject = new Subject<Entity[]>();
-        // const subject = new ReplaySubject<Entity[]>(1);
-
-        // this.tracing.querySpawned(query);
-
-        // return from(this.query(query)).pipe(
-        //     switchMap(result => {
-        //         if (result === false) {
-        //             return of([]);
-        //         }
-
-        //         // const keySchema = query.getEntitySchema().getKey();
-        //         const entities = flatMap(result, x => x.getEntities());
-
-        //         // [todo] also track:
-        //         // - related entities
-        //         // - newly added entities that fit the criteria
-        //         // const trackedCriterion = createCriterionFromEntities(entities, keySchema.getPath());
-
-        //         // [todo] remove subject once no longer subscribed to
-        //         this.watchedQueries.set(
-        //             query,
-        //             // new Query(query.getEntitySchema(), trackedCriterion, query.getExpansionValue()),
-        //             subject
-        //         );
-
-        //         return subject.asObservable().pipe(
-        //             startWith(entities),
-        //             distinctUntilChanged((a, b) => {
-        //                 const normalizedA = normalizeEntities(query.getEntitySchema(), a);
-        //                 const normalizedB = normalizeEntities(query.getEntitySchema(), b);
-
-        //                 const differentFoundSchemas = xor(
-        //                     normalizedA
-        //                         .getSchemas()
-        //                         .filter(schema => normalizedA.get(schema).length > 0)
-        //                         .map(schema => schema.getId()),
-        //                     normalizedB
-        //                         .getSchemas()
-        //                         .filter(schema => normalizedA.get(schema).length > 0)
-        //                         .map(schema => schema.getId())
-        //                 );
-
-        //                 if (differentFoundSchemas.length > 0) {
-        //                     return false;
-        //                 }
-
-        //                 for (const schema of normalizedA.getSchemas()) {
-        //                     const diff = xorWith(normalizedA.get(schema), normalizedB.get(schema), isEqual);
-
-        //                     if (diff.length > 0) {
-        //                         return false;
-        //                     }
-        //                 }
-
-        //                 // debugger;
-
-        //                 // return isEqual(a, b);
-        //                 const equal = xorWith(a, b, isEqual);
-
-        //                 if (equal.length > 0) {
-        //                     console.log("not equal", a, b);
-        //                 }
-
-        //                 return equal.length == 0;
-        //             }),
-        //             tap(() => this.tracing.reactiveQueryEmitted(query)),
-        //             finalize(() => {
-        //                 this.tracing.reactiveQueryDisposed(query);
-        //                 this.watchedQueries.delete(query);
-        //             })
-        //         ) as any as Observable<T[]>;
-        //     })
-        // );
     }
 
     // [todo] should stay async because at one point i want to make use of service-workers
@@ -311,8 +96,6 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
             })
         );
 
-        this.emitAllWatchedQueries();
-
         return result as T[];
     }
 
@@ -330,59 +113,59 @@ export class EntityWorkspace implements IEntityStore, IEntityStreamInterceptor {
             })
         );
 
-        this.emitAllWatchedQueries();
-
         return result as T[];
     }
+
+    // [todo] copied over from (now deleted) ScopedEntityWorkspace, want to reuse for DX
+    // oneById(id: number | string | Entity, hydrate?: UnpackedEntitySelection<T>): Observable<T | undefined> {
+    //     let bag: Record<string, any>;
+    //     const keyPaths = this.schema.getKey().getPaths();
+
+    //     if (keyPaths.length > 1) {
+    //         if (typeof id !== "object") {
+    //             throw new Error("composite id expected");
+    //         }
+
+    //         bag = {};
+
+    //         for (const path of keyPaths) {
+    //             bag = writePath(path, bag, readPath(path, id));
+    //         }
+    //     } else {
+    //         bag = writePath(keyPaths[0], {}, id);
+    //     }
+
+    //     const criterion = new EntityCriteriaTools().where(bag);
+
+    //     return this.workspace
+    //         .query$<T>(this.schema, criterion, EntitySelection.unpack(this.schema, hydrate ?? true))
+    //         .pipe(map(entities => entities[0]));
+    // }
 
     delete(entities: Entity[], schema: IEntitySchema): Promise<boolean> {
         throw new Error("Method not implemented.");
     }
 
-    clear(): void {
-        this.database.clear();
+    from<T extends Entity>(blueprint: Class<T>): EntityQueryBuilder<EntityBlueprintInstance<T>> {
+        return new EntityQueryBuilder({ schema: this.catalog.resolve(blueprint), context: this.context });
+    }
+
+    fromSchema(schema: IEntitySchema): EntityQueryBuilder {
+        return new EntityQueryBuilder({ schema, context: this.context });
+    }
+
+    protected getQueryBuilderCreate<T extends Entity = Entity>(schema: IEntitySchema<T>): EntityQueryBuilderCreate<T> {
+        return {
+            schema,
+            context: this.context,
+        };
     }
 
     private toSchema(schema: IEntitySchema | Class): IEntitySchema {
         if (!("getId" in schema)) {
-            const resolvedSchema = this.schemas?.resolve(schema);
-
-            if (!resolvedSchema) {
-                throw new Error(`failed to resolve blueprint to schema for type ${schema.name}`);
-            }
-
-            return resolvedSchema;
+            return this.catalog.resolve(schema);
         }
 
         return schema;
-    }
-
-    scope<T extends Entity>(blueprint: Class<T>): ScopedEntityWorkspace<EntityBlueprintInstance<T>> {
-        // [todo] to be removed by making schemas not undefined
-        if (!this.schemas) {
-            throw new Error("this.schemas is falsy");
-        }
-
-        const schema = this.schemas.resolve(blueprint);
-
-        return new ScopedEntityWorkspace({ schema, workspace: this });
-    }
-
-    from<T extends Entity>(blueprint: Class<T>): EntityQueryBuilder<EntityBlueprintInstance<T>> {
-        // [todo] to be removed by making schemas not undefined
-        if (!this.schemas) {
-            throw new Error("this.schemas is falsy");
-        }
-
-        const schema = this.schemas.resolve(blueprint);
-
-        return new EntityQueryBuilder({ schema, workspace: this });
-    }
-
-    protected getQueryBuilderParts<T extends Entity = Entity>(schema: IEntitySchema<T>): EntityQueryBuilderCreate<T> {
-        return {
-            schema,
-            workspace: this,
-        };
     }
 }

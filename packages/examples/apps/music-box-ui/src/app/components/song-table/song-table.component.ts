@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input } from "@angular/core";
-import { EntitySchemaCatalog } from "@entity-space/core";
+import { EntitySchemaCatalog, EntitySelection } from "@entity-space/core";
 import { Song, SongBlueprint, WebSongLocation } from "@entity-space/examples/libs/music-model";
 import { map, ReplaySubject, switchMap } from "rxjs";
 import { MusicBoxWorkspace } from "../../music-box-workspace";
@@ -33,7 +33,14 @@ export class SongTableComponent {
     }
 
     songs$ = this.songInput$.pipe(
-        switchMap(songs => this.entities.scope(SongBlueprint).hydrate(songs, { artist: true, locations: true })),
+        // [todo] deactivated as i removed hydrate$() (was a really old implementation)
+        // switchMap(songs =>
+        //     this.entities.hydrate$(
+        //         this.schemas.resolve(SongBlueprint),
+        //         songs,
+        //         EntitySelection.unpack(this.schemas.resolve(SongBlueprint), { artist: true, locations: true })
+        //     )
+        // ),
         map(songs => songs.slice().sort((a, b) => a.name.localeCompare(b.name)))
     );
 

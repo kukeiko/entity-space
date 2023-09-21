@@ -71,10 +71,6 @@ export class EntityStreamPacket<T extends Entity = Entity> {
         return `📦 ${[accepted, delivered, rejected, entities].filter(str => str.length > 0).join(", ")}`;
     }
 
-    concat(other: EntityStreamPacket<T>): EntityStreamPacket<T> {
-        return EntityStreamPacket.concat(this, other);
-    }
-
     merge(other: EntityStreamPacket<T>): EntityStreamPacket<T> {
         return new EntityStreamPacket<T>({
             accepted: this.queryTools.mergeQueries(...this.accepted, ...other.accepted),
@@ -123,18 +119,10 @@ export class EntityStreamPacket<T extends Entity = Entity> {
         return this.payload.length > 0;
     }
 
-    static concat<T extends Entity>(a: EntityStreamPacket<T>, b: EntityStreamPacket<T>): EntityStreamPacket<T> {
-        return new EntityStreamPacket<T>({
-            accepted: [...a.getAcceptedQueries(), ...b.getAcceptedQueries()],
-            errors: [...a.getErrors(), ...b.getErrors()],
-            payload: [...a.getPayload(), ...b.getPayload()],
-            rejected: [...a.getRejectedQueries(), ...b.getRejectedQueries()],
-        });
-    }
-
     static withoutRejected<T extends Entity>(packet: EntityStreamPacket<T>): EntityStreamPacket<T> {
         return new EntityStreamPacket<T>({
             accepted: packet.getAcceptedQueries(),
+            delivered: packet.getDeliveredQueries(),
             errors: packet.getErrors(),
             payload: packet.getPayload(),
         });

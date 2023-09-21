@@ -24,6 +24,7 @@ export * from "./lib/execution/entity-query-tracing";
 export * from "./lib/execution/entity-stream";
 export * from "./lib/execution/entity-stream-packet";
 export * from "./lib/execution/entity-workspace";
+export * from "./lib/execution/entity-workspace-context";
 export * from "./lib/lexer/lex.fn";
 export * from "./lib/lexer/token-type.enum";
 export * from "./lib/lexer/token.contract";

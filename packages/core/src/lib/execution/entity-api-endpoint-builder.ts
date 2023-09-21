@@ -18,7 +18,7 @@ export class EntityApiEndpointBuilder<
     S = {},
     P extends Entity | undefined = Entity | undefined
 > {
-    constructor(schema: IEntitySchema) {
+    constructor(schema: IEntitySchema<T>) {
         this.schema = schema;
         this.supportedSelection = schema.getDefaultSelection();
         const criteriaTools = new EntityCriteriaTools();
