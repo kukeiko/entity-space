@@ -30,6 +30,10 @@ export class EntityHydratorApi implements IEntityStreamInterceptor {
 
     hydrationEndpoints: IEntityHydrationEndpoint[] = [];
 
+    getName(): string {
+        return EntityHydratorApi.name;
+    }
+
     intercept(stream: EntityStream<Entity>): EntityStream<Entity> {
         const cache = new InMemoryEntityDatabase();
         let delivered: IEntityQuery[] = [];

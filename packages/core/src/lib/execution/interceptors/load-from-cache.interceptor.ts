@@ -14,6 +14,10 @@ export class LoadFromCacheInterceptor implements IEntityStreamInterceptor {
     private readonly criteriaTools = new EntityCriteriaTools();
     private readonly queryTools = new EntityQueryTools({ criteriaTools: this.criteriaTools });
 
+    getName(): string {
+        return LoadFromCacheInterceptor.name;
+    }
+
     intercept(stream: EntityStream<Entity>): EntityStream<Entity> {
         return merge(
             stream.pipe(map(EntityStreamPacket.withoutRejected), filter(EntityStreamPacket.isNotEmpty)),

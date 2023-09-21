@@ -32,6 +32,10 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
     private readonly queryTools = new EntityQueryTools({ criteriaTools: this.criteriaTools });
     private readonly selectionTools = new EntitySelectionTools();
 
+    getName(): string {
+        return SchemaRelationBasedHydrator.name;
+    }
+
     intercept(stream: EntityStream): EntityStream {
         let accepted: IEntityQuery[] = [];
         // const accepted: IEntityQuery[] = [];
@@ -205,7 +209,7 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
         const accepted: IEntityQuery[] = [];
         const payloads: EntitySet[] = [];
 
-        return runInterceptors(this.interceptors, [relationQuery]).pipe(
+        return runInterceptors(this.interceptors, [relationQuery], this.tracing).pipe(
             tap(packet => {
                 accepted.push(...packet.getAcceptedQueries());
                 payloads.push(...packet.getPayload());

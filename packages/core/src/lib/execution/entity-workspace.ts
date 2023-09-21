@@ -13,25 +13,25 @@ import { EntityBlueprintInstance } from "../schema/entity-blueprint-instance.typ
 import { EntitySchemaCatalog } from "../schema/entity-schema-catalog";
 import { IEntitySchema } from "../schema/schema.interface";
 import { EntityQueryBuilder, EntityQueryBuilderCreate } from "./entity-query-builder";
-import { EntityWorkspaceContext } from "./entity-workspace-context";
+import { EntitySpaceServices } from "./entity-space-services";
 
 export class EntityWorkspace implements IEntityStore {
-    constructor(private readonly context: EntityWorkspaceContext) {
-        this.store = context.getStores()[0]; // [todo] compatibility with music-box app
+    constructor(private readonly services: EntitySpaceServices) {
+        this.store = services.getStores()[0]; // [todo] compatibility with music-box app
     }
 
     private store?: IEntityStore;
 
     private get catalog(): EntitySchemaCatalog {
-        return this.context.getCatalog();
+        return this.services.getCatalog();
     }
 
     private get database(): InMemoryEntityDatabase {
-        return this.context.getDatabase();
+        return this.services.getDatabase();
     }
 
-    getContext(): EntityWorkspaceContext {
-        return this.context;
+    getContext(): EntitySpaceServices {
+        return this.services;
     }
 
     private readonly criteriaTools: IEntityCriteriaTools = new EntityCriteriaTools();
@@ -147,17 +147,17 @@ export class EntityWorkspace implements IEntityStore {
     }
 
     from<T extends Entity>(blueprint: Class<T>): EntityQueryBuilder<EntityBlueprintInstance<T>> {
-        return new EntityQueryBuilder({ schema: this.catalog.resolve(blueprint), context: this.context });
+        return new EntityQueryBuilder({ schema: this.catalog.resolve(blueprint), context: this.services });
     }
 
     fromSchema(schema: IEntitySchema): EntityQueryBuilder {
-        return new EntityQueryBuilder({ schema, context: this.context });
+        return new EntityQueryBuilder({ schema, context: this.services });
     }
 
     protected getQueryBuilderCreate<T extends Entity = Entity>(schema: IEntitySchema<T>): EntityQueryBuilderCreate<T> {
         return {
             schema,
-            context: this.context,
+            context: this.services,
         };
     }
 

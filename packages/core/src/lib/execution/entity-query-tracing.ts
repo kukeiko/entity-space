@@ -159,4 +159,25 @@ export class EntityQueryTracing {
     fromCache(query: IEntityQuery): void {
         this.print(query, "💾 from cache", query.toString());
     }
+
+    streamDidNotReportAnyRejections(queries: IEntityQuery[], interceptorName: string): void {
+        queries.forEach(query => {
+            this.print(
+                query,
+                `🐞 original stream ${interceptorName} didn't report any meaningful rejections`,
+                query.toString()
+            );
+        });
+    }
+
+    streamDidNotReportSomeRejections(queries: IEntityQuery[], expected: IEntityQuery[], interceptorName: string): void {
+        queries.forEach(query => {
+            this.print(
+                query,
+                `🐞 original stream ${interceptorName} didn't report some rejections`,
+                query.toString(),
+                expected.join(", ")
+            );
+        });
+    }
 }

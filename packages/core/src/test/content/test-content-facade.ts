@@ -26,6 +26,10 @@ export class TestContentFacade implements IEntityStreamInterceptor {
     private readonly api = new TestContentEntityApi(this.repository, this.catalog, this.tracing);
     private packetLogging = false;
 
+    getName(): string {
+        return TestContentFacade.name;
+    }
+
     setData<K extends keyof TestContentData>(key: K, entities: TestContentData[K]): this {
         this.repository.set(key, entities);
         return this;
@@ -83,7 +87,7 @@ export class TestContentFacade implements IEntityStreamInterceptor {
             new LogPacketsInterceptor(this.packetLogging),
         ];
 
-        const packet = await lastValueFrom(runInterceptors(interceptors, [query]));
+        const packet = await lastValueFrom(runInterceptors(interceptors, [query], this.tracing));
 
         if (packet.getErrors().length) {
             throw new Error(

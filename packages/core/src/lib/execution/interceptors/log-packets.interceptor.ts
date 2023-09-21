@@ -9,6 +9,10 @@ export type LogPacketsInterceptorOptions = { logEach?: boolean; logFinal?: boole
 export class LogPacketsInterceptor implements IEntityStreamInterceptor {
     constructor(private readonly options: LogPacketsInterceptorOptions) {}
 
+    getName(): string {
+        return LogPacketsInterceptor.name;
+    }
+
     intercept(stream: EntityStream<Entity>): EntityStream<Entity> {
         let options = this.options;
 

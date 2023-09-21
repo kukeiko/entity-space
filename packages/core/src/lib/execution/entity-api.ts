@@ -26,6 +26,10 @@ export class EntityApi implements IEntityStreamInterceptor {
     protected readonly shapeTools = new EntityCriteriaShapeTools({ criteriaTools: this.criteriaTools });
     protected readonly whereEntityTools = new WhereEntityTools(this.shapeTools, this.criteriaTools);
 
+    getName(): string {
+        return EntityApi.name;
+    }
+
     addEndpoint<T extends Entity>(
         schema: IEntitySchema<T>,
         build: (builder: EntityApiEndpointBuilder<T>) => unknown

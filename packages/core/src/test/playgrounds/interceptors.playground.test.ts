@@ -110,7 +110,7 @@ describe("playground: interceptors", () => {
         const query = queryTools.createQuery({ entitySchema: productSchema, selection });
 
         // act
-        const actual = await lastValueFrom(runInterceptors(interceptors, [query]));
+        const actual = await lastValueFrom(runInterceptors(interceptors, [query], tracing));
 
         // assert
     });
@@ -226,7 +226,7 @@ describe("playground: interceptors", () => {
         });
 
         // act
-        const actual = await lastValueFrom(runInterceptors(interceptors, [query]));
+        const actual = await lastValueFrom(runInterceptors(interceptors, [query], tracing));
 
         // assert
     });

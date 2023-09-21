@@ -5,7 +5,7 @@ import { EntityQueryTracing } from "./entity-query-tracing";
 import { IEntityStreamInterceptor } from "./interceptors/entity-stream-interceptor.interface";
 
 // [todo] I think I want a name unrelated to the EntityWorkspace
-export class EntityWorkspaceContext {
+export class EntitySpaceServices {
     constructor(private readonly catalog: EntitySchemaCatalog, private readonly tracing: EntityQueryTracing) {}
 
     private readonly database = new InMemoryEntityDatabase();

@@ -3,9 +3,8 @@ import { NgModule } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { BrowserModule } from "@angular/platform-browser";
 import { BrowserAnimationsModule } from "@angular/platform-browser/animations";
-import { EntityQueryTracing, EntitySchemaCatalog, EntityWorkspace } from "@entity-space/core";
+import { EntityQueryTracing, EntitySchemaCatalog, EntitySpaceServices, EntityWorkspace } from "@entity-space/core";
 import { SongBlueprint, SongLocationEntitySchema } from "@entity-space/examples/libs/music-model";
-import { EntityWorkspaceContext } from "packages/core/src/lib/execution/entity-workspace-context";
 import { ButtonModule } from "primeng/button";
 import { DialogModule } from "primeng/dialog";
 import { DropdownModule } from "primeng/dropdown";
@@ -87,14 +86,14 @@ import { MusicBoxWorkspace } from "./music-box-workspace";
             },
         },
         {
-            provide: EntityWorkspaceContext,
+            provide: EntitySpaceServices,
             deps: [EntitySchemaCatalog, EntityQueryTracing, MusicBoxClientSideEntityApi],
             useFactory: (
                 catalog: EntitySchemaCatalog,
                 tracing: EntityQueryTracing,
                 clientSideEntityApi: MusicBoxClientSideEntityApi
             ) => {
-                const context = new EntityWorkspaceContext(catalog, tracing);
+                const context = new EntitySpaceServices(catalog, tracing);
                 context.pushSource(clientSideEntityApi);
                 context.pushStore(clientSideEntityApi);
 
@@ -104,8 +103,8 @@ import { MusicBoxWorkspace } from "./music-box-workspace";
 
         {
             provide: MusicBoxWorkspace,
-            deps: [EntityWorkspaceContext],
-            useFactory: (context: EntityWorkspaceContext) => {
+            deps: [EntitySpaceServices],
+            useFactory: (context: EntitySpaceServices) => {
                 return new MusicBoxWorkspace(context);
             },
         },

@@ -18,13 +18,14 @@ import { EntitySelection } from "../query/entity-selection";
 import { IEntitySchema } from "../schema/schema.interface";
 import { EntityStream } from "./entity-stream";
 import { EntityStreamPacket } from "./entity-stream-packet";
-import { EntityWorkspaceContext } from "./entity-workspace-context";
+import { EntitySpaceServices } from "./entity-space-services";
 import { IEntityStreamInterceptor } from "./interceptors/entity-stream-interceptor.interface";
 import { LoadFromCacheInterceptor } from "./interceptors/load-from-cache.interceptor";
 import { LogPacketsInterceptor } from "./interceptors/log-packets.interceptor";
 import { SchemaRelationBasedHydrator } from "./interceptors/schema-relation-based-hydrator";
 import { WriteToCacheInterceptor } from "./interceptors/write-to-cache.interceptor";
 import { runInterceptors } from "./run-interceptors.fn";
+import { EntityQueryTracing } from "./entity-query-tracing";
 
 export interface EntityQueryBuilderPatch<T extends Entity> {
     selection?: UnpackedEntitySelection<T>;
@@ -33,14 +34,14 @@ export interface EntityQueryBuilderPatch<T extends Entity> {
 }
 
 export interface EntityQueryBuilderCreate<T extends Entity> extends EntityQueryBuilderPatch<T> {
-    context: EntityWorkspaceContext;
+    context: EntitySpaceServices;
     schema: IEntitySchema<T>;
 }
 
 export class EntityQueryBuilder<T extends Entity = Entity> implements IEntityStreamInterceptor {
     constructor(args: EntityQueryBuilderCreate<T>) {
         this.createArgs = args;
-        this.context = args.context;
+        this.services = args.context;
         this.schema = args.schema;
         this.selection = args.selection ?? args.schema.getDefaultSelection();
         this.criteria = args.criteria ?? new EntityCriteriaTools().all();
@@ -51,7 +52,7 @@ export class EntityQueryBuilder<T extends Entity = Entity> implements IEntityStr
         this.queryTools = new EntityQueryTools({ criteriaTools: this.criteriaTools });
     }
 
-    private readonly context: EntityWorkspaceContext;
+    private readonly services: EntitySpaceServices;
     private readonly createArgs: EntityQueryBuilderCreate<T>;
     private readonly schema: IEntitySchema<T>;
     private readonly selection: UnpackedEntitySelection<T>;
@@ -61,6 +62,10 @@ export class EntityQueryBuilder<T extends Entity = Entity> implements IEntityStr
     private readonly shapeTools: EntityCriteriaShapeTools;
     private readonly whereEntityTools: WhereEntityTools;
     private readonly queryTools: IEntityQueryTools;
+
+    getName(): string {
+        return EntityQueryBuilder.name;
+    }
 
     copy(patch?: EntityQueryBuilderPatch<T>): this {
         return new (getInstanceClass(this))({ ...this.createArgs, ...(patch ?? {}) });
@@ -115,7 +120,7 @@ export class EntityQueryBuilder<T extends Entity = Entity> implements IEntityStr
             parameters,
         });
 
-        this.context.getTracing().querySpawned(query);
+        this.services.getTracing().querySpawned(query);
 
         return from(this.query<T>(query)).pipe(
             map(results => {
@@ -130,18 +135,18 @@ export class EntityQueryBuilder<T extends Entity = Entity> implements IEntityStr
 
     private async query<T extends Entity = Entity>(query: IEntityQuery): Promise<false | EntitySet<T>[]> {
         const sources = [
-            new LoadFromCacheInterceptor(this.context.getDatabase(), this.context.getTracing()),
-            ...this.context.getSources(),
+            new LoadFromCacheInterceptor(this.services.getDatabase(), this.services.getTracing()),
+            ...this.services.getSources(),
             // new LogPacketsInterceptor(true),
-            ...this.context.getHydrators(),
-            new SchemaRelationBasedHydrator(this.context.getTracing(), [this]),
-            new WriteToCacheInterceptor(this.context.getDatabase()),
+            ...this.services.getHydrators(),
+            new SchemaRelationBasedHydrator(this.services.getTracing(), [this]),
+            new WriteToCacheInterceptor(this.services.getDatabase()),
         ];
 
-        await lastValueFrom(runInterceptors(sources, [query]));
+        await lastValueFrom(runInterceptors(sources, [query], this.services.getTracing()));
 
-        const entities = this.context.getDatabase().querySync(query).getEntities() as T[];
-        this.context
+        const entities = this.services.getDatabase().querySync(query).getEntities() as T[];
+        this.services
             .getTracing()
             .queryResolved(query, `${entities.length}x entit${entities.length === 1 ? "y" : "ies"}`);
 
@@ -157,7 +162,16 @@ export class EntityQueryBuilder<T extends Entity = Entity> implements IEntityStr
                 mergeMap(packet =>
                     merge(...packet.getRejectedQueries().map(query => this.query(query))).pipe(
                         filter(isNotFalse),
-                        map(payload => of(new EntityStreamPacket({ payload })))
+                        map(payload =>
+                            of(
+                                // [todo] rejections from this.query() are not forwarded
+                                new EntityStreamPacket({
+                                    payload,
+                                    accepted: payload.map(set => set.getQuery()),
+                                    delivered: payload.map(set => set.getQuery()),
+                                })
+                            )
+                        )
                     )
                 ),
                 mergeAll()

@@ -5,10 +5,16 @@ import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
 import { EntityQueryError } from "../query/entity-query-error";
 import { EntityQueryTools } from "../query/entity-query-tools";
 import { IEntityQuery } from "../query/entity-query.interface";
+import { EntityQueryTracing } from "./entity-query-tracing";
 import { EntityStream } from "./entity-stream";
 import { EntityStreamPacket } from "./entity-stream-packet";
 
-export function safeWrapEntityStream(stream: EntityStream, queries: IEntityQuery[]): EntityStream {
+export function safeWrapEntityStream(
+    stream: EntityStream,
+    queries: IEntityQuery[],
+    tracing: EntityQueryTracing,
+    interceptorName: string
+): EntityStream {
     const safelyWrapped = stream.pipe(
         // a stream that doesn't emit anything is equal to a stream emitting 1x packet that rejects all queries
         defaultIfEmpty(new EntityStreamPacket({ rejected: queries })),
@@ -54,7 +60,7 @@ export function safeWrapEntityStream(stream: EntityStream, queries: IEntityQuery
             const notReportedAsRejected = subtractQueries(queries, [...accepted, ...rejected]);
 
             if (!notReportedAsRejected) {
-                console.log("🐞 original stream didn't report any meaningful rejections", queries.join(", "));
+                tracing.streamDidNotReportAnyRejections(queries, interceptorName);
                 // original stream didn't report any meaningful rejections
                 return of(new EntityStreamPacket({ rejected: queries }));
             } else if (!notReportedAsRejected.length) {
@@ -62,7 +68,7 @@ export function safeWrapEntityStream(stream: EntityStream, queries: IEntityQuery
                 return EMPTY;
             } else {
                 // original stream missed to report some rejections
-                console.log("🐞 original stream missed to report some rejections", notReportedAsRejected.join(", "));
+                tracing.streamDidNotReportSomeRejections(queries, notReportedAsRejected, interceptorName);
                 return of(new EntityStreamPacket({ rejected: notReportedAsRejected }));
             }
         })

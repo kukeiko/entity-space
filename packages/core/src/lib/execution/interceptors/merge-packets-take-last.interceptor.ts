@@ -6,6 +6,10 @@ import { EntityStreamPacket } from "../entity-stream-packet";
 import { IEntityStreamInterceptor } from "./entity-stream-interceptor.interface";
 
 export class MergePacketsTakeLastInterceptor implements IEntityStreamInterceptor {
+    getName(): string {
+        return MergePacketsTakeLastInterceptor.name;
+    }
+
     intercept(stream: EntityStream<Entity>): EntityStream<Entity> {
         // [todo] have to utilize database until we can merge EntitySets without it
         const database = new InMemoryEntityDatabase();
