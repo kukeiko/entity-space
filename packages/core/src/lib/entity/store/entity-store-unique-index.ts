@@ -26,6 +26,10 @@ export class EntityStoreUniqueIndex<E extends Entity = Entity> {
         return this;
     }
 
+    clear() : void {
+        this.map.clear();
+    }
+
     getByCriterion(criterion: ICriterion): false | { values: number[]; reshaped: ReshapedCriterion<ICriterion> } {
         return this.map.getByCriterion(criterion);
     }

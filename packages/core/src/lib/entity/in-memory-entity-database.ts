@@ -129,6 +129,11 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         this.queryCache$.next([]);
     }
 
+    clearBySchema(schema: IEntitySchema): void {
+        this.stores.get(schema.getId())?.clear();
+        this.cachedQueries.set(schema.getId(), []);
+    }
+
     private getOrCreateStore(schema: IEntitySchema): EntityStore {
         let store = this.stores.get(schema.getId());
 

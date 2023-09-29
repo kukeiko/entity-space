@@ -24,7 +24,7 @@ export class EntityStore {
     private readonly entitySchema: IEntitySchema;
     private readonly uniqueIndexes = new Map<string, EntityStoreUniqueIndex>();
     private readonly commonIndexes = new Map<string, EntityStoreCommonIndex>();
-    private readonly parametersCache: { parameters: Entity; ids: Entity[] }[] = [];
+    private parametersCache: { parameters: Entity; ids: Entity[] }[] = [];
     private entities: (Entity | undefined)[] = [];
     private readonly criteriaTools = new EntityCriteriaTools();
 
@@ -36,6 +36,13 @@ export class EntityStore {
         }
 
         return keyIndex;
+    }
+
+    clear(): void {
+        this.entities = [];
+        this.parametersCache = [];
+        this.uniqueIndexes.forEach(index => index.clear());
+        this.commonIndexes.forEach(index => index.clear());
     }
 
     // [todo] indexing needs to be crash safe (transactional safety)

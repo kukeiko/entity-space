@@ -12,6 +12,10 @@ export class EntityStoreCommonIndex<E extends Entity = Entity> {
     private readonly paths: string[];
     private readonly map: ComplexKeyMap<E, Set<number>>;
 
+    clear(): void {
+        this.map.clear();
+    }
+
     get(entity: E): Set<number> | undefined {
         return this.map.get(entity);
     }

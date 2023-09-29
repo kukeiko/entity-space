@@ -46,6 +46,10 @@ export class ComplexKeyMap<E extends Entity = Entity, V = E> {
     private readonly lastPath: string;
     private readonly criterionShape: EntityCriteriaShape;
 
+    clear(): void {
+        this.map.clear();
+    }
+
     get(entity: E | Entity, paths?: string[]): V | undefined {
         let map = this.map;
         let leadingPaths = this.leadingPaths;

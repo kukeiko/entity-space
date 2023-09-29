@@ -1,4 +1,4 @@
-import { getInstanceClass, isNotFalse } from "@entity-space/utils";
+import { Class, getInstanceClass, isNotFalse } from "@entity-space/utils";
 import { flatten } from "lodash";
 import { filter, from, lastValueFrom, map, merge, mergeAll, mergeMap, Observable, of } from "rxjs";
 import { Entity } from "../common/entity.type";
@@ -29,11 +29,16 @@ export interface EntityQueryBuilderPatch<T extends Entity> {
     selection?: UnpackedEntitySelection<T>;
     criteria?: ICriterion;
     parameters?: Entity;
+    cache?: EntityCacheInvalidationOptions;
 }
 
 export interface EntityQueryBuilderCreate<T extends Entity> extends EntityQueryBuilderPatch<T> {
     context: EntitySpaceServices;
     schema: IEntitySchema<T>;
+}
+
+export interface EntityCacheInvalidationOptions {
+    blueprints: Class[];
 }
 
 export class EntityQueryBuilder<T extends Entity = Entity> implements IEntityStreamInterceptor {
@@ -48,6 +53,7 @@ export class EntityQueryBuilder<T extends Entity = Entity> implements IEntityStr
         this.shapeTools = new EntityCriteriaShapeTools({ criteriaTools: this.criteriaTools });
         this.whereEntityTools = new WhereEntityTools(this.shapeTools, this.criteriaTools);
         this.queryTools = new EntityQueryTools({ criteriaTools: this.criteriaTools });
+        this.cacheOptions = args.cache;
     }
 
     private readonly services: EntitySpaceServices;
@@ -60,6 +66,7 @@ export class EntityQueryBuilder<T extends Entity = Entity> implements IEntityStr
     private readonly shapeTools: EntityCriteriaShapeTools;
     private readonly whereEntityTools: WhereEntityTools;
     private readonly queryTools: IEntityQueryTools;
+    private readonly cacheOptions?: EntityCacheInvalidationOptions;
 
     getName(): string {
         return EntityQueryBuilder.name;
@@ -86,6 +93,10 @@ export class EntityQueryBuilder<T extends Entity = Entity> implements IEntityStr
 
     using(parameters: Entity): this {
         return this.copy({ parameters });
+    }
+
+    invalidateCache(cache: EntityCacheInvalidationOptions): this {
+        return this.copy({ cache });
     }
 
     findAll(): Observable<{ entities: T[] }> {
@@ -132,12 +143,20 @@ export class EntityQueryBuilder<T extends Entity = Entity> implements IEntityStr
     }
 
     private async query<T extends Entity = Entity>(query: IEntityQuery): Promise<false | EntitySet<T>[]> {
+        if (this.cacheOptions) {
+            this.cacheOptions.blueprints.forEach(blueprint => {
+                this.services.getDatabase().clearBySchema(this.services.getCatalog().resolve(blueprint));
+            });
+        }
+
         const sources = [
             new LoadFromCacheInterceptor(this.services.getDatabase(), this.services.getTracing()),
-            ...this.services.getSources(),
             // new LogPacketsInterceptor(true),
+            ...this.services.getSources(),
             ...this.services.getHydrators(),
-            new SchemaRelationBasedHydrator(this.services, [this]),
+            // [todo] copying to prevent clearing cache more than once. not the best way to do it.
+            // a problem for future me!
+            new SchemaRelationBasedHydrator(this.services, [this.copy({ cache: undefined })]),
             new WriteToCacheInterceptor(this.services.getDatabase()),
         ];
 
