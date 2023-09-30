@@ -61,11 +61,11 @@ export class EntityApi implements IEntityStreamInterceptor {
         const streams = queries.map(query => {
             const endpoints = this.getEndpointsAcceptingSchema(query.getEntitySchema());
             const [delegatedStreams, acceptedQueries] = this.dispatchToEndpoints(query, endpoints);
-            const rejectedQueries = this.queryTools.subtractQueries(queries, acceptedQueries);
+            const rejectedQueries = this.queryTools.subtractQueries([query], acceptedQueries);
             const initialPackets: EntityStreamPacket[] = [];
 
             if (!rejectedQueries || rejectedQueries.length) {
-                initialPackets.push(new EntityStreamPacket({ rejected: rejectedQueries || queries }));
+                initialPackets.push(new EntityStreamPacket({ rejected: rejectedQueries || [query] }));
             }
 
             return merge(...initialPackets.map(packet => of(packet)), ...delegatedStreams);
@@ -128,7 +128,7 @@ export class EntityApi implements IEntityStreamInterceptor {
         }
 
         acceptedReshaped.forEach(query =>
-            this.services.getTracing().queryDispatchedToEndpoint(query, endpoint.getCriterionShape())
+            this.services.getTracing().queryDispatchedToEndpoint(queries, query, endpoint.getCriterionShape())
         );
 
         const initialPacket = new EntityStreamPacket({ accepted: acceptedReshaped });
