@@ -25,7 +25,7 @@ export interface EntityQueryParametersShape {
 }
 
 function containsNoFalse(parts: ReshapedParts): parts is WithoutFalse<ReshapedParts> {
-    return !Object.values(parts).some(part => part === false);
+    return Object.values(parts).every(part => part !== false);
 }
 
 export class EntityQueryShape {
