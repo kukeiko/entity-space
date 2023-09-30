@@ -36,6 +36,19 @@ describe("criteria: intersecting", () => {
         .intersectedWith("{ price: [100, 200], rating: [3, 5] } | { price: (200, 300], rating: [3, 5] }")
         .toEqual("{ price: [100, 200], rating: [3, 5] } | { price: (200, 300], rating: [3, 5] }");
 
+    // all
+    expectCriteria("all").intersectedWith("all").toEqual("all");
+    expectCriteria("all").intersectedWith("none").toEqual("none");
+
+    // none
+    expectCriteria("none").intersectedWith("none").toEqual("none");
+    expectCriteria("none").intersectedWith("all").toEqual("none");
+    expectCriteria("none").intersectedWith("1").toEqual("none");
+    expectCriteria("none").intersectedWith("{1, 2}").toEqual("none");
+    expectCriteria("none").intersectedWith("1 | 2").toEqual("none");
+    expectCriteria("none").intersectedWith("[..., 9]").toEqual("none");
+    expectCriteria("none").intersectedWith("{ foo: 1, bar: 2 }").toEqual("none");
+
     // or-criteria
     expectCriteria("[1, 7] | [10, 13]").intersectedWith("[3, 9]").toEqual("[3, 7]");
     expectCriteria("[1, 7] | [10, 13]").intersectedWith("[3, 11]").toEqual("[3, 7] | [10, 11]");

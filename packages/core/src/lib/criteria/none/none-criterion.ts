@@ -18,7 +18,7 @@ export class NoneCriterion extends CriterionBase implements INoneCriterion {
     }
 
     intersect(_: ICriterion): false | ICriterion {
-        return false;
+        return this;
     }
 
     invert(): false | ICriterion {
