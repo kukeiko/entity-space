@@ -11,7 +11,6 @@ import { EntityQueryTools } from "../../query/entity-query-tools";
 import { IEntityQuery } from "../../query/entity-query.interface";
 import { IEntitySchema } from "../../schema/schema.interface";
 import { EntityApiEndpoint, EntityApiEndpointData, EntityApiEndpointInvoke } from "../entity-api-endpoint";
-import { EntityApiEndpointBuilder } from "../entity-api-endpoint-builder";
 import { EntitySpaceServices } from "../entity-space-services";
 import { EntityStream } from "../entity-stream";
 import { EntityStreamPacket } from "../entity-stream-packet";
@@ -30,18 +29,7 @@ export class EntityApi implements IEntityStreamInterceptor {
         return EntityApi.name;
     }
 
-    addEndpoint<T extends Entity>(
-        schema: IEntitySchema<T>,
-        build: (builder: EntityApiEndpointBuilder<T>) => unknown
-    ): this {
-        const builder = new EntityApiEndpointBuilder<T>(schema);
-        build(builder);
-        this.endpoints.push(builder.build());
-
-        return this;
-    }
-
-    addEndpoint_noBuilder(endpoint: EntityApiEndpoint): this {
+    addEndpoint(endpoint: EntityApiEndpoint): this {
         this.endpoints.push(endpoint);
         return this;
     }

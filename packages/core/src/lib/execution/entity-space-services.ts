@@ -2,6 +2,7 @@ import { Class } from "@entity-space/utils";
 import { Entity } from "../common/entity.type";
 import { Select } from "../common/select.type";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
+import { ICriterion } from "../criteria/criterion.interface";
 import { EntityCriteriaShapeTools } from "../criteria/entity-criteria-shape-tools";
 import { IEntityCriteriaShapeTools } from "../criteria/entity-criteria-shape-tools.interface";
 import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
@@ -10,13 +11,13 @@ import { WhereEntityShape } from "../criteria/where-entity/where-entity-shape.ty
 import { WhereEntityTools } from "../criteria/where-entity/where-entity-tools";
 import { IEntityStore } from "../entity/entity-store.interface";
 import { InMemoryEntityDatabase } from "../entity/in-memory-entity-database";
+import { EntityQueryParametersShape } from "../query/entity-query-shape";
 import { EntitySelection } from "../query/entity-selection";
 import { EntityBlueprintInstance } from "../schema/entity-blueprint-instance.type";
 import { define } from "../schema/entity-blueprint-property";
 import { EntitySchemaCatalog } from "../schema/entity-schema-catalog";
 import { IEntitySchema } from "../schema/schema.interface";
 import { EntityApiEndpoint, EntityApiEndpointInvoke } from "./entity-api-endpoint";
-import { EntityApiEndpointBuilder } from "./entity-api-endpoint-builder";
 import { EntityQueryTracing } from "./entity-query-tracing";
 import { EntityApi } from "./interceptors/entity-api";
 import { EntityHydrationEndpoint, EntityHydratorApi, HydrationResult } from "./interceptors/entity-hydrator-api";
@@ -41,9 +42,13 @@ export class EntitySchemaScopedServicesBuilder<T extends Entity> {
         where,
         load,
         select,
+        parameters,
+        accept,
     }: {
         where?: S | WhereEntityShape<T>;
         select?: UnpackedEntitySelection<T>;
+        parameters?: EntityQueryParametersShape;
+        accept?: (criterion: ICriterion) => boolean;
         load: EntityApiEndpointInvoke<T, WhereEntityShapeInstance<T, S>>;
     }): this {
         const criterionShape =
@@ -59,9 +64,11 @@ export class EntitySchemaScopedServicesBuilder<T extends Entity> {
             schema: this.schema,
             invoke: load as any,
             whereEntityShape: where,
+            parametersShape: parameters,
+            acceptCriterion: accept,
         });
 
-        this.api.addEndpoint_noBuilder(endpoint);
+        this.api.addEndpoint(endpoint);
 
         return this;
     }

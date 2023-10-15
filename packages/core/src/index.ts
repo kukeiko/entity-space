@@ -16,7 +16,6 @@ export * from "./lib/entity/store/entity-store";
 export * from "./lib/entity/store/entity-store-common-index";
 export * from "./lib/entity/store/entity-store-unique-index";
 export * from "./lib/execution/entity-api-endpoint";
-export * from "./lib/execution/entity-api-endpoint-builder";
 export * from "./lib/execution/entity-query-builder";
 export * from "./lib/execution/entity-query-tracing";
 export * from "./lib/execution/entity-space-services";
