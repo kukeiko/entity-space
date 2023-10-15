@@ -2,8 +2,8 @@ import { EntityBlueprint } from "../../lib/schema/entity-blueprint";
 import { define } from "../../lib/schema/entity-blueprint-property";
 import { EntitySchemaCatalog } from "../../lib/schema/entity-schema-catalog";
 
-describe("EntitySchemaCatalog", () => {
-    describe("resolve()", () => {
+describe(EntitySchemaCatalog.name, () => {
+    describe(EntitySchemaCatalog.prototype.resolve.name, () => {
         it("should support composite keys", () => {
             // arrange
             const compositeKeyPath = ["namespace", "id"];
@@ -42,7 +42,7 @@ describe("EntitySchemaCatalog", () => {
             expect(index.isUnique()).toEqual(true);
         });
 
-        it("should create index even is only 'unique' flag is supplied", () => {
+        it("should create an index even if only 'unique' flag is supplied", () => {
             // arrange
             @EntityBlueprint({ id: "foo" })
             class FooBlueprint {
@@ -58,6 +58,48 @@ describe("EntitySchemaCatalog", () => {
 
             // assert
             expect(getIndex).not.toThrow();
+        });
+
+        it("should throw if relation.from points to a property that is not an index", () => {
+            // arrange
+            @EntityBlueprint({ id: "albums" })
+            class Album {
+                id = define(Number, { required: true });
+                songs = define(Song, { array: true, relation: true, from: "id", to: "albumId" });
+            }
+
+            @EntityBlueprint({ id: "songs" })
+            class Song {
+                id = define(Number, { required: true, id: true });
+                albumId = define(Number, { required: true, index: true });
+            }
+
+            const catalog = new EntitySchemaCatalog();
+            const resolve = () => catalog.resolve(Album);
+
+            // assert
+            expect(resolve).toThrow();
+        });
+
+        it("should throw if relation.to points to a property that is not an index", () => {
+            // arrange
+            @EntityBlueprint({ id: "albums" })
+            class Album {
+                id = define(Number, { required: true, id: true });
+                songs = define(Song, { array: true, relation: true, from: "id", to: "albumId" });
+            }
+
+            @EntityBlueprint({ id: "songs" })
+            class Song {
+                id = define(Number, { required: true, id: true });
+                albumId = define(Number, { required: true });
+            }
+
+            const catalog = new EntitySchemaCatalog();
+            const resolve = () => catalog.resolve(Album);
+
+            // assert
+            expect(resolve).toThrow();
         });
     });
 });

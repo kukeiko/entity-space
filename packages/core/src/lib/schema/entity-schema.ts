@@ -148,6 +148,10 @@ export class EntitySchema<T extends Entity = Entity> implements IEntitySchema<T>
     }
 
     findIndex(name: string): IEntitySchemaIndex | undefined {
+        if (this.hasKey() && this.getKey().getName() === name) {
+            return this.getKey();
+        }
+
         return this.indexes.find(index => index.getName() === name);
     }
 
