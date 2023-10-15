@@ -1,28 +1,32 @@
 import { filter, from, map, merge, mergeMap, Observable, of, shareReplay, startWith, takeLast, tap } from "rxjs";
 import { Entity } from "../../common/entity.type";
+import { UnpackedEntitySelection } from "../../common/unpacked-entity-selection.type";
 import { EntityCriteriaTools } from "../../criteria/entity-criteria-tools";
 import { EntitySet } from "../../entity/data-structures/entity-set";
 import { InMemoryEntityDatabase } from "../../entity/in-memory-entity-database";
-import { EntityStream } from "../entity-stream";
-import { EntityStreamPacket } from "../entity-stream-packet";
-import { IEntityStreamInterceptor } from "./entity-stream-interceptor.interface";
 import { EntityQueryTools } from "../../query/entity-query-tools";
 import { IEntityQuery } from "../../query/entity-query.interface";
 import { EntitySelection } from "../../query/entity-selection";
+import { IEntitySchema } from "../../schema/schema.interface";
 import { EntitySpaceServices } from "../entity-space-services";
+import { EntityStream } from "../entity-stream";
+import { EntityStreamPacket } from "../entity-stream-packet";
+import { IEntityStreamInterceptor } from "./entity-stream-interceptor.interface";
 
-export type HydrationResult = Promise<Entity[]> | Entity[] | Observable<Entity[]>;
+export type HydrationResult<T extends Entity = Entity> = Promise<T[]> | T[] | Observable<T[]>;
 
 export interface EntityHydrationProposal {
     requiredSelection: EntitySelection;
     hydratedSelection: EntitySelection;
     rejectedQuery: IEntityQuery;
-    endpoint: IEntityHydrationEndpoint;
+    endpoint: EntityHydrationEndpoint;
 }
 
-export interface IEntityHydrationEndpoint {
-    load(entities: EntitySet, selection: EntitySelection): HydrationResult;
-    proposeHydration(rejectedSelection: IEntityQuery): false | EntityHydrationProposal;
+export interface EntityHydrationEndpoint<T extends Entity = Entity> {
+    schema: IEntitySchema<T>;
+    requires: UnpackedEntitySelection<T>;
+    hydrates: UnpackedEntitySelection<T>;
+    load(entities: T[], selection: UnpackedEntitySelection<T>): HydrationResult<T>;
 }
 
 export class EntityHydratorApi implements IEntityStreamInterceptor {
@@ -31,15 +35,15 @@ export class EntityHydratorApi implements IEntityStreamInterceptor {
     private readonly criteriaTools = new EntityCriteriaTools();
     private readonly queryTools = new EntityQueryTools({ criteriaTools: this.criteriaTools });
 
-    hydrationEndpoints: IEntityHydrationEndpoint[] = [];
+    hydrationEndpoints: EntityHydrationEndpoint[] = [];
 
     getName(): string {
         return EntityHydratorApi.name;
     }
 
     intercept(stream: EntityStream<Entity>): EntityStream<Entity> {
-        let delivered: IEntityQuery[] = [];
-        let proposals: EntityHydrationProposal[] = [];
+        let mergedDelivered: IEntityQuery[] = [];
+        let openProposals: EntityHydrationProposal[] = [];
 
         const hydrate = (stream: EntityStream): EntityStream => {
             return stream.pipe(
@@ -53,20 +57,24 @@ export class EntityHydratorApi implements IEntityStreamInterceptor {
                             packet.getRejectedQueries()
                         );
 
-                        proposals.push(...newProposals);
+                        openProposals.push(...newProposals);
                         rejected = openRejected;
                     }
 
                     if (packet.hasDelivered()) {
-                        delivered = this.queryTools.mergeQueries(...delivered, ...packet.getDeliveredQueries());
+                        mergedDelivered = this.queryTools.mergeQueries(
+                            ...mergedDelivered,
+                            ...packet.getDeliveredQueries()
+                        );
                     }
 
                     const [nextProposals, streams] = this.drainProposals(
-                        proposals,
-                        delivered,
+                        openProposals,
+                        mergedDelivered,
                         this.services.getDatabase()
                     );
-                    proposals = nextProposals;
+
+                    openProposals = nextProposals;
 
                     if (streams.length) {
                         streams.push(...streams.map(stream => hydrate(stream)));
@@ -80,6 +88,7 @@ export class EntityHydratorApi implements IEntityStreamInterceptor {
                 })
             );
         };
+
         return merge(
             stream.pipe(
                 map(packet => packet.withoutRejected()),
@@ -96,7 +105,7 @@ export class EntityHydratorApi implements IEntityStreamInterceptor {
     }
 
     private toProposals(
-        endpoints: IEntityHydrationEndpoint[],
+        endpoints: EntityHydrationEndpoint[],
         rejected: IEntityQuery[]
     ): [EntityHydrationProposal[], IEntityQuery[]] {
         const nextRejected: IEntityQuery[] = [];
@@ -106,7 +115,7 @@ export class EntityHydratorApi implements IEntityStreamInterceptor {
             let open = rejectedQuery;
 
             for (const hydrationEndpoint of endpoints) {
-                const hydrationProposal = hydrationEndpoint.proposeHydration(open);
+                const hydrationProposal = this.proposeHydration(open, hydrationEndpoint);
 
                 if (!hydrationProposal) {
                     continue;
@@ -129,6 +138,31 @@ export class EntityHydratorApi implements IEntityStreamInterceptor {
         }
 
         return [proposals, nextRejected];
+    }
+
+    private proposeHydration(open: IEntityQuery, endpoint: EntityHydrationEndpoint): false | EntityHydrationProposal {
+        const supportedSelection = new EntitySelection({
+            schema: endpoint.schema,
+            value: endpoint.hydrates,
+        });
+
+        const intersection = open.getSelection().intersect(supportedSelection);
+
+        if (!intersection) {
+            return false;
+        }
+
+        const requiredSelectionValue = endpoint.requires;
+
+        return {
+            endpoint,
+            hydratedSelection: intersection,
+            requiredSelection: new EntitySelection({
+                schema: endpoint.schema,
+                value: requiredSelectionValue,
+            }),
+            rejectedQuery: open,
+        };
     }
 
     private drainProposals(
@@ -173,7 +207,7 @@ export class EntityHydratorApi implements IEntityStreamInterceptor {
 
                     streams.push(
                         this.loadedToEntityStream(
-                            proposal.endpoint.load(entities, proposal.hydratedSelection),
+                            proposal.endpoint.load(entities.getEntities(), proposal.hydratedSelection.getValue()),
                             entitySetToHydrateQuery,
                             proposal.hydratedSelection
                         ).pipe(startWith(new EntityStreamPacket({ accepted: [acceptedQuery] })), shareReplay())

@@ -16,12 +16,12 @@ import { EntityQueryTools } from "../../lib/query/entity-query-tools";
 import { IEntityQuery } from "../../lib/query/entity-query.interface";
 import { EntityBlueprintInstance } from "../../lib/schema/entity-blueprint-instance.type";
 import { TestContentData, TestContentDatabase } from "./test-content-database";
-import { TestContentEntityApi } from "./test-content.entity-api";
+import { TestContentEndpoints } from "./test-content-endpoints";
 
 export class TestContentFacade implements IEntityStreamInterceptor {
     private readonly services = new EntitySpaceServices();
-    private readonly repository = new TestContentDatabase();
-    private readonly api = new TestContentEntityApi(this.repository, this.services);
+    private readonly database = new TestContentDatabase();
+    private readonly endpoints = new TestContentEndpoints(this.database, this.services);
     private packetLogging = false;
 
     getName(): string {
@@ -29,7 +29,7 @@ export class TestContentFacade implements IEntityStreamInterceptor {
     }
 
     setData<K extends keyof TestContentData>(key: K, entities: TestContentData[K]): this {
-        this.repository.set(key, entities);
+        this.database.set(key, entities);
         return this;
     }
 
@@ -43,8 +43,8 @@ export class TestContentFacade implements IEntityStreamInterceptor {
         return this;
     }
 
-    configureApi(configure: (api: TestContentEntityApi) => unknown): this {
-        configure(this.api);
+    configureEndpoints(configure: (endpoints: TestContentEndpoints) => unknown): this {
+        configure(this.endpoints);
         return this;
     }
 
@@ -77,7 +77,7 @@ export class TestContentFacade implements IEntityStreamInterceptor {
         const hydrator = new SchemaRelationBasedHydrator(this.services, [this]);
 
         let interceptors: IEntityStreamInterceptor[] = [
-            this.api,
+            ...this.services.getSources(),
             new LogPacketsInterceptor({ logEach: this.packetLogging }),
             hydrator,
             new LogPacketsInterceptor({ logEach: this.packetLogging }),

@@ -32,7 +32,7 @@ describe("interceptors", () => {
         // arrange
         const facade = createFacade()
             .setData("users", [{ id: 2 }, { id: 3 }])
-            .configureApi(api => api.withGetAllUsers());
+            .configureEndpoints(endpoints => endpoints.withGetAllUsers());
 
         const query = facade.createQuery(UserBlueprint);
         const expected = createExpectedPacket(query, [{ id: 2 }, { id: 3 }]);
@@ -48,7 +48,7 @@ describe("interceptors", () => {
         // arrange
         const facade = createFacade()
             .setData("users", [{ id: 2 }, { id: 7 }])
-            .configureApi(api => api.withGetUserById());
+            .configureEndpoints(endpoints => endpoints.withGetUserById());
 
         const query = facade.createQuery(UserBlueprint, { id: 2 }, { id: true });
         const expected = createExpectedPacket(query, [{ id: 2 }]);
@@ -60,11 +60,11 @@ describe("interceptors", () => {
         expectPacketEqual(actual, expected);
     });
 
-    it("should load one user by id & hydrate one relation", async () => {
+    it("should load one user by id & hydrate one relation via schema relation hydrator", async () => {
         // arrange
         const facade = createFacade()
             .setData("users", [{ id: 2, parentId: 7 }, { id: 7 }])
-            .configureApi(api => api.withGetUserById());
+            .configureEndpoints(endpoints => endpoints.withGetUserById());
 
         const query = facade.createQuery(UserBlueprint, { id: 2 }, { id: true, parentId: true, parent: { id: true } });
         const expected = createExpectedPacket(query, [{ id: 2, parentId: 7, parent: { id: 7 } }]);
@@ -80,7 +80,7 @@ describe("interceptors", () => {
         // arrange
         const facade = createFacade()
             .setData("users", [{ id: 2, parentId: 7 }, { id: 7 }, { id: 3, parentId: 8 }, { id: 8 }])
-            .configureApi(api => api.withGetUserById());
+            .configureEndpoints(endpoints => endpoints.withGetUserById());
 
         const query = facade.createQuery(
             UserBlueprint,
@@ -101,7 +101,7 @@ describe("interceptors", () => {
         // arrange
         const facade = createFacade()
             .setData("users", [{ id: 2, parentId: 7 }, { id: 7 }, { id: 3, parentId: 8 }, { id: 8 }])
-            .configureApi(api => api.withGetUserById().withGetAllUsers());
+            .configureEndpoints(endpoints => endpoints.withGetUserById().withGetAllUsers());
 
         const query = facade.createQuery(
             UserBlueprint,
@@ -122,7 +122,7 @@ describe("interceptors", () => {
         // arrange
         const facade = createFacade()
             .setData("users", [{ id: 2, parentId: 7 }, { id: 7, parentId: 13 }, { id: 13, parentId: 64 }, { id: 64 }])
-            .configureApi(api => api.withGetUserById());
+            .configureEndpoints(endoints => endoints.withGetUserById());
 
         const query = facade.createQuery(
             UserBlueprint,
@@ -165,7 +165,7 @@ describe("interceptors", () => {
         const facade = createFacade()
             .setData("products", [product])
             .setData("users", [createdBy, updatedBy])
-            .configureApi(api => api.withGetAllProducts().withGetUserById());
+            .configureEndpoints(endpoints => endpoints.withGetAllProducts().withGetUserById());
 
         const query = facade.createQuery(ProductBlueprint, undefined, {
             id: true,
