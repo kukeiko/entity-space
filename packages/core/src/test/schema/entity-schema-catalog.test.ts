@@ -1,6 +1,6 @@
-import { EntityBlueprint } from "../lib/schema/entity-blueprint";
-import { define } from "../lib/schema/entity-blueprint-property";
-import { EntitySchemaCatalog } from "../lib/schema/entity-schema-catalog";
+import { EntityBlueprint } from "../../lib/schema/entity-blueprint";
+import { define } from "../../lib/schema/entity-blueprint-property";
+import { EntitySchemaCatalog } from "../../lib/schema/entity-schema-catalog";
 
 describe("EntitySchemaCatalog", () => {
     describe("resolve()", () => {

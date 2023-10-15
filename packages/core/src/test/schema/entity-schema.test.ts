@@ -1,4 +1,4 @@
-import { EntitySchema } from "../lib/schema/entity-schema";
+import { EntitySchema } from "../../lib/schema/entity-schema";
 
 describe("entity-schema", () => {
     describe("getDefaultSelection()", () => {
