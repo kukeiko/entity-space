@@ -1,7 +1,6 @@
 import { isNotFalse } from "@entity-space/utils";
 import { flatten } from "lodash";
 import { filter, from, isObservable, map, merge, mergeAll, Observable, of, startWith, switchMap, tap } from "rxjs";
-import { Entity } from "../../common/entity.type";
 import { EntityCriteriaShapeTools } from "../../criteria/entity-criteria-shape-tools";
 import { EntityCriteriaTools } from "../../criteria/entity-criteria-tools";
 import { WhereEntityTools } from "../../criteria/where-entity/where-entity-tools";
@@ -35,31 +34,38 @@ export class EntityApi implements IEntityStreamInterceptor {
     }
 
     intercept(stream: EntityStream): EntityStream {
+        if (!this.endpoints.length) {
+            return stream;
+        }
+
         return merge(
             stream.pipe(map(EntityStreamPacket.withoutRejected), filter(EntityStreamPacket.isNotEmpty)),
             stream.pipe(
                 filter(EntityStreamPacket.hasRejected),
-                map(packet => this.query$(packet.getRejectedQueries())),
+                map(packet => {
+                    const streams = packet.getRejectedQueries().map(query => {
+                        const endpoints = this.getEndpointsAcceptingSchema(query.getEntitySchema());
+
+                        if (!endpoints.length) {
+                            return of(new EntityStreamPacket({ rejected: [query] }));
+                        }
+
+                        const [delegatedStreams, acceptedQueries] = this.dispatchToEndpoints(query, endpoints);
+                        const rejectedQueries = this.queryTools.subtractQueries([query], acceptedQueries);
+                        const initialPackets: EntityStreamPacket[] = [];
+
+                        if (!rejectedQueries || rejectedQueries.length) {
+                            initialPackets.push(new EntityStreamPacket({ rejected: rejectedQueries || [query] }));
+                        }
+
+                        return merge(...initialPackets.map(packet => of(packet)), ...delegatedStreams);
+                    });
+
+                    return merge(...streams);
+                }),
                 mergeAll()
             )
         );
-    }
-
-    query$<T extends Entity = Entity>(queries: IEntityQuery[]): Observable<EntityStreamPacket<T>> {
-        const streams = queries.map(query => {
-            const endpoints = this.getEndpointsAcceptingSchema(query.getEntitySchema());
-            const [delegatedStreams, acceptedQueries] = this.dispatchToEndpoints(query, endpoints);
-            const rejectedQueries = this.queryTools.subtractQueries([query], acceptedQueries);
-            const initialPackets: EntityStreamPacket[] = [];
-
-            if (!rejectedQueries || rejectedQueries.length) {
-                initialPackets.push(new EntityStreamPacket({ rejected: rejectedQueries || [query] }));
-            }
-
-            return merge(...initialPackets.map(packet => of(packet)), ...delegatedStreams);
-        });
-
-        return merge(...streams) as Observable<EntityStreamPacket<T>>;
     }
 
     private dispatchToEndpoints(query: IEntityQuery, endpoints: EntityApiEndpoint[]): [EntityStream[], IEntityQuery[]] {
@@ -136,9 +142,9 @@ export class EntityApi implements IEntityStreamInterceptor {
 
                 return this.invokedToDataStream(invoked).pipe(
                     map(data => this.endpointDataToPacket(query, data)),
-                    tap(packet =>
-                        packet.getPayload().forEach(payload => this.services.getDatabase().upsertSync(payload))
-                    ),
+                    tap(packet => {
+                        packet.getPayload().forEach(payload => this.services.getDatabase().upsertSync(payload));
+                    }),
                     // [todo] dirty fix to make it work if data source returns data synchronously
                     switchMap(
                         packet => new Promise<EntityStreamPacket>(resolve => setTimeout(() => resolve(packet), 1))

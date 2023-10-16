@@ -1,5 +1,6 @@
-import { Class } from "@entity-space/utils";
+import { Class, isDefined } from "@entity-space/utils";
 import { Entity } from "../common/entity.type";
+import { PackedEntitySelection } from "../common/packed-entity-selection.type";
 import { Select } from "../common/select.type";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
 import { ICriterion } from "../criteria/criterion.interface";
@@ -46,7 +47,7 @@ export class EntitySchemaScopedServicesBuilder<T extends Entity> {
         accept,
     }: {
         where?: S | WhereEntityShape<T>;
-        select?: UnpackedEntitySelection<T>;
+        select?: PackedEntitySelection<T>;
         parameters?: EntityQueryParametersShape;
         accept?: (criterion: ICriterion) => boolean;
         load: EntityApiEndpointInvoke<T, WhereEntityShapeInstance<T, S>>;
@@ -56,10 +57,10 @@ export class EntitySchemaScopedServicesBuilder<T extends Entity> {
                 ? this.shapeTools.any()
                 : this.whereEntityTools.toCriterionShapeFromWhereEntityShape(where, this.schema);
 
-        select = select ?? this.schema.getDefaultSelection();
+        const unpackedSelect = EntitySelection.unpack(this.schema, select ?? {});
 
         const endpoint = new EntityApiEndpoint({
-            selection: new EntitySelection({ schema: this.schema, value: select }),
+            selection: new EntitySelection({ schema: this.schema, value: unpackedSelect }),
             criterionShape,
             schema: this.schema,
             invoke: load as any,
@@ -128,6 +129,10 @@ export class EntitySpaceServices {
         return [...this.apis.values(), ...this.sources];
     }
 
+    getSourcesFor(schema: IEntitySchema): IEntityStreamInterceptor[] {
+        return [this.apis.get(schema.getId())].filter(isDefined);
+    }
+
     pushHydrator(source: IEntityStreamInterceptor): this {
         this.hydratorInterceptors.push(source);
         return this;
@@ -135,6 +140,10 @@ export class EntitySpaceServices {
 
     getHydrators(): IEntityStreamInterceptor[] {
         return [...this.hydrators.values(), ...this.hydratorInterceptors];
+    }
+
+    getHydratorsFor(schema: IEntitySchema): IEntityStreamInterceptor[] {
+        return [this.hydrators.get(schema.getId())].filter(isDefined);
     }
 
     pushStore(store: IEntityStore): this {

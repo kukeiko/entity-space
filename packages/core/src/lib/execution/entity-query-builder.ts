@@ -22,7 +22,6 @@ import { EntityStreamPacket } from "./entity-stream-packet";
 import { IEntityStreamInterceptor } from "./interceptors/entity-stream-interceptor.interface";
 import { LoadFromCacheInterceptor } from "./interceptors/load-from-cache.interceptor";
 import { SchemaRelationBasedHydrator } from "./interceptors/schema-relation-based-hydrator";
-import { WriteToCacheInterceptor } from "./interceptors/write-to-cache.interceptor";
 import { runInterceptors } from "./run-interceptors.fn";
 
 export interface EntityQueryBuilderPatch<T extends Entity> {
@@ -152,12 +151,10 @@ export class EntityQueryBuilder<T extends Entity = Entity> implements IEntityStr
         const sources = [
             new LoadFromCacheInterceptor(this.services.getDatabase(), this.services.getTracing()),
             // new LogPacketsInterceptor(true),
-            ...this.services.getSources(),
-            ...this.services.getHydrators(),
-            // [todo] copying to prevent clearing cache more than once. not the best way to do it.
-            // a problem for future me!
+            ...this.services.getSourcesFor(query.getEntitySchema()),
+            ...this.services.getHydratorsFor(query.getEntitySchema()),
+            // [todo] copying to prevent clearing cache more than once. not the best way to do it. a problem for future me!
             new SchemaRelationBasedHydrator(this.services, [this.copy({ cache: undefined })]),
-            new WriteToCacheInterceptor(this.services.getDatabase()),
         ];
 
         await lastValueFrom(runInterceptors(sources, [query], this.services.getTracing()));

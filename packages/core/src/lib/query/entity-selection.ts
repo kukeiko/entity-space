@@ -13,6 +13,7 @@ export class EntitySelection {
 
     private readonly value: UnpackedEntitySelection;
     private readonly schema: IEntitySchema;
+    private cachedToString?: string;
 
     getSchema(): IEntitySchema {
         return this.schema;
@@ -27,7 +28,7 @@ export class EntitySelection {
     }
 
     toString(): string {
-        return EntitySelection.toString(this.value);
+        return this.cachedToString ?? (this.cachedToString = EntitySelection.toString(this.value));
     }
 
     static toString(value?: UnpackedEntitySelection): string {

@@ -1,4 +1,4 @@
-import { filter, from, map, merge, mergeMap, Observable, of, shareReplay, startWith, takeLast, tap } from "rxjs";
+import { filter, from, map, merge, mergeMap, Observable, of, shareReplay, startWith, takeLast } from "rxjs";
 import { Entity } from "../../common/entity.type";
 import { UnpackedEntitySelection } from "../../common/unpacked-entity-selection.type";
 import { EntityCriteriaTools } from "../../criteria/entity-criteria-tools";
@@ -42,6 +42,10 @@ export class EntityHydratorApi implements IEntityStreamInterceptor {
     }
 
     intercept(stream: EntityStream<Entity>): EntityStream<Entity> {
+        if (!this.hydrationEndpoints.length) {
+            return stream;
+        }
+
         let mergedDelivered: IEntityQuery[] = [];
         let openProposals: EntityHydrationProposal[] = [];
 
@@ -93,12 +97,6 @@ export class EntityHydratorApi implements IEntityStreamInterceptor {
             stream.pipe(
                 map(packet => packet.withoutRejected()),
                 filter(packet => !packet.isEmpty())
-            ),
-            stream.pipe(
-                filter(packet => packet.hasPayload()),
-                tap(packet => {
-                    packet.getPayload().forEach(payload => this.services.getDatabase().upsertSync(payload));
-                })
             ),
             hydrate(stream)
         );
@@ -170,7 +168,7 @@ export class EntityHydratorApi implements IEntityStreamInterceptor {
         deliveredQueries: IEntityQuery[],
         cache: InMemoryEntityDatabase
     ): [EntityHydrationProposal[], EntityStream[]] {
-        let nextProposals: EntityHydrationProposal[] = proposals;
+        let nextProposals: EntityHydrationProposal[] = proposals.slice();
         const streams: EntityStream[] = [];
 
         for (const proposal of proposals) {
