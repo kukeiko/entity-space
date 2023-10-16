@@ -1,7 +1,7 @@
 import { IEntitySchema, IEntitySchemaIndex, IEntitySchemaProperty, IEntitySchemaRelation } from "./schema.interface";
 
 export class EntitySchemaRelation implements IEntitySchemaRelation {
-    constructor(entitySchema: IEntitySchema, propertyKey: string, from: string, to: string) {
+    constructor(entitySchema: IEntitySchema, propertyKey: string, from: string[], to: string[]) {
         this.entitySchema = entitySchema;
         this.propertyKey = propertyKey;
         this.from = from;
@@ -9,12 +9,12 @@ export class EntitySchemaRelation implements IEntitySchemaRelation {
     }
 
     private readonly entitySchema: IEntitySchema;
-    private readonly from: string;
+    private readonly from: string[];
     private readonly propertyKey: string;
-    private readonly to: string;
+    private readonly to: string[];
 
-    getFromIndex(): IEntitySchemaIndex {
-        return this.entitySchema.getIndexOrKey(this.from);
+    getFromPaths(): string[] {
+        return this.from;
     }
 
     getPropertyName(): string {
@@ -29,7 +29,7 @@ export class EntitySchemaRelation implements IEntitySchemaRelation {
         return this.getProperty().getUnboxedEntitySchema();
     }
 
-    getToIndex(): IEntitySchemaIndex {
-        return this.getRelatedEntitySchema().getIndexOrKey(this.to);
+    getToPaths(): string[] {
+        return this.to;
     }
 }

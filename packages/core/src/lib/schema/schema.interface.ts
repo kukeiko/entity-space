@@ -10,11 +10,11 @@ export interface IEntitySchemaIndex {
 }
 
 export interface IEntitySchemaRelation {
-    getFromIndex(): IEntitySchemaIndex;
+    getFromPaths() : string[];
     getPropertyName(): string;
     getProperty(): IEntitySchemaProperty;
     getRelatedEntitySchema(): IEntitySchema;
-    getToIndex(): IEntitySchemaIndex;
+    getToPaths() : string[];
 }
 
 export interface IPropertyValueCommonSchema {

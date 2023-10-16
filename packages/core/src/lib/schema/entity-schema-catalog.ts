@@ -1,7 +1,7 @@
 import { Class } from "@entity-space/utils";
 import { Entity } from "../common/entity.type";
 import { ArraySchema } from "./array-schema";
-import { getEntityBlueprintMetadata, getNamedProperties, isEntityBlueprint } from "./entity-blueprint";
+import { EntityBlueprint, getEntityBlueprintMetadata, getNamedProperties, isEntityBlueprint } from "./entity-blueprint";
 import { EntityBlueprintInstance } from "./entity-blueprint-instance.type";
 import {
     BlueprintProperty,
@@ -55,6 +55,14 @@ export class EntitySchemaCatalog {
 
         const properties = getNamedProperties(blueprint);
         const idProperties = properties.filter(hasAttribute("id"));
+
+        if (idProperties.length > 1) {
+            throw new Error(
+                `${schema.getId()} contains multiple properties with the "id" attribute. If you need a composite id, please define it in the ${
+                    EntityBlueprint.name
+                } decorator instead`
+            );
+        }
 
         // [todo] this seems funky - when I used composite keys in example apps, I never specified "key: true" on multiple properties.
         // instead, I specified the composite key in the decorator
@@ -140,18 +148,6 @@ export class EntitySchemaCatalog {
             relatedSchema = this.resolve(relationProperty.valueType);
         } else {
             throw new Error(`valueType of property ${name} is neither a Blueprint nor an object containing $ref`);
-        }
-
-        if (!relatedSchema.findIndex(relationProperty.to)) {
-            throw new Error(
-                `relation ${schema.getId()}.${name}.to points to an index that does not exist on schema ${relatedSchema.getId()}`
-            );
-        }
-
-        if (!schema.findIndex(relationProperty.from)) {
-            throw new Error(
-                `relation ${schema.getId()}.${name}.from points to an index that does not exist on the schema`
-            );
         }
 
         if (hasAttribute("array", relationProperty)) {

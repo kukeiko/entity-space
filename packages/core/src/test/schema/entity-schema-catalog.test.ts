@@ -16,15 +16,14 @@ describe(EntitySchemaCatalog.name, () => {
 
             // act
             const catalog = new EntitySchemaCatalog();
-            catalog.resolve(FooBlueprint);
-            const schema = catalog.getSchema("foo");
+            const schema = catalog.resolve(FooBlueprint);
             const key = schema.getKey();
 
             // assert
             expect(key.getPaths()).toEqual(compositeKeyPath);
         });
 
-        it("should apply the unique attribute to indexes", () => {
+        it("should support the unique attribute", () => {
             // arrange
             @EntityBlueprint({ id: "foo" })
             class FooBlueprint {
@@ -34,15 +33,14 @@ describe(EntitySchemaCatalog.name, () => {
 
             // act
             const catalog = new EntitySchemaCatalog();
-            catalog.resolve(FooBlueprint);
-            const schema = catalog.getSchema("foo");
+            const schema = catalog.resolve(FooBlueprint);
             const index = schema.getIndex("name");
 
             // assert
             expect(index.isUnique()).toEqual(true);
         });
 
-        it("should create an index even if only 'unique' flag is supplied", () => {
+        it("should automatically create an index if the unique attribute is set", () => {
             // arrange
             @EntityBlueprint({ id: "foo" })
             class FooBlueprint {
@@ -52,54 +50,28 @@ describe(EntitySchemaCatalog.name, () => {
 
             // act
             const catalog = new EntitySchemaCatalog();
-            catalog.resolve(FooBlueprint);
-            const schema = catalog.getSchema("foo");
+            const schema = catalog.resolve(FooBlueprint);
             const getIndex = () => schema.getIndex("name");
 
             // assert
             expect(getIndex).not.toThrow();
         });
 
-        it("should throw if relation.from points to a property that is not an index", () => {
-            // arrange
-            @EntityBlueprint({ id: "albums" })
-            class Album {
-                id = define(Number, { required: true });
-                songs = define(Song, { array: true, relation: true, from: "id", to: "albumId" });
-            }
+        describe("should throw", () => {
+            it("if multiple properties an id attribute", () => {
+                // arrange
+                @EntityBlueprint({ id: "foo" })
+                class Foo {
+                    id_A = define(Number, { id: true });
+                    id_B = define(Number, { id: true });
+                }
 
-            @EntityBlueprint({ id: "songs" })
-            class Song {
-                id = define(Number, { required: true, id: true });
-                albumId = define(Number, { required: true, index: true });
-            }
+                const catalog = new EntitySchemaCatalog();
+                const resolve = () => catalog.resolve(Foo);
 
-            const catalog = new EntitySchemaCatalog();
-            const resolve = () => catalog.resolve(Album);
-
-            // assert
-            expect(resolve).toThrow();
-        });
-
-        it("should throw if relation.to points to a property that is not an index", () => {
-            // arrange
-            @EntityBlueprint({ id: "albums" })
-            class Album {
-                id = define(Number, { required: true, id: true });
-                songs = define(Song, { array: true, relation: true, from: "id", to: "albumId" });
-            }
-
-            @EntityBlueprint({ id: "songs" })
-            class Song {
-                id = define(Number, { required: true, id: true });
-                albumId = define(Number, { required: true });
-            }
-
-            const catalog = new EntitySchemaCatalog();
-            const resolve = () => catalog.resolve(Album);
-
-            // assert
-            expect(resolve).toThrow();
+                // assert
+                expect(resolve).toThrow();
+            });
         });
     });
 });

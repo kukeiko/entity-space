@@ -204,22 +204,18 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         const relatedSchema = relation.getRelatedEntitySchema();
         // [todo] what about dictionaries?
         const isArray = relation.getProperty().getValueSchema().isArray();
-        const fromIndex = relation.getFromIndex();
-        const toIndex = relation.getToIndex();
+        const fromPaths = relation.getFromPaths();
+        const toPaths = relation.getToPaths();
 
-        if (fromIndex.getPaths().length !== toIndex.getPaths().length) {
+        if (fromPaths.length !== toPaths.length) {
             throw new Error(
-                `can't hydrate relation "${relation.getPropertyName()}" (type: ${relatedSchema.getId()}): length of paths between from & to index are not equal (from: "${fromIndex
-                    .getPaths()
-                    .join(",")}", to: "${toIndex.getPaths().join(", ")}")`
+                `can't hydrate relation "${relation.getPropertyName()}" (type: ${relatedSchema.getId()}): length of paths between from & to index are not equal (from: "${fromPaths.join(
+                    ","
+                )}", to: "${toPaths.join(", ")}")`
             );
         }
 
-        const criteria = this.criteriaTools.createCriterionFromEntities(
-            entities,
-            fromIndex.getPaths(),
-            toIndex.getPaths()
-        );
+        const criteria = this.criteriaTools.createCriterionFromEntities(entities, fromPaths, toPaths);
         const query = this.queryTools.createQuery({
             entitySchema: relatedSchema,
             criteria,
@@ -228,14 +224,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
 
         const result = this.querySync(query);
 
-        joinEntities(
-            entities,
-            result.getEntities(),
-            relation.getPropertyName(),
-            fromIndex.getPaths(),
-            toIndex.getPaths(),
-            isArray
-        );
+        joinEntities(entities, result.getEntities(), relation.getPropertyName(), fromPaths, toPaths, isArray);
     }
 
     addQueryToCached(query: IEntityQuery): void {

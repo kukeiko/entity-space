@@ -38,8 +38,8 @@ export interface ReadOnlyAttribute {
 
 export interface RelationAttribute {
     relation: true;
-    from: string; // [todo] support string[]
-    to: string; // [todo] support string[]
+    from: string | string[];
+    to: string | string[];
 }
 
 export interface RequiredAttribute {

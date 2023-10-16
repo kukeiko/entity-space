@@ -258,7 +258,7 @@ describe("EntityWorkspace", () => {
 
             fooSchema.addProperty("bar", barSchema);
             // [todo] unintuitive usage of auto computed index name
-            fooSchema.addRelation("bar", "id,secondaryId", "fooId");
+            fooSchema.addRelation("bar", ["id", "secondaryId"], ["fooId", "secondaryId"]);
 
             const workspace = createWorkspace();
 
@@ -287,7 +287,7 @@ describe("EntityWorkspace", () => {
             const fooSchema = new EntitySchema("foo").addInteger("id", true).setKey("id");
             const barSchema = new EntitySchema("bar").addInteger("bazId", true).addIndex("bazId");
             const bazSchema = new EntitySchema("baz").addInteger("id", true).setKey("id");
-            barSchema.addRelationProperty("baz", bazSchema, "bazId", "id");
+            barSchema.addRelationProperty("baz", bazSchema, ["bazId"], ["id"]);
             fooSchema.addProperty("bar", barSchema);
 
             const workspace = createWorkspace();
@@ -336,8 +336,8 @@ describe("EntityWorkspace", () => {
             .addIndex("bazId");
 
         const bazSchema = new EntitySchema("baz").addInteger("id").setKey("id");
-        fooSchema.addRelationProperty("bar", barSchema, "barId", "id");
-        barSchema.addRelationProperty("baz", bazSchema, "bazId", "id");
+        fooSchema.addRelationProperty("bar", barSchema, ["barId"], ["id"]);
+        barSchema.addRelationProperty("baz", bazSchema, ["bazId"], ["id"]);
 
         const workspace = createWorkspace();
 

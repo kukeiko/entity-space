@@ -73,8 +73,8 @@ export class EntitySchema<T extends Entity = Entity> implements IEntitySchema<T>
     addRelationProperty(
         name: string,
         valueSchema: IPropertyValueSchema,
-        from: string,
-        to: string,
+        from: string | string[],
+        to: string | string[],
         required = false
     ): this {
         this.addProperty(name, valueSchema, required);
@@ -94,8 +94,13 @@ export class EntitySchema<T extends Entity = Entity> implements IEntitySchema<T>
         return this.addProperty(name, new PrimitiveSchema("integer"), required);
     }
 
-    addRelation(propertyKey: string, from: string, to: string): this {
-        const relation = new EntitySchemaRelation(this, propertyKey, from, to);
+    addRelation(propertyKey: string, from: string | string[], to: string | string[]): this {
+        const relation = new EntitySchemaRelation(
+            this,
+            propertyKey,
+            Array.isArray(from) ? from : [from],
+            Array.isArray(to) ? to : [to]
+        );
         this.relations.push(relation);
         return this;
     }
