@@ -200,7 +200,7 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
         const accepted: IEntityQuery[] = [];
         const payloads: EntitySet[] = [];
 
-        return runInterceptors(this.interceptors, [relationQuery], this.services.getTracing()).pipe(
+        return runInterceptors(this.interceptors, relationQuery, this.services.getTracing()).pipe(
             tap(packet => {
                 accepted.push(...packet.getAcceptedQueries());
                 payloads.push(...packet.getPayload());

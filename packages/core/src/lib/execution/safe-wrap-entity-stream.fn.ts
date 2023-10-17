@@ -11,25 +11,23 @@ import { EntityStreamPacket } from "./entity-stream-packet";
 
 export function safeWrapEntityStream(
     stream: EntityStream,
-    queries: IEntityQuery[],
+    query: IEntityQuery,
     tracing: EntityQueryTracing,
     interceptorName: string
 ): EntityStream {
     const safelyWrapped = stream.pipe(
         // a stream that doesn't emit anything is equal to a stream emitting 1x packet that rejects all queries
-        defaultIfEmpty(new EntityStreamPacket({ rejected: queries })),
+        defaultIfEmpty(new EntityStreamPacket({ rejected: [query] })),
         // make sure uncaught errors are mapped to QueryErrors so that the stream doesn't get prematurely aborted
-        catchError(error =>
-            of(new EntityStreamPacket({ errors: queries.map(query => new EntityQueryError(query, error)) }))
-        ),
+        catchError(error => of(new EntityStreamPacket({ errors: [new EntityQueryError(query, error)] }))),
         map(packet => {
             if (!packet.getAcceptedQueries().length) {
                 return packet;
             }
 
             // [todo] document why I added this intersection
-            const intersected = flatMap(packet.getAcceptedQueries(), accepted =>
-                queries.map(query => query.intersect(accepted)).filter(isNotFalse)
+            const intersected = flatMap(packet.getAcceptedQueries(), accepted => query.intersect(accepted)).filter(
+                isNotFalse
             );
 
             return new EntityStreamPacket({
@@ -57,18 +55,18 @@ export function safeWrapEntityStream(
         }),
         takeLast(1),
         switchMap(() => {
-            const notReportedAsRejected = subtractQueries(queries, [...accepted, ...rejected]);
+            const notReportedAsRejected = subtractQueries([query], [...accepted, ...rejected]);
 
             if (!notReportedAsRejected) {
-                tracing.streamDidNotReportAnyRejections(queries, interceptorName);
+                tracing.streamDidNotReportAnyRejections(query, interceptorName);
                 // original stream didn't report any meaningful rejections
-                return of(new EntityStreamPacket({ rejected: queries }));
+                return of(new EntityStreamPacket({ rejected: [query] }));
             } else if (!notReportedAsRejected.length) {
                 // original stream correctly reported all rejections
                 return EMPTY;
             } else {
                 // original stream missed to report some rejections
-                tracing.streamDidNotReportSomeRejections(queries, notReportedAsRejected, interceptorName);
+                tracing.streamDidNotReportSomeRejections(query, notReportedAsRejected, interceptorName);
                 return of(new EntityStreamPacket({ rejected: notReportedAsRejected }));
             }
         })

@@ -8,13 +8,14 @@ import { safeWrapEntityStream } from "./safe-wrap-entity-stream.fn";
 
 export function runInterceptors(
     interceptors: IEntityStreamInterceptor[],
-    queries: IEntityQuery[],
+    query: IEntityQuery,
     tracing: EntityQueryTracing
 ): EntityStream {
-    let startWith = of(new EntityStreamPacket({ rejected: queries }));
+    let startWith = of(new EntityStreamPacket({ rejected: [query] }));
 
     return interceptors.reduce(
-        (previous, interceptor) => safeWrapEntityStream(interceptor.intercept(previous), queries, tracing, interceptor.getName()),
+        (previous, interceptor) =>
+            safeWrapEntityStream(interceptor.intercept(previous), query, tracing, interceptor.getName()),
         startWith
     );
 }

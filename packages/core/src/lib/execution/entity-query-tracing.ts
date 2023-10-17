@@ -1,16 +1,39 @@
-import { EntityStreamPacket } from "./entity-stream-packet";
-import { IEntityQuery } from "../query/entity-query.interface";
 import { ICriterionShape } from "../criteria/criterion-shape.interface";
+import { IEntityQuery } from "../query/entity-query.interface";
+import { EntityStreamPacket } from "./entity-stream-packet";
+
+const TAB_WIDTH = 4;
+const MAX_FULLY_PRINTED_ENTITIES = 10;
 
 type EntityQueryTracingFilter = (query: IEntityQuery) => boolean;
+
+class EntityQueryTraceMessageBuilder {
+    private lines: string[] = [];
+
+    addLine(message: string, indent = 0): this {
+        this.lines.push(" ".repeat(indent * TAB_WIDTH) + message);
+        return this;
+    }
+
+    buildMessage(): string {
+        return this.lines.join("\n");
+    }
+}
 
 export class EntityQueryTracing {
     private consoleEnabled = false;
     private filters: EntityQueryTracingFilter[] = [];
 
-    private print(query: IEntityQuery, ...message: unknown[]): void {
+    private log(query: IEntityQuery, build: (builder: EntityQueryTraceMessageBuilder) => unknown): void {
+        if (!this.consoleEnabled) {
+            return;
+        }
+
         if (this.filters.every(filter => filter(query))) {
-            console.log(...message);
+            const builder = new EntityQueryTraceMessageBuilder();
+            build(builder);
+            const message = builder.buildMessage();
+            console.log(message);
         }
     }
 
@@ -24,160 +47,127 @@ export class EntityQueryTracing {
     }
 
     querySpawned(query: IEntityQuery, source?: string): void {
-        if (!this.consoleEnabled) {
-            return;
-        }
+        this.log(query, builder => {
+            builder.addLine("🥚 query spawned:").addLine(`- query: ${query.toString()}`, 1);
 
-        let message = `🥚 query spawned: ${query.toString()}`;
-
-        if (source) {
-            message = `${message} (source: ${source})`;
-        }
-
-        this.print(query, message);
+            if (source) {
+                builder.addLine(`- source: ${source}`, 1);
+            }
+        });
     }
 
     hydrationQuerySpawned(query: IEntityQuery): void {
-        if (!this.consoleEnabled) {
-            return;
-        }
-
-        this.print(query, `🥚 💧 hydration query spawned: ${query.toString()}`);
-    }
-
-    queryStartedExecution(query: IEntityQuery): void {
-        if (!this.consoleEnabled) {
-            return;
-        }
-
-        this.print(query, "💎 query started execution:", query.toString());
+        this.log(query, builder => {
+            builder.addLine("🥚 💧 hydration query spawned:").addLine(`- query: ${query}`, 1);
+        });
     }
 
     queryResolved(query: IEntityQuery, result?: string): void {
-        if (!this.consoleEnabled) {
-            return;
-        }
+        this.log(query, builder => {
+            builder.addLine(`🐣 query has been resolved:`).addLine(`- query: ${query}`, 1);
 
-        this.print(
-            query,
-            `🐣 query has been resolved: ${query.toString()}${result !== void 0 ? `, result: ${result}` : ""}`
-        );
+            if (result !== undefined) {
+                builder.addLine(`- result: ${result}`, 1);
+            }
+        });
     }
 
-    queryGotSubtracted(
-        query: IEntityQuery,
-        by: IEntityQuery[],
-        result: IEntityQuery[],
-        options?: { byLabel?: string }
-    ): void {
-        if (!this.consoleEnabled) {
-            return;
-        }
-
-        this.print(
-            query,
-            "🎈 query got subtracted:",
-            query.toString(),
-            (options?.byLabel ?? ", by") + ":",
-            by.map(query => query.toString()),
-            result.map(query => query.toString())
-        );
-    }
-
-    queryGotFullySubtracted(query: IEntityQuery, by: IEntityQuery[], options?: { byLabel?: string }): void {
-        if (!this.consoleEnabled) {
-            return;
-        }
-
-        return;
-        this.print(
-            query,
-            `🎀 query got fully subtracted: ${query.toString()}, ${options?.byLabel ?? "by"}: ${by.map(query =>
-                query.toString()
-            )}`
-        );
-    }
-
-    queryDispatchedToEndpoint(query: IEntityQuery, shape: ICriterionShape): void {
-        if (!this.consoleEnabled) {
-            return;
-        }
-
-        this.print(
-            query,
-            `🔌 query ${query.toString()} got dispatched to an endpoint accepting criteria ${shape.toString()}`
-        );
+    queryDispatchedToEndpoint(original: IEntityQuery[], reshaped: IEntityQuery, shape: ICriterionShape): void {
+        original.forEach(original => {
+            this.log(original, builder =>
+                builder
+                    .addLine("🔌 query got dispatched to an endpoint:")
+                    .addLine(`- original: ${original}`, 1)
+                    .addLine(`- reshaped: ${reshaped}`, 1)
+                    .addLine(`- endpoint: ${shape}`, 1)
+            );
+        });
     }
 
     endpointDeliveredPacket(query: IEntityQuery, shape: ICriterionShape, packet: EntityStreamPacket): void {
-        if (!this.consoleEnabled) {
-            return;
-        }
+        this.log(query, builder => {
+            builder
+                .addLine(`🔌 🚚 query got a packet from endpoint:`)
+                .addLine(`- query: ${query}`, 1)
+                .addLine(`- endpoint: ${shape}`, 1)
+                .addLine(`- packet:`, 1);
 
-        this.print(
-            query,
-            `🔌 🚚 query ${query.toString()} got a packet via endpoint ${shape.toString()}: ${packet.toString()}`
-        );
+            this.addPacketLines(packet, builder, 2);
+        });
     }
 
     queryReceivedPacket(query: IEntityQuery, packet: EntityStreamPacket): void {
-        if (!this.consoleEnabled) {
-            return;
-        }
-
-        this.print(query, `🚚 query ${query.toString()} received packet ${packet.toString()}`);
-    }
-
-    queryGotRejectedByAllSources(query: IEntityQuery): void {
-        if (!this.consoleEnabled) {
-            return;
-        }
-
-        this.print(query, `❌ query got rejected by all sources: ${query.toString()}`);
-    }
-
-    reactiveQueryEmitted(query: IEntityQuery): void {
-        if (!this.consoleEnabled) {
-            return;
-        }
-
-        return;
-
-        this.print(query, `🔥 reactive query ${query.toString()} caused an emit`);
-    }
-
-    reactiveQueryDisposed(query: IEntityQuery): void {
-        if (!this.consoleEnabled) {
-            return;
-        }
-
-        return;
-
-        this.print(query, `🧹 reactive query ${query.toString()} got disposed`);
-    }
-
-    fromCache(query: IEntityQuery): void {
-        this.print(query, "💾 from cache", query.toString());
-    }
-
-    streamDidNotReportAnyRejections(queries: IEntityQuery[], interceptorName: string): void {
-        queries.forEach(query => {
-            this.print(
-                query,
-                `🐞 original stream ${interceptorName} didn't report any meaningful rejections`,
-                query.toString()
-            );
+        this.log(query, builder => {
+            builder.addLine("🚚 query received a packet:").addLine(`- query: ${query}`, 1).addLine("- packet:", 1);
+            this.addPacketLines(packet, builder, 2);
         });
     }
 
-    streamDidNotReportSomeRejections(queries: IEntityQuery[], expected: IEntityQuery[], interceptorName: string): void {
-        queries.forEach(query => {
-            this.print(
-                query,
-                `🐞 original stream ${interceptorName} didn't report some rejections`,
-                query.toString(),
-                expected.join(", ")
-            );
+    queryWasLoadedFromCache(query: IEntityQuery): void {
+        this.log(query, builder => {
+            builder.addLine("💾 query was loaded from cache:").addLine(`- query: ${query}`, 1);
         });
+    }
+
+    streamDidNotReportAnyRejections(query: IEntityQuery, interceptorName: string): void {
+        this.log(query, builder => {
+            builder
+                .addLine("🐞 original stream didn't report any meaningful rejections:")
+                .addLine(`- interceptor: ${interceptorName}`, 1)
+                .addLine(`- query: ${query}`);
+        });
+    }
+
+    streamDidNotReportSomeRejections(query: IEntityQuery, expected: IEntityQuery[], interceptorName: string): void {
+        this.log(query, builder => {
+            builder
+                .addLine("🐞 original stream didn't report some rejections")
+                .addLine(`- interceptor: ${interceptorName}`, 1)
+                .addLine(`- query: ${query}`, 1)
+                .addLine(`- expected:`, 1);
+
+            expected.forEach(expected => builder.addLine(`- ${expected}`, 2));
+        });
+    }
+
+    private addPacketLines(packet: EntityStreamPacket, builder: EntityQueryTraceMessageBuilder, indent = 0): void {
+        if (packet.isEmpty()) {
+            builder.addLine("- (empty)", indent);
+            return;
+        }
+
+        const accepted = packet.getAcceptedQueries();
+
+        if (accepted.length) {
+            builder.addLine(`- ✔️ accepted:`, indent);
+            accepted.forEach(query => builder.addLine(`- ${query}`, indent + 1));
+        }
+
+        const delivered = packet.getDeliveredQueries();
+
+        if (delivered.length) {
+            builder.addLine(`- 🚚 delivered:`, indent);
+            delivered.forEach(query => builder.addLine(`- ${query}`, indent + 1));
+        }
+
+        const rejected = packet.getRejectedQueries();
+
+        if (rejected.length) {
+            builder.addLine(`- ❌ accepted:`, indent);
+            rejected.forEach(query => builder.addLine(`- ${query}`, indent + 1));
+        }
+
+        const entities = packet.getEntitiesFlat();
+
+        if (entities.length) {
+            builder.addLine(`- 🎁 payload: ${entities.length}x entit${entities.length === 1 ? "y" : "ies"}`, indent);
+            entities
+                .slice(0, MAX_FULLY_PRINTED_ENTITIES)
+                .forEach(entity => builder.addLine(`- ${JSON.stringify(entity)}`, indent + 1));
+
+            if (entities.length > MAX_FULLY_PRINTED_ENTITIES) {
+                builder.addLine(`- ... (and ${entities.length - MAX_FULLY_PRINTED_ENTITIES} more)`, indent + 1);
+            }
+        }
     }
 }

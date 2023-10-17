@@ -157,7 +157,7 @@ export class EntityQueryBuilder<T extends Entity = Entity> implements IEntityStr
             new SchemaRelationBasedHydrator(this.services, [this.copy({ cache: undefined })]),
         ];
 
-        await lastValueFrom(runInterceptors(sources, [query], this.services.getTracing()));
+        await lastValueFrom(runInterceptors(sources, query, this.services.getTracing()));
 
         const entities = this.services.getDatabase().querySync(query).getEntities() as T[];
         this.services

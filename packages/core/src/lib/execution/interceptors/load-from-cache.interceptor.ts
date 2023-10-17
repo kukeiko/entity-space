@@ -42,7 +42,7 @@ export class LoadFromCacheInterceptor implements IEntityStreamInterceptor {
                     return merge(
                         of(new EntityStreamPacket({ rejected: open })).pipe(filter(EntityStreamPacket.isNotEmpty)),
                         ...accepted.map(query => {
-                            this.tracing.fromCache(query);
+                            this.tracing.queryWasLoadedFromCache(query);
 
                             return this.database.query$(query).pipe(
                                 map(

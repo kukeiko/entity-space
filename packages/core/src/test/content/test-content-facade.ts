@@ -85,7 +85,7 @@ export class TestContentFacade implements IEntityStreamInterceptor {
             new LogPacketsInterceptor(this.packetLogging),
         ];
 
-        const packet = await lastValueFrom(runInterceptors(interceptors, [query], this.services.getTracing()));
+        const packet = await lastValueFrom(runInterceptors(interceptors, query, this.services.getTracing()));
 
         if (packet.getErrors().length) {
             throw new Error(
