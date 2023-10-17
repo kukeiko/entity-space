@@ -4,13 +4,6 @@
     "projects": {
         "core": "packages/core",
         "node": "packages/node",
-        "utils": "packages/utils",
-        "examples-common-model": "packages/examples/libs/common-model",
-        "examples-music-box-api": "packages/examples/apps/music-box-api",
-        "examples-music-box-ui": "packages/examples/apps/music-box-ui",
-        "examples-music-model": "packages/examples/libs/music-model",
-        "examples-products-api": "packages/examples/apps/products-api",
-        "examples-products-model": "packages/examples/libs/products-model",
-        "examples-products-ui": "packages/examples/apps/products-ui"
+        "utils": "packages/utils"
     }
 }
