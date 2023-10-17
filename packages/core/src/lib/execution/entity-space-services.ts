@@ -14,8 +14,6 @@ import { IEntityStore } from "../entity/entity-store.interface";
 import { InMemoryEntityDatabase } from "../entity/in-memory-entity-database";
 import { EntityQueryParametersShape } from "../query/entity-query-shape";
 import { EntitySelection } from "../query/entity-selection";
-import { EntityBlueprintInstance } from "../schema/entity-blueprint-instance.type";
-import { define } from "../schema/entity-blueprint-property";
 import { EntitySchemaCatalog } from "../schema/entity-schema-catalog";
 import { IEntitySchema } from "../schema/schema.interface";
 import { EntityApiEndpoint, EntityApiEndpointInvoke } from "./entity-api-endpoint";
@@ -26,7 +24,6 @@ import { IEntityStreamInterceptor } from "./interceptors/entity-stream-intercept
 
 export class EntitySchemaScopedServicesBuilder<T extends Entity> {
     constructor(
-        private readonly services: EntitySpaceServices,
         private readonly schema: IEntitySchema<T>,
         private readonly api: EntityApi,
         private readonly hydrator: EntityHydratorApi
@@ -102,8 +99,6 @@ export class EntitySpaceServices {
     private readonly tracing = new EntityQueryTracing();
     private readonly catalog = new EntitySchemaCatalog();
     private readonly database = new InMemoryEntityDatabase();
-    private readonly sources: IEntityStreamInterceptor[] = [];
-    private readonly hydratorInterceptors: IEntityStreamInterceptor[] = [];
     private readonly stores: IEntityStore[] = [];
     private readonly apis = new Map<string, EntityApi>();
     private readonly hydrators = new Map<string, EntityHydratorApi>();
@@ -120,26 +115,16 @@ export class EntitySpaceServices {
         return this.database;
     }
 
-    pushSource(source: IEntityStreamInterceptor): this {
-        this.sources.push(source);
-        return this;
-    }
-
     getSources(): IEntityStreamInterceptor[] {
-        return [...this.apis.values(), ...this.sources];
+        return Array.from(this.apis.values());
     }
 
     getSourcesFor(schema: IEntitySchema): IEntityStreamInterceptor[] {
         return [this.apis.get(schema.getId())].filter(isDefined);
     }
 
-    pushHydrator(source: IEntityStreamInterceptor): this {
-        this.hydratorInterceptors.push(source);
-        return this;
-    }
-
     getHydrators(): IEntityStreamInterceptor[] {
-        return [...this.hydrators.values(), ...this.hydratorInterceptors];
+        return Array.from(this.hydrators.values());
     }
 
     getHydratorsFor(schema: IEntitySchema): IEntityStreamInterceptor[] {
@@ -160,28 +145,7 @@ export class EntitySpaceServices {
         const api = this.getOrCreateApi(schema);
         const hydrator = this.getOrCreateHydrator(schema);
 
-        return new EntitySchemaScopedServicesBuilder(this, schema, api, hydrator);
-    }
-
-    addHydratorFor_v2<T, R extends UnpackedEntitySelection<EntityBlueprintInstance<T>>>(
-        type: Class<T>,
-        opts: {
-            requires: R;
-        },
-        hydrate: (entities: Select<EntityBlueprintInstance<T>, R>[]) => any
-    ): any {}
-
-    test() {
-        class Foo {
-            id = define(String);
-            name = define(String);
-        }
-
-        this.addHydratorFor_v2(Foo, { requires: { id: true } }, entities => {
-            entities[0].id;
-        });
-
-        // this.addHydratorFor(Foo).requires({ id: true }).hydrates({ name: true }).executes();
+        return new EntitySchemaScopedServicesBuilder(schema, api, hydrator);
     }
 
     private getOrCreateApi(schema: IEntitySchema): EntityApi {
