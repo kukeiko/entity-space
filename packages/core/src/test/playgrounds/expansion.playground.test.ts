@@ -1,8 +1,8 @@
 import { Unbox } from "@entity-space/utils";
 import { PackedEntitySelection } from "../../lib/common/packed-entity-selection.type";
+import { Select } from "../../lib/common/select.type";
 import { EntityBlueprintInstance } from "../../lib/schema/entity-blueprint-instance.type";
 import { define } from "../../lib/schema/entity-blueprint-property";
-import { Select } from "../../lib/common/select.type";
 import { Canvas, CanvasBlueprint, ProductBlueprint, ShapeBlueprints, Square } from "../content";
 
 // credit to captain-yossarian https://captain-yossarian.medium.com/typescript-object-oriented-typings-4fd42ce14c75
@@ -22,15 +22,15 @@ xdescribe("playground: selection", () => {
     it("complex expand w/ union types", () => {
         // [todo] convert to type tests
         class CustomUserBlueprint {
-            id = define(Number, { required: true });
-            name = define(String);
-            createdBy = define(CustomUserBlueprint);
-            updatedBy = define(CustomUserBlueprint, { nullable: true });
-            children = define(CustomUserBlueprint, { array: true });
+            id = define(Number);
+            name = define(String, { optional: true });
+            createdBy = define(CustomUserBlueprint, { optional: true });
+            updatedBy = define(CustomUserBlueprint, { optional: true, nullable: true });
+            children = define(CustomUserBlueprint, { optional: true, array: true });
             // metadata ref is for entities where the dev does not want to (or cannot) use blueprints
-            products = define(ProductBlueprint, { array: true });
-            canvas = define(CanvasBlueprint);
-            shapes = define(ShapeBlueprints, { array: true });
+            products = define(ProductBlueprint, { optional: true, array: true });
+            canvas = define(CanvasBlueprint, { optional: true });
+            shapes = define(ShapeBlueprints, { optional: true, array: true });
         }
 
         type CustomUser = EntityBlueprintInstance<CustomUserBlueprint>;

@@ -10,8 +10,8 @@ describe(EntitySchemaCatalog.name, () => {
 
             @EntityBlueprint({ id: "foo", key: compositeKeyPath })
             class FooBlueprint {
-                id = define(Number, { required: true });
-                namespace = define(String, { required: true });
+                id = define(Number);
+                namespace = define(String);
             }
 
             // act
@@ -27,8 +27,8 @@ describe(EntitySchemaCatalog.name, () => {
             // arrange
             @EntityBlueprint({ id: "foo" })
             class FooBlueprint {
-                id = define(Number, { required: true, id: true });
-                name = define(String, { required: true, index: true, unique: true });
+                id = define(Number, { id: true });
+                name = define(String, { index: true, unique: true });
             }
 
             // act
@@ -44,8 +44,8 @@ describe(EntitySchemaCatalog.name, () => {
             // arrange
             @EntityBlueprint({ id: "foo" })
             class FooBlueprint {
-                id = define(Number, { required: true, id: true });
-                name = define(String, { required: true, unique: true });
+                id = define(Number, { id: true });
+                name = define(String, { unique: true });
             }
 
             // act

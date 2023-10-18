@@ -7,7 +7,7 @@ import { BrandBlueprint } from "./brand.model";
 @EntityBlueprint({ id: "product-reviews" })
 export class ProductReviewBlueprint extends ReviewBlueprint {
     productId = define(Number);
-    product = define(BrandBlueprint, { relation: true, from: "productId", to: "id" });
+    product = define(BrandBlueprint, { optional: true, relation: true, from: "productId", to: "id" });
 }
 
 export type ProductReview = EntityBlueprintInstance<ProductReviewBlueprint>;

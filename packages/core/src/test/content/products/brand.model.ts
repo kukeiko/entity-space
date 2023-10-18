@@ -6,10 +6,10 @@ import { DataEntryMetadataBlueprint } from "../common/metadata.model";
 @EntityBlueprint({ id: "brands" })
 export class BrandBlueprint {
     id = define(Number, { id: true, required: true });
-    name = define(String, { required: true });
-    rating = define(Number);
-    ranking = define(Number);
-    metadata = define(DataEntryMetadataBlueprint, { required: true });
+    name = define(String);
+    rating = define(Number, { optional: true });
+    ranking = define(Number, { optional: true });
+    metadata = define(DataEntryMetadataBlueprint);
 }
 
 export type Brand = EntityBlueprintInstance<BrandBlueprint>;

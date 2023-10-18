@@ -42,8 +42,8 @@ export interface RelationAttribute {
     to: string | string[];
 }
 
-export interface RequiredAttribute {
-    required: true;
+export interface OptionalAttribute {
+    optional: true;
 }
 
 export interface UniqueAttribute {
@@ -65,9 +65,9 @@ export type AllAttributes =
     | IdAttribute
     | IndexAttribute
     | NullableAttribute
+    | OptionalAttribute
     | ReadOnlyAttribute
     | RelationAttribute
-    | RequiredAttribute
     | UniqueAttribute;
 
 // [todo] user can put anything as O & "find references" doesn't work

@@ -107,7 +107,7 @@ export class EntitySchemaCatalog {
     }
 
     private addNonRelationalPropertyToSchema(schema: EntitySchema, name: string, property: BlueprintProperty): void {
-        const isRequired = hasAttribute("required", property);
+        const isRequired = !hasAttribute("optional", property);
 
         if (hasAttribute("array", property)) {
             if (isEntityBlueprint(property.valueType)) {
@@ -139,7 +139,7 @@ export class EntitySchemaCatalog {
         name: string,
         relationProperty: BlueprintProperty & RelationAttribute
     ): void {
-        const isRequired = hasAttribute("required", relationProperty);
+        const isRequired = !hasAttribute("optional", relationProperty);
         let relatedSchema: IEntitySchema;
 
         if (typeof relationProperty.valueType === "object" && "$ref" in relationProperty.valueType) {

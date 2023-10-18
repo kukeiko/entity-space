@@ -23,20 +23,20 @@ import { UserBlueprint } from "../common/user.model";
  */
 @EntityBlueprint({ id: "canvases" })
 export class CanvasBlueprint {
-    id = define(Number, { id: true, required: true });
-    authorId = define(Number, { nullable: true });
-    author = define(UserBlueprint, { relation: true, from: "authorId", to: "id", nullable: true });
-    name = define(String);
-    shapes = define(ShapeBlueprints, { array: true, nullable: true });
+    id = define(Number, { id: true });
+    authorId = define(Number, { optional: true, nullable: true });
+    author = define(UserBlueprint, { optional: true, relation: true, from: "authorId", to: "id", nullable: true });
+    name = define(String, { optional: true });
+    shapes = define(ShapeBlueprints, { optional: true, array: true, nullable: true });
 }
 
 /**
  * Base class (and therefore abstract) for all other shapes.
  */
 export abstract class BaseShapeBlueprint extends DataEntryBlueprint {
-    id = define(Number, { id: true, required: true });
-    area = define(Number);
-    canvas = define(CanvasBlueprint);
+    id = define(Number, { id: true });
+    area = define(Number, { optional: true });
+    canvas = define(CanvasBlueprint, { optional: true });
 }
 
 /**
@@ -44,8 +44,8 @@ export abstract class BaseShapeBlueprint extends DataEntryBlueprint {
  */
 @EntityBlueprint({ id: "circles" })
 export class CircleBlueprint extends BaseShapeBlueprint {
-    radius = define(Number);
-    type = define("circle" as const, { discriminator: true, required: true });
+    radius = define(Number, { optional: true });
+    type = define("circle" as const, { discriminator: true });
 }
 
 /**
@@ -53,8 +53,8 @@ export class CircleBlueprint extends BaseShapeBlueprint {
  */
 @EntityBlueprint({ id: "squares" })
 export class SquareBlueprint extends BaseShapeBlueprint {
-    length = define(Number);
-    type = define("square" as const, { discriminator: true, required: true });
+    length = define(Number, { optional: true });
+    type = define("square" as const, { discriminator: true });
 }
 
 /**
@@ -62,10 +62,10 @@ export class SquareBlueprint extends BaseShapeBlueprint {
  */
 @EntityBlueprint({ id: "triangles" })
 export class TriangleBlueprint extends BaseShapeBlueprint {
-    type = define("triangle" as const, { discriminator: true, required: true });
-    angleA = define(Number);
-    angleB = define(Number);
-    angleC = define(Number);
+    type = define("triangle" as const, { discriminator: true });
+    angleA = define(Number, { optional: true });
+    angleB = define(Number, { optional: true });
+    angleC = define(Number, { optional: true });
 }
 
 /**
@@ -73,8 +73,8 @@ export class TriangleBlueprint extends BaseShapeBlueprint {
  */
 @EntityBlueprint({ id: "shape-groups" })
 export class ShapeGroupBlueprint extends BaseShapeBlueprint {
-    type = define("group" as const, { discriminator: true, required: true });
-    shapes = define(ShapeBlueprints, { array: true });
+    type = define("group" as const, { discriminator: true });
+    shapes = define(ShapeBlueprints, { optional: true, array: true });
 }
 
 /**
