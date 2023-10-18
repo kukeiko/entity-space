@@ -4,13 +4,13 @@ import { Entity } from "../../lib/common/entity.type";
 import { UnpackedEntitySelection } from "../../lib/common/unpacked-entity-selection.type";
 import { EntityCriteriaTools } from "../../lib/criteria/entity-criteria-tools";
 import { EntityWhere } from "../../lib/criteria/entity-criteria-tools.interface";
-import { EntitySpaceServices } from "../../lib/execution/entity-space-services";
+import { EntityServiceContainer } from "../../lib/execution/entity-service-container";
 import { EntityStream } from "../../lib/execution/entity-stream";
 import { EntityStreamPacket } from "../../lib/execution/entity-stream-packet";
+import { EntityRelationHydrator } from "../../lib/execution/interceptors/entity-relation-hydrator";
 import { IEntityStreamInterceptor } from "../../lib/execution/interceptors/entity-stream-interceptor.interface";
 import { LogPacketsInterceptor } from "../../lib/execution/interceptors/log-packets.interceptor";
 import { MergePacketsTakeLastInterceptor } from "../../lib/execution/interceptors/merge-packets-take-last.interceptor";
-import { SchemaRelationBasedHydrator } from "../../lib/execution/interceptors/schema-relation-based-hydrator";
 import { runInterceptors } from "../../lib/execution/run-interceptors.fn";
 import { EntityQueryTools } from "../../lib/query/entity-query-tools";
 import { IEntityQuery } from "../../lib/query/entity-query.interface";
@@ -19,7 +19,7 @@ import { TestContentData, TestContentDatabase } from "./test-content-database";
 import { TestContentEndpoints } from "./test-content-endpoints";
 
 export class TestContentFacade implements IEntityStreamInterceptor {
-    private readonly services = new EntitySpaceServices();
+    private readonly services = new EntityServiceContainer();
     private readonly database = new TestContentDatabase();
     private readonly endpoints = new TestContentEndpoints(this.database, this.services);
     private packetLogging = false;
@@ -74,7 +74,7 @@ export class TestContentFacade implements IEntityStreamInterceptor {
     }
 
     async query(query: IEntityQuery): Promise<EntityStreamPacket> {
-        const hydrator = new SchemaRelationBasedHydrator(this.services, [this]);
+        const hydrator = new EntityRelationHydrator(this.services, [this]);
 
         let interceptors: IEntityStreamInterceptor[] = [
             ...this.services.getSources(),

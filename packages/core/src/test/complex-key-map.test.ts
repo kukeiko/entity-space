@@ -1,5 +1,5 @@
 import { EntityCriteriaTools } from "../lib/criteria/entity-criteria-tools";
-import { ComplexKeyMap } from "../lib/entity/data-structures/complex-key-map";
+import { ComplexKeyMap } from "../lib/entity/complex-key-map";
 
 interface Vector {
     x: number;

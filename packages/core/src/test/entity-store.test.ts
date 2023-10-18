@@ -1,5 +1,5 @@
 import { EntityCriteriaTools } from "../lib/criteria/entity-criteria-tools";
-import { EntityStore } from "../lib/entity/store/entity-store";
+import { EntityStore } from "../lib/execution/store/entity-store";
 import { EntitySchema } from "../lib/schema/entity-schema";
 
 interface Vector {

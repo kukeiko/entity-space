@@ -10,18 +10,18 @@ import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
 import { EntityWhere } from "../criteria/entity-criteria-tools.interface";
 import { WhereEntityTools } from "../criteria/where-entity/where-entity-tools";
 import { WhereEntitySingle } from "../criteria/where-entity/where-entity.types";
-import { EntitySet } from "../entity/data-structures/entity-set";
+import { EntitySet } from "../entity/entity-set";
 import { EntityQueryTools } from "../query/entity-query-tools";
 import { IEntityQueryTools } from "../query/entity-query-tools.interface";
 import { IEntityQuery } from "../query/entity-query.interface";
 import { EntitySelection } from "../query/entity-selection";
 import { IEntitySchema } from "../schema/schema.interface";
-import { EntitySpaceServices } from "./entity-space-services";
+import { EntityServiceContainer } from "./entity-service-container";
 import { EntityStream } from "./entity-stream";
 import { EntityStreamPacket } from "./entity-stream-packet";
 import { IEntityStreamInterceptor } from "./interceptors/entity-stream-interceptor.interface";
 import { LoadFromCacheInterceptor } from "./interceptors/load-from-cache.interceptor";
-import { SchemaRelationBasedHydrator } from "./interceptors/schema-relation-based-hydrator";
+import { EntityRelationHydrator } from "./interceptors/entity-relation-hydrator";
 import { runInterceptors } from "./run-interceptors.fn";
 
 export interface EntityQueryBuilderPatch<T extends Entity> {
@@ -32,7 +32,7 @@ export interface EntityQueryBuilderPatch<T extends Entity> {
 }
 
 export interface EntityQueryBuilderCreate<T extends Entity> extends EntityQueryBuilderPatch<T> {
-    context: EntitySpaceServices;
+    context: EntityServiceContainer;
     schema: IEntitySchema<T>;
 }
 
@@ -55,7 +55,7 @@ export class EntityQueryBuilder<T extends Entity = Entity> implements IEntityStr
         this.cacheOptions = args.cache;
     }
 
-    private readonly services: EntitySpaceServices;
+    private readonly services: EntityServiceContainer;
     private readonly createArgs: EntityQueryBuilderCreate<T>;
     private readonly schema: IEntitySchema<T>;
     private readonly selection: UnpackedEntitySelection<T>;
@@ -154,7 +154,7 @@ export class EntityQueryBuilder<T extends Entity = Entity> implements IEntityStr
             ...this.services.getSourcesFor(query.getEntitySchema()),
             ...this.services.getHydratorsFor(query.getEntitySchema()),
             // [todo] copying to prevent clearing cache more than once. not the best way to do it. a problem for future me!
-            new SchemaRelationBasedHydrator(this.services, [this.copy({ cache: undefined })]),
+            new EntityRelationHydrator(this.services, [this.copy({ cache: undefined })]),
         ];
 
         await lastValueFrom(runInterceptors(sources, query, this.services.getTracing()));

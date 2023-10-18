@@ -1,11 +1,11 @@
-import { EntitySpaceServices } from "../../lib/execution/entity-space-services";
+import { EntityServiceContainer } from "../../lib/execution/entity-service-container";
 import { UserBlueprint } from "./common/user.model";
 import { BrandBlueprint } from "./products/brand.model";
 import { ProductBlueprint } from "./products/product.model";
 import { TestContentDatabase } from "./test-content-database";
 
 export class TestContentEndpoints {
-    constructor(private readonly database: TestContentDatabase, private readonly services: EntitySpaceServices) {}
+    constructor(private readonly database: TestContentDatabase, private readonly services: EntityServiceContainer) {}
 
     withGetAllUsers(): this {
         this.services.for(UserBlueprint).addSource({

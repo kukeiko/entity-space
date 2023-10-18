@@ -2,18 +2,18 @@ import { filter, from, map, merge, mergeMap, Observable, of, shareReplay, startW
 import { Entity } from "../../common/entity.type";
 import { UnpackedEntitySelection } from "../../common/unpacked-entity-selection.type";
 import { EntityCriteriaTools } from "../../criteria/entity-criteria-tools";
-import { EntitySet } from "../../entity/data-structures/entity-set";
-import { InMemoryEntityDatabase } from "../../entity/in-memory-entity-database";
+import { EntitySet } from "../../entity/entity-set";
+import { InMemoryEntityDatabase } from "../in-memory-entity-database";
 import { EntityQueryTools } from "../../query/entity-query-tools";
 import { IEntityQuery } from "../../query/entity-query.interface";
 import { EntitySelection } from "../../query/entity-selection";
 import { IEntitySchema } from "../../schema/schema.interface";
-import { EntitySpaceServices } from "../entity-space-services";
+import { EntityServiceContainer } from "../entity-service-container";
 import { EntityStream } from "../entity-stream";
 import { EntityStreamPacket } from "../entity-stream-packet";
 import { IEntityStreamInterceptor } from "./entity-stream-interceptor.interface";
 
-export type HydrationResult<T extends Entity = Entity> = Promise<T[]> | T[] | Observable<T[]>;
+export type EntityHydrationResult<T extends Entity = Entity> = Promise<T[]> | T[] | Observable<T[]>;
 
 export interface EntityHydrationProposal {
     requiredSelection: EntitySelection;
@@ -26,11 +26,11 @@ export interface EntityHydrationEndpoint<T extends Entity = Entity> {
     schema: IEntitySchema<T>;
     requires: UnpackedEntitySelection<T>;
     hydrates: UnpackedEntitySelection<T>;
-    load(entities: T[], selection: UnpackedEntitySelection<T>): HydrationResult<T>;
+    load(entities: T[], selection: UnpackedEntitySelection<T>): EntityHydrationResult<T>;
 }
 
-export class EntityHydratorApi implements IEntityStreamInterceptor {
-    constructor(private readonly services: EntitySpaceServices) {}
+export class EntityHydrator implements IEntityStreamInterceptor {
+    constructor(private readonly services: EntityServiceContainer) {}
 
     private readonly criteriaTools = new EntityCriteriaTools();
     private readonly queryTools = new EntityQueryTools({ criteriaTools: this.criteriaTools });
@@ -38,7 +38,7 @@ export class EntityHydratorApi implements IEntityStreamInterceptor {
     hydrationEndpoints: EntityHydrationEndpoint[] = [];
 
     getName(): string {
-        return EntityHydratorApi.name;
+        return EntityHydrator.name;
     }
 
     intercept(stream: EntityStream<Entity>): EntityStream<Entity> {
@@ -218,7 +218,7 @@ export class EntityHydratorApi implements IEntityStreamInterceptor {
     }
 
     private loadedToEntityStream(
-        result: HydrationResult,
+        result: EntityHydrationResult,
         hydratedEntitySetQuery: IEntityQuery,
         hydratedSelection: EntitySelection
     ): EntityStream {

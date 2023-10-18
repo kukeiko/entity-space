@@ -5,16 +5,16 @@ import { Entity } from "../common/entity.type";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
 import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
 import { IEntityCriteriaTools } from "../criteria/entity-criteria-tools.interface";
+import { EntitySet } from "../entity/entity-set";
+import { IEntityDatabase } from "./entity-database.interface";
+import { joinEntities } from "../entity/join-entities.fn";
+import { normalizeEntities } from "../entity/normalize-entities.fn";
+import { EntityStore } from "./store/entity-store";
 import { EntityQueryTools } from "../query/entity-query-tools";
 import { IEntityQueryTools } from "../query/entity-query-tools.interface";
 import { IEntityQuery } from "../query/entity-query.interface";
 import { EntitySelection } from "../query/entity-selection";
 import { IEntitySchema, IEntitySchemaRelation } from "../schema/schema.interface";
-import { EntitySet } from "./data-structures/entity-set";
-import { IEntityDatabase } from "./entity-database.interface";
-import { joinEntities } from "./functions/join-entities.fn";
-import { normalizeEntities } from "./functions/normalize-entities.fn";
-import { EntityStore } from "./store/entity-store";
 
 export class InMemoryEntityDatabase implements IEntityDatabase {
     private readonly stores = new Map<string, EntityStore>();

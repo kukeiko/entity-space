@@ -1,14 +1,14 @@
 import { readPath, writePath } from "@entity-space/utils";
-import { Entity } from "../../common/entity.type";
-import { assertValidPaths } from "../../common/validate-paths.fn";
-import { ICriterionShape } from "../../criteria/criterion-shape.interface";
-import { ICriterion } from "../../criteria/criterion.interface";
-import { EntityCriteriaShapeTools } from "../../criteria/entity-criteria-shape-tools";
-import { EntityCriteriaTools } from "../../criteria/entity-criteria-tools";
-import { EntityCriteriaShape } from "../../criteria/entity-criteria/entity-criteria-shape";
-import { IEqualsCriterion } from "../../criteria/equals/equals-criterion.interface";
-import { IInArrayCriterion } from "../../criteria/in-array/in-array-criterion.interface";
-import { ReshapedCriterion } from "../../criteria/reshaped-criterion";
+import { Entity } from "../common/entity.type";
+import { assertValidPaths } from "../common/validate-paths.fn";
+import { ICriterionShape } from "../criteria/criterion-shape.interface";
+import { ICriterion } from "../criteria/criterion.interface";
+import { EntityCriteriaShapeTools } from "../criteria/entity-criteria-shape-tools";
+import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
+import { EntityCriteriaShape } from "../criteria/entity-criteria/entity-criteria-shape";
+import { IEqualsCriterion } from "../criteria/equals/equals-criterion.interface";
+import { IInArrayCriterion } from "../criteria/in-array/in-array-criterion.interface";
+import { ReshapedCriterion } from "../criteria/reshaped-criterion";
 
 // [todo] wanted to move this to utils, and then i noticed we have a dependency to criteria package,
 // so we can't really do that. maybe we should have a map implementing getting items by criteria

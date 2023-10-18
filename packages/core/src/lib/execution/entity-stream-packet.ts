@@ -1,7 +1,7 @@
 import { flatMap } from "lodash";
 import { Entity } from "../common/entity.type";
 import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
-import { EntitySet } from "../entity/data-structures/entity-set";
+import { EntitySet } from "../entity/entity-set";
 import { EntityQueryError } from "../query/entity-query-error";
 import { EntityQueryTools } from "../query/entity-query-tools";
 import { IEntityQuery } from "../query/entity-query.interface";

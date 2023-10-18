@@ -1,6 +1,6 @@
-import { Entity } from "../../common/entity.type";
-import { IEntitySchema } from "../../schema/schema.interface";
-import { NormalizedEntities } from "../data-structures/normalized-entities";
+import { Entity } from "../common/entity.type";
+import { IEntitySchema } from "../schema/schema.interface";
+import { NormalizedEntities } from "./normalized-entities";
 
 // [todo] protect against recursion. data read from entity-space is not cyclical, but user-provided entities might be.
 export function normalizeEntities(

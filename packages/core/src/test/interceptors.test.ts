@@ -1,5 +1,5 @@
 import { Entity } from "../lib/common/entity.type";
-import { EntitySet } from "../lib/entity/data-structures/entity-set";
+import { EntitySet } from "../lib/entity/entity-set";
 import { EntityStreamPacket } from "../lib/execution/entity-stream-packet";
 import { IEntityQuery } from "../lib/query/entity-query.interface";
 import { Product, ProductBlueprint, TestContentFacade, User, UserBlueprint } from "./content";

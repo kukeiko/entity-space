@@ -2,7 +2,7 @@ import { Observable } from "rxjs";
 import { Entity } from "../common/entity.type";
 import { IEntityQuery } from "../query/entity-query.interface";
 import { IEntitySchema } from "../schema/schema.interface";
-import { EntitySet } from "./data-structures/entity-set";
+import { EntitySet } from "../entity/entity-set";
 
 export interface IEntityDatabase {
     query$(query: IEntityQuery): Observable<EntitySet>;

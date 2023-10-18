@@ -3,9 +3,9 @@ import { Observable } from "rxjs";
 import { Entity } from "../common/entity.type";
 import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
 import { IEntityCriteriaTools } from "../criteria/entity-criteria-tools.interface";
-import { EntitySet } from "../entity/data-structures/entity-set";
+import { EntitySet } from "../entity/entity-set";
 import { IEntityStore } from "../entity/entity-store.interface";
-import { InMemoryEntityDatabase } from "../entity/in-memory-entity-database";
+import { InMemoryEntityDatabase } from "./in-memory-entity-database";
 import { EntityQueryTools } from "../query/entity-query-tools";
 import { IEntityQueryTools } from "../query/entity-query-tools.interface";
 import { IEntityQuery } from "../query/entity-query.interface";
@@ -13,10 +13,10 @@ import { EntityBlueprintInstance } from "../schema/entity-blueprint-instance.typ
 import { EntitySchemaCatalog } from "../schema/entity-schema-catalog";
 import { IEntitySchema } from "../schema/schema.interface";
 import { EntityQueryBuilder, EntityQueryBuilderCreate } from "./entity-query-builder";
-import { EntitySpaceServices } from "./entity-space-services";
+import { EntityServiceContainer } from "./entity-service-container";
 
 export class EntityWorkspace implements IEntityStore {
-    constructor(private readonly services: EntitySpaceServices) {
+    constructor(private readonly services: EntityServiceContainer) {
         this.store = services.getStores()[0]; // [todo] compatibility with music-box app
     }
 
@@ -30,7 +30,7 @@ export class EntityWorkspace implements IEntityStore {
         return this.services.getDatabase();
     }
 
-    getContext(): EntitySpaceServices {
+    getContext(): EntityServiceContainer {
         return this.services;
     }
 

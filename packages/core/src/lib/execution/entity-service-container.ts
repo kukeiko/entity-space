@@ -11,22 +11,22 @@ import { WhereEntityShapeInstance } from "../criteria/where-entity/where-entity-
 import { WhereEntityShape } from "../criteria/where-entity/where-entity-shape.types";
 import { WhereEntityTools } from "../criteria/where-entity/where-entity-tools";
 import { IEntityStore } from "../entity/entity-store.interface";
-import { InMemoryEntityDatabase } from "../entity/in-memory-entity-database";
+import { InMemoryEntityDatabase } from "./in-memory-entity-database";
 import { EntityQueryParametersShape } from "../query/entity-query-shape";
 import { EntitySelection } from "../query/entity-selection";
 import { EntitySchemaCatalog } from "../schema/entity-schema-catalog";
 import { IEntitySchema } from "../schema/schema.interface";
-import { EntityApiEndpoint, EntityApiEndpointInvoke } from "./entity-api-endpoint";
+import { EntitySourceEndpoint, EntitySourceEndpointInvoke } from "./interceptors/entity-source-endpoint";
 import { EntityQueryTracing } from "./entity-query-tracing";
-import { EntityApi } from "./interceptors/entity-api";
-import { EntityHydrationEndpoint, EntityHydratorApi, HydrationResult } from "./interceptors/entity-hydrator-api";
+import { EntitySource } from "./interceptors/entity-source";
+import { EntityHydrationEndpoint, EntityHydrator, EntityHydrationResult } from "./interceptors/entity-hydrator";
 import { IEntityStreamInterceptor } from "./interceptors/entity-stream-interceptor.interface";
 
-export class EntitySchemaScopedServicesBuilder<T extends Entity> {
+export class EntitySchemaScopedServiceContainer<T extends Entity> {
     constructor(
         private readonly schema: IEntitySchema<T>,
-        private readonly api: EntityApi,
-        private readonly hydrator: EntityHydratorApi
+        private readonly api: EntitySource,
+        private readonly hydrator: EntityHydrator
     ) {
         const criteriaTools = new EntityCriteriaTools();
         this.shapeTools = new EntityCriteriaShapeTools({ criteriaTools });
@@ -47,7 +47,7 @@ export class EntitySchemaScopedServicesBuilder<T extends Entity> {
         select?: PackedEntitySelection<T>;
         parameters?: EntityQueryParametersShape;
         accept?: (criterion: ICriterion) => boolean;
-        load: EntityApiEndpointInvoke<T, WhereEntityShapeInstance<T, S>>;
+        load: EntitySourceEndpointInvoke<T, WhereEntityShapeInstance<T, S>>;
     }): this {
         const criterionShape =
             where === undefined
@@ -56,7 +56,7 @@ export class EntitySchemaScopedServicesBuilder<T extends Entity> {
 
         const unpackedSelect = EntitySelection.unpack(this.schema, select ?? {});
 
-        const endpoint = new EntityApiEndpoint({
+        const endpoint = new EntitySourceEndpoint({
             selection: new EntitySelection({ schema: this.schema, value: unpackedSelect }),
             criterionShape,
             schema: this.schema,
@@ -78,7 +78,7 @@ export class EntitySchemaScopedServicesBuilder<T extends Entity> {
     }: {
         select: UnpackedEntitySelection<T>;
         requires: R;
-        hydrate: (entities: Select<T, R>[], selection: UnpackedEntitySelection<T>) => HydrationResult<T>;
+        hydrate: (entities: Select<T, R>[], selection: UnpackedEntitySelection<T>) => EntityHydrationResult<T>;
     }): this {
         const endpoint: EntityHydrationEndpoint<T> = {
             hydrates: select,
@@ -95,13 +95,13 @@ export class EntitySchemaScopedServicesBuilder<T extends Entity> {
     }
 }
 
-export class EntitySpaceServices {
+export class EntityServiceContainer {
     private readonly tracing = new EntityQueryTracing();
     private readonly catalog = new EntitySchemaCatalog();
     private readonly database = new InMemoryEntityDatabase();
     private readonly stores: IEntityStore[] = [];
-    private readonly apis = new Map<string, EntityApi>();
-    private readonly hydrators = new Map<string, EntityHydratorApi>();
+    private readonly apis = new Map<string, EntitySource>();
+    private readonly hydrators = new Map<string, EntityHydrator>();
 
     getCatalog(): EntitySchemaCatalog {
         return this.catalog;
@@ -145,25 +145,25 @@ export class EntitySpaceServices {
         const api = this.getOrCreateApi(schema);
         const hydrator = this.getOrCreateHydrator(schema);
 
-        return new EntitySchemaScopedServicesBuilder(schema, api, hydrator);
+        return new EntitySchemaScopedServiceContainer(schema, api, hydrator);
     }
 
-    private getOrCreateApi(schema: IEntitySchema): EntityApi {
+    private getOrCreateApi(schema: IEntitySchema): EntitySource {
         let api = this.apis.get(schema.getId());
 
         if (!api) {
-            api = new EntityApi(this);
+            api = new EntitySource(this);
             this.apis.set(schema.getId(), api);
         }
 
         return api;
     }
 
-    private getOrCreateHydrator(schema: IEntitySchema): EntityHydratorApi {
+    private getOrCreateHydrator(schema: IEntitySchema): EntityHydrator {
         let hydrator = this.hydrators.get(schema.getId());
 
         if (!hydrator) {
-            hydrator = new EntityHydratorApi(this);
+            hydrator = new EntityHydrator(this);
             this.hydrators.set(schema.getId(), hydrator);
         }
 

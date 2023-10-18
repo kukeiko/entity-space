@@ -1,6 +1,6 @@
 import { map, takeLast, tap } from "rxjs";
 import { Entity } from "../../common/entity.type";
-import { InMemoryEntityDatabase } from "../../entity/in-memory-entity-database";
+import { InMemoryEntityDatabase } from "../in-memory-entity-database";
 import { EntityStream } from "../entity-stream";
 import { EntityStreamPacket } from "../entity-stream-packet";
 import { IEntityStreamInterceptor } from "./entity-stream-interceptor.interface";

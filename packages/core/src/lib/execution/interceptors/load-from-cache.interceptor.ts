@@ -1,7 +1,7 @@
 import { filter, forkJoin, map, merge, mergeMap, of, switchMap } from "rxjs";
 import { Entity } from "../../common/entity.type";
 import { EntityCriteriaTools } from "../../criteria/entity-criteria-tools";
-import { IEntityDatabase } from "../../entity/entity-database.interface";
+import { IEntityDatabase } from "../entity-database.interface";
 import { EntityQueryTools } from "../../query/entity-query-tools";
 import { EntityQueryTracing } from "../entity-query-tracing";
 import { EntityStream } from "../entity-stream";

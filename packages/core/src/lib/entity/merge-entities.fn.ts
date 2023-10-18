@@ -1,7 +1,7 @@
 import { uniq } from "lodash";
-import { Entity } from "../../common/entity.type";
-import { IEntitySchema } from "../../schema/schema.interface";
-import { ComplexKeyMap } from "../data-structures/complex-key-map";
+import { Entity } from "../common/entity.type";
+import { IEntitySchema } from "../schema/schema.interface";
+import { ComplexKeyMap } from "./complex-key-map";
 
 function mergeEntitiesInternal(schema: IEntitySchema, ...entities: Entity[]): Entity {
     // [todo] why did i do uniq()? if i find out, i should document it

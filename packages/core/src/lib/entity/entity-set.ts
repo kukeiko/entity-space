@@ -1,6 +1,6 @@
-import { Entity } from "../../common/entity.type";
-import { IEntitySchema } from "../../schema/schema.interface";
-import { IEntityQuery } from "../../query/entity-query.interface";
+import { Entity } from "../common/entity.type";
+import { IEntitySchema } from "../schema/schema.interface";
+import { IEntityQuery } from "../query/entity-query.interface";
 
 export class EntitySet<T extends Entity = Entity> {
     constructor({ query, entities }: { query: IEntityQuery; entities: T[] }) {

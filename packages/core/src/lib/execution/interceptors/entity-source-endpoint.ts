@@ -1,19 +1,19 @@
 import { Observable } from "rxjs";
-import { Entity } from "../common/entity.type";
-import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
-import { ICriterionShape } from "../criteria/criterion-shape.interface";
-import { ICriterion } from "../criteria/criterion.interface";
-import { WhereEntityShape } from "../criteria/where-entity/where-entity-shape.types";
-import { EntitySet } from "../entity/data-structures/entity-set";
-import { EntityQueryParametersShape } from "../query/entity-query-shape";
-import { IEntityQuery } from "../query/entity-query.interface";
-import { EntitySelection } from "../query/entity-selection";
-import { QueryPaging } from "../query/query-paging";
-import { IEntitySchema } from "../schema/schema.interface";
+import { Entity } from "../../common/entity.type";
+import { UnpackedEntitySelection } from "../../common/unpacked-entity-selection.type";
+import { ICriterionShape } from "../../criteria/criterion-shape.interface";
+import { ICriterion } from "../../criteria/criterion.interface";
+import { WhereEntityShape } from "../../criteria/where-entity/where-entity-shape.types";
+import { EntitySet } from "../../entity/entity-set";
+import { EntityQueryParametersShape } from "../../query/entity-query-shape";
+import { IEntityQuery } from "../../query/entity-query.interface";
+import { EntitySelection } from "../../query/entity-selection";
+import { QueryPaging } from "../../query/query-paging";
+import { IEntitySchema } from "../../schema/schema.interface";
 
-export type EntityApiEndpointData<T extends Entity = Entity> = T | T[] | EntitySet<T>;
+export type EntitySourceEndpointData<T extends Entity = Entity> = T | T[] | EntitySet<T>;
 
-export type EntityApiEndpointInvoke<
+export type EntitySourceEndpointInvoke<
     T extends Entity = Entity,
     C = {},
     P extends Entity | undefined = Entity | undefined
@@ -23,9 +23,9 @@ export type EntityApiEndpointInvoke<
     paging?: QueryPaging;
     parameters: P;
     criteria: C;
-}) => Observable<EntityApiEndpointData<T>> | Promise<EntityApiEndpointData<T>> | EntityApiEndpointData<T>;
+}) => Observable<EntitySourceEndpointData<T>> | Promise<EntitySourceEndpointData<T>> | EntitySourceEndpointData<T>;
 
-export class EntityApiEndpoint {
+export class EntitySourceEndpoint {
     constructor({
         acceptCriterion,
         criterionShape,
@@ -37,7 +37,7 @@ export class EntityApiEndpoint {
     }: {
         acceptCriterion?: (criterion: ICriterion) => boolean;
         criterionShape: ICriterionShape;
-        invoke: EntityApiEndpointInvoke;
+        invoke: EntitySourceEndpointInvoke;
         whereEntityShape?: WhereEntityShape;
         schema: IEntitySchema;
         parametersShape?: EntityQueryParametersShape;
@@ -57,7 +57,7 @@ export class EntityApiEndpoint {
     private readonly whereEntityShape?: WhereEntityShape;
     private readonly criterionShape: ICriterionShape;
     private readonly selection: EntitySelection;
-    private readonly invoke: EntityApiEndpointInvoke;
+    private readonly invoke: EntitySourceEndpointInvoke;
     private readonly acceptCriterionFn: (criterion: ICriterion) => boolean;
 
     getSchema(): IEntitySchema {
@@ -80,7 +80,7 @@ export class EntityApiEndpoint {
         return this.selection;
     }
 
-    getInvoke(): EntityApiEndpointInvoke {
+    getInvoke(): EntitySourceEndpointInvoke {
         return this.invoke;
     }
 

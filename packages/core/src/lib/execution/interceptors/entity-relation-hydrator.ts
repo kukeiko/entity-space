@@ -3,13 +3,13 @@ import { EMPTY, filter, map, merge, of, switchMap, takeLast, tap } from "rxjs";
 import { Entity } from "../../common/entity.type";
 import { UnpackedEntitySelection } from "../../common/unpacked-entity-selection.type";
 import { EntityCriteriaTools } from "../../criteria/entity-criteria-tools";
-import { EntitySet } from "../../entity/data-structures/entity-set";
+import { EntitySet } from "../../entity/entity-set";
 import { EntityQuery } from "../../query/entity-query";
 import { EntityQueryTools } from "../../query/entity-query-tools";
 import { IEntityQuery } from "../../query/entity-query.interface";
 import { EntitySelection } from "../../query/entity-selection";
 import { EntitySelectionTools } from "../../query/entity-selection-tools";
-import { EntitySpaceServices } from "../entity-space-services";
+import { EntityServiceContainer } from "../entity-service-container";
 import { EntityStream } from "../entity-stream";
 import { EntityStreamPacket } from "../entity-stream-packet";
 import { runInterceptors } from "../run-interceptors.fn";
@@ -21,9 +21,9 @@ interface HydrateRelationQuery {
     relationQuery: IEntityQuery;
 }
 
-export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
+export class EntityRelationHydrator implements IEntityStreamInterceptor {
     constructor(
-        private readonly services: EntitySpaceServices,
+        private readonly services: EntityServiceContainer,
         private readonly interceptors: IEntityStreamInterceptor[]
     ) {}
 
@@ -32,7 +32,7 @@ export class SchemaRelationBasedHydrator implements IEntityStreamInterceptor {
     private readonly selectionTools = new EntitySelectionTools();
 
     getName(): string {
-        return SchemaRelationBasedHydrator.name;
+        return EntityRelationHydrator.name;
     }
 
     intercept(stream: EntityStream): EntityStream {

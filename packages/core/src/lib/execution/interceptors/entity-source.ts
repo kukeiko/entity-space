@@ -4,31 +4,31 @@ import { filter, from, isObservable, map, merge, mergeAll, Observable, of, start
 import { EntityCriteriaShapeTools } from "../../criteria/entity-criteria-shape-tools";
 import { EntityCriteriaTools } from "../../criteria/entity-criteria-tools";
 import { WhereEntityTools } from "../../criteria/where-entity/where-entity-tools";
-import { EntitySet } from "../../entity/data-structures/entity-set";
+import { EntitySet } from "../../entity/entity-set";
 import { EntityQueryShape } from "../../query/entity-query-shape";
 import { EntityQueryTools } from "../../query/entity-query-tools";
 import { IEntityQuery } from "../../query/entity-query.interface";
 import { IEntitySchema } from "../../schema/schema.interface";
-import { EntityApiEndpoint, EntityApiEndpointData, EntityApiEndpointInvoke } from "../entity-api-endpoint";
-import { EntitySpaceServices } from "../entity-space-services";
+import { EntitySourceEndpoint, EntitySourceEndpointData, EntitySourceEndpointInvoke } from "./entity-source-endpoint";
+import { EntityServiceContainer } from "../entity-service-container";
 import { EntityStream } from "../entity-stream";
 import { EntityStreamPacket } from "../entity-stream-packet";
 import { IEntityStreamInterceptor } from "./entity-stream-interceptor.interface";
 
-export class EntityApi implements IEntityStreamInterceptor {
-    constructor(protected readonly services: EntitySpaceServices) {}
+export class EntitySource implements IEntityStreamInterceptor {
+    constructor(protected readonly services: EntityServiceContainer) {}
 
-    protected endpoints: EntityApiEndpoint[] = [];
+    protected endpoints: EntitySourceEndpoint[] = [];
     protected readonly criteriaTools = new EntityCriteriaTools();
     protected readonly queryTools = new EntityQueryTools({ criteriaTools: this.criteriaTools });
     protected readonly shapeTools = new EntityCriteriaShapeTools({ criteriaTools: this.criteriaTools });
     protected readonly whereEntityTools = new WhereEntityTools(this.shapeTools, this.criteriaTools);
 
     getName(): string {
-        return EntityApi.name;
+        return EntitySource.name;
     }
 
-    addEndpoint(endpoint: EntityApiEndpoint): this {
+    addEndpoint(endpoint: EntitySourceEndpoint): this {
         this.endpoints.push(endpoint);
         return this;
     }
@@ -68,7 +68,7 @@ export class EntityApi implements IEntityStreamInterceptor {
         );
     }
 
-    private dispatchToEndpoints(query: IEntityQuery, endpoints: EntityApiEndpoint[]): [EntityStream[], IEntityQuery[]] {
+    private dispatchToEndpoints(query: IEntityQuery, endpoints: EntitySourceEndpoint[]): [EntityStream[], IEntityQuery[]] {
         let open: IEntityQuery[] = [query];
         const delegatedStreams: EntityStream[] = [];
         const acceptedQueries: IEntityQuery[] = [];
@@ -93,7 +93,7 @@ export class EntityApi implements IEntityStreamInterceptor {
     }
 
     private dispatchToEndpoint(
-        endpoint: EntityApiEndpoint,
+        endpoint: EntitySourceEndpoint,
         queries: IEntityQuery[]
     ): false | [Observable<EntityStreamPacket>, IEntityQuery[]] {
         const queryShape = new EntityQueryShape({
@@ -157,7 +157,7 @@ export class EntityApi implements IEntityStreamInterceptor {
         return [stream, acceptedReshaped];
     }
 
-    private tracePacket(packet: EntityStreamPacket, endpoint: EntityApiEndpoint, accepted: IEntityQuery[]): void {
+    private tracePacket(packet: EntityStreamPacket, endpoint: EntitySourceEndpoint, accepted: IEntityQuery[]): void {
         const relevantAccepted = accepted.filter(acceptedQuery =>
             packet.getPayload().some(payload => payload.getQuery().intersect(acceptedQuery))
         );
@@ -167,17 +167,17 @@ export class EntityApi implements IEntityStreamInterceptor {
         );
     }
 
-    private invokedToDataStream(invoked: ReturnType<EntityApiEndpointInvoke>): Observable<EntityApiEndpointData> {
+    private invokedToDataStream(invoked: ReturnType<EntitySourceEndpointInvoke>): Observable<EntitySourceEndpointData> {
         if (invoked instanceof Promise) {
             return from(invoked);
         } else if (Array.isArray(invoked) || invoked instanceof EntitySet || !isObservable(invoked)) {
             return of(invoked);
         } else {
-            return invoked as Observable<EntityApiEndpointData>;
+            return invoked as Observable<EntitySourceEndpointData>;
         }
     }
 
-    private endpointDataToPacket(query: IEntityQuery, data: EntityApiEndpointData): EntityStreamPacket {
+    private endpointDataToPacket(query: IEntityQuery, data: EntitySourceEndpointData): EntityStreamPacket {
         if (data instanceof EntitySet) {
             // if we have an EntitySet, the source told us exactly what has been delivered
             return new EntityStreamPacket({ delivered: [data.getQuery()], payload: [data] });
@@ -188,7 +188,7 @@ export class EntityApi implements IEntityStreamInterceptor {
         }
     }
 
-    private getEndpointsAcceptingSchema(schema: IEntitySchema): EntityApiEndpoint[] {
+    private getEndpointsAcceptingSchema(schema: IEntitySchema): EntitySourceEndpoint[] {
         return this.endpoints.filter(endpoint => endpoint.getSchema().getId() === schema.getId());
     }
 }
