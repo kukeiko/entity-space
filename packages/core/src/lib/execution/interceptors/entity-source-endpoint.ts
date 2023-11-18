@@ -5,7 +5,7 @@ import { ICriterionShape } from "../../criteria/criterion-shape.interface";
 import { ICriterion } from "../../criteria/criterion.interface";
 import { WhereEntityShape } from "../../criteria/where-entity/where-entity-shape.types";
 import { EntitySet } from "../../entity/entity-set";
-import { EntityQueryParametersShape } from "../../query/entity-query-shape";
+import { EntityQueryParametersShape, EntityQueryShape } from "../../query/entity-query-shape";
 import { IEntityQuery } from "../../query/entity-query.interface";
 import { EntitySelection } from "../../query/entity-selection";
 import { QueryPaging } from "../../query/query-paging";
@@ -50,6 +50,12 @@ export class EntitySourceEndpoint {
         this.schema = schema;
         this.parametersShape = parametersShape;
         this.selection = selection;
+        this.queryShape = new EntityQueryShape({
+            schema: this.schema,
+            criterion: this.criterionShape,
+            selection: this.selection,
+            parameters: this.parametersShape,
+        });
     }
 
     private readonly schema: IEntitySchema;
@@ -57,11 +63,16 @@ export class EntitySourceEndpoint {
     private readonly whereEntityShape?: WhereEntityShape;
     private readonly criterionShape: ICriterionShape;
     private readonly selection: EntitySelection;
+    private readonly queryShape: EntityQueryShape;
     private readonly invoke: EntitySourceEndpointInvoke;
     private readonly acceptCriterionFn: (criterion: ICriterion) => boolean;
 
     getSchema(): IEntitySchema {
         return this.schema;
+    }
+
+    getQueryShape(): EntityQueryShape {
+        return this.queryShape;
     }
 
     getParametersShape(): EntityQueryParametersShape | undefined {

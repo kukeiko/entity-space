@@ -5,7 +5,6 @@ import { EntityCriteriaShapeTools } from "../../criteria/entity-criteria-shape-t
 import { EntityCriteriaTools } from "../../criteria/entity-criteria-tools";
 import { WhereEntityTools } from "../../criteria/where-entity/where-entity-tools";
 import { EntitySet } from "../../entity/entity-set";
-import { EntityQueryShape } from "../../query/entity-query-shape";
 import { EntityQueryTools } from "../../query/entity-query-tools";
 import { IEntityQuery } from "../../query/entity-query.interface";
 import { IEntitySchema } from "../../schema/schema.interface";
@@ -101,14 +100,7 @@ export class EntitySource implements IEntityStreamInterceptor {
         endpoint: EntitySourceEndpoint,
         queries: IEntityQuery[]
     ): false | [Observable<EntityStreamPacket>, IEntityQuery[]] {
-        // [todo] move queryShape to endpoint class
-        const queryShape = new EntityQueryShape({
-            schema: endpoint.getSchema(),
-            criterion: endpoint.getCriterionShape(),
-            selection: endpoint.getSelection(),
-            parameters: endpoint.getParametersShape(),
-        });
-
+        const queryShape = endpoint.getQueryShape();
         const reshapedQueries = flatten(queries.map(query => queryShape.reshape(query)).filter(isNotFalse));
 
         if (!reshapedQueries) {
@@ -169,14 +161,7 @@ export class EntitySource implements IEntityStreamInterceptor {
                 [],
             ];
         } else if (openQueries !== false && openQueries.length) {
-            // [todo] move queryShape to endpoint class
-            const queryShape = new EntityQueryShape({
-                schema: endpoint.getSchema(),
-                criterion: endpoint.getCriterionShape(),
-                selection: endpoint.getSelection(),
-                parameters: endpoint.getParametersShape(),
-            });
-
+            const queryShape = endpoint.getQueryShape();
             const reshaped = openQueries.map(openQuery => {
                 const reshaped = queryShape.reshape(openQuery);
 
