@@ -1,4 +1,4 @@
-import { expectCriteria } from "./expect-criteria.fn";
+import { expectCriteria } from "../tools/expect-criteria.fn";
 
 describe("criteria: intersecting", () => {
     // equals

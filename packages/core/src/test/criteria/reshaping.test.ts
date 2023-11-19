@@ -2,7 +2,7 @@ import { EntityCriteriaShapeTools } from "../../lib/criteria/entity-criteria-sha
 import { IEntityCriteriaShapeTools } from "../../lib/criteria/entity-criteria-shape-tools.interface";
 import { EntityCriteriaTools } from "../../lib/criteria/entity-criteria-tools";
 import { IEntityCriteriaTools } from "../../lib/criteria/entity-criteria-tools.interface";
-import { expectCriteria } from "./expect-criteria.fn";
+import { expectCriteria } from "../tools/expect-criteria.fn";
 
 // [todo] all tests should ignore order of reshaped / open criteria
 describe("criteria: reshaping", () => {
