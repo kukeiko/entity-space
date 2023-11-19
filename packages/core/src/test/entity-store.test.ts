@@ -1,44 +1,74 @@
 import { EntityCriteriaTools } from "../lib/criteria/entity-criteria-tools";
 import { EntityStore } from "../lib/execution/store/entity-store";
 import { EntitySchema } from "../lib/schema/entity-schema";
+import { EntitySchemaCatalog } from "../lib/schema/entity-schema-catalog";
+import { Color, ColorBlueprint, MinecraftBlock, MinecraftBlockBlueprint } from "./content";
 
-interface Vector {
-    x: number;
-    y: number;
-    z: number;
-}
-
-interface Block {
-    position: Vector;
-    typeId: string;
-}
-
-describe("entity-store", () => {
+describe(EntityStore.name, () => {
     const criteriaTools = new EntityCriteriaTools();
     const { where } = criteriaTools;
 
-    describe("add() & get()", () => {
-        it("should allow adding and getting entities", () => {
+    describe(EntityStore.prototype.add.name, () => {
+        it("should allow adding entities", () => {
             // arrange
-            const entitySchema = new EntitySchema("block")
-                .setKey(["position.x", "position.y", "position.z"], { name: "id" })
-                .addIndex(["position.x", "position.z"])
-                .addIndex("position.x")
-                .addIndex("position.y")
-                .addIndex("position.z")
-                .addIndex("typeId");
-
+            const catalog = new EntitySchemaCatalog();
+            const entitySchema = catalog.resolve(ColorBlueprint);
             const entityStore = new EntityStore(entitySchema);
 
-            const blocks: Block[] = [
+            const colors: Color[] = [{ id: 1, name: "Red" }];
+            const expected: Color[] = [{ id: 1, name: "Red" }];
+
+            // act
+            entityStore.add(colors);
+            const actual = expected.map(block => entityStore.get(block));
+
+            // assert
+            expect(actual).toEqual(expected);
+            colors.forEach((color, index) => expect(actual[index]).not.toBe(color));
+        });
+
+        it("should allow adding using a complex key", () => {
+            // arrange
+            const catalog = new EntitySchemaCatalog();
+            const entitySchema = catalog.resolve(MinecraftBlockBlueprint);
+            const entityStore = new EntityStore(entitySchema);
+
+            const blocks: MinecraftBlock[] = [
                 { position: { x: 0, y: 0, z: 0 }, typeId: "minecraft:grass_block" },
-                { position: { x: 0, y: -1, z: 0 }, typeId: "minecraft:dirt" },
-                { position: { x: 0, y: 0, z: 0 }, typeId: "minecraft:dirt" },
+                { position: { x: 0, y: 1, z: 0 }, typeId: "minecraft:dirt" },
+                { position: { x: 0, y: 2, z: 0 }, typeId: "minecraft:dirt" },
             ];
 
-            const expected: Block[] = [
+            const expected: MinecraftBlock[] = [
+                { position: { x: 0, y: 0, z: 0 }, typeId: "minecraft:grass_block" },
+                { position: { x: 0, y: 1, z: 0 }, typeId: "minecraft:dirt" },
+                { position: { x: 0, y: 2, z: 0 }, typeId: "minecraft:dirt" },
+            ];
+
+            // act
+            entityStore.add(blocks);
+            const fetched = expected.map(block => entityStore.get(block));
+
+            // assert
+            expect(fetched).toEqual(expected);
+            blocks.forEach((block, index) => expect(fetched[index]).not.toBe(block));
+        });
+
+        it("should allow adding duplicates and merges them", () => {
+            // arrange
+            const catalog = new EntitySchemaCatalog();
+            const entitySchema = catalog.resolve(MinecraftBlockBlueprint);
+            const entityStore = new EntityStore(entitySchema);
+
+            const blocks: MinecraftBlock[] = [
+                { position: { x: 0, y: 0, z: 0 }, typeId: "minecraft:grass_block" },
+                { position: { x: 0, y: 1, z: 0 }, typeId: "minecraft:dirt" },
+                { position: { x: 0, y: 0, z: 0 }, typeId: "minecraft:dirt" }, // same id as first element (with a change in typeId)
+            ];
+
+            const expected: MinecraftBlock[] = [
                 { position: { x: 0, y: 0, z: 0 }, typeId: "minecraft:dirt" },
-                { position: { x: 0, y: -1, z: 0 }, typeId: "minecraft:dirt" },
+                { position: { x: 0, y: 1, z: 0 }, typeId: "minecraft:dirt" },
             ];
 
             // act
@@ -51,20 +81,15 @@ describe("entity-store", () => {
         });
     });
 
-    describe("getByCriterion()", () => {
-        it("should return entities filtered by criterion", () => {
-            const entitySchema = new EntitySchema("block")
-                .setKey(["position.x", "position.y", "position.z"], { name: "id" })
-                .addIndex(["position.x", "position.z"])
-                .addIndex("position.x")
-                .addIndex("position.y")
-                .addIndex("position.z")
-                .addIndex("typeId");
-
+    describe(EntityStore.prototype.getByCriterion.name, () => {
+        it("should return entities filtered by a criterion", () => {
+            // arrange
+            const catalog = new EntitySchemaCatalog();
+            const entitySchema = catalog.resolve(MinecraftBlockBlueprint);
             const entityStore = new EntityStore(entitySchema);
             const criteriaFactory = new EntityCriteriaTools();
 
-            const blocks: Block[] = [
+            const blocks: MinecraftBlock[] = [
                 { position: { x: 0, y: 0, z: 0 }, typeId: "minecraft:grass_block" },
                 { position: { x: 0, y: 0, z: 1 }, typeId: "minecraft:grass_block" },
                 { position: { x: 0, y: 0, z: 2 }, typeId: "minecraft:grass_block" },
@@ -74,18 +99,18 @@ describe("entity-store", () => {
             ];
 
             const byTypeId_expected = blocks.filter(block => block.typeId === "minecraft:dirt");
-            const byTypeId_criterion = where<Block>({ typeId: "minecraft:dirt" });
+            const byTypeId_criterion = where<MinecraftBlock>({ typeId: "minecraft:dirt" });
 
             const byXandZ_expected = blocks.filter(block => block.position.x === 0 && block.position.z === 0);
-            const byXandZ_criterion = where<Block>({ position: { x: 0, z: 0 } });
+            const byXandZ_criterion = where<MinecraftBlock>({ position: { x: 0, z: 0 } });
 
             const byXandZ_or_byTypeId_expected = blocks.filter(
                 block => block.typeId === "minecraft:dirt" || (block.position.x === 0 && block.position.z === 0)
             );
 
             const byXandZ_or_byTypeId_criterion = criteriaFactory.or([
-                where<Block>({ position: { x: 0, z: 0 } }),
-                where<Block>({ typeId: "minecraft:dirt" }),
+                where<MinecraftBlock>({ position: { x: 0, z: 0 } }),
+                where<MinecraftBlock>({ typeId: "minecraft:dirt" }),
             ]);
 
             // act
@@ -101,7 +126,7 @@ describe("entity-store", () => {
         });
     });
 
-    describe("getByParameters()", () => {
+    describe(EntityStore.prototype.getByParameters.name, () => {
         it("should return entities filtered by parameters", () => {
             // arrange
             const entitySchema = new EntitySchema("foo").setKey("id").addInteger("id", true);
