@@ -46,12 +46,12 @@ describe("criteria: subtractions", () => {
         expectCriteria("{1, 2, 3}").minus("{1, 2, 3}").toEqual(true);
         expectCriteria("{1, 2, 3}").minus("{1, 2, 3, 4}").toEqual(true);
         expectCriteria("{1, 2, 3}").minus("!{4}").toEqual(true);
+        expectCriteria("{1, 2, 3}").minus("[1, 3]").toEqual(true);
 
         expectCriteria("{1, 2, 3}").minus("{1, 2, 4}").toEqual("{3}");
         expectCriteria("{1, 2, 3}").minus("!{1}").toEqual("{1}");
         expectCriteria("{1, 2, 3}").minus("{4, 5, 6}").toEqual(false);
         expectCriteria("{1, 2, 3}").minus("!{1, 2, 3}").toEqual(false);
-        expectCriteria("{1, 2, 3}").minus("[1, 3]").toEqual(false);
     }
 
     {
@@ -124,7 +124,7 @@ describe("criteria: subtractions", () => {
             .minus("(starts-with(foo) & contains(bar) & ends-with(baz))")
             .toEqual("(starts-with(foo) & !(contains(bar) & ends-with(baz)))");
 
-        expectCriteria("({5} & [8, 10])").minus("[1, 7]").toEqual(false);
+        expectCriteria("({5} & [8, 10])").minus("[1, 7]").toEqual(true);
     }
 
     {

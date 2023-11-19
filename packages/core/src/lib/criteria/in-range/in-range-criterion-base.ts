@@ -1,9 +1,8 @@
 import { Class, getInstanceClass } from "@entity-space/utils";
-import { IAndCriterion } from "../and/and-criterion.interface";
 import { CriterionBase } from "../criterion-base";
 import { ICriterion, ICriterion$ } from "../criterion.interface";
 import { IEntityCriteriaTools } from "../entity-criteria-tools.interface";
-import { IOrCriterion } from "../or/or-criterion.interface";
+import { PrimitiveValue } from "../in-array/in-array-criterion.interface";
 
 export type FromCriterion<T> = {
     op: ">=" | ">";
@@ -174,6 +173,24 @@ export abstract class InRangeCriterion<T> extends CriterionBase implements ICrit
                         this.tools
                     ),
                 ]);
+            }
+        } else if (this.tools.isInArrayCriterion(other)) {
+            const remaining = new Set<PrimitiveValue>();
+
+            for (const value of other.getValues()) {
+                if (!this.contains(value)) {
+                    remaining.add(value);
+                }
+            }
+
+            if (remaining.size === 0) {
+                return true;
+            } else if (remaining.size < other.getValues().length) {
+                if (remaining.size === 1) {
+                    return this.tools.equals(remaining.values().next().value);
+                } else {
+                    return this.tools.inArray(remaining);
+                }
             }
         }
 

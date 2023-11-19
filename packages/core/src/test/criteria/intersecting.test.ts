@@ -7,11 +7,10 @@ describe("criteria: intersecting", () => {
     expectCriteria("1").intersectedWith("{-1, 0, 1}").toEqual("1");
 
     // in-array
-    // [todo] during criteria-vnext, i reworked intersection a bit: it now simplifies.
-    // so there is a small change in behaviour, not sure if causes issues somewhere else.
-    // expectCriteria("{1, 2, 3}").intersectedWith("{2}").toEqual("{2}");
     expectCriteria("{1, 2, 3}").intersectedWith("2").toEqual("2");
     expectCriteria("{1, 2, 3}").intersectedWith("{4}").toEqual(false);
+    expectCriteria("{1, 2, 3}").intersectedWith("[1, 2]").toEqual("{1, 2}");
+    expectCriteria("{1, 2, 3}").intersectedWith("(1, 2]").toEqual("2");
 
     // not-in-array
     expectCriteria("!{2}").intersectedWith("!{7}").toEqual("!{2, 7}");
