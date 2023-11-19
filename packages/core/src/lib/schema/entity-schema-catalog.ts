@@ -33,13 +33,17 @@ export class EntitySchemaCatalog {
 
     resolve<T>(blueprint: Class<T>): IEntitySchema<EntityBlueprintInstance<T>> {
         const metadata = getEntityBlueprintMetadata(blueprint);
-        let schema: EntitySchema;
 
         if (this.schemas.has(metadata.id)) {
             return this.schemas.get(metadata.id) as EntitySchema<EntityBlueprintInstance<T>>;
+        } else {
+            return this.createSchemaFromBlueprint(blueprint);
         }
+    }
 
-        schema = new EntitySchema(metadata.id);
+    private createSchemaFromBlueprint<T>(blueprint: Class<T>): IEntitySchema<EntityBlueprintInstance<T>> {
+        const metadata = getEntityBlueprintMetadata(blueprint);
+        const schema = new EntitySchema(metadata.id);
         this.schemas.set(metadata.id, schema);
 
         if (metadata.key) {
