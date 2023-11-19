@@ -33,8 +33,14 @@ export class NotInArrayCriterion extends CriterionBase implements INotInArrayCri
         } else if (this.tools.isInArrayCriterion(other)) {
             const intersected = other.getValues().filter(value => !this.values.has(value));
 
-            if (intersected.length) {
+            if (intersected.length === 1) {
+                return this.tools.equals(intersected[0]);
+            } else if (intersected.length) {
                 return this.tools.inArray(intersected);
+            }
+        } else if (this.tools.isEqualsCriterion(other)) {
+            if (this.contains(other.getValue())) {
+                return other;
             }
         }
 

@@ -5,16 +5,22 @@ describe("criteria: intersecting", () => {
     expectCriteria("true").intersectedWith("true").toEqual("true");
     expectCriteria("true").intersectedWith("false").toEqual(false);
     expectCriteria("1").intersectedWith("{-1, 0, 1}").toEqual("1");
+    expectCriteria("1").intersectedWith("[1, 3]").toEqual("1");
+    expectCriteria("1").intersectedWith("(1, 3]").toEqual(false);
 
     // in-array
     expectCriteria("{1, 2, 3}").intersectedWith("2").toEqual("2");
     expectCriteria("{1, 2, 3}").intersectedWith("{4}").toEqual(false);
     expectCriteria("{1, 2, 3}").intersectedWith("[1, 2]").toEqual("{1, 2}");
     expectCriteria("{1, 2, 3}").intersectedWith("(1, 2]").toEqual("2");
+    expectCriteria("{1, 2, 3}").intersectedWith("!{1, 2, 3}").toEqual(false);
+    expectCriteria("{1, 2, 3}").intersectedWith("!{1, 2}").toEqual("3");
 
     // not-in-array
     expectCriteria("!{2}").intersectedWith("!{7}").toEqual("!{2, 7}");
     expectCriteria("!{2}").intersectedWith("{1, 2, 3}").toEqual("{1, 3}");
+    expectCriteria("!{2}").intersectedWith("{1, 2}").toEqual("1");
+    expectCriteria("!{7}").intersectedWith("8").toEqual("8");
 
     // in-range
     expectCriteria("[1, 7]").intersectedWith("[3, 5]").toEqual("[3, 5]");
