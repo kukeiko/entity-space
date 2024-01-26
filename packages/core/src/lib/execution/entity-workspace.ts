@@ -104,6 +104,27 @@ export class EntityWorkspace implements IEntityStore {
         return result as T[];
     }
 
+    async createOne<B>(blueprint: Class<B>, entity: EntityBlueprintInstance<B>): Promise<EntityBlueprintInstance<B>> {
+        const schema = this.services.getCatalog().resolve(blueprint);
+        const mutator = this.services.getMutatorFor(schema);
+
+        return mutator.createOne(entity) as Promise<EntityBlueprintInstance<B>>;
+    }
+
+    async updateOne<B>(blueprint: Class<B>, entity: EntityBlueprintInstance<B>): Promise<EntityBlueprintInstance<B>> {
+        const schema = this.services.getCatalog().resolve(blueprint);
+        const mutator = this.services.getMutatorFor(schema);
+
+        return mutator.updateOne(entity) as Promise<EntityBlueprintInstance<B>>;
+    }
+
+    async deleteOne<T>(blueprint: Class<T>, entity: EntityBlueprintInstance<T>): Promise<void> {
+        const schema = this.services.getCatalog().resolve(blueprint);
+        const mutator = this.services.getMutatorFor(schema);
+
+        return mutator.deleteOne(entity);
+    }
+
     async update<T extends Entity>(entities: DeepPartial<T>[], schema: IEntitySchema): Promise<false | T[]> {
         const result = (await this.store?.update(entities, schema)) ?? false;
 

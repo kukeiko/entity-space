@@ -10,23 +10,35 @@ import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
 import { WhereEntityShapeInstance } from "../criteria/where-entity/where-entity-shape-instance.types";
 import { WhereEntityShape } from "../criteria/where-entity/where-entity-shape.types";
 import { WhereEntityTools } from "../criteria/where-entity/where-entity-tools";
+import { EntityMapper } from "../entity/entity-mapper";
 import { IEntityStore } from "../entity/entity-store.interface";
-import { InMemoryEntityDatabase } from "./in-memory-entity-database";
 import { EntityQueryParametersShape } from "../query/entity-query-shape";
 import { EntitySelection } from "../query/entity-selection";
+import { EntityBlueprintInstance } from "../schema/entity-blueprint-instance.type";
 import { EntitySchemaCatalog } from "../schema/entity-schema-catalog";
 import { IEntitySchema } from "../schema/schema.interface";
-import { EntitySourceEndpoint, EntitySourceEndpointInvoke } from "./interceptors/entity-source-endpoint";
+import {
+    CreateManyEntitiesFn,
+    CreateOneEntityFn,
+    DeleteManyEntitiesFn,
+    DeleteOneEntityFn,
+    EntityMutator,
+    UpdateManyEntitiesFn,
+    UpdateOneEntityFn,
+} from "./entity-mutator";
 import { EntityQueryTracing } from "./entity-query-tracing";
+import { InMemoryEntityDatabase } from "./in-memory-entity-database";
+import { EntityHydrationEndpoint, EntityHydrationResult, EntityHydrator } from "./interceptors/entity-hydrator";
 import { EntitySource } from "./interceptors/entity-source";
-import { EntityHydrationEndpoint, EntityHydrator, EntityHydrationResult } from "./interceptors/entity-hydrator";
+import { EntitySourceEndpoint, EntitySourceEndpointInvoke } from "./interceptors/entity-source-endpoint";
 import { IEntityStreamInterceptor } from "./interceptors/entity-stream-interceptor.interface";
 
-export class EntitySchemaScopedServiceContainer<T extends Entity> {
+export class EntitySchemaScopedServiceContainer<B> {
     constructor(
-        private readonly schema: IEntitySchema<T>,
+        private readonly schema: IEntitySchema<EntityBlueprintInstance<B>>,
         private readonly api: EntitySource,
-        private readonly hydrator: EntityHydrator
+        private readonly hydrator: EntityHydrator,
+        private readonly mutator: EntityMutator<B>
     ) {
         const criteriaTools = new EntityCriteriaTools();
         this.shapeTools = new EntityCriteriaShapeTools({ criteriaTools });
@@ -36,22 +48,26 @@ export class EntitySchemaScopedServiceContainer<T extends Entity> {
     private readonly shapeTools: IEntityCriteriaShapeTools;
     private readonly whereEntityTools: WhereEntityTools;
 
-    addSource<S extends WhereEntityShape<T>>({
+    addSource<S extends WhereEntityShape<EntityBlueprintInstance<B>>>({
         where,
         load,
         select,
         parameters,
         accept,
     }: {
-        where?: S | WhereEntityShape<T>;
-        select?: PackedEntitySelection<T>;
+        where?: S | WhereEntityShape<EntityBlueprintInstance<B>>;
+        select?: PackedEntitySelection<EntityBlueprintInstance<B>>;
         parameters?: EntityQueryParametersShape;
         accept?: (criterion: ICriterion) => boolean;
-        load: EntitySourceEndpointInvoke<T, WhereEntityShapeInstance<T, S>>;
+        load: EntitySourceEndpointInvoke<
+            EntityBlueprintInstance<B>,
+            WhereEntityShapeInstance<EntityBlueprintInstance<B>, S>
+        >;
     }): this {
         const criterionShape =
             where === undefined
-                ? this.shapeTools.any()
+                ? // ? this.shapeTools.any()
+                  this.shapeTools.all()
                 : this.whereEntityTools.toCriterionShapeFromWhereEntityShape(where, this.schema);
 
         const unpackedSelect = EntitySelection.unpack(this.schema, select ?? {});
@@ -71,25 +87,63 @@ export class EntitySchemaScopedServiceContainer<T extends Entity> {
         return this;
     }
 
-    addHydrator<R extends UnpackedEntitySelection<T>>({
+    addHydrator<R extends UnpackedEntitySelection<EntityBlueprintInstance<B>>>({
         hydrate,
         select,
         requires,
     }: {
-        select: UnpackedEntitySelection<T>;
+        select: UnpackedEntitySelection<EntityBlueprintInstance<B>>;
         requires: R;
-        hydrate: (entities: Select<T, R>[], selection: UnpackedEntitySelection<T>) => EntityHydrationResult<T>;
+        hydrate: (
+            entities: Select<EntityBlueprintInstance<B>, R>[],
+            selection: UnpackedEntitySelection<EntityBlueprintInstance<B>>
+        ) => EntityHydrationResult<EntityBlueprintInstance<B>>;
     }): this {
-        const endpoint: EntityHydrationEndpoint<T> = {
+        const endpoint: EntityHydrationEndpoint<EntityBlueprintInstance<B>> = {
             hydrates: select,
             requires,
-            schema: this.schema,
+            schema: this.schema as any,
             load(entities, selection) {
-                return hydrate(entities as Select<T, R>[], selection);
+                return hydrate(entities as Select<EntityBlueprintInstance<B>, R>[], selection);
             },
         };
 
         this.hydrator.hydrationEndpoints.push(endpoint);
+
+        return this;
+    }
+
+    addMutator(args: {
+        createOne?: CreateOneEntityFn<B>;
+        createMany?: CreateManyEntitiesFn<B>;
+        updateOne?: UpdateOneEntityFn<B>;
+        updateMany?: UpdateManyEntitiesFn<B>;
+        deleteOne?: DeleteOneEntityFn<B>;
+        deleteMany?: DeleteManyEntitiesFn<B>;
+    }): this {
+        if (args.createOne) {
+            this.mutator.setCreateOne(args.createOne);
+        }
+
+        if (args.createMany) {
+            this.mutator.setCreateMany(args.createMany);
+        }
+
+        if (args.updateOne) {
+            this.mutator.setUpdateOne(args.updateOne);
+        }
+
+        if (args.updateMany) {
+            this.mutator.setUpdateMany(args.updateMany);
+        }
+
+        if (args.deleteOne) {
+            this.mutator.setDeleteOne(args.deleteOne);
+        }
+
+        if (args.deleteMany) {
+            this.mutator.setDeleteMany(args.deleteMany);
+        }
 
         return this;
     }
@@ -98,13 +152,19 @@ export class EntitySchemaScopedServiceContainer<T extends Entity> {
 export class EntityServiceContainer {
     private readonly tracing = new EntityQueryTracing();
     private readonly catalog = new EntitySchemaCatalog();
+    private readonly mapper = new EntityMapper();
     private readonly database = new InMemoryEntityDatabase();
     private readonly stores: IEntityStore[] = [];
     private readonly apis = new Map<string, EntitySource>();
     private readonly hydrators = new Map<string, EntityHydrator>();
+    private readonly mutators = new Map<string, EntityMutator>();
 
     getCatalog(): EntitySchemaCatalog {
         return this.catalog;
+    }
+
+    getMapper(): EntityMapper {
+        return this.mapper;
     }
 
     getTracing(): EntityQueryTracing {
@@ -131,6 +191,10 @@ export class EntityServiceContainer {
         return [this.hydrators.get(schema.getId())].filter(isDefined);
     }
 
+    getMutatorFor(schema: IEntitySchema): EntityMutator {
+        return this.getOrCreateMutator(schema);
+    }
+
     pushStore(store: IEntityStore): this {
         this.stores.push(store);
         return this;
@@ -140,12 +204,13 @@ export class EntityServiceContainer {
         return this.stores.slice();
     }
 
-    for<T extends Entity>(blueprint: Class<T>) {
+    for<B extends Entity>(blueprint: Class<B>): EntitySchemaScopedServiceContainer<B> {
         const schema = this.catalog.resolve(blueprint);
         const api = this.getOrCreateApi(schema);
         const hydrator = this.getOrCreateHydrator(schema);
+        const mutator = this.getOrCreateMutator(schema) as EntityMutator<B>;
 
-        return new EntitySchemaScopedServiceContainer(schema, api, hydrator);
+        return new EntitySchemaScopedServiceContainer<B>(schema, api, hydrator, mutator);
     }
 
     private getOrCreateApi(schema: IEntitySchema): EntitySource {
@@ -168,5 +233,16 @@ export class EntityServiceContainer {
         }
 
         return hydrator;
+    }
+
+    private getOrCreateMutator(schema: IEntitySchema): EntityMutator {
+        let mutator = this.mutators.get(schema.getId());
+
+        if (!mutator) {
+            mutator = new EntityMutator(schema);
+            this.mutators.set(schema.getId(), mutator);
+        }
+
+        return mutator;
     }
 }
