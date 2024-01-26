@@ -79,36 +79,53 @@ export class EntityMapper {
         joinedProperty: string,
         fromPaths: string[],
         toPaths: string[],
-        isArray: boolean
+        isArray = false,
+        isNullable = false
     ): void {
         if (fromPaths.length === 1) {
-            return this.joinEntitiesOnePath(
+            return this.joinEntitiesSinglePath(
                 fromEntities,
                 toEntities,
                 joinedProperty,
                 fromPaths[0],
                 toPaths[0],
-                isArray
+                isArray,
+                isNullable
             );
         } else {
-            return this.joinEntitiesManyPaths(fromEntities, toEntities, joinedProperty, fromPaths, toPaths, isArray);
+            return this.joinEntitiesMultiPath(
+                fromEntities,
+                toEntities,
+                joinedProperty,
+                fromPaths,
+                toPaths,
+                isArray,
+                isNullable
+            );
         }
     }
 
-    private joinEntitiesOnePath(
+    private joinEntitiesSinglePath(
         fromEntities: Entity[],
         toEntities: Entity[],
         joinedProperty: string,
         fromPath: string,
         toPath: string,
-        isArray: boolean
+        isArray: boolean,
+        isNullable: boolean
     ): void {
         const fromMap = new Map<any, Entity[]>();
 
-        for (const entity of fromEntities) {
-            const value = readPath(fromPath, entity);
+        for (const fromEntity of fromEntities) {
+            if (isArray) {
+                writePath(joinedProperty, fromEntity, []);
+            } else if (isNullable) {
+                writePath(joinedProperty, fromEntity, null);
+            }
+
+            const value = readPath(fromPath, fromEntity);
             const array = fromMap.get(value) ?? fromMap.set(value, []).get(value)!;
-            array.push(entity);
+            array.push(fromEntity);
         }
 
         for (const toEntity of toEntities) {
@@ -131,17 +148,24 @@ export class EntityMapper {
         }
     }
 
-    private joinEntitiesManyPaths(
+    private joinEntitiesMultiPath(
         fromEntities: Entity[],
         toEntities: Entity[],
         joinedProperty: string,
         fromPaths: string[],
         toPaths: string[],
-        isArray: boolean
+        isArray: boolean,
+        isNullable: boolean
     ): void {
         const fromMap = new ComplexKeyMap<Entity, Entity[]>(fromPaths);
 
         for (const fromEntity of fromEntities) {
+            if (isArray) {
+                writePath(joinedProperty, fromEntity, []);
+            } else if (isNullable) {
+                writePath(joinedProperty, fromEntity, null);
+            }
+
             fromMap.set(fromEntity, [fromEntity], (previous, current) => [...previous, ...current]);
         }
 

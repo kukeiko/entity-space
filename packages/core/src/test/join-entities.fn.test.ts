@@ -95,4 +95,221 @@ describe("joinEntities()", () => {
             },
         ]);
     });
+
+    describe("empty join", () => {
+        it("single path", () => {
+            // arrange
+            interface Foo {
+                id: number;
+                barId: number;
+                bar?: Bar;
+            }
+
+            interface Bar {
+                id: number;
+            }
+
+            const fooEntities: Foo[] = [
+                { id: 1, barId: 10 },
+                { id: 2, barId: 20 },
+            ];
+            const barEntities: Bar[] = [{ id: 20 }];
+
+            // act
+            mapper.joinEntities(fooEntities, barEntities, "bar", ["barId"], ["id"]);
+
+            // assert
+            expect(fooEntities).toEqual<Foo[]>([
+                {
+                    id: 1,
+                    barId: 10,
+                },
+                {
+                    id: 2,
+                    barId: 20,
+                    bar: { id: 20 },
+                },
+            ]);
+        });
+
+        it("single path: nullable", () => {
+            // arrange
+            interface Foo {
+                id: number;
+                barId: number;
+                bar?: Bar | null;
+            }
+
+            interface Bar {
+                id: number;
+            }
+
+            const fooEntities: Foo[] = [
+                { id: 1, barId: 10 },
+                { id: 2, barId: 20 },
+            ];
+            const barEntities: Bar[] = [{ id: 20 }];
+
+            // act
+            mapper.joinEntities(fooEntities, barEntities, "bar", ["barId"], ["id"], false, true);
+
+            // assert
+            expect(fooEntities).toEqual<Required<Foo>[]>([
+                {
+                    id: 1,
+                    barId: 10,
+                    bar: null,
+                },
+                {
+                    id: 2,
+                    barId: 20,
+                    bar: { id: 20 },
+                },
+            ]);
+        });
+
+        it("single path: array", () => {
+            // arrange
+            interface Foo {
+                id: number;
+                joined?: Bar[];
+            }
+
+            interface Bar {
+                id: number;
+                fooId: number;
+            }
+
+            const fooEntities: Foo[] = [{ id: 1 }, { id: 2 }];
+            const barEntities: Bar[] = [];
+
+            // act
+            mapper.joinEntities(fooEntities, barEntities, "joined", ["id"], ["fooId"], true);
+
+            // assert
+            expect(fooEntities).toEqual<Required<Foo>[]>([
+                {
+                    id: 1,
+                    joined: [],
+                },
+                {
+                    id: 2,
+                    joined: [],
+                },
+            ]);
+        });
+
+        it("multi path", () => {
+            // arrange
+            interface Foo {
+                id: number;
+                barId: number;
+                namespaceId: number;
+                bar?: Bar;
+            }
+
+            interface Bar {
+                id: number;
+                namespaceId: number;
+            }
+
+            const fooEntities: Foo[] = [
+                { id: 1, barId: 10, namespaceId: 100 },
+                { id: 2, barId: 20, namespaceId: 200 },
+            ];
+            const barEntities: Bar[] = [{ id: 20, namespaceId: 200 }];
+
+            // act
+            mapper.joinEntities(fooEntities, barEntities, "bar", ["namespaceId", "barId"], ["namespaceId", "id"]);
+
+            // assert
+            expect(fooEntities).toEqual<Foo[]>([
+                { id: 1, barId: 10, namespaceId: 100 },
+                { id: 2, barId: 20, namespaceId: 200, bar: { id: 20, namespaceId: 200 } },
+            ]);
+        });
+
+        it("multi path: nullable", () => {
+            // arrange
+            interface Foo {
+                id: number;
+                barId: number;
+                namespaceId: number;
+                bar?: Bar | null;
+            }
+
+            interface Bar {
+                id: number;
+                namespaceId: number;
+            }
+
+            const fooEntities: Foo[] = [
+                { id: 1, barId: 10, namespaceId: 100 },
+                { id: 2, barId: 20, namespaceId: 200 },
+            ];
+            const barEntities: Bar[] = [{ id: 20, namespaceId: 200 }];
+
+            // act
+            mapper.joinEntities(
+                fooEntities,
+                barEntities,
+                "bar",
+                ["namespaceId", "barId"],
+                ["namespaceId", "id"],
+                false,
+                true
+            );
+
+            // assert
+            expect(fooEntities).toEqual<Foo[]>([
+                { id: 1, barId: 10, namespaceId: 100, bar: null },
+                { id: 2, barId: 20, namespaceId: 200, bar: { id: 20, namespaceId: 200 } },
+            ]);
+        });
+
+        it("multi path: array", () => {
+            // arrange
+            interface Foo {
+                id: number;
+                namespaceId: number;
+                joined?: Bar[];
+            }
+
+            interface Bar {
+                id: number;
+                namespaceId: number;
+                fooId: number;
+            }
+
+            const fooEntities: Foo[] = [
+                { id: 1, namespaceId: 100 },
+                { id: 2, namespaceId: 200 },
+            ];
+            const barEntities: Bar[] = [{ id: 20, namespaceId: 200, fooId: 2 }];
+
+            // act
+            mapper.joinEntities(
+                fooEntities,
+                barEntities,
+                "joined",
+                ["namespaceId", "id"],
+                ["namespaceId", "fooId"],
+                true
+            );
+
+            // assert
+            expect(fooEntities).toEqual<Required<Foo>[]>([
+                {
+                    id: 1,
+                    namespaceId: 100,
+                    joined: [],
+                },
+                {
+                    id: 2,
+                    namespaceId: 200,
+                    joined: [{ id: 20, namespaceId: 200, fooId: 2 }],
+                },
+            ]);
+        });
+    });
 });
