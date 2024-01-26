@@ -242,7 +242,8 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
             relation.getPropertyName(),
             fromPaths,
             toPaths,
-            isArray
+            isArray,
+            relation.getProperty().getValueSchema().isNullable()
         );
     }
 
