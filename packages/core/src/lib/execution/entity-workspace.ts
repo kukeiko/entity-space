@@ -14,6 +14,11 @@ import { EntitySchemaCatalog } from "../schema/entity-schema-catalog";
 import { IEntitySchema } from "../schema/schema.interface";
 import { EntityQueryBuilder, EntityQueryBuilderCreate } from "./entity-query-builder";
 import { EntityServiceContainer } from "./entity-service-container";
+import { WhereEntityTools } from "../criteria/where-entity/where-entity-tools";
+import { EntityCriteriaShapeTools } from "../criteria/entity-criteria-shape-tools";
+import { WhereEntitySingle } from "../criteria/where-entity/where-entity.types";
+import { EntitySelection } from "../query/entity-selection";
+import { PackedEntitySelection } from "../common/packed-entity-selection.type";
 
 export class EntityWorkspace implements IEntityStore {
     constructor(private readonly services: EntityServiceContainer) {
@@ -152,6 +157,26 @@ export class EntityWorkspace implements IEntityStore {
 
     fromSchema(schema: IEntitySchema): EntityQueryBuilder {
         return new EntityQueryBuilder({ schema, context: this.services });
+    }
+
+    invalidate<T extends Entity>(
+        blueprint: Class<T>,
+        args?: {
+            where?: WhereEntitySingle<EntityBlueprintInstance<T>>;
+            select?: PackedEntitySelection<EntityBlueprintInstance<T>>;
+        }
+    ): void {
+        const shapeTools = new EntityCriteriaShapeTools({ criteriaTools: this.criteriaTools });
+        const whereEntityTools = new WhereEntityTools(shapeTools, this.criteriaTools);
+        const schema = this.services.getCatalog().resolve(blueprint);
+        const criterion =
+            args?.where === undefined
+                ? this.criteriaTools.all()
+                : whereEntityTools.toCriterionFromWhereEntitySingle(schema, args.where).simplify();
+        const select = EntitySelection.unpack(schema, args?.select ?? {});
+
+        const query = this.queryTools.createQuery({ entitySchema: schema, criteria: criterion, selection: select });
+        this.services.getDatabase().invalidate(query);
     }
 
     protected getQueryBuilderCreate<T extends Entity = Entity>(schema: IEntitySchema<T>): EntityQueryBuilderCreate<T> {

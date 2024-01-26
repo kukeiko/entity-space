@@ -35,6 +35,17 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         return this.querySync(query);
     }
 
+    invalidate(query: IEntityQuery): void {
+        const entities = this.querySync(query);
+        const store = this.getOrCreateStore(query.getEntitySchema());
+
+        for (const entity of entities.getEntities()) {
+            store.remove(entity);
+        }
+
+        this.removeQueryFromCached(query);
+    }
+
     // [todo] unused, can be removed
     subtractByCached(query: IEntityQuery): IEntityQuery[] | false {
         const cached = this.getCachedQueries(query.getEntitySchema());
@@ -227,9 +238,22 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
         joinEntities(entities, result.getEntities(), relation.getPropertyName(), fromPaths, toPaths, isArray);
     }
 
-    addQueryToCached(query: IEntityQuery): void {
+    private addQueryToCached(query: IEntityQuery): void {
         const cachedQueries = this.getCachedQueries(query.getEntitySchema());
-        this.cachedQueries.set(query.getEntitySchema().getId(), this.queryTools.mergeQueries(query, ...cachedQueries));
+        const nextCachedQueries = this.queryTools.mergeQueries(query, ...cachedQueries);
+        this.cachedQueries.set(query.getEntitySchema().getId(), nextCachedQueries);
+        this.queryCache$.next(this.getAllCachedQueries());
+    }
+
+    private removeQueryFromCached(query: IEntityQuery): void {
+        const cachedQueries = this.getCachedQueries(query.getEntitySchema());
+        const nextCachedQueries = this.queryTools.subtractQueries(cachedQueries, [query]);
+
+        if (!nextCachedQueries) {
+            return;
+        }
+
+        this.cachedQueries.set(query.getEntitySchema().getId(), nextCachedQueries);
         this.queryCache$.next(this.getAllCachedQueries());
     }
 

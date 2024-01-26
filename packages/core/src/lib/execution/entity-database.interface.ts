@@ -20,4 +20,5 @@ export interface IEntityDatabase {
     // [todo] try to get rid of this - had to introduce when switching "InMemoryEntityDatabase"
     // w/ "IEntityDatabase" in EntitySourceGateway
     querySync<T extends Entity = Entity>(query: IEntityQuery): EntitySet<T>;
+    invalidate(query: IEntityQuery): void;
 }

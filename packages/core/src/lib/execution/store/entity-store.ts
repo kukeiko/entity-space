@@ -109,6 +109,18 @@ export class EntityStore {
         return entities;
     }
 
+    remove(entity: Entity): void {
+        const slot = this.getKeyIndex().get(entity);
+
+        if (slot === void 0) {
+            return;
+        }
+
+        this.entities[slot] = undefined;
+        this.uniqueIndexes.forEach(index => index.delete(entity));
+        this.commonIndexes.forEach(index => index.delete(entity, slot));
+    }
+
     private getSlotsByCriterion(criterion: ICriterion): Set<number> {
         let open: ICriterion | undefined = criterion;
         const slots = new Set<number>();
