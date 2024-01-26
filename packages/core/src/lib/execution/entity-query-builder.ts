@@ -98,16 +98,54 @@ export class EntityQueryBuilder<T extends Entity = Entity> implements IEntityStr
         return this.copy({ cache });
     }
 
-    findAll(): Observable<{ entities: T[] }> {
+    findAll$(): Observable<{ entities: T[] }> {
         return this.query$(this.schema, this.criteria, this.selection, this.parameters).pipe(
             map(entities => ({ entities }))
         );
     }
 
-    findOne(): Observable<{ entity: T | undefined }> {
+    findOne$(): Observable<{ entity: T | undefined }> {
         return this.query$(this.schema, this.criteria, this.selection, this.parameters).pipe(
             map(entities => ({ entity: entities[0] }))
         );
+    }
+
+    async findOne(args?: {
+        select?: PackedEntitySelection<T>;
+        where?: WhereEntitySingle<T>;
+        parameters?: Entity;
+    }): Promise<T | undefined> {
+        const criterion =
+            args?.where === undefined
+                ? this.criteriaTools.all()
+                : this.whereEntityTools.toCriterionFromWhereEntitySingle(this.schema, args.where).simplify();
+        const select = EntitySelection.unpack(this.schema, args?.select ?? {});
+        const entities = await lastValueFrom(this.query$(this.schema, criterion, select, args?.parameters));
+
+        return entities[0];
+    }
+
+    async findMany(args?: {
+        select?: PackedEntitySelection<T>;
+        where?: WhereEntitySingle<T>;
+        parameters?: Entity;
+    }): Promise<T[]> {
+        const criterion =
+            args?.where === undefined
+                ? this.criteriaTools.all()
+                : this.whereEntityTools.toCriterionFromWhereEntitySingle(this.schema, args.where).simplify();
+        const select = EntitySelection.unpack(this.schema, args?.select ?? {});
+        const entities = await lastValueFrom(this.query$(this.schema, criterion, select, args?.parameters));
+
+        return entities;
+    }
+
+    async findAll(args?: { select?: PackedEntitySelection<T>; parameters?: Entity }): Promise<T[]> {
+        const criterion = this.criteriaTools.all();
+        const select = EntitySelection.unpack(this.schema, args?.select ?? {});
+        const entities = await lastValueFrom(this.query$(this.schema, criterion, select, args?.parameters));
+
+        return entities;
     }
 
     private query$<T extends Entity>(
