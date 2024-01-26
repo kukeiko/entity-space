@@ -37,8 +37,9 @@ export class EntityQueryTracing {
         }
     }
 
-    enableConsole(flag = true): void {
+    enableConsole(flag = true): this {
         this.consoleEnabled = flag;
+        return this;
     }
 
     addFilter(filter: EntityQueryTracingFilter): this {
