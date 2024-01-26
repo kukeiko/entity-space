@@ -245,14 +245,7 @@ export class EntityCriteria extends CriterionBase implements IEntityCriteria {
                 }
             }
 
-            if (otherKeys.size && didInvert) {
-                // if we had to invert one criteria, and the other has a criteria we don't: do not subtract anything.
-                // this change did not actually break any tests, and it results in a more expected query cache subtraction behaviour.
-                // [todo] commenting this out leads to interesting API call results. I think it uncovers issues in implemented interecptors.
-                return false;
-            }
-
-            if (subtractions.every(x => x.result === false)) {
+            if (subtractions.every(x => x.result === false) && !didInvert) {
                 return false;
             } else if (subtractions.every(x => x.result === true)) {
                 return true;
