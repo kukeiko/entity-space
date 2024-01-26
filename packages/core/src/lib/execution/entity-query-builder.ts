@@ -149,7 +149,7 @@ export class EntityQueryBuilder<T extends Entity = Entity> implements IEntityStr
         }
 
         const sources = [
-            new LoadFromCacheInterceptor(this.services.getDatabase(), this.services.getTracing()),
+            // new LoadFromCacheInterceptor(this.services.getDatabase(), this.services.getTracing()),
             // new LogPacketsInterceptor(true),
             ...this.services.getSourcesFor(query.getEntitySchema()),
             ...this.services.getHydratorsFor(query.getEntitySchema()),
