@@ -1,6 +1,12 @@
-import { joinEntities } from "../lib/entity/join-entities.fn";
+import { EntityMapper } from "../lib/entity/entity-mapper";
 
 describe("joinEntities()", () => {
+    let mapper: EntityMapper;
+
+    beforeEach(() => {
+        mapper = new EntityMapper();
+    });
+
     it("primitive index: join", () => {
         interface Foo {
             id: number;
@@ -22,7 +28,7 @@ describe("joinEntities()", () => {
             { id: 50, fooId: 2 },
         ];
 
-        joinEntities(fooEntities, barEntities, "joined", ["id"], ["fooId"], true);
+        mapper.joinEntities(fooEntities, barEntities, "joined", ["id"], ["fooId"], true);
 
         expect(fooEntities).toEqual<Required<Foo>[]>([
             {
@@ -69,7 +75,7 @@ describe("joinEntities()", () => {
             { id: 50, fooId: 2, namespace: "cheese" },
         ];
 
-        joinEntities(fooEntities, barEntities, "joined", ["id", "namespace"], ["fooId", "namespace"], true);
+        mapper.joinEntities(fooEntities, barEntities, "joined", ["id", "namespace"], ["fooId", "namespace"], true);
 
         expect(fooEntities).toEqual<Required<Foo>[]>([
             {

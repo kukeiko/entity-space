@@ -1,20 +1,20 @@
 import { cloneJson, groupBy, readPath } from "@entity-space/utils";
 import { flatten } from "lodash";
-import { from, Observable, of, startWith, Subject } from "rxjs";
+import { Observable, Subject, from, of, startWith } from "rxjs";
 import { Entity } from "../common/entity.type";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
 import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
 import { IEntityCriteriaTools } from "../criteria/entity-criteria-tools.interface";
+import { EntityMapper } from "../entity/entity-mapper";
 import { EntitySet } from "../entity/entity-set";
-import { IEntityDatabase } from "./entity-database.interface";
-import { joinEntities } from "../entity/join-entities.fn";
 import { normalizeEntities } from "../entity/normalize-entities.fn";
-import { EntityStore } from "./store/entity-store";
 import { EntityQueryTools } from "../query/entity-query-tools";
 import { IEntityQueryTools } from "../query/entity-query-tools.interface";
 import { IEntityQuery } from "../query/entity-query.interface";
 import { EntitySelection } from "../query/entity-selection";
 import { IEntitySchema, IEntitySchemaRelation } from "../schema/schema.interface";
+import { IEntityDatabase } from "./entity-database.interface";
+import { EntityStore } from "./store/entity-store";
 
 export class InMemoryEntityDatabase implements IEntityDatabase {
     private readonly stores = new Map<string, EntityStore>();
@@ -22,6 +22,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
     private readonly queryCache$ = new Subject<IEntityQuery[]>();
     private readonly criteriaTools: IEntityCriteriaTools = new EntityCriteriaTools();
     private readonly queryTools: IEntityQueryTools = new EntityQueryTools({ criteriaTools: this.criteriaTools });
+    private readonly mapper = new EntityMapper();
 
     getQueryCache$(): Observable<IEntityQuery[]> {
         return this.queryCache$.asObservable().pipe(startWith(this.getAllCachedQueries()));
@@ -235,7 +236,14 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
 
         const result = this.querySync(query);
 
-        joinEntities(entities, result.getEntities(), relation.getPropertyName(), fromPaths, toPaths, isArray);
+        this.mapper.joinEntities(
+            entities,
+            result.getEntities(),
+            relation.getPropertyName(),
+            fromPaths,
+            toPaths,
+            isArray
+        );
     }
 
     private addQueryToCached(query: IEntityQuery): void {
