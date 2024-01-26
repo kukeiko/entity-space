@@ -12,12 +12,8 @@ export class AllCriterionShape implements ICriterionShape<IAllCriterion> {
     readonly [ICriterionShape$] = true;
     private readonly tools: IEntityCriteriaTools;
 
-    reshape(criterion: ICriterion): false | ReshapedCriterion<IAllCriterion> {
-        if (this.tools.isAllCriterion(criterion)) {
-            return new ReshapedCriterion([criterion]);
-        }
-
-        return false;
+    reshape(_: ICriterion): false | ReshapedCriterion<IAllCriterion> {
+        return new ReshapedCriterion([this.tools.all()]);
     }
 
     toString(): string {

@@ -11,7 +11,7 @@ describe("criteria: reshaping", () => {
     const { inRange, or, inArray, equals, where, all } = shapeTools;
 
     expectCriteria("all").reshapedUsing(all(), "all").toEqual("all");
-    expectCriteria("[1, 7]").reshapedUsing(all(), "all").toEqual(false);
+    expectCriteria("[1, 7]").reshapedUsing(all(), "all").toEqual("all");
 
     expectCriteria("[1, 7]").reshapedUsing(inRange(Number), "in-range:number").toEqual("[1, 7]");
 
