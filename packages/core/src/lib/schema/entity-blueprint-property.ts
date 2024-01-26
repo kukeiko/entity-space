@@ -50,6 +50,14 @@ export interface UniqueAttribute {
     unique: true;
 }
 
+export interface DtoAttribute {
+    dto: string;
+}
+
+export interface WritableAttribute {
+    writable: true;
+}
+
 // [todo] sadly, we can't support writeOnly yet, as otherwise intellisense for Expansion<Instance<MyModel>> won't work :(
 // reason being that we would have to filter out properties that are write only, so we need a { [K in keyof T] } mapping,
 // which just kills intellisense. not sure why, probably a limitation of typescript?
@@ -68,7 +76,9 @@ export type AllAttributes =
     | OptionalAttribute
     | ReadOnlyAttribute
     | RelationAttribute
-    | UniqueAttribute;
+    | UniqueAttribute
+    | DtoAttribute
+    | WritableAttribute;
 
 // [todo] user can put anything as O & "find references" doesn't work
 export function define<V extends BlueprintPropertyValue, O extends Partial<AllAttributes>>(
@@ -84,6 +94,7 @@ export function isProperty(value: unknown): value is BlueprintProperty {
 
 type DistributedKeyOf<T> = T extends any ? keyof T : never;
 
+// [todo] does not work for "dto"
 export function hasAttribute<P extends BlueprintProperty, K extends DistributedKeyOf<AllAttributes>>(
     attribute: K,
     property: P
@@ -98,4 +109,8 @@ export function hasAttribute(attribute: string, property?: Record<string, any>):
     }
 
     return property[attribute] === true;
+}
+
+export function hasDtoAttribute<P extends BlueprintProperty>(property: P): property is P & DtoAttribute {
+    return typeof (property as any as DtoAttribute).dto === "string";
 }
