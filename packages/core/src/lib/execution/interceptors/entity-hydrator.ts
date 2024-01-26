@@ -1,4 +1,4 @@
-import { filter, from, map, merge, mergeMap, Observable, of, shareReplay, startWith, takeLast } from "rxjs";
+import { filter, from, map, merge, mergeMap, Observable, of, shareReplay, startWith, takeLast, tap } from "rxjs";
 import { Entity } from "../../common/entity.type";
 import { UnpackedEntitySelection } from "../../common/unpacked-entity-selection.type";
 import { EntityCriteriaTools } from "../../criteria/entity-criteria-tools";
@@ -208,7 +208,13 @@ export class EntityHydrator implements IEntityStreamInterceptor {
                             proposal.endpoint.load(entities.getEntities(), proposal.hydratedSelection.getValue()),
                             entitySetToHydrateQuery,
                             proposal.hydratedSelection
-                        ).pipe(startWith(new EntityStreamPacket({ accepted: [acceptedQuery] })), shareReplay())
+                        ).pipe(
+                            startWith(new EntityStreamPacket({ accepted: [acceptedQuery] })),
+                            tap(packet => {
+                                packet.getPayload().forEach(payload => this.services.getDatabase().upsertSync(payload));
+                            }),
+                            shareReplay()
+                        )
                     );
                 }
             }
