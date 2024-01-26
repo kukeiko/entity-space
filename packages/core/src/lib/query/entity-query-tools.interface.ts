@@ -22,6 +22,6 @@ export interface IEntityQueryTools {
     mergeQueries(...queries: IEntityQuery[]): IEntityQuery[];
     mergeQuery(a: IEntityQuery, b: IEntityQuery): false | IEntityQuery;
     subtractQuery(factory: IEntityQueryTools, a: IEntityQuery, b: IEntityQuery): IEntityQuery[] | false;
-    subtractQueries(queriesA: IEntityQuery[], queriesB: IEntityQuery[]): IEntityQuery[] | false;
+    subtractQueries(what: IEntityQuery[], by: IEntityQuery[]): IEntityQuery[] | false;
     parseQuery(input: string, schemas: EntitySchemaCatalog): IEntityQuery;
 }
