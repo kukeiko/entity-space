@@ -407,7 +407,7 @@ describe("EntityWorkspace", () => {
                     workspace
                         .fromSchema(entitySchema)
                         .where({ id: [1, 2] })
-                        .findAll()
+                        .findAll$()
                         .pipe(
                             // [todo] should also make assertion against entities we just received
                             tap(() => workspace.add<Entity>(entitySchema, changes[index++] ?? [])),
