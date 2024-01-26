@@ -1,4 +1,4 @@
-import { Class } from "@entity-space/utils";
+import { Class, isPrimitive } from "@entity-space/utils";
 import { Entity } from "../common/entity.type";
 import { ArraySchema } from "./array-schema";
 import { EntityBlueprint, getEntityBlueprintMetadata, getNamedProperties, isEntityBlueprint } from "./entity-blueprint";
@@ -47,6 +47,7 @@ export class EntitySchemaCatalog {
         this.schemas.set(metadata.id, schema);
 
         if (metadata.key) {
+            // [todo] make sure properties actually exist & are not optional
             schema.setKey(metadata.key);
         }
 
@@ -62,23 +63,27 @@ export class EntitySchemaCatalog {
 
         if (idProperties.length > 1) {
             throw new Error(
-                `${schema.getId()} contains multiple properties with the "id" attribute. If you need a composite id, please define it in the ${
+                `blueprint ${schema.getId()} contains multiple properties with the "id" attribute. If you need a composite id, please define it in the ${
                     EntityBlueprint.name
-                } decorator instead`
+                } class decorator instead`
             );
-        }
+        } else if (idProperties.length) {
+            const idProperty = idProperties[0];
 
-        // [todo] this seems funky - when I used composite keys in example apps, I never specified "key: true" on multiple properties.
-        // instead, I specified the composite key in the decorator
-        if (idProperties.length > 0) {
-            schema.setKey(idProperties.map(property => property.name));
+            if (hasAttribute("optional", idProperty)) {
+                throw new Error(`id property ${schema.getId()}.${idProperty.name} can't be optional`);
+            }
 
-            for (const idProperty of idProperties) {
+            schema.setKey(idProperty.name);
+
+            if (isPrimitive(idProperty.valueType)) {
                 schema.addProperty(
                     idProperty.name,
                     new PrimitiveSchema(this.toPrimitiveSchemaDataType(idProperty.valueType)),
                     true
                 );
+            } else {
+                throw new Error(`not yet implemented: id attribute on a complex type property`);
             }
         }
 
