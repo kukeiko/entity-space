@@ -11,7 +11,6 @@ import { WhereEntityShapeInstance } from "../criteria/where-entity/where-entity-
 import { WhereEntityShape } from "../criteria/where-entity/where-entity-shape.types";
 import { WhereEntityTools } from "../criteria/where-entity/where-entity-tools";
 import { EntityMapper } from "../entity/entity-mapper";
-import { IEntityStore } from "../entity/entity-store.interface";
 import { EntityQueryParametersShape } from "../query/entity-query-shape";
 import { EntitySelection } from "../query/entity-selection";
 import { EntityBlueprintInstance } from "../schema/entity-blueprint-instance.type";
@@ -154,7 +153,6 @@ export class EntityServiceContainer {
     private readonly catalog = new EntitySchemaCatalog();
     private readonly mapper = new EntityMapper();
     private readonly database = new InMemoryEntityDatabase();
-    private readonly stores: IEntityStore[] = [];
     private readonly apis = new Map<string, EntitySource>();
     private readonly hydrators = new Map<string, EntityHydrator>();
     private readonly mutators = new Map<string, EntityMutator>();
@@ -193,15 +191,6 @@ export class EntityServiceContainer {
 
     getMutatorFor(schema: IEntitySchema): EntityMutator {
         return this.getOrCreateMutator(schema);
-    }
-
-    pushStore(store: IEntityStore): this {
-        this.stores.push(store);
-        return this;
-    }
-
-    getStores(): IEntityStore[] {
-        return this.stores.slice();
     }
 
     for<B extends Entity>(blueprint: Class<B>): EntitySchemaScopedServiceContainer<B> {

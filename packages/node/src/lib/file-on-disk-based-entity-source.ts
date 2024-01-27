@@ -5,14 +5,14 @@ import {
     EntitySet,
     IEntityQuery,
     IEntitySchema,
-    IEntityStore,
 } from "@entity-space/core";
 import { toMap } from "@entity-space/utils";
 import { constants } from "node:fs";
 import { access, readFile, writeFile } from "node:fs/promises";
 
 // [todo] sloppily written, mostly considers happy paths only. just good enough to quickly continue working on example apps.
-export class FileOnDiskBasedEntitySource implements IEntityStore {
+// export class FileOnDiskBasedEntitySource implements IEntityStore {
+export class FileOnDiskBasedEntitySource {
     constructor(filePath: string) {
         this.filePath = filePath;
     }

@@ -1,6 +1,6 @@
 import { Class, getInstanceClass, isNotFalse } from "@entity-space/utils";
 import { flatten } from "lodash";
-import { filter, from, lastValueFrom, map, merge, mergeAll, mergeMap, Observable, of } from "rxjs";
+import { Observable, filter, from, lastValueFrom, map, merge, mergeAll, mergeMap, of } from "rxjs";
 import { Entity } from "../common/entity.type";
 import { PackedEntitySelection } from "../common/packed-entity-selection.type";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
@@ -19,9 +19,8 @@ import { IEntitySchema } from "../schema/schema.interface";
 import { EntityServiceContainer } from "./entity-service-container";
 import { EntityStream } from "./entity-stream";
 import { EntityStreamPacket } from "./entity-stream-packet";
-import { IEntityStreamInterceptor } from "./interceptors/entity-stream-interceptor.interface";
-import { LoadFromCacheInterceptor } from "./interceptors/load-from-cache.interceptor";
 import { EntityRelationHydrator } from "./interceptors/entity-relation-hydrator";
+import { IEntityStreamInterceptor } from "./interceptors/entity-stream-interceptor.interface";
 import { runInterceptors } from "./run-interceptors.fn";
 
 export interface EntityQueryBuilderPatch<T extends Entity> {
@@ -32,7 +31,7 @@ export interface EntityQueryBuilderPatch<T extends Entity> {
 }
 
 export interface EntityQueryBuilderCreate<T extends Entity> extends EntityQueryBuilderPatch<T> {
-    context: EntityServiceContainer;
+    services: EntityServiceContainer;
     schema: IEntitySchema<T>;
 }
 
@@ -43,7 +42,7 @@ export interface EntityCacheInvalidationOptions {
 export class EntityQueryBuilder<T extends Entity = Entity> implements IEntityStreamInterceptor {
     constructor(args: EntityQueryBuilderCreate<T>) {
         this.createArgs = args;
-        this.services = args.context;
+        this.services = args.services;
         this.schema = args.schema;
         this.selection = args.selection ?? args.schema.getDefaultSelection();
         this.criteria = args.criteria ?? new EntityCriteriaTools().all();
