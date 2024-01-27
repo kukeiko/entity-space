@@ -1,5 +1,4 @@
-import { EntitySchema } from "../lib/schema/entity-schema";
-import { mergeEntities } from "../lib/entity/merge-entities.fn";
+import { EntityTools } from "../lib/entity/entity-tools";
 
 interface Foo {
     id: number;
@@ -7,7 +6,7 @@ interface Foo {
     bar?: { baz?: string };
 }
 
-const fooSchema = new EntitySchema("foo").addInteger("id").setKey("id").addString("name");
+const { dedupeMergeEntities } = new EntityTools().toDestructurable();
 
 describe("mergEntities()", () => {
     it("works", () => {
@@ -38,16 +37,10 @@ describe("mergEntities()", () => {
         ];
 
         // act
-        const actual = mergeEntities(fooSchema, willBeMerged);
+        const actual = dedupeMergeEntities(willBeMerged, ["id"]);
 
         // assert
         expect(actual).toEqual(expected);
-
-        for (const entity of actual) {
-            const original = willBeMerged.find(candidate => candidate.id === entity.id);
-            expect(entity).toBe(original);
-            expect(entity.bar).toBe(original?.bar);
-        }
     });
 
     it("returns empty array if given empty array", () => {
@@ -56,7 +49,7 @@ describe("mergEntities()", () => {
         const expected: Foo[] = [];
 
         // act
-        const actual = mergeEntities(fooSchema, willBeMerged);
+        const actual = dedupeMergeEntities(willBeMerged, ["id"]);
 
         // assert
         expect(actual).toEqual(expected);

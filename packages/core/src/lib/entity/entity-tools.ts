@@ -111,6 +111,70 @@ export class EntityTools implements IEntityTools {
         }
     }
 
+    matchesSchema(entity: Entity, schema: IEntitySchema<Entity>): boolean {
+        const openRequiredKeys = new Set(
+            schema
+                .getProperties()
+                .filter(property => property.isRequired())
+                .map(property => property.getName())
+        );
+        const properties = new Map(schema.getProperties().map(property => [property.getName(), property]));
+
+        for (const key in entity) {
+            const property = properties.get(key);
+
+            if (!property) {
+                return false;
+            }
+
+            if (!this.matchesValueSchema(entity[key], property.getValueSchema())) {
+                return false;
+            }
+
+            openRequiredKeys.delete(key);
+        }
+
+        return !openRequiredKeys.size;
+    }
+
+    dedupeMergeEntities(entities: Entity[], keyPaths: string[]): Entity[] {
+        const keyMap = new ComplexKeyMap<Entity, Entity>(keyPaths);
+
+        for (const entity of entities) {
+            keyMap.set(entity, entity, (previous, current) => this.mergeEntities(previous, current));
+        }
+
+        return keyMap.getAll();
+    }
+
+    mergeEntities(...entities: Entity[]): Entity {
+        const merged: Entity = {};
+
+        for (const entity of entities) {
+            for (const key in entity) {
+                const value = entity[key];
+
+                if (value === void 0) {
+                    delete merged[key];
+                } else if (value !== null && typeof value === "object" && !(value instanceof Date)) {
+                    if (typeof merged[key] === "object" && !Array.isArray(value) && !(value instanceof Date)) {
+                        merged[key] = this.mergeEntities(merged[key], value);
+                    } else {
+                        merged[key] = value;
+                    }
+                } else {
+                    merged[key] = value;
+                }
+            }
+        }
+
+        return merged;
+    }
+
+    copyEntity(entity: Entity): Entity {
+        return this.mergeEntities(entity);
+    }
+
     private joinEntitiesSinglePath(
         fromEntities: Entity[],
         toEntities: Entity[],
@@ -192,32 +256,6 @@ export class EntityTools implements IEntityTools {
                 }
             }
         }
-    }
-
-    matchesSchema(entity: Entity, schema: IEntitySchema<Entity>): boolean {
-        const openRequiredKeys = new Set(
-            schema
-                .getProperties()
-                .filter(property => property.isRequired())
-                .map(property => property.getName())
-        );
-        const properties = new Map(schema.getProperties().map(property => [property.getName(), property]));
-
-        for (const key in entity) {
-            const property = properties.get(key);
-
-            if (!property) {
-                return false;
-            }
-
-            if (!this.matchesValueSchema(entity[key], property.getValueSchema())) {
-                return false;
-            }
-
-            openRequiredKeys.delete(key);
-        }
-
-        return !openRequiredKeys.size;
     }
 
     private matchesValueSchema(value: unknown, schema: IPropertyValueSchema): boolean {

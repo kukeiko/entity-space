@@ -3,8 +3,8 @@ import { isEqual } from "lodash";
 import { Entity } from "../../common/entity.type";
 import { ICriterion } from "../../criteria/criterion.interface";
 import { EntityCriteriaTools } from "../../criteria/entity-criteria-tools";
+import { EntityTools } from "../../entity/entity-tools";
 import { IEntitySchema } from "../../schema/schema.interface";
-import { ComplexKeyMap } from "../../entity/complex-key-map";
 import { EntityStoreCommonIndex } from "./entity-store-common-index";
 import { EntityStoreUniqueIndex } from "./entity-store-unique-index";
 
@@ -26,6 +26,7 @@ export class EntityStore {
     private readonly commonIndexes = new Map<string, EntityStoreCommonIndex>();
     private parametersCache: { parameters: Entity; ids: Entity[] }[] = [];
     private entities: (Entity | undefined)[] = [];
+    private readonly entityTools = new EntityTools();
     private readonly criteriaTools = new EntityCriteriaTools();
 
     getKeyIndex(): EntityStoreUniqueIndex {
@@ -49,7 +50,7 @@ export class EntityStore {
     add(entities: Entity[], parameters?: Entity): void {
         if (this.entitySchema.hasKey()) {
             const key = this.entitySchema.getKey();
-            entities = this.dedupeEntities(entities, key.getPaths());
+            entities = this.entityTools.dedupeMergeEntities(entities, key.getPaths());
             const keyIndex = this.getKeyIndex();
 
             for (let entity of entities) {
@@ -58,10 +59,10 @@ export class EntityStore {
                 if (slot === void 0) {
                     this.uniqueIndexes.forEach(index => index.set(entity, this.entities.length));
                     this.commonIndexes.forEach(index => index.add(entity, this.entities.length));
-                    this.entities.push(this.mergeEntities(entity)); // [todo] absuing mergeEntities() to copy an entity. confusing
+                    this.entities.push(this.entityTools.copyEntity(entity));
                 } else {
                     const previous = this.entities[slot]!;
-                    entity = this.mergeEntities(previous, entity);
+                    entity = this.entityTools.mergeEntities(previous, entity);
                     this.entities[slot] = entity;
                     this.uniqueIndexes.forEach(index => index.replace(previous, entity, slot));
                     this.commonIndexes.forEach(index => index.replace(previous, entity, slot));
@@ -81,7 +82,7 @@ export class EntityStore {
             const cache = this.parametersCache.find(cache => isEqual(cache.parameters, parameters));
 
             if (cache) {
-                cache.ids = this.dedupeEntities([...cache.ids, ...entities], key.getPaths());
+                cache.ids = this.entityTools.dedupeMergeEntities([...cache.ids, ...entities], key.getPaths());
             } else {
                 this.parametersCache.push({ ids: entities, parameters });
             }
@@ -223,40 +224,5 @@ export class EntityStore {
         indexes: Iterable<T>
     ): T[] {
         return [...indexes].sort((a, b) => b.getPaths().length - a.getPaths().length);
-    }
-
-    private dedupeEntities(entities: Entity[], keyPaths: string[]): Entity[] {
-        const keyMap = new ComplexKeyMap<Entity, Entity>(keyPaths);
-
-        for (const entity of entities) {
-            keyMap.set(entity, entity, (previous, current) => this.mergeEntities(previous, current));
-        }
-
-        return keyMap.getAll();
-    }
-
-    private mergeEntities(...entities: Entity[]): Entity {
-        // [todo] use global mergEntities() instead
-        const merged: Entity = {};
-
-        for (const entity of entities) {
-            for (const key in entity) {
-                const value = entity[key];
-
-                if (value === void 0) {
-                    delete merged[key];
-                } else if (value !== null && typeof value === "object" && !(value instanceof Date)) {
-                    if (typeof merged[key] === "object" && !Array.isArray(value) && !(value instanceof Date)) {
-                        merged[key] = this.mergeEntities(merged[key], value);
-                    } else {
-                        merged[key] = value;
-                    }
-                } else {
-                    merged[key] = value;
-                }
-            }
-        }
-
-        return merged;
     }
 }

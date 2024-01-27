@@ -21,4 +21,7 @@ export interface IEntityTools {
         isNullable?: boolean
     ): void;
     matchesSchema(entity: Entity, schema: IEntitySchema): boolean;
+    dedupeMergeEntities(entities: Entity[], keyPaths: string[]): Entity[];
+    mergeEntities(...entities: Entity[]): Entity;
+    copyEntity(entity: Entity): Entity;
 }

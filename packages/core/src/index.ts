@@ -6,7 +6,6 @@ export * from "./lib/criteria/entity-criteria-shape-tools";
 export * from "./lib/criteria/entity-criteria-tools";
 export * from "./lib/entity/complex-key-map";
 export * from "./lib/entity/entity-set";
-export * from "./lib/entity/merge-entities.fn";
 export * from "./lib/entity/normalize-entities.fn";
 export * from "./lib/entity/normalized-entities";
 export * from "./lib/execution/entity-query-builder";
