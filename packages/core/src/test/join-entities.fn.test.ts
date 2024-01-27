@@ -1,10 +1,11 @@
-import { EntityMapper } from "../lib/entity/entity-mapper";
+import { EntityTools } from "../lib/entity/entity-tools";
+import { IEntityTools } from "../lib/entity/entity-tools.interface";
 
 describe("joinEntities()", () => {
-    let mapper: EntityMapper;
+    let tools: IEntityTools;
 
     beforeEach(() => {
-        mapper = new EntityMapper();
+        tools = new EntityTools();
     });
 
     it("primitive index: join", () => {
@@ -28,7 +29,7 @@ describe("joinEntities()", () => {
             { id: 50, fooId: 2 },
         ];
 
-        mapper.joinEntities(fooEntities, barEntities, "joined", ["id"], ["fooId"], true);
+        tools.joinEntities(fooEntities, barEntities, "joined", ["id"], ["fooId"], true);
 
         expect(fooEntities).toEqual<Required<Foo>[]>([
             {
@@ -75,7 +76,7 @@ describe("joinEntities()", () => {
             { id: 50, fooId: 2, namespace: "cheese" },
         ];
 
-        mapper.joinEntities(fooEntities, barEntities, "joined", ["id", "namespace"], ["fooId", "namespace"], true);
+        tools.joinEntities(fooEntities, barEntities, "joined", ["id", "namespace"], ["fooId", "namespace"], true);
 
         expect(fooEntities).toEqual<Required<Foo>[]>([
             {
@@ -116,7 +117,7 @@ describe("joinEntities()", () => {
             const barEntities: Bar[] = [{ id: 20 }];
 
             // act
-            mapper.joinEntities(fooEntities, barEntities, "bar", ["barId"], ["id"]);
+            tools.joinEntities(fooEntities, barEntities, "bar", ["barId"], ["id"]);
 
             // assert
             expect(fooEntities).toEqual<Foo[]>([
@@ -151,7 +152,7 @@ describe("joinEntities()", () => {
             const barEntities: Bar[] = [{ id: 20 }];
 
             // act
-            mapper.joinEntities(fooEntities, barEntities, "bar", ["barId"], ["id"], false, true);
+            tools.joinEntities(fooEntities, barEntities, "bar", ["barId"], ["id"], false, true);
 
             // assert
             expect(fooEntities).toEqual<Required<Foo>[]>([
@@ -184,7 +185,7 @@ describe("joinEntities()", () => {
             const barEntities: Bar[] = [];
 
             // act
-            mapper.joinEntities(fooEntities, barEntities, "joined", ["id"], ["fooId"], true);
+            tools.joinEntities(fooEntities, barEntities, "joined", ["id"], ["fooId"], true);
 
             // assert
             expect(fooEntities).toEqual<Required<Foo>[]>([
@@ -220,7 +221,7 @@ describe("joinEntities()", () => {
             const barEntities: Bar[] = [{ id: 20, namespaceId: 200 }];
 
             // act
-            mapper.joinEntities(fooEntities, barEntities, "bar", ["namespaceId", "barId"], ["namespaceId", "id"]);
+            tools.joinEntities(fooEntities, barEntities, "bar", ["namespaceId", "barId"], ["namespaceId", "id"]);
 
             // assert
             expect(fooEntities).toEqual<Foo[]>([
@@ -250,7 +251,7 @@ describe("joinEntities()", () => {
             const barEntities: Bar[] = [{ id: 20, namespaceId: 200 }];
 
             // act
-            mapper.joinEntities(
+            tools.joinEntities(
                 fooEntities,
                 barEntities,
                 "bar",
@@ -288,7 +289,7 @@ describe("joinEntities()", () => {
             const barEntities: Bar[] = [{ id: 20, namespaceId: 200, fooId: 2 }];
 
             // act
-            mapper.joinEntities(
+            tools.joinEntities(
                 fooEntities,
                 barEntities,
                 "joined",

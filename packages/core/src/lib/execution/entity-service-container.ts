@@ -10,7 +10,8 @@ import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
 import { WhereEntityShapeInstance } from "../criteria/where-entity/where-entity-shape-instance.types";
 import { WhereEntityShape } from "../criteria/where-entity/where-entity-shape.types";
 import { WhereEntityTools } from "../criteria/where-entity/where-entity-tools";
-import { EntityMapper } from "../entity/entity-mapper";
+import { EntityTools } from "../entity/entity-tools";
+import { IEntityTools } from "../entity/entity-tools.interface";
 import { EntityQueryParametersShape } from "../query/entity-query-shape";
 import { EntitySelection } from "../query/entity-selection";
 import { EntityBlueprintInstance } from "../schema/entity-blueprint-instance.type";
@@ -151,7 +152,7 @@ export class EntitySchemaScopedServiceContainer<B> {
 export class EntityServiceContainer {
     private readonly tracing = new EntityQueryTracing();
     private readonly catalog = new EntitySchemaCatalog();
-    private readonly mapper = new EntityMapper();
+    private readonly entityTools = new EntityTools();
     private readonly database = new InMemoryEntityDatabase();
     private readonly apis = new Map<string, EntitySource>();
     private readonly hydrators = new Map<string, EntityHydrator>();
@@ -161,8 +162,8 @@ export class EntityServiceContainer {
         return this.catalog;
     }
 
-    getMapper(): EntityMapper {
-        return this.mapper;
+    getEntityTools(): IEntityTools {
+        return this.entityTools;
     }
 
     getTracing(): EntityQueryTracing {

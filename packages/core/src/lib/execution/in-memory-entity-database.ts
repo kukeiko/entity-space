@@ -5,8 +5,8 @@ import { Entity } from "../common/entity.type";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
 import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
 import { IEntityCriteriaTools } from "../criteria/entity-criteria-tools.interface";
-import { EntityMapper } from "../entity/entity-mapper";
 import { EntitySet } from "../entity/entity-set";
+import { EntityTools } from "../entity/entity-tools";
 import { normalizeEntities } from "../entity/normalize-entities.fn";
 import { EntityQueryTools } from "../query/entity-query-tools";
 import { IEntityQueryTools } from "../query/entity-query-tools.interface";
@@ -22,7 +22,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
     private readonly queryCache$ = new Subject<IEntityQuery[]>();
     private readonly criteriaTools: IEntityCriteriaTools = new EntityCriteriaTools();
     private readonly queryTools: IEntityQueryTools = new EntityQueryTools({ criteriaTools: this.criteriaTools });
-    private readonly mapper = new EntityMapper();
+    private readonly entityTools = new EntityTools();
 
     getQueryCache$(): Observable<IEntityQuery[]> {
         return this.queryCache$.asObservable().pipe(startWith(this.getAllCachedQueries()));
@@ -236,7 +236,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
 
         const result = this.querySync(query);
 
-        this.mapper.joinEntities(
+        this.entityTools.joinEntities(
             entities,
             result.getEntities(),
             relation.getPropertyName(),
