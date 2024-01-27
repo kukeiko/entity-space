@@ -2,6 +2,7 @@ import { Class } from "@entity-space/utils";
 import { Entity } from "../common/entity.type";
 import { EntityBlueprintInstance } from "../schema/entity-blueprint-instance.type";
 import { IEntitySchema } from "../schema/schema.interface";
+import { NormalizedEntities } from "./normalized-entities";
 
 export interface IEntityTools {
     toDestructurable(): IEntityTools;
@@ -24,4 +25,5 @@ export interface IEntityTools {
     dedupeMergeEntities(entities: Entity[], keyPaths: string[]): Entity[];
     mergeEntities(...entities: Entity[]): Entity;
     copyEntity(entity: Entity): Entity;
+    normalizeEntities(schema: IEntitySchema, entities: Entity[], normalized?: NormalizedEntities): NormalizedEntities;
 }

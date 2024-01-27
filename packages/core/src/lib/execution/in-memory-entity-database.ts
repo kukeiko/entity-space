@@ -7,7 +7,6 @@ import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
 import { IEntityCriteriaTools } from "../criteria/entity-criteria-tools.interface";
 import { EntitySet } from "../entity/entity-set";
 import { EntityTools } from "../entity/entity-tools";
-import { normalizeEntities } from "../entity/normalize-entities.fn";
 import { EntityQueryTools } from "../query/entity-query-tools";
 import { IEntityQueryTools } from "../query/entity-query-tools.interface";
 import { IEntityQuery } from "../query/entity-query.interface";
@@ -104,7 +103,7 @@ export class InMemoryEntityDatabase implements IEntityDatabase {
     upsertSync(entitySet: EntitySet<Entity>): void {
         this.addQueryToCached(entitySet.getQuery());
         const entities = cloneJson(entitySet.getEntities());
-        const normalized = normalizeEntities(entitySet.getQuery().getEntitySchema(), entities);
+        const normalized = this.entityTools.normalizeEntities(entitySet.getQuery().getEntitySchema(), entities);
         const parameters = entitySet.getQuery().getParameters();
 
         for (const schema of normalized.getSchemas()) {
