@@ -16,18 +16,25 @@ export class EntityStoreUniqueIndex<E extends Entity = Entity> {
         return this.map.get(entity);
     }
 
-    set(entity: E, value: number): void {
+    set(entity: E, value: number): this {
         this.map.set(entity, value);
+        return this;
     }
 
     delete(entity: E): this {
         this.map.delete(entity);
-
         return this;
     }
 
-    clear() : void {
+    replace(what: E, by: E, value: number): this {
+        this.delete(what);
+        this.set(by, value);
+        return this;
+    }
+
+    clear(): this {
         this.map.clear();
+        return this;
     }
 
     getByCriterion(criterion: ICriterion): false | { values: number[]; reshaped: ReshapedCriterion<ICriterion> } {

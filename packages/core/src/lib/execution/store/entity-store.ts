@@ -58,13 +58,13 @@ export class EntityStore {
                 if (slot === void 0) {
                     this.uniqueIndexes.forEach(index => index.set(entity, this.entities.length));
                     this.commonIndexes.forEach(index => index.add(entity, this.entities.length));
-                    this.entities.push(this.mergeEntities(entity));
+                    this.entities.push(this.mergeEntities(entity)); // [todo] absuing mergeEntities() to copy an entity. confusing
                 } else {
                     const previous = this.entities[slot]!;
                     entity = this.mergeEntities(previous, entity);
                     this.entities[slot] = entity;
-                    this.uniqueIndexes.forEach(index => index.delete(previous).set(entity, slot));
-                    this.commonIndexes.forEach(index => index.delete(previous, slot).add(entity, slot));
+                    this.uniqueIndexes.forEach(index => index.replace(previous, entity, slot));
+                    this.commonIndexes.forEach(index => index.replace(previous, entity, slot));
                 }
             }
         } else {

@@ -12,21 +12,28 @@ export class EntityStoreCommonIndex<E extends Entity = Entity> {
     private readonly paths: string[];
     private readonly map: ComplexKeyMap<E, Set<number>>;
 
-    clear(): void {
-        this.map.clear();
-    }
-
     get(entity: E): Set<number> | undefined {
         return this.map.get(entity);
     }
 
-    add(entity: E, value: number): void {
+    add(entity: E, value: number): this {
         this.map.set(entity, new Set([value]), previous => previous.add(value));
+        return this;
     }
 
     delete(entity: E, slot: number): this {
         this.map.get(entity)?.delete(slot);
+        return this;
+    }
 
+    replace(what: E, by: E, slot: number): this {
+        this.delete(what, slot);
+        this.add(by, slot);
+        return this;
+    }
+
+    clear(): this {
+        this.map.clear();
         return this;
     }
 
