@@ -31,11 +31,11 @@ function toEntitySet(entities: Entity[], schema: IEntitySchema): EntitySet {
 }
 
 function upsert(database: EntityCache, schema: IEntitySchema, entities: Entity[]): void {
-    database.upsertSync(toEntitySet(entities, schema));
+    database.upsert(toEntitySet(entities, schema));
 }
 
 function read(database: EntityCache, query: IEntityQuery): Entity[] {
-    return database.querySync(query).getEntities();
+    return database.query(query).getEntities();
 }
 
 describe(EntityCache.name, () => {

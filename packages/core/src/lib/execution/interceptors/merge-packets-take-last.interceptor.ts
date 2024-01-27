@@ -19,13 +19,13 @@ export class MergePacketsTakeLastInterceptor implements IEntityStreamInterceptor
             tap(packet => {
                 mergedPacket = mergedPacket.merge(packet);
                 packet.getPayload().forEach(payload => {
-                    database.upsertSync(payload);
+                    database.upsert(payload);
                 });
             }),
             takeLast(1),
             map(() => {
                 const accepted = mergedPacket.getAcceptedQueries();
-                const payload = accepted.map(query => database.querySync(query));
+                const payload = accepted.map(query => database.query(query));
 
                 return new EntityStreamPacket({
                     accepted,

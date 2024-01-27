@@ -1,12 +1,12 @@
-import { cloneJson, groupBy, readPath } from "@entity-space/utils";
+import { cloneJson, readPath } from "@entity-space/utils";
 import { flatten } from "lodash";
-import { Observable, Subject, from, of, startWith } from "rxjs";
 import { Entity } from "../common/entity.type";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
 import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
 import { IEntityCriteriaTools } from "../criteria/entity-criteria-tools.interface";
 import { EntitySet } from "../entity/entity-set";
 import { EntityTools } from "../entity/entity-tools";
+import { IEntityTools } from "../entity/entity-tools.interface";
 import { EntityQueryTools } from "../query/entity-query-tools";
 import { IEntityQueryTools } from "../query/entity-query-tools.interface";
 import { IEntityQuery } from "../query/entity-query.interface";
@@ -18,62 +18,11 @@ import { EntityStore } from "./store/entity-store";
 export class EntityCache implements IEntityCache {
     private readonly stores = new Map<string, EntityStore>();
     private readonly cachedQueries = new Map<string, IEntityQuery[]>();
-    private readonly queryCache$ = new Subject<IEntityQuery[]>();
     private readonly criteriaTools: IEntityCriteriaTools = new EntityCriteriaTools();
     private readonly queryTools: IEntityQueryTools = new EntityQueryTools({ criteriaTools: this.criteriaTools });
-    private readonly entityTools = new EntityTools();
+    private readonly entityTools: IEntityTools = new EntityTools();
 
-    getQueryCache$(): Observable<IEntityQuery[]> {
-        return this.queryCache$.asObservable().pipe(startWith(this.getAllCachedQueries()));
-    }
-
-    query$(query: IEntityQuery): Observable<EntitySet<Entity>> {
-        return from(this.query(query));
-    }
-
-    async query(query: IEntityQuery): Promise<EntitySet> {
-        return this.querySync(query);
-    }
-
-    invalidate(query: IEntityQuery): void {
-        const entities = this.querySync(query);
-        const store = this.getOrCreateStore(query.getEntitySchema());
-
-        for (const entity of entities.getEntities()) {
-            store.remove(entity);
-        }
-
-        this.removeQueryFromCached(query);
-    }
-
-    // [todo] unused, can be removed
-    subtractByCached(query: IEntityQuery): IEntityQuery[] | false {
-        const cached = this.getCachedQueries(query.getEntitySchema());
-        return this.queryTools.subtractQueries([query], cached);
-    }
-
-    // [todo] not used; but i did not want to delete it already.
-    // if i don't find a use soonish™ reason to keep it, i should remove it
-    subtractManyByCached(queries: IEntityQuery[]): IEntityQuery[] {
-        const groupedBySchema = groupBy(queries, query => query.getEntitySchema());
-        const subtracted: IEntityQuery[] = [];
-
-        for (const [schema, queries] of groupedBySchema.entries()) {
-            const result = this.queryTools.subtractQueries(queries, this.getCachedQueries(schema));
-
-            if (!result) {
-                subtracted.push(...queries);
-                continue;
-            }
-
-            subtracted.push(...result);
-        }
-
-        return subtracted;
-    }
-
-    // [todo] need some tests
-    querySync<T extends Entity = Entity>(query: IEntityQuery): EntitySet<T> {
+    query<T extends Entity = Entity>(query: IEntityQuery): EntitySet<T> {
         const store = this.getOrCreateStore(query.getEntitySchema());
         const nonRelationalCriterion = this.criteriaTools.omitRelationalCriteria(
             query.getCriteria(),
@@ -100,7 +49,7 @@ export class EntityCache implements IEntityCache {
         return new EntitySet<T>({ query, entities });
     }
 
-    upsertSync(entitySet: EntitySet<Entity>): void {
+    upsert(entitySet: EntitySet<Entity>): void {
         this.addQueryToCached(entitySet.getQuery());
         const entities = cloneJson(entitySet.getEntities());
         const normalized = this.entityTools.normalizeEntities(entitySet.getQuery().getEntitySchema(), entities);
@@ -126,23 +75,47 @@ export class EntityCache implements IEntityCache {
         }
     }
 
-    async upsert(entitySet: EntitySet<Entity>): Promise<void> {
-        this.upsertSync(entitySet);
+    subtractQuery(query: IEntityQuery): IEntityQuery[] | false {
+        const cached = this.getCachedQueries(query.getEntitySchema());
+        return this.queryTools.subtractQueries([query], cached);
     }
 
-    upsert$<T extends Entity = Entity>(entities: EntitySet<T>): Observable<void> {
-        return from(this.upsert(entities));
+    subtractQueries(queries: IEntityQuery[]): IEntityQuery[] | false {
+        if (!queries.length) {
+            return [];
+        }
+
+        const schemaIds = new Set(queries.map(query => query.getEntitySchema().getId()));
+
+        if (schemaIds.size > 1) {
+            throw new Error(`expected all queries to share the same EntitySchema`);
+        }
+
+        const schema = queries[0].getEntitySchema();
+        const cached = this.getCachedQueries(schema);
+
+        return this.queryTools.subtractQueries(queries, cached);
     }
 
     clear(): void {
         this.stores.clear();
         this.cachedQueries.clear();
-        this.queryCache$.next([]);
     }
 
     clearBySchema(schema: IEntitySchema): void {
         this.stores.get(schema.getId())?.clear();
         this.cachedQueries.set(schema.getId(), []);
+    }
+
+    clearByQuery(query: IEntityQuery): void {
+        const entities = this.query(query);
+        const store = this.getOrCreateStore(query.getEntitySchema());
+
+        for (const entity of entities.getEntities()) {
+            store.remove(entity);
+        }
+
+        this.removeQueryFromCached(query);
     }
 
     private getOrCreateStore(schema: IEntitySchema): EntityStore {
@@ -233,7 +206,7 @@ export class EntityCache implements IEntityCache {
             selection: selection ?? relatedSchema.getDefaultSelection(),
         });
 
-        const result = this.querySync(query);
+        const result = this.query(query);
 
         this.entityTools.joinEntities(
             entities,
@@ -250,7 +223,6 @@ export class EntityCache implements IEntityCache {
         const cachedQueries = this.getCachedQueries(query.getEntitySchema());
         const nextCachedQueries = this.queryTools.mergeQueries(query, ...cachedQueries);
         this.cachedQueries.set(query.getEntitySchema().getId(), nextCachedQueries);
-        this.queryCache$.next(this.getAllCachedQueries());
     }
 
     private removeQueryFromCached(query: IEntityQuery): void {
@@ -262,15 +234,10 @@ export class EntityCache implements IEntityCache {
         }
 
         this.cachedQueries.set(query.getEntitySchema().getId(), nextCachedQueries);
-        this.queryCache$.next(this.getAllCachedQueries());
     }
 
-    getCachedQueries(schema: IEntitySchema): IEntityQuery[] {
+    private getCachedQueries(schema: IEntitySchema): IEntityQuery[] {
         return this.cachedQueries.get(schema.getId()) ?? [];
-    }
-
-    getCachedQueries$(): Observable<IEntityQuery[]> {
-        return of(this.getAllCachedQueries());
     }
 
     private getAllCachedQueries(): IEntityQuery[] {

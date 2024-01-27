@@ -18,6 +18,7 @@ import { EntityBlueprintInstance } from "../schema/entity-blueprint-instance.typ
 import { EntitySchemaCatalog } from "../schema/entity-schema-catalog";
 import { IEntitySchema } from "../schema/schema.interface";
 import { EntityCache } from "./entity-cache";
+import { IEntityCache } from "./entity-cache.interface";
 import {
     CreateManyEntitiesFn,
     CreateOneEntityFn,
@@ -170,7 +171,7 @@ export class EntityServiceContainer {
         return this.tracing;
     }
 
-    getCache(): EntityCache {
+    getCache(): IEntityCache {
         return this.cache;
     }
 

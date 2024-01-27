@@ -196,7 +196,7 @@ export class EntityQueryBuilder<T extends Entity = Entity> implements IEntityStr
 
         await lastValueFrom(runInterceptors(sources, query, this.services.getTracing()));
 
-        const entities = this.services.getCache().querySync(query).getEntities() as T[];
+        const entities = this.services.getCache().query(query).getEntities() as T[];
         this.services
             .getTracing()
             .queryResolved(query, `${entities.length}x entit${entities.length === 1 ? "y" : "ies"}`);

@@ -71,7 +71,7 @@ export class EntityWorkspace {
         const select = EntitySelection.unpack(schema, args?.select ?? {});
 
         const query = this.queryTools.createQuery({ entitySchema: schema, criteria: criterion, selection: select });
-        this.services.getCache().invalidate(query);
+        this.services.getCache().clearByQuery(query);
     }
 
     // [todo] not yet used, idea was this to be a support for user-defined, custom EntityQueryBuilders

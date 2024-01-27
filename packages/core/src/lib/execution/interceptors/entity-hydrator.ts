@@ -7,7 +7,7 @@ import { EntityQueryTools } from "../../query/entity-query-tools";
 import { IEntityQuery } from "../../query/entity-query.interface";
 import { EntitySelection } from "../../query/entity-selection";
 import { IEntitySchema } from "../../schema/schema.interface";
-import { EntityCache } from "../entity-cache";
+import { IEntityCache } from "../entity-cache.interface";
 import { EntityServiceContainer } from "../entity-service-container";
 import { EntityStream } from "../entity-stream";
 import { EntityStreamPacket } from "../entity-stream-packet";
@@ -166,7 +166,7 @@ export class EntityHydrator implements IEntityStreamInterceptor {
     private drainProposals(
         proposals: EntityHydrationProposal[],
         deliveredQueries: IEntityQuery[],
-        cache: EntityCache
+        cache: IEntityCache
     ): [EntityHydrationProposal[], EntityStream[]] {
         let nextProposals: EntityHydrationProposal[] = proposals.slice();
         const streams: EntityStream[] = [];
@@ -200,7 +200,7 @@ export class EntityHydrator implements IEntityStreamInterceptor {
                         nextProposals = proposals.filter(p => p !== proposal);
                     }
 
-                    const entities = cache.querySync(entitySetToHydrateQuery);
+                    const entities = cache.query(entitySetToHydrateQuery);
                     const acceptedQuery = entitySetToHydrateQuery.withSelection(proposal.hydratedSelection);
 
                     streams.push(
@@ -211,7 +211,7 @@ export class EntityHydrator implements IEntityStreamInterceptor {
                         ).pipe(
                             startWith(new EntityStreamPacket({ accepted: [acceptedQuery] })),
                             tap(packet => {
-                                packet.getPayload().forEach(payload => this.services.getCache().upsertSync(payload));
+                                packet.getPayload().forEach(payload => this.services.getCache().upsert(payload));
                             }),
                             shareReplay()
                         )
