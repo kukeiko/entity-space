@@ -29,6 +29,7 @@ export type EntityWhere<T> = {
 };
 
 export interface IEntityCriteriaTools {
+    toDestructurable(): IEntityCriteriaTools;
     all(): IAllCriterion;
     none(): INoneCriterion;
     and(...criteria: ICriterion[] | ICriterion[][]): IAndCriterion;

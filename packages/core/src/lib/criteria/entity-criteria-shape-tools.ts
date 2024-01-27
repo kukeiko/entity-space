@@ -1,4 +1,4 @@
-import { isRecord, Null, Primitive, writePath } from "@entity-space/utils";
+import { isRecord, Null, Primitive, toDestructurableInstance, writePath } from "@entity-space/utils";
 import { assertValidPaths } from "../common/validate-paths.fn";
 import { AllCriterionShape } from "./all/all-criterion-shape";
 import { AnyCriterionShape } from "./any-criterion-shape";
@@ -21,44 +21,50 @@ export class EntityCriteriaShapeTools implements IEntityCriteriaShapeTools {
 
     private readonly criteriaTools: IEntityCriteriaTools;
 
-    any = (): AnyCriterionShape => {
+    toDestructurable(): IEntityCriteriaShapeTools {
+        return toDestructurableInstance(this);
+    }
+
+    any(): AnyCriterionShape {
         return new AnyCriterionShape();
-    };
+    }
 
-    all = (): AllCriterionShape => {
+    all(): AllCriterionShape {
         return new AllCriterionShape({ tools: this.criteriaTools });
-    };
+    }
 
-    equals = <T extends Primitive | typeof Null>(valueTypes?: T[] | undefined): EqualsCriterionShape<T> => {
+    equals<T extends Primitive | typeof Null>(valueTypes?: T[] | undefined): EqualsCriterionShape<T> {
         // [todo] type assertion
         return new EqualsCriterionShape({
             valueTypes: valueTypes ?? ([Number, String, Boolean, Null] as T[]),
             tools: this.criteriaTools,
         });
-    };
+    }
 
-    inArray = <T extends Primitive | typeof Null>(valueTypes?: T[] | undefined): InArrayCriterionShape<T> => {
+    inArray<T extends Primitive | typeof Null>(valueTypes?: T[] | undefined): InArrayCriterionShape<T> {
         // [todo] type assertion
         return new InArrayCriterionShape({
             valueTypes: valueTypes ?? ([Number, String, Boolean, Null] as T[]),
             tools: this.criteriaTools,
         });
-    };
+    }
 
-    inRange = <T extends typeof String | typeof Number>(valueType: T): InRangeCriterionShape<T> => {
+    inRange<T extends typeof String | typeof Number>(valueType: T): InRangeCriterionShape<T> {
         return new InRangeCriterionShape({ valueType, tools: this.criteriaTools });
-    };
+    }
 
-    or = <T extends ICriterionShape>(shapes: T[]): OrCriterionShape<T> => {
+    or<T extends ICriterionShape>(shapes: T[]): OrCriterionShape<T> {
         return new OrCriterionShape({ tools: this.criteriaTools, shapes });
-    };
+    }
 
-    never = (): NeverCriterionShape => new NeverCriterionShape({ tools: this.criteriaTools });
+    never(): NeverCriterionShape {
+        return new NeverCriterionShape({ tools: this.criteriaTools });
+    }
 
-    where = (required: Record<string, unknown>, optional?: Record<string, unknown>): EntityCriteriaShape => {
+    where(required: Record<string, unknown>, optional?: Record<string, unknown>): EntityCriteriaShape {
         const map = (bag: Record<string, unknown>): Record<string, ICriterionShape> => {
             const keys = Object.keys(bag);
-            
+
             if (keys.some(key => key.includes("."))) {
                 assertValidPaths(keys);
                 const writtenPathsBag: Record<string, unknown> = {};
@@ -94,9 +100,9 @@ export class EntityCriteriaShapeTools implements IEntityCriteriaShapeTools {
             required: map(required),
             optional: optional ? map(optional) : void 0,
         });
-    };
+    }
 
-    isCriterionShape = (value: unknown): value is ICriterionShape => {
+    isCriterionShape(value: unknown): value is ICriterionShape {
         return ICriterionShape.is(value);
-    };
+    }
 }

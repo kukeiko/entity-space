@@ -12,7 +12,7 @@ describe("parseQuery()", () => {
     catalog.addSchema(fooSchema);
     const criteriaFactory = new EntityCriteriaTools();
     const queryTools = new EntityQueryTools({ criteriaTools: criteriaFactory });
-    const { parseQuery } = queryTools;
+    const { parseQuery } = queryTools.toDestructurable();
 
     function shouldParse(stringified: string, expected: IEntityQuery, specFn = it): void {
         specFn(`should parse ${stringified} to ${expected.toString()}`, () => {

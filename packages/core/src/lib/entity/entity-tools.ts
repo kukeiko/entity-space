@@ -1,10 +1,14 @@
-import { isRecord } from "@entity-space/utils";
+import { isRecord, toDestructurableInstance } from "@entity-space/utils";
 import { Entity } from "../common/entity.type";
 import { IEntitySchema, IPropertyValueSchema } from "../schema/schema.interface";
 import { IEntityTools } from "./entity-tools.interface";
 
 export class EntityTools implements IEntityTools {
-    matchesSchema = (entity: Entity, schema: IEntitySchema<Entity>): boolean => {
+    toDestructurable(): IEntityTools {
+        return toDestructurableInstance(this);
+    }
+
+    matchesSchema(entity: Entity, schema: IEntitySchema<Entity>): boolean {
         const openRequiredKeys = new Set(
             schema
                 .getProperties()
@@ -28,7 +32,7 @@ export class EntityTools implements IEntityTools {
         }
 
         return !openRequiredKeys.size;
-    };
+    }
 
     private matchesValueSchema(value: unknown, schema: IPropertyValueSchema): boolean {
         if (value === null && schema.isNullable()) {

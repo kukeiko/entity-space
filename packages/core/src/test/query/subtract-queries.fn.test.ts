@@ -8,7 +8,7 @@ describe("subtractQueries()", () => {
     //     return new EntityQuery({ entitySchema: new EntitySchema("foo"), criteria, selection });
     // }
     const queryTools = new EntityQueryTools({ criteriaTools: new EntityCriteriaTools() });
-    const { subtractQueries } = queryTools;
+    const { subtractQueries } = queryTools.toDestructurable();
 
     describe("no subtraction", () => {
         it("[] subtracted by [] should be []", () => {

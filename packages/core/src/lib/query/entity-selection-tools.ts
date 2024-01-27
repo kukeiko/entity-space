@@ -1,7 +1,12 @@
+import { toDestructurableInstance } from "@entity-space/utils";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
 import { ClippedEntitySelection, IEntitySelectionTools } from "./entity-selection-tools.interface";
 
 export class EntitySelectionTools implements IEntitySelectionTools {
+    toDestructurable(): IEntitySelectionTools {
+        return toDestructurableInstance(this);
+    }
+
     // [todo] I think I was a bit sloppy when implementing hydrating relations of complex types by introducing
     // this extra "clip()" method, when it should be enough to use subtraction & a new method on EntitySelection
     // that will return an an array of [PropertyPath, SelectedValue][]

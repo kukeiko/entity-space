@@ -24,7 +24,7 @@ describe("mergeQueries()", () => {
     const criteriaFactory = new EntityCriteriaTools();
     const queryTools = new EntityQueryTools({ criteriaTools: criteriaFactory });
     const { where, inRange, or } = criteriaFactory.toDestructurable();
-    const { mergeQueries, mergeQuery, parseQuery } = queryTools;
+    const { mergeQueries, mergeQuery, parseQuery } = queryTools.toDestructurable();
 
     it(`
         { price: [100, 200], rating: [3, 5] }

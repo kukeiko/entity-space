@@ -57,7 +57,7 @@ function isNumberOrVoid(value: unknown): value is number | undefined {
 type PrimitiveValue = ReturnType<Primitive | typeof Null>;
 
 export class EntityCriteriaTools implements IEntityCriteriaTools {
-    toDestructurable(): EntityCriteriaTools {
+    toDestructurable(): IEntityCriteriaTools {
         return toDestructurableInstance(this);
     }
 

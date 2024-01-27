@@ -16,6 +16,7 @@ export interface EntityQueryCreate {
 }
 
 export interface IEntityQueryTools {
+    toDestructurable(): IEntityQueryTools;
     createQuery(args: EntityQueryCreate): IEntityQuery;
     createIdQueryFromEntities(schema: IEntitySchema, entities: Entity[]): IEntityQuery;
     createQueriesFromEntities(schema: IEntitySchema, entities: Entity[]): IEntityQuery[];

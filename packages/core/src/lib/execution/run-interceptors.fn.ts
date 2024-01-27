@@ -46,7 +46,7 @@ function safeWrapEntityStream(
     const accepted: IEntityQuery[] = [];
     const rejected: IEntityQuery[] = [];
     const queryTools = new EntityQueryTools({ criteriaTools: new EntityCriteriaTools() });
-    const { subtractQueries } = queryTools;
+    const { subtractQueries } = queryTools.toDestructurable();
 
     // make sure we're not missing any rejections
     const ensureProperRejection = safelyWrapped.pipe(

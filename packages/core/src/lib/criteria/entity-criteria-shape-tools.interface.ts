@@ -10,6 +10,7 @@ import { NeverCriterionShape } from "./never/never-criterion-shape";
 import { OrCriterionShape } from "./or/or-criterion-shape";
 
 export interface IEntityCriteriaShapeTools {
+    toDestructurable(): IEntityCriteriaShapeTools;
     any(): AnyCriterionShape;
     all(): AllCriterionShape;
     equals<T extends Primitive | typeof Null>(valueTypes?: T[]): EqualsCriterionShape<T>;

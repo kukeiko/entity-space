@@ -8,7 +8,7 @@ import { expectCriteria } from "../tools/expect-criteria.fn";
 describe("criteria: reshaping", () => {
     const criteriaTools: IEntityCriteriaTools = new EntityCriteriaTools();
     const shapeTools: IEntityCriteriaShapeTools = new EntityCriteriaShapeTools({ criteriaTools: criteriaTools });
-    const { inRange, or, inArray, equals, where, all } = shapeTools;
+    const { inRange, or, inArray, equals, where, all } = shapeTools.toDestructurable();
 
     expectCriteria("all").reshapedUsing(all(), "all").toEqual("all");
     expectCriteria("[1, 7]").reshapedUsing(all(), "all").toEqual("all");

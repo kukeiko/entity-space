@@ -22,8 +22,8 @@ export class FileOnDiskBasedEntitySource {
     private readonly queryTools = new EntityQueryTools({ criteriaTools: this.criteriaTools });
 
     async query(query: IEntityQuery): Promise<false | EntitySet[]> {
-        const { where, inArray } = this.criteriaTools;
-        const { createQuery } = this.queryTools;
+        const { where, inArray } = this.criteriaTools.toDestructurable();
+        const { createQuery } = this.queryTools.toDestructurable();
 
         const entitiesFromFile = await this.loadEntitiesFromFile(query.getEntitySchema());
         const entities = query.getCriteria().filter(entitiesFromFile);
