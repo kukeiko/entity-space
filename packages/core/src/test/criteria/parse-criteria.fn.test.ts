@@ -4,7 +4,8 @@ import { parseCriteria } from "../../lib/criteria/parsing/parse-criteria.fn";
 
 describe("parseCriteria()", () => {
     const tools = new EntityCriteriaTools();
-    const { equals, notEquals, and, or, isOdd, all, inRange, inArray, notInArray, none, never, where } = tools;
+    const { all, equals, notEquals, and, or, isOdd, inRange, inArray, notInArray, none, never, where } =
+        tools.toDestructurable();
 
     function shouldParse(stringified: string, expected: ICriterion, specFn = it): void {
         specFn(`should parse ${stringified}`, () => {

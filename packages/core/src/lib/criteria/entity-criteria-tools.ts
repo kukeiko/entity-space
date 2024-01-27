@@ -4,6 +4,7 @@ import {
     Null,
     Primitive,
     readPath,
+    toDestructurableInstance,
     writePath,
 } from "@entity-space/utils";
 import { Entity } from "../common/entity.type";
@@ -56,62 +57,70 @@ function isNumberOrVoid(value: unknown): value is number | undefined {
 type PrimitiveValue = ReturnType<Primitive | typeof Null>;
 
 export class EntityCriteriaTools implements IEntityCriteriaTools {
-    all = (): IAllCriterion => {
+    toDestructurable(): EntityCriteriaTools {
+        return toDestructurableInstance(this);
+    }
+
+    all(): IAllCriterion {
         return new AllCriterion({ tools: this });
-    };
+    }
 
-    none = (): INoneCriterion => {
+    none(): INoneCriterion {
         return new NoneCriterion({ tools: this });
-    };
+    }
 
-    and = (...criteria: ICriterion[] | ICriterion[][]): IAndCriterion => {
+    and(...criteria: ICriterion[] | ICriterion[][]): IAndCriterion {
         criteria = Array.isArray(criteria[0]) ? (criteria[0] as ICriterion[]) : (criteria as ICriterion[]);
 
         return new AndCriterion({ criteria, tools: this });
-    };
+    }
 
-    or = (...criteria: ICriterion[] | ICriterion[][]): IOrCriterion => {
+    or(...criteria: ICriterion[] | ICriterion[][]): IOrCriterion {
         criteria = Array.isArray(criteria[0]) ? (criteria[0] as ICriterion[]) : (criteria as ICriterion[]);
 
         return new OrCriterion({ criteria, tools: this });
-    };
+    }
 
-    equals = (value: PrimitiveValue): IEqualsCriterion => {
+    equals(value: PrimitiveValue): IEqualsCriterion {
         return new EqualsCriterion({ value, tools: this });
-    };
+    }
 
-    every = (criterion: ICriterion): IEveryCriterion => new EveryCriterion({ criterion, tools: this });
+    every(criterion: ICriterion): IEveryCriterion {
+        return new EveryCriterion({ criterion, tools: this });
+    }
 
-    never = (): INeverCriterion => new NeverCriterion({ tools: this });
+    never(): INeverCriterion {
+        return new NeverCriterion({ tools: this });
+    }
 
-    notEquals = (value: PrimitiveValue): INotEqualsCriterion => {
+    notEquals(value: PrimitiveValue): INotEqualsCriterion {
         return new NotEqualsCriterion({ value, tools: this });
-    };
+    }
 
-    isEven = (): IIsEvenCriterion => {
+    isEven(): IIsEvenCriterion {
         return new IsEvenCriterion({ tools: this });
-    };
+    }
 
-    isOdd = (): IIsOddCriterion => {
+    isOdd(): IIsOddCriterion {
         return new IsOddCriterion({ tools: this });
-    };
+    }
 
-    inArray = (values: Iterable<PrimitiveValue>): IInArrayCriterion => {
+    inArray(values: Iterable<PrimitiveValue>): IInArrayCriterion {
         // [todo] i added sorting the values to prevent failings tests, as there a lot of them that
         // check for equality by calling .toString() on an EntityQuery (and subsequently on criteria).
         // should re-evaluate if that way of testing is a good idea
         return new InArrayCriterion({ values: Object.freeze(new Set(Array.from(values).sort())), tools: this });
-    };
+    }
 
-    notInArray = (values: Iterable<PrimitiveValue>): INotInArrayCriterion => {
+    notInArray(values: Iterable<PrimitiveValue>): INotInArrayCriterion {
         return new NotInArrayCriterion({ values: Object.freeze(new Set(values)), tools: this });
-    };
+    }
 
-    inRange = (
+    inRange(
         from?: string | number | undefined,
         to?: string | number | undefined,
         inclusive?: boolean | [boolean, boolean] | undefined
-    ): IInStringRangeCriterion | IInNumberRangeCriterion => {
+    ): IInStringRangeCriterion | IInNumberRangeCriterion {
         // [todo] what if both from & to are void? previously i returned "all",
         // but because shapes want exact criterion type, i cant do that no more.
         if (isStringOrVoid(from) && isStringOrVoid(to)) {
@@ -121,11 +130,13 @@ export class EntityCriteriaTools implements IEntityCriteriaTools {
         }
 
         throw new Error(`invalid arguments`);
-    };
+    }
 
-    some = (criterion: ICriterion): ISomeCriterion => new SomeCriterion({ criterion, tools: this });
+    some(criterion: ICriterion): ISomeCriterion {
+        return new SomeCriterion({ criterion, tools: this });
+    }
 
-    where = <T extends Entity = Entity>(criteria: EntityWhere<T>): IEntityCriteria => {
+    where<T extends Entity = Entity>(criteria: EntityWhere<T>): IEntityCriteria {
         const built: Record<string, ICriterion> = {};
 
         for (const key in criteria) {
@@ -143,83 +154,83 @@ export class EntityCriteriaTools implements IEntityCriteriaTools {
         }
 
         return new EntityCriteria({ criteria: built, tools: this });
-    };
+    }
 
-    isCriterion = (value: unknown): value is ICriterion => {
+    isCriterion(value: unknown): value is ICriterion {
         return hasInterfaceMarker(ICriterion$, value);
-    };
+    }
 
-    isAllCriterion = (value: unknown): value is IAllCriterion => {
+    isAllCriterion(value: unknown): value is IAllCriterion {
         return hasInterfaceMarker(IAllCriterion$, value);
-    };
+    }
 
-    isAndCriterion = (value: unknown): value is IAndCriterion => {
+    isAndCriterion(value: unknown): value is IAndCriterion {
         return hasInterfaceMarker(IAndCriterion$, value);
-    };
+    }
 
-    isEntityCriteria = (value: unknown): value is IEntityCriteria => {
+    isEntityCriteria(value: unknown): value is IEntityCriteria {
         return hasInterfaceMarker(IEntityCriteria$, value);
-    };
+    }
 
-    isEqualsCriterion = (value: unknown): value is IEqualsCriterion => {
+    isEqualsCriterion(value: unknown): value is IEqualsCriterion {
         return hasInterfaceMarker(IEqualsCriterion$, value);
-    };
+    }
 
-    isEvenCriterion = (value: unknown): value is IIsEvenCriterion => {
+    isEvenCriterion(value: unknown): value is IIsEvenCriterion {
         return hasInterfaceMarker(IIsEvenCriterion$, value);
-    };
+    }
 
-    isEveryCriterion = (value: unknown): value is IEveryCriterion => {
+    isEveryCriterion(value: unknown): value is IEveryCriterion {
         return hasInterfaceMarker(IEveryCriterion$, value);
-    };
+    }
 
-    isInArrayCriterion = (value: unknown): value is IInArrayCriterion => {
+    isInArrayCriterion(value: unknown): value is IInArrayCriterion {
         return hasInterfaceMarker(IInArrayCriterion$, value);
-    };
+    }
 
-    isInNumberRangeCriterion = (value: unknown): value is IInNumberRangeCriterion => {
+    isInNumberRangeCriterion(value: unknown): value is IInNumberRangeCriterion {
         return hasInterfaceMarker(IInNumberRangeCriterion$, value);
-    };
+    }
 
-    isInStringRangeCriterion = (value: unknown): value is IInStringRangeCriterion => {
+    isInStringRangeCriterion(value: unknown): value is IInStringRangeCriterion {
         return hasInterfaceMarker(IInStringRangeCriterion$, value);
-    };
+    }
 
-    isNeverCriterion = (value: unknown): value is INeverCriterion => {
+    isNeverCriterion(value: unknown): value is INeverCriterion {
         return hasInterfaceMarker(INeverCriterion$, value);
-    };
+    }
 
-    isNoneCriterion = (value: unknown): value is INoneCriterion => {
+    isNoneCriterion(value: unknown): value is INoneCriterion {
         return hasInterfaceMarker(INoneCriterion$, value);
-    };
+    }
 
-    isNotEqualsCriterion = (value: unknown): value is INotEqualsCriterion => {
+    isNotEqualsCriterion(value: unknown): value is INotEqualsCriterion {
         return hasInterfaceMarker(INotEqualsCriterion$, value);
-    };
+    }
 
-    isNotInArrayCriterion = (value: unknown): value is INotInArrayCriterion => {
+    isNotInArrayCriterion(value: unknown): value is INotInArrayCriterion {
         return hasInterfaceMarker(INotInArrayCriterion$, value);
-    };
+    }
 
-    isOddCriterion = (value: unknown): value is IIsOddCriterion => {
+    isOddCriterion(value: unknown): value is IIsOddCriterion {
         return hasInterfaceMarker(IIsOddCriterion$, value);
-    };
+    }
 
-    isOrCriterion = (value: unknown): value is IOrCriterion => {
+    isOrCriterion(value: unknown): value is IOrCriterion {
         return hasInterfaceMarker(IOrCriterion$, value);
-    };
+    }
 
-    isSomeCriterion = (value: unknown): value is ISomeCriterion => {
+    isSomeCriterion(value: unknown): value is ISomeCriterion {
         return hasInterfaceMarker(ISomeCriterion$, value);
-    };
+    }
 
-    createCriterionFromEntities = (entities: Entity[], paths: string[], writtenPaths?: string[]): ICriterion => {
+    createCriterionFromEntities(entities: Entity[], paths: string[], writtenPaths?: string[]): ICriterion {
         if (paths.length === 1) {
             return this.createCriterionOnePath(entities, paths[0], writtenPaths ? writtenPaths[0] : void 0);
         } else {
             return this.createCriterionManyPaths(entities, paths, writtenPaths);
         }
-    };
+    }
 
     private createCriterionOnePath(entities: Entity[], path: string, writtenPath = path): ICriterion {
         const readValue = (entity: Entity): any => readPath(path, entity);

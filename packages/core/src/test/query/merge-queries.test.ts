@@ -23,7 +23,7 @@ interface Product {
 describe("mergeQueries()", () => {
     const criteriaFactory = new EntityCriteriaTools();
     const queryTools = new EntityQueryTools({ criteriaTools: criteriaFactory });
-    const { where, inRange, or } = criteriaFactory;
+    const { where, inRange, or } = criteriaFactory.toDestructurable();
     const { mergeQueries, mergeQuery, parseQuery } = queryTools;
 
     it(`

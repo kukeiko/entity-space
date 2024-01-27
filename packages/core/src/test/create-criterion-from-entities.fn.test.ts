@@ -12,7 +12,7 @@ interface Block {
 }
 
 describe("createCriterionFromEntities()", () => {
-    const { where, inArray, createCriterionFromEntities } = new EntityCriteriaTools();
+    const { where, inArray, createCriterionFromEntities } = new EntityCriteriaTools().toDestructurable();
 
     it("should create criterion for primitive index", () => {
         // arrange

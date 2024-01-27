@@ -40,7 +40,7 @@ function read(database: InMemoryEntityDatabase, query: IEntityQuery): Entity[] {
 
 describe("EntityWorkspace", () => {
     const criteriaFactory = new EntityCriteriaTools();
-    const { where, inArray } = criteriaFactory;
+    const { where, inArray } = criteriaFactory.toDestructurable();
 
     let database: InMemoryEntityDatabase;
 

@@ -3,7 +3,7 @@ import { expectCriteria } from "../tools/expect-criteria.fn";
 
 describe("criteria: subtractions", () => {
     const factory = new EntityCriteriaTools();
-    let { inRange, where } = factory;
+    let { inRange, where } = factory.toDestructurable();
 
     {
         // binary

@@ -33,7 +33,7 @@ describe("parseQuery()", () => {
         return queryTools.createQuery({ entitySchema: fooSchema, ...parts });
     }
 
-    const { where, or, equals } = criteriaFactory;
+    const { where, or, equals } = criteriaFactory.toDestructurable();
 
     // schema only
     shouldParse("foo", createFooQuery({}));

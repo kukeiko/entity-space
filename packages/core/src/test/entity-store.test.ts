@@ -6,7 +6,7 @@ import { Color, ColorBlueprint, MinecraftBlock, MinecraftBlockBlueprint } from "
 
 describe(EntityStore.name, () => {
     const criteriaTools = new EntityCriteriaTools();
-    const { where } = criteriaTools;
+    const { where } = criteriaTools.toDestructurable();
 
     describe(EntityStore.prototype.add.name, () => {
         it("should allow adding entities", () => {

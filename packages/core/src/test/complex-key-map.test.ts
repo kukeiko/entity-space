@@ -25,7 +25,7 @@ interface Artist {
 }
 
 describe("ComplexKeyMap", () => {
-    const { where, equals } = new EntityCriteriaTools();
+    const { where, equals } = new EntityCriteriaTools().toDestructurable();
 
     it("should store and retrieve one entity", () => {
         // arrange
