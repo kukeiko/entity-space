@@ -1,6 +1,6 @@
 import { map, takeLast, tap } from "rxjs";
 import { Entity } from "../../common/entity.type";
-import { InMemoryEntityDatabase } from "../in-memory-entity-database";
+import { EntityCache } from "../entity-cache";
 import { EntityStream } from "../entity-stream";
 import { EntityStreamPacket } from "../entity-stream-packet";
 import { IEntityStreamInterceptor } from "./entity-stream-interceptor.interface";
@@ -12,7 +12,7 @@ export class MergePacketsTakeLastInterceptor implements IEntityStreamInterceptor
 
     intercept(stream: EntityStream<Entity>): EntityStream<Entity> {
         // [todo] have to utilize database until we can merge EntitySets without it
-        const database = new InMemoryEntityDatabase();
+        const database = new EntityCache();
         let mergedPacket = new EntityStreamPacket();
 
         return stream.pipe(

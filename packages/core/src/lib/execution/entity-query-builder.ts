@@ -181,7 +181,7 @@ export class EntityQueryBuilder<T extends Entity = Entity> implements IEntityStr
     private async query<T extends Entity = Entity>(query: IEntityQuery): Promise<false | EntitySet<T>[]> {
         if (this.cacheOptions) {
             this.cacheOptions.blueprints.forEach(blueprint => {
-                this.services.getDatabase().clearBySchema(this.services.getCatalog().resolve(blueprint));
+                this.services.getCache().clearBySchema(this.services.getCatalog().resolve(blueprint));
             });
         }
 
@@ -196,7 +196,7 @@ export class EntityQueryBuilder<T extends Entity = Entity> implements IEntityStr
 
         await lastValueFrom(runInterceptors(sources, query, this.services.getTracing()));
 
-        const entities = this.services.getDatabase().querySync(query).getEntities() as T[];
+        const entities = this.services.getCache().querySync(query).getEntities() as T[];
         this.services
             .getTracing()
             .queryResolved(query, `${entities.length}x entit${entities.length === 1 ? "y" : "ies"}`);

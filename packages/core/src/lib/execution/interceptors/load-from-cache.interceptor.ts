@@ -1,15 +1,15 @@
-import { filter, forkJoin, map, merge, mergeMap, of, switchMap } from "rxjs";
+import { filter, forkJoin, map, merge, mergeMap, of } from "rxjs";
 import { Entity } from "../../common/entity.type";
 import { EntityCriteriaTools } from "../../criteria/entity-criteria-tools";
-import { IEntityDatabase } from "../entity-database.interface";
 import { EntityQueryTools } from "../../query/entity-query-tools";
+import { IEntityCache } from "../entity-cache.interface";
 import { EntityQueryTracing } from "../entity-query-tracing";
 import { EntityStream } from "../entity-stream";
 import { EntityStreamPacket } from "../entity-stream-packet";
 import { IEntityStreamInterceptor } from "./entity-stream-interceptor.interface";
 
 export class LoadFromCacheInterceptor implements IEntityStreamInterceptor {
-    constructor(private readonly database: IEntityDatabase, private readonly tracing: EntityQueryTracing) {}
+    constructor(private readonly database: IEntityCache, private readonly tracing: EntityQueryTracing) {}
 
     private readonly criteriaTools = new EntityCriteriaTools();
     private readonly queryTools = new EntityQueryTools({ criteriaTools: this.criteriaTools });

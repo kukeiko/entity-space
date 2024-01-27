@@ -3,11 +3,11 @@ import { Entity } from "../../common/entity.type";
 import { UnpackedEntitySelection } from "../../common/unpacked-entity-selection.type";
 import { EntityCriteriaTools } from "../../criteria/entity-criteria-tools";
 import { EntitySet } from "../../entity/entity-set";
-import { InMemoryEntityDatabase } from "../in-memory-entity-database";
 import { EntityQueryTools } from "../../query/entity-query-tools";
 import { IEntityQuery } from "../../query/entity-query.interface";
 import { EntitySelection } from "../../query/entity-selection";
 import { IEntitySchema } from "../../schema/schema.interface";
+import { EntityCache } from "../entity-cache";
 import { EntityServiceContainer } from "../entity-service-container";
 import { EntityStream } from "../entity-stream";
 import { EntityStreamPacket } from "../entity-stream-packet";
@@ -75,7 +75,7 @@ export class EntityHydrator implements IEntityStreamInterceptor {
                     const [nextProposals, streams] = this.drainProposals(
                         openProposals,
                         mergedDelivered,
-                        this.services.getDatabase()
+                        this.services.getCache()
                     );
 
                     openProposals = nextProposals;
@@ -166,7 +166,7 @@ export class EntityHydrator implements IEntityStreamInterceptor {
     private drainProposals(
         proposals: EntityHydrationProposal[],
         deliveredQueries: IEntityQuery[],
-        cache: InMemoryEntityDatabase
+        cache: EntityCache
     ): [EntityHydrationProposal[], EntityStream[]] {
         let nextProposals: EntityHydrationProposal[] = proposals.slice();
         const streams: EntityStream[] = [];
@@ -211,7 +211,7 @@ export class EntityHydrator implements IEntityStreamInterceptor {
                         ).pipe(
                             startWith(new EntityStreamPacket({ accepted: [acceptedQuery] })),
                             tap(packet => {
-                                packet.getPayload().forEach(payload => this.services.getDatabase().upsertSync(payload));
+                                packet.getPayload().forEach(payload => this.services.getCache().upsertSync(payload));
                             }),
                             shareReplay()
                         )

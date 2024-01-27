@@ -17,6 +17,7 @@ import { EntitySelection } from "../query/entity-selection";
 import { EntityBlueprintInstance } from "../schema/entity-blueprint-instance.type";
 import { EntitySchemaCatalog } from "../schema/entity-schema-catalog";
 import { IEntitySchema } from "../schema/schema.interface";
+import { EntityCache } from "./entity-cache";
 import {
     CreateManyEntitiesFn,
     CreateOneEntityFn,
@@ -27,7 +28,6 @@ import {
     UpdateOneEntityFn,
 } from "./entity-mutator";
 import { EntityQueryTracing } from "./entity-query-tracing";
-import { InMemoryEntityDatabase } from "./in-memory-entity-database";
 import { EntityHydrationEndpoint, EntityHydrationResult, EntityHydrator } from "./interceptors/entity-hydrator";
 import { EntitySource } from "./interceptors/entity-source";
 import { EntitySourceEndpoint, EntitySourceEndpointInvoke } from "./interceptors/entity-source-endpoint";
@@ -153,7 +153,7 @@ export class EntityServiceContainer {
     private readonly tracing = new EntityQueryTracing();
     private readonly catalog = new EntitySchemaCatalog();
     private readonly entityTools = new EntityTools();
-    private readonly database = new InMemoryEntityDatabase();
+    private readonly cache = new EntityCache();
     private readonly apis = new Map<string, EntitySource>();
     private readonly hydrators = new Map<string, EntityHydrator>();
     private readonly mutators = new Map<string, EntityMutator>();
@@ -170,8 +170,8 @@ export class EntityServiceContainer {
         return this.tracing;
     }
 
-    getDatabase(): InMemoryEntityDatabase {
-        return this.database;
+    getCache(): EntityCache {
+        return this.cache;
     }
 
     getSources(): IEntityStreamInterceptor[] {

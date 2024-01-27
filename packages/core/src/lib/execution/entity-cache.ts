@@ -12,10 +12,10 @@ import { IEntityQueryTools } from "../query/entity-query-tools.interface";
 import { IEntityQuery } from "../query/entity-query.interface";
 import { EntitySelection } from "../query/entity-selection";
 import { IEntitySchema, IEntitySchemaRelation } from "../schema/schema.interface";
-import { IEntityDatabase } from "./entity-database.interface";
+import { IEntityCache } from "./entity-cache.interface";
 import { EntityStore } from "./store/entity-store";
 
-export class InMemoryEntityDatabase implements IEntityDatabase {
+export class EntityCache implements IEntityCache {
     private readonly stores = new Map<string, EntityStore>();
     private readonly cachedQueries = new Map<string, IEntityQuery[]>();
     private readonly queryCache$ = new Subject<IEntityQuery[]>();

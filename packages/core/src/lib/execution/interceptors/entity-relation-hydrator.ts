@@ -60,7 +60,7 @@ export class EntityRelationHydrator implements IEntityStreamInterceptor {
                                 continue;
                             }
 
-                            const entitySetToHydrate = this.services.getDatabase().querySync(entitySetToHydrateQuery);
+                            const entitySetToHydrate = this.services.getCache().querySync(entitySetToHydrateQuery);
 
                             if (!entitySetToHydrate.getEntities().length) {
                                 continue;

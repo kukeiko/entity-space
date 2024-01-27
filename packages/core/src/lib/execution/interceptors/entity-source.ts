@@ -1,6 +1,6 @@
 import { isFalse, isNotFalse } from "@entity-space/utils";
 import { flatten } from "lodash";
-import { filter, from, isObservable, map, merge, mergeAll, Observable, of, startWith, switchMap, tap } from "rxjs";
+import { Observable, filter, from, isObservable, map, merge, mergeAll, of, startWith, switchMap, tap } from "rxjs";
 import { EntityCriteriaShapeTools } from "../../criteria/entity-criteria-shape-tools";
 import { EntityCriteriaTools } from "../../criteria/entity-criteria-tools";
 import { WhereEntityTools } from "../../criteria/where-entity/where-entity-tools";
@@ -143,7 +143,7 @@ export class EntitySource implements IEntityStreamInterceptor {
         query: IEntityQuery,
         endpoint: EntitySourceEndpoint
     ): false | [Observable<EntityStreamPacket>, IEntityQuery[]] {
-        let openQueries = this.services.getDatabase().subtractByCached(query);
+        let openQueries = this.services.getCache().subtractByCached(query);
         let fromCacheQueries: IEntityQuery[] = [];
         let fromCacheEntities: EntitySet[] = [];
         const initialPackets: EntityStreamPacket[] = [];
@@ -155,7 +155,7 @@ export class EntitySource implements IEntityStreamInterceptor {
                     new EntityStreamPacket({
                         accepted: [query],
                         delivered: [query],
-                        payload: [this.services.getDatabase().querySync(query)],
+                        payload: [this.services.getCache().querySync(query)],
                     })
                 ),
                 [],
@@ -183,7 +183,7 @@ export class EntitySource implements IEntityStreamInterceptor {
                         throw new Error(`bad EntityQuery subtraction logic implementation`);
                     }
 
-                    fromCacheEntities = fromCacheQueries.map(query => this.services.getDatabase().querySync(query));
+                    fromCacheEntities = fromCacheQueries.map(query => this.services.getCache().querySync(query));
                     fromCacheQueries = fromCacheQueries_;
 
                     // [todo] "query" argument should actually be the query initially passed to this method,
@@ -230,7 +230,7 @@ export class EntitySource implements IEntityStreamInterceptor {
                 return this.invokedToDataStream(invoked).pipe(
                     map(data => this.endpointDataToPacket(query, data)),
                     tap(packet => {
-                        packet.getPayload().forEach(payload => this.services.getDatabase().upsertSync(payload));
+                        packet.getPayload().forEach(payload => this.services.getCache().upsertSync(payload));
                     }),
                     // [todo] dirty fix to make it work if data source returns data synchronously
                     switchMap(

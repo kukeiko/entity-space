@@ -4,7 +4,7 @@ import { IEntityQuery } from "../query/entity-query.interface";
 import { IEntitySchema } from "../schema/schema.interface";
 import { EntitySet } from "../entity/entity-set";
 
-export interface IEntityDatabase {
+export interface IEntityCache {
     query$(query: IEntityQuery): Observable<EntitySet>;
     query(query: IEntityQuery): Promise<EntitySet>;
     upsert$<T extends Entity = Entity>(entities: EntitySet<T>): Observable<void>;

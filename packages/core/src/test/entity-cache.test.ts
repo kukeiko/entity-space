@@ -3,7 +3,7 @@ import { UnpackedEntitySelection } from "../lib/common/unpacked-entity-selection
 import { ICriterion } from "../lib/criteria/criterion.interface";
 import { EntityCriteriaTools } from "../lib/criteria/entity-criteria-tools";
 import { EntitySet } from "../lib/entity/entity-set";
-import { InMemoryEntityDatabase } from "../lib/execution/in-memory-entity-database";
+import { EntityCache } from "../lib/execution/entity-cache";
 import { EntityQueryTools } from "../lib/query/entity-query-tools";
 import { IEntityQuery } from "../lib/query/entity-query.interface";
 import { EntitySchema } from "../lib/schema/entity-schema";
@@ -30,22 +30,22 @@ function toEntitySet(entities: Entity[], schema: IEntitySchema): EntitySet {
     });
 }
 
-function upsert(database: InMemoryEntityDatabase, schema: IEntitySchema, entities: Entity[]): void {
+function upsert(database: EntityCache, schema: IEntitySchema, entities: Entity[]): void {
     database.upsertSync(toEntitySet(entities, schema));
 }
 
-function read(database: InMemoryEntityDatabase, query: IEntityQuery): Entity[] {
+function read(database: EntityCache, query: IEntityQuery): Entity[] {
     return database.querySync(query).getEntities();
 }
 
-describe("EntityWorkspace", () => {
+describe(EntityCache.name, () => {
     const criteriaFactory = new EntityCriteriaTools();
     const { where, inArray } = criteriaFactory.toDestructurable();
 
-    let database: InMemoryEntityDatabase;
+    let database: EntityCache;
 
     beforeEach(() => {
-        database = new InMemoryEntityDatabase();
+        database = new EntityCache();
     });
 
     describe("querying against cache", () => {
