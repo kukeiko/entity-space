@@ -10,7 +10,6 @@ import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
 import { WhereEntityShapeInstance } from "../criteria/where-entity/where-entity-shape-instance.types";
 import { WhereEntityShape } from "../criteria/where-entity/where-entity-shape.types";
 import { WhereEntityTools } from "../criteria/where-entity/where-entity-tools";
-import { EntityTools } from "../entity/entity-tools";
 import { IEntityTools } from "../entity/entity-tools.interface";
 import { EntityQueryParametersShape } from "../query/entity-query-shape";
 import { EntitySelection } from "../query/entity-selection";
@@ -29,6 +28,8 @@ import {
     UpdateOneEntityFn,
 } from "./entity-mutator";
 import { EntityQueryTracing } from "./entity-query-tracing";
+import { EntityToolbag } from "./entity-toolbag";
+import { IEntityToolbag } from "./entity-toolbag.interface";
 import { EntityHydrationEndpoint, EntityHydrationResult, EntityHydrator } from "./interceptors/entity-hydrator";
 import { EntitySource } from "./interceptors/entity-source";
 import { EntitySourceEndpoint, EntitySourceEndpointInvoke } from "./interceptors/entity-source-endpoint";
@@ -153,8 +154,8 @@ export class EntitySchemaScopedServiceContainer<B> {
 export class EntityServiceContainer {
     private readonly tracing = new EntityQueryTracing();
     private readonly catalog = new EntitySchemaCatalog();
-    private readonly entityTools = new EntityTools();
-    private readonly cache = new EntityCache();
+    private readonly toolbag = new EntityToolbag();
+    private readonly cache = new EntityCache(this.toolbag);
     private readonly apis = new Map<string, EntitySource>();
     private readonly hydrators = new Map<string, EntityHydrator>();
     private readonly mutators = new Map<string, EntityMutator>();
@@ -163,8 +164,12 @@ export class EntityServiceContainer {
         return this.catalog;
     }
 
+    getToolbag(): IEntityToolbag {
+        return this.toolbag;
+    }
+
     getEntityTools(): IEntityTools {
-        return this.entityTools;
+        return this.toolbag.getEntityTools();
     }
 
     getTracing(): EntityQueryTracing {

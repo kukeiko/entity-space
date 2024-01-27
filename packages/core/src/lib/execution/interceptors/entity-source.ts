@@ -1,11 +1,8 @@
 import { isFalse, isNotFalse } from "@entity-space/utils";
 import { flatten } from "lodash";
 import { Observable, filter, from, isObservable, map, merge, mergeAll, of, startWith, switchMap, tap } from "rxjs";
-import { EntityCriteriaShapeTools } from "../../criteria/entity-criteria-shape-tools";
-import { EntityCriteriaTools } from "../../criteria/entity-criteria-tools";
 import { WhereEntityTools } from "../../criteria/where-entity/where-entity-tools";
 import { EntitySet } from "../../entity/entity-set";
-import { EntityQueryTools } from "../../query/entity-query-tools";
 import { IEntityQuery } from "../../query/entity-query.interface";
 import { IEntitySchema } from "../../schema/schema.interface";
 import { EntityServiceContainer } from "../entity-service-container";
@@ -18,9 +15,9 @@ export class EntitySource implements IEntityStreamInterceptor {
     constructor(protected readonly services: EntityServiceContainer) {}
 
     protected endpoints: EntitySourceEndpoint[] = [];
-    protected readonly criteriaTools = new EntityCriteriaTools();
-    protected readonly queryTools = new EntityQueryTools({ criteriaTools: this.criteriaTools });
-    protected readonly shapeTools = new EntityCriteriaShapeTools({ criteriaTools: this.criteriaTools });
+    protected readonly criteriaTools = this.services.getToolbag().getCriteriaTools();
+    protected readonly queryTools = this.services.getToolbag().getQueryTools();
+    protected readonly shapeTools = this.services.getToolbag().getCriteriaShapeTools();
     protected readonly whereEntityTools = new WhereEntityTools(this.shapeTools, this.criteriaTools);
 
     getName(): string {

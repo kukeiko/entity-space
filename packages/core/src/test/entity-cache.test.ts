@@ -4,6 +4,7 @@ import { ICriterion } from "../lib/criteria/criterion.interface";
 import { EntityCriteriaTools } from "../lib/criteria/entity-criteria-tools";
 import { EntitySet } from "../lib/entity/entity-set";
 import { EntityCache } from "../lib/execution/entity-cache";
+import { EntityToolbag } from "../lib/execution/entity-toolbag";
 import { EntityQueryTools } from "../lib/query/entity-query-tools";
 import { IEntityQuery } from "../lib/query/entity-query.interface";
 import { EntitySchema } from "../lib/schema/entity-schema";
@@ -45,7 +46,7 @@ describe(EntityCache.name, () => {
     let database: EntityCache;
 
     beforeEach(() => {
-        database = new EntityCache();
+        database = new EntityCache(new EntityToolbag());
     });
 
     describe("querying against cache", () => {

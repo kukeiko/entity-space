@@ -1,9 +1,7 @@
 import { filter, from, map, merge, mergeMap, Observable, of, shareReplay, startWith, takeLast, tap } from "rxjs";
 import { Entity } from "../../common/entity.type";
 import { UnpackedEntitySelection } from "../../common/unpacked-entity-selection.type";
-import { EntityCriteriaTools } from "../../criteria/entity-criteria-tools";
 import { EntitySet } from "../../entity/entity-set";
-import { EntityQueryTools } from "../../query/entity-query-tools";
 import { IEntityQuery } from "../../query/entity-query.interface";
 import { EntitySelection } from "../../query/entity-selection";
 import { IEntitySchema } from "../../schema/schema.interface";
@@ -32,8 +30,7 @@ export interface EntityHydrationEndpoint<T extends Entity = Entity> {
 export class EntityHydrator implements IEntityStreamInterceptor {
     constructor(private readonly services: EntityServiceContainer) {}
 
-    private readonly criteriaTools = new EntityCriteriaTools();
-    private readonly queryTools = new EntityQueryTools({ criteriaTools: this.criteriaTools });
+    private readonly queryTools = this.services.getToolbag().getQueryTools();
 
     hydrationEndpoints: EntityHydrationEndpoint[] = [];
 

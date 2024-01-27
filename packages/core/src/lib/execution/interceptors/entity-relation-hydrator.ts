@@ -2,13 +2,10 @@ import { isNotFalse, readPathOnObjects, writePath } from "@entity-space/utils";
 import { EMPTY, filter, map, merge, of, switchMap, takeLast, tap } from "rxjs";
 import { Entity } from "../../common/entity.type";
 import { UnpackedEntitySelection } from "../../common/unpacked-entity-selection.type";
-import { EntityCriteriaTools } from "../../criteria/entity-criteria-tools";
 import { EntitySet } from "../../entity/entity-set";
 import { EntityQuery } from "../../query/entity-query";
-import { EntityQueryTools } from "../../query/entity-query-tools";
 import { IEntityQuery } from "../../query/entity-query.interface";
 import { EntitySelection } from "../../query/entity-selection";
-import { EntitySelectionTools } from "../../query/entity-selection-tools";
 import { EntityServiceContainer } from "../entity-service-container";
 import { EntityStream } from "../entity-stream";
 import { EntityStreamPacket } from "../entity-stream-packet";
@@ -27,9 +24,9 @@ export class EntityRelationHydrator implements IEntityStreamInterceptor {
         private readonly interceptors: IEntityStreamInterceptor[]
     ) {}
 
-    private readonly criteriaTools = new EntityCriteriaTools();
-    private readonly queryTools = new EntityQueryTools({ criteriaTools: this.criteriaTools });
-    private readonly selectionTools = new EntitySelectionTools();
+    private readonly criteriaTools = this.services.getToolbag().getCriteriaTools();
+    private readonly queryTools = this.services.getToolbag().getQueryTools();
+    private readonly selectionTools = this.services.getToolbag().getSelectionTools();
 
     getName(): string {
         return EntityRelationHydrator.name;

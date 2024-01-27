@@ -1,33 +1,25 @@
 import { cloneJson, readPath } from "@entity-space/utils";
-import { flatten } from "lodash";
 import { Entity } from "../common/entity.type";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
-import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
-import { IEntityCriteriaTools } from "../criteria/entity-criteria-tools.interface";
 import { EntitySet } from "../entity/entity-set";
-import { EntityTools } from "../entity/entity-tools";
-import { IEntityTools } from "../entity/entity-tools.interface";
-import { EntityQueryTools } from "../query/entity-query-tools";
-import { IEntityQueryTools } from "../query/entity-query-tools.interface";
 import { IEntityQuery } from "../query/entity-query.interface";
 import { EntitySelection } from "../query/entity-selection";
 import { IEntitySchema, IEntitySchemaRelation } from "../schema/schema.interface";
 import { IEntityCache } from "./entity-cache.interface";
+import { IEntityToolbag } from "./entity-toolbag.interface";
 import { EntityStore } from "./store/entity-store";
 
 export class EntityCache implements IEntityCache {
+    constructor(private readonly toolbag: IEntityToolbag) {}
+
     private readonly stores = new Map<string, EntityStore>();
     private readonly cachedQueries = new Map<string, IEntityQuery[]>();
-    private readonly criteriaTools: IEntityCriteriaTools = new EntityCriteriaTools();
-    private readonly queryTools: IEntityQueryTools = new EntityQueryTools({ criteriaTools: this.criteriaTools });
-    private readonly entityTools: IEntityTools = new EntityTools();
 
     query<T extends Entity = Entity>(query: IEntityQuery): EntitySet<T> {
         const store = this.getOrCreateStore(query.getEntitySchema());
-        const nonRelationalCriterion = this.criteriaTools.omitRelationalCriteria(
-            query.getCriteria(),
-            query.getEntitySchema()
-        );
+        const nonRelationalCriterion = this.toolbag
+            .getCriteriaTools()
+            .omitRelationalCriteria(query.getCriteria(), query.getEntitySchema());
 
         const parameters = query.getParameters();
         let entities = (
@@ -52,7 +44,9 @@ export class EntityCache implements IEntityCache {
     upsert(entitySet: EntitySet<Entity>): void {
         this.addQueryToCached(entitySet.getQuery());
         const entities = cloneJson(entitySet.getEntities());
-        const normalized = this.entityTools.normalizeEntities(entitySet.getQuery().getEntitySchema(), entities);
+        const normalized = this.toolbag
+            .getEntityTools()
+            .normalizeEntities(entitySet.getQuery().getEntitySchema(), entities);
         const parameters = entitySet.getQuery().getParameters();
 
         for (const schema of normalized.getSchemas()) {
@@ -66,7 +60,7 @@ export class EntityCache implements IEntityCache {
             }
 
             if (normalizedEntities.length > 0) {
-                const indexQueries = this.queryTools.createQueriesFromEntities(schema, normalizedEntities);
+                const indexQueries = this.toolbag.getQueryTools().createQueriesFromEntities(schema, normalizedEntities);
 
                 for (const indexQuery of indexQueries) {
                     this.addQueryToCached(indexQuery);
@@ -77,7 +71,7 @@ export class EntityCache implements IEntityCache {
 
     subtractQuery(query: IEntityQuery): IEntityQuery[] | false {
         const cached = this.getCachedQueries(query.getEntitySchema());
-        return this.queryTools.subtractQueries([query], cached);
+        return this.toolbag.getQueryTools().subtractQueries([query], cached);
     }
 
     subtractQueries(queries: IEntityQuery[]): IEntityQuery[] | false {
@@ -94,7 +88,7 @@ export class EntityCache implements IEntityCache {
         const schema = queries[0].getEntitySchema();
         const cached = this.getCachedQueries(schema);
 
-        return this.queryTools.subtractQueries(queries, cached);
+        return this.toolbag.getQueryTools().subtractQueries(queries, cached);
     }
 
     clear(): void {
@@ -199,8 +193,8 @@ export class EntityCache implements IEntityCache {
             );
         }
 
-        const criteria = this.criteriaTools.createCriterionFromEntities(entities, fromPaths, toPaths);
-        const query = this.queryTools.createQuery({
+        const criteria = this.toolbag.getCriteriaTools().createCriterionFromEntities(entities, fromPaths, toPaths);
+        const query = this.toolbag.getQueryTools().createQuery({
             entitySchema: relatedSchema,
             criteria,
             selection: selection ?? relatedSchema.getDefaultSelection(),
@@ -208,26 +202,28 @@ export class EntityCache implements IEntityCache {
 
         const result = this.query(query);
 
-        this.entityTools.joinEntities(
-            entities,
-            result.getEntities(),
-            relation.getPropertyName(),
-            fromPaths,
-            toPaths,
-            isArray,
-            relation.getProperty().getValueSchema().isNullable()
-        );
+        this.toolbag
+            .getEntityTools()
+            .joinEntities(
+                entities,
+                result.getEntities(),
+                relation.getPropertyName(),
+                fromPaths,
+                toPaths,
+                isArray,
+                relation.getProperty().getValueSchema().isNullable()
+            );
     }
 
     private addQueryToCached(query: IEntityQuery): void {
         const cachedQueries = this.getCachedQueries(query.getEntitySchema());
-        const nextCachedQueries = this.queryTools.mergeQueries(query, ...cachedQueries);
+        const nextCachedQueries = this.toolbag.getQueryTools().mergeQueries(query, ...cachedQueries);
         this.cachedQueries.set(query.getEntitySchema().getId(), nextCachedQueries);
     }
 
     private removeQueryFromCached(query: IEntityQuery): void {
         const cachedQueries = this.getCachedQueries(query.getEntitySchema());
-        const nextCachedQueries = this.queryTools.subtractQueries(cachedQueries, [query]);
+        const nextCachedQueries = this.toolbag.getQueryTools().subtractQueries(cachedQueries, [query]);
 
         if (!nextCachedQueries) {
             return;
@@ -238,9 +234,5 @@ export class EntityCache implements IEntityCache {
 
     private getCachedQueries(schema: IEntitySchema): IEntityQuery[] {
         return this.cachedQueries.get(schema.getId()) ?? [];
-    }
-
-    private getAllCachedQueries(): IEntityQuery[] {
-        return flatten(Array.from(this.cachedQueries.values()));
     }
 }

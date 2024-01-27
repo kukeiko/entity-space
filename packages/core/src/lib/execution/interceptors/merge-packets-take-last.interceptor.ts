@@ -3,16 +3,18 @@ import { Entity } from "../../common/entity.type";
 import { EntityCache } from "../entity-cache";
 import { EntityStream } from "../entity-stream";
 import { EntityStreamPacket } from "../entity-stream-packet";
+import { IEntityToolbag } from "../entity-toolbag.interface";
 import { IEntityStreamInterceptor } from "./entity-stream-interceptor.interface";
 
 export class MergePacketsTakeLastInterceptor implements IEntityStreamInterceptor {
+    constructor(private readonly toolbag: IEntityToolbag) {}
+
     getName(): string {
         return MergePacketsTakeLastInterceptor.name;
     }
 
     intercept(stream: EntityStream<Entity>): EntityStream<Entity> {
-        // [todo] have to utilize database until we can merge EntitySets without it
-        const database = new EntityCache();
+        const database = new EntityCache(this.toolbag);
         let mergedPacket = new EntityStreamPacket();
 
         return stream.pipe(

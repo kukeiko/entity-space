@@ -81,7 +81,7 @@ export class TestContentFacade implements IEntityStreamInterceptor {
             new LogPacketsInterceptor({ logEach: this.packetLogging }),
             hydrator,
             new LogPacketsInterceptor({ logEach: this.packetLogging }),
-            new MergePacketsTakeLastInterceptor(),
+            new MergePacketsTakeLastInterceptor(this.services.getToolbag()),
             new LogPacketsInterceptor(this.packetLogging),
         ];
 
