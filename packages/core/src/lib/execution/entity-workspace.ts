@@ -12,7 +12,7 @@ import { EntitySelection } from "../query/entity-selection";
 import { EntityBlueprintInstance } from "../schema/entity-blueprint-instance.type";
 import { EntitySchemaCatalog } from "../schema/entity-schema-catalog";
 import { IEntitySchema } from "../schema/schema.interface";
-import { EntityQueryBuilder, EntityQueryBuilderCreate } from "./entity-query-builder";
+import { EntityQueryExecutor } from "./entity-query-executor";
 import { EntityServiceContainer } from "./entity-service-container";
 
 export class EntityWorkspace {
@@ -46,12 +46,12 @@ export class EntityWorkspace {
         return mutator.deleteOne(entity);
     }
 
-    from<T extends Entity>(blueprint: Class<T>): EntityQueryBuilder<EntityBlueprintInstance<T>> {
-        return new EntityQueryBuilder({ schema: this.catalog.resolve(blueprint), services: this.services });
+    from<T extends Entity>(blueprint: Class<T>): EntityQueryExecutor<EntityBlueprintInstance<T>> {
+        return new EntityQueryExecutor(this.catalog.resolve(blueprint), this.services);
     }
 
-    fromSchema(schema: IEntitySchema): EntityQueryBuilder {
-        return new EntityQueryBuilder({ schema, services: this.services });
+    fromSchema(schema: IEntitySchema): EntityQueryExecutor {
+        return new EntityQueryExecutor(schema, this.services);
     }
 
     invalidate<T extends Entity>(
@@ -72,13 +72,5 @@ export class EntityWorkspace {
 
         const query = this.queryTools.createQuery({ entitySchema: schema, criteria: criterion, selection: select });
         this.services.getCache().clearByQuery(query);
-    }
-
-    // [todo] not yet used, idea was this to be a support for user-defined, custom EntityQueryBuilders
-    protected getQueryBuilderCreate<T extends Entity = Entity>(schema: IEntitySchema<T>): EntityQueryBuilderCreate<T> {
-        return {
-            schema,
-            services: this.services,
-        };
     }
 }

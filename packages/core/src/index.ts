@@ -8,7 +8,7 @@ export * from "./lib/entity/complex-key-map";
 export * from "./lib/entity/entity-set";
 export * from "./lib/entity/normalized-entities";
 export * from "./lib/execution/entity-cache";
-export * from "./lib/execution/entity-query-builder";
+export * from "./lib/execution/entity-query-executor";
 export * from "./lib/execution/entity-query-tracing";
 export * from "./lib/execution/entity-service-container";
 export * from "./lib/execution/entity-stream";
