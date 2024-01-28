@@ -77,7 +77,7 @@ export class TestContentFacade implements IEntityStreamInterceptor {
         const hydrator = new EntityRelationHydrator(this.services, [this]);
 
         let interceptors: IEntityStreamInterceptor[] = [
-            ...this.services.getSources(),
+            ...this.services.getSourcesFor(query.getEntitySchema()),
             new LogPacketsInterceptor({ logEach: this.packetLogging }),
             hydrator,
             new LogPacketsInterceptor({ logEach: this.packetLogging }),

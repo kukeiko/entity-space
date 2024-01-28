@@ -28,6 +28,12 @@ describe("interceptors", () => {
         });
     }
 
+    function createRejectionPacket(query: IEntityQuery): EntityStreamPacket {
+        return new EntityStreamPacket({
+            rejected: [query],
+        });
+    }
+
     it("should load all users", async () => {
         // arrange
         const facade = createFacade()
@@ -36,6 +42,19 @@ describe("interceptors", () => {
 
         const query = facade.createQuery(UserBlueprint);
         const expected = createExpectedPacket(query, [{ id: 2 }, { id: 3 }]);
+
+        // act
+        const actual = await facade.query(query);
+
+        // assert
+        expectPacketEqual(actual, expected);
+    });
+
+    it("should not load all users", async () => {
+        // arrange
+        const facade = createFacade({ logTracing: true }).configureEndpoints(endpoints => endpoints.withGetUserById());
+        const query = facade.createQuery(UserBlueprint);
+        const expected = createRejectionPacket(query);
 
         // act
         const actual = await facade.query(query);
