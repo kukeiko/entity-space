@@ -69,11 +69,7 @@ export class EntityHydrator implements IEntityStreamInterceptor {
                         );
                     }
 
-                    const [nextProposals, streams] = this.drainProposals(
-                        openProposals,
-                        mergedDelivered,
-                        this.services.getCache()
-                    );
+                    const [nextProposals, streams] = this.drainProposals(openProposals, mergedDelivered);
 
                     openProposals = nextProposals;
 
@@ -162,8 +158,7 @@ export class EntityHydrator implements IEntityStreamInterceptor {
 
     private drainProposals(
         proposals: EntityHydrationProposal[],
-        deliveredQueries: IEntityQuery[],
-        cache: IEntityCache
+        deliveredQueries: IEntityQuery[]
     ): [EntityHydrationProposal[], EntityStream[]] {
         let nextProposals: EntityHydrationProposal[] = proposals.slice();
         const streams: EntityStream[] = [];
@@ -197,7 +192,7 @@ export class EntityHydrator implements IEntityStreamInterceptor {
                         nextProposals = proposals.filter(p => p !== proposal);
                     }
 
-                    const entities = cache.query(entitySetToHydrateQuery);
+                    const entities = this.services.getCache().query(entitySetToHydrateQuery);
                     const acceptedQuery = entitySetToHydrateQuery.withSelection(proposal.hydratedSelection);
 
                     streams.push(

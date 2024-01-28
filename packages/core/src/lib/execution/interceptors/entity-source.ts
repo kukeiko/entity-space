@@ -1,5 +1,4 @@
 import { isFalse, isNotFalse } from "@entity-space/utils";
-import { flatten } from "lodash";
 import { Observable, filter, from, isObservable, map, merge, mergeAll, of, startWith, switchMap, tap } from "rxjs";
 import { WhereEntityTools } from "../../criteria/where-entity/where-entity-tools";
 import { EntitySet } from "../../entity/entity-set";
