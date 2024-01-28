@@ -38,32 +38,28 @@ export class EntitySource implements IEntityStreamInterceptor {
             stream.pipe(map(EntityStreamPacket.withoutRejected), filter(EntityStreamPacket.isNotEmpty)),
             stream.pipe(
                 filter(EntityStreamPacket.hasRejected),
-                map(packet => {
-                    const streams = packet.getRejectedQueries().map(query => {
-                        // [todo] we currently only have 1x EntitySchema per 1x EntitySource, making filtering endpoints
-                        // by EntitySchema kind of useless.
-                        const endpoints = this.getEndpointsAcceptingSchema(query.getEntitySchema());
-
-                        if (!endpoints.length) {
-                            return of(new EntityStreamPacket({ rejected: [query] }));
-                        }
-
-                        const [delegatedStreams, acceptedQueries] = this.dispatchToEndpoints(query, endpoints);
-                        const rejectedQueries = this.queryTools.subtractQueries([query], acceptedQueries);
-                        const initialPackets: EntityStreamPacket[] = [];
-
-                        if (!rejectedQueries || rejectedQueries.length) {
-                            initialPackets.push(new EntityStreamPacket({ rejected: rejectedQueries || [query] }));
-                        }
-
-                        return merge(...initialPackets.map(packet => of(packet)), ...delegatedStreams);
-                    });
-
-                    return merge(...streams);
-                }),
+                map(packet => merge(...packet.getRejectedQueries().map(query => this.rejectedQueryToStream(query)))),
                 mergeAll()
             )
         );
+    }
+
+    private rejectedQueryToStream(query: IEntityQuery): EntityStream {
+        // [todo] we currently only have 1x EntitySchema per 1x EntitySource, making filtering endpoints by EntitySchema kind of useless.
+        const endpoints = this.getEndpointsAcceptingSchema(query.getEntitySchema());
+
+        if (!endpoints.length) {
+            return of(new EntityStreamPacket({ rejected: [query] }));
+        }
+
+        const [streams, acceptedQueries] = this.dispatchToEndpoints(query, endpoints);
+        const rejectedQueries = this.queryTools.subtractQueries([query], acceptedQueries);
+
+        if (!rejectedQueries || rejectedQueries.length) {
+            streams.push(of(new EntityStreamPacket({ rejected: rejectedQueries || [query] })));
+        }
+
+        return merge(...streams);
     }
 
     private dispatchToEndpoints(
@@ -75,15 +71,15 @@ export class EntitySource implements IEntityStreamInterceptor {
         const acceptedQueries: IEntityQuery[] = [];
 
         for (const endpoint of endpoints) {
-            const dispatched = this.dispatchToEndpoint(endpoint, open);
+            const [stream, accepted] = this.dispatchToEndpoint(endpoint, open);
 
-            if (!dispatched) {
+            if (!stream) {
                 continue;
             }
 
-            delegatedStreams.push(dispatched[0]);
-            acceptedQueries.push(...dispatched[1]);
-            open = this.queryTools.subtractQueries(open, dispatched[1]) || open;
+            delegatedStreams.push(stream);
+            acceptedQueries.push(...accepted);
+            open = this.queryTools.subtractQueries(open, accepted) || open;
 
             if (!open.length) {
                 break;
@@ -96,42 +92,30 @@ export class EntitySource implements IEntityStreamInterceptor {
     private dispatchToEndpoint(
         endpoint: EntitySourceEndpoint,
         queries: IEntityQuery[]
-    ): false | [Observable<EntityStreamPacket>, IEntityQuery[]] {
-        const queryShape = endpoint.getQueryShape();
-        const reshapedQueries = flatten(queries.map(query => queryShape.reshape(query)).filter(isNotFalse));
-
-        if (!reshapedQueries) {
-            return false;
-        }
-
-        const acceptedReshaped = reshapedQueries.filter(query => {
-            if (!endpoint.acceptCriterion(query.getCriteria())) {
-                return false;
-            }
-
-            return true;
-        });
+    ): [false] | [Observable<EntityStreamPacket>, IEntityQuery[]] {
+        const acceptedReshaped = queries
+            .map(query => endpoint.getQueryShape().reshape(query))
+            .filter(isNotFalse)
+            .flat()
+            .filter(query => endpoint.acceptCriterion(query.getCriteria()));
 
         if (!acceptedReshaped.length) {
-            return false;
+            return [false];
         }
 
         const results = acceptedReshaped.map(query => this.runQueryAgainstEndpoint(query, endpoint));
 
         if (results.every(isFalse)) {
-            return false;
+            return [false];
         }
 
-        const [streams, accepted] = results.reduce(
-            (acc, value) => {
-                if (value !== false) {
-                    acc[0].push(value[0]);
-                    acc[1].push(...value[1]);
-                }
-                return acc;
-            },
-            [[], []] as [Observable<EntityStreamPacket>[], IEntityQuery[]]
-        );
+        const streams: EntityStream[] = [];
+        const accepted: IEntityQuery[] = [];
+
+        results.filter(isNotFalse).forEach(([stream, acceptedQueries]) => {
+            streams.push(stream);
+            accepted.push(...acceptedQueries);
+        });
 
         return [merge(...streams), accepted];
     }
@@ -139,70 +123,20 @@ export class EntitySource implements IEntityStreamInterceptor {
     private runQueryAgainstEndpoint(
         query: IEntityQuery,
         endpoint: EntitySourceEndpoint
-    ): false | [Observable<EntityStreamPacket>, IEntityQuery[]] {
-        let openQueries = this.services.getCache().subtractQuery(query);
+    ): false | [streams: EntityStream, accepted: IEntityQuery[]] {
+        let openQueries: IEntityQuery[] = [query];
+        const streams: EntityStream[] = [];
+        const fromCache = this.loadQueryFromCache(query, endpoint);
         let fromCacheQueries: IEntityQuery[] = [];
-        let fromCacheEntities: EntitySet[] = [];
-        const initialPackets: EntityStreamPacket[] = [];
 
-        if (openQueries !== false && !openQueries.length) {
-            this.services.getTracing().queryWasLoadedFromCache(query);
-            return [
-                of(
-                    new EntityStreamPacket({
-                        accepted: [query],
-                        delivered: [query],
-                        payload: [this.services.getCache().query(query)],
-                    })
-                ),
-                [],
-            ];
-        } else if (openQueries !== false && openQueries.length) {
-            const queryShape = endpoint.getQueryShape();
-            const reshaped = openQueries.map(openQuery => {
-                const reshaped = queryShape.reshape(openQuery);
+        if (fromCache !== false) {
+            streams.push(fromCache[0]);
+            openQueries = fromCache[1];
+            fromCacheQueries = fromCache[2];
 
-                if (reshaped === false || !reshaped.length) {
-                    return false;
-                } else {
-                    return reshaped;
-                }
-            });
-
-            if (reshaped.every(isNotFalse)) {
-                const merged = this.queryTools.mergeQueries(...flatten(reshaped));
-                const reshapedAgain = merged.map(mergedQuery => queryShape.reshape(mergedQuery));
-
-                if (reshapedAgain.every(isNotFalse)) {
-                    let fromCacheQueries_ = this.queryTools.subtractQueries([query], openQueries);
-
-                    if (fromCacheQueries_ === false || !fromCacheQueries_.length) {
-                        throw new Error(`bad EntityQuery subtraction logic implementation`);
-                    }
-
-                    fromCacheEntities = fromCacheQueries.map(query => this.services.getCache().query(query));
-                    fromCacheQueries = fromCacheQueries_;
-
-                    // [todo] "query" argument should actually be the query initially passed to this method,
-                    // and then new arguments should exist to describe the actual query loaded from cache (as it could be a subset of the initial query)
-                    fromCacheQueries.forEach(query => this.services.getTracing().queryWasLoadedFromCache(query));
-                    openQueries = flatten(reshapedAgain);
-
-                    initialPackets.push(
-                        new EntityStreamPacket({
-                            accepted: fromCacheQueries,
-                            delivered: fromCacheQueries,
-                            payload: fromCacheEntities,
-                        })
-                    );
-                } else {
-                    openQueries = [query];
-                }
-            } else {
-                openQueries = [query];
+            if (!openQueries.length) {
+                return [fromCache[0], [query]];
             }
-        } else {
-            openQueries = [query];
         }
 
         const initialPacket = new EntityStreamPacket({ accepted: openQueries });
@@ -213,6 +147,7 @@ export class EntitySource implements IEntityStreamInterceptor {
         );
 
         const stream = merge(
+            ...streams,
             ...openQueries.map(query => {
                 const invoked = endpoint.getInvoke()({
                     query,
@@ -240,6 +175,83 @@ export class EntitySource implements IEntityStreamInterceptor {
         ).pipe(startWith(initialPacket));
 
         return [stream, [...openQueries, ...fromCacheQueries]];
+    }
+
+    private loadQueryFromCache(
+        query: IEntityQuery,
+        endpoint: EntitySourceEndpoint
+    ): false | [streams: EntityStream, open: IEntityQuery[], fromCache: IEntityQuery[]] {
+        const openQueries = this.services.getCache().subtractQuery(query);
+
+        // nothing loaded from cache
+        if (openQueries === false) {
+            return false;
+        }
+
+        // everything loaded from cache
+        if (!openQueries.length) {
+            this.services.getTracing().queryWasLoadedFromCache(query);
+
+            return [
+                of(
+                    new EntityStreamPacket({
+                        accepted: [query],
+                        delivered: [query],
+                        payload: [this.services.getCache().query(query)],
+                    })
+                ),
+                [],
+                [query],
+            ];
+        }
+
+        // potential for partially loading from cache
+        const queryShape = endpoint.getQueryShape();
+        const reshaped = openQueries.map(openQuery => {
+            const reshaped = queryShape.reshape(openQuery);
+
+            if (reshaped === false || !reshaped.length) {
+                return false;
+            } else {
+                return reshaped;
+            }
+        });
+
+        if (!reshaped.every(isNotFalse)) {
+            return false;
+        }
+
+        // [todo] not quite sure why we're merging
+        const merged = this.queryTools.mergeQueries(...reshaped.flat());
+        const reshapedAgain = merged.map(mergedQuery => queryShape.reshape(mergedQuery));
+
+        if (!reshapedAgain.every(isNotFalse)) {
+            return false;
+        }
+
+        const fromCacheQueries = this.queryTools.subtractQueries([query], openQueries);
+
+        if (fromCacheQueries === false || !fromCacheQueries.length) {
+            throw new Error(`bad EntityQuery subtraction logic implementation`);
+        }
+
+        const fromCacheEntities = fromCacheQueries.map(query => this.services.getCache().query(query));
+
+        // [todo] "query" argument should actually be the query initially passed to this method,
+        // and then new arguments should exist to describe the actual query loaded from cache (as it could be a subset of the initial query)
+        fromCacheQueries.forEach(query => this.services.getTracing().queryWasLoadedFromCache(query));
+
+        return [
+            of(
+                new EntityStreamPacket({
+                    accepted: fromCacheQueries,
+                    delivered: fromCacheQueries,
+                    payload: fromCacheEntities,
+                })
+            ),
+            reshapedAgain.flat(),
+            fromCacheQueries,
+        ];
     }
 
     private tracePacket(packet: EntityStreamPacket, endpoint: EntitySourceEndpoint, accepted: IEntityQuery[]): void {
