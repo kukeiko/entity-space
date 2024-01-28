@@ -1,4 +1,4 @@
-import { Class, isNotFalse } from "@entity-space/utils";
+import { Class } from "@entity-space/utils";
 import { Observable, filter, from, lastValueFrom, map, merge, mergeAll, mergeMap, of } from "rxjs";
 import { Entity } from "../common/entity.type";
 import { PackedEntitySelection } from "../common/packed-entity-selection.type";
@@ -15,6 +15,8 @@ import { EntityStream } from "./entity-stream";
 import { EntityStreamPacket } from "./entity-stream-packet";
 import { EntityRelationHydrator } from "./interceptors/entity-relation-hydrator";
 import { IEntityStreamInterceptor } from "./interceptors/entity-stream-interceptor.interface";
+import { LogPacketsInterceptor } from "./interceptors/log-packets.interceptor";
+import { MergePacketsTakeLastInterceptor } from "./interceptors/merge-packets-take-last.interceptor";
 import { runInterceptors } from "./run-interceptors.fn";
 
 export interface EntityCacheInvalidationOptions {
@@ -35,6 +37,12 @@ export class EntityQueryExecutor<T extends Entity = Entity> implements IEntitySt
     private readonly shapeTools = this.services.getToolbag().getCriteriaShapeTools();
     private readonly whereEntityTools = new WhereEntityTools(this.shapeTools, this.criteriaTools);
     private readonly queryTools = this.services.getToolbag().getQueryTools();
+    private logPackets = false;
+
+    enablePacketLogging(flag = true): this {
+        this.logPackets = flag;
+        return this;
+    }
 
     getName(): string {
         return EntityQueryExecutor.name;
@@ -94,32 +102,46 @@ export class EntityQueryExecutor<T extends Entity = Entity> implements IEntitySt
 
         const query = this.queryTools.createQuery({ entitySchema: this.schema, criteria, selection, parameters });
         this.services.getTracing().querySpawned(query);
-        const results = await this.query<T>(query);
+        const entitySet = await this.query<T>(query);
 
-        if (!results) {
-            return [];
-        }
-
-        return results.flatMap(entitySet => entitySet.getEntities());
+        return entitySet.getEntities();
     }
 
-    private async query<T extends Entity = Entity>(query: IEntityQuery): Promise<false | EntitySet<T>[]> {
-        const sources = [
-            // new LoadFromCacheInterceptor(this.services.getDatabase(), this.services.getTracing()),
-            // new LogPacketsInterceptor(true),
-            ...this.services.getSourcesFor(query.getEntitySchema()),
-            ...this.services.getHydratorsFor(query.getEntitySchema()),
-            new EntityRelationHydrator(this.services, [this]),
-        ];
-
-        await lastValueFrom(runInterceptors(sources, query, this.services.getTracing()));
-
-        const entities = this.services.getCache().query(query).getEntities() as T[];
+    private async query<T extends Entity = Entity>(query: IEntityQuery): Promise<EntitySet<T>> {
+        const packet = await this.queryAsPacket<T>(query);
+        const entities = packet.getEntitiesFlat();
         this.services
             .getTracing()
             .queryResolved(query, `${entities.length}x entit${entities.length === 1 ? "y" : "ies"}`);
 
-        return [new EntitySet({ query, entities })];
+        return new EntitySet({ query, entities: packet.getEntitiesFlat() });
+    }
+
+    // [todo] still needed for TestContentFacade
+    async queryAsPacket<T extends Entity = Entity>(query: IEntityQuery): Promise<EntityStreamPacket<T>> {
+        const sources = [
+            ...this.services.getSourcesFor(query.getEntitySchema()),
+            new LogPacketsInterceptor({ logEach: this.logPackets }),
+            ...this.services.getHydratorsFor(query.getEntitySchema()),
+            new LogPacketsInterceptor({ logEach: this.logPackets }),
+            new EntityRelationHydrator(this.services, [this]),
+            new LogPacketsInterceptor({ logEach: this.logPackets }),
+            new MergePacketsTakeLastInterceptor(this.services.getToolbag()),
+            new LogPacketsInterceptor(this.logPackets),
+        ];
+
+        const packet = await lastValueFrom(runInterceptors(sources, query, this.services.getTracing()));
+
+        if (packet.getErrors().length) {
+            throw new Error(
+                packet
+                    .getErrors()
+                    .map(error => error.getErrorMessage())
+                    .join(", ")
+            );
+        }
+
+        return packet as EntityStreamPacket<T>;
     }
 
     intercept(stream: EntityStream<Entity>): EntityStream<Entity> {
@@ -129,15 +151,14 @@ export class EntityQueryExecutor<T extends Entity = Entity> implements IEntitySt
                 map(EntityStreamPacket.withOnlyRejected),
                 filter(EntityStreamPacket.isNotEmpty),
                 mergeMap(packet =>
-                    merge(...packet.getRejectedQueries().map(query => this.query(query))).pipe(
-                        filter(isNotFalse),
+                    merge(...packet.getRejectedQueries().map(query => from(this.query(query)))).pipe(
                         map(payload =>
                             of(
                                 // [todo] rejections from this.query() are not forwarded
                                 new EntityStreamPacket({
-                                    payload,
-                                    accepted: payload.map(set => set.getQuery()),
-                                    delivered: payload.map(set => set.getQuery()),
+                                    payload: [payload],
+                                    accepted: [payload.getQuery()],
+                                    delivered: [payload.getQuery()],
                                 })
                             )
                         )

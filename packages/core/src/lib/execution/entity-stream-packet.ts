@@ -1,4 +1,3 @@
-import { flatMap } from "lodash";
 import { Entity } from "../common/entity.type";
 import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
 import { EntitySet } from "../entity/entity-set";
@@ -35,7 +34,7 @@ export class EntityStreamPacket<T extends Entity = Entity> {
     private readonly payload: EntitySet<T>[];
 
     getEntitiesFlat(): T[] {
-        return flatMap(this.payload, queriedEntities => queriedEntities.getEntities());
+        return this.payload.flatMap(payload => payload.getEntities());
     }
 
     getAcceptedQueries(): IEntityQuery[] {
