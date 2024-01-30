@@ -8,7 +8,8 @@ import { IEntityQuery } from "../query/entity-query.interface";
 import { EntityQueryTracing } from "./entity-query-tracing";
 import { EntityStream } from "./entity-stream";
 import { EntityStreamPacket } from "./entity-stream-packet";
-import { IEntityStreamInterceptor } from "./interceptors/entity-stream-interceptor.interface";
+import { IEntityStreamInterceptor } from "./entity-stream-interceptor.interface";
+import { EntityQueryExecutionContext } from "./entity-query-execution-context";
 
 function safeWrapEntityStream(
     stream: EntityStream,
@@ -79,13 +80,14 @@ function safeWrapEntityStream(
 export function runInterceptors(
     interceptors: IEntityStreamInterceptor[],
     query: IEntityQuery,
-    tracing: EntityQueryTracing
+    tracing: EntityQueryTracing,
+    context: EntityQueryExecutionContext
 ): EntityStream {
     let startWith = of(new EntityStreamPacket({ rejected: [query] }));
 
     return interceptors.reduce(
         (previous, interceptor) =>
-            safeWrapEntityStream(interceptor.intercept(previous), query, tracing, interceptor.getName()),
+            safeWrapEntityStream(interceptor.intercept(previous, context), query, tracing, interceptor.getName()),
         startWith
     );
 }

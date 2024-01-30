@@ -8,7 +8,7 @@ import { EntityServiceContainer } from "../entity-service-container";
 import { EntityStream } from "../entity-stream";
 import { EntityStreamPacket } from "../entity-stream-packet";
 import { EntitySourceEndpoint, EntitySourceEndpointData, EntitySourceEndpointInvoke } from "./entity-source-endpoint";
-import { IEntityStreamInterceptor } from "./entity-stream-interceptor.interface";
+import { IEntityStreamInterceptor } from "../entity-stream-interceptor.interface";
 
 export class EntitySource implements IEntityStreamInterceptor {
     constructor(protected readonly services: EntityServiceContainer) {}
@@ -161,6 +161,7 @@ export class EntitySource implements IEntityStreamInterceptor {
                 return this.invokedToDataStream(invoked).pipe(
                     map(data => this.endpointDataToPacket(query, data)),
                     tap(packet => {
+                        // [todo] #216 should use cache bucket
                         packet.getPayload().forEach(payload => this.services.getCache().upsert(payload));
                     }),
                     // [todo] dirty fix to make it work if data source returns data synchronously
@@ -180,6 +181,7 @@ export class EntitySource implements IEntityStreamInterceptor {
         query: IEntityQuery,
         endpoint: EntitySourceEndpoint
     ): false | [streams: EntityStream, open: IEntityQuery[], fromCache: IEntityQuery[]] {
+        // [todo] #216 should use cache bucket
         const openQueries = this.services.getCache().subtractQuery(query);
 
         // nothing loaded from cache
@@ -196,6 +198,7 @@ export class EntitySource implements IEntityStreamInterceptor {
                     new EntityStreamPacket({
                         accepted: [query],
                         delivered: [query],
+                        // [todo] #216 should use cache bucket
                         payload: [this.services.getCache().query(query)],
                     })
                 ),
@@ -234,6 +237,7 @@ export class EntitySource implements IEntityStreamInterceptor {
             throw new Error(`bad EntityQuery subtraction logic implementation`);
         }
 
+        // [todo] #216 should use cache bucket
         const fromCacheEntities = fromCacheQueries.map(query => this.services.getCache().query(query));
 
         // [todo] "query" argument should actually be the query initially passed to this method,

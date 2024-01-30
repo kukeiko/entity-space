@@ -4,7 +4,7 @@ import { EntityCache } from "../entity-cache";
 import { EntityStream } from "../entity-stream";
 import { EntityStreamPacket } from "../entity-stream-packet";
 import { IEntityToolbag } from "../entity-toolbag.interface";
-import { IEntityStreamInterceptor } from "./entity-stream-interceptor.interface";
+import { IEntityStreamInterceptor } from "../entity-stream-interceptor.interface";
 
 export class MergePacketsTakeLastInterceptor implements IEntityStreamInterceptor {
     constructor(private readonly toolbag: IEntityToolbag) {}

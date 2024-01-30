@@ -1,22 +1,24 @@
 import { Class } from "@entity-space/utils";
-import { Observable, filter, from, lastValueFrom, map, merge, mergeAll, mergeMap, of } from "rxjs";
+import { Observable, filter, from, lastValueFrom, map, merge, mergeAll } from "rxjs";
 import { Entity } from "../common/entity.type";
 import { PackedEntitySelection } from "../common/packed-entity-selection.type";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
 import { ICriterion } from "../criteria/criterion.interface";
 import { WhereEntityTools } from "../criteria/where-entity/where-entity-tools";
 import { WhereEntitySingle } from "../criteria/where-entity/where-entity.types";
-import { EntitySet } from "../entity/entity-set";
 import { IEntityQuery } from "../query/entity-query.interface";
 import { EntitySelection } from "../query/entity-selection";
 import { IEntitySchema } from "../schema/schema.interface";
+import { EntityCache } from "./entity-cache";
+import { EntityQueryExecutionContext } from "./entity-query-execution-context";
 import { EntityServiceContainer } from "./entity-service-container";
 import { EntityStream } from "./entity-stream";
+import { IEntityStreamInterceptor } from "./entity-stream-interceptor.interface";
 import { EntityStreamPacket } from "./entity-stream-packet";
 import { EntityRelationHydrator } from "./interceptors/entity-relation-hydrator";
-import { IEntityStreamInterceptor } from "./interceptors/entity-stream-interceptor.interface";
 import { LogPacketsInterceptor } from "./interceptors/log-packets.interceptor";
 import { MergePacketsTakeLastInterceptor } from "./interceptors/merge-packets-take-last.interceptor";
+import { WriteToStreamCacheInterceptor } from "./interceptors/write-to-stream-cache.interceptor";
 import { runInterceptors } from "./run-interceptors.fn";
 
 export interface EntityCacheInvalidationOptions {
@@ -100,37 +102,42 @@ export class EntityQueryExecutor<T extends Entity = Entity> implements IEntitySt
             });
         }
 
+        const cache = new EntityCache(this.services.getToolbag());
+        const context = new EntityQueryExecutionContext(cache);
         const query = this.queryTools.createQuery({ entitySchema: this.schema, criteria, selection, parameters });
         this.services.getTracing().querySpawned(query);
-        const entitySet = await this.query<T>(query);
-
-        return entitySet.getEntities();
-    }
-
-    private async query<T extends Entity = Entity>(query: IEntityQuery): Promise<EntitySet<T>> {
-        const packet = await this.queryAsPacket<T>(query);
-        const entities = packet.getEntitiesFlat();
+        await this.queryAsPacket<T>(query, context);
+        const entities = cache.query(query).getEntities();
         this.services
             .getTracing()
             .queryResolved(query, `${entities.length}x entit${entities.length === 1 ? "y" : "ies"}`);
 
-        return new EntitySet({ query, entities: packet.getEntitiesFlat() });
+        return entities as T[];
     }
 
     // [todo] still needed for TestContentFacade
-    async queryAsPacket<T extends Entity = Entity>(query: IEntityQuery): Promise<EntityStreamPacket<T>> {
+    async queryAsPacket<T extends Entity = Entity>(
+        query: IEntityQuery,
+        context: EntityQueryExecutionContext
+    ): Promise<EntityStreamPacket<T>> {
+        const writeToCacheInterceptor = new WriteToStreamCacheInterceptor();
+        const logEachPacketInterceptor = new LogPacketsInterceptor({ logEach: this.logPackets });
+
         const sources = [
             ...this.services.getSourcesFor(query.getEntitySchema()),
-            new LogPacketsInterceptor({ logEach: this.logPackets }),
+            writeToCacheInterceptor,
+            logEachPacketInterceptor,
             ...this.services.getHydratorsFor(query.getEntitySchema()),
-            new LogPacketsInterceptor({ logEach: this.logPackets }),
+            writeToCacheInterceptor,
+            logEachPacketInterceptor,
             new EntityRelationHydrator(this.services, [this]),
-            new LogPacketsInterceptor({ logEach: this.logPackets }),
-            new MergePacketsTakeLastInterceptor(this.services.getToolbag()),
+            writeToCacheInterceptor,
+            logEachPacketInterceptor,
+            new MergePacketsTakeLastInterceptor(this.services.getToolbag()), // [todo] still needed for TestContentFacade
             new LogPacketsInterceptor(this.logPackets),
         ];
 
-        const packet = await lastValueFrom(runInterceptors(sources, query, this.services.getTracing()));
+        const packet = await lastValueFrom(runInterceptors(sources, query, this.services.getTracing(), context));
 
         if (packet.getErrors().length) {
             throw new Error(
@@ -144,25 +151,14 @@ export class EntityQueryExecutor<T extends Entity = Entity> implements IEntitySt
         return packet as EntityStreamPacket<T>;
     }
 
-    intercept(stream: EntityStream<Entity>): EntityStream<Entity> {
+    intercept(stream: EntityStream, context: EntityQueryExecutionContext): EntityStream {
         return merge(
             stream.pipe(map(EntityStreamPacket.withoutRejected), filter(EntityStreamPacket.isNotEmpty)),
             stream.pipe(
                 map(EntityStreamPacket.withOnlyRejected),
                 filter(EntityStreamPacket.isNotEmpty),
-                mergeMap(packet =>
-                    merge(...packet.getRejectedQueries().map(query => from(this.query(query)))).pipe(
-                        map(payload =>
-                            of(
-                                // [todo] rejections from this.query() are not forwarded
-                                new EntityStreamPacket({
-                                    payload: [payload],
-                                    accepted: [payload.getQuery()],
-                                    delivered: [payload.getQuery()],
-                                })
-                            )
-                        )
-                    )
+                map(packet =>
+                    merge(...packet.getRejectedQueries().map(query => from(this.queryAsPacket(query, context))))
                 ),
                 mergeAll()
             )

@@ -33,7 +33,7 @@ import { IEntityToolbag } from "./entity-toolbag.interface";
 import { EntityHydrationEndpoint, EntityHydrationResult, EntityHydrator } from "./interceptors/entity-hydrator";
 import { EntitySource } from "./interceptors/entity-source";
 import { EntitySourceEndpoint, EntitySourceEndpointInvoke } from "./interceptors/entity-source-endpoint";
-import { IEntityStreamInterceptor } from "./interceptors/entity-stream-interceptor.interface";
+import { IEntityStreamInterceptor } from "./entity-stream-interceptor.interface";
 
 export class EntitySchemaScopedServiceContainer<B> {
     constructor(

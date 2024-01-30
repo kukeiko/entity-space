@@ -2,6 +2,8 @@ import { Class } from "@entity-space/utils";
 import { UnpackedEntitySelection } from "../../lib/common/unpacked-entity-selection.type";
 import { EntityCriteriaTools } from "../../lib/criteria/entity-criteria-tools";
 import { EntityWhere } from "../../lib/criteria/entity-criteria-tools.interface";
+import { EntityCache } from "../../lib/execution/entity-cache";
+import { EntityQueryExecutionContext } from "../../lib/execution/entity-query-execution-context";
 import { EntityQueryExecutor } from "../../lib/execution/entity-query-executor";
 import { EntityServiceContainer } from "../../lib/execution/entity-service-container";
 import { EntityStreamPacket } from "../../lib/execution/entity-stream-packet";
@@ -56,8 +58,11 @@ export class TestContentFacade {
     }
 
     query(query: IEntityQuery): Promise<EntityStreamPacket> {
+        const cache = new EntityCache(this.services.getToolbag());
+        const context = new EntityQueryExecutionContext(cache);
+
         return new EntityQueryExecutor(query.getEntitySchema(), this.services)
             .enablePacketLogging(this.packetLogging)
-            .queryAsPacket(query);
+            .queryAsPacket(query, context);
     }
 }

@@ -6,11 +6,12 @@ import { EntitySet } from "../../entity/entity-set";
 import { EntityQuery } from "../../query/entity-query";
 import { IEntityQuery } from "../../query/entity-query.interface";
 import { EntitySelection } from "../../query/entity-selection";
+import { EntityQueryExecutionContext } from "../entity-query-execution-context";
 import { EntityServiceContainer } from "../entity-service-container";
 import { EntityStream } from "../entity-stream";
+import { IEntityStreamInterceptor } from "../entity-stream-interceptor.interface";
 import { EntityStreamPacket } from "../entity-stream-packet";
 import { runInterceptors } from "../run-interceptors.fn";
-import { IEntityStreamInterceptor } from "./entity-stream-interceptor.interface";
 
 interface HydrateRelationQuery {
     entities: EntitySet;
@@ -32,7 +33,7 @@ export class EntityRelationHydrator implements IEntityStreamInterceptor {
         return EntityRelationHydrator.name;
     }
 
-    intercept(stream: EntityStream): EntityStream {
+    intercept(stream: EntityStream, context: EntityQueryExecutionContext): EntityStream {
         let accepted: IEntityQuery[] = [];
         let rejected: IEntityQuery[] = [];
 
@@ -57,7 +58,7 @@ export class EntityRelationHydrator implements IEntityStreamInterceptor {
                                 continue;
                             }
 
-                            const entitySetToHydrate = this.services.getCache().query(entitySetToHydrateQuery);
+                            const entitySetToHydrate = context.getStreamCache().query(entitySetToHydrateQuery);
 
                             if (!entitySetToHydrate.getEntities().length) {
                                 continue;
@@ -84,7 +85,7 @@ export class EntityRelationHydrator implements IEntityStreamInterceptor {
 
                             hydrationStreams.push(
                                 ...targets.map(hydrationQuery => {
-                                    return this.startRelationHydration(hydrationQuery);
+                                    return this.startRelationHydration(hydrationQuery, context);
                                 })
                             );
                         }
@@ -192,12 +193,15 @@ export class EntityRelationHydrator implements IEntityStreamInterceptor {
         };
     }
 
-    private startRelationHydration(hydrationQuery: HydrateRelationQuery): EntityStream {
+    private startRelationHydration(
+        hydrationQuery: HydrateRelationQuery,
+        context: EntityQueryExecutionContext
+    ): EntityStream {
         const relationQuery = hydrationQuery.relationQuery;
         const accepted: IEntityQuery[] = [];
         const payloads: EntitySet[] = [];
 
-        return runInterceptors(this.interceptors, relationQuery, this.services.getTracing()).pipe(
+        return runInterceptors(this.interceptors, relationQuery, this.services.getTracing(), context).pipe(
             tap(packet => {
                 accepted.push(...packet.getAcceptedQueries());
                 payloads.push(...packet.getPayload());

@@ -3,6 +3,7 @@ import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
 import { EntitySet } from "../entity/entity-set";
 import { EntityQueryError } from "../query/entity-query-error";
 import { EntityQueryTools } from "../query/entity-query-tools";
+import { IEntityQueryTools } from "../query/entity-query-tools.interface";
 import { IEntityQuery } from "../query/entity-query.interface";
 
 export class EntityStreamPacket<T extends Entity = Entity> {
@@ -26,7 +27,7 @@ export class EntityStreamPacket<T extends Entity = Entity> {
         this.payload = payload ?? [];
     }
 
-    private readonly queryTools = new EntityQueryTools({ criteriaTools: new EntityCriteriaTools() });
+    private readonly queryTools: IEntityQueryTools = new EntityQueryTools({ criteriaTools: new EntityCriteriaTools() });
     private readonly accepted: IEntityQuery[];
     private readonly delivered: IEntityQuery[];
     private readonly rejected: IEntityQuery[];

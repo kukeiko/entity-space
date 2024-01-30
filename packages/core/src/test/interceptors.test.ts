@@ -79,7 +79,7 @@ describe("interceptors", () => {
         expectPacketEqual(actual, expected);
     });
 
-    it("should load one user by id & hydrate one relation via schema relation hydrator", async () => {
+    it("should load one user by id & hydrate one relation via auto hydrator", async () => {
         // arrange
         const facade = createFacade()
             .setData("users", [{ id: 2, parentId: 7 }, { id: 7 }])
@@ -95,7 +95,7 @@ describe("interceptors", () => {
         expectPacketEqual(actual, expected);
     });
 
-    it("should load two users by id with a hydrated relation that is also filtered by id", async () => {
+    it("should load two users by id with an auto hydrated relation that is also filtered by id", async () => {
         // arrange
         const facade = createFacade()
             .setData("users", [{ id: 2, parentId: 7 }, { id: 7 }, { id: 3, parentId: 8 }, { id: 8 }])

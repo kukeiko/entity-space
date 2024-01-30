@@ -6,7 +6,7 @@ import { IEntityCache } from "../entity-cache.interface";
 import { EntityQueryTracing } from "../entity-query-tracing";
 import { EntityStream } from "../entity-stream";
 import { EntityStreamPacket } from "../entity-stream-packet";
-import { IEntityStreamInterceptor } from "./entity-stream-interceptor.interface";
+import { IEntityStreamInterceptor } from "../entity-stream-interceptor.interface";
 
 export class LoadFromCacheInterceptor implements IEntityStreamInterceptor {
     constructor(private readonly cache: IEntityCache, private readonly tracing: EntityQueryTracing) {}

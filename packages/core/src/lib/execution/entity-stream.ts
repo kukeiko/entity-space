@@ -1,4 +1,4 @@
-import { Observable } from "rxjs";
+import { type Observable } from "rxjs";
 import { Entity } from "../common/entity.type";
 import { EntityStreamPacket } from "./entity-stream-packet";
 

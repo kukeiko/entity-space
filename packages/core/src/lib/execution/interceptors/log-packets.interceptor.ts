@@ -2,7 +2,7 @@ import { EMPTY, merge, switchMap, takeLast, tap } from "rxjs";
 import { Entity } from "../../common/entity.type";
 import { EntityStream } from "../entity-stream";
 import { EntityStreamPacket } from "../entity-stream-packet";
-import { IEntityStreamInterceptor } from "./entity-stream-interceptor.interface";
+import { IEntityStreamInterceptor } from "../entity-stream-interceptor.interface";
 
 export type LogPacketsInterceptorOptions = { logEach?: boolean; logFinal?: boolean } | boolean;
 
