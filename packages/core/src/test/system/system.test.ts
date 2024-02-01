@@ -150,8 +150,8 @@ describe("system", () => {
                 const loadArtistById = addLoadArtistById();
 
                 // act
-                await workspace.from(ArtistBlueprint).findOne({ where: { id } }); // load into cache
-                const actual = await workspace.from(ArtistBlueprint).findOne({ where: { id } }); // load from cache
+                await workspace.from(ArtistBlueprint).findOne({ where: { id }, cache: true }); // load into cache
+                const actual = await workspace.from(ArtistBlueprint).findOne({ where: { id }, cache: true }); // load from cache
 
                 // assert
                 expect(actual).toEqual(expected);
@@ -166,8 +166,8 @@ describe("system", () => {
                 const ids = artists.map(artist => artist.id);
 
                 // act
-                await workspace.from(ArtistBlueprint).findMany({ where: { id: ids } }); // load into cache
-                const actual = await workspace.from(ArtistBlueprint).findOne({ where: { id } });
+                await workspace.from(ArtistBlueprint).findMany({ where: { id: ids }, cache: true }); // load into cache
+                const actual = await workspace.from(ArtistBlueprint).findOne({ where: { id }, cache: true });
 
                 // assert
                 expect(actual).toEqual(expected);
@@ -181,9 +181,9 @@ describe("system", () => {
                 const loadArtistById = addLoadArtistById();
 
                 // act
-                await workspace.from(ArtistBlueprint).findOne({ where: { id } }); // load into cache
+                await workspace.from(ArtistBlueprint).findOne({ where: { id }, cache: true }); // load into cache
                 workspace.invalidate(ArtistBlueprint, { where: { id } });
-                const actual = await workspace.from(ArtistBlueprint).findOne({ where: { id } });
+                const actual = await workspace.from(ArtistBlueprint).findOne({ where: { id }, cache: true });
 
                 // assert
                 expect(actual).toEqual(expected);
@@ -284,8 +284,8 @@ describe("system", () => {
                     const loadArtistsById = addLoadArtistsById();
 
                     // act
-                    await workspace.from(ArtistBlueprint).findMany({ where: { id } }); // load into cache
-                    const actual = await workspace.from(ArtistBlueprint).findMany({ where: { id } });
+                    await workspace.from(ArtistBlueprint).findMany({ where: { id }, cache: true }); // load into cache
+                    const actual = await workspace.from(ArtistBlueprint).findMany({ where: { id }, cache: true });
 
                     // assert
                     expect(actual).toEqual(expected);
@@ -301,8 +301,8 @@ describe("system", () => {
                     const loadArtistsById = addLoadArtistsById();
 
                     // act
-                    await workspace.from(ArtistBlueprint).findMany({ where: { id: loadIntoCacheId } });
-                    const actual = await workspace.from(ArtistBlueprint).findMany({ where: { id } });
+                    await workspace.from(ArtistBlueprint).findMany({ where: { id: loadIntoCacheId }, cache: true });
+                    const actual = await workspace.from(ArtistBlueprint).findMany({ where: { id }, cache: true });
 
                     // assert
                     expect(actual).toEqual(expected);
@@ -350,8 +350,8 @@ describe("system", () => {
                     const loadArtistById = addLoadArtistById();
 
                     // act
-                    await workspace.from(ArtistBlueprint).findMany({ where: { id } }); // load into cache
-                    const actual = await workspace.from(ArtistBlueprint).findMany({ where: { id } });
+                    await workspace.from(ArtistBlueprint).findMany({ where: { id }, cache: true }); // load into cache
+                    const actual = await workspace.from(ArtistBlueprint).findMany({ where: { id }, cache: true });
 
                     // assert
                     expect(actual).toEqual(expected);
@@ -368,9 +368,9 @@ describe("system", () => {
             const loadArtistsById = addLoadArtistsById();
 
             // act
-            await workspace.from(ArtistBlueprint).findMany({ where: { id } }); // load into cache
+            await workspace.from(ArtistBlueprint).findMany({ where: { id }, cache: true }); // load into cache
             workspace.invalidate(ArtistBlueprint, { where: { id: invalidatedIds } });
-            const actual = await workspace.from(ArtistBlueprint).findMany({ where: { id } });
+            const actual = await workspace.from(ArtistBlueprint).findMany({ where: { id }, cache: true });
 
             // assert
             expect(actual).toEqual(expected);

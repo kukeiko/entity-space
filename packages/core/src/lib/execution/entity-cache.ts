@@ -96,9 +96,11 @@ export class EntityCache implements IEntityCache {
         this.cachedQueries.clear();
     }
 
-    clearBySchema(schema: IEntitySchema): void {
-        this.stores.get(schema.getId())?.clear();
-        this.cachedQueries.set(schema.getId(), []);
+    clearBySchema(...schemas: IEntitySchema[]): void {
+        schemas.forEach(schema => {
+            this.stores.get(schema.getId())?.clear();
+            this.cachedQueries.set(schema.getId(), []);
+        });
     }
 
     clearByQuery(query: IEntityQuery): void {

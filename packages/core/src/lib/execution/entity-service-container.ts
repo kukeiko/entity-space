@@ -156,6 +156,7 @@ export class EntityServiceContainer {
     private readonly catalog = new EntitySchemaCatalog();
     private readonly toolbag = new EntityToolbag();
     private readonly cache = new EntityCache(this.toolbag);
+    private readonly caches = new Map<unknown, IEntityCache>();
     private readonly apis = new Map<string, EntitySource>();
     private readonly hydrators = new Map<string, EntityHydrator>();
     private readonly mutators = new Map<string, EntityMutator>();
@@ -198,6 +199,25 @@ export class EntityServiceContainer {
 
     getMutatorFor(schema: IEntitySchema): EntityMutator {
         return this.getOrCreateMutator(schema);
+    }
+
+    getOrCreateCache(key: unknown): IEntityCache {
+        if (key === undefined) {
+            return this.cache;
+        }
+
+        let cache = this.caches.get(key);
+
+        if (!cache) {
+            cache = new EntityCache(this.toolbag);
+            this.caches.set(key, cache);
+        }
+
+        return cache;
+    }
+
+    destroyCache(key: unknown): void {
+        this.caches.delete(key);
     }
 
     for<B extends Entity>(blueprint: Class<B>): EntitySchemaScopedServiceContainer<B> {

@@ -1,6 +1,8 @@
-import { toDestructurableInstance } from "@entity-space/utils";
+import { isNotNullsyEntryValue, toDestructurableInstance, toMap } from "@entity-space/utils";
 import { UnpackedEntitySelection } from "../common/unpacked-entity-selection.type";
 import { ClippedEntitySelection, IEntitySelectionTools } from "./entity-selection-tools.interface";
+import { IEntitySchema } from "../schema/schema.interface";
+import { EntitySelection } from "./entity-selection";
 
 export class EntitySelectionTools implements IEntitySelectionTools {
     toDestructurable(): IEntitySelectionTools {
@@ -36,5 +38,32 @@ export class EntitySelectionTools implements IEntitySelectionTools {
         };
 
         return clipInternal(what, by, []);
+    }
+
+    getRelatedSchemas(selection: EntitySelection): IEntitySchema[] {
+        const schemas: IEntitySchema[] = [];
+        this.getRelatedSchemasCore(selection.getSchema(), selection.getValue(), schemas);
+        return schemas;
+    }
+
+    private getRelatedSchemasCore(
+        schema: IEntitySchema,
+        selection: UnpackedEntitySelection,
+        schemas: IEntitySchema[]
+    ): void {
+        for (const [key, selected] of Object.entries(selection).filter(isNotNullsyEntryValue)) {
+            const relation = schema.findRelation(key);
+
+            if (!relation) {
+                continue;
+            }
+
+            const relatedSchema = relation.getRelatedEntitySchema();
+            schemas.push(relatedSchema);
+
+            if (selected !== true) {
+                this.getRelatedSchemasCore(relatedSchema, selected, schemas);
+            }
+        }
     }
 }

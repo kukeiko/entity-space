@@ -1,4 +1,5 @@
 import { Class } from "@entity-space/utils";
+import { lastValueFrom } from "rxjs";
 import { UnpackedEntitySelection } from "../../lib/common/unpacked-entity-selection.type";
 import { EntityCriteriaTools } from "../../lib/criteria/entity-criteria-tools";
 import { EntityWhere } from "../../lib/criteria/entity-criteria-tools.interface";
@@ -58,11 +59,14 @@ export class TestContentFacade {
     }
 
     query(query: IEntityQuery): Promise<EntityStreamPacket> {
-        const cache = new EntityCache(this.services.getToolbag());
-        const context = new EntityQueryExecutionContext(cache);
+        const resultsCache = new EntityCache(this.services.getToolbag());
+        const cacheBucket = new EntityCache(this.services.getToolbag());
+        const context = new EntityQueryExecutionContext(resultsCache, cacheBucket);
 
-        return new EntityQueryExecutor(query.getEntitySchema(), this.services)
-            .enablePacketLogging(this.packetLogging)
-            .queryAsPacket(query, context);
+        return lastValueFrom(
+            new EntityQueryExecutor(query.getEntitySchema(), this.services)
+                .enablePacketLogging(this.packetLogging)
+                .queryAsPacket$(query, context)
+        );
     }
 }

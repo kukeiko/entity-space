@@ -1,27 +1,28 @@
 import { isNotFalse } from "@entity-space/utils";
 import { flatMap } from "lodash";
 import { catchError, defaultIfEmpty, EMPTY, map, merge, of, shareReplay, switchMap, takeLast, tap } from "rxjs";
+import { Entity } from "../common/entity.type";
 import { EntityCriteriaTools } from "../criteria/entity-criteria-tools";
 import { EntityQueryError } from "../query/entity-query-error";
 import { EntityQueryTools } from "../query/entity-query-tools";
 import { IEntityQuery } from "../query/entity-query.interface";
+import { EntityQueryExecutionContext } from "./entity-query-execution-context";
 import { EntityQueryTracing } from "./entity-query-tracing";
 import { EntityStream } from "./entity-stream";
-import { EntityStreamPacket } from "./entity-stream-packet";
 import { IEntityStreamInterceptor } from "./entity-stream-interceptor.interface";
-import { EntityQueryExecutionContext } from "./entity-query-execution-context";
+import { EntityStreamPacket } from "./entity-stream-packet";
 
-function safeWrapEntityStream(
-    stream: EntityStream,
+function safeWrapEntityStream<T extends Entity = Entity>(
+    stream: EntityStream<T>,
     query: IEntityQuery,
     tracing: EntityQueryTracing,
     interceptorName: string
-): EntityStream {
-    const safelyWrapped = stream.pipe(
+): EntityStream<T> {
+    const safelyWrapped: EntityStream<T> = stream.pipe(
         // a stream that doesn't emit anything is equal to a stream emitting 1x packet that rejects all queries
-        defaultIfEmpty(new EntityStreamPacket({ rejected: [query] })),
+        defaultIfEmpty(new EntityStreamPacket<T>({ rejected: [query] })),
         // make sure uncaught errors are mapped to QueryErrors so that the stream doesn't get prematurely aborted
-        catchError(error => of(new EntityStreamPacket({ errors: [new EntityQueryError(query, error)] }))),
+        catchError(error => of(new EntityStreamPacket<T>({ errors: [new EntityQueryError(query, error)] }))),
         map(packet => {
             if (!packet.getAcceptedQueries().length) {
                 return packet;
@@ -50,7 +51,7 @@ function safeWrapEntityStream(
     const { subtractQueries } = queryTools.toDestructurable();
 
     // make sure we're not missing any rejections
-    const ensureProperRejection = safelyWrapped.pipe(
+    const ensureProperRejection: EntityStream<T> = safelyWrapped.pipe(
         tap(packet => {
             accepted.push(...packet.getAcceptedQueries());
             rejected.push(...packet.getRejectedQueries());
@@ -62,14 +63,14 @@ function safeWrapEntityStream(
             if (!notReportedAsRejected) {
                 tracing.streamDidNotReportAnyRejections(query, interceptorName);
                 // original stream didn't report any meaningful rejections
-                return of(new EntityStreamPacket({ rejected: [query] }));
+                return of(new EntityStreamPacket<T>({ rejected: [query] }));
             } else if (!notReportedAsRejected.length) {
                 // original stream correctly reported all rejections
                 return EMPTY;
             } else {
                 // original stream missed to report some rejections
                 tracing.streamDidNotReportSomeRejections(query, notReportedAsRejected, interceptorName);
-                return of(new EntityStreamPacket({ rejected: notReportedAsRejected }));
+                return of(new EntityStreamPacket<T>({ rejected: notReportedAsRejected }));
             }
         })
     );
@@ -77,17 +78,22 @@ function safeWrapEntityStream(
     return merge(safelyWrapped, ensureProperRejection);
 }
 
-export function runInterceptors(
+export function runInterceptors<T extends Entity = Entity>(
     interceptors: IEntityStreamInterceptor[],
     query: IEntityQuery,
     tracing: EntityQueryTracing,
     context: EntityQueryExecutionContext
-): EntityStream {
-    let startWith = of(new EntityStreamPacket({ rejected: [query] }));
+): EntityStream<T> {
+    let startWith = of(new EntityStreamPacket<T>({ rejected: [query] }));
 
     return interceptors.reduce(
         (previous, interceptor) =>
-            safeWrapEntityStream(interceptor.intercept(previous, context), query, tracing, interceptor.getName()),
+            safeWrapEntityStream<T>(
+                interceptor.intercept(previous, context) as EntityStream<T>,
+                query,
+                tracing,
+                interceptor.getName()
+            ),
         startWith
     );
 }

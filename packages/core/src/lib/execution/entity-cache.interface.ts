@@ -10,5 +10,5 @@ export interface IEntityCache {
     subtractQueries(queries: IEntityQuery[]): IEntityQuery[] | false;
     clearByQuery(query: IEntityQuery): void;
     clear(): void;
-    clearBySchema(schema: IEntitySchema): void;
+    clearBySchema(...schemas: IEntitySchema[]): void;
 }

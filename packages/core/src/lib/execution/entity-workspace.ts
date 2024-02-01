@@ -57,6 +57,7 @@ export class EntityWorkspace {
     invalidate<T extends Entity>(
         blueprint: Class<T>,
         args?: {
+            cacheKey?: unknown;
             where?: WhereEntitySingle<EntityBlueprintInstance<T>>;
             select?: PackedEntitySelection<EntityBlueprintInstance<T>>;
         }
@@ -71,6 +72,10 @@ export class EntityWorkspace {
         const select = EntitySelection.unpack(schema, args?.select ?? {});
 
         const query = this.queryTools.createQuery({ entitySchema: schema, criteria: criterion, selection: select });
-        this.services.getCache().clearByQuery(query);
+        this.services.getOrCreateCache(args?.cacheKey).clearByQuery(query);
+    }
+
+    destroyCache(cacheKey: unknown): void {
+        this.services.destroyCache(cacheKey);
     }
 }
