@@ -38,8 +38,11 @@ export interface ReadOnlyAttribute {
 
 export interface RelationAttribute {
     relation: true;
-    from: string | string[];
-    to: string | string[];
+    from: string | string[] | BlueprintProperty<Primitive> | BlueprintProperty<Primitive>[];
+    to:
+        | string
+        | string[]
+        | ((instance: Record<string, unknown>) => BlueprintProperty<Primitive> | BlueprintProperty<Primitive>[]);
 }
 
 export interface OptionalAttribute {
@@ -81,6 +84,9 @@ export type AllAttributes =
     | WritableAttribute;
 
 // [todo] user can put anything as O & "find references" doesn't work
+/**
+ * @deprecated use EntityBlueprint.id/number/entity... instead
+ */
 export function define<V extends BlueprintPropertyValue, O extends Partial<AllAttributes>>(
     valueType: V,
     options?: O

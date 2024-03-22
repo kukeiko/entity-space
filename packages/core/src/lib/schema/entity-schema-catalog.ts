@@ -1,13 +1,13 @@
-import { Class, isPrimitive } from "@entity-space/utils";
+import { Class, isPrimitive, isString } from "@entity-space/utils";
 import { Entity } from "../common/entity.type";
 import { ArraySchema } from "./array-schema";
-import { EntityBlueprint, getEntityBlueprintMetadata, getNamedProperties, isEntityBlueprint } from "./entity-blueprint";
+import { EntityBlueprint, getEntityBlueprintMetadata, isEntityBlueprint, toPropertyRecord } from "./entity-blueprint";
 import { EntityBlueprintInstance } from "./entity-blueprint-instance.type";
 import {
     BlueprintProperty,
     BlueprintPropertyValue,
-    hasAttribute,
     RelationAttribute,
+    hasAttribute,
 } from "./entity-blueprint-property";
 import { EntitySchema } from "./entity-schema";
 import { PrimitiveSchema } from "./primitive-schema";
@@ -58,58 +58,47 @@ export class EntitySchemaCatalog {
             }
         }
 
-        const properties = getNamedProperties(blueprint);
-        const idProperties = properties.filter(hasAttribute("id"));
+        const properties = toPropertyRecord(new blueprint() as Record<string, unknown>);
+        let foundId = false;
 
-        if (idProperties.length > 1) {
-            throw new Error(
-                `blueprint ${schema.getId()} contains multiple properties with the "id" attribute. If you need a composite id, please define it in the ${
-                    EntityBlueprint.name
-                } class decorator instead`
-            );
-        } else if (idProperties.length) {
-            const idProperty = idProperties[0];
+        for (const [name, property] of Object.entries(properties)) {
+            if (hasAttribute("id", property)) {
+                if (foundId) {
+                    throw new Error(
+                        `blueprint ${schema.getId()} contains multiple properties with the "id" attribute. If you need a composite id, please define it in the ${
+                            EntityBlueprint.name
+                        } class decorator instead`
+                    );
+                }
 
-            if (hasAttribute("optional", idProperty)) {
-                throw new Error(`id property ${schema.getId()}.${idProperty.name} can't be optional`);
-            }
+                foundId = true;
+                if (hasAttribute("optional", property)) {
+                    throw new Error(`id property ${schema.getId()}.${name} can't be optional`);
+                }
 
-            schema.setKey(idProperty.name);
+                schema.setKey(name);
 
-            if (isPrimitive(idProperty.valueType)) {
-                schema.addProperty(
-                    idProperty.name,
-                    new PrimitiveSchema(this.toPrimitiveSchemaDataType(idProperty.valueType)),
-                    true
-                );
+                if (isPrimitive(property.valueType)) {
+                    schema.addProperty(
+                        name,
+                        new PrimitiveSchema(this.toPrimitiveSchemaDataType(property.valueType)),
+                        true
+                    );
+                } else {
+                    throw new Error(`not yet implemented: id attribute on a complex type property`);
+                }
+            } else if (hasAttribute("relation", property)) {
+                this.addRelationPropertyToSchema(schema, name, property, properties);
             } else {
-                throw new Error(`not yet implemented: id attribute on a complex type property`);
-            }
-        }
-
-        properties
-            .filter(hasAttribute("relation"))
-            .forEach(property => this.addRelationPropertyToSchema(schema, property.name, property));
-
-        properties
-            .filter(property => !hasAttribute("relation", property) && !hasAttribute("id", property))
-            .forEach(property => this.addNonRelationalPropertyToSchema(schema, property.name, property));
-
-        for (const indexedProperty of properties.filter(hasAttribute("index"))) {
-            if (hasAttribute("id", indexedProperty)) {
-                continue;
+                this.addNonRelationalPropertyToSchema(schema, name, property);
             }
 
-            const unique = hasAttribute("unique", indexedProperty);
-            schema.addIndex(indexedProperty.name, { unique });
-        }
-
-        for (const indexedProperty of properties.filter(hasAttribute("unique"))) {
-            if (schema.findIndex(indexedProperty.name)) {
-                continue;
+            if (
+                !hasAttribute("id", property) &&
+                (hasAttribute("index", property) || hasAttribute("unique", property))
+            ) {
+                schema.addIndex(name, { unique: hasAttribute("unique", property) });
             }
-
-            schema.addIndex(indexedProperty.name, { unique: true });
         }
 
         return schema as EntitySchema<EntityBlueprintInstance<T>>;
@@ -146,7 +135,8 @@ export class EntitySchemaCatalog {
     private addRelationPropertyToSchema(
         schema: EntitySchema,
         name: string,
-        relationProperty: BlueprintProperty & RelationAttribute
+        relationProperty: BlueprintProperty & RelationAttribute,
+        properties: Record<string, BlueprintProperty>
     ): void {
         const isRequired = !hasAttribute("optional", relationProperty);
         let relatedSchema: IEntitySchema;
@@ -165,9 +155,65 @@ export class EntitySchemaCatalog {
             schema.addProperty(name, relatedSchema, isRequired);
         }
 
-        schema.addRelation(name, relationProperty.from, relationProperty.to);
+        const from = this.relationPropertyToFromString(relationProperty, properties);
+        const to = this.relationPropertyToToString(relationProperty);
+        schema.addRelation(name, from, to);
+    }
 
-        // [todo] implement remaining relational value types
+    private relationPropertyToFromString(
+        relationProperty: BlueprintProperty & RelationAttribute,
+        properties: Record<string, BlueprintProperty>
+    ): string | string[] {
+        if (
+            typeof relationProperty.from === "string" ||
+            (Array.isArray(relationProperty.from) && relationProperty.from.every(isString))
+        ) {
+            return relationProperty.from;
+        } else {
+            const fromProperties = Array.isArray(relationProperty.from)
+                ? relationProperty.from
+                : [relationProperty.from];
+            return fromProperties.map(fromProperty => this.getNameOfProperty(properties, fromProperty));
+        }
+    }
+
+    private relationPropertyToToString(relationProperty: BlueprintProperty & RelationAttribute): string | string[] {
+        if (
+            typeof relationProperty.to === "string" ||
+            (Array.isArray(relationProperty.to) && relationProperty.to.every(isString))
+        ) {
+            return relationProperty.to;
+        } else {
+            if (!isEntityBlueprint(relationProperty.valueType)) {
+                throw new Error(`valueType must be a blueprint`);
+            }
+
+            const instance = new relationProperty.valueType();
+            const allProperties = toPropertyRecord(instance);
+            let providedProperties = relationProperty.to(instance);
+
+            if (!Array.isArray(providedProperties)) {
+                providedProperties = [providedProperties];
+            }
+
+            return providedProperties.map(toProperty => this.getNameOfProperty(allProperties, toProperty));
+        }
+    }
+
+    private getNameOfProperty(properties: Record<string, BlueprintProperty>, property: BlueprintProperty): string {
+        const name = this.findKeyOfValueInRecord(properties, property);
+
+        if (name === undefined) {
+            throw new Error(`did not find name of property`);
+        }
+
+        return name;
+    }
+
+    private findKeyOfValueInRecord<T>(record: Record<string, T>, value: T): string | undefined {
+        const [key] = Object.entries(record).find(([_, candidate]) => candidate === value) ?? [];
+
+        return key;
     }
 
     private toPrimitiveSchemaDataType(valueType: BlueprintPropertyValue): PrimitiveSchemaDataType {

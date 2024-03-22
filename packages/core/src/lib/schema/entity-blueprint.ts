@@ -1,5 +1,12 @@
-import { Class, isDefined } from "@entity-space/utils";
-import { BlueprintProperty, isProperty } from "./entity-blueprint-property";
+import { Class, Primitive, isDefined } from "@entity-space/utils";
+import {
+    ArrayAttribute,
+    BlueprintProperty,
+    IdAttribute,
+    OptionalAttribute,
+    RelationAttribute,
+    isProperty,
+} from "./entity-blueprint-property";
 
 // [todo] changed it to Symbol.for() instead of just Symbol() to fix an issue where, in a test,
 // i imported the decorate via absolute path instead of relative. the test failed because of it,
@@ -42,7 +49,7 @@ export function isEntityBlueprint(value: any): value is Class {
     return Reflect.getMetadata(BLUEPRINT_METADATA_KEY, value) !== void 0;
 }
 
-type NamedProperty = BlueprintProperty & { name: string };
+export type NamedProperty = BlueprintProperty & { name: string };
 
 export function getNamedProperties(blueprint: Class): NamedProperty[] {
     const instance = new blueprint();
@@ -50,4 +57,111 @@ export function getNamedProperties(blueprint: Class): NamedProperty[] {
     return Object.entries(instance)
         .map(([name, property]) => (isProperty(property) ? { ...property, name } : void 0))
         .filter(isDefined);
+}
+
+export function toPropertyRecord(instance: Record<string, unknown>): Record<string, BlueprintProperty> {
+    return Object.entries(instance).reduce((properties, [key, property]) => {
+        if (isProperty(property)) {
+            properties[key] = property;
+        }
+
+        return properties;
+    }, {} as Record<string, BlueprintProperty>);
+}
+
+export module EntityBlueprint {
+    type IdOptions = {
+        writable?: true;
+        dto?: string;
+    };
+
+    export function id<V extends Primitive = typeof Number, O extends IdOptions = {}>(
+        valueType?: V,
+        options?: O
+    ): BlueprintProperty<V> & IdAttribute & O {
+        return { valueType: valueType ?? Number, id: true, ...(options ?? {}) } as any;
+    }
+
+    type StringOptions = {
+        writable?: true;
+        dto?: string;
+        nullable?: true;
+        index?: true;
+    };
+
+    export function string<O extends StringOptions>(options?: O): BlueprintProperty<typeof String> & O {
+        return { valueType: String, ...(options ?? {}) } as any;
+    }
+
+    type NumberOptions = {
+        writable?: true;
+        dto?: string;
+        nullable?: true;
+        index?: true;
+    };
+
+    export function number<O extends NumberOptions>(options?: O): BlueprintProperty<typeof Number> & O {
+        return { valueType: Number, ...(options ?? {}) } as any;
+    }
+
+    type BooleanOptions = {
+        writable?: true;
+        dto?: string;
+        nullable?: true;
+    };
+
+    export function boolean<O extends BooleanOptions>(options?: O): BlueprintProperty<typeof Boolean> & O {
+        return { valueType: Boolean, ...(options ?? {}) } as any;
+    }
+
+    type RelatedEntityOptions = {
+        dto?: string;
+        nullable?: true;
+    };
+
+    type EntityOptions = {
+        dto?: string;
+        nullable?: true;
+        optional?: true;
+    };
+
+    export function entity<V extends Class, O extends EntityOptions>(
+        valueType: V,
+        options?: O
+    ): BlueprintProperty<V> & O;
+    export function entity<V extends Class, O extends RelatedEntityOptions>(
+        valueType: V,
+        from: string | string[] | BlueprintProperty<Primitive> | BlueprintProperty<Primitive>[],
+        to:
+            | string
+            | string[]
+            | ((other: InstanceType<V>) => BlueprintProperty<Primitive> | BlueprintProperty<Primitive>[]),
+        options?: O
+    ): BlueprintProperty<V> & RelationAttribute & OptionalAttribute & O;
+    export function entity(...args: any[]): any {
+        if (args.length === 2) {
+            const [valueType, options] = args;
+            return { valueType, ...(options ?? {}) };
+        }
+
+        const [valueType, from, to, options] = args;
+        return { valueType, from, to, optional: true, relation: true, ...(options ?? {}) } as any;
+    }
+
+    type RelatedEntitiesOptions = {
+        dto?: string;
+        nullable?: true;
+    };
+
+    export function entities<V extends Class, O extends RelatedEntitiesOptions>(
+        valueType: V,
+        from: string | string[] | BlueprintProperty<Primitive> | BlueprintProperty<Primitive>[],
+        to:
+            | string
+            | string[]
+            | ((other: InstanceType<V>) => BlueprintProperty<Primitive> | BlueprintProperty<Primitive>[]),
+        options?: O
+    ): BlueprintProperty<V> & ArrayAttribute & RelationAttribute & OptionalAttribute & O {
+        return { valueType, array: true, from, to, relation: true, optional: true, ...(options ?? {}) } as any;
+    }
 }
