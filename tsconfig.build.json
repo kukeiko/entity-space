@@ -1,0 +1,24 @@
+{
+    "extends": "./tsconfig.base.json",
+    "compilerOptions": {
+        "composite": true,
+        "declaration": true,
+        "emitDecoratorMetadata": true,
+        "importHelpers": true,
+        "sourceMap": true,
+        "target": "ES2022"
+    },
+    "references": [
+        { "path": "./packages/browser/tsconfig.build.json" },
+        { "path": "./packages/core/tsconfig.build.json" },
+        { "path": "./packages/elements/tsconfig.build.json" },
+        { "path": "./packages/execution/tsconfig.build.json" },
+        { "path": "./packages/lexer/tsconfig.build.json" },
+        { "path": "./packages/math/tsconfig.build.json" },
+        { "path": "./packages/node/tsconfig.build.json" },
+        { "path": "./packages/schema/tsconfig.build.json" },
+        { "path": "./packages/utils/tsconfig.build.json" }
+    ],
+    "files": [],
+    "exclude": ["node_modules"]
+}

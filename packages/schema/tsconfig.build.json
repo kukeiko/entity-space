@@ -1,0 +1,11 @@
+{
+    "extends": "../../tsconfig.build.json",
+    "compilerOptions": {
+        "rootDir": "./src",
+        "baseUrl": ".",
+        "outDir": "../../dist/schema",
+        "tsBuildInfoFile": "../../tmp/schema.tsbuildinfo"
+    },
+    "include": ["./src/package.json", "./src/**/*.mts", "./src/index.ts"],
+    "exclude": ["./src/**/*.test.mts"]
+}
