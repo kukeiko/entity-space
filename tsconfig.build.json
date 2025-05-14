@@ -1,0 +1,14 @@
+{
+    "extends": "./tsconfig.base.json",
+    "compilerOptions": {
+        "composite": true,
+        "declaration": true,
+        "emitDecoratorMetadata": true,
+        "importHelpers": true,
+        "sourceMap": true,
+        "target": "ES2022"
+    },
+    "references": [],
+    "files": [],
+    "exclude": ["node_modules"]
+}

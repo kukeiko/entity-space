@@ -1,0 +1,10 @@
+{
+    "extends": "./tsconfig.base.json",
+    "compilerOptions": {
+        "baseUrl": ".",
+        "types": ["node"],
+        "paths": {}
+    },
+    "include": ["./**/*.mts", "./**/index.ts"],
+    "exclude": ["node_modules", "dist"]
+}
