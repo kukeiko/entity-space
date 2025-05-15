@@ -1,0 +1,21 @@
+{
+    "extends": "../../tsconfig.build.json",
+    "compilerOptions": {
+        "rootDir": "./",
+        "baseUrl": ".",
+        "outDir": "../../dist/elements",
+        "tsBuildInfoFile": "../../tmp/elements.tsbuildinfo",
+        "paths": {
+            "@entity-space/lexer": ["../lexer/index.ts"],
+            "@entity-space/schema": ["../schema/index.ts"],
+            "@entity-space/utils": ["../utils/index.ts"]
+        }
+    },
+    "include": ["./package.json", "./**/*.mts", "./index.ts"],
+    "exclude": ["./**/*.test.mts", "./**/testing"],
+    "references": [
+        { "path": "../lexer/tsconfig.build.json" },
+        { "path": "../schema/tsconfig.build.json" },
+        { "path": "../utils/tsconfig.build.json" }
+    ]
+}

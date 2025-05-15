@@ -9,6 +9,7 @@
         "target": "ES2022"
     },
     "references": [
+        { "path": "./src/elements/tsconfig.build.json" },
         { "path": "./src/lexer/tsconfig.build.json" },
         { "path": "./src/schema/tsconfig.build.json" },
         { "path": "./src/utils/tsconfig.build.json" }
