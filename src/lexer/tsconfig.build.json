@@ -1,0 +1,15 @@
+{
+    "extends": "../../tsconfig.build.json",
+    "compilerOptions": {
+        "rootDir": "./",
+        "baseUrl": ".",
+        "outDir": "../../dist/lexer",
+        "tsBuildInfoFile": "../../tmp/lexer.tsbuildinfo",
+        "paths": {
+            "@entity-space/utils": ["../utils/index.ts"]
+        }
+    },
+    "include": ["./package.json", "./**/*.mts", "./index.ts"],
+    "exclude": ["./**/*.test.mts", "./**/testing"],
+    "references": [{ "path": "../utils/tsconfig.build.json" }]
+}
