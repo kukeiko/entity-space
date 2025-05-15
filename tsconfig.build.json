@@ -8,7 +8,7 @@
         "sourceMap": true,
         "target": "ES2022"
     },
-    "references": [],
+    "references": [{ "path": "./src/utils/tsconfig.build.json" }],
     "files": [],
     "exclude": ["node_modules"]
 }

@@ -1,0 +1,11 @@
+{
+    "extends": "../../tsconfig.build.json",
+    "compilerOptions": {
+        "rootDir": "./",
+        "baseUrl": ".",
+        "outDir": "../../dist/utils",
+        "tsBuildInfoFile": "../../tmp/utils.tsbuildinfo"
+    },
+    "include": ["./package.json", "./**/*.mts", "./index.ts"],
+    "exclude": ["./**/*.test.mts", "./**/testing"]
+}
