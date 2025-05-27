@@ -1,0 +1,15 @@
+{
+    "name": "@entity-space/utils",
+    "version": "0.7.0-alpha.2",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/kukeiko/entity-space"
+    },
+    "exports": {
+        "types": "./index.d.ts",
+        "import": "./index.js",
+        "require": "./cjs/index.js"
+    },
+    "dependencies": {}
+}

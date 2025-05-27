@@ -3,7 +3,9 @@
     "compilerOptions": {
         "baseUrl": ".",
         "types": ["node"],
-        "paths": {}
+        "paths": {
+            "@entity-space/utils": ["src/utils/index.ts"]
+        }
     },
     "include": ["./**/*.ts"],
     "exclude": ["node_modules", "dist"]
