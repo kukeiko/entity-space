@@ -1,0 +1,13 @@
+{
+    "extends": "../../tsconfig.build.json",
+    "compilerOptions": {
+        "tsBuildInfoFile": "../../tmp/elements.tsbuildinfo",
+        "paths": {
+            "@entity-space/lexer": ["../lexer/index.ts"],
+            "@entity-space/utils": ["../utils/index.ts"]
+        }
+    },
+    "include": ["./package.json", "./**/*.ts"],
+    "exclude": ["./**/*.test.ts", "./**/testing"],
+    "references": [{ "path": "../lexer/tsconfig.json" }, { "path": "../utils/tsconfig.json" }]
+}

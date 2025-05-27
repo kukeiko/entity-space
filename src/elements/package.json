@@ -1,0 +1,19 @@
+{
+    "name": "@entity-space/elements",
+    "version": "0.7.0-alpha.2",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/kukeiko/entity-space"
+    },
+    "exports": {
+        "types": "./index.d.ts",
+        "import": "./index.js",
+        "require": "./cjs/index.js"
+    },
+    "dependencies": {
+        "@entity-space/lexer": "0.7.0-alpha.2",
+        "@entity-space/utils": "0.7.0-alpha.2",
+        "lodash": "4.17.21"
+    }
+}
