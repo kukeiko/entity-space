@@ -4,6 +4,7 @@
         "baseUrl": ".",
         "types": ["node"],
         "paths": {
+            "@entity-space/lexer": ["src/lexer/index.ts"],
             "@entity-space/utils": ["src/utils/index.ts"]
         }
     },

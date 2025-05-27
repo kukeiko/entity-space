@@ -1,0 +1,11 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "module": "CommonJS",
+        "moduleResolution": "node",
+        "outDir": "../../dist/lexer/cjs",
+        "rootDir": "./"
+    },
+    "include": ["./**/*.ts"],
+    "references": [{ "path": "../utils/tsconfig.json" }]
+}

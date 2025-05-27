@@ -9,6 +9,8 @@
         "sourceMap": true
     },
     "references": [
+        { "path": "./src/lexer/tsconfig.json" },
+        { "path": "./src/lexer/tsconfig.cjs.json" },
         { "path": "./src/utils/tsconfig.json" },
         { "path": "./src/utils/tsconfig.cjs.json" }
     ],
