@@ -1,0 +1,14 @@
+{
+    "extends": "../../tsconfig.build.json",
+    "compilerOptions": {
+        "tsBuildInfoFile": "../../tmp/execution.tsbuildinfo",
+        "paths": {
+            "@entity-space/elements": ["../elements/index.ts"],
+            "@entity-space/elements/testing": ["../elements/testing/index.ts"],
+            "@entity-space/utils": ["../utils/index.ts"]
+        }
+    },
+    "include": ["./package.json", "./**/*.ts"],
+    "exclude": ["./**/*.test.ts", "./**/testing"],
+    "references": [{ "path": "../elements/tsconfig.json" }, { "path": "../utils/tsconfig.json" }]
+}

@@ -11,6 +11,8 @@
     "references": [
         { "path": "./src/elements/tsconfig.json" },
         { "path": "./src/elements/tsconfig.cjs.json" },
+        { "path": "./src/execution/tsconfig.json" },
+        { "path": "./src/execution/tsconfig.cjs.json" },
         { "path": "./src/lexer/tsconfig.json" },
         { "path": "./src/lexer/tsconfig.cjs.json" },
         { "path": "./src/utils/tsconfig.json" },

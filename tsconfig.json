@@ -6,6 +6,8 @@
         "paths": {
             "@entity-space/elements": ["src/elements/index.ts"],
             "@entity-space/elements/testing": ["src/elements/testing/index.ts"],
+            "@entity-space/execution": ["src/execution/index.ts"],
+            "@entity-space/execution/testing": ["src/execution/testing/index.ts"],
             "@entity-space/lexer": ["src/lexer/index.ts"],
             "@entity-space/utils": ["src/utils/index.ts"]
         }
