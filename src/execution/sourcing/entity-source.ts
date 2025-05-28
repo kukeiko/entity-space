@@ -7,10 +7,12 @@ import {
     PackedEntitySelection,
     reshapeQuery,
     reshapeQueryShape,
+    validateEntity,
     WhereEntityShape,
     WhereEntityShapeInstance,
 } from "@entity-space/elements";
 import { isNot } from "@entity-space/utils";
+import { partition } from "lodash";
 import { EntityQueryExecutionContext } from "../entity-query-execution-context";
 import { EntityQueryTracing } from "../entity-query-tracing";
 import { AcceptedEntitySourcing } from "./accepted-entity-sourcing";
@@ -100,10 +102,18 @@ export class EntitySource {
             criteria,
             parameters: query.getParameters()?.getValue() ?? {},
         });
-
         this.#tracing.queryReceivedEntities(query, entities);
 
-        return entities;
+        const [validEntities, invalidEntities] = partition(
+            entities,
+            entity => validateEntity(this.#queryShape.getSchema(), entity) === undefined,
+        );
+
+        if (invalidEntities.length) {
+            this.#tracing.filteredInvalidEntities(query, invalidEntities);
+        }
+
+        return validEntities;
     }
 
     #subtractByCache(query: EntityQuery, context: EntityQueryExecutionContext): EntityQuery[] {

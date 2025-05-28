@@ -79,6 +79,13 @@ export class EntityQueryTracing {
         });
     }
 
+    filteredInvalidEntities(query: EntityQuery, entities: readonly Entity[]): void {
+        this.#log(query, builder => {
+            builder.addLine("🐞 filtered invalid entities:").addLine(`- query: ${query}`, 1);
+            this.#addEntityLines(entities, builder, 1);
+        });
+    }
+
     queryWasLoadedFromCache(query: EntityQuery): void {
         this.#log(query, builder => {
             builder.addLine("💾 query was loaded from cache:").addLine(`- query: ${query}`, 1);
