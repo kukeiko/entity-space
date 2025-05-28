@@ -29,6 +29,7 @@ export * from "./entity/join-entities.fn";
 export * from "./entity/merge-entities.fn";
 export * from "./entity/normalize-entities.fn";
 export * from "./entity/select-entity-type";
+export * from "./entity/validate-entity.fn";
 export * from "./query/entity-query";
 export * from "./query/entity-query-parameters";
 export * from "./query/entity-query-shape";

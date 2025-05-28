@@ -43,6 +43,10 @@ export class EntitySchema {
         return this.#idPaths;
     }
 
+    isProperty(name: string): boolean {
+        return name in this.#primitives || name in this.#relations;
+    }
+
     addPrimitive(
         name: string,
         primitive: Primitive,
@@ -139,6 +143,15 @@ export class EntitySchema {
 
     getProperties(): EntityProperty[] {
         return [...Object.values(this.#primitives), ...Object.values(this.#relations)];
+    }
+
+    getPropertyRecord(filter?: (property: EntityProperty) => boolean): Record<string, EntityProperty> {
+        const propertyEntries = (filter ? this.getProperties().filter(filter) : this.getProperties()).map(property => [
+            property.getName(),
+            property,
+        ]);
+
+        return Object.fromEntries(propertyEntries);
     }
 
     #assertIsProperty(name: string): void {
