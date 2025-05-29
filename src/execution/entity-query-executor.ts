@@ -76,7 +76,11 @@ export class EntityQueryExecutor {
             return false;
         }
 
-        return new DescribedEntitySourcing(queryShape.getSchema(), queryShape.getSelection(), acceptedSourcings);
+        return new DescribedEntitySourcing(
+            queryShape.getSchema(),
+            queryShape.getUnpackedSelection(),
+            acceptedSourcings,
+        );
     }
 
     describeHydration(sourcing: EntitySourcingState): DescribedEntityHydration | false {

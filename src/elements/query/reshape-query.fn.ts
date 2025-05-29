@@ -46,15 +46,9 @@ export function reshapeQuery(shape: EntityQueryShape, query: EntityQuery): Entit
         return false;
     }
 
-    const criterion = reshapeQueryCriterion(shape, query);
-
-    if (criterion === false) {
-        return false;
-    }
-
     const reshapedParts: ReshapedParts = {
-        criterion,
-        selection: intersectSelection(shape.getSelection(), query.getSelection()),
+        criterion: reshapeQueryCriterion(shape, query),
+        selection: intersectSelection(shape.getUnpackedSelection(), query.getSelection()),
     };
 
     if (!containsNoFalse(reshapedParts)) {

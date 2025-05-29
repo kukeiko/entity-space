@@ -1,12 +1,12 @@
 import { CriterionShape } from "../criteria/criterion-shape";
 import { EntitySchema } from "../entity/entity-schema";
-import { EntitySelection, selectionToString } from "../selection/entity-selection";
-import { packEntitySelection } from "../selection/pack-entity-selection.fn";
+import { EntitySelection, PackedEntitySelection, selectionToString } from "../selection/entity-selection";
+import { unpackSelection } from "../selection/unpack-selection.fn";
 
 export class EntityQueryShape {
     constructor(
         schema: EntitySchema,
-        selection: EntitySelection,
+        selection: PackedEntitySelection,
         criterionShape?: CriterionShape,
         parametersSchema?: EntitySchema,
     ) {
@@ -17,7 +17,7 @@ export class EntityQueryShape {
     }
 
     readonly #schema: EntitySchema;
-    readonly #selection: EntitySelection;
+    readonly #selection: PackedEntitySelection;
     readonly #criterionShape?: CriterionShape;
     readonly #parametersSchema?: EntitySchema;
 
@@ -25,8 +25,12 @@ export class EntityQueryShape {
         return this.#schema;
     }
 
-    getSelection(): EntitySelection {
+    getSelection(): PackedEntitySelection {
         return this.#selection;
+    }
+
+    getUnpackedSelection(): EntitySelection {
+        return unpackSelection(this.#schema, this.#selection);
     }
 
     getCriterionShape(): CriterionShape | undefined {
@@ -40,8 +44,7 @@ export class EntityQueryShape {
     toString(): string {
         const parameters = this.#parametersSchema ? `<${this.#parametersSchema.getName()}>` : "";
         const criterion = this.#criterionShape !== undefined ? `(${this.#criterionShape.toString()})` : "";
-        const packedSelection = packEntitySelection(this.#schema, this.#selection);
-        const selection = Object.keys(packedSelection).length ? `/${selectionToString(packedSelection)}` : "";
+        const selection = Object.keys(this.#selection).length ? `/${selectionToString(this.#selection)}` : "";
 
         return [this.#schema.getName(), parameters, criterion, selection].join("");
     }

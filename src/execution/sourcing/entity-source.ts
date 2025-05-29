@@ -4,14 +4,14 @@ import {
     EntityQuery,
     EntityQueryShape,
     mergeQueries,
-    PackedEntitySelection,
     reshapeQuery,
     reshapeQueryShape,
+    reshapeSelection,
     validateEntity,
     WhereEntityShape,
     WhereEntityShapeInstance,
 } from "@entity-space/elements";
-import { isNot } from "@entity-space/utils";
+import { DeepPartial, isNot } from "@entity-space/utils";
 import { partition } from "lodash";
 import { isObservable, lastValueFrom, Observable } from "rxjs";
 import { EntityQueryExecutionContext } from "../entity-query-execution-context";
@@ -26,9 +26,9 @@ export type LoadedEntities<T extends Entity = Entity> =
     | Observable<T>
     | Observable<T[]>;
 
-export type LoadEntitiesFunction<T extends Entity = Entity, C = {}, P extends Entity = Entity> = (args: {
+export type LoadEntitiesFunction<T extends Entity = Entity, C = {}, S = {}, P extends Entity = Entity> = (args: {
     query: EntityQuery;
-    selection: PackedEntitySelection<T>; // [todo] replace with TypedEntitySelection<T>
+    selection: DeepPartial<S>;
     criteria: C;
     parameters: P;
 }) => LoadedEntities<T>;
@@ -107,7 +107,7 @@ export class EntitySource {
         this.#tracing.queryDispatchedToSource(query, originalQuery, this.#queryShape.getCriterionShape());
         const loaded = this.#load({
             query,
-            selection: query.getSelection(),
+            selection: reshapeSelection(this.#queryShape.getSelection(), query.getSelection()),
             criteria,
             parameters: query.getParameters()?.getValue() ?? {},
         });

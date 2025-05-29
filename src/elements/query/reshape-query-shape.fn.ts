@@ -2,6 +2,7 @@ import { EntityCriterionShape } from "../criteria/entity-criterion-shape";
 import { reshapeCriterionShape } from "../criteria/reshape/reshape-criterion-shape.fn";
 import { ReshapedCriterionShape } from "../criteria/reshaped-criterion-shape";
 import { intersectSelection } from "../selection/intersect-selection.fn";
+import { packEntitySelection } from "../selection/pack-entity-selection.fn";
 import { subtractSelection } from "../selection/subtract-selection.fn";
 import { EntityQueryShape } from "./entity-query-shape";
 import { ReshapedEntityQueryShape } from "./reshaped-entity-query-shape";
@@ -59,19 +60,19 @@ export function reshapeQueryShape(what: EntityQueryShape, by: EntityQueryShape):
         }
     }
 
-    const intersectedSelection = intersectSelection(what.getSelection(), by.getSelection());
+    const intersectedSelection = intersectSelection(what.getUnpackedSelection(), by.getUnpackedSelection());
 
     if (intersectedSelection === false) {
         return false;
     }
 
-    const openSelection = subtractSelection(what.getSelection(), intersectedSelection);
+    const openSelection = subtractSelection(what.getUnpackedSelection(), intersectedSelection);
     let openForSelection: EntityQueryShape | undefined;
 
     if (typeof openSelection !== "boolean") {
         openForSelection = new EntityQueryShape(
             what.getSchema(),
-            openSelection,
+            packEntitySelection(what.getSchema(), openSelection),
             what.getCriterionShape(),
             what.getParametersSchema(),
         );

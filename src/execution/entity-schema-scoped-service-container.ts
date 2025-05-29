@@ -4,7 +4,9 @@ import {
     EntityQueryShape,
     EntitySchema,
     EntitySelection,
+    getDefaultSelection,
     isRequiredCreatableEntityProperty,
+    mergeSelection,
     PackedEntitySelection,
     TypedEntitySelection,
     unpackSelection,
@@ -41,18 +43,23 @@ export class EntitySchemaScopedServiceContainer<B> {
     readonly #addHydratorFn: (hydrator: ExplicitEntityHydrator) => void;
     readonly #addMutatorFn: (mutator: EntityMutator) => void;
 
-    addSource<S extends WhereEntityShape<EntityBlueprint.Instance<B>>, P>({
+    addSource<
+        W extends WhereEntityShape<EntityBlueprint.Instance<B>>,
+        S extends PackedEntitySelection<EntityBlueprint.Instance<B>>,
+        P,
+    >({
         where,
         select,
         load,
         parameters,
     }: {
-        where?: S | WhereEntityShape<EntityBlueprint.Instance<B>>;
-        select?: PackedEntitySelection<EntityBlueprint.Instance<B>>;
+        where?: W | WhereEntityShape<EntityBlueprint.Instance<B>>;
+        select?: S | PackedEntitySelection<EntityBlueprint.Instance<B>>;
         parameters?: Class<P>;
         load: LoadEntitiesFunction<
             EntityBlueprint.Instance<B>,
-            WhereEntityShapeInstance<S, EntityBlueprint.Instance<B>>,
+            WhereEntityShapeInstance<W, EntityBlueprint.Instance<B>>,
+            S,
             EntityBlueprint.Instance<P>
         >;
     }): this {
@@ -61,7 +68,7 @@ export class EntitySchemaScopedServiceContainer<B> {
 
         const queryShape = new EntityQueryShape(
             this.#schema,
-            unpackSelection(this.#schema, select ?? {}),
+            mergeSelection(getDefaultSelection(this.#schema), (select ?? {}) as EntitySelection),
             criterionShape,
             parameters ? this.#services.getCatalog().getSchemaByBlueprint(parameters) : undefined,
         );

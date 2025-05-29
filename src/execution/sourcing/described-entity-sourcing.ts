@@ -9,7 +9,7 @@ export class DescribedEntitySourcing implements EntitySourcingState {
         this.#acceptedSourcings = Object.freeze(acceptedSourcing.slice());
 
         const availableSelection = intersectSelections(
-            this.#acceptedSourcings.map(sourcing => sourcing.getReshapedShape().getReshaped().getSelection()),
+            this.#acceptedSourcings.map(sourcing => sourcing.getReshapedShape().getReshaped().getUnpackedSelection()),
         );
 
         if (!availableSelection) {
