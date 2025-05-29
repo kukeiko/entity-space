@@ -1,3 +1,4 @@
+import { EntityCriterionShape } from "../criteria/entity-criterion-shape";
 import { reshapeCriterionShape } from "../criteria/reshape/reshape-criterion-shape.fn";
 import { ReshapedCriterionShape } from "../criteria/reshaped-criterion-shape";
 import { intersectSelection } from "../selection/intersect-selection.fn";
@@ -15,6 +16,11 @@ function reshapeQueryCriterionShape(
     if (!whatCriterionShape) {
         if (!byCriterionShape) {
             return undefined;
+        } else if (
+            byCriterionShape instanceof EntityCriterionShape &&
+            !Object.keys(byCriterionShape.getRequiredShapes()).length
+        ) {
+            return new ReshapedCriterionShape(byCriterionShape);
         } else {
             return false;
         }

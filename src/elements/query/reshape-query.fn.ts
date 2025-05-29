@@ -1,6 +1,6 @@
 import { permutateEntries } from "@entity-space/utils";
 import { Criterion } from "../criteria/criterion";
-import { CriterionShape } from "../criteria/criterion-shape";
+import { EntityCriterionShape } from "../criteria/entity-criterion-shape";
 import { reshapeCriterion } from "../criteria/reshape/reshape-criterion.fn";
 import { EntitySelection } from "../selection/entity-selection";
 import { intersectSelection } from "../selection/intersect-selection.fn";
@@ -20,6 +20,25 @@ function containsNoFalse(parts: ReshapedParts): parts is WithoutFalse<ReshapedPa
     return Object.values(parts).every(part => part !== false);
 }
 
+function reshapeQueryCriterion(shape: EntityQueryShape, query: EntityQuery): Criterion[] | false | undefined {
+    const criterion = query.getCriterion();
+    const criterionShape = shape.getCriterionShape();
+
+    if (criterionShape === undefined) {
+        return undefined;
+    } else if (criterion === undefined) {
+        if (criterionShape instanceof EntityCriterionShape && !Object.keys(criterionShape.getRequiredShapes()).length) {
+            return undefined;
+        } else {
+            return false;
+        }
+    }
+
+    const reshaped = reshapeCriterion([criterionShape], criterion);
+
+    return reshaped ? reshaped.getReshaped().slice() : false;
+}
+
 export function reshapeQuery(shape: EntityQueryShape, query: EntityQuery): EntityQuery[] | false {
     if (shape.getSchema().getName() !== query.getSchema().getName()) {
         return false;
@@ -27,21 +46,14 @@ export function reshapeQuery(shape: EntityQueryShape, query: EntityQuery): Entit
         return false;
     }
 
-    const criterion = query.getCriterion();
-    const criterionShape = shape.getCriterionShape();
+    const criterion = reshapeQueryCriterion(shape, query);
 
-    if (criterion === undefined && criterionShape !== undefined) {
+    if (criterion === false) {
         return false;
     }
 
-    const reshapeQueryCriterion = (criterion: Criterion, shape: CriterionShape): false | Criterion[] => {
-        const reshaped = reshapeCriterion([shape], criterion);
-
-        return reshaped ? reshaped.getReshaped().slice() : false;
-    };
-
     const reshapedParts: ReshapedParts = {
-        criterion: criterion && criterionShape ? reshapeQueryCriterion(criterion, criterionShape) : undefined,
+        criterion,
         selection: intersectSelection(shape.getSelection(), query.getSelection()),
     };
 
