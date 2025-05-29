@@ -13,16 +13,25 @@ import {
 } from "@entity-space/elements";
 import { isNot } from "@entity-space/utils";
 import { partition } from "lodash";
+import { isObservable, lastValueFrom, Observable } from "rxjs";
 import { EntityQueryExecutionContext } from "../entity-query-execution-context";
 import { EntityQueryTracing } from "../entity-query-tracing";
 import { AcceptedEntitySourcing } from "./accepted-entity-sourcing";
+
+export type LoadedEntities<T extends Entity = Entity> =
+    | T
+    | T[]
+    | Promise<T>
+    | Promise<T[]>
+    | Observable<T>
+    | Observable<T[]>;
 
 export type LoadEntitiesFunction<T extends Entity = Entity, C = {}, P extends Entity = Entity> = (args: {
     query: EntityQuery;
     selection: PackedEntitySelection<T>; // [todo] replace with TypedEntitySelection<T>
     criteria: C;
     parameters: P;
-}) => Promise<T[]> | T[];
+}) => LoadedEntities<T>;
 
 export class EntitySource {
     constructor(
@@ -96,12 +105,13 @@ export class EntitySource {
         }
 
         this.#tracing.queryDispatchedToSource(query, originalQuery, this.#queryShape.getCriterionShape());
-        const entities = await this.#load({
+        const loaded = this.#load({
             query,
             selection: query.getSelection(),
             criteria,
             parameters: query.getParameters()?.getValue() ?? {},
         });
+        const entities = await this.#loadedToEntities(loaded);
         this.#tracing.queryReceivedEntities(query, entities);
 
         const [validEntities, invalidEntities] = partition(
@@ -114,6 +124,20 @@ export class EntitySource {
         }
 
         return validEntities;
+    }
+
+    async #loadedToEntities(loaded: LoadedEntities): Promise<Entity[]> {
+        let entities: Entity | Entity[];
+
+        if (loaded instanceof Promise) {
+            entities = await loaded;
+        } else if (isObservable(loaded)) {
+            entities = await lastValueFrom(loaded as Observable<Entity | Entity[]>);
+        } else {
+            entities = loaded;
+        }
+
+        return Array.isArray(entities) ? entities : [entities];
     }
 
     #subtractByCache(query: EntityQuery, context: EntityQueryExecutionContext): EntityQuery[] {
