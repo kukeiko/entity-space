@@ -9,6 +9,8 @@
         "sourceMap": true
     },
     "references": [
+        { "path": "./src/common/tsconfig.json" },
+        { "path": "./src/common/tsconfig.cjs.json" },
         { "path": "./src/elements/tsconfig.json" },
         { "path": "./src/elements/tsconfig.cjs.json" },
         { "path": "./src/execution/tsconfig.json" },
