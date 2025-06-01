@@ -43,4 +43,12 @@ export class EntityPrimitiveProperty extends EntityProperty {
     isUnique(): boolean {
         return this.#options.unique;
     }
+
+    getDefaultValue(): ReturnType<Primitive> | ReturnType<Primitive>[] {
+        if (this.isArray()) {
+            return [];
+        } else {
+            return this.#primitive();
+        }
+    }
 }

@@ -35,7 +35,8 @@ export class EntityWorkspace {
     }
 
     from<T>(blueprint: Class<T>): EntityQueryBuilder<EntityBlueprint.Instance<T>> {
-        return new EntityQueryBuilder(blueprint, args => this.#query$(args));
+        const schema = this.#services.getCatalog().getSchemaByBlueprint(blueprint);
+        return new EntityQueryBuilder(schema, args => this.#query$(args));
     }
 
     in<T>(blueprint: Class<T>): EntityMutationBuilder<T> {
@@ -45,7 +46,7 @@ export class EntityWorkspace {
 
     #query$<T>(args: QueryArguments): Observable<T[]> {
         return defer(() => {
-            const schema = this.#services.getCatalog().getSchemaByBlueprint(args.blueprint);
+            const schema = args.schema;
             const criteria = args.where ? whereEntityToCriterion(args.where) : undefined;
             const selection = unpackSelection(schema, args.select ?? {});
             const parameters = args.parameters

@@ -1,4 +1,4 @@
-import { Entity, PackedEntitySelection, WhereEntity } from "@entity-space/elements";
+import { Entity, EntitySchema, PackedEntitySelection, WhereEntity } from "@entity-space/elements";
 import { Class } from "@entity-space/utils";
 
 export interface QueryCacheOptions {
@@ -8,7 +8,7 @@ export interface QueryCacheOptions {
 }
 
 export interface QueryArguments {
-    blueprint: Class;
+    schema: EntitySchema;
     select?: PackedEntitySelection;
     where?: WhereEntity;
     parameters?: QueryArgumentsParameters;

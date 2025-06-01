@@ -1,7 +1,11 @@
 import {
     EntityBlueprint,
     EntitySchema,
+    entityToSelection,
+    getDefaultSelection,
+    intersectSelection,
     isRequiredCreatableEntityProperty,
+    isUpdatableEntityProperty,
     PackedEntitySelection,
     unpackSelection,
 } from "@entity-space/elements";
@@ -27,8 +31,7 @@ export class EntityMutationBuilder<B, S extends PackedEntitySelection<EntityBlue
         return this as any;
     }
 
-    // [todo] inconsistency w/ query/hydration builder: they have "getOne()", "hydrateOne()" - so this should be "createOne()" instead
-    async create(entity: EntityBlueprint.Creatable<B>): Promise<EntityBlueprint.Instance<B>> {
+    async createOne(entity: EntityBlueprint.Creatable<B>): Promise<EntityBlueprint.Instance<B>> {
         const selection = unpackSelection(this.#schema, this.#selection, isRequiredCreatableEntityProperty);
         const operation = new MutationOperation("create", this.#schema, selection, [entity]);
         const created = await this.#mutateFn(operation);
@@ -36,22 +39,24 @@ export class EntityMutationBuilder<B, S extends PackedEntitySelection<EntityBlue
         return created[0];
     }
 
-    createMany(entities: EntityBlueprint.Creatable<B>[]): Promise<EntityBlueprint.Instance<B>[]> {
-        const selection = unpackSelection(this.#schema, this.#selection, isRequiredCreatableEntityProperty);
-        const operation = new MutationOperation("create", this.#schema, selection, entities);
+    async updateOne(entity: EntityBlueprint.Updatable<B>): Promise<EntityBlueprint.Instance<B>> {
+        const updatedSelection = intersectSelection(
+            entityToSelection(this.#schema, entity),
+            getDefaultSelection(this.#schema, isUpdatableEntityProperty),
+        );
 
-        return this.#mutateFn(operation);
+        if (!updatedSelection) {
+            throw new Error(`no updatable properties found`);
+        }
+
+        const operation = new MutationOperation("update", this.#schema, updatedSelection, [entity]);
+        const updated = await this.#mutateFn(operation);
+
+        return updated[0];
     }
 
-    update(entities: EntityBlueprint.Updatable<B>[]): Promise<EntityBlueprint.Instance<B>[]> {
-        throw new Error("not yet implemented");
-    }
-
-    save(entities: EntityBlueprint.Instance<B>[]): Promise<EntityBlueprint.Instance<B>[]> {
-        throw new Error("not yet implemented");
-    }
-
-    delete(entities: EntityBlueprint.Instance<B>[]): Promise<EntityBlueprint.Instance<B>[]> {
-        throw new Error("not yet implemented");
+    async deleteOne(entity: EntityBlueprint.Instance<B>): Promise<void> {
+        const operation = new MutationOperation("delete", this.#schema, getDefaultSelection(this.#schema), [entity]);
+        await this.#mutateFn(operation);
     }
 }

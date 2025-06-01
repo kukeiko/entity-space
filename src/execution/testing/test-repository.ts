@@ -206,7 +206,7 @@ export class TestRepository {
             return Promise.resolve(created);
         });
 
-        this.#services.for(ArtistBlueprint).addCreateMutator({ create });
+        this.#services.for(ArtistBlueprint).addCreateOneMutator({ create });
 
         return create;
     }

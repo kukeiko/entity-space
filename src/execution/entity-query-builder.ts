@@ -1,15 +1,24 @@
-import { Entity, EntityBlueprint, PackedEntitySelection, SelectEntity, WhereEntity } from "@entity-space/elements";
+import {
+    constructCreatableEntity,
+    Entity,
+    EntityBlueprint,
+    EntitySchema,
+    EntitySelection,
+    PackedEntitySelection,
+    SelectEntity,
+    WhereEntity,
+} from "@entity-space/elements";
 import { Class } from "@entity-space/utils";
 import { lastValueFrom, map, Observable } from "rxjs";
 import { QueryArguments, QueryArgumentsParameters, QueryCacheOptions } from "./execution-arguments.interface";
 
 export class EntityQueryBuilder<T extends Entity = Entity, S extends PackedEntitySelection<T> = {}> {
-    constructor(blueprint: Class, queryFn: (args: QueryArguments) => Observable<T[]>) {
-        this.#blueprint = blueprint;
+    constructor(schema: EntitySchema, queryFn: (args: QueryArguments) => Observable<T[]>) {
+        this.#schema = schema;
         this.#queryFn = queryFn;
     }
 
-    readonly #blueprint: Class;
+    readonly #schema: EntitySchema;
     readonly #queryFn: (args: QueryArguments) => Observable<T[]>;
     #selection: PackedEntitySelection<T> = {};
     #criteria: WhereEntity<T> = {};
@@ -96,9 +105,13 @@ export class EntityQueryBuilder<T extends Entity = Entity, S extends PackedEntit
         return lastValueFrom(this.findOneTyped$());
     }
 
+    constructCreatable(selection?: PackedEntitySelection<T>): T {
+        return constructCreatableEntity(this.#schema, selection) as T;
+    }
+
     #toQueryArguments(): QueryArguments {
         return {
-            blueprint: this.#blueprint,
+            schema: this.#schema,
             cache: this.#cache,
             parameters: this.#parameters,
             select: this.#selection,

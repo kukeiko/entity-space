@@ -6,6 +6,7 @@ import {
     EntitySelection,
     getDefaultSelection,
     isRequiredCreatableEntityProperty,
+    isUpdatableEntityProperty,
     mergeSelection,
     PackedEntitySelection,
     TypedEntitySelection,
@@ -19,7 +20,7 @@ import { EntityQueryExecutionContext } from "./entity-query-execution-context";
 import { EntityServiceContainer } from "./entity-service-container";
 import { ExplicitEntityHydrator } from "./hydration/explicit-entity-hydrator";
 import { EntityMutator } from "./mutation/entity-mutator";
-import { CreateEntitiesFn, CreateEntityFn } from "./mutation/mutation-function.type";
+import { CreateEntitiesFn, CreateEntityFn, DeleteEntityFn, UpdateEntityFn } from "./mutation/mutation-function.type";
 import { EntitySource, LoadEntitiesFunction } from "./sourcing/entity-source";
 
 export class EntitySchemaScopedServiceContainer<B> {
@@ -111,7 +112,7 @@ export class EntitySchemaScopedServiceContainer<B> {
         return this;
     }
 
-    addCreateMutator({
+    addCreateOneMutator({
         create,
         select,
     }: {
@@ -133,7 +134,7 @@ export class EntitySchemaScopedServiceContainer<B> {
         return this;
     }
 
-    addCreateManyMutator({
+    addCreateMutator({
         create,
         select,
     }: {
@@ -147,6 +148,41 @@ export class EntitySchemaScopedServiceContainer<B> {
                 selection: selection as TypedEntitySelection<EntityBlueprint.Instance<B>>,
             }),
         );
+
+        this.#addMutatorFn(mutator);
+
+        return this;
+    }
+
+    addUpdateOneMutator({
+        update,
+        select,
+    }: {
+        select?: PackedEntitySelection<EntityBlueprint.Instance<B>>;
+        update: UpdateEntityFn<B>;
+    }): this {
+        const selection = unpackSelection(this.#schema, select ?? {}, isUpdatableEntityProperty);
+        const mutator = new EntityMutator(this.#schema, "update", selection, async (entities, selection) => {
+            const updated = await update({
+                entity: entities[0] as EntityBlueprint.Updatable<B>,
+            });
+
+            return [updated];
+        });
+
+        this.#addMutatorFn(mutator);
+
+        return this;
+    }
+
+    addDeleteOneMutator({ delete: deleteFn }: { delete: DeleteEntityFn<B> }): this {
+        const mutator = new EntityMutator(this.#schema, "delete", getDefaultSelection(this.#schema), async entities => {
+            await deleteFn({
+                entity: entities[0] as EntityBlueprint.Instance<B>,
+            });
+
+            return [];
+        });
 
         this.#addMutatorFn(mutator);
 
