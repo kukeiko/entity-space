@@ -2,7 +2,7 @@ import { Class, isPrimitiveType } from "@entity-space/utils";
 import { EntityBlueprint, getNamedProperties } from "./entity-blueprint";
 import { hasAttribute } from "./entity-blueprint-property";
 
-export function toEntityFromDto<T>(blueprint: Class<T>, dto: Record<string, unknown>): EntityBlueprint.Instance<T> {
+export function dtoToEntity<T>(blueprint: Class<T>, dto: Record<string, unknown>): EntityBlueprint.Instance<T> {
     const properties = getNamedProperties(blueprint);
     const entity: Record<string, unknown> = {};
 
@@ -20,18 +20,18 @@ export function toEntityFromDto<T>(blueprint: Class<T>, dto: Record<string, unkn
         } else if (hasAttribute("array", property) && hasAttribute("entity", property)) {
             if (hasAttribute("dto", property)) {
                 entity[property.name] = (dto[property.dto] as any[]).map(dto =>
-                    toEntityFromDto(property.valueType as Class, dto),
+                    dtoToEntity(property.valueType as Class, dto),
                 );
             } else {
                 entity[property.name] = (dto[property.name] as any[]).map(dto =>
-                    toEntityFromDto(property.valueType as Class, dto),
+                    dtoToEntity(property.valueType as Class, dto),
                 );
             }
         } else if (hasAttribute("entity", property)) {
             if (hasAttribute("dto", property)) {
-                entity[property.name] = toEntityFromDto(property.valueType as Class, dto[property.dto] as any);
+                entity[property.name] = dtoToEntity(property.valueType as Class, dto[property.dto] as any);
             } else {
-                entity[property.name] = toEntityFromDto(property.valueType as Class, dto[property.name] as any);
+                entity[property.name] = dtoToEntity(property.valueType as Class, dto[property.name] as any);
             }
         }
     });
