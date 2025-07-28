@@ -1,6 +1,6 @@
 {
     "name": "@entity-space/lexer",
-    "version": "0.7.0-alpha.4",
+    "version": "0.7.0-alpha.5",
     "license": "MIT",
     "repository": {
         "type": "git",
@@ -12,6 +12,6 @@
         "require": "./cjs/index.js"
     },
     "dependencies": {
-        "@entity-space/utils": "0.7.0-alpha.4"
+        "@entity-space/utils": "0.7.0-alpha.5"
     }
 }
