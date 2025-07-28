@@ -36,6 +36,10 @@ export class EntityPrimitiveProperty extends EntityProperty {
         return this.#primitive;
     }
 
+    isString(): boolean {
+        return this.#primitive === String;
+    }
+
     isCreatable(): boolean {
         return this.#options.creatable;
     }

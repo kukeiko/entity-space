@@ -4,6 +4,7 @@ import { Entity } from "./entity";
 import {
     EntityBlueprintCreatableInstance,
     EntityBlueprintInstance,
+    EntityBlueprintSavableInstance,
     EntityBlueprintUpdatableInstance,
 } from "./entity-blueprint-instance.type";
 import {
@@ -64,6 +65,7 @@ export namespace EntityBlueprint {
     export type Instance<T> = EntityBlueprintInstance<T>;
     export type Creatable<T> = EntityBlueprintCreatableInstance<T>;
     export type Updatable<T> = EntityBlueprintUpdatableInstance<T>;
+    export type Savable<T> = EntityBlueprintSavableInstance<T>;
 
     export function register<T>(blueprint: Class<T>, options: RegisterEntityBlueprintOptions<T> = {}): void {
         blueprints.set(blueprint, {

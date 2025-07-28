@@ -27,8 +27,8 @@ describe("execution", () => {
 
     it("should work", async () => {
         /**
-         * This test is a temporary one to actively check lots of features to break anything while developing,
-         * but should be split into smaller ones at some point.
+         * This test is a temporary one to actively check lots of features to reduce change of breaking something while developing.
+         * It should be split into smaller ones at some point.
          */
         // arrange
         const users: User[] = [
@@ -74,10 +74,10 @@ describe("execution", () => {
         ];
 
         repository.useEntities({ artists, songs, tags, users });
-        repository.addLoadArtistById();
-        repository.addLoadSongsByArtistId();
-        repository.addLoadUserById();
-        repository.addLoadTagById();
+        repository.useLoadArtistById();
+        repository.useLoadSongsByArtistId();
+        repository.useLoadUserById();
+        repository.useLoadTagById();
 
         // act
         const artist = await workspace
@@ -142,7 +142,7 @@ describe("execution", () => {
 
         const expected = users.slice(0, 2);
         repository.useEntities({ users });
-        repository.addLoadAllUsers();
+        repository.useLoadAllUsers();
 
         // act
         const actual = await workspace
@@ -171,7 +171,7 @@ describe("execution", () => {
             .map(user => ({ ...user, metadata: { ...user.metadata, createdBy: users[2] } }));
 
         repository.useEntities({ users });
-        repository.addLoadAllUsers();
+        repository.useLoadAllUsers();
 
         // act
         const actual = await workspace
@@ -215,8 +215,8 @@ describe("execution", () => {
                 .get();
 
         repository.useEntities({ users });
-        repository.addLoadUsersByRequest();
-        repository.addLoadUserById();
+        repository.useLoadUsersByRequest();
+        repository.useLoadUserById();
 
         // act
         const loadedFromSource = await load();
@@ -251,7 +251,7 @@ describe("execution", () => {
         }));
 
         repository.useEntities({ users });
-        repository.addLoadUserById();
+        repository.useLoadUserById();
 
         // act
         const actual = await workspace

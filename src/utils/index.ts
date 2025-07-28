@@ -9,3 +9,4 @@ export * from "./path";
 export * from "./permutate-entries.fn";
 export * from "./primitive";
 export * from "./types";
+export * from "./unwrap-sync-or-async-value.fn";

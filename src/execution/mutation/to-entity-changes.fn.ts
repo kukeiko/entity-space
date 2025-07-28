@@ -1,0 +1,221 @@
+import {
+    Entity,
+    EntityRelationSelection,
+    EntitySchema,
+    getEntityDifference,
+    isNewEntity,
+    isPersistedEntity,
+    toEntityPairs,
+} from "@entity-space/elements";
+import { ComplexKeyMap, readPath, writePath } from "@entity-space/utils";
+import { isEmpty } from "lodash";
+import { entityHasId } from "../../elements/entity/entity-has-id.fn";
+import { EntityChange } from "./entity-change";
+import { EntityChanges } from "./entity-changes";
+import { EntityMutationType } from "./entity-mutation";
+
+function getCreated(
+    schema: EntitySchema,
+    entities: readonly Entity[],
+    selection: EntityRelationSelection,
+): EntityChange[] {
+    const created: EntityChange[] = [];
+
+    if (schema.hasId()) {
+        created.push(
+            ...entities
+                .filter(entity => isNewEntity(schema, entity))
+                .map(entity => new EntityChange("create", schema, entity)),
+        );
+    }
+
+    for (const [key, selected] of Object.entries(selection)) {
+        const relation = schema.getRelation(key);
+        const relatedSchema = relation.getRelatedSchema();
+        const related = relation.readValues(entities);
+        created.push(...getCreated(relatedSchema, related, selected));
+    }
+
+    return created;
+}
+
+function getUpdated(
+    schema: EntitySchema,
+    entities: readonly Entity[],
+    selection: EntityRelationSelection,
+    previous?: readonly Entity[],
+): EntityChange[] {
+    const updated: EntityChange[] = [];
+
+    if (schema.hasId()) {
+        const updatedEntities = entities.filter(entity => isPersistedEntity(schema, entity));
+
+        if (previous !== undefined) {
+            const pairs = toEntityPairs(schema, updatedEntities, previous);
+
+            for (const [current, previous] of pairs) {
+                // [todo] ⏰ make diff, add id, then add EntityChange
+                const difference =
+                    previous !== undefined ? getEntityDifference(schema, current, previous, selection) : current;
+
+                if (previous !== undefined && !isEmpty(difference)) {
+                    for (const idPath of schema.getIdPaths()) {
+                        writePath(idPath, difference, readPath(idPath, current));
+                    }
+
+                    updated.push(new EntityChange("update", schema, current, difference));
+                }
+            }
+
+            const pairedEntities = new Set(pairs.map(pair => pair[0]));
+
+            for (const updatedUnpairedEntity of updatedEntities.filter(entity => !pairedEntities.has(entity))) {
+                updated.push(new EntityChange("update", schema, updatedUnpairedEntity));
+            }
+        } else {
+            updated.push(
+                ...entities
+                    .filter(entity => isPersistedEntity(schema, entity))
+                    .map(entity => new EntityChange("update", schema, entity)),
+            );
+        }
+    }
+
+    for (const [key, selected] of Object.entries(selection)) {
+        const relation = schema.getRelation(key);
+        const relatedSchema = relation.getRelatedSchema();
+        const related = relation.readValues(entities);
+        updated.push(...getUpdated(relatedSchema, related, selected));
+    }
+
+    return updated;
+}
+
+function getMapOfAllEntities(
+    schema: EntitySchema,
+    entities: readonly Entity[],
+    selection: EntityRelationSelection,
+    map = new Map<EntitySchema, ComplexKeyMap<Entity, Entity>>(),
+): Map<EntitySchema, ComplexKeyMap<Entity, Entity>> {
+    for (const entity of entities) {
+        if (entityHasId(schema, entity)) {
+            if (!map.has(schema)) {
+                map.set(schema, new ComplexKeyMap(schema.getIdPaths()));
+            }
+
+            map.get(schema)!.set(entity, entity);
+        }
+
+        for (const [key, selected] of Object.entries(selection)) {
+            const relation = schema.getRelation(key);
+            getMapOfAllEntities(relation.getRelatedSchema(), relation.readValueAsArray(entity), selected, map);
+        }
+    }
+
+    return map;
+}
+
+function getShallowRemoved(
+    schema: EntitySchema,
+    current: Map<EntitySchema, ComplexKeyMap<Entity, Entity>>,
+    previous: Entity[],
+): EntityChange[] {
+    const removed: EntityChange[] = [];
+
+    for (const entity of previous) {
+        if (entityHasId(schema, entity) && (!current.has(schema) || !current.get(schema)!.has(entity))) {
+            removed.push(
+                new EntityChange("delete", schema, entity, undefined, removed => {
+                    // the reason we mutate the "previous" array is to prevent an entity being deleted multiple times in case of a retry
+                    const index = previous.indexOf(removed);
+
+                    if (index < 0) {
+                        throw new Error("entity to remove not found");
+                    }
+
+                    previous.splice(index, 1);
+                }),
+            );
+        }
+    }
+
+    return removed;
+}
+
+function getRelatedRemoved(
+    schema: EntitySchema,
+    current: Map<EntitySchema, ComplexKeyMap<Entity, Entity>>,
+    previous: Entity[],
+    selection: EntityRelationSelection,
+): EntityChange[] {
+    const changes: EntityChange[] = [];
+
+    for (const entity of previous) {
+        for (const [key, selected] of Object.entries(selection)) {
+            if (
+                entityHasId(schema, entity) &&
+                current.has(schema) &&
+                current.get(schema)!.has(entity) &&
+                current.get(schema)!.get(entity)![key] === undefined
+            ) {
+                // skip if original entity did not explicitly provide a a value for the relation
+                continue;
+            }
+
+            const relation = schema.getRelation(key);
+            const value = relation.readValue(entity);
+
+            if (value == null) {
+                continue;
+            }
+
+            const relatedSchema = relation.getRelatedSchema();
+
+            // remove any children
+            if (relation.isArray() && relation.joinsFromId() && Array.isArray(value)) {
+                changes.push(...getShallowRemoved(relatedSchema, current, value));
+            }
+
+            changes.push(...getRelatedRemoved(relatedSchema, current, relation.readValueAsArray(entity), selected));
+        }
+    }
+
+    return changes;
+}
+
+function getRemoved(
+    schema: EntitySchema,
+    current: readonly Entity[],
+    selection: EntityRelationSelection,
+    previous: Entity[],
+): EntityChange[] {
+    const currentEntitiesMap = getMapOfAllEntities(schema, current, selection);
+    const removedRoots = getShallowRemoved(schema, currentEntitiesMap, previous);
+    const removedChildren = getRelatedRemoved(schema, currentEntitiesMap, previous, selection);
+
+    return [...removedRoots, ...removedChildren];
+}
+
+export function toEntityChanges(
+    schema: EntitySchema,
+    entities: readonly Entity[],
+    selection: EntityRelationSelection,
+    previous?: Entity[],
+    type: EntityMutationType[] = ["create", "update", "delete"],
+): EntityChanges | undefined {
+    const changes: EntityChange[] = [];
+
+    if (previous !== undefined && type.includes("delete")) {
+        changes.push(...getRemoved(schema, entities, selection, previous));
+    }
+
+    if (type.includes("create")) {
+        changes.push(...getCreated(schema, entities, selection));
+    }
+
+    if (type.includes("update")) {
+        changes.push(...getUpdated(schema, entities, selection, previous));
+    }
+
+    return changes.length ? new EntityChanges(changes) : undefined;
+}

@@ -1,4 +1,4 @@
-import { Class, Primitive, Unbox } from "@entity-space/utils";
+import { Class, DeepPartial, Primitive, Unbox } from "@entity-space/utils";
 import {
     ArrayAttribute,
     BlueprintProperty,
@@ -40,7 +40,7 @@ export type EntityBlueprintInstance<T> = InstanceDefault<T> & InstanceRequired<T
 type CreatablePropertyValueType<V> = V extends Primitive
     ? ReturnType<V>
     : V extends Class
-      ? EntityBlueprintCreatableInstance<InstanceType<V>>
+      ? DeepPartial<EntityBlueprintCreatableInstance<InstanceType<V>>>
       : never;
 
 type CreatableRequiredPropertyKeys<T> = Exclude<
@@ -64,7 +64,7 @@ type CreatableInstanceDefault<T> = {
 
 type CreatableInstanceRequired<T> = {
     [K in CreatableRequiredPropertyKeys<T>]: T[K] extends BlueprintProperty<infer V>
-        ? NullIfNullable<T[K], BoxIfContainer<T[K], PropertyValueType<Unbox<V>>>> // [todo] was it intentional to use PropertyValueType instead of CreatablePropertyValueType?
+        ? NullIfNullable<T[K], BoxIfContainer<T[K], CreatablePropertyValueType<Unbox<V>>>>
         : T[K];
 };
 
@@ -91,8 +91,55 @@ type UpdatableInstanceDefault<T> = {
 
 type UpdatableInstanceRequired<T> = {
     [K in UpdatableRequiredPropertyKeys<T>]: T[K] extends BlueprintProperty<infer V>
-        ? NullIfNullable<T[K], BoxIfContainer<T[K], PropertyValueType<Unbox<V>>>> // [todo] was it intentional to use PropertyValueType instead of CreatablePropertyValueType?
+        ? NullIfNullable<T[K], BoxIfContainer<T[K], UpdatablePropertyValueType<Unbox<V>>>>
         : T[K];
 };
 
 export type EntityBlueprintUpdatableInstance<T> = UpdatableInstanceDefault<T> & UpdatableInstanceRequired<T>;
+
+type SavablePropertyValueType<V> = V extends Primitive
+    ? ReturnType<V>
+    : V extends Class
+      ? EntityBlueprintSavableInstance<InstanceType<V>>
+      : never;
+
+type SavableRequiredCreatablePropertyKeys<T> = Exclude<
+    {
+        [K in keyof T]: T[K] extends OptionalAttribute
+            ? never
+            : T[K] extends ReadonlyAttribute
+              ? T[K] extends CreatableAttribute
+                  ? K
+                  : never
+              : K;
+    }[keyof T],
+    undefined
+>;
+
+type SavableRequiredUpdatablePropertyKeys<T> = Exclude<
+    {
+        [K in keyof T]: T[K] extends IdAttribute ? K : never;
+    }[keyof T],
+    undefined
+>;
+
+type SavableInstanceDefault<T> = {
+    [K in keyof T]?: T[K] extends BlueprintProperty<infer V>
+        ? NullIfNullable<T[K], BoxIfContainer<T[K], SavablePropertyValueType<Unbox<V>>>>
+        : T[K];
+};
+
+type SavableInstanceRequiredCreatable<T> = {
+    [K in SavableRequiredCreatablePropertyKeys<T>]: T[K] extends BlueprintProperty<infer V>
+        ? NullIfNullable<T[K], BoxIfContainer<T[K], SavablePropertyValueType<Unbox<V>>>>
+        : T[K];
+};
+
+type SavableInstanceRequiredUpdatable<T> = {
+    [K in SavableRequiredUpdatablePropertyKeys<T>]: T[K] extends BlueprintProperty<infer V>
+        ? NullIfNullable<T[K], BoxIfContainer<T[K], SavablePropertyValueType<Unbox<V>>>>
+        : T[K];
+};
+
+export type EntityBlueprintSavableInstance<T> = SavableInstanceDefault<T> &
+    (SavableInstanceRequiredUpdatable<T> | SavableInstanceRequiredCreatable<T>);

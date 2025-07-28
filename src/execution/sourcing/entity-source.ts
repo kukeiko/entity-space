@@ -11,33 +11,26 @@ import {
     WhereEntityShape,
     WhereEntityShapeInstance,
 } from "@entity-space/elements";
-import { DeepPartial, isNot } from "@entity-space/utils";
+import { DeepPartial, isNot, SyncOrAsyncValue, unwrapSyncOrAsyncValue } from "@entity-space/utils";
 import { partition } from "lodash";
-import { isObservable, lastValueFrom, Observable } from "rxjs";
 import { EntityQueryExecutionContext } from "../entity-query-execution-context";
 import { EntityQueryTracing } from "../entity-query-tracing";
 import { AcceptedEntitySourcing } from "./accepted-entity-sourcing";
 
-export type LoadedEntities<T extends Entity = Entity> =
-    | T
-    | T[]
-    | Promise<T>
-    | Promise<T[]>
-    | Observable<T>
-    | Observable<T[]>;
+export type LoadEntitiesFnResult<T extends Entity = Entity> = SyncOrAsyncValue<T> | SyncOrAsyncValue<T[]>;
 
-export type LoadEntitiesFunction<T extends Entity = Entity, C = {}, S = {}, P extends Entity = Entity> = (args: {
+export type LoadEntitiesFn<T extends Entity = Entity, C = {}, S = {}, P extends Entity = Entity> = (args: {
     query: EntityQuery;
     selection: DeepPartial<S>;
     criteria: C;
     parameters: P;
-}) => LoadedEntities<T>;
+}) => SyncOrAsyncValue<T> | SyncOrAsyncValue<T[]>;
 
 export class EntitySource {
     constructor(
         tracing: EntityQueryTracing,
         queryShape: EntityQueryShape,
-        load: LoadEntitiesFunction,
+        load: LoadEntitiesFn,
         whereEntityShape?: WhereEntityShape,
     ) {
         this.#tracing = tracing;
@@ -48,7 +41,7 @@ export class EntitySource {
 
     readonly #tracing: EntityQueryTracing;
     readonly #queryShape: EntityQueryShape;
-    readonly #load: LoadEntitiesFunction;
+    readonly #load: LoadEntitiesFn;
     readonly #whereEntityShape?: WhereEntityShape;
 
     accept(queryShape: EntityQueryShape): AcceptedEntitySourcing | false {
@@ -111,7 +104,9 @@ export class EntitySource {
             criteria,
             parameters: query.getParameters()?.getValue() ?? {},
         });
-        const entities = await this.#loadedToEntities(loaded);
+
+        const result = await unwrapSyncOrAsyncValue(loaded);
+        const entities = Array.isArray(result) ? result : [result];
         this.#tracing.queryReceivedEntities(query, entities);
 
         const [validEntities, invalidEntities] = partition(
@@ -124,20 +119,6 @@ export class EntitySource {
         }
 
         return validEntities;
-    }
-
-    async #loadedToEntities(loaded: LoadedEntities): Promise<Entity[]> {
-        let entities: Entity | Entity[];
-
-        if (loaded instanceof Promise) {
-            entities = await loaded;
-        } else if (isObservable(loaded)) {
-            entities = await lastValueFrom(loaded as Observable<Entity | Entity[]>);
-        } else {
-            entities = loaded;
-        }
-
-        return Array.isArray(entities) ? entities : [entities];
     }
 
     #subtractByCache(query: EntityQuery, context: EntityQueryExecutionContext): EntityQuery[] {

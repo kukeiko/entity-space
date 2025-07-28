@@ -5,23 +5,33 @@ import {
     EntitySchema,
     EntitySelection,
     getDefaultSelection,
-    isRequiredCreatableEntityProperty,
-    isUpdatableEntityProperty,
     mergeSelection,
     PackedEntitySelection,
-    TypedEntitySelection,
+    packEntitySelection,
+    toRelationSelection,
     unpackSelection,
     WhereEntityShape,
     WhereEntityShapeInstance,
     whereEntityShapeToCriterionShape,
 } from "@entity-space/elements";
-import { Class } from "@entity-space/utils";
+import { Class, unwrapSyncOrAsyncValue } from "@entity-space/utils";
 import { EntityQueryExecutionContext } from "./entity-query-execution-context";
 import { EntityServiceContainer } from "./entity-service-container";
 import { ExplicitEntityHydrator } from "./hydration/explicit-entity-hydrator";
-import { EntityMutator } from "./mutation/entity-mutator";
-import { CreateEntitiesFn, CreateEntityFn, DeleteEntityFn, UpdateEntityFn } from "./mutation/mutation-function.type";
-import { EntitySource, LoadEntitiesFunction } from "./sourcing/entity-source";
+import { EntityMutationType } from "./mutation/entity-mutation";
+import {
+    CreateEntitiesFn,
+    CreateEntityFn,
+    DeleteEntitiesFn,
+    DeleteEntityFn,
+    SaveEntitiesFn,
+    SaveEntityFn,
+    UpdateEntitiesFn,
+    UpdateEntityFn,
+} from "./mutation/entity-mutation-function.type";
+import { EntityMutationFn } from "./mutation/entity-mutator";
+import { ExplicitEntityMutator } from "./mutation/explicit-entity-mutator";
+import { EntitySource, LoadEntitiesFn } from "./sourcing/entity-source";
 
 export class EntitySchemaScopedServiceContainer<B> {
     constructor(
@@ -29,7 +39,7 @@ export class EntitySchemaScopedServiceContainer<B> {
         schema: EntitySchema,
         addSourceFn: (source: EntitySource) => void,
         addHydratorFn: (hydrator: ExplicitEntityHydrator) => void,
-        addMutatorFn: (mutator: EntityMutator) => void,
+        addMutatorFn: (mutator: ExplicitEntityMutator) => void,
     ) {
         this.#services = services;
         this.#schema = schema;
@@ -42,7 +52,7 @@ export class EntitySchemaScopedServiceContainer<B> {
     readonly #schema: EntitySchema;
     readonly #addSourceFn: (source: EntitySource) => void;
     readonly #addHydratorFn: (hydrator: ExplicitEntityHydrator) => void;
-    readonly #addMutatorFn: (mutator: EntityMutator) => void;
+    readonly #addMutatorFn: (mutator: ExplicitEntityMutator) => void;
 
     addSource<
         W extends WhereEntityShape<EntityBlueprint.Instance<B>>,
@@ -57,7 +67,7 @@ export class EntitySchemaScopedServiceContainer<B> {
         where?: W | WhereEntityShape<EntityBlueprint.Instance<B>>;
         select?: S | PackedEntitySelection<EntityBlueprint.Instance<B>>;
         parameters?: Class<P>;
-        load: LoadEntitiesFunction<
+        load: LoadEntitiesFn<
             EntityBlueprint.Instance<B>,
             WhereEntityShapeInstance<W, EntityBlueprint.Instance<B>>,
             S,
@@ -74,9 +84,7 @@ export class EntitySchemaScopedServiceContainer<B> {
             parameters ? this.#services.getCatalog().getSchemaByBlueprint(parameters) : undefined,
         );
 
-        this.#addSourceFn(
-            new EntitySource(this.#services.getTracing(), queryShape, load as LoadEntitiesFunction, where),
-        );
+        this.#addSourceFn(new EntitySource(this.#services.getTracing(), queryShape, load as LoadEntitiesFn, where));
 
         return this;
     }
@@ -89,7 +97,7 @@ export class EntitySchemaScopedServiceContainer<B> {
         select: PackedEntitySelection<EntityBlueprint.Instance<B>>;
         requires: S;
         hydrate: (
-            // [todo] similar to LoadEntitiesFunction, add a HydrateEntitiesFunction type and make it a singular argument for improved DX
+            // [todo] ❌ similar to LoadEntitiesFunction, add a HydrateEntitiesFunction type and make it a singular argument for improved DX
             entities: EntityBlueprint.Instance<B>[],
             selection: PackedEntitySelection<EntityBlueprint.Instance<B>>,
             context: EntityQueryExecutionContext,
@@ -112,78 +120,160 @@ export class EntitySchemaScopedServiceContainer<B> {
         return this;
     }
 
-    addCreateOneMutator({
+    addSaveOneMutator<S extends PackedEntitySelection<EntityBlueprint.Instance<B>>>({
+        save,
+        select,
+    }: {
+        select?: S | PackedEntitySelection<EntityBlueprint.Instance<B>>;
+        save: SaveEntityFn<B, S>;
+    }): this {
+        const mutate: EntityMutationFn = (entities, selection) => {
+            return Promise.all(
+                entities.map(entity => {
+                    return unwrapSyncOrAsyncValue(
+                        save({ entity: entity as EntityBlueprint.Savable<B>, selection: selection as S }),
+                    );
+                }),
+            );
+        };
+
+        return this.#addMutator("save", mutate, select);
+    }
+
+    addSaveMutator<S extends PackedEntitySelection<EntityBlueprint.Instance<B>>>({
+        save,
+        select,
+    }: {
+        select?: S | PackedEntitySelection<EntityBlueprint.Instance<B>>;
+        save: SaveEntitiesFn<B, S>;
+    }): this {
+        const mutate: EntityMutationFn = (entities, selection) => {
+            return unwrapSyncOrAsyncValue(
+                save({
+                    entities: entities as EntityBlueprint.Savable<B>[],
+                    selection: packEntitySelection(this.#schema, selection) as S,
+                }),
+            );
+        };
+
+        return this.#addMutator("save", mutate, select);
+    }
+
+    addCreateOneMutator<S extends PackedEntitySelection<EntityBlueprint.Instance<B>>>({
         create,
         select,
     }: {
-        select?: PackedEntitySelection<EntityBlueprint.Instance<B>>;
-        create: CreateEntityFn<B>;
+        select?: S | PackedEntitySelection<EntityBlueprint.Instance<B>>;
+        create: CreateEntityFn<B, S>;
     }): this {
-        const selection = unpackSelection(this.#schema, select ?? {}, isRequiredCreatableEntityProperty);
-        const mutator = new EntityMutator(this.#schema, "create", selection, async (entities, selection) => {
-            const created = await create({
-                entity: entities[0] as EntityBlueprint.Creatable<B>,
-                selection: selection as TypedEntitySelection<EntityBlueprint.Instance<B>>,
-            });
+        const mutate: EntityMutationFn = (entities, selection) => {
+            return Promise.all(
+                entities.map(entity => {
+                    return unwrapSyncOrAsyncValue(
+                        create({ entity: entity as EntityBlueprint.Creatable<B>, selection: selection as S }),
+                    );
+                }),
+            );
+        };
 
-            return [created];
-        });
-
-        this.#addMutatorFn(mutator);
-
-        return this;
+        return this.#addMutator("create", mutate, select);
     }
 
-    addCreateMutator({
+    addCreateMutator<S extends PackedEntitySelection<EntityBlueprint.Instance<B>>>({
         create,
         select,
     }: {
-        select?: PackedEntitySelection<EntityBlueprint.Instance<B>>;
-        create: CreateEntitiesFn<B>;
+        select?: S | PackedEntitySelection<EntityBlueprint.Instance<B>>;
+        create: CreateEntitiesFn<B, S>;
     }): this {
-        // [todo] might need to unpackSelection() - but with a predicate to only include properties that are required for creation
-        const mutator = new EntityMutator(this.#schema, "create", {}, (entities, selection) =>
-            create({
-                entities: entities as EntityBlueprint.Creatable<B>[],
-                selection: selection as TypedEntitySelection<EntityBlueprint.Instance<B>>,
-            }),
-        );
+        const mutate: EntityMutationFn = (entities, selection) => {
+            return unwrapSyncOrAsyncValue(
+                create({ entities: entities as EntityBlueprint.Creatable<B>[], selection: selection as S }),
+            );
+        };
 
-        this.#addMutatorFn(mutator);
-
-        return this;
+        return this.#addMutator("create", mutate, select);
     }
 
-    addUpdateOneMutator({
+    addUpdateOneMutator<S extends PackedEntitySelection<EntityBlueprint.Instance<B>>>({
         update,
         select,
     }: {
-        select?: PackedEntitySelection<EntityBlueprint.Instance<B>>;
-        update: UpdateEntityFn<B>;
+        select?: S | PackedEntitySelection<EntityBlueprint.Instance<B>>;
+        update: UpdateEntityFn<B, S>;
     }): this {
-        const selection = unpackSelection(this.#schema, select ?? {}, isUpdatableEntityProperty);
-        const mutator = new EntityMutator(this.#schema, "update", selection, async (entities, selection) => {
-            const updated = await update({
-                entity: entities[0] as EntityBlueprint.Updatable<B>,
-            });
+        const mutate: EntityMutationFn = (entities, selection) => {
+            return Promise.all(
+                entities.map(entity => {
+                    return unwrapSyncOrAsyncValue(
+                        update({ entity: entity as EntityBlueprint.Updatable<B>, selection: selection as S }),
+                    );
+                }),
+            );
+        };
 
-            return [updated];
-        });
-
-        this.#addMutatorFn(mutator);
-
-        return this;
+        return this.#addMutator("update", mutate, select);
     }
 
-    addDeleteOneMutator({ delete: deleteFn }: { delete: DeleteEntityFn<B> }): this {
-        const mutator = new EntityMutator(this.#schema, "delete", getDefaultSelection(this.#schema), async entities => {
-            await deleteFn({
-                entity: entities[0] as EntityBlueprint.Instance<B>,
-            });
+    addUpdateMutator<S extends PackedEntitySelection<EntityBlueprint.Instance<B>>>({
+        update,
+        select,
+    }: {
+        select?: S | PackedEntitySelection<EntityBlueprint.Instance<B>>;
+        update: UpdateEntitiesFn<B, S>;
+    }): this {
+        const mutate: EntityMutationFn = (entities, selection) => {
+            return unwrapSyncOrAsyncValue(
+                update({ entities: entities as EntityBlueprint.Updatable<B>[], selection: selection as S }),
+            );
+        };
 
-            return [];
-        });
+        return this.#addMutator("update", mutate, select);
+    }
 
+    addDeleteOneMutator<S extends PackedEntitySelection<EntityBlueprint.Instance<B>>>({
+        delete: del,
+        select,
+    }: {
+        select?: S | PackedEntitySelection<EntityBlueprint.Instance<B>>;
+        delete: DeleteEntityFn<B, S>;
+    }): this {
+        const mutate: EntityMutationFn = (entities, selection) => {
+            return Promise.all(
+                entities.map(entity => {
+                    return unwrapSyncOrAsyncValue(
+                        del({ entity: entity as EntityBlueprint.Instance<B>, selection: selection as S }),
+                    );
+                }),
+            );
+        };
+
+        return this.#addMutator("delete", mutate, select);
+    }
+
+    addDeleteMutator<S extends PackedEntitySelection<EntityBlueprint.Instance<B>>>({
+        delete: del,
+        select,
+    }: {
+        select?: S | PackedEntitySelection<EntityBlueprint.Instance<B>>;
+        delete: DeleteEntitiesFn<B, S>;
+    }): this {
+        const mutate: EntityMutationFn = (entities, selection) => {
+            return unwrapSyncOrAsyncValue(
+                del({ entities: entities as EntityBlueprint.Instance<B>[], selection: selection as S }),
+            );
+        };
+
+        return this.#addMutator("delete", mutate, select);
+    }
+
+    #addMutator(
+        type: EntityMutationType,
+        mutate: EntityMutationFn,
+        select?: PackedEntitySelection<EntityBlueprint.Instance<B>>,
+    ): this {
+        const selection = select ? toRelationSelection(this.#schema, unpackSelection(this.#schema, select)) : undefined;
+        const mutator = new ExplicitEntityMutator(type, this.#schema, mutate, selection);
         this.#addMutatorFn(mutator);
 
         return this;

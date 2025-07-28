@@ -1,9 +1,23 @@
-import { cloneEntity, EntityBlueprint } from "@entity-space/elements";
+import { cloneEntity, EntityBlueprint, PackedEntitySelection } from "@entity-space/elements";
 import {
     AlbumBlueprint,
     ArtistBlueprint,
     ArtistRequest,
     ArtistRequestBlueprint,
+    Item,
+    ItemAttributeType,
+    ItemAttributeTypeBlueprint,
+    ItemAttributeTypeCreatable,
+    ItemAttributeTypeUpdatable,
+    ItemBlueprint,
+    ItemCreatable,
+    ItemSavable,
+    ItemSocket,
+    ItemSocketBlueprint,
+    ItemSocketCreatable,
+    ItemSocketSavable,
+    ItemSocketUpdatable,
+    ItemUpdatable,
     RecordMetadata,
     SongBlueprint,
     TagBlueprint,
@@ -13,7 +27,7 @@ import {
 } from "@entity-space/elements/testing";
 import { vi } from "vitest";
 import { EntityServiceContainer } from "../entity-service-container";
-import { CreateEntityFn } from "../mutation/mutation-function.type";
+import { CreateEntityFn } from "../mutation/entity-mutation-function.type";
 import { defaultEntities, TestEntities } from "./default-entities";
 
 function filterById<T extends { id: string | number }>(id: string | number): (entity: T) => boolean {
@@ -69,7 +83,7 @@ export class TestRepository {
         return this;
     }
 
-    addLoadAllUsers() {
+    useLoadAllUsers() {
         const load = vi.fn(() => this.#filter("users"));
 
         this.#services.for(UserBlueprint).addSource({
@@ -80,7 +94,7 @@ export class TestRepository {
         return load;
     }
 
-    addLoadUserById() {
+    useLoadUserById() {
         const load = vi.fn((id: number) => this.#filter("users", filterById(id)));
 
         this.#services.for(UserBlueprint).addSource({
@@ -91,7 +105,7 @@ export class TestRepository {
         return load;
     }
 
-    addLoadUsersByRequest() {
+    useLoadUsersByRequest() {
         const load = vi.fn((parameters: UserRequest) => {
             return this.#filter("users", undefined, parameters.pageSize ?? 3, parameters.page);
         });
@@ -104,7 +118,7 @@ export class TestRepository {
         return load;
     }
 
-    addLoadTagById() {
+    useLoadTagById() {
         const load = vi.fn((id: string) => this.#filter("tags", filterById(id)));
 
         this.#services.for(TagBlueprint).addSource({
@@ -115,7 +129,7 @@ export class TestRepository {
         return load;
     }
 
-    addLoadArtistsByRequest() {
+    useLoadArtistsByRequest() {
         const load = vi.fn((parameters: ArtistRequest) => {
             const page = parameters.page ?? 0;
             const pageSize = parameters.pageSize ?? 3;
@@ -133,7 +147,7 @@ export class TestRepository {
         return load;
     }
 
-    addLoadArtistsByCreatedAt() {
+    useLoadArtistsByCreatedAt() {
         const load = vi.fn(
             (
                 createdAt?: [string | undefined | null, string | undefined | null],
@@ -157,7 +171,7 @@ export class TestRepository {
         return load;
     }
 
-    addLoadArtistById() {
+    useLoadArtistById() {
         const load = vi.fn((id: number) => this.#filter("artists", filterById(id)));
 
         this.#services.for(ArtistBlueprint).addSource({
@@ -168,7 +182,7 @@ export class TestRepository {
         return load;
     }
 
-    addLoadArtistsByIds() {
+    useLoadArtistsByIds() {
         const loadArtistsById = vi.fn((ids: number[]) => this.#filter("artists", filterByIds(ids)));
 
         this.#services.for(ArtistBlueprint).addSource({
@@ -179,7 +193,7 @@ export class TestRepository {
         return loadArtistsById;
     }
 
-    addLoadArtistsByCountry() {
+    useLoadArtistsByCountry() {
         const load = vi.fn((country?: string | null) => this.#filter("artists", artist => artist.country === country));
 
         this.#services.for(ArtistBlueprint).addSource({
@@ -190,7 +204,7 @@ export class TestRepository {
         return load;
     }
 
-    addCreateArtist() {
+    useCreateArtist() {
         const create = vi.fn<CreateEntityFn<ArtistBlueprint>>(({ entity: artist }) => {
             const nextId = this.#nextId("artists");
 
@@ -211,7 +225,7 @@ export class TestRepository {
         return create;
     }
 
-    addLoadAlbumById() {
+    useLoadAlbumById() {
         const load = vi.fn((id: number) => this.#filter("albums", filterById(id)));
 
         this.#services.for(AlbumBlueprint).addSource({
@@ -222,7 +236,7 @@ export class TestRepository {
         return load;
     }
 
-    addLoadSongsByArtistId() {
+    useLoadSongsByArtistId() {
         const loadSongsByArtistId = vi.fn((artistIds: number[]) =>
             this.#filter("songs", song => artistIds.includes(song.artistId)),
         );
@@ -236,7 +250,7 @@ export class TestRepository {
         return loadSongsByArtistId;
     }
 
-    addLoadSongsByArtistIdAndNamespace() {
+    useLoadSongsByArtistIdAndNamespace() {
         const loadSongsByArtistIdsAndNamespace = vi.fn((artistIds: number[], namespace: string) =>
             this.#filter("songs", song => song.namespace === namespace && artistIds.includes(song.artistId)),
         );
@@ -248,6 +262,263 @@ export class TestRepository {
         });
 
         return loadSongsByArtistIdsAndNamespace;
+    }
+
+    useCreateItems(createdAt: string) {
+        const createItem = vi.fn(
+            ({ entities, selection }: { entities: ItemCreatable[]; selection: PackedEntitySelection<Item> }) => {
+                console.log("🆕 create Item received:");
+                console.dir(entities, { depth: null });
+                const items = structuredClone(entities);
+
+                for (const item of items) {
+                    item.id = item.assignId;
+                    item.createdAt = createdAt;
+
+                    // [todo] ❌ commented out to remind myself of: add validation to entities returned from user mutation functions
+                    // making sure entities are properly hydrated
+                    // item.updatedAt = null;
+                }
+
+                return items as Item[];
+            },
+        );
+
+        this.#services.for(ItemBlueprint).addCreateMutator({
+            create: createItem,
+        });
+
+        return createItem;
+    }
+
+    useUpdateItems(updatedAt: string) {
+        const updateItems = vi.fn(({ entities }: { entities: ItemUpdatable[] }) => {
+            console.log("✏️ update Item received:");
+            console.dir(entities, { depth: null });
+            const items = structuredClone(entities);
+
+            for (const item of items) {
+                item.updatedAt = updatedAt;
+            }
+
+            // [todo] ❓ do we really expect users to return the fully loaded entities?
+            return items as Item[];
+        });
+
+        this.#services.for(ItemBlueprint).addUpdateMutator({
+            update: updateItems,
+        });
+
+        return updateItems;
+    }
+
+    useSaveItems(createdAt: string, updatedAt: string) {
+        const saveItems = vi.fn(
+            ({ entities, selection }: { entities: ItemSavable[]; selection: PackedEntitySelection<Item> }) => {
+                console.log("💾 save Item received:");
+                console.dir(entities, { depth: null });
+                const items = structuredClone(entities) as ItemSavable[];
+
+                for (const item of items) {
+                    if (!item.id) {
+                        item.id = item.assignId;
+                        item.createdAt = createdAt;
+                    }
+
+                    if (selection.sockets && item.sockets) {
+                        // [todo] ❌ type issue in "ItemSavable", item.sockets[number] allows "undefined"
+                        for (const socket of item.sockets as ItemSocketSavable[]) {
+                            if (!socket.id) {
+                                socket.id = socket.assignId;
+                                socket.createdAt = socket.createdAt;
+                            }
+
+                            socket.updatedAt = updatedAt;
+                        }
+                    }
+
+                    item.updatedAt = updatedAt;
+                }
+
+                return items as Item[];
+            },
+        );
+
+        this.#services.for(ItemBlueprint).addSaveMutator({
+            select: { sockets: true },
+            save: saveItems,
+        });
+
+        return saveItems;
+    }
+
+    useDeleteItems() {
+        const deleteItems = vi.fn(
+            ({ entities, selection }: { entities: Item[]; selection: PackedEntitySelection<Item> }) => {
+                console.log("❌ delete Item received:");
+                console.dir(entities, { depth: null });
+                const items = structuredClone(entities) as Item[];
+                return items;
+            },
+        );
+
+        this.#services.for(ItemBlueprint).addDeleteMutator({
+            delete: deleteItems,
+        });
+
+        return deleteItems;
+    }
+
+    useCreateItemSockets(createdAt: string) {
+        const createItemSockets = vi.fn(
+            ({
+                entities,
+                selection,
+            }: {
+                entities: ItemSocketCreatable[];
+                selection: PackedEntitySelection<ItemSocket>;
+            }) => {
+                console.log("🆕 create ItemSocket received:");
+                console.dir(entities, { depth: null });
+                const itemSockets = structuredClone(entities);
+
+                for (const itemSocket of itemSockets) {
+                    itemSocket.id = itemSocket.assignId;
+                    itemSocket.createdAt = createdAt;
+                }
+
+                return itemSockets as ItemSocket[];
+            },
+        );
+
+        this.#services.for(ItemSocketBlueprint).addCreateMutator({
+            create: createItemSockets,
+        });
+
+        return createItemSockets;
+    }
+
+    useUpdateItemSockets(updatedAt: string) {
+        const updateItemSockets = vi.fn(
+            ({
+                entities,
+                selection,
+            }: {
+                entities: ItemSocketUpdatable[];
+                selection: PackedEntitySelection<ItemSocket>;
+            }) => {
+                console.log("✏️ update ItemSocket received:");
+                console.dir(entities, { depth: null });
+                const items = structuredClone(entities);
+
+                for (const item of items) {
+                    item.updatedAt = updatedAt;
+                }
+
+                return items as ItemSocket[];
+            },
+        );
+
+        this.#services.for(ItemSocketBlueprint).addUpdateMutator({
+            update: updateItemSockets,
+        });
+
+        return updateItemSockets;
+    }
+
+    useDeleteItemSockets() {
+        const deleteItems = vi.fn(
+            ({ entities, selection }: { entities: ItemSocket[]; selection: PackedEntitySelection<ItemSocket> }) => {
+                console.log("❌ delete ItemSocket received:");
+                console.dir(entities, { depth: null });
+                return structuredClone(entities);
+            },
+        );
+
+        this.#services.for(ItemSocketBlueprint).addDeleteMutator({
+            delete: deleteItems,
+        });
+
+        return deleteItems;
+    }
+
+    useCreateItemAttributeTypes(createdAt: string) {
+        const createItemAttributeTypes = vi.fn(
+            ({
+                entities,
+                selection,
+            }: {
+                entities: ItemAttributeTypeCreatable[];
+                selection: PackedEntitySelection<ItemSocket>;
+            }) => {
+                console.log("🆕 create ItemAttributeType received:");
+                console.dir(entities, { depth: null });
+                const itemAttributeTypes = structuredClone(entities) as ItemAttributeTypeCreatable[];
+
+                for (const itemAttributeType of itemAttributeTypes) {
+                    itemAttributeType.id = itemAttributeType.assignId;
+                    itemAttributeType.createdAt = createdAt;
+                }
+
+                return itemAttributeTypes as ItemAttributeType[];
+            },
+        );
+
+        this.#services.for(ItemAttributeTypeBlueprint).addCreateMutator({
+            create: createItemAttributeTypes,
+        });
+
+        return createItemAttributeTypes;
+    }
+
+    useUpdateItemAttributeTypes(updatedAt: string) {
+        const updateItemAttributeTypes = vi.fn(
+            ({
+                entities,
+                selection,
+            }: {
+                entities: ItemAttributeTypeUpdatable[];
+                selection: PackedEntitySelection<ItemSocket>;
+            }) => {
+                console.log("✏️ update ItemAttributeType received:");
+                console.dir(entities, { depth: null });
+                const items = structuredClone(entities);
+
+                for (const item of items) {
+                    item.updatedAt = updatedAt;
+                }
+
+                return items as ItemAttributeType[];
+            },
+        );
+
+        this.#services.for(ItemAttributeTypeBlueprint).addUpdateMutator({
+            update: updateItemAttributeTypes,
+        });
+
+        return updateItemAttributeTypes;
+    }
+
+    useDeleteItemAttributeTypes() {
+        const deleteItemAttributeTypes = vi.fn(
+            ({
+                entities,
+                selection,
+            }: {
+                entities: ItemAttributeType[];
+                selection: PackedEntitySelection<ItemSocket>;
+            }) => {
+                console.log("❌ delete ItemAttributeType received:");
+                console.dir(entities, { depth: null });
+                return structuredClone(entities);
+            },
+        );
+
+        this.#services.for(ItemAttributeTypeBlueprint).addDeleteMutator({
+            delete: deleteItemAttributeTypes,
+        });
+
+        return deleteItemAttributeTypes;
     }
 
     #filter<K extends keyof TestEntities>(

@@ -30,6 +30,10 @@ export function toPaths(paths: readonly string[]): Path[] {
     return wrapped;
 }
 
+export function joinPaths(paths: readonly (string | Path)[]): Path {
+    return toPath(paths.map(path => (typeof path === "string" ? path : toPathSegments(path))).join("."));
+}
+
 export function toPathSegments(path: Path): readonly string[] {
     return path[$path];
 }

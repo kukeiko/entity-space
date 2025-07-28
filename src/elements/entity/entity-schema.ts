@@ -43,8 +43,24 @@ export class EntitySchema {
         return this.#idPaths;
     }
 
+    getLeadingIdPaths(): readonly Path[] {
+        return this.#idPaths.slice(0, -1);
+    }
+
+    getLastIdPath(): Path {
+        if (!this.hasId()) {
+            throw new Error(`schema ${this.#name} has no id defined`);
+        }
+
+        return this.#idPaths.at(-1)!;
+    }
+
     isProperty(name: string): boolean {
         return name in this.#primitives || name in this.#relations;
+    }
+
+    isIdProperty(name: string): boolean {
+        return this.#idPaths.some(path => path.toString() === name);
     }
 
     addPrimitive(
@@ -68,14 +84,24 @@ export class EntitySchema {
         return name in this.#primitives;
     }
 
-    getPrimitive(name: string): EntityPrimitiveProperty {
-        this.#assertIsProperty(name);
+    getPrimitive(name: string | Path): EntityPrimitiveProperty {
+        if (typeof name === "string") {
+            this.#assertIsProperty(name);
 
-        if (!this.isPrimitive(name)) {
-            throw new Error(`${this.#name}.${name} is not a primitive property`);
+            if (!this.isPrimitive(name)) {
+                throw new Error(`${this.#name}.${name} is not a primitive property`);
+            }
+
+            return this.#primitives[name];
+        } else {
+            let schema: EntitySchema = this;
+
+            for (const segment of toPathSegments(name).slice(0, -1)) {
+                schema = schema.getRelation(segment).getRelatedSchema();
+            }
+
+            return schema.getPrimitive(toPathSegments(name).at(-1)!);
         }
-
-        return this.#primitives[name];
     }
 
     addRelation(
@@ -95,6 +121,8 @@ export class EntitySchema {
 
         let joinFromIsContainer = false;
         let joinToIsContainer = false;
+        let joinsFromId = false;
+        let joinsToId = false;
 
         if (options?.relationshipType === RelationshipType.Joined) {
             const joinFrom = options.joinFrom ?? [];
@@ -112,12 +140,22 @@ export class EntitySchema {
             } else if ((joinFromIsContainer || joinToIsContainer) && options.container === undefined) {
                 throw new Error(`joinFrom / joinTo can only cross a container if the relation is a container`);
             }
+
+            if (this.#idPaths.length) {
+                joinsFromId = lastJoinFrom.valueOf() === this.#idPaths.at(-1)!.valueOf();
+            }
+
+            if (schema.#idPaths.length) {
+                joinsToId = lastJoinTo.valueOf() === schema.#idPaths.at(-1)!.valueOf();
+            }
         }
 
-        this.#relations[name] = new EntityRelationProperty(name, schema, {
+        this.#relations[name] = new EntityRelationProperty(name, this, schema, {
             ...options,
             joinFromIsContainer,
             joinToIsContainer,
+            joinsFromId,
+            joinsToId,
         });
 
         return this;
@@ -127,18 +165,33 @@ export class EntitySchema {
         return name in this.#relations;
     }
 
-    getRelation(name: string): EntityRelationProperty {
-        this.#assertIsProperty(name);
+    getRelation(name: string | Path): EntityRelationProperty {
+        if (typeof name === "string") {
+            this.#assertIsProperty(name);
 
-        if (!this.isRelation(name)) {
-            throw new Error(`${this.#name}.${name} is not a relation property`);
+            if (!this.isRelation(name)) {
+                throw new Error(`${this.#name}.${name} is not a relation property`);
+            }
+
+            return this.#relations[name];
+        } else {
+            let schema: EntitySchema = this;
+
+            for (const segment of toPathSegments(name).slice(0, -1)) {
+                schema = schema.getRelation(segment).getRelatedSchema();
+            }
+
+            return schema.getRelation(toPathSegments(name).at(-1)!);
         }
-
-        return this.#relations[name];
     }
 
     getRelations(): EntityRelationProperty[] {
         return Object.values(this.#relations);
+    }
+
+    getProperty(key: string): EntityProperty {
+        this.#assertIsProperty(key);
+        return this.#primitives[key] || this.#relations[key];
     }
 
     getProperties(): EntityProperty[] {

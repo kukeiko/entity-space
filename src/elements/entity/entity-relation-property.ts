@@ -1,4 +1,4 @@
-import { isNotNullsy, Path } from "@entity-space/utils";
+import { isNotNullsy, Path, readPath, writePath } from "@entity-space/utils";
 import { isNull, isPlainObject, isUndefined } from "lodash";
 import { Entity } from "./entity";
 import { EntityProperty, EntityPropertyOptions } from "./entity-property";
@@ -22,18 +22,22 @@ export interface EntityRelationPropertyOptions {
     relationshipType?: RelationshipType;
     joinFrom: readonly Path[];
     joinFromIsContainer: boolean;
+    joinsFromId: boolean;
     joinTo: readonly Path[];
     joinToIsContainer: boolean;
+    joinsToId: boolean;
 }
 
 export class EntityRelationProperty extends EntityProperty {
     constructor(
         name: string,
         schema: EntitySchema,
+        relatedSchema: EntitySchema,
         options?: Partial<EntityPropertyOptions & EntityRelationPropertyOptions>,
     ) {
         super(name, options);
         this.#schema = schema;
+        this.#relatedSchema = relatedSchema;
 
         if (options?.relationshipType) {
             assertValidRelationshipType(options?.relationshipType);
@@ -43,9 +47,9 @@ export class EntityRelationProperty extends EntityProperty {
         let joinTo = options?.joinTo ?? [];
 
         if (options?.relationshipType === RelationshipType.Joined) {
-            if (!schema.hasId()) {
+            if (!relatedSchema.hasId()) {
                 throw new Error(
-                    `related schema ${schema.getName()} must have an id when using the Joined relationship type`,
+                    `related schema ${relatedSchema.getName()} must have an id when using the Joined relationship type`,
                 );
             }
 
@@ -74,16 +78,23 @@ export class EntityRelationProperty extends EntityProperty {
             relationshipType: options?.relationshipType,
             joinFrom: Object.freeze(joinFrom.slice()),
             joinFromIsContainer: options?.joinFromIsContainer === true,
+            joinsFromId: options?.joinsFromId === true,
             joinTo: Object.freeze(joinTo.slice()),
             joinToIsContainer: options?.joinToIsContainer === true,
+            joinsToId: options?.joinsToId === true,
         });
     }
 
     readonly #schema: EntitySchema;
+    readonly #relatedSchema: EntitySchema;
     readonly #options: Readonly<EntityRelationPropertyOptions>;
 
-    getRelatedSchema(): EntitySchema {
+    getSchema(): EntitySchema {
         return this.#schema;
+    }
+
+    getRelatedSchema(): EntitySchema {
+        return this.#relatedSchema;
     }
 
     isEmbedded(): boolean {
@@ -102,12 +113,20 @@ export class EntityRelationProperty extends EntityProperty {
         return this.#options.joinFromIsContainer;
     }
 
+    joinsFromId(): boolean {
+        return this.#options.joinsFromId;
+    }
+
     getJoinTo(): readonly Path[] {
         return this.#options.joinTo;
     }
 
     joinToIsContainer(): boolean {
         return this.#options.joinToIsContainer;
+    }
+
+    joinsToId(): boolean {
+        return this.#options.joinsToId;
     }
 
     readValue(entity: Entity): Entity | Entity[] | undefined | null {
@@ -136,5 +155,94 @@ export class EntityRelationProperty extends EntityProperty {
             .map(entity => this.readValue(entity))
             .filter(isNotNullsy)
             .flat();
+    }
+
+    readValueAsArray(entity: Entity): Entity[] {
+        const value = this.readValue(entity);
+
+        if (value == null) {
+            return [];
+        } else if (!Array.isArray(value)) {
+            return [value];
+        } else {
+            return value;
+        }
+    }
+
+    // [todo] ❌ implement remaining
+    // [todo] ❌ move to standalone file
+    writeIds(entities: readonly Entity[]): void {
+        if (this.joinsFromId() && this.joinsToId()) {
+            throw new Error("not supported: joins both from & to id");
+        } else if (this.joinsFromId()) {
+            if (this.isArray() && this.joinToIsContainer()) {
+                // [todo] implement
+                throw new Error("not yet implemented");
+            } else if (this.isArray()) {
+                const [joinsFrom, joinsTo] = [this.getJoinFrom(), this.getJoinTo()];
+
+                for (const entity of entities) {
+                    const related = this.readValueAsArray(entity);
+
+                    if (!related.length) {
+                        continue;
+                    }
+
+                    for (const relatedEntity of related) {
+                        for (let i = 0; i < joinsFrom.length - 1; i++) {
+                            const [joinFrom, joinTo] = [joinsFrom[i], joinsTo[i]];
+                            writePath(joinTo, relatedEntity, readPath(joinFrom, entity));
+                        }
+
+                        const [lastJoinFrom, lastJoinTo] = [joinsFrom.at(-1)!, joinsTo.at(-1)!];
+                        writePath(lastJoinTo, relatedEntity, readPath(lastJoinFrom, entity));
+                    }
+                }
+            } else {
+                // [todo] implement
+                throw new Error("not yet implemented");
+            }
+        } else if (this.joinsToId()) {
+            if (this.isArray() && this.joinFromIsContainer()) {
+                const [joinsFrom, joinsTo] = [this.getJoinFrom(), this.getJoinTo()];
+
+                for (const entity of entities) {
+                    const related = this.readValueAsArray(entity);
+
+                    if (!related.length) {
+                        continue;
+                    }
+
+                    for (let i = 0; i < joinsFrom.length - 1; i++) {
+                        const [joinFrom, joinTo] = [joinsFrom[i], joinsTo[i]];
+                        // [todo] instead we should collect all values from related and write once, and assert that they are all the same
+                        writePath(joinFrom, entity, readPath(joinTo, related[0]));
+                    }
+
+                    const [lastJoinFrom, lastJoinTo] = [joinsFrom.at(-1)!, joinsTo.at(-1)!];
+                    writePath(lastJoinFrom, entity, readPath(lastJoinTo, related));
+                }
+            } else if (this.isArray()) {
+                // [todo] implement
+                throw new Error("not yet implemented");
+            } else {
+                const [joinsFrom, joinsTo] = [this.getJoinFrom(), this.getJoinTo()];
+
+                for (const entity of entities) {
+                    const related = this.readValue(entity) as Entity | null | undefined;
+
+                    if (related == null) {
+                        continue;
+                    }
+
+                    for (let i = 0; i < joinsFrom.length; i++) {
+                        const [joinFrom, joinTo] = [joinsFrom[i], joinsTo[i]];
+                        writePath(joinFrom, entity, readPath(joinTo, related));
+                    }
+                }
+            }
+        } else {
+            throw new Error("relation doesn't join on any id");
+        }
     }
 }

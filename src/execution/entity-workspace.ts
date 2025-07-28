@@ -1,4 +1,5 @@
 import {
+    Entity,
     EntityBlueprint,
     EntityQuery,
     EntityQueryParameters,
@@ -15,20 +16,23 @@ import { EntityQueryExecutionContext } from "./entity-query-execution-context";
 import { EntityQueryExecutor } from "./entity-query-executor";
 import { EntityServiceContainer } from "./entity-service-container";
 import { HydrateArguments, QueryArguments, QueryCacheOptions } from "./execution-arguments.interface";
-import { EntityMutationExecutor } from "./mutation/entity-mutation-executor";
-import { MutationOperation } from "./mutation/mutation-operation";
+import { AcceptedEntityMutation } from "./mutation/accepted-entity-mutation";
+import { EntityChanges } from "./mutation/entity-changes";
+import { EntityMutation } from "./mutation/entity-mutation";
+import { EntityMutator } from "./mutation/entity-mutator";
+import { generatePathedMutators } from "./mutation/generate-pathed-mutators.fn";
+import { sortAcceptedMutationsByDependency } from "./mutation/sort-accepted-mutations-by-dependency.fn";
+import { toEntityChanges } from "./mutation/to-entity-changes.fn";
 import { toSourcedEntities } from "./sourcing/to-sourced-entities.fn";
 
 export class EntityWorkspace {
     constructor(services: EntityServiceContainer) {
         this.#services = services;
         this.#executor = new EntityQueryExecutor(services);
-        this.#mutationExecutor = new EntityMutationExecutor(services);
     }
 
     readonly #services: EntityServiceContainer;
     readonly #executor: EntityQueryExecutor;
-    readonly #mutationExecutor: EntityMutationExecutor;
 
     for<T>(blueprint: Class<T>): EntityHydrationBuilder<EntityBlueprint.Instance<T>> {
         return new EntityHydrationBuilder(blueprint, args => this.#hydrate$(args));
@@ -159,44 +163,64 @@ export class EntityWorkspace {
         });
     }
 
-    async #mutate<T>(operation: MutationOperation): Promise<T[]> {
-        // [todo] validate entities in each operation before we do anything
-        // for (const operation of operations) {
-        // [todo] map entities to omit properties not needed, for example for create:
-        // - readonly ids (keep writable readonly ids)
-        // - other readonly properties
-        // - relations not specified in selection
-        /**
-         * [artist + songs]
-         * 1) create artist
-         * 2) assign artistId to songs
-         * 3) create songs
-         */
-        /**
-         * [artist + country + songs]
-         * 1) create country
-         * 2) assign countryId to artist
-         * 3) create artist
-         * 4) assign artistId to songs
-         * 5) create songs
-         */
-        /**
-         * [artist + country + songs + songs.country] (songs.country doesn't exist, need a proper example)
-         * 1) create country
-         * 2) assign countryId to artist
-         * 3) create artist
-         * 4) assign artistId to songs
-         * 5) create song countries which were not created for artist
-         * 6) assign song country id
-         * 7) create songs
-         */
-        /**
-         * [artist + albums + songs + songs.album]
-         * => hmm!
-         */
-        // }
+    async #mutate(mutation: EntityMutation): Promise<Entity[]> {
+        const schema = mutation.getSchema();
+        const explicitMutators = this.#services.getExplicitMutatorsFor(schema);
+        const selection = mutation.getSelection();
+        const pathedMutators = selection ? generatePathedMutators(this.#services, schema, selection) : [];
+        const mutators: EntityMutator[] = [...explicitMutators, ...pathedMutators];
 
-        return this.#mutationExecutor.executeMutation(operation);
+        // [todo] ❌ toEntityChanges() could just receive EntityMutation as singular argument
+        const entities = mutation.getEntities();
+        const previous = mutation.getPrevious();
+        const entityChanges = toEntityChanges(
+            mutation.getSchema(),
+            mutation.getEntities(),
+            selection ?? {},
+            mutation.getPrevious(),
+            mutation.getType() === "save" ? undefined : [mutation.getType()],
+        );
+
+        if (entityChanges === undefined) {
+            return entities;
+        }
+
+        let nextEntityChanges: EntityChanges | undefined = entityChanges;
+        const allAccepted: AcceptedEntityMutation[] = [];
+
+        for (const mutator of mutators) {
+            const [accepted, open] = mutator.accept(
+                schema,
+                mutation.getEntities(),
+                nextEntityChanges,
+                selection,
+                previous,
+            );
+
+            if (accepted === undefined) {
+                continue;
+            }
+
+            allAccepted.push(accepted);
+            nextEntityChanges = open;
+
+            if (nextEntityChanges === undefined) {
+                break;
+            }
+        }
+
+        if (nextEntityChanges !== undefined) {
+            // [todo] ❌ should throw
+            console.log("⚠️ did not accept all");
+        }
+
+        const sortedAllAccepted = sortAcceptedMutationsByDependency(allAccepted);
+
+        for (const mutation of sortedAllAccepted) {
+            await mutation.mutate();
+        }
+
+        return entities;
     }
 
     #toCacheOptions(options?: QueryCacheOptions | boolean): QueryCacheOptions | false {

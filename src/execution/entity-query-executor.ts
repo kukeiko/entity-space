@@ -236,6 +236,7 @@ export class EntityQueryExecutor {
     #getHydratorsForSchema(schema: EntitySchema): EntityHydrator[] {
         const explicit = this.#services.getExplicitHydratorsFor(schema);
 
+        // [todo] shouldn't the explicit ones come first so that user-defined hydrators take precedence?
         return [new AutoJoinableEntityHydrator(this), ...explicit];
     }
 

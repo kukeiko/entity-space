@@ -4,7 +4,7 @@ import { EntityCache } from "./cache/entity-cache";
 import { EntityQueryTracing } from "./entity-query-tracing";
 import { EntitySchemaScopedServiceContainer } from "./entity-schema-scoped-service-container";
 import { ExplicitEntityHydrator } from "./hydration/explicit-entity-hydrator";
-import { EntityMutator } from "./mutation/entity-mutator";
+import { ExplicitEntityMutator } from "./mutation/explicit-entity-mutator";
 import { EntitySource } from "./sourcing/entity-source";
 
 export class EntityServiceContainer {
@@ -12,7 +12,7 @@ export class EntityServiceContainer {
     readonly #catalog = new EntitySchemaCatalog();
     readonly #sources = new Map<string, EntitySource[]>();
     readonly #explicitHydrators = new Map<string, ExplicitEntityHydrator[]>();
-    readonly #mutators = new Map<string, EntityMutator[]>();
+    readonly #mutators = new Map<string, ExplicitEntityMutator[]>();
     readonly #caches = new Map<unknown, EntityCache>();
 
     getTracing(): EntityQueryTracing {
@@ -23,16 +23,16 @@ export class EntityServiceContainer {
         return this.#catalog;
     }
 
-    getSourcesFor(schema: EntitySchema): EntitySource[] {
-        return this.#sources.get(schema.getName()) ?? [];
+    getSourcesFor(schema: EntitySchema): readonly EntitySource[] {
+        return this.#sources.get(schema.getName())?.slice() ?? [];
     }
 
-    getExplicitHydratorsFor(schema: EntitySchema): ExplicitEntityHydrator[] {
-        return this.#explicitHydrators.get(schema.getName()) ?? [];
+    getExplicitHydratorsFor(schema: EntitySchema): readonly ExplicitEntityHydrator[] {
+        return this.#explicitHydrators.get(schema.getName())?.slice() ?? [];
     }
 
-    getMutatorsFor(schema: EntitySchema): EntityMutator[] {
-        return this.#mutators.get(schema.getName()) ?? [];
+    getExplicitMutatorsFor(schema: EntitySchema): readonly ExplicitEntityMutator[] {
+        return this.#mutators.get(schema.getName())?.slice() ?? [];
     }
 
     for<B>(blueprint: Class<B>): EntitySchemaScopedServiceContainer<B> {
@@ -46,7 +46,7 @@ export class EntityServiceContainer {
             mutateMapEntry(this.#explicitHydrators, schema.getName(), hydrators => hydrators.push(hydrator), []);
         };
 
-        const addMutator = (mutator: EntityMutator) => {
+        const addMutator = (mutator: ExplicitEntityMutator) => {
             mutateMapEntry(this.#mutators, schema.getName(), mutators => mutators.push(mutator), []);
         };
 

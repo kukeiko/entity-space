@@ -35,6 +35,10 @@ export class ComplexKeyMap<Key extends Record<string, any> = Record<string, any>
         this.map.clear();
     }
 
+    has(key: Key): boolean {
+        return this.get(key) !== undefined;
+    }
+
     /**
      * Retrieve a value.
      * @param key The complex key identifying the value you want returned.
