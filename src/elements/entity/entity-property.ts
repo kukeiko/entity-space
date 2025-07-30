@@ -51,6 +51,10 @@ export abstract class EntityProperty {
         return this.#name;
     }
 
+    getDtoName(): string {
+        return this.#options.dtoName;
+    }
+
     isContainer(): boolean {
         return this.#options.container !== undefined;
     }
