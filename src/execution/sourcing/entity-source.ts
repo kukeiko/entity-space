@@ -11,20 +11,20 @@ import {
     WhereEntityShape,
     WhereEntityShapeInstance,
 } from "@entity-space/elements";
-import { DeepPartial, isNot, SyncOrAsyncValue, unwrapSyncOrAsyncValue } from "@entity-space/utils";
+import { DeepPartial, isNot, MaybeAsync, unwrapMaybeAsync } from "@entity-space/utils";
 import { partition } from "lodash";
 import { EntityQueryExecutionContext } from "../entity-query-execution-context";
 import { EntityQueryTracing } from "../entity-query-tracing";
 import { AcceptedEntitySourcing } from "./accepted-entity-sourcing";
 
-export type LoadEntitiesFnResult<T extends Entity = Entity> = SyncOrAsyncValue<T> | SyncOrAsyncValue<T[]>;
+export type LoadEntitiesFnResult<T extends Entity = Entity> = MaybeAsync<T> | MaybeAsync<T[]>;
 
 export type LoadEntitiesFn<T extends Entity = Entity, C = {}, S = {}, P extends Entity = Entity> = (args: {
     query: EntityQuery;
     selection: DeepPartial<S>;
     criteria: C;
     parameters: P;
-}) => SyncOrAsyncValue<T> | SyncOrAsyncValue<T[]>;
+}) => MaybeAsync<T> | MaybeAsync<T[]>;
 
 export class EntitySource {
     constructor(
@@ -105,7 +105,7 @@ export class EntitySource {
             parameters: query.getParameters()?.getValue() ?? {},
         });
 
-        const result = await unwrapSyncOrAsyncValue(loaded);
+        const result = await unwrapMaybeAsync(loaded);
         const entities = Array.isArray(result) ? result : [result];
         this.#tracing.queryReceivedEntities(query, entities);
 

@@ -1,7 +1,7 @@
 import { isObservable, lastValueFrom } from "rxjs";
-import { SyncOrAsyncValue } from "./types";
+import { MaybeAsync } from "./types";
 
-export function unwrapSyncOrAsyncValue<T>(value: SyncOrAsyncValue<T>): Promise<T> {
+export function unwrapMaybeAsync<T>(value: MaybeAsync<T>): Promise<T> {
     if (value instanceof Promise) {
         return value;
     } else if (isObservable(value)) {

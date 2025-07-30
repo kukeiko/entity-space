@@ -14,7 +14,7 @@ import {
     WhereEntityShapeInstance,
     whereEntityShapeToCriterionShape,
 } from "@entity-space/elements";
-import { Class, unwrapSyncOrAsyncValue } from "@entity-space/utils";
+import { Class, unwrapMaybeAsync } from "@entity-space/utils";
 import { EntityQueryExecutionContext } from "./entity-query-execution-context";
 import { EntityServiceContainer } from "./entity-service-container";
 import { ExplicitEntityHydrator } from "./hydration/explicit-entity-hydrator";
@@ -130,7 +130,7 @@ export class EntitySchemaScopedServiceContainer<B> {
         const mutate: EntityMutationFn = (entities, selection) => {
             return Promise.all(
                 entities.map(entity => {
-                    return unwrapSyncOrAsyncValue(
+                    return unwrapMaybeAsync(
                         save({ entity: entity as EntityBlueprint.Savable<B>, selection: selection as S }),
                     );
                 }),
@@ -148,7 +148,7 @@ export class EntitySchemaScopedServiceContainer<B> {
         save: SaveEntitiesFn<B, S>;
     }): this {
         const mutate: EntityMutationFn = (entities, selection) => {
-            return unwrapSyncOrAsyncValue(
+            return unwrapMaybeAsync(
                 save({
                     entities: entities as EntityBlueprint.Savable<B>[],
                     selection: packEntitySelection(this.#schema, selection) as S,
@@ -169,7 +169,7 @@ export class EntitySchemaScopedServiceContainer<B> {
         const mutate: EntityMutationFn = (entities, selection) => {
             return Promise.all(
                 entities.map(entity => {
-                    return unwrapSyncOrAsyncValue(
+                    return unwrapMaybeAsync(
                         create({ entity: entity as EntityBlueprint.Creatable<B>, selection: selection as S }),
                     );
                 }),
@@ -187,7 +187,7 @@ export class EntitySchemaScopedServiceContainer<B> {
         create: CreateEntitiesFn<B, S>;
     }): this {
         const mutate: EntityMutationFn = (entities, selection) => {
-            return unwrapSyncOrAsyncValue(
+            return unwrapMaybeAsync(
                 create({ entities: entities as EntityBlueprint.Creatable<B>[], selection: selection as S }),
             );
         };
@@ -205,7 +205,7 @@ export class EntitySchemaScopedServiceContainer<B> {
         const mutate: EntityMutationFn = (entities, selection) => {
             return Promise.all(
                 entities.map(entity => {
-                    return unwrapSyncOrAsyncValue(
+                    return unwrapMaybeAsync(
                         update({ entity: entity as EntityBlueprint.Updatable<B>, selection: selection as S }),
                     );
                 }),
@@ -223,7 +223,7 @@ export class EntitySchemaScopedServiceContainer<B> {
         update: UpdateEntitiesFn<B, S>;
     }): this {
         const mutate: EntityMutationFn = (entities, selection) => {
-            return unwrapSyncOrAsyncValue(
+            return unwrapMaybeAsync(
                 update({ entities: entities as EntityBlueprint.Updatable<B>[], selection: selection as S }),
             );
         };
@@ -241,7 +241,7 @@ export class EntitySchemaScopedServiceContainer<B> {
         const mutate: EntityMutationFn = (entities, selection) => {
             return Promise.all(
                 entities.map(entity => {
-                    return unwrapSyncOrAsyncValue(
+                    return unwrapMaybeAsync(
                         del({ entity: entity as EntityBlueprint.Instance<B>, selection: selection as S }),
                     );
                 }),
@@ -259,7 +259,7 @@ export class EntitySchemaScopedServiceContainer<B> {
         delete: DeleteEntitiesFn<B, S>;
     }): this {
         const mutate: EntityMutationFn = (entities, selection) => {
-            return unwrapSyncOrAsyncValue(
+            return unwrapMaybeAsync(
                 del({ entities: entities as EntityBlueprint.Instance<B>[], selection: selection as S }),
             );
         };
