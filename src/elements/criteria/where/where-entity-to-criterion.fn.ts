@@ -1,8 +1,19 @@
 import { isPrimitive } from "@entity-space/utils";
 import { Criterion } from "../criterion";
 import { EntityCriterion, PackedEntityCriterion } from "../entity-criterion";
+import { EqualsCriterion } from "../equals-criterion";
+import { InArrayCriterion } from "../in-array-criterion";
 import { InRangeCriterion } from "../in-range-criterion";
-import { WhereEntity, WhereInRange } from "./where-entity.type";
+import { NotEqualsCriterion } from "../not-equals-criterion";
+import { NotInArrayCriterion } from "../not-in-array-criterion";
+import {
+    WhereEntity,
+    WhereEquals,
+    WhereInArray,
+    WhereInRange,
+    WhereNotEquals,
+    WhereNotInArray,
+} from "./where-entity.type";
 
 export function whereEntityToCriterion(where: WhereEntity): Criterion | undefined {
     const criterion: PackedEntityCriterion = {};
@@ -17,6 +28,14 @@ export function whereEntityToCriterion(where: WhereEntity): Criterion | undefine
         } else if ((value as WhereInRange<any>).$inRange) {
             const [from, to] = (value as WhereInRange<any>).$inRange;
             criterion[key] = new InRangeCriterion(from, to);
+        } else if ((value as WhereEquals<any>).$equals !== undefined) {
+            criterion[key] = new EqualsCriterion((value as WhereEquals<any>).$equals);
+        } else if ((value as WhereNotEquals<any>).$notEquals !== undefined) {
+            criterion[key] = new NotEqualsCriterion((value as WhereNotEquals<any>).$notEquals);
+        } else if ((value as WhereInArray<any>).$inArray !== undefined) {
+            criterion[key] = new InArrayCriterion((value as WhereInArray<any>).$inArray);
+        } else if ((value as WhereNotInArray<any>).$notInArray !== undefined) {
+            criterion[key] = new NotInArrayCriterion((value as WhereNotInArray<any>).$notInArray);
         } else {
             const nested = whereEntityToCriterion(value as WhereEntity);
 

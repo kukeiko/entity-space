@@ -1,10 +1,10 @@
 import { Primitive, Unbox } from "@entity-space/utils";
 import { Entity } from "../../entity/entity";
 
-type WhereEquals<T> = { $equals: T };
-type WhereNotEquals<T> = { $notEquals: T };
-type WhereInArray<T> = { $inArray: T[] };
-type WhereNotInArray<T> = { $notInArray: T[] };
+export type WhereEquals<T> = { $equals: T };
+export type WhereNotEquals<T> = { $notEquals: T };
+export type WhereInArray<T> = { $inArray: T[] };
+export type WhereNotInArray<T> = { $notInArray: T[] };
 export type WhereInRange<T> = { $inRange: [T | undefined, T | undefined] };
 
 type WherePrimitive<T> =
