@@ -135,8 +135,8 @@ describe("execution", () => {
     it("should return entities matching the criteria", async () => {
         // arrange
         const users: User[] = [
-            { id: 1, name: "Susi Sonne", metadata: { createdById: 2, createdAt: new Date().toISOString() } },
-            { id: 2, name: "Mara Mauzi", metadata: { createdById: 2, createdAt: new Date().toISOString() } },
+            { id: 1, name: "Mara Mauzi", metadata: { createdById: 2, createdAt: new Date().toISOString() } },
+            { id: 2, name: "Susi Sonne", metadata: { createdById: 2, createdAt: new Date().toISOString() } },
             { id: 3, name: "Dana Dandy", metadata: { createdById: 1, createdAt: new Date().toISOString() } },
         ];
 

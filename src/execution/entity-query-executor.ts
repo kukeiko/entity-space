@@ -202,6 +202,14 @@ export class EntityQueryExecutor {
             entities = entities.filter(entity => withoutDehydrated.contains(entity));
         }
 
+        if (query.getParameters() === undefined) {
+            const sorter = query.getSchema().getSorter();
+
+            if (sorter) {
+                entities.sort(sorter);
+            }
+        }
+
         return entities;
     }
 
