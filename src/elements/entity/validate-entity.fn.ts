@@ -55,7 +55,7 @@ export function validateEntity(
             const valueType = primitiveToType(entity[key]);
             const expectedTypeName = primitiveTypeToString(property.getPrimitiveType());
 
-            if (valueType !== property.getPrimitiveType()) {
+            if (valueType !== property.getPrimitiveType() && expectedTypeName !== "custom") {
                 errors[`${path}`] =
                     `value is not of type ${expectedTypeName} (got ${primitiveTypeToString(valueType)})`;
             }
