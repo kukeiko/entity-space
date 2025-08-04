@@ -8,7 +8,7 @@ export class AcceptedEntityMutation {
         acceptedChanges: readonly EntityChange[],
         dependencies: readonly EntityMutationDependency[],
         mutateFn: (mutation: AcceptedEntityMutation) => Promise<void>, // [todo] ❌ hacky
-        selection?: EntityRelationSelection,
+        selection: EntityRelationSelection,
         previous?: readonly Entity[],
     ) {
         this.#entities = Object.freeze(entities.slice());
@@ -23,7 +23,7 @@ export class AcceptedEntityMutation {
     readonly #changes: readonly EntityChange[];
     readonly #dependencies: readonly EntityMutationDependency[];
     readonly #mutateFn: (mutation: AcceptedEntityMutation) => Promise<void>;
-    readonly #selection?: EntityRelationSelection;
+    readonly #selection: EntityRelationSelection;
     readonly #previous?: readonly Entity[];
 
     async mutate(): Promise<void> {
@@ -46,7 +46,7 @@ export class AcceptedEntityMutation {
         return this.#changes;
     }
 
-    getSelection(): EntityRelationSelection | undefined {
+    getSelection(): EntityRelationSelection {
         return this.#selection;
     }
 

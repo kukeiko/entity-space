@@ -1,5 +1,5 @@
 import {
-    cloneEntity,
+    copyEntities,
     Entity,
     EntityQuery,
     EntitySchema,
@@ -63,7 +63,7 @@ export class EntityStore {
             entities = entities.filter(entity => isHydrated(entity, selection));
         }
 
-        entities = entities.map(cloneEntity);
+        entities = copyEntities(this.#schema, entities);
 
         return entities;
     }

@@ -4,11 +4,10 @@ import { isEntityRelationProperty } from "../entity/entity-relation-property";
 import { EntitySchema } from "../entity/entity-schema";
 import { EntityRelationSelection, EntitySelection } from "./entity-selection";
 
-// [todo] ❌ almost a carbon copy of "getDefaultSelection()"
 export function getSelection(
     schema: EntitySchema,
+    relations?: EntityRelationSelection,
     predicate?: (property: EntityProperty) => boolean,
-    relationSelection?: EntityRelationSelection,
 ): EntitySelection {
     predicate = predicate ?? (() => true);
     const selection: EntitySelection = {};
@@ -19,12 +18,12 @@ export function getSelection(
         } else if (
             isEntityRelationProperty(property) &&
             predicate(property) &&
-            (relationSelection === undefined || relationSelection[property.getName()])
+            (relations === undefined || relations[property.getName()])
         ) {
             selection[property.getName()] = getSelection(
                 property.getRelatedSchema(),
-                candidate => candidate !== property && predicate(candidate), // [todo] really wonky way of preventing endless loops
-                relationSelection === undefined ? undefined : relationSelection?.[property.getName()] ?? {},
+                relations === undefined ? undefined : (relations?.[property.getName()] ?? {}),
+                candidate => candidate !== property && predicate(candidate),
             );
         }
     }

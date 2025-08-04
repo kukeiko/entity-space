@@ -1,4 +1,5 @@
 import {
+    addIdSelection,
     assignCreatedIds,
     assignEntitiesUsingIds,
     copyEntity,
@@ -29,7 +30,7 @@ export class ExplicitEntityMutator extends EntityMutator {
         type: EntityMutationType,
         schema: EntitySchema,
         mutateFn: EntityMutationFn,
-        selection?: EntityRelationSelection,
+        selection: EntityRelationSelection,
     ) {
         super();
         this.#type = type;
@@ -41,13 +42,13 @@ export class ExplicitEntityMutator extends EntityMutator {
     readonly #type: EntityMutationType;
     readonly #schema: EntitySchema;
     readonly #mutateFn: EntityMutationFn;
-    readonly #selection?: EntityRelationSelection;
+    readonly #selection: EntityRelationSelection;
 
     override accept(
         schema: EntitySchema,
         entities: readonly Entity[],
         changes: EntityChanges,
-        selection?: EntityRelationSelection,
+        selection: EntityRelationSelection,
         previous?: readonly Entity[],
     ): [accepted: AcceptedEntityMutation | undefined, open: EntityChanges | undefined] {
         if (schema.getName() !== this.#schema.getName()) {
@@ -68,10 +69,7 @@ export class ExplicitEntityMutator extends EntityMutator {
         if (!accepted.length) {
             return [undefined, changes];
         } else {
-            const acceptedSelection =
-                selection !== undefined && this.#selection !== undefined
-                    ? intersectRelationSelection(selection, this.#selection)
-                    : undefined;
+            const acceptedSelection = intersectRelationSelection(selection, this.#selection);
 
             return [
                 new AcceptedEntityMutation(
@@ -94,16 +92,17 @@ export class ExplicitEntityMutator extends EntityMutator {
                 dependency.writeIds(this.#schema, mutation.getContainedRootEntities());
             }
 
-            // [todo] ⏰ instead, map each EntityChange to a copy and keep them as a pair
+            const creatableSelection = getSelection(this.#schema, mutation.getSelection(), isCreatableEntityProperty);
+
             const map = new Map(
                 mutation.getContainedRootEntities().map(entity => {
-                    // [todo] ⏰ we need to copy over only creatable properties
                     const copy = copyEntity(
                         this.#schema,
                         entity,
-                        mutation.getSelection(),
-                        isCreatableEntityProperty,
-                        (_, entity) => mutation.getChanges().some(change => change.getEntity() === entity),
+                        creatableSelection,
+                        (relation, entity) =>
+                            relation.isEmbedded() ||
+                            mutation.getChanges().some(change => change.getEntity() === entity),
                     );
 
                     return [copy, entity];
@@ -112,22 +111,8 @@ export class ExplicitEntityMutator extends EntityMutator {
 
             const copies = Array.from(map.keys());
             const created = await this.#mutateFn(copies, mutation.getSelection() ?? {});
-            // const pairs = toEntityPairs(this.#schema, copies, created);
-
-            // for (const [copy, created] of pairs) {
-            //     if (created === undefined) {
-            //         throw new Error("no created match found");
-            //     }
-
-            //     const original = map.get(copy)!;
-
-            //     // [todo] ❌ we're only assigning ids on root entities, need to also do it for related entities
-            //     for (const idPath of this.#schema.getIdPaths()) {
-            //         writePath(idPath, original, readPath(idPath, created));
-            //     }
-            // }
             assignCreatedIds(this.#schema, mutation.getSelection() ?? {}, mutation.getContainedRootEntities(), created);
-            const selection = getSelection(this.#schema, undefined, mutation.getSelection() ?? {});
+            const selection = getSelection(this.#schema, mutation.getSelection() ?? {});
             const originals = Array.from(map.values());
             assignEntitiesUsingIds(this.#schema, selection, originals, created);
 
@@ -141,16 +126,20 @@ export class ExplicitEntityMutator extends EntityMutator {
                 dependency.writeIds(this.#schema, mutation.getContainedRootEntities());
             }
 
+            const updatableSelection = addIdSelection(
+                this.#schema,
+                getSelection(this.#schema, mutation.getSelection(), isUpdatableEntityProperty),
+            );
+
             const map = new Map(
                 mutation.getContainedRootEntities().map(entity => {
-                    // [todo] ⏰ need to copy over ids as well
                     const copy = copyEntity(
                         this.#schema,
                         entity,
-                        mutation.getSelection(),
-                        isUpdatableEntityProperty,
-                        (_, entity) => mutation.getChanges().some(change => change.getEntity() === entity),
-                        true,
+                        updatableSelection,
+                        (relation, entity) =>
+                            relation.isEmbedded() ||
+                            mutation.getChanges().some(change => change.getEntity() === entity),
                     );
 
                     return [copy, entity];
@@ -160,7 +149,7 @@ export class ExplicitEntityMutator extends EntityMutator {
             const copies = Array.from(map.keys());
             const updated = await this.#mutateFn(copies, mutation.getSelection() ?? {});
             const originals = Array.from(map.values());
-            const selection = getSelection(this.#schema, undefined, mutation.getSelection() ?? {});
+            const selection = getSelection(this.#schema, mutation.getSelection() ?? {});
             assignEntitiesUsingIds(this.#schema, selection, originals, updated);
 
             for (const dependency of mutation.getInboundDependencies()) {
@@ -171,15 +160,18 @@ export class ExplicitEntityMutator extends EntityMutator {
             // [todo] ❌ we need splice the original entities if the user just wants do "delete" (i.e. there is no previous),
             // so that in case of an error (service temporarily unavailable), and some entities have already been deleted successfully,
             // entity-space doesn't try to delete those again.
+
+            const deletableSelection = getSelection(this.#schema, mutation.getSelection());
+
             const map = new Map(
                 mutation.getPreviousContainedRootEntities().map(entity => {
                     const copy = copyEntity(
                         this.#schema,
                         entity,
-                        mutation.getSelection(),
-                        undefined,
-                        (_, entity) => mutation.getChanges().some(change => change.getEntity() === entity),
-                        true,
+                        deletableSelection,
+                        (relation, entity) =>
+                            relation.isEmbedded() ||
+                            mutation.getChanges().some(change => change.getEntity() === entity),
                     );
 
                     return [copy, entity];
@@ -210,25 +202,54 @@ export class ExplicitEntityMutator extends EntityMutator {
                 dependency.writeIds(this.#schema, mutation.getContainedRootEntities());
             }
 
+            const savableSelection = addIdSelection(
+                this.#schema,
+                getSelection(this.#schema, mutation.getSelection(), isSavableEntityProperty),
+            );
+
             const map = new Map(
                 mutation.getContainedRootEntities().map(entity => {
                     const copy = copyEntity(
                         this.#schema,
                         entity,
-                        mutation.getSelection(),
-                        isSavableEntityProperty,
-                        (_, entity) => mutation.getChanges().some(change => change.getEntity() === entity),
-                        true,
+                        savableSelection,
+                        (relation, entity) =>
+                            relation.isEmbedded() ||
+                            mutation.getChanges().some(change => change.getEntity() === entity),
                     );
 
                     return [copy, entity];
                 }),
             );
+            // const map = new Map(
+            //     mutation.getContainedRootEntities().map(entity => {
+            //         const copy = copyEntity(
+            //             this.#schema,
+            //             entity,
+            //             mutation.getSelection(),
+            //             isSavableEntityProperty,
+            //             (_, entity) => mutation.getChanges().some(change => change.getEntity() === entity),
+            //             true,
+            //         );
+
+            //         return [copy, entity];
+            //     }),
+            // );
 
             const copies = Array.from(map.keys());
+            // const copiesV2 = copyEntities(
+            //     this.#schema,
+            //     mutation.getContainedRootEntities(),
+            //     savableSelection,
+            //     (relation, related) =>
+            //         relation.isEmbedded() || mutation.getChanges().some(change => change.getEntity() === related),
+            // );
+
+            // console.dir(copiesV2, { depth: null });
+
             const saved = await this.#mutateFn(copies, mutation.getSelection() ?? {});
             assignCreatedIds(this.#schema, mutation.getSelection() ?? {}, mutation.getContainedRootEntities(), saved);
-            const selection = getSelection(this.#schema, undefined, mutation.getSelection() ?? {});
+            const selection = getSelection(this.#schema, mutation.getSelection() ?? {});
             const originals = Array.from(map.values());
             assignEntitiesUsingIds(this.#schema, selection, originals, saved);
             // [todo] ❓ i think "save" will also handle delete, so we need to do that somehow here as well.

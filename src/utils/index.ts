@@ -4,6 +4,7 @@ export * from "./is-defined.fn";
 export * from "./is-not-nullsy.fn";
 export * from "./is-not.fn";
 export * from "./is.fn";
+export * from "./json-clone.fn";
 export * from "./mutate-map-entry.fn";
 export * from "./path";
 export * from "./permutate-entries.fn";

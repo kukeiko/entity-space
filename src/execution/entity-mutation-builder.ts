@@ -25,8 +25,16 @@ export class EntityMutationBuilder<B, S extends PackedEntitySelection<EntityBlue
         return this as any;
     }
 
-    saveOne(entity: EntityBlueprint.Savable<B>): Promise<EntityBlueprint.Instance<B>> {
-        throw new Error("not yet implemented");
+    async saveOne(entity: EntityBlueprint.Savable<B>): Promise<EntityBlueprint.Instance<B>> {
+        const mutation = new EntityMutation(
+            "save",
+            this.#schema,
+            [entity],
+            toRelationSelection(this.#schema, unpackSelection(this.#schema, this.#selection)),
+        );
+
+        const saved = await this.#mutateFn(mutation);
+        return saved[0] as EntityBlueprint.Instance<B>;
     }
 
     async save(

@@ -1,4 +1,3 @@
-import { cloneEntity } from "@entity-space/elements";
 import {
     Artist,
     ArtistBlueprint,
@@ -242,7 +241,7 @@ describe("execution", () => {
                 throw new Error(`bad test data, did not find user by id ${id}`);
             }
 
-            return cloneEntity(user);
+            return structuredClone(user);
         };
 
         const expected = users.map(user => ({

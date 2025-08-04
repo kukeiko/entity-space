@@ -9,7 +9,7 @@ export abstract class EntityMutator {
         schema: EntitySchema,
         entities: readonly Entity[],
         changes: EntityChanges,
-        selection?: EntityRelationSelection,
+        selection: EntityRelationSelection,
         previous?: readonly Entity[],
     ): [accepted: AcceptedEntityMutation | undefined, open: EntityChanges | undefined];
 

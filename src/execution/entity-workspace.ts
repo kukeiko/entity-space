@@ -166,7 +166,7 @@ export class EntityWorkspace {
     async #mutate(mutation: EntityMutation): Promise<Entity[]> {
         const schema = mutation.getSchema();
         const explicitMutators = this.#services.getExplicitMutatorsFor(schema);
-        const selection = mutation.getSelection();
+        const selection = mutation.getSelection() ?? {};
         const pathedMutators = selection ? generatePathedMutators(this.#services, schema, selection) : [];
         const mutators: EntityMutator[] = [...explicitMutators, ...pathedMutators];
 
@@ -176,7 +176,7 @@ export class EntityWorkspace {
         const entityChanges = toEntityChanges(
             mutation.getSchema(),
             mutation.getEntities(),
-            selection ?? {},
+            selection,
             mutation.getPrevious(),
             mutation.getType() === "save" ? undefined : [mutation.getType()],
         );

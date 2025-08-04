@@ -1,4 +1,5 @@
 import { isPrimitiveType, Primitive } from "@entity-space/utils";
+import { Entity } from "./entity";
 import { EntityProperty, EntityPropertyOptions } from "./entity-property";
 
 export function isEntityPrimitiveProperty(value: unknown): value is EntityPrimitiveProperty {
@@ -53,6 +54,16 @@ export class EntityPrimitiveProperty extends EntityProperty {
             return [];
         } else {
             return this.#primitive();
+        }
+    }
+
+    copyValue(entity: Entity): ReturnType<Primitive> | ReturnType<Primitive>[] {
+        const value = entity[this.getName()];
+
+        if (value == null || !this.isArray()) {
+            return value;
+        } else {
+            return (value as ReturnType<Primitive>[]).slice();
         }
     }
 }

@@ -64,6 +64,80 @@ describe("mutation", () => {
             expect(saved[0]).toBe(windforce);
         });
 
+        it("save one entity incl. related", async () => {
+            // arrange
+            const windforce: ItemSavable = {
+                assignId: 1,
+                attributes: [
+                    {
+                        typeId: 100,
+                        values: [1, 2, 3],
+                    },
+                ],
+                name: "Windforce",
+                sockets: [
+                    {
+                        assignId: 10,
+                        itemId: 0,
+                        socketedItemId: 2,
+                    },
+                ],
+            };
+
+            const windforcePassedToSave: ItemSavable = {
+                assignId: 1,
+                attributes: [
+                    {
+                        typeId: 100,
+                        values: [1, 2, 3],
+                    },
+                ],
+                name: "Windforce",
+                sockets: [
+                    {
+                        assignId: 10,
+                        itemId: 0,
+                        socketedItemId: 2,
+                    },
+                ],
+            };
+
+            const windforceSaved: Item = {
+                id: 1,
+                assignId: 1,
+                attributes: [
+                    {
+                        typeId: 100,
+                        values: [1, 2, 3],
+                    },
+                ],
+                createdAt,
+                name: "Windforce",
+                updatedAt,
+                sockets: [
+                    {
+                        id: 10,
+                        assignId: 10,
+                        itemId: 1,
+                        socketedItemId: 2,
+                        createdAt,
+                        updatedAt: null,
+                    },
+                ],
+            };
+
+            const saveItem = repository.useSaveItems(createdAt, updatedAt);
+
+            // act
+            const saved = await workspace.in(ItemBlueprint).select({ sockets: true }).save([windforce]);
+            console.dir(saved, { depth: null });
+
+            // assert
+            expect(saveItem).toHaveBeenCalledWith({ entities: [windforcePassedToSave], selection: { sockets: true } });
+            expect(saved).toEqual([windforceSaved]);
+            expect(saved[0]).toBe(windforce);
+        });
+
         describe("should recognize changes", () => {
             it("on embedded arrays", async () => {
                 const updateItems = repository.useUpdateItems(updatedAt);
@@ -77,7 +151,7 @@ describe("mutation", () => {
                     attributes: [
                         {
                             typeId: 1,
-                            values: [40],
+                            values: [40], // this will change
                         },
                         {
                             typeId: 2,
@@ -85,7 +159,7 @@ describe("mutation", () => {
                         },
                         {
                             typeId: 3,
-                            values: [50],
+                            values: [50], // this will change
                         },
                     ],
                     name: "Windforce",
@@ -100,7 +174,7 @@ describe("mutation", () => {
                     attributes: [
                         {
                             typeId: 1,
-                            values: [30],
+                            values: [30], // this has changed
                         },
                         {
                             typeId: 2,
@@ -108,7 +182,7 @@ describe("mutation", () => {
                         },
                         {
                             typeId: 3,
-                            values: [60],
+                            values: [60], // this has changed
                         },
                     ],
                     name: "Windforce",
@@ -138,7 +212,10 @@ describe("mutation", () => {
                 await workspace.in(ItemBlueprint).save([windforceChanged], [windforceOriginal]);
 
                 // assert
-                expect(updateItems).toHaveBeenCalledWith({ entities: [windforcePassedToUpdate], selection: {} });
+                expect(updateItems).toHaveBeenCalledWith({
+                    entities: [windforcePassedToUpdate],
+                    selection: { attributes: {} },
+                });
             });
         });
 
@@ -269,7 +346,6 @@ describe("mutation", () => {
                 }
             });
 
-            // [todo] ❌ doesn't work yet
             it("empty array is omitted", async () => {
                 {
                     // arrange
@@ -477,7 +553,7 @@ describe("mutation", () => {
                             ],
                         },
                     ],
-                    selection: {},
+                    selection: { attributes: {} },
                 });
                 expect(createItems).toHaveBeenCalledWith({
                     entities: [
@@ -490,7 +566,7 @@ describe("mutation", () => {
                             ],
                         },
                     ],
-                    selection: {},
+                    selection: { attributes: {} },
                 });
                 expect(updateItems).toHaveBeenCalledTimes(1);
                 expect(updateItems).toHaveBeenCalledWith({
@@ -501,7 +577,7 @@ describe("mutation", () => {
                             attributes: [{ values: [2], typeId: 1 }],
                         },
                     ],
-                    selection: {},
+                    selection: { attributes: {} },
                 });
                 expect(deleteItems).toHaveBeenCalledTimes(1);
                 expect(deleteItems).toHaveBeenCalledWith({
@@ -515,7 +591,7 @@ describe("mutation", () => {
                             updatedAt,
                         },
                     ],
-                    selection: {},
+                    selection: { attributes: {} },
                 });
             }
 
@@ -641,7 +717,7 @@ describe("mutation", () => {
                         updatedAt,
                     },
                 ],
-                selection: {},
+                selection: { attributes: {} },
             });
 
             expect(deleteItemSockets).toHaveBeenCalledTimes(1);

@@ -1,4 +1,4 @@
-import { cloneEntity, EntityBlueprint, PackedEntitySelection } from "@entity-space/elements";
+import { EntityBlueprint, PackedEntitySelection } from "@entity-space/elements";
 import {
     AlbumBlueprint,
     ArtistBlueprint,
@@ -25,6 +25,7 @@ import {
     UserRequest,
     UserRequestBlueprint,
 } from "@entity-space/elements/testing";
+import { jsonClone } from "@entity-space/utils";
 import { vi } from "vitest";
 import { EntityServiceContainer } from "../entity-service-container";
 import { CreateEntityFn } from "../mutation/entity-mutation-function.type";
@@ -136,7 +137,7 @@ export class TestRepository {
             const sliceFrom = pageSize * page;
             const sliceTo = pageSize * (page + 1);
 
-            return this.#filter("artists").slice(sliceFrom, sliceTo).map(cloneEntity);
+            return jsonClone(this.#filter("artists").slice(sliceFrom, sliceTo));
         });
 
         this.#services.for(ArtistBlueprint).addSource({
@@ -330,10 +331,12 @@ export class TestRepository {
                         for (const socket of item.sockets as ItemSocketSavable[]) {
                             if (!socket.id) {
                                 socket.id = socket.assignId;
-                                socket.createdAt = socket.createdAt;
+                                socket.createdAt = createdAt;
+                                socket.updatedAt = null;
+                                socket.itemId = item.id;
+                            } else {
+                                socket.updatedAt = updatedAt;
                             }
-
-                            socket.updatedAt = updatedAt;
                         }
                     }
 
@@ -527,7 +530,7 @@ export class TestRepository {
         pageSize?: number,
         page?: number,
     ): TestEntities[K] {
-        let filtered = (this.#testEntities[entity] ?? []).filter(predicate ?? (() => true)).map(cloneEntity);
+        let filtered = jsonClone((this.#testEntities[entity] ?? []).filter(predicate ?? (() => true)));
 
         if (pageSize) {
             page = page ?? 0;
