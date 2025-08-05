@@ -164,38 +164,21 @@ export class EntityWorkspace {
     }
 
     async #mutate(mutation: EntityMutation): Promise<Entity[]> {
-        const schema = mutation.getSchema();
-        const explicitMutators = this.#services.getExplicitMutatorsFor(schema);
-        const selection = mutation.getSelection() ?? {};
-        const pathedMutators = selection ? generatePathedMutators(this.#services, schema, selection) : [];
-        const mutators: EntityMutator[] = [...explicitMutators, ...pathedMutators];
-
-        // [todo] ❌ toEntityChanges() could just receive EntityMutation as singular argument
-        const entities = mutation.getEntities();
-        const previous = mutation.getPrevious();
-        const entityChanges = toEntityChanges(
-            mutation.getSchema(),
-            mutation.getEntities(),
-            selection,
-            mutation.getPrevious(),
-            mutation.getType() === "save" ? undefined : [mutation.getType()],
-        );
+        const entityChanges = toEntityChanges(mutation);
 
         if (entityChanges === undefined) {
-            return entities;
+            return mutation.getEntities();
         }
 
+        const mutators: EntityMutator[] = [
+            ...this.#services.getExplicitMutatorsFor(mutation.getSchema()),
+            ...generatePathedMutators(this.#services, mutation.getSchema(), mutation.getSelection() ?? {}),
+        ];
         let nextEntityChanges: EntityChanges | undefined = entityChanges;
         const allAccepted: AcceptedEntityMutation[] = [];
 
         for (const mutator of mutators) {
-            const [accepted, open] = mutator.accept(
-                schema,
-                mutation.getEntities(),
-                nextEntityChanges,
-                selection,
-                previous,
-            );
+            const [accepted, open] = mutator.accept(nextEntityChanges, undefined);
 
             if (accepted === undefined) {
                 continue;
@@ -214,13 +197,11 @@ export class EntityWorkspace {
             console.log("⚠️ did not accept all");
         }
 
-        const sortedAllAccepted = sortAcceptedMutationsByDependency(allAccepted);
-
-        for (const mutation of sortedAllAccepted) {
+        for (const mutation of sortAcceptedMutationsByDependency(allAccepted)) {
             await mutation.mutate();
         }
 
-        return entities;
+        return mutation.getEntities();
     }
 
     #toCacheOptions(options?: QueryCacheOptions | boolean): QueryCacheOptions | false {

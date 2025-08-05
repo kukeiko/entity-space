@@ -1,4 +1,5 @@
-import { Entity, EntityRelationSelection, EntitySchema } from "@entity-space/elements";
+import { Entity, EntityRelationSelection } from "@entity-space/elements";
+import { Path } from "@entity-space/utils";
 import { AcceptedEntityMutation } from "./accepted-entity-mutation";
 import { EntityChanges } from "./entity-changes";
 
@@ -6,11 +7,8 @@ export type EntityMutationFn = (entities: Entity[], selection: EntityRelationSel
 
 export abstract class EntityMutator {
     abstract accept(
-        schema: EntitySchema,
-        entities: readonly Entity[],
         changes: EntityChanges,
-        selection: EntityRelationSelection,
-        previous?: readonly Entity[],
+        path?: Path,
     ): [accepted: AcceptedEntityMutation | undefined, open: EntityChanges | undefined];
 
     abstract mutate(mutation: AcceptedEntityMutation): Promise<void>;

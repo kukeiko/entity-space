@@ -12,7 +12,7 @@ import { isEmpty } from "lodash";
 import { entityHasId } from "../../elements/entity/entity-has-id.fn";
 import { EntityChange } from "./entity-change";
 import { EntityChanges } from "./entity-changes";
-import { EntityMutationType } from "./entity-mutation";
+import { EntityMutation, EntityMutationType } from "./entity-mutation";
 
 function getCreated(
     schema: EntitySchema,
@@ -196,13 +196,13 @@ function getRemoved(
     return [...removedRoots, ...removedChildren];
 }
 
-export function toEntityChanges(
-    schema: EntitySchema,
-    entities: readonly Entity[],
-    selection: EntityRelationSelection,
-    previous?: Entity[],
-    type: EntityMutationType[] = ["create", "update", "delete"],
-): EntityChanges | undefined {
+export function toEntityChanges(mutation: EntityMutation): EntityChanges | undefined {
+    const schema = mutation.getSchema();
+    const entities = mutation.getEntities();
+    const selection = mutation.getSelection() ?? {};
+    const previous = mutation.getPrevious();
+    const type: EntityMutationType[] =
+        mutation.getType() === "save" ? ["create", "update", "delete"] : [mutation.getType()];
     const changes: EntityChange[] = [];
 
     if (previous !== undefined && type.includes("delete")) {
@@ -217,5 +217,5 @@ export function toEntityChanges(
         changes.push(...getUpdated(schema, entities, selection, previous));
     }
 
-    return changes.length ? new EntityChanges(changes) : undefined;
+    return changes.length ? new EntityChanges(schema, selection, changes, entities, previous) : undefined;
 }

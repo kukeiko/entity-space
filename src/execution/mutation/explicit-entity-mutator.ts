@@ -3,7 +3,6 @@ import {
     assignCreatedIds,
     assignEntitiesUsingIds,
     copyEntity,
-    Entity,
     EntityRelationSelection,
     EntitySchema,
     EntitySelection,
@@ -17,13 +16,13 @@ import {
 } from "@entity-space/elements";
 import { joinPaths, Path, toPath } from "@entity-space/utils";
 import { isEmpty } from "lodash";
-import { entityHasId } from "../../elements/entity/entity-has-id.fn";
 import { AcceptedEntityMutation } from "./accepted-entity-mutation";
 import { EntityChange } from "./entity-change";
 import { EntityChanges } from "./entity-changes";
 import { EntityMutationType } from "./entity-mutation";
 import { EntityMutationDependency } from "./entity-mutation-dependency";
 import { EntityMutationFn, EntityMutator } from "./entity-mutator";
+import { getCreateDependencies } from "./get-create-dependencies.fn";
 
 export class ExplicitEntityMutator extends EntityMutator {
     constructor(
@@ -45,40 +44,30 @@ export class ExplicitEntityMutator extends EntityMutator {
     readonly #selection: EntityRelationSelection;
 
     override accept(
-        schema: EntitySchema,
-        entities: readonly Entity[],
         changes: EntityChanges,
-        selection: EntityRelationSelection,
-        previous?: readonly Entity[],
+        path?: Path,
     ): [accepted: AcceptedEntityMutation | undefined, open: EntityChanges | undefined] {
+        const schema = changes.getSchema(path);
+
         if (schema.getName() !== this.#schema.getName()) {
             return [undefined, changes];
         }
 
-        const [accepted, open, dependencies] = this.#accept(
-            this.#schema,
-            entities,
-            changes,
-            selection,
-            this.#selection,
-            undefined,
-            previous,
-            true,
-        );
+        const [accepted, open, dependencies] = this.#accept(changes, this.#selection, path, true);
 
         if (!accepted.length) {
             return [undefined, changes];
         } else {
-            const acceptedSelection = intersectRelationSelection(selection, this.#selection);
+            const acceptedSelection = intersectRelationSelection(changes.getSelection(path), this.#selection);
 
             return [
                 new AcceptedEntityMutation(
-                    entities,
+                    changes.getEntities(path),
                     accepted,
                     dependencies,
                     mutation => this.mutate(mutation),
                     acceptedSelection,
-                    previous,
+                    changes.getPrevious(path),
                 ),
                 open,
             ];
@@ -221,39 +210,15 @@ export class ExplicitEntityMutator extends EntityMutator {
                     return [copy, entity];
                 }),
             );
-            // const map = new Map(
-            //     mutation.getContainedRootEntities().map(entity => {
-            //         const copy = copyEntity(
-            //             this.#schema,
-            //             entity,
-            //             mutation.getSelection(),
-            //             isSavableEntityProperty,
-            //             (_, entity) => mutation.getChanges().some(change => change.getEntity() === entity),
-            //             true,
-            //         );
-
-            //         return [copy, entity];
-            //     }),
-            // );
 
             const copies = Array.from(map.keys());
-            // const copiesV2 = copyEntities(
-            //     this.#schema,
-            //     mutation.getContainedRootEntities(),
-            //     savableSelection,
-            //     (relation, related) =>
-            //         relation.isEmbedded() || mutation.getChanges().some(change => change.getEntity() === related),
-            // );
-
-            // console.dir(copiesV2, { depth: null });
-
             const saved = await this.#mutateFn(copies, mutation.getSelection() ?? {});
             assignCreatedIds(this.#schema, mutation.getSelection() ?? {}, mutation.getContainedRootEntities(), saved);
             const selection = getSelection(this.#schema, mutation.getSelection() ?? {});
             const originals = Array.from(map.values());
             assignEntitiesUsingIds(this.#schema, selection, originals, saved);
+
             // [todo] ❓ i think "save" will also handle delete, so we need to do that somehow here as well.
-            // [todo] ⏰ write dependencies
             for (const dependency of mutation.getInboundDependencies()) {
                 console.log(`⚡ writing inbound dependency: ${dependency.getType()} ${dependency.getPath()}`);
                 dependency.writeIds(this.#schema, originals);
@@ -262,18 +227,18 @@ export class ExplicitEntityMutator extends EntityMutator {
     }
 
     #accept(
-        schema: EntitySchema,
-        entities: readonly Entity[],
         changes: EntityChanges,
-        changeSelection?: EntityRelationSelection,
         supportedSelection?: EntityRelationSelection,
         path?: Path,
-        previous?: readonly Entity[],
         isRoot?: boolean,
     ): [accepted: EntityChange[], open: EntityChanges | undefined, dependencies: EntityMutationDependency[]] {
+        const entities = changes.getEntities(path);
+        const schema = changes.getSchema(path);
         let [acceptedChanges, open] = schema.hasId()
             ? changes.subtractChanges(this.#type === "save" ? ["create", "update"] : [this.#type], schema, entities)
             : [[], changes];
+
+        const previous = changes.getPrevious(path);
 
         if (previous && open && (this.#type === "delete" || (!isRoot && this.#type === "save"))) {
             const [acceptedDeletionChanges, nextOpen] = schema.hasId()
@@ -289,19 +254,20 @@ export class ExplicitEntityMutator extends EntityMutator {
 
         let dependencies: EntityMutationDependency[] = [];
 
-        if (changeSelection !== undefined) {
+        const changeSelection = changes.getSelection(path);
+
+        if (!isEmpty(changeSelection)) {
             const createChanges = acceptedChanges.filter(
                 change => change.getType() === "create" || change.getType() === "update",
             );
 
             if (createChanges.length) {
                 dependencies.push(
-                    ...this.#getCreateDependencies(
+                    ...getCreateDependencies(
                         schema,
                         createChanges.map(change => change.getEntity()),
                         changeSelection,
                         supportedSelection,
-                        path,
                     ),
                 );
             }
@@ -316,13 +282,9 @@ export class ExplicitEntityMutator extends EntityMutator {
         if (changeSelection !== undefined && supportedSelection !== undefined) {
             const intersection = intersectRelationSelection(supportedSelection, changeSelection);
             const [relatedChanges, relatedDependencies, openAfterRelated] = this.#acceptRelated(
-                schema,
                 intersection,
-                entities,
-                changeSelection,
                 open,
                 path,
-                previous,
             );
 
             acceptedChanges.push(...relatedChanges);
@@ -334,28 +296,20 @@ export class ExplicitEntityMutator extends EntityMutator {
     }
 
     #acceptRelated(
-        schema: EntitySchema,
         intersection: EntitySelection,
-        entities: readonly Entity[],
-        changeSelection: EntityRelationSelection,
         changes: EntityChanges,
         path?: Path,
-        previous?: readonly Entity[],
     ): [EntityChange[], EntityMutationDependency[], EntityChanges | undefined] {
         const entityChanges: EntityChange[] = [];
         const dependencies: EntityMutationDependency[] = [];
         let openChanges: EntityChanges | undefined = changes;
+        const schema = changes.getSchema(path);
 
         for (const [key, selected] of Object.entries(toRelationSelection(schema, intersection))) {
-            const relation = schema.getRelation(key);
             const [relatedRemovedChanges, nextOpenChanges, relatedDependencies] = this.#accept(
-                relation.getRelatedSchema(),
-                entities.flatMap(entity => relation.readValueAsArray(entity)),
                 openChanges,
-                isEmpty(changeSelection[key]) ? undefined : changeSelection[key],
                 isEmpty(selected) ? undefined : selected,
                 path === undefined ? toPath(key) : joinPaths([path, key]),
-                previous ? previous.flatMap(entity => relation.readValueAsArray(entity)) : undefined,
             );
 
             if (relatedRemovedChanges) {
@@ -371,76 +325,5 @@ export class ExplicitEntityMutator extends EntityMutator {
         }
 
         return [entityChanges, dependencies, openChanges];
-    }
-
-    #getCreateDependencies(
-        schema: EntitySchema,
-        entities: readonly Entity[],
-        required: EntityRelationSelection,
-        supported?: EntityRelationSelection,
-        path?: Path,
-    ): EntityMutationDependency[] {
-        const dependencies = Object.entries(required).flatMap(([key, selected]) => {
-            const relation = schema.getRelation(key);
-
-            if (relation.isEmbedded()) {
-                const related = entities.flatMap(entity => relation.readValueAsArray(entity));
-
-                return this.#getCreateDependencies(
-                    relation.getRelatedSchema(),
-                    related,
-                    selected,
-                    supported?.[key],
-                    path === undefined ? toPath(key) : joinPaths([path, key]),
-                );
-            } else if (supported === undefined || supported[key] === undefined) {
-                if (relation.joinsFromId() && relation.joinsToId()) {
-                    throw new Error(
-                        "unsupported: trying to create dependency to a created relation that joins both from & to an id",
-                    );
-                }
-
-                const relatedSchema = relation.getRelatedSchema();
-                const relatedCreatable = entities.flatMap(entity =>
-                    relation.readValueAsArray(entity).filter(entity => !entityHasId(relatedSchema, entity)),
-                );
-
-                const dependencies: EntityMutationDependency[] = [];
-
-                if (relatedCreatable.length) {
-                    dependencies.push(
-                        new EntityMutationDependency(
-                            "create",
-                            relatedSchema,
-                            relatedCreatable,
-                            relation.joinsToId(),
-                            path === undefined ? toPath(key) : joinPaths([path, key]),
-                        ),
-                    );
-                }
-
-                const relatedUpdatable = entities.flatMap(entity =>
-                    relation.readValueAsArray(entity).filter(entity => entityHasId(relatedSchema, entity)),
-                );
-
-                if (relatedUpdatable.length) {
-                    dependencies.push(
-                        new EntityMutationDependency(
-                            "update",
-                            relatedSchema,
-                            relatedUpdatable,
-                            relation.joinsToId(),
-                            path === undefined ? toPath(key) : joinPaths([path, key]),
-                        ),
-                    );
-                }
-
-                return dependencies;
-            } else {
-                return [];
-            }
-        });
-
-        return dependencies;
     }
 }
