@@ -3,7 +3,6 @@ import {
     Entity,
     EntityBlueprint,
     EntitySchema,
-    EntitySelection,
     PackedEntitySelection,
     SelectEntity,
     WhereEntity,

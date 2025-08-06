@@ -1,8 +1,8 @@
 import { expect, test, TestAPI } from "vitest";
-import { selectionToString } from "../selection/entity-selection";
 import { intersectSelection } from "../selection/intersect-selection.fn";
 import { mergeSelection } from "../selection/merge-selection.fn";
 import { parseSelection } from "../selection/parse-selection.fn";
+import { selectionToString } from "../selection/selection-to-string.fn";
 import { subtractSelection } from "../selection/subtract-selection.fn";
 
 const parse = (input: string) => parseSelection(input);

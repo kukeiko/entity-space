@@ -74,6 +74,7 @@ export * from "./selection/omit-relational-selections.fn";
 export * from "./selection/pack-entity-selection.fn";
 export * from "./selection/reshape-selection.fn";
 export * from "./selection/selection-to-pathed-related-schemas.fn";
+export * from "./selection/selection-to-string.fn";
 export * from "./selection/subtract-selection.fn";
 export * from "./selection/to-relation-selection.fn";
 export * from "./selection/unpack-selection.fn";
