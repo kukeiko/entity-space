@@ -128,6 +128,7 @@ export namespace EntityBlueprint {
         valueType: V,
         options?: O,
     ): BlueprintProperty<V> & EntityAttribute & O;
+    // [todo] ❌ remove "optional" flag because we're joining here which is optional by default
     export function entity<V extends Class, O extends EntityOptions>(
         valueType: V,
         from: Path | Path[] | BlueprintProperty<Primitive> | BlueprintProperty<Primitive>[],

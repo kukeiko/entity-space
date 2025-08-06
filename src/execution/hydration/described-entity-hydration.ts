@@ -1,3 +1,4 @@
+import { EntitySelection, mergeSelections } from "@entity-space/elements";
 import { AcceptedEntityHydration } from "./accepted-entity-hydration";
 
 export class DescribedEntityHydration {
@@ -11,5 +12,13 @@ export class DescribedEntityHydration {
 
     getAcceptedHydrations(): readonly (readonly AcceptedEntityHydration[])[] {
         return this.#acceptedHydrations;
+    }
+
+    getAcceptedSelection(): EntitySelection {
+        return mergeSelections(
+            this.#acceptedHydrations.flatMap(acceptedHydrations =>
+                acceptedHydrations.map(acceptedHydration => acceptedHydration.getAcceptedSelection()),
+            ),
+        );
     }
 }

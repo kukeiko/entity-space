@@ -3,37 +3,56 @@ import { isEntityRelationProperty } from "../entity/entity-relation-property";
 import { EntitySchema } from "../entity/entity-schema";
 import { EntitySelection, PackedEntitySelection } from "./entity-selection";
 import { getDefaultSelection } from "./get-default-selection.fn";
+import { mergeSelection } from "./merge-selection.fn";
+import { toRelationSelection } from "./to-relation-selection.fn";
+
+function unpackSelectionWithoutDefault(
+    schema: EntitySchema,
+    selection: PackedEntitySelection,
+    predicate?: (property: EntityProperty) => boolean,
+): EntitySelection {
+    predicate = predicate ?? (() => true);
+    const unpacked: EntitySelection = {};
+    let foundRecursive = false;
+
+    for (const [key, selectionValue] of Object.entries(selection)) {
+        if (selectionValue === undefined) {
+            continue;
+        }
+
+        const property = schema.getProperty(key);
+
+        if (!predicate(property)) {
+            continue;
+        } else if (isEntityRelationProperty(property)) {
+            if (selectionValue === true) {
+                unpacked[key] = {};
+            } else if (selectionValue === "*" || selectionValue === selection) {
+                if (foundRecursive) {
+                    throw new Error("a selection with multiple recursive entries on the same level is not supported");
+                }
+
+                foundRecursive = true;
+                unpacked[key] = unpacked;
+            } else {
+                unpacked[key] = unpackSelectionWithoutDefault(property.getRelatedSchema(), selectionValue);
+            }
+        } else {
+            unpacked[key] = true;
+        }
+    }
+
+    return unpacked;
+}
 
 export function unpackSelection(
     schema: EntitySchema,
     selection: PackedEntitySelection,
     predicate?: (property: EntityProperty) => boolean,
 ): EntitySelection {
-    predicate = predicate ?? (() => true);
-    const unpacked = getDefaultSelection(schema, predicate);
-    const propertyMap = new Map(schema.getProperties().map(property => [property.getName(), property]));
+    const unpackedWithoutDefaultSelection = unpackSelectionWithoutDefault(schema, selection, predicate);
+    const relations = toRelationSelection(schema, unpackedWithoutDefaultSelection);
+    const defaultSelection = getDefaultSelection(schema, predicate, relations);
 
-    for (const [name, selectionValue] of Object.entries(selection)) {
-        if (selectionValue === undefined) {
-            continue;
-        }
-
-        const property = propertyMap.get(name);
-
-        if (property === undefined) {
-            throw new Error(`property ${schema.getName()}.${name} does not exist`);
-        }
-
-        if (selectionValue === true) {
-            if (isEntityRelationProperty(property) && predicate(property)) {
-                unpacked[name] = getDefaultSelection(property.getRelatedSchema());
-            } else if (predicate(property)) {
-                unpacked[name] = true;
-            }
-        } else if (isEntityRelationProperty(property) && predicate(property)) {
-            unpacked[name] = unpackSelection(property.getRelatedSchema(), selectionValue);
-        }
-    }
-
-    return unpacked;
+    return mergeSelection(defaultSelection, unpackedWithoutDefaultSelection);
 }

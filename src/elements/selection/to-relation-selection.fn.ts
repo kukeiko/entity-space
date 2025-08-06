@@ -9,10 +9,12 @@ export function toRelationSelection(schema: EntitySchema, selection: EntitySelec
             continue;
         } else if (value === true) {
             throw new Error("invalid selection");
+        } else if (value === selection) {
+            relationSelection[key] = relationSelection;
+        } else {
+            const relation = schema.getRelation(key);
+            relationSelection[key] = toRelationSelection(relation.getRelatedSchema(), value);
         }
-
-        const relation = schema.getRelation(key);
-        relationSelection[key] = toRelationSelection(relation.getRelatedSchema(), value);
     }
 
     return relationSelection;

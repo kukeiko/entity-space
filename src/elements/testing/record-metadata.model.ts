@@ -7,8 +7,8 @@ export class RecordMetadataBlueprint {
     createdAt = string();
     createdById = number();
     createdBy = entity(UserBlueprint, this.createdById, user => user.id, { optional });
-    updatedAt = string({ optional, nullable });
-    updatedById = number({ optional, nullable });
+    updatedAt = string({ nullable });
+    updatedById = number({ nullable });
     updatedBy = entity(UserBlueprint, this.updatedById, user => user.id, { optional, nullable });
 }
 

@@ -3,6 +3,7 @@ import {
     EntityBlueprint,
     EntityQuery,
     EntityQueryParameters,
+    selectionToString,
     unpackSelection,
     whereEntityToCriterion,
 } from "@entity-space/elements";

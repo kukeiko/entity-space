@@ -1,8 +1,14 @@
+import { isEqual } from "lodash";
 import { EntitySelection } from "./entity-selection";
+import { omitEmptySelections } from "./omit-empty-selections.fn";
 
-export function subtractSelection(what: EntitySelection, by: EntitySelection): EntitySelection | boolean {
+function subtractSelectionCore(
+    what: EntitySelection,
+    by: EntitySelection,
+    visited: Map<EntitySelection, [EntitySelection, EntitySelection]> = new Map(),
+): EntitySelection {
     const subtracted: EntitySelection = {};
-    let didSubtract = false;
+    visited.set(what, [by, subtracted]);
 
     for (const key in what) {
         const valueWhat = what[key];
@@ -13,24 +19,20 @@ export function subtractSelection(what: EntitySelection, by: EntitySelection): E
         } else if (typeof valueWhat !== typeof valueBy) {
             throw new Error(`subtraction between incompatible selections on key ${key}`);
         } else if (valueWhat !== true && valueBy !== true) {
-            const nestedSubtracted = subtractSelection(valueWhat, valueBy);
-
-            if (nestedSubtracted === false) {
-                subtracted[key] = valueWhat;
-            } else if (nestedSubtracted !== true) {
-                subtracted[key] = nestedSubtracted;
-                didSubtract = true;
+            if (visited.get(valueWhat)?.[0] === valueBy) {
+                subtracted[key] = visited.get(valueWhat)![1];
             } else {
-                didSubtract = true;
+                subtracted[key] = subtractSelectionCore(valueWhat, valueBy, visited);
             }
-        } else {
-            didSubtract = true;
         }
     }
 
-    if (!didSubtract) {
-        return false;
-    }
+    return subtracted;
+}
 
-    return Object.keys(subtracted).length ? subtracted : true;
+export function subtractSelection(what: EntitySelection, by: EntitySelection): EntitySelection | boolean {
+    const subtracted = subtractSelectionCore(what, by);
+    omitEmptySelections(subtracted);
+
+    return Object.keys(subtracted).length ? (isEqual(what, subtracted) ? false : subtracted) : true;
 }

@@ -40,7 +40,7 @@ export function joinEntities(
             }
 
             for (const entity of entities) {
-                entity[relation.getName()] = joinedEntitiesMap.get(entity, relation.getJoinFrom());
+                entity[relation.getName()] = joinedEntitiesMap.get(entity, relation.getJoinFrom()) ?? [];
             }
         }
     } else {
@@ -51,7 +51,8 @@ export function joinEntities(
         }
 
         for (const entity of entities) {
-            entity[relation.getName()] = joinedEntitiesMap.get(entity, relation.getJoinFrom());
+            entity[relation.getName()] =
+                joinedEntitiesMap.get(entity, relation.getJoinFrom()) ?? (relation.isNullable() ? null : undefined);
         }
     }
 }

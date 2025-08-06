@@ -10,6 +10,10 @@ export function getCreateDependencies(
     supported?: EntityRelationSelection,
     path?: Path,
 ): EntityMutationDependency[] {
+    if (!entities.length) {
+        return [];
+    }
+
     const dependencies = Object.entries(required).flatMap(([key, selected]) => {
         const relation = schema.getRelation(key);
 

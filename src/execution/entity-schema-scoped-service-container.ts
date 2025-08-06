@@ -134,7 +134,10 @@ export class EntitySchemaScopedServiceContainer<B> {
             return Promise.all(
                 entities.map(entity => {
                     return unwrapMaybeAsync(
-                        save({ entity: entity as EntityBlueprint.Savable<B>, selection: selection as S }),
+                        save({
+                            entity: entity as EntityBlueprint.Savable<B>,
+                            selection: packEntitySelection(this.#schema, selection) as S,
+                        }),
                     );
                 }),
             );
@@ -183,7 +186,10 @@ export class EntitySchemaScopedServiceContainer<B> {
             return Promise.all(
                 entities.map(entity => {
                     return unwrapMaybeAsync(
-                        create({ entity: entity as EntityBlueprint.Creatable<B>, selection: selection as S }),
+                        create({
+                            entity: entity as EntityBlueprint.Creatable<B>,
+                            selection: packEntitySelection(this.#schema, selection) as S,
+                        }),
                     );
                 }),
             );
@@ -206,7 +212,10 @@ export class EntitySchemaScopedServiceContainer<B> {
     }): this {
         const mutate: EntityMutationFn = (entities, selection) => {
             return unwrapMaybeAsync(
-                create({ entities: entities as EntityBlueprint.Creatable<B>[], selection: selection as S }),
+                create({
+                    entities: entities as EntityBlueprint.Creatable<B>[],
+                    selection: packEntitySelection(this.#schema, selection) as S,
+                }),
             );
         };
 
@@ -229,7 +238,10 @@ export class EntitySchemaScopedServiceContainer<B> {
             return Promise.all(
                 entities.map(entity => {
                     return unwrapMaybeAsync(
-                        update({ entity: entity as EntityBlueprint.Updatable<B>, selection: selection as S }),
+                        update({
+                            entity: entity as EntityBlueprint.Updatable<B>,
+                            selection: packEntitySelection(this.#schema, selection) as S,
+                        }),
                     );
                 }),
             );
@@ -252,7 +264,10 @@ export class EntitySchemaScopedServiceContainer<B> {
     }): this {
         const mutate: EntityMutationFn = (entities, selection) => {
             return unwrapMaybeAsync(
-                update({ entities: entities as EntityBlueprint.Updatable<B>[], selection: selection as S }),
+                update({
+                    entities: entities as EntityBlueprint.Updatable<B>[],
+                    selection: packEntitySelection(this.#schema, selection) as S,
+                }),
             );
         };
 
@@ -275,7 +290,10 @@ export class EntitySchemaScopedServiceContainer<B> {
             return Promise.all(
                 entities.map(entity => {
                     return unwrapMaybeAsync(
-                        del({ entity: entity as EntityBlueprint.Instance<B>, selection: selection as S }),
+                        del({
+                            entity: entity as EntityBlueprint.Instance<B>,
+                            selection: packEntitySelection(this.#schema, selection) as S,
+                        }),
                     );
                 }),
             );
@@ -295,7 +313,10 @@ export class EntitySchemaScopedServiceContainer<B> {
     }): this {
         const mutate: EntityMutationFn = (entities, selection) => {
             return unwrapMaybeAsync(
-                del({ entities: entities as EntityBlueprint.Instance<B>[], selection: selection as S }),
+                del({
+                    entities: entities as EntityBlueprint.Instance<B>[],
+                    selection: packEntitySelection(this.#schema, selection) as S,
+                }),
             );
         };
 
@@ -305,7 +326,7 @@ export class EntitySchemaScopedServiceContainer<B> {
     }
 
     #addMutator(type: EntityMutationType, mutate: EntityMutationFn, selection: EntityRelationSelection): this {
-        const mutator = new ExplicitEntityMutator(type, this.#schema, mutate, selection);
+        const mutator = new ExplicitEntityMutator(this.#services.getTracing(), type, this.#schema, mutate, selection);
         this.#addMutatorFn(mutator);
 
         return this;

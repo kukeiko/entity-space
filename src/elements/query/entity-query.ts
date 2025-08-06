@@ -1,6 +1,7 @@
 import { Criterion } from "../criteria/criterion";
 import { EntitySchema } from "../entity/entity-schema";
-import { EntitySelection, selectionToString } from "../selection/entity-selection";
+import { EntitySelection } from "../selection/entity-selection";
+import { selectionToString } from "../selection/selection-to-string.fn";
 import { packEntitySelection } from "../selection/pack-entity-selection.fn";
 import { EntityQueryParameters } from "./entity-query-parameters";
 

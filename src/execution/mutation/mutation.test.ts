@@ -1,4 +1,7 @@
 import {
+    Folder,
+    FolderBlueprint,
+    FolderSavable,
     Item,
     ItemAttributeType,
     ItemAttributeTypeCreatable,
@@ -6,6 +9,11 @@ import {
     ItemSavable,
     ItemSocket,
     ItemUpdatable,
+    Tree,
+    TreeBlueprint,
+    TreeSavable,
+    User,
+    UserSavable,
 } from "@entity-space/elements/testing";
 import { beforeEach, describe, expect, it } from "vitest";
 import { EntityWorkspace } from "../entity-workspace";
@@ -56,7 +64,6 @@ describe("mutation", () => {
 
             // act
             const saved = await workspace.in(ItemBlueprint).select({ sockets: true }).save([windforce]);
-            console.dir(saved, { depth: null });
 
             // assert
             expect(saveItem).toHaveBeenCalledWith({ entities: [windforcePassedToSave], selection: { sockets: true } });
@@ -130,7 +137,6 @@ describe("mutation", () => {
 
             // act
             const saved = await workspace.in(ItemBlueprint).select({ sockets: true }).save([windforce]);
-            console.dir(saved, { depth: null });
 
             // assert
             expect(saveItem).toHaveBeenCalledWith({ entities: [windforcePassedToSave], selection: { sockets: true } });
@@ -214,7 +220,7 @@ describe("mutation", () => {
                 // assert
                 expect(updateItems).toHaveBeenCalledWith({
                     entities: [windforcePassedToUpdate],
-                    selection: { attributes: {} },
+                    selection: {},
                 });
             });
         });
@@ -297,91 +303,87 @@ describe("mutation", () => {
 
         describe("should delete children only if empty array is provided explicitly", () => {
             it("empty array is provided", async () => {
-                {
-                    // arrange
-                    const deleteItemSocket = repository.useDeleteItemSockets();
+                // arrange
+                const deleteItemSocket = repository.useDeleteItemSockets();
 
-                    const windforce: ItemUpdatable = {
-                        id: 1,
-                        name: "Windforce",
-                        sockets: [], // empty array is explicitly provided, expecting the previous sockets to be deleted
-                    };
+                const windforce: ItemUpdatable = {
+                    id: 1,
+                    name: "Windforce",
+                    sockets: [], // empty array is explicitly provided, expecting the previous sockets to be deleted
+                };
 
-                    const windforcePrevious: Item = {
-                        id: 1,
-                        assignId: 1,
-                        createdAt,
-                        updatedAt,
-                        attributes: [],
-                        name: "Windforce",
-                        sockets: [
-                            {
-                                id: 2,
-                                assignId: 2,
-                                createdAt,
-                                itemId: 1,
-                                socketedItemId: 4,
-                                updatedAt,
-                            },
-                        ],
-                    };
+                const windforcePrevious: Item = {
+                    id: 1,
+                    assignId: 1,
+                    createdAt,
+                    updatedAt,
+                    attributes: [],
+                    name: "Windforce",
+                    sockets: [
+                        {
+                            id: 2,
+                            assignId: 2,
+                            createdAt,
+                            itemId: 1,
+                            socketedItemId: 4,
+                            updatedAt,
+                        },
+                    ],
+                };
 
-                    // act
-                    await workspace.in(ItemBlueprint).select({ sockets: true }).save([windforce], [windforcePrevious]);
+                // act
+                await workspace.in(ItemBlueprint).select({ sockets: true }).save([windforce], [windforcePrevious]);
 
-                    // assert
-                    expect(deleteItemSocket).toHaveBeenCalledWith({
-                        entities: [
-                            {
-                                id: 2,
-                                assignId: 2,
-                                createdAt,
-                                itemId: 1,
-                                socketedItemId: 4,
-                                updatedAt,
-                            },
-                        ],
-                        selection: {},
-                    });
-                }
+                // assert
+                expect(deleteItemSocket).toHaveBeenCalledWith({
+                    entities: [
+                        {
+                            id: 2,
+                            assignId: 2,
+                            createdAt,
+                            itemId: 1,
+                            socketedItemId: 4,
+                            updatedAt,
+                        },
+                    ],
+                    selection: {},
+                });
             });
 
             it("empty array is omitted", async () => {
-                {
-                    // arrange
-                    const deleteItemSocket = repository.useDeleteItemSockets();
+                // arrange
+                const deleteItemSocket = repository.useDeleteItemSockets();
 
-                    const windforce: ItemUpdatable = {
-                        id: 1,
-                        name: "Windforce",
-                        // no sockets array is provided -> no sockets should be deleted
-                    };
+                const windforce: ItemUpdatable = {
+                    id: 1,
+                    name: "Windforce",
+                    // no sockets array is provided -> no sockets should be deleted
+                };
 
-                    const windforcePrevious: Item = {
-                        id: 1,
-                        assignId: 1,
-                        createdAt,
-                        updatedAt,
-                        attributes: [],
-                        name: "Windforce",
-                        sockets: [
-                            {
-                                id: 2,
-                                assignId: 2,
-                                createdAt,
-                                itemId: 1,
-                                socketedItemId: 4,
-                                updatedAt,
-                            },
-                        ],
-                    };
+                const windforcePrevious: Item = {
+                    id: 1,
+                    assignId: 1,
+                    createdAt,
+                    updatedAt,
+                    attributes: [],
+                    name: "Windforce",
+                    sockets: [
+                        {
+                            id: 2,
+                            assignId: 2,
+                            createdAt,
+                            itemId: 1,
+                            socketedItemId: 4,
+                            updatedAt,
+                        },
+                    ],
+                };
 
-                    // act
-                    await workspace.in(ItemBlueprint).select({ sockets: true }).save([windforce], [windforcePrevious]);
+                // act
+                await workspace.in(ItemBlueprint).select({ sockets: true }).save([windforce], [windforcePrevious]);
 
-                    // assert
-                    expect(deleteItemSocket).not.toHaveBeenCalled();
-                }
+                // assert
+                expect(deleteItemSocket).not.toHaveBeenCalled();
             });
         });
 
@@ -400,7 +402,8 @@ describe("mutation", () => {
             const increasedAttackSpeed: ItemAttributeTypeCreatable = { assignId: 2, name: "Increased Attack Speed" };
             const enhancedDamage: ItemAttributeTypeCreatable = { assignId: 5, name: "Enhanced Damage" };
 
-            // will be updated because it does not exist on an item in "previous" causing no diff to be created for it
+            // will always be updated because it does not exist on an item in "previous" causing no diff to be created for it
+            // that could be used to understand any changes made to it
             const plusStrength: ItemAttributeType = {
                 id: 3,
                 assignId: 3,
@@ -529,15 +532,6 @@ describe("mutation", () => {
                 .select({ sockets: { socketedItem: { attributes: { type: true } } }, attributes: { type: true } })
                 .save(items, previous);
 
-            console.log("[before mutate]");
-            console.dir(itemsBeforeMutate, { depth: null });
-            console.log("[after mutate]");
-            console.dir(items, { depth: null });
-            console.log("[previous before mutate]");
-            console.dir(previousBeforeMutate, { depth: null });
-            console.log("[previous after mutate]");
-            console.dir(previous, { depth: null });
-
             // assert
             // Item
             {
@@ -553,7 +547,7 @@ describe("mutation", () => {
                             ],
                         },
                     ],
-                    selection: { attributes: {} },
+                    selection: {},
                 });
                 expect(createItems).toHaveBeenCalledWith({
                     entities: [
@@ -566,7 +560,7 @@ describe("mutation", () => {
                             ],
                         },
                     ],
-                    selection: { attributes: {} },
+                    selection: {},
                 });
                 expect(updateItems).toHaveBeenCalledTimes(1);
                 expect(updateItems).toHaveBeenCalledWith({
@@ -577,7 +571,7 @@ describe("mutation", () => {
                             attributes: [{ values: [2], typeId: 1 }],
                         },
                     ],
-                    selection: { attributes: {} },
+                    selection: {},
                 });
                 expect(deleteItems).toHaveBeenCalledTimes(1);
                 expect(deleteItems).toHaveBeenCalledWith({
@@ -591,7 +585,7 @@ describe("mutation", () => {
                             updatedAt,
                         },
                     ],
-                    selection: { attributes: {} },
+                    selection: {},
                 });
             }
 
@@ -648,6 +642,241 @@ describe("mutation", () => {
                     selection: {},
                 });
                 expect(deleteItemAttributeTypes).not.toHaveBeenCalled();
+            }
+        });
+
+        it("should work for recursive embedded relations", async () => {
+            // arrange
+            const saveTrees = repository.useSaveTrees();
+            const saveUsers = repository.useSaveUsers();
+
+            const createdBy: UserSavable = {
+                name: "Susi Sonne",
+                metadata: {
+                    createdAt,
+                    createdById: 0,
+                },
+            };
+
+            const tree: TreeSavable = {
+                name: "Mighty Oak",
+                branches: [
+                    {
+                        leaves: [
+                            {
+                                color: "green",
+                                metadata: { createdAt, createdBy },
+                            },
+                        ],
+                        branches: [
+                            {
+                                leaves: [
+                                    {
+                                        color: "red",
+                                        metadata: { createdAt, createdBy },
+                                    },
+                                ],
+                                metadata: { createdAt, createdBy },
+                            },
+                        ],
+                    },
+                ],
+                metadata: { createdAt, createdBy },
+            };
+
+            // act
+            await workspace
+                .in(TreeBlueprint)
+                .select({
+                    metadata: {
+                        createdBy: true,
+                    },
+                    branches: {
+                        branches: "*",
+                        metadata: {
+                            createdBy: true,
+                        },
+                    },
+                })
+                .save([tree]);
+
+            // assert
+            {
+                // Tree
+
+                expect(saveTrees).toHaveBeenCalledTimes(1);
+                expect(saveTrees).toHaveBeenCalledWith({
+                    entities: [
+                        {
+                            name: "Mighty Oak",
+                            branches: [
+                                {
+                                    leaves: [
+                                        {
+                                            color: "green",
+                                            metadata: { createdAt },
+                                        },
+                                    ],
+                                    branches: [
+                                        {
+                                            leaves: [
+                                                {
+                                                    color: "red",
+                                                    metadata: { createdAt },
+                                                },
+                                            ],
+                                            metadata: { createdAt },
+                                        },
+                                    ],
+                                },
+                            ],
+                            metadata: { createdAt },
+                        },
+                    ],
+                    selection: {},
+                });
+            }
+
+            {
+                // User
+                expect(saveUsers).toHaveBeenCalledTimes(1);
+                expect(saveUsers).toHaveBeenCalledWith({
+                    entities: [
+                        {
+                            name: "Susi Sonne",
+                            metadata: {
+                                createdAt,
+                                createdById: 0,
+                            },
+                        },
+                    ],
+                    selection: {},
+                });
+            }
+        });
+
+        it("should work for recursive joined relations", async () => {
+            // arrange
+            const saveFolders = repository.useSaveFolders();
+            const saveFiles = repository.useSaveFiles();
+            const saveUsers = repository.useSaveUsers();
+
+            const createdBy: UserSavable = {
+                name: "Susi Sonne",
+                metadata: {
+                    createdAt,
+                    createdById: 0,
+                },
+            };
+
+            const folder: FolderSavable = {
+                name: "Morcheeba",
+                metadata: { createdAt, createdBy },
+                parentId: 0,
+                parent: {
+                    name: "Music",
+                    parentId: null,
+                    metadata: { createdAt, createdBy },
+                },
+                folders: [
+                    {
+                        name: "Dive Deep",
+                        parentId: 0,
+                        metadata: { createdAt, createdBy },
+                        files: [
+                            {
+                                name: "Enjoy The Ride",
+                                folderId: 0,
+                                metadata: { createdAt, createdBy },
+                            },
+                        ],
+                    },
+                ],
+            };
+
+            // act
+            await workspace
+                .in(FolderBlueprint)
+                .select({
+                    metadata: {
+                        createdBy: true,
+                    },
+                    folders: {
+                        folders: "*",
+                        files: true,
+                    },
+                    parent: {
+                        parent: "*",
+                    },
+                })
+                .save([folder]);
+
+            // assert
+
+            {
+                // Folders
+                expect(saveFolders).toHaveBeenNthCalledWith(1, {
+                    entities: [
+                        {
+                            name: "Music",
+                            parentId: null,
+                            metadata: { createdAt },
+                        },
+                    ],
+                    selection: {},
+                });
+                expect(saveFolders).toHaveBeenNthCalledWith(2, {
+                    entities: [
+                        {
+                            name: "Morcheeba",
+                            parentId: 1,
+                            metadata: { createdAt },
+                        },
+                    ],
+                    selection: {},
+                });
+                expect(saveFolders).toHaveBeenNthCalledWith(3, {
+                    entities: [
+                        {
+                            name: "Dive Deep",
+                            parentId: 2,
+                            metadata: { createdAt },
+                        },
+                    ],
+                    selection: {},
+                });
+            }
+
+            {
+                // File
+                expect(saveFiles).toHaveBeenCalledTimes(1);
+                expect(saveFiles).toHaveBeenCalledWith({
+                    entities: [
+                        {
+                            name: "Enjoy The Ride",
+                            folderId: 3,
+                            metadata: { createdAt },
+                        },
+                    ],
+                    selection: {},
+                });
+            }
+
+            {
+                // User
+                expect(saveUsers).toHaveBeenCalledTimes(1);
+                expect(saveUsers).toHaveBeenCalledWith({
+                    entities: [
+                        {
+                            name: "Susi Sonne",
+                            metadata: {
+                                createdAt,
+                                createdById: 0,
+                            },
+                        },
+                    ],
+                    selection: {},
+                });
             }
         });
     });
@@ -717,7 +946,7 @@ describe("mutation", () => {
                         updatedAt,
                     },
                 ],
-                selection: { attributes: {} },
+                selection: {},
             });
 
             expect(deleteItemSockets).toHaveBeenCalledTimes(1);
@@ -743,7 +972,317 @@ describe("mutation", () => {
                 selection: {},
             });
 
-            expect(deleteItemAttributeTypes).not.toHaveBeenCalled();
+            expect(deleteItemAttributeTypes).toHaveBeenCalledTimes(1);
+            expect(deleteItemAttributeTypes).toHaveBeenCalledWith({
+                entities: [
+                    {
+                        id: 10,
+                        assignId: 10,
+                        name: "Increased Attack Speed",
+                        createdAt,
+                        updatedAt,
+                    },
+                ],
+                selection: {},
+            });
+        });
+
+        it("should work for recursive embedded relations", async () => {
+            // arrange
+            const deleteTrees = repository.useDeleteTrees();
+            const deleteUsers = repository.useDeleteUsers();
+
+            const createdBy: User = {
+                id: 1,
+                name: "Susi Sonne",
+                metadata: {
+                    createdAt,
+                    createdById: 0,
+                    updatedAt: null,
+                    updatedById: null,
+                },
+            };
+
+            const tree: Tree = {
+                id: 1,
+                name: "Mighty Oak",
+                branches: [
+                    {
+                        metadata: { createdAt, createdBy, createdById: 1, updatedAt, updatedById: null },
+                        leaves: [
+                            {
+                                color: "green",
+                                metadata: { createdAt, createdBy, createdById: 1, updatedAt, updatedById: null },
+                            },
+                        ],
+                        branches: [
+                            {
+                                branches: [],
+                                leaves: [
+                                    {
+                                        color: "red",
+                                        metadata: {
+                                            createdAt,
+                                            createdBy,
+                                            createdById: 1,
+                                            updatedAt,
+                                            updatedById: null,
+                                        },
+                                    },
+                                ],
+                                metadata: { createdAt, createdBy, createdById: 1, updatedAt, updatedById: null },
+                            },
+                        ],
+                    },
+                ],
+                metadata: { createdAt, createdBy, createdById: 1, updatedAt, updatedById: null },
+            };
+
+            // act
+            await workspace
+                .in(TreeBlueprint)
+                .select({
+                    metadata: {
+                        createdBy: true,
+                    },
+                    branches: {
+                        branches: "*",
+                        metadata: {
+                            createdBy: true,
+                        },
+                    },
+                })
+                .delete([tree]);
+
+            // assert
+            {
+                // Tree
+                expect(deleteTrees).toHaveBeenCalledTimes(1);
+                expect(deleteTrees).toHaveBeenCalledWith({
+                    entities: [
+                        {
+                            id: 1,
+                            name: "Mighty Oak",
+                            branches: [
+                                {
+                                    metadata: { createdAt, createdById: 1, updatedAt, updatedById: null },
+                                    leaves: [
+                                        {
+                                            color: "green",
+                                            metadata: {
+                                                createdAt,
+                                                createdById: 1,
+                                                updatedAt,
+                                                updatedById: null,
+                                            },
+                                        },
+                                    ],
+                                    branches: [
+                                        {
+                                            // [todo] ❌ had to comment out - behavior that I did not expect, analyse and adapt
+                                            // branches: [],
+                                            leaves: [
+                                                {
+                                                    color: "red",
+                                                    metadata: {
+                                                        createdAt,
+                                                        createdById: 1,
+                                                        updatedAt,
+                                                        updatedById: null,
+                                                    },
+                                                },
+                                            ],
+                                            metadata: {
+                                                createdAt,
+                                                createdById: 1,
+                                                updatedAt,
+                                                updatedById: null,
+                                            },
+                                        },
+                                    ],
+                                },
+                            ],
+                            metadata: { createdAt, createdById: 1, updatedAt, updatedById: null },
+                        },
+                    ],
+                    selection: {},
+                });
+            }
+
+            {
+                // User
+                expect(deleteUsers).toHaveBeenCalledTimes(1);
+                expect(deleteUsers).toHaveBeenCalledWith({
+                    entities: [
+                        {
+                            id: 1,
+                            name: "Susi Sonne",
+                            metadata: {
+                                createdAt,
+                                createdById: 0,
+                                updatedAt: null,
+                                updatedById: null,
+                            },
+                        },
+                    ],
+                    selection: {},
+                });
+            }
+        });
+
+        it("should work for recursive joined relations", async () => {
+            // arrange
+            const deleteFolders = repository.useDeleteFolders();
+            const saveFiles = repository.useDeleteFiles();
+            const saveUsers = repository.useDeleteUsers();
+
+            const createdBy: User = {
+                id: 1,
+                name: "Susi Sonne",
+                metadata: {
+                    createdAt,
+                    createdById: 0,
+                    updatedAt: null,
+                    updatedById: null,
+                },
+            };
+
+            const folder: Folder = {
+                id: 2,
+                name: "Morcheeba",
+                metadata: { createdAt, createdBy, createdById: 1, updatedAt, updatedById: null },
+                parentId: 1,
+                parent: {
+                    id: 1,
+                    name: "Music",
+                    parentId: null,
+                    metadata: { createdAt, createdBy, createdById: 1, updatedAt, updatedById: null },
+                },
+                folders: [
+                    {
+                        id: 3,
+                        name: "Dive Deep",
+                        parentId: 2,
+                        metadata: { createdAt, createdBy, createdById: 1, updatedAt, updatedById: null },
+                        files: [
+                            {
+                                id: 1,
+                                name: "Enjoy The Ride",
+                                folderId: 3,
+                                metadata: { createdAt, createdBy, createdById: 1, updatedAt, updatedById: null },
+                            },
+                        ],
+                    },
+                ],
+            };
+
+            // act
+            await workspace
+                .in(FolderBlueprint)
+                .select({
+                    metadata: {
+                        createdBy: true,
+                    },
+                    folders: {
+                        folders: "*",
+                        files: true,
+                    },
+                    parent: {
+                        parent: "*",
+                    },
+                })
+                .delete([folder]);
+
+            // assert
+
+            {
+                // Folders
+                expect(deleteFolders).toHaveBeenNthCalledWith(1, {
+                    entities: [
+                        {
+                            id: 3,
+                            name: "Dive Deep",
+                            parentId: 2,
+                            metadata: {
+                                createdAt,
+                                createdById: 1,
+                                updatedAt,
+                                updatedById: null,
+                            },
+                        },
+                    ],
+                    selection: {},
+                });
+                expect(deleteFolders).toHaveBeenNthCalledWith(2, {
+                    entities: [
+                        {
+                            id: 2,
+                            name: "Morcheeba",
+                            parentId: 1,
+                            metadata: {
+                                createdAt,
+                                createdById: 1,
+                                updatedAt,
+                                updatedById: null,
+                            },
+                        },
+                    ],
+                    selection: {},
+                });
+
+                expect(deleteFolders).toHaveBeenNthCalledWith(3, {
+                    entities: [
+                        {
+                            id: 1,
+                            name: "Music",
+                            parentId: null,
+                            metadata: { createdAt, createdById: 1, updatedAt, updatedById: null },
+                        },
+                    ],
+                    selection: {},
+                });
+            }
+
+            {
+                // File
+                expect(saveFiles).toHaveBeenCalledTimes(1);
+                expect(saveFiles).toHaveBeenCalledWith({
+                    entities: [
+                        {
+                            id: 1,
+                            name: "Enjoy The Ride",
+                            folderId: 3,
+                            metadata: {
+                                createdAt,
+                                createdById: 1,
+                                updatedAt,
+                                updatedById: null,
+                            },
+                        },
+                    ],
+                    selection: {},
+                });
+            }
+
+            {
+                // User
+                expect(saveUsers).toHaveBeenCalledTimes(1);
+                expect(saveUsers).toHaveBeenCalledWith({
+                    entities: [
+                        {
+                            id: 1,
+                            name: "Susi Sonne",
+                            metadata: {
+                                createdAt,
+                                createdById: 0,
+                                updatedAt: null,
+                                updatedById: null,
+                            },
+                        },
+                    ],
+                    selection: {},
+                });
+            }
         });
     });
 });

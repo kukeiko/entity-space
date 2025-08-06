@@ -1,4 +1,4 @@
-import { isDefined } from "./is-defined.fn";
+import { isNotNullsy } from "./is-not-nullsy.fn";
 
 const $path = Symbol();
 
@@ -38,6 +38,14 @@ export function toPathSegments(path: Path): readonly string[] {
     return path[$path];
 }
 
+export function prependPath<T, U = T>(path: Path | undefined, value: T): U {
+    if (path === undefined) {
+        return value as any as U;
+    } else {
+        return writePath(path, {}, value) as any;
+    }
+}
+
 export function writePath<T, U extends Record<string, any>>(path: Path, object: U, value: T): U {
     const segments = toPathSegments(path);
     let next = object as Record<string, any>;
@@ -55,17 +63,19 @@ export function writePath<T, U extends Record<string, any>>(path: Path, object: 
     return object;
 }
 
-export function readPath<T = unknown>(path: Path, objects: readonly Record<string, any>[]): T[];
-export function readPath<T = unknown>(path: Path, object: Record<string, any>): T | undefined;
+export function readPath<T = unknown>(path: Path | undefined, objects: readonly Record<string, any>[]): T[];
+export function readPath<T = unknown>(path: Path | undefined, object: Record<string, any>): T | undefined;
 export function readPath<T = unknown>(
-    path: Path,
+    path: Path | undefined,
     objects: Record<string, any> | readonly Record<string, any>[],
 ): T[] | T | undefined {
-    if (Array.isArray(objects)) {
+    if (path === undefined) {
+        return objects as T[] | T | undefined;
+    } else if (Array.isArray(objects)) {
         let read: T[] = objects as T[];
 
         for (const segment of toPathSegments(path)) {
-            read = read.flatMap(object => (object as any)[segment]).filter(isDefined);
+            read = read.flatMap(object => (object as any)[segment]).filter(isNotNullsy);
         }
 
         return read;

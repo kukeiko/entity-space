@@ -1,4 +1,4 @@
-import { Entity, EntitySelection } from "@entity-space/elements";
+import { Entity, EntitySelection, selectionToString } from "@entity-space/elements";
 import { EntityQueryExecutionContext } from "../entity-query-execution-context";
 
 export type HydrateEntitiesFunction = (
@@ -32,5 +32,10 @@ export class AcceptedEntityHydration {
 
     hydrateEntities(entities: Entity[], context: EntityQueryExecutionContext): Promise<void> {
         return this.#hydrateFn(entities, this.#acceptedSelection, context);
+    }
+
+    toString() : string {
+        // to make debugging easier. should not be relied upon as actual logic
+        return selectionToString(this.#acceptedSelection);
     }
 }

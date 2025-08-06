@@ -1,11 +1,13 @@
-import { Album, Artist, RecordMetadata, Song, Tag, User } from "@entity-space/elements/testing";
+import { Album, Artist, Folder, RecordMetadata, Song, Tag, Tree, User } from "@entity-space/elements/testing";
 
-const createMetadata = (createdById: number, updatedById?: number): RecordMetadata => ({
-    createdAt: new Date().toISOString(),
-    createdById,
-    updatedById,
-    updatedAt: updatedById ? new Date(Date.now() + 360 * 1000).toISOString() : undefined,
-});
+export function createMetadata(createdById: number, updatedById?: number, createdAt?: string): RecordMetadata {
+    return {
+        createdAt: createdAt ?? new Date().toISOString(),
+        createdById,
+        updatedById: updatedById ?? null,
+        updatedAt: updatedById ? new Date(Date.now() + 360 * 1000).toISOString() : null,
+    };
+}
 
 const users: User[] = [
     { id: 1, name: "Admin", metadata: createMetadata(0) },
@@ -68,12 +70,94 @@ const songs: Song[] = [
     // Sunnexo
 ];
 
+const trees: Tree[] = [
+    {
+        id: 1,
+        name: "Mighty Oak",
+        metadata: createMetadata(1, 2),
+        branches: [
+            {
+                metadata: createMetadata(2, 1),
+                branches: [],
+                leaves: [
+                    {
+                        color: "green",
+                        metadata: createMetadata(2),
+                    },
+                    {
+                        color: "green",
+                        metadata: createMetadata(2, 1),
+                    },
+                ],
+            },
+            {
+                metadata: createMetadata(1, 2),
+                branches: [
+                    {
+                        metadata: createMetadata(1),
+                        branches: [],
+                        leaves: [
+                            {
+                                color: "orange",
+                                metadata: createMetadata(2),
+                            },
+                        ],
+                    },
+                    {
+                        metadata: createMetadata(1),
+                        branches: [],
+                        leaves: [
+                            {
+                                color: "orange",
+                                metadata: createMetadata(2),
+                            },
+                            {
+                                color: "green",
+                                metadata: createMetadata(2),
+                            },
+                        ],
+                    },
+                ],
+                leaves: [
+                    {
+                        color: "orange",
+                        metadata: createMetadata(2, 1),
+                    },
+                ],
+            },
+        ],
+    },
+];
+
+const folders: Folder[] = [
+    {
+        id: 1,
+        name: "music",
+        parentId: null,
+        metadata: createMetadata(1),
+    },
+    {
+        id: 2,
+        name: "Morcheeba",
+        parentId: 1,
+        metadata: createMetadata(2, 1),
+    },
+    {
+        id: 3,
+        name: "Deep Dive",
+        parentId: 2,
+        metadata: createMetadata(2, 1),
+    },
+];
+
 export interface TestEntities {
     users: User[];
     artists: Artist[];
     albums: Album[];
     songs: Song[];
     tags: Tag[];
+    trees: Tree[];
+    folders: Folder[];
 }
 
-export const defaultEntities: TestEntities = { users, artists, albums, songs, tags };
+export const defaultEntities: TestEntities = { users, artists, albums, songs, tags, trees, folders };

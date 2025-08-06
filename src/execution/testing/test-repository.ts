@@ -4,6 +4,12 @@ import {
     ArtistBlueprint,
     ArtistRequest,
     ArtistRequestBlueprint,
+    File,
+    FileBlueprint,
+    FileSavable,
+    Folder,
+    FolderBlueprint,
+    FolderSavable,
     Item,
     ItemAttributeType,
     ItemAttributeTypeBlueprint,
@@ -21,9 +27,14 @@ import {
     RecordMetadata,
     SongBlueprint,
     TagBlueprint,
+    Tree,
+    TreeBlueprint,
+    TreeSavable,
+    User,
     UserBlueprint,
     UserRequest,
     UserRequestBlueprint,
+    UserSavable,
 } from "@entity-space/elements/testing";
 import { jsonClone } from "@entity-space/utils";
 import { vi } from "vitest";
@@ -72,7 +83,15 @@ export class TestRepository {
     }
 
     readonly #services: EntityServiceContainer;
-    #testEntities: Partial<TestEntities> = {};
+    #testEntities: TestEntities = {
+        albums: [],
+        artists: [],
+        folders: [],
+        songs: [],
+        tags: [],
+        trees: [],
+        users: [],
+    };
 
     useDefaultEntities(): this {
         this.#testEntities = structuredClone(defaultEntities);
@@ -80,7 +99,7 @@ export class TestRepository {
     }
 
     useEntities(entities: Partial<TestEntities>): this {
-        this.#testEntities = structuredClone(entities);
+        this.#testEntities = { ...this.#testEntities, ...structuredClone(entities) };
         return this;
     }
 
@@ -165,7 +184,8 @@ export class TestRepository {
                     metadata: { createdAt, updatedAt },
                 },
             }) => {
-                return load(createdAt.value, updatedAt.value);
+                // [todo] ❌ bug: elvis not required if we make RecordMetadata.updatedAt optional
+                return load(createdAt.value, updatedAt?.value);
             },
         });
 
@@ -212,7 +232,7 @@ export class TestRepository {
             const created: EntityBlueprint.Instance<ArtistBlueprint> = {
                 id: nextId,
                 namespace: artist.namespace,
-                metadata: { createdAt: new Date().toISOString(), createdById: 1 },
+                metadata: { createdAt: new Date().toISOString(), createdById: 1, updatedAt: null, updatedById: null },
                 name: artist.name,
             };
 
@@ -268,8 +288,6 @@ export class TestRepository {
     useCreateItems(createdAt: string) {
         const createItem = vi.fn(
             ({ entities, selection }: { entities: ItemCreatable[]; selection: PackedEntitySelection<Item> }) => {
-                console.log("🆕 create Item received:");
-                console.dir(entities, { depth: null });
                 const items = structuredClone(entities);
 
                 for (const item of items) {
@@ -294,8 +312,6 @@ export class TestRepository {
 
     useUpdateItems(updatedAt: string) {
         const updateItems = vi.fn(({ entities }: { entities: ItemUpdatable[] }) => {
-            console.log("✏️ update Item received:");
-            console.dir(entities, { depth: null });
             const items = structuredClone(entities);
 
             for (const item of items) {
@@ -316,8 +332,6 @@ export class TestRepository {
     useSaveItems(createdAt: string, updatedAt: string) {
         const saveItems = vi.fn(
             ({ entities, selection }: { entities: ItemSavable[]; selection: PackedEntitySelection<Item> }) => {
-                console.log("💾 save Item received:");
-                console.dir(entities, { depth: null });
                 const items = structuredClone(entities) as ItemSavable[];
 
                 for (const item of items) {
@@ -358,8 +372,6 @@ export class TestRepository {
     useDeleteItems() {
         const deleteItems = vi.fn(
             ({ entities, selection }: { entities: Item[]; selection: PackedEntitySelection<Item> }) => {
-                console.log("❌ delete Item received:");
-                console.dir(entities, { depth: null });
                 const items = structuredClone(entities) as Item[];
                 return items;
             },
@@ -381,8 +393,6 @@ export class TestRepository {
                 entities: ItemSocketCreatable[];
                 selection: PackedEntitySelection<ItemSocket>;
             }) => {
-                console.log("🆕 create ItemSocket received:");
-                console.dir(entities, { depth: null });
                 const itemSockets = structuredClone(entities);
 
                 for (const itemSocket of itemSockets) {
@@ -410,8 +420,6 @@ export class TestRepository {
                 entities: ItemSocketUpdatable[];
                 selection: PackedEntitySelection<ItemSocket>;
             }) => {
-                console.log("✏️ update ItemSocket received:");
-                console.dir(entities, { depth: null });
                 const items = structuredClone(entities);
 
                 for (const item of items) {
@@ -432,8 +440,6 @@ export class TestRepository {
     useDeleteItemSockets() {
         const deleteItems = vi.fn(
             ({ entities, selection }: { entities: ItemSocket[]; selection: PackedEntitySelection<ItemSocket> }) => {
-                console.log("❌ delete ItemSocket received:");
-                console.dir(entities, { depth: null });
                 return structuredClone(entities);
             },
         );
@@ -454,8 +460,6 @@ export class TestRepository {
                 entities: ItemAttributeTypeCreatable[];
                 selection: PackedEntitySelection<ItemSocket>;
             }) => {
-                console.log("🆕 create ItemAttributeType received:");
-                console.dir(entities, { depth: null });
                 const itemAttributeTypes = structuredClone(entities) as ItemAttributeTypeCreatable[];
 
                 for (const itemAttributeType of itemAttributeTypes) {
@@ -483,8 +487,6 @@ export class TestRepository {
                 entities: ItemAttributeTypeUpdatable[];
                 selection: PackedEntitySelection<ItemSocket>;
             }) => {
-                console.log("✏️ update ItemAttributeType received:");
-                console.dir(entities, { depth: null });
                 const items = structuredClone(entities);
 
                 for (const item of items) {
@@ -511,8 +513,6 @@ export class TestRepository {
                 entities: ItemAttributeType[];
                 selection: PackedEntitySelection<ItemSocket>;
             }) => {
-                console.log("❌ delete ItemAttributeType received:");
-                console.dir(entities, { depth: null });
                 return structuredClone(entities);
             },
         );
@@ -522,6 +522,206 @@ export class TestRepository {
         });
 
         return deleteItemAttributeTypes;
+    }
+
+    useLoadAllTrees() {
+        const load = vi.fn(() => this.#filter("trees"));
+
+        this.#services.for(TreeBlueprint).addSource({
+            load: () => load(),
+        });
+
+        return load;
+    }
+
+    useLoadAllTreesWithFirstLevelBranchesMetadataCreatedBy() {
+        const load = vi.fn(() => this.#filter("trees"));
+
+        this.#services.for(TreeBlueprint).addSource({
+            load: ({ selection }) => {
+                const trees = load();
+
+                if (selection.branches?.metadata?.createdBy) {
+                    for (const tree of trees) {
+                        for (const branch of tree.branches) {
+                            branch.metadata.createdBy = this.#filter(
+                                "users",
+                                user => user.id === branch.metadata.createdById,
+                            )[0];
+                        }
+                    }
+                }
+
+                return trees;
+            },
+            select: { branches: { metadata: { createdBy: true } } },
+        });
+
+        return load;
+    }
+
+    useLoadAllFolders() {
+        const load = vi.fn(() => this.#filter("folders"));
+
+        this.#services.for(FolderBlueprint).addSource({
+            load: () => load(),
+        });
+
+        return load;
+    }
+
+    useSaveTrees() {
+        const save = vi.fn(
+            ({ entities, selection }: { entities: TreeSavable[]; selection: PackedEntitySelection<Tree> }) => {
+                entities = structuredClone(entities);
+
+                for (const entity of entities) {
+                    entity.id = this.#nextId("trees");
+                }
+
+                return entities as Tree[];
+            },
+        );
+
+        this.#services.for(TreeBlueprint).addSaveMutator({
+            save,
+            select: {
+                branches: {
+                    branches: "*",
+                },
+            },
+        });
+
+        return save;
+    }
+
+    useDeleteTrees() {
+        const deleteTrees = vi.fn(
+            ({ entities, selection }: { entities: Tree[]; selection: PackedEntitySelection<Tree> }) => {
+                const items = structuredClone(entities) as Tree[];
+                return items;
+            },
+        );
+
+        this.#services.for(TreeBlueprint).addDeleteMutator({
+            delete: deleteTrees,
+        });
+
+        return deleteTrees;
+    }
+
+    useSaveFolders() {
+        const save = vi.fn(
+            ({ entities, selection }: { entities: FolderSavable[]; selection: PackedEntitySelection<Folder> }) => {
+                entities = structuredClone(entities);
+
+                for (const entity of entities) {
+                    entity.id = this.#nextId("folders");
+                    this.#testEntities.folders.push(entity as Folder);
+                }
+
+                return entities as Folder[];
+            },
+        );
+
+        this.#services.for(FolderBlueprint).addSaveMutator({
+            save,
+        });
+
+        return save;
+    }
+
+    useDeleteFolders() {
+        const deleteFolders = vi.fn(
+            ({ entities, selection }: { entities: Folder[]; selection: PackedEntitySelection<Folder> }) => {
+                const items = structuredClone(entities) as Folder[];
+                return items;
+            },
+        );
+
+        this.#services.for(FolderBlueprint).addDeleteMutator({
+            delete: deleteFolders,
+        });
+
+        return deleteFolders;
+    }
+
+    useSaveFiles() {
+        const save = vi.fn(
+            ({ entities, selection }: { entities: FileSavable[]; selection: PackedEntitySelection<File> }) => {
+                entities = structuredClone(entities);
+
+                // for (const entity of entities) {
+                //     entity.id = this.#nextId("trees");
+                //     entity.metadata = createMetadata(createdById, undefined, createdAt);
+
+                //     // [todo] ❌ commented out to remind myself of: add validation to entities returned from user mutation functions
+                //     // making sure entities are properly hydrated
+                //     // item.updatedAt = null;
+                // }
+
+                return entities as File[];
+            },
+        );
+
+        this.#services.for(FileBlueprint).addSaveMutator({
+            save,
+        });
+
+        return save;
+    }
+
+    useDeleteFiles() {
+        const del = vi.fn(({ entities, selection }: { entities: File[]; selection: PackedEntitySelection<File> }) => {
+            const items = structuredClone(entities) as File[];
+            return items;
+        });
+
+        this.#services.for(FileBlueprint).addDeleteMutator({
+            delete: del,
+        });
+
+        return del;
+    }
+
+    useSaveUsers() {
+        const save = vi.fn(
+            ({ entities, selection }: { entities: UserSavable[]; selection: PackedEntitySelection<Item> }) => {
+                entities = structuredClone(entities);
+
+                // for (const entity of entities) {
+                //     entity.id = this.#nextId("trees");
+                //     entity.metadata = createMetadata(createdById, undefined, createdAt);
+
+                //     // [todo] ❌ commented out to remind myself of: add validation to entities returned from user mutation functions
+                //     // making sure entities are properly hydrated
+                //     // item.updatedAt = null;
+                // }
+
+                return entities as User[];
+            },
+        );
+
+        this.#services.for(UserBlueprint).addSaveMutator({
+            save,
+        });
+
+        return save;
+    }
+
+    useDeleteUsers() {
+        const deleteUsers = vi.fn(
+            ({ entities, selection }: { entities: User[]; selection: PackedEntitySelection<User> }) => {
+                const items = structuredClone(entities) as Tree[];
+                return items;
+            },
+        );
+
+        this.#services.for(UserBlueprint).addDeleteMutator({
+            delete: deleteUsers,
+        });
+
+        return deleteUsers;
     }
 
     #filter<K extends keyof TestEntities>(
@@ -548,6 +748,6 @@ export class TestRepository {
             return +b.id - +a.id;
         });
 
-        return latest[0]?.id ?? 0 + 1;
+        return (latest[0]?.id ?? 0) + 1;
     }
 }

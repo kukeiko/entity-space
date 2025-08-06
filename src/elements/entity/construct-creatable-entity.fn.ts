@@ -19,6 +19,10 @@ export function constructCreatableEntity(schema: EntitySchema, selection: Packed
             } else if (property.isArray()) {
                 entity[key] = [];
             } else {
+                if (selection[key] === "*" || selection[key] === selection) {
+                    throw new Error("recursive selection not supported to construct a creatable entity")
+                }
+
                 entity[key] = constructCreatableEntity(
                     property.getRelatedSchema(),
                     selection[key] === true ? {} : selection[key],

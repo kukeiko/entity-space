@@ -1,6 +1,7 @@
 import { CriterionShape } from "../criteria/criterion-shape";
 import { EntitySchema } from "../entity/entity-schema";
-import { EntitySelection, PackedEntitySelection, selectionToString } from "../selection/entity-selection";
+import { EntitySelection, PackedEntitySelection } from "../selection/entity-selection";
+import { selectionToString } from "../selection/selection-to-string.fn";
 import { unpackSelection } from "../selection/unpack-selection.fn";
 
 export class EntityQueryShape {

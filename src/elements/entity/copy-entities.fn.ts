@@ -9,7 +9,9 @@ export function copyEntities(
     selection?: EntitySelection,
     relatedPredicate?: (relation: EntityRelationProperty, entity: Entity) => boolean,
 ): Entity[] {
-    if (selection === undefined) {
+    if (!entities.length) {
+        return [];
+    } else if (selection === undefined) {
         if (relatedPredicate === undefined) {
             return JSON.parse(JSON.stringify(entities));
         } else {
@@ -66,7 +68,7 @@ export function copyEntities(
                     } else if (value == null) {
                         copies[i][key] = value;
                     } else if (relatedPredicate === undefined || relatedPredicate(relation, value)) {
-                        copies[i][key] = copyEntities(relatedSchema, [value], selected);
+                        copies[i][key] = copyEntities(relatedSchema, [value], selected)[0];
                     }
                 }
             }

@@ -1,7 +1,12 @@
 import { EntitySelection, PackedEntitySelection } from "./entity-selection";
 
-export function reshapeSelection(shape: PackedEntitySelection, selection: EntitySelection): PackedEntitySelection {
+function reshapeSelectionCore(
+    shape: PackedEntitySelection,
+    selection: EntitySelection,
+    visited: Map<EntitySelection, PackedEntitySelection>,
+): PackedEntitySelection {
     const reshaped: PackedEntitySelection = {};
+    visited.set(selection, reshaped);
 
     for (const [key, value] of Object.entries(selection)) {
         const shapeValue = shape[key];
@@ -17,11 +22,23 @@ export function reshapeSelection(shape: PackedEntitySelection, selection: Entity
         } else {
             if (shapeValue === true) {
                 reshaped[key] = true;
+            } else if (shapeValue === "*") {
+                if (visited.has(value)) {
+                    reshaped[key] = "*";
+                }
             } else {
-                reshaped[key] = reshapeSelection(shapeValue, value);
+                if (visited.has(value)) {
+                    reshaped[key] = visited.get(value)!;
+                } else {
+                    reshaped[key] = reshapeSelectionCore(shapeValue, value, visited);
+                }
             }
         }
     }
 
     return reshaped;
+}
+
+export function reshapeSelection(shape: PackedEntitySelection, selection: EntitySelection): PackedEntitySelection {
+    return reshapeSelectionCore(shape, selection, new Map());
 }

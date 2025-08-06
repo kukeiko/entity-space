@@ -12,3 +12,6 @@ export class UserBlueprint {
 register(UserBlueprint, { name: "user", sort: (a, b) => a.name.localeCompare(b.name) });
 
 export type User = EntityBlueprint.Instance<UserBlueprint>;
+export type UserCreatable = EntityBlueprint.Creatable<UserBlueprint>;
+export type UserUpdatable = EntityBlueprint.Updatable<UserBlueprint>;
+export type UserSavable = EntityBlueprint.Savable<UserBlueprint>;

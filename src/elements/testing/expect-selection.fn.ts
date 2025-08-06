@@ -1,8 +1,8 @@
 import { expect, test, TestAPI } from "vitest";
-import { selectionToString } from "../selection/entity-selection";
 import { intersectSelection } from "../selection/intersect-selection.fn";
 import { mergeSelection } from "../selection/merge-selection.fn";
 import { parseSelection } from "../selection/parse-selection.fn";
+import { selectionToString } from "../selection/selection-to-string.fn";
 import { subtractSelection } from "../selection/subtract-selection.fn";
 
 const parse = (input: string) => parseSelection(input);
@@ -36,7 +36,7 @@ export function expectSelection(
                     }
                 },
                 toThrowError(message?: string) {
-                    specFn(`${selection} ∩ ${other} throws ${message ?? "Error"}`, () => {
+                    specFn(`${selection} ∩ ${other} throws: ${message ?? "Error"}`, () => {
                         const intersect = () => intersectSelection(parse(selection), parse(other));
                         expect(intersect).toThrowError(message);
                     });
@@ -53,7 +53,7 @@ export function expectSelection(
                     });
                 },
                 toThrowError(message?: string) {
-                    specFn(`${selection} + ${other} throws ${message ?? "Error"}`, () => {
+                    specFn(`${selection} + ${other} throws: ${message ?? "Error"}`, () => {
                         const merge = () => mergeSelection(parse(selection), parse(other));
                         expect(merge).toThrowError(message);
                     });
@@ -76,7 +76,7 @@ export function expectSelection(
                             const result = subtractSelection(parse(selection), parse(other));
 
                             if (typeof result === "boolean") {
-                                expect(result.toString()).toEqual(parse(expected).toString());
+                                expect(result.toString()).toEqual(selectionToString(parse(expected)));
                             } else {
                                 expect(selectionToString(result)).toEqual(selectionToString(parse(expected)));
                             }
@@ -84,7 +84,7 @@ export function expectSelection(
                     }
                 },
                 toThrowError(message?: string) {
-                    specFn(`${selection} - ${other} throws ${message ?? "Error"}`, () => {
+                    specFn(`${selection} - ${other} throws: ${message ?? "Error"}`, () => {
                         const subtract = () => subtractSelection(parse(selection), parse(other));
                         expect(subtract).toThrowError(message);
                     });

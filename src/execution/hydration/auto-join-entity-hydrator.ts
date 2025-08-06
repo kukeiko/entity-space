@@ -7,21 +7,24 @@ import {
     EntitySelection,
     isSelectionSubsetOf,
     joinEntities,
-    mergeSelections,
     relationToCriterionShape,
 } from "@entity-space/elements";
 import { isNot, writePath } from "@entity-space/utils";
 import { EntityQueryExecutor } from "../entity-query-executor";
+import { EntityQueryTracing } from "../entity-query-tracing";
 import { AcceptedEntityHydration, HydrateEntitiesFunction } from "./accepted-entity-hydration";
 import { EntityHydrator } from "./entity-hydrator";
+import { mergeAcceptedEntityHydrations } from "./functions/merge-accepted-entity-hydrations.fn";
 
-export class AutoJoinableEntityHydrator extends EntityHydrator {
-    constructor(queryExecutor: EntityQueryExecutor) {
+export class AutoJoinEntityHydrator extends EntityHydrator {
+    constructor(queryExecutor: EntityQueryExecutor, tracing: EntityQueryTracing) {
         super();
         this.#queryExecutor = queryExecutor;
+        this.#tracing = tracing;
     }
 
     readonly #queryExecutor: EntityQueryExecutor;
+    readonly #tracing: EntityQueryTracing;
 
     override accept(
         schema: EntitySchema,
@@ -44,7 +47,7 @@ export class AutoJoinableEntityHydrator extends EntityHydrator {
             return false;
         }
 
-        return this.#mergeAcceptedEntityHydrations(acceptedHydrations);
+        return mergeAcceptedEntityHydrations(acceptedHydrations);
     }
 
     #getOpenEntityProperties(
@@ -73,7 +76,7 @@ export class AutoJoinableEntityHydrator extends EntityHydrator {
     #toAcceptedEntityHydration(
         relation: EntityRelationProperty,
         availableSelection: EntitySelection,
-        selection: EntitySelection,
+        openSelection: EntitySelection,
     ): AcceptedEntityHydration | false {
         const requiredSelection: EntitySelection = {};
 
@@ -87,7 +90,7 @@ export class AutoJoinableEntityHydrator extends EntityHydrator {
 
         const relationQueryShape = new EntityQueryShape(
             relation.getRelatedSchema(),
-            selection,
+            openSelection,
             relationToCriterionShape(relation),
         );
 
@@ -103,11 +106,19 @@ export class AutoJoinableEntityHydrator extends EntityHydrator {
             }
 
             const criteria = entitiesToCriterion(entities, relation.getJoinFrom(), relation.getJoinTo());
+
+            if (criteria === undefined) {
+                // to set default join values
+                joinEntities(entities, [], relation);
+                return;
+            }
+
             const query = new EntityQuery(
                 relation.getRelatedSchema(),
                 selection[relation.getName()] as EntitySelection,
                 criteria,
             );
+            this.#tracing.hydrationQuerySpawned(query);
             const relatedEntities = await this.#queryExecutor.executeDescribedSourcing(description, context, query);
             joinEntities(entities, relatedEntities, relation);
         };
@@ -119,12 +130,8 @@ export class AutoJoinableEntityHydrator extends EntityHydrator {
         return new AcceptedEntityHydration(acceptedSelection, requiredSelection, hydrate);
     }
 
-    #mergeAcceptedEntityHydrations(hydrations: AcceptedEntityHydration[]): AcceptedEntityHydration {
-        const acceptedSelection = mergeSelections(hydrations.map(hydration => hydration.getAcceptedSelection()));
-        const requiredSelection = mergeSelections(hydrations.map(hydration => hydration.getRequiredSelection()));
-
-        return new AcceptedEntityHydration(acceptedSelection, requiredSelection, async (entities, _, context) => {
-            await Promise.all(hydrations.map(hydrator => hydrator.hydrateEntities(entities, context)));
-        });
+    override toString(): string {
+        // to make debugging easier. should not be relied upon as actual logic
+        return `AutoJoin`;
     }
 }

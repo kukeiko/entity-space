@@ -65,37 +65,11 @@ function toEntityPairsBySmallestDifference(
     return pairs;
 }
 
-function toEntityPairsByIds(schema: EntitySchema, a: readonly Entity[], b: readonly Entity[]): [Entity, Entity][] {
-    const pairs: [Entity, Entity][] = [];
-
-    const mapOfB = new ComplexKeyMap(schema.getIdPaths());
-
-    for (const entity of b) {
-        if (entityHasId(schema, b)) {
-            mapOfB.set(entity, entity);
-        }
-    }
-
-    for (const entity of a) {
-        const match = mapOfB.get(entity);
-
-        if (!match) {
-            continue;
-        }
-
-        pairs.push([entity, match]);
-    }
-
-    return pairs;
-}
-
 export function toEntityPairs(
     schema: EntitySchema,
     a: readonly Entity[],
     b: readonly Entity[],
 ): [Entity, Entity | undefined][] {
-    const pairs: [Entity, Entity][] = [];
-
     if (!schema.hasId()) {
         return toEntityPairsBySmallestDifference(schema, a, b);
     }

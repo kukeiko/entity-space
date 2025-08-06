@@ -9,6 +9,10 @@ export function assignEntitiesUsingIds(
     targets: readonly Entity[],
     sources: readonly Entity[],
 ): void {
+    if (!targets.length || !sources.length) {
+        return;
+    }
+
     let sourcesMap: Map<Entity, Entity>;
 
     if (schema.hasId()) {

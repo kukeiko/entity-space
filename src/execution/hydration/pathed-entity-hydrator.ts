@@ -56,4 +56,9 @@ export class PathedEntityHydrator extends EntityHydrator {
             },
         );
     }
+
+    override toString(): string {
+        // to make debugging easier. should not be relied upon as actual logic
+        return `${this.#hydrator.toString()} Pathed: ${this.#path}`;
+    }
 }

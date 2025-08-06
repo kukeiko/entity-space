@@ -16,6 +16,7 @@ import {
 } from "@entity-space/elements";
 import { joinPaths, Path, toPath } from "@entity-space/utils";
 import { isEmpty } from "lodash";
+import { EntityQueryTracing } from "../entity-query-tracing";
 import { AcceptedEntityMutation } from "./accepted-entity-mutation";
 import { EntityChange } from "./entity-change";
 import { EntityChanges } from "./entity-changes";
@@ -23,21 +24,25 @@ import { EntityMutationType } from "./entity-mutation";
 import { EntityMutationDependency } from "./entity-mutation-dependency";
 import { EntityMutationFn, EntityMutator } from "./entity-mutator";
 import { getCreateDependencies } from "./get-create-dependencies.fn";
+import { getDeleteDependencies } from "./get-delete-dependencies.fn";
 
 export class ExplicitEntityMutator extends EntityMutator {
     constructor(
+        tracing: EntityQueryTracing,
         type: EntityMutationType,
         schema: EntitySchema,
         mutateFn: EntityMutationFn,
         selection: EntityRelationSelection,
     ) {
         super();
+        this.#tracing = tracing;
         this.#type = type;
         this.#schema = schema;
         this.#mutateFn = mutateFn;
         this.#selection = selection;
     }
 
+    readonly #tracing: EntityQueryTracing;
     readonly #type: EntityMutationType;
     readonly #schema: EntitySchema;
     readonly #mutateFn: EntityMutationFn;
@@ -77,7 +82,7 @@ export class ExplicitEntityMutator extends EntityMutator {
     override async mutate(mutation: AcceptedEntityMutation): Promise<void> {
         if (this.#type === "create") {
             for (const dependency of mutation.getOutboundDependencies()) {
-                console.log(`⚡ writing outbound dependency: ${dependency.getType()} ${dependency.getPath()}`);
+                this.#tracing.writingDependency(dependency.getType(), dependency.getPath(), true);
                 dependency.writeIds(this.#schema, mutation.getContainedRootEntities());
             }
 
@@ -99,6 +104,7 @@ export class ExplicitEntityMutator extends EntityMutator {
             );
 
             const copies = Array.from(map.keys());
+            this.#tracing.dispatchedMutation(this.#schema, this.#type, copies);
             const created = await this.#mutateFn(copies, mutation.getSelection() ?? {});
             assignCreatedIds(this.#schema, mutation.getSelection() ?? {}, mutation.getContainedRootEntities(), created);
             const selection = getSelection(this.#schema, mutation.getSelection() ?? {});
@@ -106,12 +112,12 @@ export class ExplicitEntityMutator extends EntityMutator {
             assignEntitiesUsingIds(this.#schema, selection, originals, created);
 
             for (const dependency of mutation.getInboundDependencies()) {
-                console.log(`⚡ writing inbound dependency: ${dependency.getType()} ${dependency.getPath()}`);
+                this.#tracing.writingDependency(dependency.getType(), dependency.getPath(), false);
                 dependency.writeIds(this.#schema, originals);
             }
         } else if (this.#type === "update") {
             for (const dependency of mutation.getOutboundDependencies()) {
-                console.log(`⚡ writing outbound dependency: ${dependency.getType()} ${dependency.getPath()}`);
+                this.#tracing.writingDependency(dependency.getType(), dependency.getPath(), true);
                 dependency.writeIds(this.#schema, mutation.getContainedRootEntities());
             }
 
@@ -136,13 +142,14 @@ export class ExplicitEntityMutator extends EntityMutator {
             );
 
             const copies = Array.from(map.keys());
+            this.#tracing.dispatchedMutation(this.#schema, this.#type, copies);
             const updated = await this.#mutateFn(copies, mutation.getSelection() ?? {});
             const originals = Array.from(map.values());
             const selection = getSelection(this.#schema, mutation.getSelection() ?? {});
             assignEntitiesUsingIds(this.#schema, selection, originals, updated);
 
             for (const dependency of mutation.getInboundDependencies()) {
-                console.log(`⚡ writing inbound dependency: ${dependency.getType()} ${dependency.getPath()}`);
+                this.#tracing.writingDependency(dependency.getType(), dependency.getPath(), false);
                 dependency.writeIds(this.#schema, originals);
             }
         } else if (this.#type === "delete") {
@@ -168,6 +175,7 @@ export class ExplicitEntityMutator extends EntityMutator {
             );
 
             const copies = Array.from(map.keys());
+            this.#tracing.dispatchedMutation(this.#schema, this.#type, copies);
             const deleted = await this.#mutateFn(copies, mutation.getSelection() ?? {});
             const originals = Array.from(map.values());
 
@@ -187,7 +195,7 @@ export class ExplicitEntityMutator extends EntityMutator {
             }
         } else if (this.#type === "save") {
             for (const dependency of mutation.getOutboundDependencies()) {
-                console.log(`⚡ writing outbound dependency: ${dependency.getType()} ${dependency.getPath()}`);
+                this.#tracing.writingDependency(dependency.getType(), dependency.getPath(), true);
                 dependency.writeIds(this.#schema, mutation.getContainedRootEntities());
             }
 
@@ -212,6 +220,7 @@ export class ExplicitEntityMutator extends EntityMutator {
             );
 
             const copies = Array.from(map.keys());
+            this.#tracing.dispatchedMutation(this.#schema, this.#type, copies);
             const saved = await this.#mutateFn(copies, mutation.getSelection() ?? {});
             assignCreatedIds(this.#schema, mutation.getSelection() ?? {}, mutation.getContainedRootEntities(), saved);
             const selection = getSelection(this.#schema, mutation.getSelection() ?? {});
@@ -220,7 +229,7 @@ export class ExplicitEntityMutator extends EntityMutator {
 
             // [todo] ❓ i think "save" will also handle delete, so we need to do that somehow here as well.
             for (const dependency of mutation.getInboundDependencies()) {
-                console.log(`⚡ writing inbound dependency: ${dependency.getType()} ${dependency.getPath()}`);
+                this.#tracing.writingDependency(dependency.getType(), dependency.getPath(), false);
                 dependency.writeIds(this.#schema, originals);
             }
         }
@@ -240,21 +249,35 @@ export class ExplicitEntityMutator extends EntityMutator {
 
         const previous = changes.getPrevious(path);
 
+        if (!entities.length && !previous?.length) {
+            return [[], changes, []];
+        }
+
+        let dependencies: EntityMutationDependency[] = [];
+        const changeSelection = changes.getSelection(path);
+
         if (previous && open && (this.#type === "delete" || (!isRoot && this.#type === "save"))) {
             const [acceptedDeletionChanges, nextOpen] = schema.hasId()
                 ? open.subtractChanges(["delete"], schema, previous)
                 : [[], open];
             acceptedChanges.push(...acceptedDeletionChanges);
             open = nextOpen;
+
+            if (acceptedDeletionChanges.length) {
+                dependencies.push(
+                    ...getDeleteDependencies(
+                        schema,
+                        acceptedDeletionChanges.map(change => change.getEntity()),
+                        changeSelection,
+                        supportedSelection,
+                    ),
+                );
+            }
         }
 
         if (!acceptedChanges.length && schema.hasId()) {
             return [[], undefined, []];
         }
-
-        let dependencies: EntityMutationDependency[] = [];
-
-        const changeSelection = changes.getSelection(path);
 
         if (!isEmpty(changeSelection)) {
             const createChanges = acceptedChanges.filter(

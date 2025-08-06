@@ -18,10 +18,12 @@ import { DescribedEntityQueryExecution } from "./described-entity-query-executio
 import { EntityQueryExecutionContext } from "./entity-query-execution-context";
 import { EntityServiceContainer } from "./entity-service-container";
 import { AcceptedEntityHydration } from "./hydration/accepted-entity-hydration";
-import { AutoJoinableEntityHydrator } from "./hydration/auto-joinable-entity-hydrator";
+import { AutoJoinEntityHydrator } from "./hydration/auto-join-entity-hydrator";
 import { DescribedEntityHydration } from "./hydration/described-entity-hydration";
 import { EntityHydrator } from "./hydration/entity-hydrator";
 import { PathedEntityHydrator } from "./hydration/pathed-entity-hydrator";
+import { RecursiveAutoJoinEntityHydrator } from "./hydration/recursive-auto-join-entity-hydrator";
+import { RecursiveEntityHydrator } from "./hydration/recursive-entity-hydrator";
 import { AcceptedEntitySourcing } from "./sourcing/accepted-entity-sourcing";
 import { DescribedEntitySourcing } from "./sourcing/described-entity-sourcing";
 import { EntitySourcingState } from "./sourcing/entity-sourcing-state.interface";
@@ -84,7 +86,7 @@ export class EntityQueryExecutor {
     }
 
     describeHydration(sourcing: EntitySourcingState): DescribedEntityHydration | false {
-        const entitySchema = sourcing.getSchema();
+        const schema = sourcing.getSchema();
         const targetSelection = sourcing.getTargetSelection();
         let availableSelection = sourcing.getAvailableSelection();
         let openSelection = sourcing.getOpenSelection();
@@ -95,15 +97,17 @@ export class EntityQueryExecutor {
 
         const acceptedHydrations: AcceptedEntityHydration[][] = [];
         const hydrators = [
-            ...this.#getHydratorsForSchema(entitySchema),
-            ...this.#getHydratorsForSelection(entitySchema, targetSelection),
+            new RecursiveAutoJoinEntityHydrator(this, this.#services.getTracing()),
+            new RecursiveEntityHydrator(this),
+            ...this.#getHydratorsForSchema(schema),
+            ...this.#getHydratorsForSelection(schema, targetSelection),
         ];
 
         while (true) {
             const currentAcceptedHydrations: AcceptedEntityHydration[] = [];
 
             for (const hydrator of hydrators) {
-                const accepted = hydrator.accept(entitySchema, availableSelection, openSelection);
+                const accepted = hydrator.accept(schema, availableSelection, openSelection);
 
                 if (accepted === false) {
                     continue;
@@ -111,6 +115,14 @@ export class EntityQueryExecutor {
 
                 currentAcceptedHydrations.push(accepted);
                 const nextOpenSelection = subtractSelection(openSelection, accepted.getAcceptedSelection());
+                this.#services
+                    .getTracing()
+                    .hydratorAcceptedSelection(
+                        hydrator,
+                        openSelection,
+                        accepted.getAcceptedSelection(),
+                        nextOpenSelection,
+                    );
 
                 if (nextOpenSelection === false) {
                     throw new Error("bad hydrator implementation");
@@ -244,8 +256,8 @@ export class EntityQueryExecutor {
     #getHydratorsForSchema(schema: EntitySchema): EntityHydrator[] {
         const explicit = this.#services.getExplicitHydratorsFor(schema);
 
-        // [todo] shouldn't the explicit ones come first so that user-defined hydrators take precedence?
-        return [new AutoJoinableEntityHydrator(this), ...explicit];
+        // [todo] ❌ shouldn't the explicit ones come first so that user-defined hydrators take precedence?
+        return [new AutoJoinEntityHydrator(this, this.#services.getTracing()), ...explicit];
     }
 
     #getHydratorsForSelection(schema: EntitySchema, selection: EntitySelection): EntityHydrator[] {

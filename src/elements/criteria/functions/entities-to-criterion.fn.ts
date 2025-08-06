@@ -4,8 +4,12 @@ import { Criterion } from "../criterion";
 import { EntityCriterion, PackedEntityCriterion } from "../entity-criterion";
 import { OrCriterion } from "../or-criterion";
 
-function singlePath(entities: readonly Entity[], path: Path, writtenPath?: Path): Criterion {
+function singlePath(entities: readonly Entity[], path: Path, writtenPath?: Path): Criterion | undefined {
     const values = readPath(path, entities).filter(isPrimitive);
+
+    if (!values.length) {
+        return undefined;
+    }
 
     return new EntityCriterion(writePath(writtenPath ?? path, {} as PackedEntityCriterion, values));
 }

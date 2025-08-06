@@ -1,4 +1,14 @@
-import { CriterionShape, Entity, EntityQuery } from "@entity-space/elements";
+import {
+    CriterionShape,
+    Entity,
+    EntityQuery,
+    EntitySchema,
+    EntitySelection,
+    selectionToString,
+} from "@entity-space/elements";
+import { Path } from "@entity-space/utils";
+import { EntityHydrator } from "./hydration/entity-hydrator";
+import { EntityMutationType } from "./mutation/entity-mutation";
 
 const TAB_WIDTH = 4;
 const MAX_FULLY_PRINTED_ENTITIES = 10;
@@ -14,7 +24,7 @@ class EntityQueryTraceMessageBuilder {
     }
 
     buildMessage(): string {
-        return this.#lines.join("\n");
+        return `${this.#lines.join("\n")}\n`;
     }
 }
 
@@ -33,7 +43,7 @@ export class EntityQueryTracing {
     }
 
     querySpawned(query: EntityQuery, source?: string): void {
-        this.#log(query, builder => {
+        this.#logForQuery(query, builder => {
             builder.addLine("🥚 query spawned:").addLine(`- query: ${query.toString()}`, 1);
 
             if (source) {
@@ -43,13 +53,13 @@ export class EntityQueryTracing {
     }
 
     hydrationQuerySpawned(query: EntityQuery): void {
-        this.#log(query, builder => {
-            builder.addLine("🥚 💧 hydration query spawned:").addLine(`- query: ${query}`, 1);
+        this.#logForQuery(query, builder => {
+            builder.addLine("💧 hydration query spawned:").addLine(`- query: ${query}`, 1);
         });
     }
 
     queryResolved(query: EntityQuery, result?: string): void {
-        this.#log(query, builder => {
+        this.#logForQuery(query, builder => {
             builder.addLine(`🐣 query has been resolved:`).addLine(`- query: ${query}`, 1);
 
             if (result !== undefined) {
@@ -59,7 +69,7 @@ export class EntityQueryTracing {
     }
 
     queryDispatchedToSource(reshaped: EntityQuery, original: EntityQuery, shape?: CriterionShape): void {
-        this.#log(original, builder => {
+        this.#logForQuery(original, builder => {
             builder.addLine("🔌 query got dispatched to a source:");
 
             if (original.toString() === reshaped.toString()) {
@@ -72,23 +82,74 @@ export class EntityQueryTracing {
         });
     }
 
+    queryDispatchedToHydrator(query: EntityQuery): void {
+        this.#logForQuery(query, builder => {
+            builder.addLine("🚰 query got dispatched to a hydrator:");
+        });
+    }
+
     queryReceivedEntities(query: EntityQuery, entities: readonly Entity[]): void {
-        this.#log(query, builder => {
+        this.#logForQuery(query, builder => {
             builder.addLine("🚚 query received payload:").addLine(`- query: ${query}`, 1);
             this.#addEntityLines(entities, builder, 1);
         });
     }
 
     filteredInvalidEntities(query: EntityQuery, entities: readonly Entity[]): void {
-        this.#log(query, builder => {
+        this.#logForQuery(query, builder => {
             builder.addLine("🐞 filtered invalid entities:").addLine(`- query: ${query}`, 1);
             this.#addEntityLines(entities, builder, 1);
         });
     }
 
     queryWasLoadedFromCache(query: EntityQuery): void {
-        this.#log(query, builder => {
+        this.#logForQuery(query, builder => {
             builder.addLine("💾 query was loaded from cache:").addLine(`- query: ${query}`, 1);
+        });
+    }
+
+    hydratorAcceptedSelection(
+        hydrator: EntityHydrator,
+        openSelection: EntitySelection,
+        acceptedSelection: EntitySelection,
+        remainingOpen?: boolean | EntitySelection,
+    ): void {
+        this.#log(builder => {
+            builder.addLine(`✅ hydrator '${hydrator.toString()}' accepted selection:`);
+            builder.addLine(" - open:", 1);
+            builder.addLine(selectionToString(openSelection), 2);
+            builder.addLine(" - accepted:", 1);
+            builder.addLine(selectionToString(acceptedSelection), 2);
+
+            if (remainingOpen && typeof remainingOpen !== "boolean") {
+                builder.addLine(" - remainng:", 1);
+                builder.addLine(selectionToString(remainingOpen), 2);
+            }
+        });
+    }
+
+    dispatchedMutation(schema: EntitySchema, type: EntityMutationType, entities: Entity[]): void {
+        const icons: Record<EntityMutationType, string> = {
+            create: "🆕",
+            delete: "❌",
+            save: "💾",
+            update: "✏️",
+        };
+
+        this.#log(builder => {
+            builder.addLine(`${icons[type]} ${type} ${schema.getName()} received:`);
+
+            for (const entity of entities) {
+                builder.addLine(` - ${JSON.stringify(entity)}`, 1);
+            }
+        });
+    }
+
+    writingDependency(type: EntityMutationType, path: Path, isOutbound: boolean): void {
+        this.#log(builder => {
+            builder.addLine(`⚡ writing ${isOutbound ? "outbound" : "inbound"} dependency:`);
+            builder.addLine(` - type: ${type}`, 1);
+            builder.addLine(` - path: ${path.toString()}`, 1);
         });
     }
 
@@ -110,16 +171,24 @@ export class EntityQueryTracing {
         }
     }
 
-    #log(query: EntityQuery, build: (builder: EntityQueryTraceMessageBuilder) => unknown): void {
+    #log(build: (builder: EntityQueryTraceMessageBuilder) => unknown): void {
         if (!this.#consoleEnabled) {
             return;
         }
 
-        if (this.#filters.every(filter => filter(query))) {
-            const builder = new EntityQueryTraceMessageBuilder();
-            build(builder);
-            const message = builder.buildMessage();
-            console.log(message);
+        const builder = new EntityQueryTraceMessageBuilder();
+        build(builder);
+        const message = builder.buildMessage();
+        console.log(message);
+    }
+
+    #logForQuery(query: EntityQuery, build: (builder: EntityQueryTraceMessageBuilder) => unknown): void {
+        if (!this.#consoleEnabled) {
+            return;
+        }
+
+        if (this.#consoleEnabled && this.#filters.every(filter => filter(query))) {
+            this.#log(build);
         }
     }
 }

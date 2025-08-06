@@ -19,6 +19,10 @@ function getCreated(
     entities: readonly Entity[],
     selection: EntityRelationSelection,
 ): EntityChange[] {
+    if (!entities.length) {
+        return [];
+    }
+
     const created: EntityChange[] = [];
 
     if (schema.hasId()) {
@@ -45,6 +49,10 @@ function getUpdated(
     selection: EntityRelationSelection,
     previous?: readonly Entity[],
 ): EntityChange[] {
+    if (!entities.length) {
+        return [];
+    }
+
     const updated: EntityChange[] = [];
 
     if (schema.hasId()) {
@@ -115,7 +123,7 @@ function getMapOfAllEntities(
     return map;
 }
 
-function getShallowRemoved(
+function getRemovedRootEntities(
     schema: EntitySchema,
     current: Map<EntitySchema, ComplexKeyMap<Entity, Entity>>,
     previous: Entity[],
@@ -142,11 +150,12 @@ function getShallowRemoved(
     return removed;
 }
 
-function getRelatedRemoved(
+function getRemovedRelatedEntities(
     schema: EntitySchema,
     current: Map<EntitySchema, ComplexKeyMap<Entity, Entity>>,
     previous: Entity[],
     selection: EntityRelationSelection,
+    includeReferences = false,
 ): EntityChange[] {
     const changes: EntityChange[] = [];
 
@@ -158,7 +167,7 @@ function getRelatedRemoved(
                 current.get(schema)!.has(entity) &&
                 current.get(schema)!.get(entity)![key] === undefined
             ) {
-                // skip if original entity did not explicitly provide a a value for the relation
+                // skip if original entity did not explicitly provide a value for the relation
                 continue;
             }
 
@@ -171,12 +180,25 @@ function getRelatedRemoved(
 
             const relatedSchema = relation.getRelatedSchema();
 
-            // remove any children
-            if (relation.isArray() && relation.joinsFromId() && Array.isArray(value)) {
-                changes.push(...getShallowRemoved(relatedSchema, current, value));
+            if (!relation.isEmbedded()) {
+                if (relation.isArray() && relation.joinsFromId() && Array.isArray(value)) {
+                    // remove any children
+                    changes.push(...getRemovedRootEntities(relatedSchema, current, value));
+                } else if (includeReferences && !relation.isArray() && relation.joinsToId() && value != null) {
+                    // remove any references
+                    changes.push(...getRemovedRootEntities(relatedSchema, current, [value]));
+                }
             }
 
-            changes.push(...getRelatedRemoved(relatedSchema, current, relation.readValueAsArray(entity), selected));
+            changes.push(
+                ...getRemovedRelatedEntities(
+                    relatedSchema,
+                    current,
+                    relation.readValueAsArray(entity),
+                    selected,
+                    includeReferences,
+                ),
+            );
         }
     }
 
@@ -188,10 +210,17 @@ function getRemoved(
     current: readonly Entity[],
     selection: EntityRelationSelection,
     previous: Entity[],
+    includeReferences = false,
 ): EntityChange[] {
     const currentEntitiesMap = getMapOfAllEntities(schema, current, selection);
-    const removedRoots = getShallowRemoved(schema, currentEntitiesMap, previous);
-    const removedChildren = getRelatedRemoved(schema, currentEntitiesMap, previous, selection);
+    const removedRoots = getRemovedRootEntities(schema, currentEntitiesMap, previous);
+    const removedChildren = getRemovedRelatedEntities(
+        schema,
+        currentEntitiesMap,
+        previous,
+        selection,
+        includeReferences,
+    );
 
     return [...removedRoots, ...removedChildren];
 }
@@ -206,7 +235,7 @@ export function toEntityChanges(mutation: EntityMutation): EntityChanges | undef
     const changes: EntityChange[] = [];
 
     if (previous !== undefined && type.includes("delete")) {
-        changes.push(...getRemoved(schema, entities, selection, previous));
+        changes.push(...getRemoved(schema, entities, selection, previous, mutation.getType() === "delete"));
     }
 
     if (type.includes("create")) {
