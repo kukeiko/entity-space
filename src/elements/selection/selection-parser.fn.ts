@@ -1,19 +1,41 @@
 import { Token, TokenType } from "@entity-space/lexer";
 import { EntitySelection } from "./entity-selection";
 
-export function* selectionParser(): Generator<unknown, false | EntitySelection, Token> {
+export function* selectionParser(
+    name = "",
+    selection: EntitySelection = {},
+    path: Record<string, EntitySelection> = {},
+): Generator<unknown, false | EntitySelection, Token> {
     let token = yield;
 
-    if (!(token.type === TokenType.Special && token.value === "{")) {
+    if (token.type !== TokenType.Special) {
+        return false;
+    } else if (token.value === "*") {
+        return path[name] || path[""] || false;
+    } else if (token.value !== "{") {
         return false;
     }
 
-    let selection: EntitySelection = {};
+    path[name] = selection;
 
     while (true) {
         token = yield;
+        let expectingName = false;
+
+        if (token.type === TokenType.Special && token.value === ",") {
+            if (!Object.keys(selection).length) {
+                return false;
+            }
+
+            token = yield;
+            expectingName = true;
+        }
 
         if (token.type === TokenType.Special && token.value === "}") {
+            if (expectingName) {
+                return false;
+            }
+
             break;
         }
 
@@ -27,7 +49,8 @@ export function* selectionParser(): Generator<unknown, false | EntitySelection, 
         if (token.type === TokenType.Special && token.value === ",") {
             selection[propertyName] = true;
         } else if (token.type === TokenType.Special && token.value === ":") {
-            const propertyValue = yield* selectionParser();
+            const relatedSelection: EntitySelection = {};
+            const propertyValue = yield* selectionParser(propertyName, relatedSelection, path);
 
             if (propertyValue === false) {
                 return false;

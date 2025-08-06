@@ -14,4 +14,22 @@ describe(parseSelection, () => {
         // assert
         expect(actual).toEqual(expected);
     });
+
+    it("should work on a recursive selection", () => {
+        // arrange
+        const expected = {
+            foo: { bar: {} },
+            khaz: { mo: { dan: { khaz: { mo: {} } } } },
+        };
+        expected.foo.bar = expected;
+        expected.khaz.mo.dan.khaz.mo = expected.khaz.mo;
+
+        const input = "{ foo: { bar: * }, khaz: { mo: { dan: { khaz: { mo: * } } } } }";
+
+        // act
+        const actual = parseSelection(input);
+
+        // assert
+        expect(actual).toEqual(expected);
+    });
 });

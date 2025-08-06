@@ -19,7 +19,7 @@ export function lex(input: string): Token[] {
     while (!next.done) {
         const char = next.value;
 
-        if ("(){}[]!:;,<>/".includes(char)) {
+        if ("(){}[]!:;,<>/*".includes(char)) {
             tokens.push(token(TokenType.Special, char));
             next = iterator.next();
         } else if ('"'.includes(char)) {
