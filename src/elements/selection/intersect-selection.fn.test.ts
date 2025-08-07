@@ -8,6 +8,17 @@ describe(intersectSelection, () => {
     expectSelection("{ foo }").intersect("{ foo, bar }").toEqual("{ foo }");
     expectSelection("{ foo: { bar } }").intersect("{ foo: { bar, baz } }").toEqual("{ foo: { bar } }");
     expectSelection("{ foo: { bar } }").intersect("{ foo: { baz } }").toEqual(false);
+    expectSelection("{ id, foo: * }").intersect("{ id, foo: * }").toEqual("{ id, foo: * }");
+    expectSelection("{ id, foo: * }").intersect("{ id, name, foo: * }").toEqual("{ id, foo: * }");
+    expectSelection("{ id, foo: { bar: { id, name, bar: * } } }")
+        .intersect("{ id, foo: { bar: { id, bar: * } } }")
+        .toEqual("{ id, foo: { bar: { id, bar: * } } }");
+    expectSelection("{ foo: { bar: { id, name } } }")
+        .intersect("{ foo: { bar: { id, name, bar: * } } }")
+        .toEqual("{ foo: { bar: { id, name } } }");
+    expectSelection("{ foo: { bar: { id, name, bar: { id, name } } } }")
+        .intersect("{ foo: { bar: { id, name, bar: * } } }")
+        .toEqual("{ foo: { bar: { id, name, bar: { id, name } } } }");
     expectSelection("{ foo }")
         .intersect("{ foo: { bar } }")
         .toThrowError("intersection between incompatible selections on key foo");
