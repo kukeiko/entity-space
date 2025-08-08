@@ -1,16 +1,15 @@
 import { isEntityPrimitiveProperty } from "../entity/entity-primitive-property";
 import { EntityProperty } from "../entity/entity-property";
-import { isEntityRelationProperty } from "../entity/entity-relation-property";
+import { EntityRelationProperty, isEntityRelationProperty } from "../entity/entity-relation-property";
 import { EntitySchema } from "../entity/entity-schema";
 import { EntitySelection } from "./entity-selection";
 
-export function getDefaultSelection(
+function getDefaultSelectionCore(
     schema: EntitySchema,
-    predicate?: (property: EntityProperty) => boolean,
-): EntitySelection {
-    predicate = predicate ?? (() => true);
-    const selection: EntitySelection = {};
-
+    selection: EntitySelection,
+    predicate: (property: EntityProperty) => boolean,
+    visited = new Map<EntityRelationProperty, EntitySelection>(),
+): void {
     for (const property of schema.getProperties()) {
         if (property.isOptional()) {
             continue;
@@ -19,9 +18,23 @@ export function getDefaultSelection(
         if (isEntityPrimitiveProperty(property) && predicate(property)) {
             selection[property.getName()] = true;
         } else if (isEntityRelationProperty(property) && predicate(property)) {
-            selection[property.getName()] = getDefaultSelection(property.getRelatedSchema(), predicate);
+            if (!visited.has(property)) {
+                visited.set(property, {});
+                getDefaultSelectionCore(property.getRelatedSchema(), visited.get(property)!, predicate, visited);
+            }
+
+            selection[property.getName()] = visited.get(property)!;
         }
     }
+}
+
+export function getDefaultSelection(
+    schema: EntitySchema,
+    predicate?: (property: EntityProperty) => boolean,
+): EntitySelection {
+    const selection: EntitySelection = {};
+    predicate = predicate ?? (() => true);
+    getDefaultSelectionCore(schema, selection, predicate);
 
     return selection;
 }
