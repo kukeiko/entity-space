@@ -1,26 +1,23 @@
 import { cloneSelection } from "./clone-selection.fn";
 import { EntitySelection } from "./entity-selection";
+import { mergeSelection } from "./merge-selection.fn";
 
 export function mergeSelections(selections: readonly EntitySelection[]): EntitySelection {
-    const merged: EntitySelection = {};
+    if (!selections.length) {
+        return {};
+    } else if (selections.length === 1) {
+        return cloneSelection(selections[0]);
+    }
 
-    for (const selection of selections) {
-        for (const [key, right] of Object.entries(selection)) {
-            const left = merged[key];
+    let merged: EntitySelection = {};
 
-            if (left === undefined) {
-                if (right === true) {
-                    merged[key] = right;
-                } else {
-                    merged[key] = cloneSelection(right);
-                }
-            } else if (typeof left !== typeof right) {
-                throw new Error(`merge between incompatible selections on key ${key}`);
-            } else if (left === true && right === true) {
-                merged[key] = true;
-            } else {
-                merged[key] = mergeSelections([left as EntitySelection, right as EntitySelection]);
-            }
+    for (let i = 0; i < selections.length; i += 2) {
+        const [a, b] = [selections[i], selections[i + 1]];
+
+        if (b === undefined) {
+            merged = mergeSelection(merged, a);
+        } else {
+            merged = mergeSelection(a, b);
         }
     }
 

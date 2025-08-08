@@ -6,6 +6,10 @@ describe(mergeSelection, () => {
     expectSelection("{ foo }").plus("{ bar }").toEqual("{ foo, bar }");
     expectSelection("{ foo }").plus("{ foo }").toEqual("{ foo }");
     expectSelection("{ foo: { bar } }").plus("{ foo: { baz } }").toEqual("{ foo: { bar, baz } }");
+    expectSelection("{ foo: * }").plus("{ bar: * }").toEqual("{ foo: { foo: * }, bar: { bar: * } }")
+    expectSelection("{ foo: * }").plus("{ foo: * }").toEqual("{ foo: * }")
+    expectSelection("{ foo: { id, foo: * } }").plus("{ foo: { name } }").toEqual("{ foo: { id, name, foo: { id, foo: * } } }")
+    expectSelection("{ foo: { id, foo: * } }").plus("{ foo: { name, foo: * } }").toEqual("{ foo: { id, name, foo: * } }")
     expectSelection("{ foo }")
         .plus("{ foo: { bar } }")
         .toThrowError("merge between incompatible selections on key foo");

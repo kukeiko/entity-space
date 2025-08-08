@@ -36,7 +36,7 @@ export function expectSelection(
                     }
                 },
                 toThrowError(message?: string) {
-                    specFn(`${selection} ∩ ${other} throws ${message ?? "Error"}`, () => {
+                    specFn(`${selection} ∩ ${other} throws: ${message ?? "Error"}`, () => {
                         const intersect = () => intersectSelection(parse(selection), parse(other));
                         expect(intersect).toThrowError(message);
                     });
@@ -53,7 +53,7 @@ export function expectSelection(
                     });
                 },
                 toThrowError(message?: string) {
-                    specFn(`${selection} + ${other} throws ${message ?? "Error"}`, () => {
+                    specFn(`${selection} + ${other} throws: ${message ?? "Error"}`, () => {
                         const merge = () => mergeSelection(parse(selection), parse(other));
                         expect(merge).toThrowError(message);
                     });
@@ -76,7 +76,7 @@ export function expectSelection(
                             const result = subtractSelection(parse(selection), parse(other));
 
                             if (typeof result === "boolean") {
-                                expect(result.toString()).toEqual(parse(expected).toString());
+                                expect(result.toString()).toEqual(selectionToString(parse(expected)));
                             } else {
                                 expect(selectionToString(result)).toEqual(selectionToString(parse(expected)));
                             }
@@ -84,7 +84,7 @@ export function expectSelection(
                     }
                 },
                 toThrowError(message?: string) {
-                    specFn(`${selection} - ${other} throws ${message ?? "Error"}`, () => {
+                    specFn(`${selection} - ${other} throws: ${message ?? "Error"}`, () => {
                         const subtract = () => subtractSelection(parse(selection), parse(other));
                         expect(subtract).toThrowError(message);
                     });
