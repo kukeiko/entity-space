@@ -35,8 +35,7 @@ export class EntityRelationProperty extends EntityProperty {
         relatedSchema: EntitySchema,
         options?: Partial<EntityPropertyOptions & EntityRelationPropertyOptions>,
     ) {
-        super(name, options);
-        this.#schema = schema;
+        super(name, schema, options);
         this.#relatedSchema = relatedSchema;
 
         if (options?.relationshipType) {
@@ -85,13 +84,8 @@ export class EntityRelationProperty extends EntityProperty {
         });
     }
 
-    readonly #schema: EntitySchema;
     readonly #relatedSchema: EntitySchema;
     readonly #options: Readonly<EntityRelationPropertyOptions>;
-
-    getSchema(): EntitySchema {
-        return this.#schema;
-    }
 
     getRelatedSchema(): EntitySchema {
         return this.#relatedSchema;
@@ -195,7 +189,7 @@ export class EntityRelationProperty extends EntityProperty {
                         }
 
                         const [lastJoinFrom, lastJoinTo] = [joinsFrom.at(-1)!, joinsTo.at(-1)!];
-                        writePath(lastJoinTo, relatedEntity, readPath(lastJoinFrom, entity));
+                        writePath(lastJoinTo, relatedEntity, readPath(lastJoinFrom, entity) ?? 0);
                     }
                 }
             } else {
@@ -220,7 +214,7 @@ export class EntityRelationProperty extends EntityProperty {
                     }
 
                     const [lastJoinFrom, lastJoinTo] = [joinsFrom.at(-1)!, joinsTo.at(-1)!];
-                    writePath(lastJoinFrom, entity, readPath(lastJoinTo, related));
+                    writePath(lastJoinFrom, entity, readPath(lastJoinTo, related) ?? 0);
                 }
             } else if (this.isArray()) {
                 // [todo] implement
@@ -237,7 +231,7 @@ export class EntityRelationProperty extends EntityProperty {
 
                     for (let i = 0; i < joinsFrom.length; i++) {
                         const [joinFrom, joinTo] = [joinsFrom[i], joinsTo[i]];
-                        writePath(joinFrom, entity, readPath(joinTo, related));
+                        writePath(joinFrom, entity, readPath(joinTo, related) ?? 0);
                     }
                 }
             }

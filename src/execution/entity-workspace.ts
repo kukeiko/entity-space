@@ -3,9 +3,9 @@ import {
     EntityBlueprint,
     EntityQuery,
     EntityQueryParameters,
-    selectionToString,
     unpackSelection,
     whereEntityToCriterion,
+    writeRelationIds,
 } from "@entity-space/elements";
 import { Class } from "@entity-space/utils";
 import { concat, defer, delay, finalize, from, map, Observable, of, switchMap } from "rxjs";
@@ -165,6 +165,7 @@ export class EntityWorkspace {
     }
 
     async #mutate(mutation: EntityMutation): Promise<Entity[]> {
+        writeRelationIds(mutation.getSchema(), mutation.getEntities(), mutation.getSelection() ?? {});
         const entityChanges = toEntityChanges(mutation);
 
         if (entityChanges === undefined) {
@@ -194,8 +195,7 @@ export class EntityWorkspace {
         }
 
         if (nextEntityChanges !== undefined) {
-            // [todo] ❌ should throw
-            console.log("⚠️ did not accept all");
+            throw new Error("not all mutations have been accepted");
         }
 
         for (const mutation of sortAcceptedMutationsByDependency(allAccepted)) {

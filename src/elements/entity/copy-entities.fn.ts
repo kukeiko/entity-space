@@ -1,5 +1,6 @@
 import { EntitySelection } from "../selection/entity-selection";
 import { Entity } from "./entity";
+import { EntityProperty } from "./entity-property";
 import { EntityRelationProperty } from "./entity-relation-property";
 import { EntitySchema } from "./entity-schema";
 
@@ -8,15 +9,16 @@ export function copyEntities(
     entities: readonly Entity[],
     selection?: EntitySelection,
     relatedPredicate?: (relation: EntityRelationProperty, entity: Entity) => boolean,
+    propertyPredicate?: (property: EntityProperty, entity: Entity) => boolean,
 ): Entity[] {
     if (!entities.length) {
         return [];
     } else if (selection === undefined) {
-        if (relatedPredicate === undefined) {
+        if (relatedPredicate === undefined && propertyPredicate === undefined) {
             return JSON.parse(JSON.stringify(entities));
         } else {
             throw new Error(
-                `not yet supported: copyEntities() with undefined selection but defined relatedPredicate (tried to copy entities of schema ${schema.getName()})`,
+                `not yet supported: copyEntities() with undefined selection but defined relatedPredicate/propertyPredicate (tried to copy entities of schema ${schema.getName()})`,
             );
         }
     }
@@ -28,6 +30,10 @@ export function copyEntities(
             const primitive = schema.getPrimitive(key);
 
             for (let i = 0; i < entities.length; ++i) {
+                if (propertyPredicate !== undefined && !propertyPredicate(schema.getProperty(key), entities[i])) {
+                    continue;
+                }
+
                 const value = primitive.copyValue(entities[i]);
 
                 if (value !== undefined) {
@@ -44,6 +50,10 @@ export function copyEntities(
 
             if (relation.isArray()) {
                 for (let i = 0; i < entities.length; ++i) {
+                    if (propertyPredicate !== undefined && !propertyPredicate(schema.getProperty(key), entities[i])) {
+                        continue;
+                    }
+
                     const value = entities[i][key];
 
                     if (value === undefined) {
@@ -56,11 +66,21 @@ export function copyEntities(
                                 ? value
                                 : (value as Entity[]).filter(entity => relatedPredicate(relation, entity));
 
-                        copies[i][key] = copyEntities(relatedSchema, related, selected, relatedPredicate);
+                        copies[i][key] = copyEntities(
+                            relatedSchema,
+                            related,
+                            selected,
+                            relatedPredicate,
+                            propertyPredicate,
+                        );
                     }
                 }
             } else {
                 for (let i = 0; i < entities.length; ++i) {
+                    if (propertyPredicate !== undefined && !propertyPredicate(schema.getProperty(key), entities[i])) {
+                        continue;
+                    }
+
                     const value = entities[i][key];
 
                     if (value === undefined) {
@@ -68,7 +88,13 @@ export function copyEntities(
                     } else if (value == null) {
                         copies[i][key] = value;
                     } else if (relatedPredicate === undefined || relatedPredicate(relation, value)) {
-                        copies[i][key] = copyEntities(relatedSchema, [value], selected)[0];
+                        copies[i][key] = copyEntities(
+                            relatedSchema,
+                            [value],
+                            selected,
+                            relatedPredicate,
+                            propertyPredicate,
+                        )[0];
                     }
                 }
             }

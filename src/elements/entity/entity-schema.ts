@@ -76,7 +76,7 @@ export class EntitySchema {
             throw new Error(`${this.#name}.${name} already exists as a relation`);
         }
 
-        this.#primitives[name] = new EntityPrimitiveProperty(name, primitive, options);
+        this.#primitives[name] = new EntityPrimitiveProperty(name, this, primitive, options);
         return this;
     }
 

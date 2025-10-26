@@ -1,6 +1,7 @@
 import { EntityBlueprint } from "../../entity/entity-blueprint";
 import { ItemAttributeBlueprint } from "./item-attribute.model";
 import { ItemSocketBlueprint } from "./item-socket.model";
+import { ItemTypeBlueprint } from "./item-type.model";
 
 const { register, id, string, number, entity, array, optional, nullable, readonly, creatable } = EntityBlueprint;
 
@@ -8,6 +9,8 @@ export class ItemBlueprint {
     id = id();
     assignId = number({ readonly, creatable });
     name = string();
+    typeId = number();
+    type = entity(ItemTypeBlueprint, this.typeId, type => type.id, { optional: true });
     attributes = entity(ItemAttributeBlueprint, { array });
     sockets = entity(ItemSocketBlueprint, this.id, itemSocket => itemSocket.itemId, { array, optional });
     createdAt = string({ readonly });

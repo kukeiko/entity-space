@@ -3,6 +3,7 @@ import {
     assignCreatedIds,
     assignEntitiesUsingIds,
     copyEntity,
+    entityHasId,
     EntityRelationSelection,
     EntitySchema,
     EntitySelection,
@@ -190,7 +191,6 @@ export class ExplicitEntityMutator extends EntityMutator {
                     throw new Error("failed to find deletion change");
                 }
 
-                // [todo] ❓ figure out if it is fine to not iterate over possible children
                 change.removeEntity();
             }
         } else if (this.#type === "save") {
@@ -206,14 +206,15 @@ export class ExplicitEntityMutator extends EntityMutator {
 
             const map = new Map(
                 mutation.getContainedRootEntities().map(entity => {
-                    const copy = copyEntity(
-                        this.#schema,
-                        entity,
-                        savableSelection,
-                        (relation, entity) =>
-                            relation.isEmbedded() ||
-                            mutation.getChanges().some(change => change.getEntity() === entity),
-                    );
+                    const copy = copyEntity(this.#schema, entity, savableSelection, undefined, (property, entity) => {
+                        if (property.getSchema().isIdProperty(property.getName())) {
+                            return true;
+                        }
+
+                        return entityHasId(property.getSchema(), entity)
+                            ? isUpdatableEntityProperty(property)
+                            : isCreatableEntityProperty(property);
+                    });
 
                     return [copy, entity];
                 }),
@@ -227,11 +228,12 @@ export class ExplicitEntityMutator extends EntityMutator {
             const originals = Array.from(map.values());
             assignEntitiesUsingIds(this.#schema, selection, originals, saved);
 
-            // [todo] ❓ i think "save" will also handle delete, so we need to do that somehow here as well.
             for (const dependency of mutation.getInboundDependencies()) {
                 this.#tracing.writingDependency(dependency.getType(), dependency.getPath(), false);
                 dependency.writeIds(this.#schema, originals);
             }
+
+            // [todo] ❓"save" also handles delete, so we need to remove deleted entities as well somehow
         }
     }
 
@@ -276,7 +278,7 @@ export class ExplicitEntityMutator extends EntityMutator {
         }
 
         if (!acceptedChanges.length && schema.hasId()) {
-            return [[], undefined, []];
+            return [[], open, []];
         }
 
         if (!isEmpty(changeSelection)) {
@@ -335,10 +337,7 @@ export class ExplicitEntityMutator extends EntityMutator {
                 path === undefined ? toPath(key) : joinPaths([path, key]),
             );
 
-            if (relatedRemovedChanges) {
-                entityChanges.push(...relatedRemovedChanges);
-            }
-
+            entityChanges.push(...relatedRemovedChanges);
             dependencies.push(...relatedDependencies);
             openChanges = nextOpenChanges;
 

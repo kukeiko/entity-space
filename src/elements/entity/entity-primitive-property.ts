@@ -1,6 +1,7 @@
 import { isPrimitiveType, Primitive } from "@entity-space/utils";
 import { Entity } from "./entity";
 import { EntityProperty, EntityPropertyOptions } from "./entity-property";
+import { EntitySchema } from "./entity-schema";
 
 export function isEntityPrimitiveProperty(value: unknown): value is EntityPrimitiveProperty {
     return value instanceof EntityPrimitiveProperty;
@@ -14,10 +15,11 @@ export interface EntityPrimitivePropertyOptions {
 export class EntityPrimitiveProperty extends EntityProperty {
     constructor(
         name: string,
+        schema: EntitySchema,
         primitive: Primitive,
         options: Partial<EntityPrimitivePropertyOptions & EntityPropertyOptions> = {},
     ) {
-        super(name, options);
+        super(name, schema, options);
 
         if (!isPrimitiveType(primitive)) {
             throw new Error(`${primitive} is not a Primitive`);

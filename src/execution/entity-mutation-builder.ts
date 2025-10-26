@@ -38,19 +38,29 @@ export class EntityMutationBuilder<B, S extends PackedEntitySelection<EntityBlue
     }
 
     async save(
+        entity: EntityBlueprint.Savable<B>,
+        previous?: EntityBlueprint.Instance<B>,
+    ): Promise<EntityBlueprint.Instance<B>>;
+    async save(
         entities: EntityBlueprint.Savable<B>[],
         previous?: EntityBlueprint.Instance<B>[],
-    ): Promise<EntityBlueprint.Instance<B>[]> {
+    ): Promise<EntityBlueprint.Instance<B>[]>;
+    async save(
+        entities: EntityBlueprint.Savable<B>[] | EntityBlueprint.Savable<B>,
+        previous?: EntityBlueprint.Instance<B>[] | EntityBlueprint.Instance<B>,
+    ): Promise<EntityBlueprint.Instance<B>[] | EntityBlueprint.Instance<B>> {
         const mutation = new EntityMutation(
             "save",
             this.#schema,
-            entities,
+            Array.isArray(entities) ? entities : [entities],
             toRelationSelection(this.#schema, unpackSelection(this.#schema, this.#selection)),
-            previous,
+            previous ? (Array.isArray(previous) ? previous : [previous]) : undefined,
         );
 
         const saved = await this.#mutateFn(mutation);
-        return saved as EntityBlueprint.Instance<B>[];
+        return Array.isArray(entities)
+            ? (saved as EntityBlueprint.Instance<B>[])
+            : (saved[0] as EntityBlueprint.Instance<B>);
     }
 
     async createOne(entity: EntityBlueprint.Creatable<B>): Promise<EntityBlueprint.Instance<B>> {
@@ -91,21 +101,22 @@ export class EntityMutationBuilder<B, S extends PackedEntitySelection<EntityBlue
         throw new Error("not yet implemented");
     }
 
-    async deleteOne(entity: EntityBlueprint.Instance<B>): Promise<void> {
-        throw new Error("not yet implemented");
-        // const operation = new EntityMutation("delete", this.#schema, getDefaultSelection(this.#schema), [entity]);
-        // await this.#mutateFn(operation);
-    }
-
-    async delete(entities: EntityBlueprint.Instance<B>[]): Promise<void> {
+    async delete(entity: EntityBlueprint.Instance<B>): Promise<EntityBlueprint.Instance<B> | undefined>;
+    async delete(entities: EntityBlueprint.Instance<B>[]): Promise<EntityBlueprint.Instance<B>[]>;
+    async delete(
+        entities: EntityBlueprint.Instance<B> | EntityBlueprint.Instance<B>[],
+    ): Promise<EntityBlueprint.Instance<B>[] | EntityBlueprint.Instance<B> | undefined> {
+        const previous: EntityBlueprint.Instance<B>[] = Array.isArray(entities) ? entities : [entities];
         const mutation = new EntityMutation(
             "delete",
             this.#schema,
             [],
             toRelationSelection(this.#schema, unpackSelection(this.#schema, this.#selection)),
-            entities,
+            previous,
         );
 
         await this.#mutateFn(mutation);
+
+        return Array.isArray(entities) ? previous : previous[0];
     }
 }

@@ -30,11 +30,11 @@ export class EntityChanges {
     }
 
     getSelection(path?: Path): EntityRelationSelection {
-        return path ? (readPath(path, this.#selection) ?? {}) : this.#selection;
+        return readPath(path, this.#selection) ?? {};
     }
 
     getEntities(path?: Path): readonly Entity[] {
-        return path ? readPath(path, this.#entities) : this.#entities;
+        return readPath(path, this.#entities);
     }
 
     getPrevious(path?: Path): Entity[] | undefined {
@@ -42,7 +42,7 @@ export class EntityChanges {
             return undefined;
         }
 
-        return path ? readPath(path, this.#previous) : this.#previous;
+        return readPath(path, this.#previous);
     }
 
     subtractChanges(

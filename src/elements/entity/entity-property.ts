@@ -1,3 +1,5 @@
+import { EntitySchema } from "./entity-schema";
+
 export enum ContainerType {
     Array = "array",
 }
@@ -23,9 +25,8 @@ export interface EntityPropertyOptions {
 }
 
 export abstract class EntityProperty {
-    constructor(name: string, options: Partial<EntityPropertyOptions> = {}) {
+    constructor(name: string, schema: EntitySchema, options: Partial<EntityPropertyOptions> = {}) {
         assertValidPropertyName(name);
-
         if (options.container) {
             assertValidPropertyContainerType(options.container);
         }
@@ -34,6 +35,7 @@ export abstract class EntityProperty {
             assertValidPropertyName(options.dtoName);
         }
 
+        this.#schema = schema;
         this.#name = name;
         this.#options = Object.freeze({
             container: options.container,
@@ -46,6 +48,11 @@ export abstract class EntityProperty {
 
     readonly #name: string;
     readonly #options: Readonly<EntityPropertyOptions>;
+    readonly #schema: EntitySchema;
+
+    getSchema(): EntitySchema {
+        return this.#schema;
+    }
 
     getName(): string {
         return this.#name;

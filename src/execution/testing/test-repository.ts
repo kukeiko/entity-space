@@ -23,6 +23,9 @@ import {
     ItemSocketCreatable,
     ItemSocketSavable,
     ItemSocketUpdatable,
+    ItemType,
+    ItemTypeBlueprint,
+    ItemTypeSavable,
     ItemUpdatable,
     RecordMetadata,
     SongBlueprint,
@@ -39,7 +42,12 @@ import {
 import { jsonClone } from "@entity-space/utils";
 import { vi } from "vitest";
 import { EntityServiceContainer } from "../entity-service-container";
-import { CreateEntityFn } from "../mutation/entity-mutation-function.type";
+import {
+    CreateEntitiesFn,
+    CreateEntityFn,
+    SaveEntitiesFn,
+    UpdateEntitiesFn,
+} from "../mutation/entity-mutation-function.type";
 import { defaultEntities, TestEntities } from "./default-entities";
 
 function filterById<T extends { id: string | number }>(id: string | number): (entity: T) => boolean {
@@ -285,6 +293,82 @@ export class TestRepository {
         return loadSongsByArtistIdsAndNamespace;
     }
 
+    useSaveItems_deprecated(createdAt: string, updatedAt: string, includeSockets = true) {
+        const saveItems = vi.fn(
+            ({ entities, selection }: { entities: ItemSavable[]; selection: PackedEntitySelection<Item> }) => {
+                const items = structuredClone(entities) as ItemSavable[];
+
+                for (const item of items) {
+                    if (!item.id) {
+                        item.id = item.assignId;
+                        item.createdAt = createdAt;
+                    }
+
+                    if (includeSockets && selection.sockets && item.sockets) {
+                        for (const socket of item.sockets) {
+                            if (!socket.id) {
+                                socket.id = socket.assignId;
+                                socket.createdAt = createdAt;
+                                socket.updatedAt = null;
+                                socket.itemId = item.id;
+                            } else {
+                                socket.updatedAt = updatedAt;
+                            }
+                        }
+                    }
+
+                    item.updatedAt = updatedAt;
+                }
+
+                return items as Item[];
+            },
+        );
+
+        this.#services.for(ItemBlueprint).addSaveMutator({
+            select: includeSockets ? { sockets: true } : {},
+            save: saveItems,
+        });
+
+        return saveItems;
+    }
+
+    useSaveItems(createdAt: string, updatedAt: string, includeSockets = false) {
+        const saveItems = vi.fn(({ entities }: Parameters<SaveEntitiesFn<ItemBlueprint, {}>>[0]) => {
+            const items = structuredClone(entities) as ItemSavable[];
+
+            for (const item of items) {
+                if (!item.id) {
+                    item.id = item.assignId;
+                    item.createdAt = createdAt;
+                    item.updatedAt = null;
+                } else {
+                    item.updatedAt = updatedAt;
+                }
+
+                if (includeSockets && item.sockets) {
+                    for (const itemSocket of item.sockets) {
+                        if (!itemSocket.id) {
+                            itemSocket.id = itemSocket.assignId;
+                            itemSocket.createdAt = createdAt;
+                            itemSocket.updatedAt = null;
+                        } else {
+                            itemSocket.updatedAt = updatedAt;
+                        }
+                    }
+                }
+            }
+
+            return items as Item[];
+        });
+
+        this.#services.for(ItemBlueprint).addSaveMutator({
+            select: includeSockets ? { sockets: true } : {},
+            save: saveItems,
+        });
+
+        return saveItems;
+    }
+
     useCreateItems(createdAt: string) {
         const createItem = vi.fn(
             ({ entities, selection }: { entities: ItemCreatable[]; selection: PackedEntitySelection<Item> }) => {
@@ -293,6 +377,7 @@ export class TestRepository {
                 for (const item of items) {
                     item.id = item.assignId;
                     item.createdAt = createdAt;
+                    item.updatedAt = null;
 
                     // [todo] ❌ commented out to remind myself of: add validation to entities returned from user mutation functions
                     // making sure entities are properly hydrated
@@ -329,46 +414,6 @@ export class TestRepository {
         return updateItems;
     }
 
-    useSaveItems(createdAt: string, updatedAt: string) {
-        const saveItems = vi.fn(
-            ({ entities, selection }: { entities: ItemSavable[]; selection: PackedEntitySelection<Item> }) => {
-                const items = structuredClone(entities) as ItemSavable[];
-
-                for (const item of items) {
-                    if (!item.id) {
-                        item.id = item.assignId;
-                        item.createdAt = createdAt;
-                    }
-
-                    if (selection.sockets && item.sockets) {
-                        // [todo] ❌ type issue in "ItemSavable", item.sockets[number] allows "undefined"
-                        for (const socket of item.sockets as ItemSocketSavable[]) {
-                            if (!socket.id) {
-                                socket.id = socket.assignId;
-                                socket.createdAt = createdAt;
-                                socket.updatedAt = null;
-                                socket.itemId = item.id;
-                            } else {
-                                socket.updatedAt = updatedAt;
-                            }
-                        }
-                    }
-
-                    item.updatedAt = updatedAt;
-                }
-
-                return items as Item[];
-            },
-        );
-
-        this.#services.for(ItemBlueprint).addSaveMutator({
-            select: { sockets: true },
-            save: saveItems,
-        });
-
-        return saveItems;
-    }
-
     useDeleteItems() {
         const deleteItems = vi.fn(
             ({ entities, selection }: { entities: Item[]; selection: PackedEntitySelection<Item> }) => {
@@ -382,6 +427,73 @@ export class TestRepository {
         });
 
         return deleteItems;
+    }
+
+    useSaveItemTypes() {
+        const saveItemTypes = vi.fn(({ entities }: Parameters<SaveEntitiesFn<ItemTypeBlueprint, {}>>[0]) => {
+            const items = structuredClone(entities) as ItemTypeSavable[];
+
+            for (const item of items) {
+                if (!item.id) {
+                    item.id = item.assignId;
+                }
+            }
+
+            return items as ItemType[];
+        });
+
+        this.#services.for(ItemTypeBlueprint).addSaveMutator({ save: saveItemTypes });
+
+        return saveItemTypes;
+    }
+
+    useCreateItemTypes() {
+        const createItemTypes = vi.fn(({ entities }: Parameters<CreateEntitiesFn<ItemTypeBlueprint, {}>>[0]) => {
+            const items = structuredClone(entities);
+
+            for (const item of items) {
+                item.id = item.assignId;
+            }
+
+            return items as ItemType[];
+        });
+
+        this.#services.for(ItemTypeBlueprint).addCreateMutator({ create: createItemTypes });
+
+        return createItemTypes;
+    }
+
+    useUpdateItemTypes() {
+        const updateItemTypes = vi.fn(({ entities }: Parameters<UpdateEntitiesFn<ItemTypeBlueprint, {}>>[0]) => {
+            const items = structuredClone(entities);
+            return items as ItemType[];
+        });
+
+        this.#services.for(ItemTypeBlueprint).addUpdateMutator({ update: updateItemTypes });
+
+        return updateItemTypes;
+    }
+
+    useSaveItemSockets(createdAt: string, updatedAt: string) {
+        const saveItemSockets = vi.fn(({ entities }: Parameters<SaveEntitiesFn<ItemSocketBlueprint, {}>>[0]) => {
+            const itemSockets = structuredClone(entities) as ItemSocketSavable[];
+
+            for (const itemSocket of itemSockets) {
+                if (!itemSocket.id) {
+                    itemSocket.id = itemSocket.assignId;
+                    itemSocket.createdAt = createdAt;
+                    itemSocket.updatedAt = null;
+                } else {
+                    itemSocket.updatedAt = updatedAt;
+                }
+            }
+
+            return itemSockets as ItemSocket[];
+        });
+
+        this.#services.for(ItemSocketBlueprint).addSaveMutator({ save: saveItemSockets });
+
+        return saveItemSockets;
     }
 
     useCreateItemSockets(createdAt: string) {
@@ -398,6 +510,7 @@ export class TestRepository {
                 for (const itemSocket of itemSockets) {
                     itemSocket.id = itemSocket.assignId;
                     itemSocket.createdAt = createdAt;
+                    itemSocket.updatedAt = null;
                 }
 
                 return itemSockets as ItemSocket[];
@@ -689,14 +802,14 @@ export class TestRepository {
             ({ entities, selection }: { entities: UserSavable[]; selection: PackedEntitySelection<Item> }) => {
                 entities = structuredClone(entities);
 
-                // for (const entity of entities) {
-                //     entity.id = this.#nextId("trees");
-                //     entity.metadata = createMetadata(createdById, undefined, createdAt);
+                for (const entity of entities) {
+                    entity.id = this.#nextId("users");
+                    // entity.metadata = createMetadata(createdById, undefined, createdAt);
 
-                //     // [todo] ❌ commented out to remind myself of: add validation to entities returned from user mutation functions
-                //     // making sure entities are properly hydrated
-                //     // item.updatedAt = null;
-                // }
+                    // [todo] ❌ commented out to remind myself of: add validation to entities returned from user mutation functions
+                    // making sure entities are properly hydrated
+                    // item.updatedAt = null;
+                }
 
                 return entities as User[];
             },

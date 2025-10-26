@@ -47,7 +47,7 @@ function getUpdated(
     schema: EntitySchema,
     entities: readonly Entity[],
     selection: EntityRelationSelection,
-    previous?: readonly Entity[],
+    previousEntities?: readonly Entity[],
 ): EntityChange[] {
     if (!entities.length) {
         return [];
@@ -58,15 +58,14 @@ function getUpdated(
     if (schema.hasId()) {
         const updatedEntities = entities.filter(entity => isPersistedEntity(schema, entity));
 
-        if (previous !== undefined) {
-            const pairs = toEntityPairs(schema, updatedEntities, previous);
+        if (previousEntities !== undefined) {
+            const pairs = toEntityPairs(schema, updatedEntities, previousEntities);
 
             for (const [current, previous] of pairs) {
-                // [todo] ⏰ make diff, add id, then add EntityChange
                 const difference =
                     previous !== undefined ? getEntityDifference(schema, current, previous, selection) : current;
 
-                if (previous !== undefined && !isEmpty(difference)) {
+                if (!isEmpty(difference)) {
                     for (const idPath of schema.getIdPaths()) {
                         writePath(idPath, difference, readPath(idPath, current));
                     }
@@ -93,7 +92,8 @@ function getUpdated(
         const relation = schema.getRelation(key);
         const relatedSchema = relation.getRelatedSchema();
         const related = relation.readValues(entities);
-        updated.push(...getUpdated(relatedSchema, related, selected));
+        const previousRelated = previousEntities ? relation.readValues(previousEntities) : undefined;
+        updated.push(...getUpdated(relatedSchema, related, selected, previousRelated));
     }
 
     return updated;
