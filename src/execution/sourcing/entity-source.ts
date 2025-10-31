@@ -66,7 +66,18 @@ export class EntitySource {
         }
 
         if (!context.readFromCache()) {
-            const entities = await Promise.all(reshaped.map(reshapedQuery => this.#loadQuery(reshapedQuery, query)));
+            const entities = await Promise.all(
+                reshaped.map(async reshapedQuery => {
+                    const entities = await this.#loadQuery(reshapedQuery, query);
+
+                    if (context.writeToCache()) {
+                        context.getCache().upsert(reshapedQuery, entities);
+                    }
+
+                    return entities;
+                }),
+            );
+
             return entities.flat();
         }
 
@@ -80,8 +91,10 @@ export class EntitySource {
             await Promise.all(
                 uncached.map(async uncachedQuery => {
                     const entities = await this.#loadQuery(uncachedQuery, query);
-                    context.getCache().upsert(uncachedQuery, entities);
-                    return entities;
+
+                    if (context.writeToCache()) {
+                        context.getCache().upsert(uncachedQuery, entities);
+                    }
                 }),
             );
         }

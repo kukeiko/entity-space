@@ -96,7 +96,11 @@ export class EntityWorkspace {
 
     #loadFromCacheAndSource$<T>(query: EntityQuery, cacheKey: unknown): Observable<T[]> {
         const cache = this.#services.getOrCreateCacheBucket(cacheKey);
-        const context = new EntityQueryExecutionContext(cache, { loadFromSource: true, readFromCache: true });
+        const context = new EntityQueryExecutionContext(cache, {
+            loadFromSource: true,
+            readFromCache: true,
+            writeToCache: true,
+        });
 
         return defer(() => {
             return this.#executor.executeQuery<T>(query, context);
@@ -122,6 +126,7 @@ export class EntityWorkspace {
                         const context = new EntityQueryExecutionContext(cache, {
                             loadFromSource: true,
                             readFromCache: false,
+                            writeToCache: true,
                         });
 
                         return this.#executor.executeQuery<T>(query, context);

@@ -1,4 +1,5 @@
 import {
+    copyEntities,
     entitiesToCriterion,
     Entity,
     EntityQuery,
@@ -51,6 +52,7 @@ export class EntityCache {
 
     upsert(query: EntityQuery, entities: readonly Entity[]): void {
         const schema = query.getSchema();
+        entities = copyEntities(query.getSchema(), entities);
         const normalized = normalizeEntities(schema, entities);
 
         for (const [schema, entities] of normalized) {
