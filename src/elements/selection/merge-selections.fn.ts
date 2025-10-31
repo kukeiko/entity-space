@@ -11,15 +11,7 @@ export function mergeSelections(selections: readonly EntitySelection[]): EntityS
 
     let merged: EntitySelection = {};
 
-    for (let i = 0; i < selections.length; i += 2) {
-        const [a, b] = [selections[i], selections[i + 1]];
-
-        if (b === undefined) {
-            merged = mergeSelection(merged, a);
-        } else {
-            merged = mergeSelection(a, b);
-        }
-    }
-
-    return merged;
+    return selections.reduce((previous, current) => {
+        return mergeSelection(previous, current);
+    }, merged);
 }
