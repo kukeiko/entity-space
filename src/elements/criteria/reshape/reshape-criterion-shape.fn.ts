@@ -35,7 +35,7 @@ function reshapeByEquals(
             const openTypes = Array.from(what.getValueTypes()).filter(valueType => !myTypes.has(valueType));
             const open = openTypes.length ? new InArrayCriterionShape(openTypes) : undefined;
 
-            return new ReshapedCriterionShape(by, open);
+            return new ReshapedCriterionShape(by, open, 1);
         }
     }
 
@@ -154,6 +154,7 @@ function reshapeByEntity(
     const reshapedShapes: Record<string, CriterionShape> = {};
     const openShapes: Record<string, CriterionShape[]> = {};
     const otherRequiredShapes = what.getRequiredShapes();
+    let flattenCount = 0;
 
     for (const [key, shape] of Object.entries(by.getRequiredShapes())) {
         const otherShapes = otherRequiredShapes[key];
@@ -177,6 +178,7 @@ function reshapeByEntity(
         }
 
         reshapedShapes[key] = reshaped.getReshaped();
+        flattenCount += reshaped.getFlattenCount();
         const openReshaped = reshaped.getOpen();
 
         if (openReshaped) {
@@ -189,15 +191,20 @@ function reshapeByEntity(
     );
 
     if (Object.keys(open).length) {
-        return new ReshapedCriterionShape(new EntityCriterionShape(reshapedShapes), new EntityCriterionShape(open));
+        return new ReshapedCriterionShape(
+            new EntityCriterionShape(reshapedShapes),
+            new EntityCriterionShape(open),
+            flattenCount,
+        );
     } else {
-        return new ReshapedCriterionShape(new EntityCriterionShape(reshapedShapes));
+        return new ReshapedCriterionShape(new EntityCriterionShape(reshapedShapes), undefined, flattenCount);
     }
 }
 
 function reshapeOrCriterionShape(self: CriterionShape[], orShape: OrCriterionShape): ReshapedCriterionShape | false {
     let reshaped: CriterionShape | undefined;
     const open: CriterionShape[] = [];
+    let flattenCount = 0;
 
     for (const item of orShape.getShapes()) {
         const result = reshapeCriterionShape(item, self);
@@ -206,6 +213,7 @@ function reshapeOrCriterionShape(self: CriterionShape[], orShape: OrCriterionSha
             open.push(item);
         } else {
             reshaped = result.getReshaped();
+            flattenCount += result.getFlattenCount();
             const openShape = result.getOpen();
 
             if (openShape) {
@@ -216,9 +224,9 @@ function reshapeOrCriterionShape(self: CriterionShape[], orShape: OrCriterionSha
 
     if (reshaped) {
         if (open.length) {
-            return new ReshapedCriterionShape(reshaped, new OrCriterionShape(open));
+            return new ReshapedCriterionShape(reshaped, new OrCriterionShape(open), flattenCount);
         } else {
-            return new ReshapedCriterionShape(reshaped);
+            return new ReshapedCriterionShape(reshaped, undefined, flattenCount);
         }
     }
 

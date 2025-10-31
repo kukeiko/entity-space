@@ -87,5 +87,6 @@ export function reshapeQueryShape(what: EntityQueryShape, by: EntityQueryShape):
         ),
         openForCriteria,
         openForSelection,
+        reshapedCriterionShape?.getFlattenCount()
     );
 }

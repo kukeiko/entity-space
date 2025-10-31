@@ -13,7 +13,7 @@ import {
     selectionToPathedRelatedSchemas,
     subtractSelection,
 } from "@entity-space/elements";
-import { toPathSegments } from "@entity-space/utils";
+import { isNot, toPathSegments } from "@entity-space/utils";
 import { DescribedEntityQueryExecution } from "./described-entity-query-execution";
 import { EntityQueryExecutionContext } from "./entity-query-execution-context";
 import { EntityServiceContainer } from "./entity-service-container";
@@ -26,6 +26,7 @@ import { RecursiveAutoJoinEntityHydrator } from "./hydration/recursive-auto-join
 import { RecursiveEntityHydrator } from "./hydration/recursive-entity-hydrator";
 import { AcceptedEntitySourcing } from "./sourcing/accepted-entity-sourcing";
 import { DescribedEntitySourcing } from "./sourcing/described-entity-sourcing";
+import { EntitySource } from "./sourcing/entity-source";
 import { EntitySourcingState } from "./sourcing/entity-sourcing-state.interface";
 
 export class EntityQueryExecutor {
@@ -59,15 +60,15 @@ export class EntityQueryExecutor {
         const sources = this.#services.getSourcesFor(queryShape.getSchema());
         let nextQueryShape: EntityQueryShape | undefined = queryShape;
 
-        for (const source of sources) {
-            const accepted = source.accept(nextQueryShape);
+        while (true) {
+            const bestAccepted = this.#getBestAcceptedSourcing(queryShape, sources);
 
-            if (!accepted) {
-                continue;
+            if (!bestAccepted) {
+                break;
             }
 
-            acceptedSourcings.push(accepted);
-            nextQueryShape = accepted.getReshapedShape().getOpenForCriteria();
+            acceptedSourcings.push(bestAccepted);
+            nextQueryShape = bestAccepted.getReshapedShape().getOpenForCriteria();
 
             if (!nextQueryShape) {
                 break;
@@ -251,6 +252,31 @@ export class EntityQueryExecutor {
         }
 
         return entities;
+    }
+
+    #getBestAcceptedSourcing(
+        queryShape: EntityQueryShape,
+        sources: readonly EntitySource[],
+    ): AcceptedEntitySourcing | undefined {
+        const accepted = sources
+            .map(source => source.accept(queryShape))
+            .filter(isNot(false))
+            .sort((a, b) => {
+                const flattenCountDiff =
+                    a.getReshapedShape().getCriteriaFlattenCount() - b.getReshapedShape().getCriteriaFlattenCount();
+
+                if (flattenCountDiff !== 0) {
+                    return flattenCountDiff;
+                }
+
+                return a.getReshapedShape().getReshaped().getCriterionShape() === undefined ? 1 : -1;
+            });
+
+        if (!accepted.length) {
+            return undefined;
+        }
+
+        return accepted[0];
     }
 
     #getHydratorsForSchema(schema: EntitySchema): EntityHydrator[] {
