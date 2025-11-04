@@ -49,8 +49,14 @@ export function unpackSelection(
     schema: EntitySchema,
     selection: PackedEntitySelection,
     predicate?: (property: EntityProperty) => boolean,
+    skipDefault = false,
 ): EntitySelection {
     const unpackedWithoutDefaultSelection = unpackSelectionWithoutDefault(schema, selection, predicate);
+
+    if (skipDefault) {
+        return unpackedWithoutDefaultSelection;
+    }
+
     const relations = toRelationSelection(schema, unpackedWithoutDefaultSelection);
     const defaultSelection = getDefaultSelection(schema, predicate, relations);
 

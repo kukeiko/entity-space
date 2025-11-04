@@ -145,9 +145,10 @@ export class EntityQueryExecutor {
                 break;
             }
 
-            availableSelection = mergeSelections(
-                currentAcceptedHydrations.map(acceptedHydration => acceptedHydration.getAcceptedSelection()),
-            );
+            availableSelection = mergeSelections([
+                availableSelection,
+                ...currentAcceptedHydrations.map(acceptedHydration => acceptedHydration.getAcceptedSelection()),
+            ]);
         }
 
         if (Object.keys(openSelection).length) {

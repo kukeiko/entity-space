@@ -37,7 +37,7 @@ export class ExplicitEntityHydrator extends EntityHydrator {
         const acceptedSelection = intersectSelection(this.#hydratedSelection, openSelection);
 
         if (acceptedSelection === false) {
-            throw new Error("bad selection logic");
+            return false;
         }
 
         return new AcceptedEntityHydration(

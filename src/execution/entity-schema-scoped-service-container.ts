@@ -109,8 +109,8 @@ export class EntitySchemaScopedServiceContainer<B> {
         this.#addHydratorFn(
             new ExplicitEntityHydrator(
                 this.#schema,
-                unpackSelection(this.#schema, requires),
-                unpackSelection(this.#schema, select),
+                unpackSelection(this.#schema, requires, undefined, true),
+                unpackSelection(this.#schema, select, undefined, true),
                 async (entities, selection, context) => {
                     await hydrate(
                         entities as EntityBlueprint.Instance<B>[],
