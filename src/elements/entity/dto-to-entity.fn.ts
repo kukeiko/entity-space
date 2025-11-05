@@ -1,11 +1,11 @@
 import { Class, isPrimitiveType } from "@entity-space/utils";
+import { Entity } from "./entity";
 import { EntityBlueprint, getNamedProperties } from "./entity-blueprint";
 import { hasAttribute } from "./entity-blueprint-property";
 
-// [todo] ❓ should accept EntitySchema instead of Blueprint?
-export function dtoToEntity<T>(blueprint: Class<T>, dto: Record<string, unknown>): EntityBlueprint.Instance<T> {
+export function dtoToEntity<T>(blueprint: Class<T>, dto: Entity): EntityBlueprint.Instance<T> {
     const properties = getNamedProperties(blueprint);
-    const entity: Record<string, unknown> = {};
+    const entity: Entity = {};
 
     properties.forEach(property => {
         if (hasAttribute("dto", property) && dto[property.dto] === undefined) {

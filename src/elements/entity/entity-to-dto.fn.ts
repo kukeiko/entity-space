@@ -1,19 +1,15 @@
 import { Class, isPrimitiveType } from "@entity-space/utils";
 import { Entity } from "./entity";
-import { EntityBlueprint, getNamedProperties } from "./entity-blueprint";
+import { getNamedProperties } from "./entity-blueprint";
 import { hasAttribute } from "./entity-blueprint-property";
 
-export function entityToDto<T>(
-    blueprint: Class<T>,
-    entity: EntityBlueprint.Instance<T>,
-    options: { writableOnly?: boolean },
-): Entity {
+export function entityToDto(blueprint: Class, entity: Entity, options?: { writableOnly?: boolean }): Entity {
     const properties = getNamedProperties(blueprint);
     const dto: Entity = {};
 
     properties.forEach(property => {
         if (isPrimitiveType(property.valueType)) {
-            if (options.writableOnly && hasAttribute("readonly", property)) {
+            if (options?.writableOnly && hasAttribute("readonly", property)) {
                 return;
             }
 
