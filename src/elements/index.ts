@@ -15,7 +15,7 @@ export * from "./criteria/where/where-entity.type";
 export * from "./entity/assign-created-ids.fn";
 export * from "./entity/assign-entities-using-ids.fn";
 export * from "./entity/assign-temporary-ids.fn";
-export * from "./entity/construct-creatable-entity.fn";
+export * from "./entity/construct-entity.fn";
 export * from "./entity/copy-entities.fn";
 export * from "./entity/copy-entity.fn";
 export * from "./entity/deduplicate-entities.fn";

@@ -1,5 +1,4 @@
 import {
-    constructCreatableEntity,
     Entity,
     EntityBlueprint,
     EntitySchema,
@@ -102,10 +101,6 @@ export class EntityQueryBuilder<T extends Entity = Entity, S extends PackedEntit
 
     findOneTyped(): Promise<SelectEntity<T, S> | undefined> {
         return lastValueFrom(this.findOneTyped$());
-    }
-
-    constructCreatable(selection?: PackedEntitySelection<T>): T {
-        return constructCreatableEntity(this.#schema, selection) as T;
     }
 
     #toQueryArguments(): QueryArguments {

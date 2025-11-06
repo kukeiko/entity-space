@@ -1,8 +1,11 @@
 import {
+    constructEntity,
     Entity,
     EntityBlueprint,
     EntityQuery,
     EntityQueryParameters,
+    PackedEntitySelection,
+    SelectEntity,
     unpackSelection,
     whereEntityToCriterion,
     writeRelationIds,
@@ -47,6 +50,17 @@ export class EntityWorkspace {
     in<T>(blueprint: Class<T>): EntityMutationBuilder<T> {
         const schema = this.#services.getCatalog().getSchemaByBlueprint(blueprint);
         return new EntityMutationBuilder(schema, operation => this.#mutate(operation));
+    }
+
+    constructDefault<T, S extends PackedEntitySelection<EntityBlueprint.Instance<T>>>(
+        blueprint: Class<T>,
+        selection?: S | PackedEntitySelection<EntityBlueprint.Instance<T>>,
+    ): SelectEntity<EntityBlueprint.Instance<T>, S> {
+        const schema = this.#services.getCatalog().getSchemaByBlueprint(blueprint);
+        return constructEntity(schema, unpackSelection(schema, selection ?? {})) as SelectEntity<
+            EntityBlueprint.Instance<T>,
+            S
+        >;
     }
 
     #query$<T>(args: QueryArguments): Observable<T[]> {
@@ -116,6 +130,10 @@ export class EntityWorkspace {
 
         return concat(
             defer(() => {
+                if (!cache.subtractByCache(query)) {
+                    refreshDelay = 0;
+                }
+
                 const context = new EntityQueryExecutionContext(cache, { loadFromSource: false, readFromCache: true });
                 return this.#executor.executeQuery<T>(query, context);
             }),
