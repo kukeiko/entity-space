@@ -122,7 +122,7 @@ export class EntityQueryTracing {
             builder.addLine(selectionToString(acceptedSelection), 2);
 
             if (remainingOpen && typeof remainingOpen !== "boolean") {
-                builder.addLine(" - remainng:", 1);
+                builder.addLine(" - remaining:", 1);
                 builder.addLine(selectionToString(remainingOpen), 2);
             }
         });
