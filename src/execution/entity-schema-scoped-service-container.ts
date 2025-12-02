@@ -11,15 +11,15 @@ import {
     mergeSelection,
     PackedEntitySelection,
     packEntitySelection,
+    SelectEntity,
     toRelationSelection,
     unpackSelection,
     WhereEntityShape,
-    WhereEntityShapeInstance,
     whereEntityShapeToCriterionShape,
 } from "@entity-space/elements";
 import { Class, unwrapMaybeAsync } from "@entity-space/utils";
-import { EntityQueryExecutionContext } from "./entity-query-execution-context";
 import { EntityServiceContainer } from "./entity-service-container";
+import { HydrateEntitiesFn } from "./hydration/entity-hydrator";
 import { ExplicitEntityHydrator } from "./hydration/explicit-entity-hydrator";
 import { EntityMutationType } from "./mutation/entity-mutation";
 import {
@@ -70,12 +70,7 @@ export class EntitySchemaScopedServiceContainer<B> {
         where?: W | WhereEntityShape<EntityBlueprint.Instance<B>>;
         select?: S | PackedEntitySelection<EntityBlueprint.Instance<B>>;
         parameters?: Class<P>;
-        load: LoadEntitiesFn<
-            EntityBlueprint.Instance<B>,
-            WhereEntityShapeInstance<W, EntityBlueprint.Instance<B>>,
-            S,
-            EntityBlueprint.Instance<P>
-        >;
+        load: LoadEntitiesFn<B, W, S, P>;
     }): this {
         const criterionShape: CriterionShape | undefined =
             where === undefined ? undefined : whereEntityShapeToCriterionShape(this.#schema, where);
@@ -99,12 +94,7 @@ export class EntitySchemaScopedServiceContainer<B> {
     }: {
         select: PackedEntitySelection<EntityBlueprint.Instance<B>>;
         requires: S;
-        hydrate: (
-            // [todo] ❌ similar to LoadEntitiesFunction, add a HydrateEntitiesFunction type and make it a singular argument for improved DX
-            entities: EntityBlueprint.Instance<B>[],
-            selection: PackedEntitySelection<EntityBlueprint.Instance<B>>,
-            context: EntityQueryExecutionContext,
-        ) => void | Promise<void>;
+        hydrate: HydrateEntitiesFn<B, S>;
     }): this {
         this.#addHydratorFn(
             new ExplicitEntityHydrator(
@@ -113,7 +103,7 @@ export class EntitySchemaScopedServiceContainer<B> {
                 unpackSelection(this.#schema, select, undefined, true),
                 async (entities, selection, context) => {
                     await hydrate(
-                        entities as EntityBlueprint.Instance<B>[],
+                        entities as SelectEntity<EntityBlueprint.Instance<B>, S>[],
                         selection as PackedEntitySelection<EntityBlueprint.Instance<B>>,
                         context,
                     );

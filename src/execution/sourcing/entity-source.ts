@@ -1,6 +1,7 @@
 import {
     criterionToWhereEntityShapeInstance,
     Entity,
+    EntityBlueprint,
     EntityQuery,
     EntityQueryShape,
     mergeQueries,
@@ -19,12 +20,12 @@ import { AcceptedEntitySourcing } from "./accepted-entity-sourcing";
 
 export type LoadEntitiesFnResult<T extends Entity = Entity> = MaybeAsync<T> | MaybeAsync<T[]>;
 
-export type LoadEntitiesFn<T extends Entity = Entity, C = {}, S = {}, P extends Entity = Entity> = (args: {
+export type LoadEntitiesFn<B = {}, W = {}, S = {}, P = {}> = (args: {
     query: EntityQuery;
     selection: DeepPartial<S>;
-    criteria: C;
-    parameters: P;
-}) => MaybeAsync<T> | MaybeAsync<T[]>;
+    criteria: WhereEntityShapeInstance<W, EntityBlueprint.Instance<B>>;
+    parameters: EntityBlueprint.Instance<P>;
+}) => MaybeAsync<EntityBlueprint.Instance<B>> | MaybeAsync<EntityBlueprint.Instance<B>[]>;
 
 export class EntitySource {
     constructor(
