@@ -34,9 +34,9 @@ export type SaveEntitiesFn<B, S = {}> = (args: {
 export type DeleteEntityFn<B, S = {}> = (args: {
     entity: EntityBlueprint.Instance<B>;
     selection: S;
-}) => MaybeAsync<EntityBlueprint.Instance<B>>;
+}) => MaybeAsync<void>;
 
 export type DeleteEntitiesFn<B, S = {}> = (args: {
     entities: EntityBlueprint.Instance<B>[];
     selection: S;
-}) => MaybeAsync<EntityBlueprint.Instance<B>[]>;
+}) => MaybeAsync<void>;

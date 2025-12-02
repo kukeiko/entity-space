@@ -286,8 +286,8 @@ export class EntitySchemaScopedServiceContainer<B> {
         select?: S | PackedEntitySelection<EntityBlueprint.Instance<B>>;
         delete: DeleteEntityFn<B, S>;
     }): this {
-        const mutate: EntityMutationFn = (entities, selection) => {
-            return Promise.all(
+        const mutate: EntityMutationFn = async (entities, selection) => {
+            await Promise.all(
                 entities.map(entity => {
                     return unwrapMaybeAsync(
                         del({
@@ -297,6 +297,8 @@ export class EntitySchemaScopedServiceContainer<B> {
                     );
                 }),
             );
+
+            return entities;
         };
 
         const selection = toRelationSelection(this.#schema, unpackSelection(this.#schema, select ?? {}));
@@ -311,13 +313,15 @@ export class EntitySchemaScopedServiceContainer<B> {
         select?: S | PackedEntitySelection<EntityBlueprint.Instance<B>>;
         delete: DeleteEntitiesFn<B, S>;
     }): this {
-        const mutate: EntityMutationFn = (entities, selection) => {
-            return unwrapMaybeAsync(
+        const mutate: EntityMutationFn = async (entities, selection) => {
+            await unwrapMaybeAsync(
                 del({
                     entities: entities as EntityBlueprint.Instance<B>[],
                     selection: packEntitySelection(this.#schema, selection) as S,
                 }),
             );
+
+            return entities;
         };
 
         const selection = toRelationSelection(this.#schema, unpackSelection(this.#schema, select ?? {}));
