@@ -20,7 +20,7 @@ function getHydratedSelectionCore(schema: EntitySchema, hydratedSelection: Entit
     const relations = schema.getProperties().filter(isEntityRelationProperty);
 
     for (const relation of relations) {
-        if (relation.isOptional() && entities.some(entity => entity[relation.getName()]) === undefined) {
+        if (relation.isOptional() && entities.some(entity => entity[relation.getName()] === undefined)) {
             continue;
         }
 
