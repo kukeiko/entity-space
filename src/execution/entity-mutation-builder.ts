@@ -80,25 +80,30 @@ export class EntityMutationBuilder<B, S extends PackedEntitySelection<EntityBlue
         // return this.#mutateFn(operation);
     }
 
-    async updateOne(entity: EntityBlueprint.Updatable<B>): Promise<EntityBlueprint.Instance<B>> {
-        throw new Error("not yet implemented");
-        // const updatedSelection = intersectSelection(
-        //     entityToSelection(this.#schema, entity),
-        //     getDefaultSelection(this.#schema, isUpdatableEntityProperty),
-        // );
+    async update(
+        entity: EntityBlueprint.Updatable<B>,
+        previous?: EntityBlueprint.Instance<B>,
+    ): Promise<EntityBlueprint.Instance<B>>;
+    async update(
+        entities: EntityBlueprint.Updatable<B>[],
+        previous?: EntityBlueprint.Instance<B>[],
+    ): Promise<EntityBlueprint.Instance<B>[]>;
+    async update(
+        entities: EntityBlueprint.Updatable<B>[] | EntityBlueprint.Updatable<B>,
+        previous?: EntityBlueprint.Instance<B>[] | EntityBlueprint.Instance<B>,
+    ): Promise<EntityBlueprint.Instance<B>[] | EntityBlueprint.Instance<B>> {
+        const mutation = new EntityMutation(
+            "update",
+            this.#schema,
+            Array.isArray(entities) ? entities : [entities],
+            toRelationSelection(this.#schema, unpackSelection(this.#schema, this.#selection)),
+            previous ? (Array.isArray(previous) ? previous : [previous]) : undefined,
+        );
 
-        // if (!updatedSelection) {
-        //     throw new Error(`no updatable properties found`);
-        // }
-
-        // const operation = new EntityMutation("update", this.#schema, updatedSelection, [entity]);
-        // const updated = await this.#mutateFn(operation);
-
-        // return updated[0];
-    }
-
-    update(entities: EntityBlueprint.Updatable<B>[]): Promise<EntityBlueprint.Instance<B>[]> {
-        throw new Error("not yet implemented");
+        const saved = await this.#mutateFn(mutation);
+        return Array.isArray(entities)
+            ? (saved as EntityBlueprint.Instance<B>[])
+            : (saved[0] as EntityBlueprint.Instance<B>);
     }
 
     async delete(entity: EntityBlueprint.Instance<B>): Promise<EntityBlueprint.Instance<B> | undefined>;
