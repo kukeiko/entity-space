@@ -52,6 +52,14 @@ export class EntityWorkspace {
         return new EntityMutationBuilder(schema, operation => this.#mutate(operation));
     }
 
+    // [todo] ❌ move to EntityMutationBuilder because I want to add another arg here (overridden default values)
+    // and if a user doesn't want a selection it becomes messy because they need to provide "undefined" or an empty
+    // object for the selection. with EntityMutationBuilder they can just opt into using .select()
+    constructDefault<T>(blueprint: Class<T>): EntityBlueprint.Instance<T>;
+    constructDefault<T, S extends PackedEntitySelection<EntityBlueprint.Instance<T>>>(
+        blueprint: Class<T>,
+        selection: S | PackedEntitySelection<EntityBlueprint.Instance<T>>,
+    ): SelectEntity<EntityBlueprint.Instance<T>, S>;
     constructDefault<T, S extends PackedEntitySelection<EntityBlueprint.Instance<T>>>(
         blueprint: Class<T>,
         selection?: S | PackedEntitySelection<EntityBlueprint.Instance<T>>,
