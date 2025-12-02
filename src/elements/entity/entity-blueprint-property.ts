@@ -25,6 +25,10 @@ export interface ReadonlyAttribute {
     readonly: true;
 }
 
+export interface ParentAttribute {
+    parent: true;
+}
+
 export interface CreatableAttribute {
     creatable: true;
 }
@@ -56,6 +60,7 @@ export type AllAttributes =
     | IdAttribute
     | NullableAttribute
     | OptionalAttribute
+    | ParentAttribute
     | ReadonlyAttribute
     | UniqueAttribute;
 

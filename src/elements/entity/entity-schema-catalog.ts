@@ -102,6 +102,7 @@ export class EntitySchemaCatalog {
                 nullable: hasAttribute("nullable", property),
                 optional: hasAttribute("optional", property),
                 readonly: hasAttribute("readonly", property),
+                parent: hasAttribute("parent", property)
             });
         }
 

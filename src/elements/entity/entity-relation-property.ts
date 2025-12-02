@@ -26,6 +26,7 @@ export interface EntityRelationPropertyOptions {
     joinTo: readonly Path[];
     joinToIsContainer: boolean;
     joinsToId: boolean;
+    parent: boolean;
 }
 
 export class EntityRelationProperty extends EntityProperty {
@@ -81,6 +82,7 @@ export class EntityRelationProperty extends EntityProperty {
             joinTo: Object.freeze(joinTo.slice()),
             joinToIsContainer: options?.joinToIsContainer === true,
             joinsToId: options?.joinsToId === true,
+            parent: options?.parent === true,
         });
     }
 
@@ -121,6 +123,10 @@ export class EntityRelationProperty extends EntityProperty {
 
     joinsToId(): boolean {
         return this.#options.joinsToId;
+    }
+
+    isParent(): boolean {
+        return this.#options.parent;
     }
 
     readValue(entity: Entity): Entity | Entity[] | undefined | null {
@@ -167,7 +173,29 @@ export class EntityRelationProperty extends EntityProperty {
     // [todo] ❌ move to standalone file
     writeIds(entities: readonly Entity[]): void {
         if (this.joinsFromId() && this.joinsToId()) {
-            throw new Error("not supported: joins both from & to id");
+            if (!this.isArray() && !this.joinToIsContainer()) {
+                const [joinsFrom, joinsTo] = [this.getJoinFrom(), this.getJoinTo()];
+
+                for (const entity of entities) {
+                    const related = this.readValue(entity) as Entity | null | undefined;
+
+                    if (related == null) {
+                        continue;
+                    }
+
+                    for (let i = 0; i < joinsFrom.length; i++) {
+                        let [joinFrom, joinTo] = [joinsFrom[i], joinsTo[i]];
+
+                        if (this.isParent()) {
+                            [joinTo, joinFrom] = [joinFrom, joinTo];
+                        }
+
+                        writePath(joinFrom, entity, readPath(joinTo, related) ?? 0);
+                    }
+                }
+            } else {
+                throw new Error("not supported: joins both from & to id");
+            }
         } else if (this.joinsFromId()) {
             if (this.isArray() && this.joinToIsContainer()) {
                 // [todo] implement

@@ -28,12 +28,6 @@ export function getCreateDependencies(
                 path === undefined ? toPath(key) : joinPaths([path, key]),
             );
         } else if (supported === undefined || supported[key] === undefined) {
-            if (relation.joinsFromId() && relation.joinsToId()) {
-                throw new Error(
-                    "unsupported: trying to create dependency to a created relation that joins both from & to an id",
-                );
-            }
-
             const relatedSchema = relation.getRelatedSchema();
             const relatedCreatable = entities.flatMap(entity =>
                 relation.readValueAsArray(entity).filter(entity => !entityHasId(relatedSchema, entity)),
@@ -47,7 +41,7 @@ export function getCreateDependencies(
                         "create",
                         relatedSchema,
                         relatedCreatable,
-                        relation.joinsToId(),
+                        relation.isParent() ? false : relation.joinsToId(),
                         path === undefined ? toPath(key) : joinPaths([path, key]),
                     ),
                 );
@@ -63,7 +57,7 @@ export function getCreateDependencies(
                         "update",
                         relatedSchema,
                         relatedUpdatable,
-                        relation.joinsToId(),
+                        relation.isParent() ? false : relation.joinsToId(),
                         path === undefined ? toPath(key) : joinPaths([path, key]),
                     ),
                 );

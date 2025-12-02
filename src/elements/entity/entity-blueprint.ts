@@ -16,6 +16,7 @@ import {
     IdAttribute,
     NullableAttribute,
     OptionalAttribute,
+    ParentAttribute,
     ReadonlyAttribute,
     isProperty,
 } from "./entity-blueprint-property";
@@ -80,6 +81,7 @@ export namespace EntityBlueprint {
     export const optional = true;
     export const readonly = true;
     export const unique = true;
+    export const parent = true;
 
     type IdOptions = Partial<DtoAttribute & CreatableAttribute>;
 
@@ -121,7 +123,7 @@ export namespace EntityBlueprint {
     }
 
     type EntityOptions = Partial<
-        ArrayAttribute & DtoAttribute & NullableAttribute & OptionalAttribute & ReadonlyAttribute
+        ArrayAttribute & DtoAttribute & NullableAttribute & OptionalAttribute & ReadonlyAttribute & ParentAttribute
     >;
 
     export function entity<V extends Class, O extends EntityOptions>(
