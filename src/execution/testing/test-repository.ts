@@ -1,6 +1,7 @@
 import { EntityBlueprint, PackedEntitySelection } from "@entity-space/elements";
 import {
     AlbumBlueprint,
+    Artist,
     ArtistBlueprint,
     ArtistRequest,
     ArtistRequestBlueprint,
@@ -28,6 +29,7 @@ import {
     ItemTypeSavable,
     ItemUpdatable,
     RecordMetadata,
+    Song,
     SongBlueprint,
     TagBlueprint,
     Tree,
@@ -204,6 +206,7 @@ export class TestRepository {
         const load = vi.fn((id: number) => this.#filter("artists", filterById(id)));
 
         this.#services.for(ArtistBlueprint).addSource({
+            select: { country: true },
             where: { id: { $equals: true } },
             load: ({ criteria: { id } }) => load(id.value),
         });
@@ -233,6 +236,52 @@ export class TestRepository {
         return load;
     }
 
+    toArtistTitle(artist: Artist): string {
+        return `${artist.name} (${artist.country})`;
+    }
+
+    findLongestSong(songs: Song[]): Song | undefined {
+        return (songs ?? []).slice().sort((a, b) => b.duration - a.duration)[0];
+    }
+
+    getLongestSong(songs: Song[]): Song {
+        const longestSong = this.findLongestSong(songs);
+
+        if (!longestSong) {
+            throw new Error("no longest song found");
+        }
+
+        return longestSong;
+    }
+
+    useHydrateArtistTitle() {
+        const hydrate = vi.fn((artists: Artist[]) => {
+            artists.forEach(entity => (entity.title = this.toArtistTitle(entity)));
+        });
+
+        this.#services.for(ArtistBlueprint).addHydrator({
+            requires: { name: true, country: true },
+            select: { title: true },
+            hydrate,
+        });
+
+        return hydrate;
+    }
+
+    addHydrateArtistLongestSong() {
+        const hydrate = vi.fn((artists: Artist[]) => {
+            artists.forEach(artist => (artist.longestSong = this.findLongestSong(artist.songs ?? [])));
+        });
+
+        this.#services.for(ArtistBlueprint).addHydrator({
+            requires: { songs: { duration: true } },
+            select: { longestSong: true },
+            hydrate,
+        });
+
+        return hydrate;
+    }
+
     useCreateArtist() {
         const create = vi.fn<CreateEntityFn<ArtistBlueprint>>(({ entity: artist }) => {
             const nextId = this.#nextId("artists");
@@ -260,6 +309,28 @@ export class TestRepository {
         this.#services.for(AlbumBlueprint).addSource({
             where: { id: { $equals: true } },
             load: ({ criteria: { id } }) => load(id.value),
+        });
+
+        return load;
+    }
+
+    useLoadSongById() {
+        const load = vi.fn((id: number) => this.#filter("songs", filterById(id)));
+
+        this.#services.for(SongBlueprint).addSource({
+            where: { id: { $equals: true } },
+            load: ({ criteria: { id } }) => load(id.value),
+        });
+
+        return load;
+    }
+
+    useLoadSongByName() {
+        const load = vi.fn((name: string) => this.#filter("songs", song => song.name === name));
+
+        this.#services.for(SongBlueprint).addSource({
+            where: { name: { $equals: true } },
+            load: ({ criteria: { name } }) => load(name.value),
         });
 
         return load;
@@ -416,10 +487,7 @@ export class TestRepository {
 
     useDeleteItems() {
         const deleteItems = vi.fn(
-            ({ entities, selection }: { entities: Item[]; selection: PackedEntitySelection<Item> }) => {
-                const items = structuredClone(entities) as Item[];
-                return items;
-            },
+            ({ entities, selection }: { entities: Item[]; selection: PackedEntitySelection<Item> }) => {},
         );
 
         this.#services.for(ItemBlueprint).addDeleteMutator({
@@ -552,9 +620,7 @@ export class TestRepository {
 
     useDeleteItemSockets() {
         const deleteItems = vi.fn(
-            ({ entities, selection }: { entities: ItemSocket[]; selection: PackedEntitySelection<ItemSocket> }) => {
-                return structuredClone(entities);
-            },
+            ({ entities, selection }: { entities: ItemSocket[]; selection: PackedEntitySelection<ItemSocket> }) => {},
         );
 
         this.#services.for(ItemSocketBlueprint).addDeleteMutator({
@@ -625,9 +691,7 @@ export class TestRepository {
             }: {
                 entities: ItemAttributeType[];
                 selection: PackedEntitySelection<ItemSocket>;
-            }) => {
-                return structuredClone(entities);
-            },
+            }) => {},
         );
 
         this.#services.for(ItemAttributeTypeBlueprint).addDeleteMutator({
@@ -710,10 +774,7 @@ export class TestRepository {
 
     useDeleteTrees() {
         const deleteTrees = vi.fn(
-            ({ entities, selection }: { entities: Tree[]; selection: PackedEntitySelection<Tree> }) => {
-                const items = structuredClone(entities) as Tree[];
-                return items;
-            },
+            ({ entities, selection }: { entities: Tree[]; selection: PackedEntitySelection<Tree> }) => {},
         );
 
         this.#services.for(TreeBlueprint).addDeleteMutator({
@@ -746,10 +807,7 @@ export class TestRepository {
 
     useDeleteFolders() {
         const deleteFolders = vi.fn(
-            ({ entities, selection }: { entities: Folder[]; selection: PackedEntitySelection<Folder> }) => {
-                const items = structuredClone(entities) as Folder[];
-                return items;
-            },
+            ({ entities, selection }: { entities: Folder[]; selection: PackedEntitySelection<Folder> }) => {},
         );
 
         this.#services.for(FolderBlueprint).addDeleteMutator({
@@ -785,10 +843,9 @@ export class TestRepository {
     }
 
     useDeleteFiles() {
-        const del = vi.fn(({ entities, selection }: { entities: File[]; selection: PackedEntitySelection<File> }) => {
-            const items = structuredClone(entities) as File[];
-            return items;
-        });
+        const del = vi.fn(
+            ({ entities, selection }: { entities: File[]; selection: PackedEntitySelection<File> }) => {},
+        );
 
         this.#services.for(FileBlueprint).addDeleteMutator({
             delete: del,
@@ -824,10 +881,7 @@ export class TestRepository {
 
     useDeleteUsers() {
         const deleteUsers = vi.fn(
-            ({ entities, selection }: { entities: User[]; selection: PackedEntitySelection<User> }) => {
-                const items = structuredClone(entities) as Tree[];
-                return items;
-            },
+            ({ entities, selection }: { entities: User[]; selection: PackedEntitySelection<User> }) => {},
         );
 
         this.#services.for(UserBlueprint).addDeleteMutator({

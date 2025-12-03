@@ -12,7 +12,9 @@ export class ArtistBlueprint {
         array,
         optional,
     });
+    longestSong = entity(SongBlueprint, { optional });
     country = string({ optional, nullable });
+    title = string({ optional });
     metadata = entity(RecordMetadataBlueprint, { readonly });
 }
 
