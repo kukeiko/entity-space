@@ -1,9 +1,11 @@
 import {
+    constructEntity,
     Entity,
     EntityBlueprint,
     EntitySchema,
     PackedEntitySelection,
     SelectEntity,
+    unpackSelection,
     WhereEntity,
 } from "@entity-space/elements";
 import { Class } from "@entity-space/utils";
@@ -101,6 +103,10 @@ export class EntityQueryBuilder<T extends Entity = Entity, S extends PackedEntit
 
     findOneTyped(): Promise<SelectEntity<T, S> | undefined> {
         return lastValueFrom(this.findOneTyped$());
+    }
+
+    constructDefault(): {} extends S ? T : SelectEntity<T, S> {
+        return constructEntity(this.#schema, unpackSelection(this.#schema, this.#selection ?? {})) as any;
     }
 
     #toQueryArguments(): QueryArguments {
