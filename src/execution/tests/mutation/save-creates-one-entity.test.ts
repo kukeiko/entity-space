@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { EntityWorkspace } from "../../entity-workspace";
 import { TestFacade, TestRepository } from "../../testing";
 
-describe("save creates one entity", () => {
+describe("save() creates one entity", () => {
     let facade: TestFacade;
     let repository: TestRepository;
     let workspace: EntityWorkspace;
@@ -183,7 +183,7 @@ describe("save creates one entity", () => {
             };
         });
 
-        it("using a save mutator", async () => {
+        it("using save mutators", async () => {
             // arrange
             const saveItems = repository.useSaveItems(createdAt, updatedAt);
             const saveItemTypes = repository.useSaveItemTypes();
@@ -201,7 +201,7 @@ describe("save creates one entity", () => {
             expect(saved).toBe(windforce.input);
         });
 
-        it("using a create mutator", async () => {
+        it("using create mutators", async () => {
             // arrange
             const createItems = repository.useCreateItems(createdAt);
             const createItemTypes = repository.useCreateItemTypes();
@@ -255,7 +255,7 @@ describe("save creates one entity", () => {
             };
         });
 
-        it("using a save mutator", async () => {
+        it("using save mutators", async () => {
             // arrange
             const saveItems = repository.useSaveItems(createdAt, updatedAt);
             const saveItemTypes = repository.useSaveItemTypes();
@@ -340,7 +340,7 @@ describe("save creates one entity", () => {
             };
         });
 
-        it("using a save mutator", async () => {
+        it("using save mutators", async () => {
             // arrange
             const saveItems = repository.useSaveItems(createdAt, updatedAt);
             const saveItemSockets = repository.useSaveItemSockets(createdAt, updatedAt);
@@ -358,7 +358,7 @@ describe("save creates one entity", () => {
             expect(saved).toBe(windforce.input);
         });
 
-        it("using a create mutator", async () => {
+        it("using create mutators", async () => {
             // arrange
             const createItems = repository.useCreateItems(createdAt);
             const createItemSockets = repository.useCreateItemSockets(createdAt);
@@ -431,7 +431,7 @@ describe("save creates one entity", () => {
             };
         });
 
-        it("using a save mutator", async () => {
+        it("using save mutators", async () => {
             // arrange
             const saveItems = repository.useSaveItems(createdAt, updatedAt);
             const saveItemSockets = repository.useSaveItemSockets(createdAt, updatedAt);
@@ -449,7 +449,7 @@ describe("save creates one entity", () => {
             expect(saved).toBe(windforce.input);
         });
 
-        it("using a save mutator and empty previous argument", async () => {
+        it("using save mutators and empty previous argument", async () => {
             // arrange
             const saveItems = repository.useSaveItems(createdAt, updatedAt);
             const saveItemSockets = repository.useSaveItemSockets(createdAt, updatedAt);

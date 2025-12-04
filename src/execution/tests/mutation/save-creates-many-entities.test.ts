@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { EntityWorkspace } from "../../entity-workspace";
 import { TestFacade, TestRepository } from "../../testing";
 
-describe("save creates many entities", () => {
+describe("save() creates many entities", () => {
     let facade: TestFacade;
     let repository: TestRepository;
     let workspace: EntityWorkspace;
