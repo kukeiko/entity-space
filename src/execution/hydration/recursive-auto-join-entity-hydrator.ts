@@ -84,6 +84,11 @@ export class RecursiveAutoJoinEntityHydrator extends EntityHydrator {
     readonly #queryExecutor: EntityQueryExecutor;
     readonly #tracing: EntityQueryTracing;
 
+    override expand(schema: EntitySchema, openSelection: EntitySelection): false | EntitySelection {
+        // [todo] ❌ implement
+        return false;
+    }
+
     override accept(
         schema: EntitySchema,
         availableSelection: EntitySelection,

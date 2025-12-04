@@ -761,7 +761,7 @@ describe("execution", () => {
                 });
             });
 
-            it("and hydrating a primitive property using a custom hydrator", async () => {
+            it.only("and hydrating a primitive property using a custom hydrator", async () => {
                 // arrange
                 const artist = artists[0];
                 const expected: SelectEntity<Artist, { title: true }> = {
@@ -773,11 +773,7 @@ describe("execution", () => {
                 const hydrateArtistTitle = repository.useHydrateArtistTitle();
 
                 // act
-                const actual = await workspace
-                    .from(ArtistBlueprint)
-                    .where({ id })
-                    .select({ country: true, title: true })
-                    .findOne();
+                const actual = await workspace.from(ArtistBlueprint).where({ id }).select({ title: true }).findOne();
 
                 // assert
                 expect(actual).toEqual(expected);

@@ -208,7 +208,15 @@ export class TestRepository {
         this.#services.for(ArtistBlueprint).addSource({
             select: { country: true },
             where: { id: { $equals: true } },
-            load: ({ criteria: { id } }) => load(id.value),
+            load: ({ criteria: { id }, selection }) => {
+                return load(id.value).map(artist => {
+                    if (!selection.country) {
+                        delete artist.country;
+                    }
+
+                    return artist;
+                });
+            },
         });
 
         return load;

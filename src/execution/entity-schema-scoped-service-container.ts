@@ -14,6 +14,7 @@ import {
     SelectEntity,
     toRelationSelection,
     unpackSelection,
+    unpackSelectionWithoutDefault,
     WhereEntityShape,
     whereEntityShapeToCriterionShape,
 } from "@entity-space/elements";
@@ -99,8 +100,8 @@ export class EntitySchemaScopedServiceContainer<B> {
         this.#addHydratorFn(
             new ExplicitEntityHydrator(
                 this.#schema,
-                unpackSelection(this.#schema, requires, undefined, true),
-                unpackSelection(this.#schema, select, undefined, true),
+                unpackSelectionWithoutDefault(this.#schema, requires),
+                unpackSelectionWithoutDefault(this.#schema, select),
                 async (entities, selection, context) => {
                     await hydrate(
                         entities as SelectEntity<EntityBlueprint.Instance<B>, S>[],

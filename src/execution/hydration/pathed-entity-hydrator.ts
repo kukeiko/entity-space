@@ -17,6 +17,28 @@ export class PathedEntityHydrator extends EntityHydrator {
     readonly #path: Path;
     readonly #pathedSchema: EntitySchema;
 
+    override expand(schema: EntitySchema, openSelection: EntitySelection): false | EntitySelection {
+        if (this.#schema.getName() !== schema.getName()) {
+            return false;
+        }
+
+        const cutOpenSelection = readPath<EntitySelection>(this.#path, openSelection);
+
+        if (cutOpenSelection === undefined) {
+            return false;
+        }
+
+        const proposed = this.#hydrator.expand(this.#pathedSchema, cutOpenSelection);
+
+        if (proposed === false) {
+            return false;
+        }
+
+        const pathedProposedSelection = writePath(this.#path, {} as EntitySelection, proposed);
+
+        return pathedProposedSelection;
+    }
+
     override accept(
         schema: EntitySchema,
         availableSelection: EntitySelection,
@@ -58,7 +80,7 @@ export class PathedEntityHydrator extends EntityHydrator {
     }
 
     override toString(): string {
-        // to make debugging easier. should not be relied upon as actual logic
-        return `${this.#hydrator.toString()} Pathed: ${this.#path}`;
+        // to make prettier tracing messages. should not be relied upon as actual logic
+        return `${this.#path}/${this.#hydrator.toString()}`;
     }
 }

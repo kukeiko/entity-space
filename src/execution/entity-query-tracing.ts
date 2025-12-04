@@ -4,6 +4,7 @@ import {
     EntityQuery,
     EntitySchema,
     EntitySelection,
+    PackedEntitySelection,
     selectionToString,
 } from "@entity-space/elements";
 import { Path } from "@entity-space/utils";
@@ -115,8 +116,8 @@ export class EntityQueryTracing {
         remainingOpen?: boolean | EntitySelection,
     ): void {
         this.#log(builder => {
-            builder.addLine(`✅ hydrator '${hydrator.toString()}' accepted selection:`);
-            builder.addLine(" - open:", 1);
+            builder.addLine(`✅ hydrator ${hydrator.toString()} accepted selection:`);
+            builder.addLine(" - requested:", 1);
             builder.addLine(selectionToString(openSelection), 2);
             builder.addLine(" - accepted:", 1);
             builder.addLine(selectionToString(acceptedSelection), 2);
@@ -125,6 +126,29 @@ export class EntityQueryTracing {
                 builder.addLine(" - remaining:", 1);
                 builder.addLine(selectionToString(remainingOpen), 2);
             }
+        });
+    }
+
+    selectionGotExpanded(
+        from: EntitySelection | PackedEntitySelection,
+        to: EntitySelection | PackedEntitySelection,
+        added: EntitySelection | PackedEntitySelection,
+    ): void {
+        this.#log(builder => {
+            builder.addLine(`↕️ selection got expanded:`);
+            builder.addLine(" - from:", 1);
+            builder.addLine(selectionToString(from), 2);
+            builder.addLine(" - to:", 1);
+            builder.addLine(selectionToString(to), 2);
+            builder.addLine(" - added:", 1);
+            builder.addLine(selectionToString(added), 2);
+        });
+    }
+
+    hydrationHasOpenSelection(selection: EntitySelection): void {
+        this.#log(builder => {
+            builder.addLine(`❌ hydration has open selection:`);
+            builder.addLine(selectionToString(selection), 1);
         });
     }
 

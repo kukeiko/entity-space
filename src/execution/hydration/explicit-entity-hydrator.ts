@@ -1,4 +1,12 @@
-import { EntitySchema, EntitySelection, intersectSelection, isSelectionSubsetOf } from "@entity-space/elements";
+import {
+    cloneSelection,
+    EntitySchema,
+    EntitySelection,
+    intersectSelection,
+    isSelectionSubsetOf,
+    selectionToString,
+    subtractSelection,
+} from "@entity-space/elements";
 import { AcceptedEntityHydration, HydrateEntitiesFunction } from "./accepted-entity-hydration";
 import { EntityHydrator } from "./entity-hydrator";
 
@@ -20,6 +28,18 @@ export class ExplicitEntityHydrator extends EntityHydrator {
     readonly #requiredSelection: EntitySelection;
     readonly #hydratedSelection: EntitySelection;
     readonly #hydrateFn: HydrateEntitiesFunction;
+
+    override expand(schema: EntitySchema, openSelection: EntitySelection): false | EntitySelection {
+        if (this.#schema.getName() !== schema.getName()) {
+            return false;
+        } else if (!intersectSelection(this.#hydratedSelection, openSelection)) {
+            return false;
+        } else if (subtractSelection(this.#requiredSelection, openSelection) === true) {
+            return false;
+        }
+
+        return cloneSelection(this.#requiredSelection);
+    }
 
     override accept(
         schema: EntitySchema,
@@ -47,5 +67,10 @@ export class ExplicitEntityHydrator extends EntityHydrator {
                 await this.#hydrateFn(entities, selection, context);
             },
         );
+    }
+
+    override toString(): string {
+        // to make prettier tracing messages. should not be relied upon as actual logic
+        return selectionToString(this.#hydratedSelection);
     }
 }

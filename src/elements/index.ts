@@ -82,4 +82,5 @@ export * from "./selection/selection-to-pathed-related-schemas.fn";
 export * from "./selection/selection-to-string.fn";
 export * from "./selection/subtract-selection.fn";
 export * from "./selection/to-relation-selection.fn";
+export * from "./selection/unpack-selection-without-default.fn";
 export * from "./selection/unpack-selection.fn";

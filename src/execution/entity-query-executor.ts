@@ -1,4 +1,5 @@
 import {
+    cloneSelection,
     Criterion,
     deduplicateEntities,
     Entity,
@@ -9,11 +10,13 @@ import {
     intersectCriterionWithSelection,
     isHydrated,
     mergeSelections,
+    packEntitySelection,
     queryToShape,
     selectionToPathedRelatedSchemas,
     subtractSelection,
 } from "@entity-space/elements";
 import { isNot, toPathSegments } from "@entity-space/utils";
+import { isEqual } from "lodash";
 import { DescribedEntityQueryExecution } from "./described-entity-query-execution";
 import { EntityQueryExecutionContext } from "./entity-query-execution-context";
 import { EntityServiceContainer } from "./entity-service-container";
@@ -36,13 +39,15 @@ export class EntityQueryExecutor {
 
     readonly #services: EntityServiceContainer;
 
-    describeQuery(query: EntityQuery): DescribedEntityQueryExecution | false {
+    describeQuery(query: EntityQuery): [DescribedEntityQueryExecution, EntityQuery] | false {
         const queryShape = queryToShape(query);
         const describedSourcing = this.describeSourcing(queryShape);
 
         if (describedSourcing === false) {
             return false;
         }
+
+        query = query.with({ selection: describedSourcing.getTargetSelection() });
 
         const describedHydration = describedSourcing.getOpenSelection()
             ? this.describeHydration(describedSourcing)
@@ -52,13 +57,14 @@ export class EntityQueryExecutor {
             return false;
         }
 
-        return new DescribedEntityQueryExecution(describedSourcing, describedHydration);
+        return [new DescribedEntityQueryExecution(describedSourcing, describedHydration), query];
     }
 
     describeSourcing(queryShape: EntityQueryShape): DescribedEntitySourcing | false {
         const acceptedSourcings: AcceptedEntitySourcing[] = [];
         const sources = this.#services.getSourcesFor(queryShape.getSchema());
         let nextQueryShape: EntityQueryShape | undefined = queryShape;
+        let targetSelection = queryShape.getUnpackedSelection();
 
         while (true) {
             const bestAccepted = this.#getBestAcceptedSourcing(queryShape, sources);
@@ -67,8 +73,17 @@ export class EntityQueryExecutor {
                 break;
             }
 
-            acceptedSourcings.push(bestAccepted);
-            nextQueryShape = bestAccepted.getReshapedShape().getOpenForCriteria();
+            if (bestAccepted[1]) {
+                targetSelection = mergeSelections([targetSelection, bestAccepted[1]]);
+            }
+
+            // targetSelection = mergeSelections([
+            //     targetSelection,
+            //     bestAccepted.getReshapedShape().getReshaped().getUnpackedSelection(),
+            // ]);
+
+            acceptedSourcings.push(bestAccepted[0]);
+            nextQueryShape = bestAccepted[0].getReshapedShape().getOpenForCriteria();
 
             if (!nextQueryShape) {
                 break;
@@ -79,11 +94,7 @@ export class EntityQueryExecutor {
             return false;
         }
 
-        return new DescribedEntitySourcing(
-            queryShape.getSchema(),
-            queryShape.getUnpackedSelection(),
-            acceptedSourcings,
-        );
+        return new DescribedEntitySourcing(queryShape.getSchema(), targetSelection, acceptedSourcings);
     }
 
     describeHydration(sourcing: EntitySourcingState): DescribedEntityHydration | false {
@@ -97,12 +108,7 @@ export class EntityQueryExecutor {
         }
 
         const acceptedHydrations: AcceptedEntityHydration[][] = [];
-        const hydrators = [
-            new RecursiveAutoJoinEntityHydrator(this, this.#services.getTracing()),
-            new RecursiveEntityHydrator(this),
-            ...this.#getHydratorsForSchema(schema),
-            ...this.#getHydratorsForSelection(schema, targetSelection),
-        ];
+        const hydrators = this.#getHydrators(schema, targetSelection);
 
         while (true) {
             const currentAcceptedHydrations: AcceptedEntityHydration[] = [];
@@ -152,6 +158,7 @@ export class EntityQueryExecutor {
         }
 
         if (Object.keys(openSelection).length) {
+            this.#services.getTracing().hydrationHasOpenSelection(openSelection);
             return false;
         }
 
@@ -159,13 +166,15 @@ export class EntityQueryExecutor {
     }
 
     async executeQuery<T>(query: EntityQuery, context: EntityQueryExecutionContext): Promise<T[]> {
-        const description = this.describeQuery(query);
+        const result = this.describeQuery(query);
 
-        if (description === false) {
+        if (result === false) {
             throw new Error(`no suitable sources found to execute query ${query}`);
         }
 
-        return (await this.executeDescribed(description, context, query)) as T[];
+        const [description, expandedQuery] = result;
+
+        return (await this.executeDescribed(description, context, expandedQuery)) as T[];
     }
 
     async executeDescribed(
@@ -258,7 +267,7 @@ export class EntityQueryExecutor {
     #getBestAcceptedSourcing(
         queryShape: EntityQueryShape,
         sources: readonly EntitySource[],
-    ): AcceptedEntitySourcing | undefined {
+    ): [AcceptedEntitySourcing, EntitySelection | undefined] | undefined {
         const accepted = sources
             .map(source => source.accept(queryShape))
             .filter(isNot(false))
@@ -277,7 +286,76 @@ export class EntityQueryExecutor {
             return undefined;
         }
 
-        return accepted[0];
+        const bestAccepted = accepted[0];
+        const expandedTargetSelection = this.#expandSourcedSelection(
+            queryShape.getSchema(),
+            queryShape.getUnpackedSelection(),
+        );
+
+        if (!isEqual(queryShape.getUnpackedSelection(), expandedTargetSelection)) {
+            const schema = queryShape.getSchema();
+
+            const added = subtractSelection(expandedTargetSelection, queryShape.getUnpackedSelection());
+
+            if (typeof added === "boolean") {
+                throw new Error("bad library logic");
+            }
+
+            this.#services
+                .getTracing()
+                .selectionGotExpanded(
+                    packEntitySelection(schema, queryShape.getUnpackedSelection()),
+                    packEntitySelection(schema, expandedTargetSelection),
+                    packEntitySelection(schema, added),
+                );
+
+            const accepted = bestAccepted
+                .getSource()
+                .accept(
+                    new EntityQueryShape(
+                        queryShape.getSchema(),
+                        expandedTargetSelection,
+                        queryShape.getCriterionShape(),
+                        queryShape.getParametersSchema(),
+                    ),
+                );
+
+            if (accepted) {
+                return [accepted, expandedTargetSelection];
+            }
+        }
+
+        return [accepted[0], undefined];
+    }
+
+    #expandSourcedSelection(schema: EntitySchema, sourcedSelection: EntitySelection): EntitySelection {
+        let expandedSelection = cloneSelection(sourcedSelection);
+
+        while (true) {
+            const hydrators = this.#getHydrators(schema, expandedSelection);
+
+            const nextExpandedSelection = hydrators.reduce((previous, current) => {
+                const next = current.expand(schema, previous);
+                return next ? mergeSelections([previous, next]) : previous;
+            }, expandedSelection);
+
+            if (nextExpandedSelection === expandedSelection) {
+                break;
+            } else {
+                expandedSelection = nextExpandedSelection;
+            }
+        }
+
+        return expandedSelection;
+    }
+
+    #getHydrators(schema: EntitySchema, selection: EntitySelection): EntityHydrator[] {
+        return [
+            new RecursiveAutoJoinEntityHydrator(this, this.#services.getTracing()),
+            new RecursiveEntityHydrator(this),
+            ...this.#getHydratorsForSchema(schema),
+            ...this.#getHydratorsForSelection(schema, selection),
+        ];
     }
 
     #getHydratorsForSchema(schema: EntitySchema): EntityHydrator[] {
