@@ -45,23 +45,29 @@ export class EntityQueryBuilder<T extends Entity = Entity, S extends PackedEntit
         return this;
     }
 
-    get$(): Observable<T[]> {
-        return this.#queryFn(this.#toQueryArguments());
+    get$(): Observable<SelectEntity<T, S>[]> {
+        return this.#queryFn(this.#toQueryArguments()) as Observable<SelectEntity<T, S>[]>;
     }
 
-    get(): Promise<T[]> {
+    get(): Promise<SelectEntity<T, S>[]> {
         return lastValueFrom(this.get$());
     }
 
+    /**
+     * @deprecated use {@link get$} instead
+     */
     getTyped$(): Observable<SelectEntity<T, S>[]> {
         return this.get$() as Observable<SelectEntity<T, S>[]>;
     }
 
+    /**
+     * @deprecated use {@link get} instead
+     */
     getTyped(): Promise<SelectEntity<T, S>[]> {
         return lastValueFrom(this.getTyped$());
     }
 
-    getOne$(): Observable<T> {
+    getOne$(): Observable<SelectEntity<T, S>> {
         return this.#queryFn(this.#toQueryArguments()).pipe(
             map(entities => {
                 if (!entities[0]) {
@@ -70,42 +76,54 @@ export class EntityQueryBuilder<T extends Entity = Entity, S extends PackedEntit
 
                 return entities[0];
             }),
-        );
+        ) as Observable<SelectEntity<T, S>>;
     }
 
-    getOne(): Promise<T> {
+    getOne(): Promise<SelectEntity<T, S>> {
         return lastValueFrom(this.getOne$());
     }
 
+    /**
+     * @deprecated use {@link getOne$} instead
+     */
     getOneTyped$(): Observable<SelectEntity<T, S>> {
         return this.getOne$() as Observable<SelectEntity<T, S>>;
     }
 
+    /**
+     * @deprecated use {@link getOne} instead
+     */
     getOneTyped(): Promise<SelectEntity<T, S>> {
         return lastValueFrom(this.getOneTyped$());
     }
 
-    findOne$(): Observable<T | undefined> {
+    findOne$(): Observable<SelectEntity<T, S> | undefined> {
         return this.#queryFn(this.#toQueryArguments()).pipe(
             map(entities => {
                 return entities[0];
             }),
-        );
+        ) as Observable<SelectEntity<T, S> | undefined>;
     }
 
-    findOne(): Promise<T | undefined> {
+    findOne(): Promise<SelectEntity<T, S> | undefined> {
         return lastValueFrom(this.findOne$());
     }
 
+    /**
+     * @deprecated use {@link findOneTyped$} instead
+     */
     findOneTyped$(): Observable<SelectEntity<T, S> | undefined> {
         return this.findOne$() as Observable<SelectEntity<T, S> | undefined>;
     }
 
+    /**
+     * @deprecated use {@link findOne} instead
+     */
     findOneTyped(): Promise<SelectEntity<T, S> | undefined> {
         return lastValueFrom(this.findOneTyped$());
     }
 
-    constructDefault(): {} extends S ? T : SelectEntity<T, S> {
+    constructDefault(): SelectEntity<T, S> {
         return constructEntity(this.#schema, unpackSelection(this.#schema, this.#selection ?? {})) as any;
     }
 
