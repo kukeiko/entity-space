@@ -1,3 +1,4 @@
+import { getCriterionShapeUniqueCount } from "../criteria/functions/get-criterion-shape-unique-count.fn";
 import { EntityQueryShape } from "./entity-query-shape";
 
 export class ReshapedEntityQueryShape {
@@ -32,5 +33,15 @@ export class ReshapedEntityQueryShape {
 
     getCriteriaFlattenCount(): number {
         return this.#criteriaFlattenCount;
+    }
+
+    getCriteriaUniqueCount(): number {
+        const criterionShape = this.#reshaped.getCriterionShape();
+
+        if (!criterionShape) {
+            return 0;
+        }
+
+        return getCriterionShapeUniqueCount(this.#reshaped.getSchema(), criterionShape);
     }
 }

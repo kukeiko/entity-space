@@ -272,6 +272,13 @@ export class EntityQueryExecutor {
             .map(source => source.accept(queryShape))
             .filter(isNot(false))
             .sort((a, b) => {
+                const uniqueCountDiff =
+                    b.getReshapedShape().getCriteriaUniqueCount() - a.getReshapedShape().getCriteriaUniqueCount();
+
+                if (uniqueCountDiff !== 0) {
+                    return uniqueCountDiff;
+                }
+
                 const flattenCountDiff =
                     a.getReshapedShape().getCriteriaFlattenCount() - b.getReshapedShape().getCriteriaFlattenCount();
 

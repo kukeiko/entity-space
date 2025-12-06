@@ -39,6 +39,10 @@ export class EntitySchema {
         return this.#idPaths.length > 0;
     }
 
+    hasCompositeId(): boolean {
+        return this.#idPaths.length > 1;
+    }
+
     getIdPaths(): readonly Path[] {
         return this.#idPaths;
     }
