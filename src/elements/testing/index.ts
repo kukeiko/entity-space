@@ -5,6 +5,7 @@ export * from "./file-system";
 export * from "./record-metadata.model";
 export * from "./rpg";
 export * from "./song.model";
+export * from "./song-tag.model";
 export * from "./tag.model";
 export * from "./tree";
 export * from "./user-request.model";

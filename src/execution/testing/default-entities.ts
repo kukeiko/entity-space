@@ -1,4 +1,4 @@
-import { Album, Artist, Folder, RecordMetadata, Song, Tag, Tree, User } from "@entity-space/elements/testing";
+import { Album, Artist, Folder, RecordMetadata, Song, SongTag, Tag, Tree, User } from "@entity-space/elements/testing";
 
 export function createMetadata(
     createdById: number,
@@ -74,6 +74,8 @@ const songs: Song[] = [
     },
     // Sunnexo
 ];
+
+const songTags: SongTag[] = [];
 
 const trees: Tree[] = [
     {
@@ -160,9 +162,10 @@ export interface TestEntities {
     artists: Artist[];
     albums: Album[];
     songs: Song[];
+    songTags: SongTag[];
     tags: Tag[];
     trees: Tree[];
     folders: Folder[];
 }
 
-export const defaultEntities: TestEntities = { users, artists, albums, songs, tags, trees, folders };
+export const defaultEntities: TestEntities = { users, artists, albums, songs, tags, songTags, trees, folders };

@@ -7,6 +7,7 @@ import {
     EntitySelection,
     isSelectionSubsetOf,
     joinEntities,
+    mergeSelections,
     relationToCriterionShape,
 } from "@entity-space/elements";
 import { isNot, writePath } from "@entity-space/utils";
@@ -27,8 +28,17 @@ export class AutoJoinEntityHydrator extends EntityHydrator {
     readonly #tracing: EntityQueryTracing;
 
     override expand(schema: EntitySchema, openSelection: EntitySelection): false | EntitySelection {
-        // [todo] ❌ implement
-        return false;
+        const openRelations = this.#getOpenEntityProperties(schema, openSelection);
+
+        if (!openRelations.length) {
+            return false;
+        }
+
+        const requiredSelection = mergeSelections(
+            openRelations.map(relation => this.#getRequiredSelectionToHydrateRelation(relation)),
+        );
+
+        return requiredSelection;
     }
 
     override accept(
@@ -36,7 +46,7 @@ export class AutoJoinEntityHydrator extends EntityHydrator {
         availableSelection: EntitySelection,
         openSelection: EntitySelection,
     ): AcceptedEntityHydration | false {
-        const openEntityProperties = this.#getOpenEntityProperties(schema, availableSelection, openSelection);
+        const openEntityProperties = this.#getOpenEntityProperties(schema, openSelection, availableSelection);
 
         const acceptedHydrations = openEntityProperties
             .map(relation =>
@@ -57,15 +67,15 @@ export class AutoJoinEntityHydrator extends EntityHydrator {
 
     #getOpenEntityProperties(
         schema: EntitySchema,
-        availableSelection: EntitySelection,
         openSelection: EntitySelection,
+        availableSelection?: EntitySelection,
     ): EntityRelationProperty[] {
         const open: EntityRelationProperty[] = [];
 
         for (const [key, value] of Object.entries(openSelection)) {
             if (
                 value === true ||
-                availableSelection[key] ||
+                (availableSelection !== undefined && availableSelection[key]) ||
                 !schema.isRelation(key) ||
                 !schema.getRelation(key).isJoined()
             ) {
@@ -83,11 +93,7 @@ export class AutoJoinEntityHydrator extends EntityHydrator {
         availableSelection: EntitySelection,
         openSelection: EntitySelection,
     ): AcceptedEntityHydration | false {
-        const requiredSelection: EntitySelection = {};
-
-        for (const path of relation.getJoinFrom()) {
-            writePath(path, requiredSelection, true);
-        }
+        const requiredSelection = this.#getRequiredSelectionToHydrateRelation(relation);
 
         if (!isSelectionSubsetOf(requiredSelection, availableSelection)) {
             return false;
@@ -133,6 +139,16 @@ export class AutoJoinEntityHydrator extends EntityHydrator {
         };
 
         return new AcceptedEntityHydration(acceptedSelection, requiredSelection, hydrate);
+    }
+
+    #getRequiredSelectionToHydrateRelation(relation: EntityRelationProperty): EntitySelection {
+        const requiredSelection: EntitySelection = {};
+
+        for (const path of relation.getJoinFrom()) {
+            writePath(path, requiredSelection, true);
+        }
+
+        return requiredSelection;
     }
 
     override toString(): string {

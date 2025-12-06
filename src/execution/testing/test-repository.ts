@@ -99,6 +99,7 @@ export class TestRepository {
         folders: [],
         songs: [],
         tags: [],
+        songTags: [],
         trees: [],
         users: [],
     };
@@ -350,12 +351,32 @@ export class TestRepository {
         );
 
         this.#services.for(SongBlueprint).addSource({
-            select: { tagIds: true },
             where: { artistId: { $inArray: true } },
             load: ({ criteria: { artistId } }) => loadSongsByArtistId(artistId.value),
         });
 
         return loadSongsByArtistId;
+    }
+
+    useHydrateSongTagIds() {
+        const hydrate = vi.fn((songs: Song[]) => {
+            {
+                songs.forEach(
+                    song =>
+                        (song.tagIds = this.#filter("songTags", songTag => songTag.songId === song.id).map(
+                            songTag => songTag.tagId,
+                        )),
+                );
+            }
+        });
+
+        this.#services.for(SongBlueprint).addHydrator({
+            select: { tagIds: true },
+            requires: { id: true },
+            hydrate,
+        });
+
+        return hydrate;
     }
 
     useLoadSongsByArtistIdAndNamespace() {
@@ -918,7 +939,7 @@ export class TestRepository {
         return filtered as TestEntities[K];
     }
 
-    #nextId<K extends Exclude<keyof TestEntities, "tags">>(entity: K): number {
+    #nextId<K extends Exclude<keyof TestEntities, "tags" | "songTags">>(entity: K): number {
         const latest = (this.#testEntities[entity] ?? []).sort((a, b) => {
             return +b.id - +a.id;
         });

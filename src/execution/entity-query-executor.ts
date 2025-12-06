@@ -349,7 +349,7 @@ export class EntityQueryExecutor {
                 return next ? mergeSelections([previous, next]) : previous;
             }, expandedSelection);
 
-            if (nextExpandedSelection === expandedSelection) {
+            if (isEqual(nextExpandedSelection, expandedSelection)) {
                 break;
             } else {
                 expandedSelection = nextExpandedSelection;

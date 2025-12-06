@@ -14,6 +14,7 @@ import {
     UserBlueprint,
     UserRequestBlueprint,
 } from "@entity-space/elements/testing";
+import { SongTag } from "src/elements/testing/song-tag.model";
 import { beforeEach, describe, expect, it } from "vitest";
 import { EntityWorkspace } from "./entity-workspace";
 import { createMetadata, defaultEntities } from "./testing/default-entities";
@@ -109,7 +110,6 @@ describe("execution", () => {
                 namespace: "dev",
                 name: "Comite",
                 duration: 336,
-                tagIds: ["upbeat"],
                 metadata: {
                     createdAt: "2025-05-19T03:27:16.292Z",
                     createdById: 1,
@@ -119,9 +119,12 @@ describe("execution", () => {
             },
         ];
 
-        repository.useEntities({ artists, songs, tags, users });
+        const songTags: SongTag[] = [{ songId: 1, tagId: "upbeat" }];
+
+        repository.useEntities({ artists, songs, tags, users, songTags });
         repository.useLoadArtistById();
         repository.useLoadSongsByArtistId();
+        repository.useHydrateSongTagIds();
         repository.useLoadUserById();
         repository.useLoadTagById();
 
@@ -135,7 +138,6 @@ describe("execution", () => {
                     // need to be hydrated in order for them to hydrate a relation. also, EntitySource has to explicitly specify that
                     // it includes tagIds - that is a source of confusion, either not require it or warn the user that entities returned
                     // include it without the source specifying that it does.
-                    tagIds: true,
                     tags: true,
                     metadata: {
                         // [todo] ❌ use "updatedBy: true" once setting unhydrated values to null works (because it could not find the updatedBy user)
