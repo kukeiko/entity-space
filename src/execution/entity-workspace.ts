@@ -144,6 +144,11 @@ export class EntityWorkspace {
         return defer(() => {
             const schema = this.#services.getCatalog().getSchemaByBlueprint(args.blueprint);
             const sourcedEntities = toSourcedEntities(schema, args.entities, unpackSelection(schema, args.select));
+
+            if (sourcedEntities.getOpenSelection() === undefined) {
+                return of(args.entities as T[]);
+            }
+
             const cacheOptions = this.#toCacheOptions(args.cache);
             const cacheKey = cacheOptions ? cacheOptions.key : undefined;
             const cache = this.#services.getOrCreateCacheBucket(cacheKey);
