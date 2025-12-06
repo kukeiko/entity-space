@@ -649,7 +649,7 @@ describe("execution", () => {
                 const loadArtistById = repository.useLoadArtistById();
 
                 // act
-                const actual = await workspace.from(ArtistBlueprint).where({ id }).findOne();
+                const actual = await workspace.from(ArtistBlueprint).select({ country: true }).where({ id }).findOne();
 
                 // assert
                 expect(actual).toEqual(expected);
@@ -663,7 +663,7 @@ describe("execution", () => {
                 const loadArtistById = repository.useLoadArtistById();
 
                 // act
-                await workspace.from(ArtistBlueprint).where({ id }).cache(true).findOne(); // load into cache
+                await workspace.from(ArtistBlueprint).select({ country: true }).where({ id }).cache(true).findOne(); // load into cache
                 const actual = await workspace.from(ArtistBlueprint).where({ id }).cache(true).findOne(); // load from cache
 
                 // assert
@@ -680,7 +680,7 @@ describe("execution", () => {
 
                 // act
                 // load into cache all the artists
-                await workspace.from(ArtistBlueprint).where({ id: ids }).cache(true).get();
+                await workspace.from(ArtistBlueprint).select({ country: true }).where({ id: ids }).cache(true).get();
                 // query the one artist we actually want
                 const actual = await workspace.from(ArtistBlueprint).where({ id }).cache(true).findOne();
 
@@ -722,7 +722,7 @@ describe("execution", () => {
                         const actual = await workspace
                             .from(SongBlueprint)
                             .where({ id })
-                            .select({ artist: true })
+                            .select({ artist: { country: true } })
                             .findOne();
 
                         // assert
@@ -750,7 +750,7 @@ describe("execution", () => {
                         const actual = await workspace
                             .from(ArtistBlueprint)
                             .where({ id })
-                            .select({ songs: true })
+                            .select({ country: true, songs: true })
                             .findOne();
 
                         // assert
@@ -761,7 +761,7 @@ describe("execution", () => {
                 });
             });
 
-            it.only("and hydrating a primitive property using a custom hydrator", async () => {
+            it("and hydrating a primitive property using a custom hydrator", async () => {
                 // arrange
                 const artist = artists[0];
                 const expected: SelectEntity<Artist, { title: true }> = {
@@ -856,7 +856,7 @@ describe("execution", () => {
                     const loadArtistById = repository.useLoadArtistById();
 
                     // act
-                    const actual = await workspace.from(ArtistBlueprint).where({ id }).get();
+                    const actual = await workspace.from(ArtistBlueprint).select({ country: true }).where({ id }).get();
 
                     // assert
                     expect(actual).toEqual(expected);
@@ -870,7 +870,7 @@ describe("execution", () => {
                     const loadArtistById = repository.useLoadArtistById();
 
                     // act
-                    await workspace.from(ArtistBlueprint).where({ id }).cache(true).get(); // load into cache
+                    await workspace.from(ArtistBlueprint).select({ country: true }).where({ id }).cache(true).get(); // load into cache
                     const actual = await workspace.from(ArtistBlueprint).where({ id }).cache(true).get();
 
                     // assert
@@ -936,7 +936,7 @@ describe("execution", () => {
             const actual = await workspace
                 .from(ArtistBlueprint)
                 .where({ id })
-                .select({ songs: true, longestSong: true })
+                .select({ country: true, songs: true, longestSong: true })
                 .findOne();
 
             // assert
