@@ -13,6 +13,7 @@ import {
     packEntitySelection,
     queryToShape,
     selectionToPathedRelatedSchemas,
+    selectionToString,
     subtractSelection,
 } from "@entity-space/elements";
 import { isNot, toPathSegments } from "@entity-space/utils";
@@ -132,7 +133,9 @@ export class EntityQueryExecutor {
                     );
 
                 if (nextOpenSelection === false) {
-                    throw new Error("bad hydrator implementation");
+                    throw new Error(
+                        `bad hydrator implementation: accepted selection ${selectionToString(accepted.getAcceptedSelection())} is not subtractable from ${selectionToString(openSelection)}`,
+                    );
                 } else if (nextOpenSelection === true) {
                     openSelection = {};
                     break;

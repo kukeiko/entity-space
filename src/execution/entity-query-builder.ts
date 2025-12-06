@@ -65,7 +65,7 @@ export class EntityQueryBuilder<T extends Entity = Entity, S extends PackedEntit
         return this.#queryFn(this.#toQueryArguments()).pipe(
             map(entities => {
                 if (!entities[0]) {
-                    throw new Error(`entity not found`);
+                    throw new Error(`${this.#schema.getName()} entity not found`);
                 }
 
                 return entities[0];
