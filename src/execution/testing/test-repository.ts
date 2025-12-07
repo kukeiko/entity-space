@@ -42,6 +42,7 @@ import {
     UserSavable,
 } from "@entity-space/elements/testing";
 import { jsonClone } from "@entity-space/utils";
+import { uniqBy } from "lodash";
 import { vi } from "vitest";
 import { EntityServiceContainer } from "../entity-service-container";
 import {
@@ -277,7 +278,7 @@ export class TestRepository {
         return hydrate;
     }
 
-    addHydrateArtistLongestSong() {
+    useHydrateArtistLongestSong() {
         const hydrate = vi.fn((artists: Artist[]) => {
             artists.forEach(artist => (artist.longestSong = this.findLongestSong(artist.songs ?? [])));
         });
@@ -289,6 +290,21 @@ export class TestRepository {
         });
 
         return hydrate;
+    }
+
+    useHydrateArtistSongTags() {
+        this.#services.for(ArtistBlueprint).addHydrator({
+            select: { songTags: true },
+            requires: { songs: { tags: true } },
+            hydrate: entities => {
+                for (const entity of entities) {
+                    entity.songTags = uniqBy(
+                        entity.songs.flatMap(song => song.tags),
+                        entity => entity.id,
+                    );
+                }
+            },
+        });
     }
 
     useCreateArtist() {
