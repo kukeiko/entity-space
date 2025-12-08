@@ -4,6 +4,9 @@ import { FileBlueprint } from "./file.model";
 
 const { register, id, number, string, entity, array, nullable, readonly, optional } = EntityBlueprint;
 
+/**
+ * Used to test recursive joined relations.
+ */
 export class FolderBlueprint {
     id = id();
     name = string();

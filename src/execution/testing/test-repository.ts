@@ -28,6 +28,7 @@ import {
     ItemTypeBlueprint,
     ItemTypeSavable,
     ItemUpdatable,
+    ProductBlueprint,
     RecordMetadata,
     Song,
     SongBlueprint,
@@ -40,6 +41,7 @@ import {
     UserRequest,
     UserRequestBlueprint,
     UserSavable,
+    WashingMachineBlueprint,
 } from "@entity-space/elements/testing";
 import { jsonClone } from "@entity-space/utils";
 import { uniqBy } from "lodash";
@@ -103,6 +105,8 @@ export class TestRepository {
         songTags: [],
         trees: [],
         users: [],
+        products: [],
+        washingMachines: [],
     };
 
     useDefaultEntities(): this {
@@ -934,6 +938,62 @@ export class TestRepository {
         });
 
         return deleteUsers;
+    }
+
+    useLoadProductById() {
+        const load = vi.fn((id: number) => this.#filter("products", filterById(id)));
+
+        this.#services.for(ProductBlueprint).addSource({
+            where: { id: { $equals: true } },
+            load: ({ criteria: { id } }) => load(id.value),
+        });
+
+        return load;
+    }
+
+    useCreateProduct() {
+        const create = vi.fn<CreateEntityFn<ProductBlueprint>>(({ entity: product }) => {
+            const nextId = this.#nextId("products");
+
+            const created: EntityBlueprint.Instance<ProductBlueprint> = {
+                id: nextId,
+                name: product.name,
+                price: product.price,
+            };
+
+            this.#testEntities.products = [...(this.#testEntities.products ?? []), created];
+
+            return Promise.resolve(created);
+        });
+
+        this.#services.for(ProductBlueprint).addCreateOneMutator({ create });
+
+        return create;
+    }
+
+    useLoadAllWashingMachines() {
+        const load = vi.fn(() => this.#filter("washingMachines"));
+
+        this.#services.for(WashingMachineBlueprint).addSource({ load });
+
+        return load;
+    }
+
+    useCreateWashingMachine() {
+        const create = vi.fn<CreateEntityFn<WashingMachineBlueprint>>(({ entity: washingMachine }) => {
+            const created: EntityBlueprint.Instance<WashingMachineBlueprint> = {
+                id: washingMachine.id,
+                maxLoadKg: washingMachine.maxLoadKg,
+            };
+
+            this.#testEntities.washingMachines = [...(this.#testEntities.washingMachines ?? []), created];
+
+            return Promise.resolve(created);
+        });
+
+        this.#services.for(WashingMachineBlueprint).addCreateOneMutator({ create });
+
+        return create;
     }
 
     #filter<K extends keyof TestEntities>(

@@ -1,4 +1,16 @@
-import { Album, Artist, Folder, RecordMetadata, Song, SongTag, Tag, Tree, User } from "@entity-space/elements/testing";
+import {
+    Album,
+    Artist,
+    Folder,
+    Product,
+    RecordMetadata,
+    Song,
+    SongTag,
+    Tag,
+    Tree,
+    User,
+    WashingMachine,
+} from "@entity-space/elements/testing";
 
 export function createMetadata(
     createdById: number,
@@ -157,6 +169,9 @@ const folders: Folder[] = [
     },
 ];
 
+const products: Product[] = [];
+const washingMachines: WashingMachine[] = [];
+
 export interface TestEntities {
     users: User[];
     artists: Artist[];
@@ -166,6 +181,19 @@ export interface TestEntities {
     tags: Tag[];
     trees: Tree[];
     folders: Folder[];
+    products: Product[];
+    washingMachines: WashingMachine[];
 }
 
-export const defaultEntities: TestEntities = { users, artists, albums, songs, tags, songTags, trees, folders };
+export const defaultEntities: TestEntities = {
+    users,
+    artists,
+    albums,
+    songs,
+    tags,
+    songTags,
+    trees,
+    folders,
+    products,
+    washingMachines,
+};
