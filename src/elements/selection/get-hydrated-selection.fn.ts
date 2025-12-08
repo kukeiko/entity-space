@@ -12,6 +12,7 @@ function getHydratedSelectionCore(schema: EntitySchema, hydratedSelection: Entit
         .filter(property => property.isOptional());
 
     for (const property of optionalPrimitiveProperties) {
+        // [todo] ❌ this seems broken
         if (entities.some(entity => entity[property.getName()]) === undefined) {
             hydratedSelection[property.getName()] = true;
         }

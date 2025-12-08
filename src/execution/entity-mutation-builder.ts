@@ -25,6 +25,9 @@ export class EntityMutationBuilder<B, S extends PackedEntitySelection<EntityBlue
         return this as any;
     }
 
+    /**
+     * @deprecated use {@link save} instead
+     */
     async saveOne(entity: EntityBlueprint.Savable<B>): Promise<EntityBlueprint.Instance<B>> {
         const mutation = new EntityMutation(
             "save",

@@ -62,6 +62,7 @@ export function whereEntityShapeToCriterionShape(schema: EntitySchema, shape: Wh
             }
         } else {
             const relation = schema.getRelation(key);
+            // [todo] ❌ should be put into "optional" if all nested shapes are optional
             required[key] = whereEntityShapeToCriterionShape(relation.getRelatedSchema(), value as WhereEntityShape);
         }
     }

@@ -156,6 +156,7 @@ function reshapeByEntity(
     const otherRequiredShapes = what.getRequiredShapes();
     let flattenCount = 0;
 
+    // [todo] ❌ what about the optional shapes?
     for (const [key, shape] of Object.entries(by.getRequiredShapes())) {
         const otherShapes = otherRequiredShapes[key];
 
