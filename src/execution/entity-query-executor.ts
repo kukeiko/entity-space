@@ -261,6 +261,7 @@ export class EntityQueryExecutor {
             if (criterion) {
                 const withoutDehydrated = intersectCriterionWithSelection(criterion, availableSelection);
                 entities = entities.filter(entity => withoutDehydrated.contains(entity));
+                entities = entities.filter(entity => isHydrated(entity, availableSelection));
             }
         }
 

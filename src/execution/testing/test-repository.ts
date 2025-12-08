@@ -154,6 +154,20 @@ export class TestRepository {
         return load;
     }
 
+    useHydrateUserCreatedByName() {
+        const hydrate = vi.fn((users: User[]) => {
+            users.forEach(user => (user.createdByName = user.metadata.createdBy!.name));
+        });
+
+        this.#services.for(UserBlueprint).addHydrator({
+            select: { createdByName: true },
+            requires: { metadata: { createdBy: true } },
+            hydrate,
+        });
+
+        return hydrate;
+    }
+
     useLoadTagById() {
         const load = vi.fn((id: string) => this.#filter("tags", filterById(id)));
 
