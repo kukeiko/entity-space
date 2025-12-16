@@ -48,7 +48,7 @@ export * from "./entity/normalize-entities.fn";
 export * from "./entity/select-entity-type";
 export * from "./entity/to-entity-pairs.fn";
 export * from "./entity/validate-entity.fn";
-export * from "./entity/write-relation-ids.fn";
+export * from "./entity/write-relation-joins.fn";
 export * from "./query/entity-query";
 export * from "./query/entity-query-parameters";
 export * from "./query/entity-query-shape";

@@ -32,7 +32,7 @@ export function assignTemporaryIds(
             nextId = assignTemporaryIds(relatedSchema, selected, related, nextId);
         }
 
-        relation.writeIds(entities)
+        relation.writeJoins(entities)
     }
 
     return nextId;

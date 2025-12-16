@@ -57,8 +57,7 @@ describe("save()", () => {
         });
     });
 
-    // [todo] ❌ not yet possible
-    it.skip("can create one-to-one relations: product.washingMachine", async () => {
+    it("can create one-to-one relations: product.washingMachine", async () => {
         // arrange
         const product: Product = {
             id: 0,

@@ -2,7 +2,7 @@ import { EntityRelationSelection } from "../selection/entity-selection";
 import { Entity } from "./entity";
 import { EntitySchema } from "./entity-schema";
 
-export function writeRelationIds(
+export function writeRelationJoins(
     schema: EntitySchema,
     entities: readonly Entity[],
     relationSelection: EntityRelationSelection,
@@ -13,13 +13,13 @@ export function writeRelationIds(
 
     for (const relation of schema.getRelations()) {
         if (relation.isJoined()) {
-            relation.writeIds(entities);
+            relation.writeJoins(entities);
         }
 
         const selectedRelation = relationSelection[relation.getName()];
 
         if (selectedRelation !== undefined) {
-            writeRelationIds(relation.getRelatedSchema(), relation.readValues(entities), selectedRelation);
+            writeRelationJoins(relation.getRelatedSchema(), relation.readValues(entities), selectedRelation);
         }
     }
 }

@@ -146,11 +146,11 @@ export class EntitySchema {
             }
 
             if (this.#idPaths.length) {
-                joinsFromId = lastJoinFrom.valueOf() === this.#idPaths.at(-1)!.valueOf();
+                joinsFromId = joinFrom.every(path => this.isIdProperty(path.valueOf()));
             }
 
             if (schema.#idPaths.length) {
-                joinsToId = lastJoinTo.valueOf() === schema.#idPaths.at(-1)!.valueOf();
+                joinsToId = joinTo.every(path => schema.isIdProperty(path.valueOf()));
             }
         }
 

@@ -41,7 +41,7 @@ export function getCreateDependencies(
                         "create",
                         relatedSchema,
                         relatedCreatable,
-                        relation.isParent() ? false : relation.joinsToId(),
+                        relation.isOutbound(),
                         path === undefined ? toPath(key) : joinPaths([path, key]),
                     ),
                 );
@@ -57,7 +57,7 @@ export function getCreateDependencies(
                         "update",
                         relatedSchema,
                         relatedUpdatable,
-                        relation.isParent() ? false : relation.joinsToId(),
+                        relation.isOutbound(),
                         path === undefined ? toPath(key) : joinPaths([path, key]),
                     ),
                 );

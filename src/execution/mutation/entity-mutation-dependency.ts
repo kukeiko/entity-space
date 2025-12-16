@@ -63,6 +63,6 @@ export class EntityMutationDependency {
             fromEntities = readPath(pathToSchema, entities);
         }
 
-        relation.writeIds(fromEntities);
+        relation.writeJoins(fromEntities);
     }
 }

@@ -5,7 +5,7 @@ import {
     EntityQueryParameters,
     unpackSelection,
     whereEntityToCriterion,
-    writeRelationIds,
+    writeRelationJoins,
 } from "@entity-space/elements";
 import { Class } from "@entity-space/utils";
 import { concat, defer, delay, finalize, from, map, Observable, of, switchMap } from "rxjs";
@@ -179,7 +179,7 @@ export class EntityWorkspace {
     }
 
     async #mutate(mutation: EntityMutation): Promise<Entity[]> {
-        writeRelationIds(mutation.getSchema(), mutation.getEntities(), mutation.getSelection() ?? {});
+        writeRelationJoins(mutation.getSchema(), mutation.getEntities(), mutation.getSelection() ?? {});
         const entityChanges = toEntityChanges(mutation);
 
         if (entityChanges === undefined) {

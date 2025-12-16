@@ -32,6 +32,7 @@ import {
     RecordMetadata,
     Song,
     SongBlueprint,
+    SongTagBlueprint,
     TagBlueprint,
     Tree,
     TreeBlueprint,
@@ -425,6 +426,47 @@ export class TestRepository {
         });
 
         return loadSongsByArtistIdsAndNamespace;
+    }
+
+    useCreateSong() {
+        const create = vi.fn<CreateEntityFn<SongBlueprint>>(({ entity: song }) => {
+            const nextId = this.#nextId("songs");
+
+            const created: EntityBlueprint.Instance<SongBlueprint> = {
+                id: nextId,
+                name: song.name,
+                albumId: song.albumId,
+                artistId: song.artistId,
+                duration: song.duration,
+                metadata: song.metadata as any, // [todo] ❌ type assertion
+                namespace: song.namespace,
+            };
+
+            this.#testEntities.songs = [...(this.#testEntities.songs ?? []), created];
+
+            return Promise.resolve(created);
+        });
+
+        this.#services.for(SongBlueprint).addCreateOneMutator({ create });
+
+        return create;
+    }
+
+    useCreateSongTag() {
+        const create = vi.fn<CreateEntityFn<SongTagBlueprint>>(({ entity: songTag }) => {
+            const created: EntityBlueprint.Instance<SongTagBlueprint> = {
+                songId: songTag.songId!, // [todo] ❌ type assertion
+                tagId: songTag.tagId!, // [todo] ❌ type assertion
+            };
+
+            this.#testEntities.songTags = [...(this.#testEntities.songTags ?? []), created];
+
+            return Promise.resolve(created);
+        });
+
+        this.#services.for(SongTagBlueprint).addCreateOneMutator({ create });
+
+        return create;
     }
 
     useSaveItems_deprecated(createdAt: string, updatedAt: string, includeSockets = true) {

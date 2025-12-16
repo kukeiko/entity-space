@@ -58,10 +58,15 @@ export abstract class EntityProperty {
         return this.#name;
     }
 
+    getNameWithSchema(): string {
+        return `${this.#schema.getName()}.${this.#name}`;
+    }
+
     getDtoName(): string {
         return this.#options.dtoName;
     }
 
+    // [todo] ❌ change to just "isArray()" (remove ContainerType completely)
     isContainer(): boolean {
         return this.#options.container !== undefined;
     }
