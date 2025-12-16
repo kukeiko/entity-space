@@ -16,7 +16,7 @@ import {
     toRelationSelection,
 } from "@entity-space/elements";
 import { joinPaths, Path, toPath } from "@entity-space/utils";
-import { isEmpty } from "lodash";
+import { isEmpty, uniq } from "lodash";
 import { EntityQueryTracing } from "../entity-query-tracing";
 import { AcceptedEntityMutation } from "./accepted-entity-mutation";
 import { EntityChange } from "./entity-change";
@@ -68,7 +68,7 @@ export class ExplicitEntityMutator extends EntityMutator {
 
             return [
                 new AcceptedEntityMutation(
-                    changes.getEntities(path),
+                    uniq(changes.getEntities(path)),
                     accepted,
                     dependencies,
                     mutation => this.mutate(mutation),

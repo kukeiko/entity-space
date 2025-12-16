@@ -8,7 +8,7 @@ import {
     toEntityPairs,
 } from "@entity-space/elements";
 import { ComplexKeyMap, readPath, writePath } from "@entity-space/utils";
-import { isEmpty } from "lodash";
+import { isEmpty, uniqBy } from "lodash";
 import { entityHasId } from "../../elements/entity/entity-has-id.fn";
 import { EntityChange } from "./entity-change";
 import { EntityChanges } from "./entity-changes";
@@ -239,7 +239,8 @@ export function toEntityChanges(mutation: EntityMutation): EntityChanges | undef
     }
 
     if (type.includes("create")) {
-        changes.push(...getCreated(schema, entities, selection));
+        const created = uniqBy(getCreated(schema, entities, selection), change => change.getEntity());
+        changes.push(...created);
     }
 
     if (type.includes("update")) {
