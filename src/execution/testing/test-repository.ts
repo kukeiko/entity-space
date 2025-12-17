@@ -51,8 +51,10 @@ import { EntityServiceContainer } from "../entity-service-container";
 import {
     CreateEntitiesFn,
     CreateEntityFn,
+    DeleteEntityFn,
     SaveEntitiesFn,
     UpdateEntitiesFn,
+    UpdateEntityFn,
 } from "../mutation/entity-mutation-function.type";
 import { defaultEntities, TestEntities } from "./default-entities";
 
@@ -347,6 +349,27 @@ export class TestRepository {
         return create;
     }
 
+    useUpdateArtist() {
+        const update = vi.fn<UpdateEntityFn<ArtistBlueprint>>(({ entity }) => {
+            // [todo] ❌ type assertion
+            return structuredClone(entity) as Artist;
+        });
+
+        this.#services.for(ArtistBlueprint).addUpdateOneMutator({ update });
+
+        return update;
+    }
+
+    useDeleteArtist() {
+        const del = vi.fn<DeleteEntityFn<ArtistBlueprint>>(() => {});
+
+        this.#services.for(ArtistBlueprint).addDeleteOneMutator({
+            delete: del,
+        });
+
+        return del;
+    }
+
     useLoadAlbumById() {
         const load = vi.fn((id: number) => this.#filter("albums", filterById(id)));
 
@@ -450,6 +473,27 @@ export class TestRepository {
         this.#services.for(SongBlueprint).addCreateOneMutator({ create });
 
         return create;
+    }
+
+    useUpdateSong() {
+        const update = vi.fn<UpdateEntityFn<SongBlueprint>>(({ entity }) => {
+            // [todo] ❌ type assertion
+            return structuredClone(entity) as Song;
+        });
+
+        this.#services.for(SongBlueprint).addUpdateOneMutator({ update });
+
+        return update;
+    }
+
+    useDeleteSong() {
+        const del = vi.fn<DeleteEntityFn<SongBlueprint>>(() => {});
+
+        this.#services.for(SongBlueprint).addDeleteOneMutator({
+            delete: del,
+        });
+
+        return del;
     }
 
     useCreateSongTag() {

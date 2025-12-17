@@ -18,7 +18,6 @@ describe("save()", () => {
 
     it("does not create the same entity twice", async () => {
         // arrange
-        facade.enableConsoleTracing();
         const metadata = createMetadata(1);
 
         const artist: Artist = {
@@ -98,6 +97,108 @@ describe("save()", () => {
         expect(createSong).toHaveBeenCalledWith<Parameters<CreateEntityFn<SongBlueprint>>>({
             selection: {},
             entity: { albumId: 1, artistId: 1, duration: 100, metadata, name: "bar", namespace: "dev" },
+        });
+    });
+
+    describe("does not update the same entity twice", () => {
+        it("without previous entities", async () => {
+            // arrange
+            const metadata = createMetadata(1);
+
+            const artist: Artist = {
+                id: 1,
+                metadata,
+                name: "foo",
+                namespace: "dev",
+            };
+
+            const songs: Song[] = [
+                {
+                    id: 1,
+                    albumId: 1,
+                    artistId: 1,
+                    artist,
+                    duration: 100,
+                    metadata,
+                    name: "bar",
+                    namespace: "dev",
+                },
+                {
+                    id: 2,
+                    albumId: 1,
+                    artistId: 1,
+                    artist,
+                    duration: 100,
+                    metadata,
+                    name: "baz",
+                    namespace: "dev",
+                },
+            ];
+
+            const updateSong = repository.useUpdateSong();
+            const updateArtist = repository.useUpdateArtist();
+
+            // act
+            await workspace.in(SongBlueprint).select({ artist: true }).save(songs);
+
+            // assert
+            expect(updateSong).toHaveBeenCalledTimes(2);
+            expect(updateArtist).toHaveBeenCalledTimes(1);
+        });
+
+        it("with previous entities", async () => {
+            // arrange
+            const metadata = createMetadata(1);
+
+            const artist: Artist = {
+                id: 1,
+                metadata,
+                name: "foo",
+                namespace: "dev",
+            };
+
+            const songs: Song[] = [
+                {
+                    id: 1,
+                    albumId: 1,
+                    artistId: 1,
+                    artist,
+                    duration: 100,
+                    metadata,
+                    name: "bar",
+                    namespace: "dev",
+                },
+                {
+                    id: 2,
+                    albumId: 1,
+                    artistId: 1,
+                    artist,
+                    duration: 100,
+                    metadata,
+                    name: "baz",
+                    namespace: "dev",
+                },
+            ];
+
+            const updatedArtist = structuredClone(artist);
+            const updatedSongs = structuredClone(songs);
+
+            updatedArtist.name = `${updatedArtist.name} (updated)`;
+
+            for (const song of updatedSongs) {
+                song.artist = updatedArtist;
+                song.name = `${song.name} (updated)`;
+            }
+
+            const updateSong = repository.useUpdateSong();
+            const updateArtist = repository.useUpdateArtist();
+
+            // act
+            await workspace.in(SongBlueprint).select({ artist: true }).save(updatedSongs, songs);
+
+            // assert
+            expect(updateSong).toHaveBeenCalledTimes(2);
+            expect(updateArtist).toHaveBeenCalledTimes(1);
         });
     });
 });

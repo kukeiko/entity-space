@@ -235,7 +235,11 @@ export function toEntityChanges(mutation: EntityMutation): EntityChanges | undef
     const changes: EntityChange[] = [];
 
     if (previous !== undefined && type.includes("delete")) {
-        changes.push(...getRemoved(schema, entities, selection, previous, mutation.getType() === "delete"));
+        const deleted = uniqBy(
+            getRemoved(schema, entities, selection, previous, mutation.getType() === "delete"),
+            change => change.getEntity(),
+        );
+        changes.push(...deleted);
     }
 
     if (type.includes("create")) {
@@ -244,7 +248,8 @@ export function toEntityChanges(mutation: EntityMutation): EntityChanges | undef
     }
 
     if (type.includes("update")) {
-        changes.push(...getUpdated(schema, entities, selection, previous));
+        const updated = uniqBy(getUpdated(schema, entities, selection, previous), change => change.getEntity());
+        changes.push(...updated);
     }
 
     return changes.length ? new EntityChanges(schema, selection, changes, entities, previous) : undefined;

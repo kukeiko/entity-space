@@ -65,6 +65,7 @@ export class ExplicitEntityMutator extends EntityMutator {
             return [undefined, changes];
         } else {
             const acceptedSelection = intersectRelationSelection(changes.getSelection(path), this.#selection);
+            const previous = changes.getPrevious(path);
 
             return [
                 new AcceptedEntityMutation(
@@ -73,7 +74,7 @@ export class ExplicitEntityMutator extends EntityMutator {
                     dependencies,
                     mutation => this.mutate(mutation),
                     acceptedSelection,
-                    changes.getPrevious(path),
+                    previous ? uniq(previous) : undefined,
                 ),
                 open,
             ];

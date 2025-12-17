@@ -33,7 +33,7 @@ function spliceMatchingEntityBySmallestDifference(
     let best: { index: number; difference: number } | undefined;
 
     for (let index = 0; index < entitiesB.length; index++) {
-        const diff = getEntityDifference(schema, entityA, entitiesB[index])
+        const diff = getEntityDifference(schema, entityA, entitiesB[index]);
         const difference = countProperties(diff);
 
         if (best === undefined || difference < best.difference) {
@@ -65,6 +65,7 @@ function toEntityPairsBySmallestDifference(
     return pairs;
 }
 
+// [todo] ❌ is faulty if same entity occurs twice - there is no test yet that checks for that
 export function toEntityPairs(
     schema: EntitySchema,
     a: readonly Entity[],
