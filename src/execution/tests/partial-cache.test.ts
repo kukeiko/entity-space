@@ -2,7 +2,7 @@ import { User, UserBlueprint } from "@entity-space/elements/testing";
 import { beforeEach, describe, expect, it } from "vitest";
 import { EntityWorkspace } from "../entity-workspace";
 import { TestFacade, TestRepository } from "../testing";
-import { createMetadata } from "../testing/default-entities";
+import { createMetadata } from "../testing/create-metadata.fn";
 
 describe("a partial cache", () => {
     let facade: TestFacade;
@@ -22,9 +22,9 @@ describe("a partial cache", () => {
             { id: 2, name: "Susi Sonne", metadata: createMetadata(3) },
         ];
 
-        repository.useEntities({ users });
-        repository.useLoadUserById();
-        repository.useHydrateUserCreatedByName();
+        repository.useCommon().useEntities({ users });
+        repository.useCommon().useLoadUserById();
+        repository.useCommon().useHydrateUserCreatedByName();
 
         // act
         // first we're loading "Mara Mauzi" into the cache

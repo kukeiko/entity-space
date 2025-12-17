@@ -40,8 +40,8 @@ describe("get()", () => {
                 .select({ metadata: { createdBy: true } })
                 .get();
 
-        repository.useEntities({ users });
-        repository.useLoadUserById();
+        repository.useCommon().useEntities({ users });
+        repository.useCommon().useLoadUserById();
 
         // act
         const loadedFromSource = await load();
@@ -82,8 +82,8 @@ describe("get()", () => {
             .slice(0, 1)
             .map(user => ({ ...user, metadata: { ...user.metadata, createdBy: users[2], updatedBy: users[2] } }));
 
-        repository.useEntities({ users });
-        repository.useLoadAllUsers();
+        repository.useCommon().useEntities({ users });
+        repository.useCommon().useLoadAllUsers();
 
         // act
         const actual = await workspace
@@ -117,8 +117,8 @@ describe("get()", () => {
         ];
 
         const expected = users.slice(0, 2);
-        repository.useEntities({ users });
-        repository.useLoadAllUsers();
+        repository.useCommon().useEntities({ users });
+        repository.useCommon().useLoadAllUsers();
 
         // act
         const actual = await workspace
@@ -183,12 +183,13 @@ describe("get()", () => {
 
         const songTags: SongTag[] = [{ songId: 1, tagId: "upbeat" }];
 
-        repository.useEntities({ artists, songs, tags, users, songTags });
-        repository.useLoadArtistById();
-        repository.useLoadSongsByArtistId();
-        repository.useHydrateSongTagIds();
-        repository.useLoadUserById();
-        repository.useLoadTagById();
+        repository.useCommon().useEntities({ users });
+        repository.useCommon().useLoadUserById();
+        repository.useMusic().useEntities({ artists, songs, tags, songTags });
+        repository.useMusic().useLoadArtistById();
+        repository.useMusic().useLoadSongsByArtistId();
+        repository.useMusic().useHydrateSongTagIds();
+        repository.useMusic().useLoadTagById();
 
         // act
         const artist = await workspace

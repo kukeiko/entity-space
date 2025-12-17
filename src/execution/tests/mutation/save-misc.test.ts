@@ -14,7 +14,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { EntityWorkspace } from "../../entity-workspace";
 import { CreateEntityFn } from "../../mutation/entity-mutation-function.type";
 import { TestFacade, TestRepository } from "../../testing";
-import { createMetadata } from "../../testing/default-entities";
+import { createMetadata } from "../../testing/create-metadata.fn";
 
 describe("save()", () => {
     let facade: TestFacade;
@@ -94,8 +94,8 @@ describe("save()", () => {
             },
         ];
 
-        const createSong = repository.useCreateSong();
-        const createArtist = repository.useCreateArtist();
+        const createSong = repository.useMusic().useCreateSong();
+        const createArtist = repository.useMusic().useCreateArtist();
 
         // act
         const actual = await workspace.in(SongBlueprint).select({ artist: true }).save(songs);
@@ -149,8 +149,8 @@ describe("save()", () => {
                 },
             ];
 
-            const updateSong = repository.useUpdateSong();
-            const updateArtist = repository.useUpdateArtist();
+            const updateSong = repository.useMusic().useUpdateSong();
+            const updateArtist = repository.useMusic().useUpdateArtist();
 
             // act
             await workspace.in(SongBlueprint).select({ artist: true }).save(songs);
@@ -204,8 +204,8 @@ describe("save()", () => {
                 song.name = `${song.name} (updated)`;
             }
 
-            const updateSong = repository.useUpdateSong();
-            const updateArtist = repository.useUpdateArtist();
+            const updateSong = repository.useMusic().useUpdateSong();
+            const updateArtist = repository.useMusic().useUpdateArtist();
 
             // act
             await workspace.in(SongBlueprint).select({ artist: true }).save(updatedSongs, songs);
@@ -217,7 +217,7 @@ describe("save()", () => {
     });
 
     it("should recognize changes on embedded arrays", async () => {
-        const updateItems = repository.useUpdateItems(updatedAt);
+        const updateItems = repository.useRpg().useUpdateItems(updatedAt);
 
         // arrange
         const windforceOriginal: Item = {
@@ -273,8 +273,8 @@ describe("save()", () => {
 
     it("should do nothing if there is no difference in updatable changes", async () => {
         // arrange
-        const updateItems = repository.useUpdateItems(updatedAt);
-        const updateItemSockets = repository.useUpdateItemSockets(updatedAt);
+        const updateItems = repository.useRpg().useUpdateItems(updatedAt);
+        const updateItemSockets = repository.useRpg().useUpdateItemSockets(updatedAt);
 
         const windforce: Item = {
             id: 1,
@@ -471,15 +471,15 @@ describe("save()", () => {
         const items: ItemSavable[] = [windforce, shako];
         const previous: Item[] = [previousShako, wizardSpike];
 
-        const createItems = repository.useCreateItems(createdAt);
-        const updateItems = repository.useUpdateItems(updatedAt);
-        const deleteItems = repository.useDeleteItems();
-        const createItemSockets = repository.useCreateItemSockets(createdAt);
-        const updateItemSockets = repository.useUpdateItemSockets(updatedAt);
-        const deleteItemSocket = repository.useDeleteItemSockets();
-        const createItemAttributeTypes = repository.useCreateItemAttributeTypes(createdAt);
-        const updateItemAttributeTypes = repository.useUpdateItemAttributeTypes(updatedAt);
-        const deleteItemAttributeTypes = repository.useDeleteItemAttributeTypes();
+        const createItems = repository.useRpg().useCreateItems(createdAt);
+        const updateItems = repository.useRpg().useUpdateItems(updatedAt);
+        const deleteItems = repository.useRpg().useDeleteItems();
+        const createItemSockets = repository.useRpg().useCreateItemSockets(createdAt);
+        const updateItemSockets = repository.useRpg().useUpdateItemSockets(updatedAt);
+        const deleteItemSocket = repository.useRpg().useDeleteItemSockets();
+        const createItemAttributeTypes = repository.useRpg().useCreateItemAttributeTypes(createdAt);
+        const updateItemAttributeTypes = repository.useRpg().useUpdateItemAttributeTypes(updatedAt);
+        const deleteItemAttributeTypes = repository.useRpg().useDeleteItemAttributeTypes();
 
         // act
         await workspace

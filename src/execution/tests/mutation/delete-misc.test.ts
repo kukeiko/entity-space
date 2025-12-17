@@ -2,7 +2,7 @@ import { Artist, Item, ItemBlueprint, Song, SongBlueprint } from "@entity-space/
 import { beforeEach, describe, expect, it } from "vitest";
 import { EntityWorkspace } from "../../entity-workspace";
 import { TestFacade, TestRepository } from "../../testing";
-import { createMetadata } from "../../testing/default-entities";
+import { createMetadata } from "../../testing/create-metadata.fn";
 
 describe("delete()", () => {
     let facade: TestFacade;
@@ -52,8 +52,8 @@ describe("delete()", () => {
             },
         ];
 
-        const deleteSong = repository.useDeleteSong();
-        const deleteArtist = repository.useDeleteArtist();
+        const deleteSong = repository.useMusic().useDeleteSong();
+        const deleteArtist = repository.useMusic().useDeleteArtist();
 
         // act
         await workspace.in(SongBlueprint).select({ artist: true }).delete(songs);
@@ -105,9 +105,9 @@ describe("delete()", () => {
             ],
         };
 
-        const deleteItems = repository.useDeleteItems();
-        const deleteItemSockets = repository.useDeleteItemSockets();
-        const deleteItemAttributeTypes = repository.useDeleteItemAttributeTypes();
+        const deleteItems = repository.useRpg().useDeleteItems();
+        const deleteItemSockets = repository.useRpg().useDeleteItemSockets();
+        const deleteItemAttributeTypes = repository.useRpg().useDeleteItemAttributeTypes();
 
         // act
         await workspace

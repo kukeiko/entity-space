@@ -1,4 +1,4 @@
-import { EntityBlueprint } from "../entity/entity-blueprint";
+import { EntityBlueprint } from "../../entity/entity-blueprint";
 import { RecordMetadataBlueprint } from "./record-metadata.model";
 
 const { register, id, string, entity, optional } = EntityBlueprint;

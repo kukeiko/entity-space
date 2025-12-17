@@ -83,7 +83,7 @@ describe("save() creates many entities", () => {
 
         it("using a save mutator", async () => {
             // arrange
-            const saveItems = repository.useSaveItems(createdAt, updatedAt);
+            const saveItems = repository.useRpg().useSaveItems(createdAt, updatedAt);
 
             // act
             const saved = await workspace.in(ItemBlueprint).save(windforce.input);
@@ -96,7 +96,7 @@ describe("save() creates many entities", () => {
 
         it("using a create mutator", async () => {
             // arrange
-            const createItems = repository.useCreateItems(createdAt);
+            const createItems = repository.useRpg().useCreateItems(createdAt);
 
             // act
             const saved = await workspace.in(ItemBlueprint).save(windforce.input);

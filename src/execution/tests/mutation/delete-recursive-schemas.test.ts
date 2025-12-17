@@ -19,8 +19,8 @@ describe("delete()", () => {
 
     it("should work for recursive embedded relations", async () => {
         // arrange
-        const deleteTrees = repository.useDeleteTrees();
-        const deleteUsers = repository.useDeleteUsers();
+        const deleteTrees = repository.useTree().useDeleteTrees();
+        const deleteUsers = repository.useCommon().useDeleteUsers();
 
         const createdBy: User = {
             id: 1,
@@ -155,9 +155,9 @@ describe("delete()", () => {
 
     it("should work for recursive joined relations", async () => {
         // arrange
-        const deleteFolders = repository.useDeleteFolders();
-        const saveFiles = repository.useDeleteFiles();
-        const saveUsers = repository.useDeleteUsers();
+        const deleteFolders = repository.useFileSystem().useDeleteFolders();
+        const saveFiles = repository.useFileSystem().useDeleteFiles();
+        const saveUsers = repository.useCommon().useDeleteUsers();
 
         const createdBy: User = {
             id: 1,

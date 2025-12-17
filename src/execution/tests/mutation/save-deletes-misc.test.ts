@@ -20,7 +20,7 @@ describe("dave()", () => {
     describe("should delete children only if empty array is provided explicitly", () => {
         it("empty array is provided", async () => {
             // arrange
-            const deleteItemSocket = repository.useDeleteItemSockets();
+            const deleteItemSocket = repository.useRpg().useDeleteItemSockets();
 
             const windforce: ItemUpdatable = {
                 id: 1,
@@ -69,7 +69,7 @@ describe("dave()", () => {
 
         it("empty array is omitted", async () => {
             // arrange
-            const deleteItemSocket = repository.useDeleteItemSockets();
+            const deleteItemSocket = repository.useRpg().useDeleteItemSockets();
 
             const windforce: ItemUpdatable = {
                 id: 1,

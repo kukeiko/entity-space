@@ -37,8 +37,8 @@ describe("save()", () => {
             },
         };
 
-        const createProduct = repository.useCreateProduct();
-        const createWashingMachine = repository.useCreateWashingMachine();
+        const createProduct = repository.useShopping().useCreateProduct();
+        const createWashingMachine = repository.useShopping().useCreateWashingMachine();
 
         // act
         const actual = await workspace.in(WashingMachineBlueprint).select({ product: true }).save(washingMachine);
@@ -79,8 +79,8 @@ describe("save()", () => {
             },
         };
 
-        const createProduct = repository.useCreateProduct();
-        const createWashingMachine = repository.useCreateWashingMachine();
+        const createProduct = repository.useShopping().useCreateProduct();
+        const createWashingMachine = repository.useShopping().useCreateWashingMachine();
 
         // act
         const actual = await workspace.in(ProductBlueprint).select({ washingMachine: true }).save(product);

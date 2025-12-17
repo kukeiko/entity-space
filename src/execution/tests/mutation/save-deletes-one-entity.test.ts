@@ -51,7 +51,7 @@ describe("save() deletes one entity", () => {
 
         it("using a delete mutator", async () => {
             // arrange
-            const deleteItems = repository.useDeleteItems();
+            const deleteItems = repository.useRpg().useDeleteItems();
 
             // act
             const saved = await workspace.in(ItemBlueprint).save([], [windforce.input]);
@@ -110,8 +110,8 @@ describe("save() deletes one entity", () => {
 
         it("using a delete mutator", async () => {
             // arrange
-            const deleteItems = repository.useDeleteItems();
-            const deleteItemSockets = repository.useDeleteItemSockets();
+            const deleteItems = repository.useRpg().useDeleteItems();
+            const deleteItemSockets = repository.useRpg().useDeleteItemSockets();
 
             // act
             const saved = await workspace.in(ItemBlueprint).select({ sockets: true }).save([], [windforce.input]);

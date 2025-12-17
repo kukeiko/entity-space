@@ -1,5 +1,5 @@
 import { EntityBlueprint } from "../../entity/entity-blueprint";
-import { RecordMetadataBlueprint } from "../record-metadata.model";
+import { RecordMetadataBlueprint } from "../common/record-metadata.model";
 import { FolderBlueprint } from "./folder.model";
 
 const { register, id, string, number, entity } = EntityBlueprint;

@@ -49,8 +49,8 @@ describe("hydrate()", () => {
             metadata: { ...user.metadata, createdBy: getUserById(user.metadata.createdById) },
         }));
 
-        repository.useEntities({ users });
-        repository.useLoadUserById();
+        repository.useCommon().useEntities({ users });
+        repository.useCommon().useLoadUserById();
 
         // act
         const actual = await workspace

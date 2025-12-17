@@ -1,7 +1,7 @@
-import { EntityBlueprint } from "../entity/entity-blueprint";
+import { EntityBlueprint } from "../../entity/entity-blueprint";
 import { AlbumBlueprint } from "./album.model";
 import { ArtistBlueprint } from "./artist.model";
-import { RecordMetadataBlueprint } from "./record-metadata.model";
+import { RecordMetadataBlueprint } from "../common/record-metadata.model";
 import { SongTagBlueprint } from "./song-tag.model";
 import { TagBlueprint } from "./tag.model";
 

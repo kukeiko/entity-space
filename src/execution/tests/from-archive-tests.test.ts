@@ -3,7 +3,7 @@ import { Artist, ArtistBlueprint, Song, SongBlueprint, SongTag, Tag } from "@ent
 import { beforeEach, describe, expect, it } from "vitest";
 import { EntityWorkspace } from "../entity-workspace";
 import { TestFacade, TestRepository } from "../testing";
-import { createMetadata } from "../testing/default-entities";
+import { createMetadata } from "../testing/create-metadata.fn";
 
 describe("[from archive] system supports", () => {
     let facade: TestFacade;
@@ -96,10 +96,8 @@ describe("[from archive] system supports", () => {
         ];
 
         tags = [{ id: "upbeat", name: "Upbeat" }];
-
         songTags = [{ songId: 10, tagId: "upbeat" }];
-
-        repository.useEntities({ artists, songs, songTags, tags });
+        repository.useMusic().useEntities({ artists, songs, songTags, tags });
     });
 
     describe("finding one entity by id", () => {
@@ -107,7 +105,7 @@ describe("[from archive] system supports", () => {
             // arrange
             const expected = artists[0];
             const id = expected.id;
-            const loadArtistById = repository.useLoadArtistById();
+            const loadArtistById = repository.useMusic().useLoadArtistById();
 
             // act
             const actual = await workspace.from(ArtistBlueprint).select({ country: true }).where({ id }).findOne();
@@ -121,7 +119,7 @@ describe("[from archive] system supports", () => {
             // arrange
             const expected = artists[0];
             const id = expected.id;
-            const loadArtistById = repository.useLoadArtistById();
+            const loadArtistById = repository.useMusic().useLoadArtistById();
 
             // act
             await workspace.from(ArtistBlueprint).select({ country: true }).where({ id }).cache(true).findOne(); // load into cache
@@ -136,7 +134,7 @@ describe("[from archive] system supports", () => {
             // arrange
             const expected = artists[0];
             const id = expected.id;
-            const loadArtistById = repository.useLoadArtistById();
+            const loadArtistById = repository.useMusic().useLoadArtistById();
             const ids = artists.map(artist => artist.id);
 
             // act
@@ -176,8 +174,8 @@ describe("[from archive] system supports", () => {
                         artist: artists.find(artist => artist.id === song.artistId)!,
                     };
                     const id = expected.id;
-                    const loadSongById = repository.useLoadSongById();
-                    const loadArtistById = repository.useLoadArtistById();
+                    const loadSongById = repository.useMusic().useLoadSongById();
+                    const loadArtistById = repository.useMusic().useLoadArtistById();
 
                     // act
                     const actual = await workspace
@@ -204,8 +202,8 @@ describe("[from archive] system supports", () => {
                             .sort((a, b) => a.name.localeCompare(b.name)),
                     };
                     const id = expected.id;
-                    const loadArtistById = repository.useLoadArtistById();
-                    const loadSongsByArtistId = repository.useLoadSongsByArtistId();
+                    const loadArtistById = repository.useMusic().useLoadArtistById();
+                    const loadSongsByArtistId = repository.useMusic().useLoadSongsByArtistId();
 
                     // act
                     const actual = await workspace
@@ -227,11 +225,11 @@ describe("[from archive] system supports", () => {
             const artist = artists[0];
             const expected: SelectEntity<Artist, { title: true }> = {
                 ...artist,
-                title: repository.toArtistTitle(artist),
+                title: repository.useMusic().toArtistTitle(artist),
             };
             const id = expected.id;
-            const loadArtistById = repository.useLoadArtistById();
-            const hydrateArtistTitle = repository.useHydrateArtistTitle();
+            const loadArtistById = repository.useMusic().useLoadArtistById();
+            const hydrateArtistTitle = repository.useMusic().useHydrateArtistTitle();
 
             // act
             const actual = await workspace.from(ArtistBlueprint).where({ id }).select({ title: true }).findOne();
@@ -249,7 +247,7 @@ describe("[from archive] system supports", () => {
                 // arrange
                 const expected = artists.slice();
                 const id = expected.map(artist => artist.id);
-                const loadArtistsById = repository.useLoadArtistsByIds();
+                const loadArtistsById = repository.useMusic().useLoadArtistsByIds();
 
                 // act
                 const actual = await workspace.from(ArtistBlueprint).where({ id }).get();
@@ -263,7 +261,7 @@ describe("[from archive] system supports", () => {
                 // arrange
                 const expected = artists.slice();
                 const id = expected.map(artist => artist.id);
-                const loadArtistsById = repository.useLoadArtistsByIds();
+                const loadArtistsById = repository.useMusic().useLoadArtistsByIds();
 
                 // act
                 await workspace.from(ArtistBlueprint).where({ id }).cache(true).get(); // load into cache
@@ -280,7 +278,7 @@ describe("[from archive] system supports", () => {
                 const loadIntoCacheId = artists[0].id;
                 const id = expected.map(artist => artist.id);
                 const expectedLoadFromSourceIds = id.filter(id => id !== loadIntoCacheId);
-                const loadArtistsById = repository.useLoadArtistsByIds();
+                const loadArtistsById = repository.useMusic().useLoadArtistsByIds();
 
                 // act
                 await workspace.from(ArtistBlueprint).where({ id: loadIntoCacheId }).cache(true).get();
@@ -314,7 +312,7 @@ describe("[from archive] system supports", () => {
                 // arrange
                 const expected = artists.slice();
                 const id = expected.map(artist => artist.id);
-                const loadArtistById = repository.useLoadArtistById();
+                const loadArtistById = repository.useMusic().useLoadArtistById();
 
                 // act
                 const actual = await workspace.from(ArtistBlueprint).select({ country: true }).where({ id }).get();
@@ -328,7 +326,7 @@ describe("[from archive] system supports", () => {
                 // arrange
                 const expected = artists.slice();
                 const id = expected.map(artist => artist.id);
-                const loadArtistById = repository.useLoadArtistById();
+                const loadArtistById = repository.useMusic().useLoadArtistById();
 
                 // act
                 await workspace.from(ArtistBlueprint).select({ country: true }).where({ id }).cache(true).get(); // load into cache
@@ -385,13 +383,13 @@ describe("[from archive] system supports", () => {
             ...artist,
             // [todo] ❓ we cannot just use "findLongestSong()" as the Select removes "undefined", meaning that we expect a hydrated property
             // to never be able to be undefined. That is fine if we enforce the user to use "null" instead, but that has some DX implications.
-            longestSong: repository.getLongestSong(songs.filter(song => song.artistId === artist.id)),
+            longestSong: repository.useMusic().getLongestSong(songs.filter(song => song.artistId === artist.id)),
             songs: songs.filter(song => song.artistId === artist.id).sort((a, b) => a.name.localeCompare(b.name)),
         };
         const id = expected.id;
-        const loadArtistById = repository.useLoadArtistById();
-        const loadSongsByArtistId = repository.useLoadSongsByArtistId();
-        const hydrateArtistLongestSong = repository.useHydrateArtistLongestSong();
+        const loadArtistById = repository.useMusic().useLoadArtistById();
+        const loadSongsByArtistId = repository.useMusic().useLoadSongsByArtistId();
+        const hydrateArtistLongestSong = repository.useMusic().useHydrateArtistLongestSong();
 
         // act
         const actual = await workspace
@@ -427,11 +425,11 @@ describe("[from archive] system supports", () => {
         const songTagIds = Array.from(new Set(expected.songs?.flatMap(song => song.tagIds ?? []) ?? []));
         expected.songTags = tags.filter(tag => songTagIds.includes(tag.id));
         const id = expected.id;
-        const loadArtistById = repository.useLoadArtistById();
-        const loadSongsByArtistId = repository.useLoadSongsByArtistId();
-        repository.useLoadTagById();
-        repository.useHydrateSongTagIds();
-        repository.useHydrateArtistSongTags();
+        const loadArtistById = repository.useMusic().useLoadArtistById();
+        const loadSongsByArtistId = repository.useMusic().useLoadSongsByArtistId();
+        repository.useMusic().useLoadTagById();
+        repository.useMusic().useHydrateSongTagIds();
+        repository.useMusic().useHydrateArtistSongTags();
 
         // act
         const actual = await workspace

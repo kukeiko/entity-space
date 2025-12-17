@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { EntityWorkspace } from "../../entity-workspace";
 import { CreateEntityFn } from "../../mutation/entity-mutation-function.type";
 import { TestFacade, TestRepository } from "../../testing";
-import { createMetadata } from "../../testing/default-entities";
+import { createMetadata } from "../../testing/create-metadata.fn";
 
 describe("save()", () => {
     let facade: TestFacade;
@@ -47,8 +47,8 @@ describe("save()", () => {
             ],
         };
 
-        const createSong = repository.useCreateSong();
-        const createSongTag = repository.useCreateSongTag();
+        const createSong = repository.useMusic().useCreateSong();
+        const createSongTag = repository.useMusic().useCreateSongTag();
 
         // act
         const actual = await workspace.in(SongBlueprint).select({ songTags: true }).save(song);
@@ -104,8 +104,8 @@ describe("save()", () => {
             { songId: 1, tagId: "trippy", songs: [expectedSong] },
         ];
 
-        const createSongTag = repository.useCreateSongTag();
-        const createSong = repository.useCreateSong();
+        const createSongTag = repository.useMusic().useCreateSongTag();
+        const createSong = repository.useMusic().useCreateSong();
 
         // act
         const actual = await workspace.in(SongTagBlueprint).select({ songs: true }).save(songTags);

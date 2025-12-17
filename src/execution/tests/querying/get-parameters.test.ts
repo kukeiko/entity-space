@@ -56,9 +56,9 @@ describe("get()", () => {
                 .cache(true)
                 .get();
 
-        repository.useEntities({ users });
-        repository.useLoadUsersByRequest();
-        repository.useLoadUserById();
+        repository.useCommon().useEntities({ users });
+        repository.useCommon().useLoadUsersByRequest();
+        repository.useCommon().useLoadUserById();
 
         // act
         const loadedFromSource = await load();

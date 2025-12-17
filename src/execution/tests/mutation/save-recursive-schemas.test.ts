@@ -24,8 +24,8 @@ describe("save()", () => {
 
     it("should work for recursive embedded relations", async () => {
         // arrange
-        const saveTrees = repository.useSaveTrees();
-        const saveUsers = repository.useSaveUsers();
+        const saveTrees = repository.useTree().useSaveTrees();
+        const saveUsers = repository.useCommon().useSaveUsers();
 
         const createdBy: UserSavable = {
             name: "Susi Sonne",
@@ -108,9 +108,9 @@ describe("save()", () => {
 
     it("should work for recursive joined relations", async () => {
         // arrange
-        const saveFolders = repository.useSaveFolders();
-        const saveFiles = repository.useSaveFiles();
-        const saveUsers = repository.useSaveUsers();
+        const saveFolders = repository.useFileSystem().useSaveFolders();
+        const saveFiles = repository.useFileSystem().useSaveFiles();
+        const saveUsers = repository.useCommon().useSaveUsers();
 
         const createdBy: UserSavable = {
             name: "Susi Sonne",

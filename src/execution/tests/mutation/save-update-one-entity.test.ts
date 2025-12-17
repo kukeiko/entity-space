@@ -56,7 +56,7 @@ describe("save() updates one entity", () => {
 
         it("using a save mutator", async () => {
             // arrange
-            const saveItems = repository.useSaveItems(createdAt, updatedAt);
+            const saveItems = repository.useRpg().useSaveItems(createdAt, updatedAt);
 
             // act
             const saved = await workspace.in(ItemBlueprint).save(windforce.input);
@@ -69,7 +69,7 @@ describe("save() updates one entity", () => {
 
         it("using an update mutator", async () => {
             // arrange
-            const updateItems = repository.useUpdateItems(updatedAt);
+            const updateItems = repository.useRpg().useUpdateItems(updatedAt);
 
             // act
             const saved = await workspace.in(ItemBlueprint).save(windforce.input);
@@ -128,8 +128,8 @@ describe("save() updates one entity", () => {
 
         it("using a save mutator", async () => {
             // arrange
-            const saveItems = repository.useSaveItems(createdAt, updatedAt);
-            const saveItemTypes = repository.useSaveItemTypes();
+            const saveItems = repository.useRpg().useSaveItems(createdAt, updatedAt);
+            const saveItemTypes = repository.useRpg().useSaveItemTypes();
 
             // act
             const saved = await workspace.in(ItemBlueprint).select({ type: true }).save(windforce.input);
@@ -149,8 +149,8 @@ describe("save() updates one entity", () => {
 
         it("using an update and a create mutator", async () => {
             // arrange
-            const updateItems = repository.useUpdateItems(updatedAt);
-            const createItemTypes = repository.useCreateItemTypes();
+            const updateItems = repository.useRpg().useUpdateItems(updatedAt);
+            const createItemTypes = repository.useRpg().useCreateItemTypes();
 
             // act
             const saved = await workspace.in(ItemBlueprint).select({ type: true }).save(windforce.input);
@@ -216,8 +216,8 @@ describe("save() updates one entity", () => {
 
         it("using a save mutator", async () => {
             // arrange
-            const saveItems = repository.useSaveItems(createdAt, updatedAt);
-            const saveItemTypes = repository.useSaveItemTypes();
+            const saveItems = repository.useRpg().useSaveItems(createdAt, updatedAt);
+            const saveItemTypes = repository.useRpg().useSaveItemTypes();
 
             // act
             const saved = await workspace.in(ItemBlueprint).select({ type: true }).save(windforce.input);
@@ -237,8 +237,8 @@ describe("save() updates one entity", () => {
 
         it("using an update mutator", async () => {
             // arrange
-            const updateItems = repository.useUpdateItems(updatedAt);
-            const updateItemTypes = repository.useUpdateItemTypes();
+            const updateItems = repository.useRpg().useUpdateItems(updatedAt);
+            const updateItemTypes = repository.useRpg().useUpdateItemTypes();
 
             // act
             const saved = await workspace.in(ItemBlueprint).select({ type: true }).save(windforce.input);
@@ -311,8 +311,8 @@ describe("save() updates one entity", () => {
 
         it("using a save mutator", async () => {
             // arrange
-            const saveItems = repository.useSaveItems(createdAt, updatedAt);
-            const saveItemSockets = repository.useSaveItemSockets(createdAt, updatedAt);
+            const saveItems = repository.useRpg().useSaveItems(createdAt, updatedAt);
+            const saveItemSockets = repository.useRpg().useSaveItemSockets(createdAt, updatedAt);
 
             // act
             const saved = await workspace.in(ItemBlueprint).select({ sockets: true }).save(windforce.input);
@@ -329,8 +329,8 @@ describe("save() updates one entity", () => {
 
         it("using an update and a create mutator", async () => {
             // arrange
-            const updateItems = repository.useUpdateItems(updatedAt);
-            const createItemSockets = repository.useCreateItemSockets(createdAt);
+            const updateItems = repository.useRpg().useUpdateItems(updatedAt);
+            const createItemSockets = repository.useRpg().useCreateItemSockets(createdAt);
 
             // act
             const saved = await workspace.in(ItemBlueprint).select({ sockets: true }).save(windforce.input);
@@ -400,8 +400,8 @@ describe("save() updates one entity", () => {
 
         it("using a save mutator", async () => {
             // arrange
-            const saveItems = repository.useSaveItems(createdAt, updatedAt);
-            const saveItemSockets = repository.useSaveItemSockets(createdAt, updatedAt);
+            const saveItems = repository.useRpg().useSaveItems(createdAt, updatedAt);
+            const saveItemSockets = repository.useRpg().useSaveItemSockets(createdAt, updatedAt);
 
             // act
             const saved = await workspace.in(ItemBlueprint).select({ sockets: true }).save(windforce.input);
@@ -418,8 +418,8 @@ describe("save() updates one entity", () => {
 
         it("using an update mutator", async () => {
             // arrange
-            const createItems = repository.useUpdateItems(updatedAt);
-            const updateItemSockets = repository.useUpdateItemSockets(updatedAt);
+            const createItems = repository.useRpg().useUpdateItems(updatedAt);
+            const updateItemSockets = repository.useRpg().useUpdateItemSockets(updatedAt);
 
             // act
             const saved = await workspace.in(ItemBlueprint).select({ sockets: true }).save(windforce.input);
@@ -501,7 +501,7 @@ describe("save() updates one entity", () => {
 
         it("using a save mutator", async () => {
             // arrange
-            const saveItems = repository.useSaveItems(createdAt, updatedAt, true);
+            const saveItems = repository.useRpg().useSaveItems(createdAt, updatedAt, true);
 
             // act
             const saved = await workspace
@@ -534,8 +534,8 @@ describe("save() updates one entity", () => {
 
         it("using a save mutator and a delete mutator", async () => {
             // arrange
-            const saveItems = repository.useSaveItems(createdAt, updatedAt);
-            const deleteItemSockets = repository.useDeleteItemSockets();
+            const saveItems = repository.useRpg().useSaveItems(createdAt, updatedAt);
+            const deleteItemSockets = repository.useRpg().useDeleteItemSockets();
 
             // act
             const saved = await workspace
@@ -555,8 +555,8 @@ describe("save() updates one entity", () => {
 
         it("using an update and a delete mutator", async () => {
             // arrange
-            const saveItems = repository.useUpdateItems(updatedAt);
-            const deleteItemSockets = repository.useDeleteItemSockets();
+            const saveItems = repository.useRpg().useUpdateItems(updatedAt);
+            const deleteItemSockets = repository.useRpg().useDeleteItemSockets();
 
             // act
             const saved = await workspace
