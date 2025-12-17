@@ -1,6 +1,6 @@
 {
     "name": "@entity-space/elements",
-    "version": "0.7.0-alpha.5",
+    "version": "0.7.0-alpha.6",
     "license": "MIT",
     "repository": {
         "type": "git",
@@ -12,8 +12,8 @@
         "require": "./cjs/index.js"
     },
     "dependencies": {
-        "@entity-space/lexer": "0.7.0-alpha.5",
-        "@entity-space/utils": "0.7.0-alpha.5",
+        "@entity-space/lexer": "0.7.0-alpha.6",
+        "@entity-space/utils": "0.7.0-alpha.6",
         "lodash": "4.17.21"
     }
 }

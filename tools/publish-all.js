@@ -10,7 +10,7 @@ function publishPackage(pkgDir) {
     const pkgJsonPath = join(fullPath, "package.json");
 
     if (!existsSync(pkgJsonPath)) {
-        console.warn(`⚠️  Skipping ${pkgDir}: no package.json found`);
+        console.warn(`⚠️ Skipping ${pkgDir}: no package.json found`);
         return;
     }
 
