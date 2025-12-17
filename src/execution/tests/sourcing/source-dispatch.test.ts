@@ -14,6 +14,8 @@ describe("source dispatch", () => {
         workspace = facade.getWorkspace();
     });
 
+    // [todo] ❌ add test "prefer sources that filter by unique values"
+
     it("should dispatch query w/o any criteria to a source that only accepts optional relational criteria", async () => {
         // arrange
         const load = vi.fn(() => []);

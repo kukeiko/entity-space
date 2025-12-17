@@ -1,19 +1,9 @@
-import {
-    Artist,
-    ArtistBlueprint,
-    Song,
-    SongTag,
-    Tag,
-    User,
-    UserBlueprint,
-    UserRequestBlueprint,
-} from "@entity-space/elements/testing";
+import { Artist, ArtistBlueprint, Song, SongTag, Tag, User, UserBlueprint } from "@entity-space/elements/testing";
 import { beforeEach, describe, expect, it } from "vitest";
-import { EntityWorkspace } from "./entity-workspace";
-import { TestFacade } from "./testing/test-facade";
-import { TestRepository } from "./testing/test-repository";
+import { EntityWorkspace } from "../../entity-workspace";
+import { TestFacade, TestRepository } from "../../testing";
 
-describe("execution", () => {
+describe("get()", () => {
     let facade: TestFacade;
     let repository: TestRepository;
     let workspace: EntityWorkspace;
@@ -60,7 +50,87 @@ describe("execution", () => {
         expect(loadedFromSource).toStrictEqual(expected);
     });
 
-    it("should work", async () => {
+    it.skip("should only return entities that are hydrated according to the selection", async () => {
+        // [todo] ❌ this test is no longer valid as i've changed joinEntities() to provide a default value
+        // (null in case of nullable, [] in case of array)
+        // arrange
+        const users: User[] = [
+            {
+                // we're expecting to only receive "Susi Sonne"
+                id: 1,
+                name: "Susi Sonne",
+                metadata: {
+                    createdById: 3,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    updatedById: 3,
+                },
+            },
+            {
+                id: 2,
+                name: "Mara Mauzi",
+                metadata: { createdById: 3, createdAt: new Date().toISOString(), updatedAt: null, updatedById: null },
+            },
+            {
+                id: 3,
+                name: "Dana Dandy",
+                metadata: { createdById: 0, createdAt: new Date().toISOString(), updatedAt: null, updatedById: null },
+            },
+        ];
+
+        const expected = users
+            .slice(0, 1)
+            .map(user => ({ ...user, metadata: { ...user.metadata, createdBy: users[2], updatedBy: users[2] } }));
+
+        repository.useEntities({ users });
+        repository.useLoadAllUsers();
+
+        // act
+        const actual = await workspace
+            .from(UserBlueprint)
+            .select({ metadata: { createdBy: true, updatedBy: true } })
+            .cache(true)
+            .get();
+
+        // assert
+        expect(actual).toStrictEqual(expected);
+    });
+
+    it("should return entities matching the criteria", async () => {
+        // arrange
+        const users: User[] = [
+            {
+                id: 1,
+                name: "Mara Mauzi",
+                metadata: { createdById: 2, createdAt: new Date().toISOString(), updatedAt: null, updatedById: null },
+            },
+            {
+                id: 2,
+                name: "Susi Sonne",
+                metadata: { createdById: 2, createdAt: new Date().toISOString(), updatedAt: null, updatedById: null },
+            },
+            {
+                id: 3,
+                name: "Dana Dandy",
+                metadata: { createdById: 1, createdAt: new Date().toISOString(), updatedAt: null, updatedById: null },
+            },
+        ];
+
+        const expected = users.slice(0, 2);
+        repository.useEntities({ users });
+        repository.useLoadAllUsers();
+
+        // act
+        const actual = await workspace
+            .from(UserBlueprint)
+            .where({ metadata: { createdById: 2 } })
+            .get();
+
+        // assert
+        expect(actual).toStrictEqual(expected);
+    });
+
+    it("should work (complex)", async () => {
         /**
          * This test is a temporary one to actively check lots of features to reduce change of breaking something while developing.
          * It should be split into smaller ones at some point.
@@ -175,140 +245,5 @@ describe("execution", () => {
                 },
             ],
         });
-    });
-
-    it("should return entities matching the criteria", async () => {
-        // arrange
-        const users: User[] = [
-            {
-                id: 1,
-                name: "Mara Mauzi",
-                metadata: { createdById: 2, createdAt: new Date().toISOString(), updatedAt: null, updatedById: null },
-            },
-            {
-                id: 2,
-                name: "Susi Sonne",
-                metadata: { createdById: 2, createdAt: new Date().toISOString(), updatedAt: null, updatedById: null },
-            },
-            {
-                id: 3,
-                name: "Dana Dandy",
-                metadata: { createdById: 1, createdAt: new Date().toISOString(), updatedAt: null, updatedById: null },
-            },
-        ];
-
-        const expected = users.slice(0, 2);
-        repository.useEntities({ users });
-        repository.useLoadAllUsers();
-
-        // act
-        const actual = await workspace
-            .from(UserBlueprint)
-            .where({ metadata: { createdById: 2 } })
-            .get();
-
-        // assert
-        expect(actual).toStrictEqual(expected);
-    });
-
-    it.skip("should only return entities that are hydrated according to the selection", async () => {
-        // [todo] ❌ this test is no longer valid as i've changed joinEntities() to provide a default value
-        // (null in case of nullable, [] in case of array)
-        // arrange
-        const users: User[] = [
-            {
-                // we're expecting to only receive "Susi Sonne"
-                id: 1,
-                name: "Susi Sonne",
-                metadata: {
-                    createdById: 3,
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString(),
-                    updatedById: 3,
-                },
-            },
-            {
-                id: 2,
-                name: "Mara Mauzi",
-                metadata: { createdById: 3, createdAt: new Date().toISOString(), updatedAt: null, updatedById: null },
-            },
-            {
-                id: 3,
-                name: "Dana Dandy",
-                metadata: { createdById: 0, createdAt: new Date().toISOString(), updatedAt: null, updatedById: null },
-            },
-        ];
-
-        const expected = users
-            .slice(0, 1)
-            .map(user => ({ ...user, metadata: { ...user.metadata, createdBy: users[2], updatedBy: users[2] } }));
-
-        repository.useEntities({ users });
-        repository.useLoadAllUsers();
-
-        // act
-        const actual = await workspace
-            .from(UserBlueprint)
-            .select({ metadata: { createdBy: true, updatedBy: true } })
-            .cache(true)
-            .get();
-
-        // assert
-        expect(actual).toStrictEqual(expected);
-    });
-
-    it("exact order and identity of entities returned by source is kept when querying by parameters", async () => {
-        /**
-         * arrange
-         *
-         * we set up three users: "Susi Sonne" and "Mara Mauzi" which will be returned by the request, where "Dana Dandy" will be hydrated
-         * as the metadata.createdBy user. Because all are of type "User", they all end up in the same EntityStore during the first load call.
-         * When we then request again (which will load from cache), we want to make sure that "Dana Dandy" is not suddenly part of the returned result,
-         * it should still only exist as metadata.createdBy.user on "Susi Sonne" and "Mara Mauzi".
-         *
-         * Testing that the order being kept is done by having "Susi Sonne" be before "Mara Mauzi",
-         * which is different to what the default sorter of "User" is set to as it orders names ascending.
-         */
-        const users: User[] = [
-            {
-                id: 1,
-                name: "Susi Sonne",
-                metadata: { createdById: 3, createdAt: new Date().toISOString(), updatedAt: null, updatedById: null },
-            },
-            {
-                id: 2,
-                name: "Mara Mauzi",
-                metadata: { createdById: 3, createdAt: new Date().toISOString(), updatedAt: null, updatedById: null },
-            },
-            {
-                id: 3,
-                name: "Dana Dandy",
-                metadata: { createdById: 0, createdAt: new Date().toISOString(), updatedAt: null, updatedById: null },
-            },
-        ];
-
-        const expected = users
-            .slice(0, 2)
-            .map(user => ({ ...user, metadata: { ...user.metadata, createdBy: users[2] } }));
-
-        const load = () =>
-            workspace
-                .from(UserBlueprint)
-                .use(UserRequestBlueprint, { page: 0, pageSize: 2 })
-                .select({ metadata: { createdBy: true } })
-                .cache(true)
-                .get();
-
-        repository.useEntities({ users });
-        repository.useLoadUsersByRequest();
-        repository.useLoadUserById();
-
-        // act
-        const loadedFromSource = await load();
-        const loadedFromCache = await load();
-
-        // assert
-        expect(loadedFromCache).toStrictEqual(expected);
-        expect(loadedFromCache).toStrictEqual(loadedFromSource);
     });
 });
