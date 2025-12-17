@@ -1,11 +1,11 @@
 import { EntityBlueprint } from "../../entity/entity-blueprint";
 import { ProductBlueprint } from "./product.model";
 
-const { register, id, number, entity, optional, creatable, parent } = EntityBlueprint;
+const { register, id, number, entity, creatable, parent } = EntityBlueprint;
 
 export class WashingMachineBlueprint {
     id = id({ creatable });
-    product = entity(ProductBlueprint, this.id, product => product.id, { optional, parent });
+    product = entity(ProductBlueprint, this.id, product => product.id, { parent });
     maxLoadKg = number();
 }
 

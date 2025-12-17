@@ -2,13 +2,13 @@ import { EntityBlueprint } from "../../entity/entity-blueprint";
 import { RecordMetadataBlueprint } from "../record-metadata.model";
 import { FolderBlueprint } from "./folder.model";
 
-const { register, id, string, number, entity, readonly, optional } = EntityBlueprint;
+const { register, id, string, number, entity } = EntityBlueprint;
 
 export class FileBlueprint {
     id = id();
     name = string();
     folderId = number();
-    folder = entity(FolderBlueprint, this.folderId, folder => folder.id, { optional });
+    folder = entity(FolderBlueprint, this.folderId, folder => folder.id);
     metadata = entity(RecordMetadataBlueprint);
 }
 

@@ -11,7 +11,6 @@ export class ArtistBlueprint {
     name = string();
     songs = entity(SongBlueprint, [this.namespace, this.id], song => [song.namespace, song.artistId], {
         array,
-        optional,
     });
     longestSong = entity(SongBlueprint, { optional });
     songTags = entity(TagBlueprint, { optional, array });

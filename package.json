@@ -10,7 +10,7 @@
         "prestart": "npm run clean",
         "build": "tsc --build tsconfig.build.json",
         "start": "tsc --build tsconfig.build.json --watch",
-        "test": "vitest --coverage"
+        "test": "vitest --coverage --typecheck"
     },
     "repository": {
         "type": "git",

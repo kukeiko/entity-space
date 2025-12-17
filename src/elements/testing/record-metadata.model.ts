@@ -1,15 +1,15 @@
 import { EntityBlueprint } from "../entity/entity-blueprint";
 import { UserBlueprint } from "./user.model";
 
-const { register, number, entity, string, optional, nullable } = EntityBlueprint;
+const { register, number, entity, string, nullable } = EntityBlueprint;
 
 export class RecordMetadataBlueprint {
     createdAt = string();
     createdById = number();
-    createdBy = entity(UserBlueprint, this.createdById, user => user.id, { optional });
+    createdBy = entity(UserBlueprint, this.createdById, user => user.id);
     updatedAt = string({ nullable });
     updatedById = number({ nullable });
-    updatedBy = entity(UserBlueprint, this.updatedById, user => user.id, { optional, nullable });
+    updatedBy = entity(UserBlueprint, this.updatedById, user => user.id, { nullable });
 }
 
 register(RecordMetadataBlueprint, { name: "record-metadata" });

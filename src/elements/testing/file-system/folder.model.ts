@@ -2,7 +2,7 @@ import { EntityBlueprint } from "../../entity/entity-blueprint";
 import { RecordMetadataBlueprint } from "../record-metadata.model";
 import { FileBlueprint } from "./file.model";
 
-const { register, id, number, string, entity, array, nullable, readonly, optional } = EntityBlueprint;
+const { register, id, number, string, entity, array, nullable } = EntityBlueprint;
 
 /**
  * Used to test recursive joined relations.
@@ -11,9 +11,9 @@ export class FolderBlueprint {
     id = id();
     name = string();
     parentId = number({ nullable });
-    parent = entity(FolderBlueprint, this.parentId, folder => folder.id, { nullable, optional });
-    folders = entity(FolderBlueprint, this.id, folder => folder.parentId, { array, optional });
-    files = entity(FileBlueprint, this.id, file => file.folderId, { array, optional });
+    parent = entity(FolderBlueprint, this.parentId, folder => folder.id, { nullable });
+    folders = entity(FolderBlueprint, this.id, folder => folder.parentId, { array });
+    files = entity(FileBlueprint, this.id, file => file.folderId, { array });
     metadata = entity(RecordMetadataBlueprint);
 }
 

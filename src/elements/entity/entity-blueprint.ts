@@ -122,26 +122,30 @@ export namespace EntityBlueprint {
         return { valueType: enumToPrimitive(valueType), ...(options ?? {}) } as any;
     }
 
-    type EntityOptions = Partial<
+    type EmbeddedEntityOptions = Partial<
         ArrayAttribute & DtoAttribute & NullableAttribute & OptionalAttribute & ReadonlyAttribute & ParentAttribute
     >;
 
-    export function entity<V extends Class, O extends EntityOptions>(
+    type JoinedEntityOptions = Partial<
+        ArrayAttribute & DtoAttribute & NullableAttribute & ReadonlyAttribute & ParentAttribute
+    >;
+
+    export function entity<V extends Class, O extends EmbeddedEntityOptions>(
         valueType: V,
         options?: O,
     ): BlueprintProperty<V> & EntityAttribute & O;
-    // [todo] ❌ remove "optional" flag because we're joining here which is optional by default
-    export function entity<V extends Class, O extends EntityOptions>(
+    export function entity<V extends Class, O extends JoinedEntityOptions>(
         valueType: V,
         from: Path | Path[] | BlueprintProperty<Primitive> | BlueprintProperty<Primitive>[],
         to: Path | Path[] | ((other: InstanceType<V>) => BlueprintProperty<Primitive> | BlueprintProperty<Primitive>[]),
         options?: O,
-    ): BlueprintProperty<V> & EntityAttribute & O;
+    ): BlueprintProperty<V> & EntityAttribute & OptionalAttribute & O;
     export function entity(...args: any[]): BlueprintProperty<Class> & EntityAttribute {
         const valueType: Class = args[0];
 
         if (args.length <= 2) {
-            const options: EntityOptions = args[1];
+            // embedded relation path
+            const options: EmbeddedEntityOptions = args[1];
 
             return {
                 entity: true,
@@ -152,10 +156,11 @@ export namespace EntityBlueprint {
             };
         }
 
+        // joined relation path
         const from: Path | Path[] | BlueprintProperty<Primitive> | BlueprintProperty<Primitive>[] = args[1];
         const to: Path | Path[] | ((other: Entity) => BlueprintProperty<Primitive> | BlueprintProperty<Primitive>[]) =
             args[2];
-        const options: EntityOptions = args[3] ?? {};
+        const options: JoinedEntityOptions = args[3] ?? {};
 
         return {
             entity: true,
