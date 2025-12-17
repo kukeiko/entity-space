@@ -78,6 +78,10 @@ export class EntityCriterionShape extends CriterionShape<EntityCriterion> {
         return this.#optional;
     }
 
+    isOptional(): boolean {
+        return Object.keys(this.#required).length === 0;
+    }
+
     override getCriterionType(): Class<EntityCriterion> {
         return EntityCriterion;
     }

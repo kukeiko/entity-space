@@ -45,7 +45,7 @@ function wherePrimitiveShapeToCriterionShapes(
     return criterionShapes;
 }
 
-export function whereEntityShapeToCriterionShape(schema: EntitySchema, shape: WhereEntityShape): CriterionShape {
+export function whereEntityShapeToCriterionShape(schema: EntitySchema, shape: WhereEntityShape): EntityCriterionShape {
     const required: PackedEntityCriterionShape = {};
     const optional: PackedEntityCriterionShape = {};
 
@@ -62,8 +62,16 @@ export function whereEntityShapeToCriterionShape(schema: EntitySchema, shape: Wh
             }
         } else {
             const relation = schema.getRelation(key);
-            // [todo] ❌ should be put into "optional" if all nested shapes are optional
-            required[key] = whereEntityShapeToCriterionShape(relation.getRelatedSchema(), value as WhereEntityShape);
+            const relatedShape = whereEntityShapeToCriterionShape(
+                relation.getRelatedSchema(),
+                value as WhereEntityShape,
+            );
+
+            if (relatedShape.isOptional()) {
+                optional[key] = relatedShape;
+            } else {
+                required[key] = relatedShape;
+            }
         }
     }
 
