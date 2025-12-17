@@ -71,9 +71,8 @@ describe("save()", () => {
         });
     });
 
-    it.skip("can create many-to-many relations: songTags.songs", async () => {
+    it("can create many-to-many relations: songTags.songs", async () => {
         // arrange
-        facade.enableConsoleTracing();
         const metadata = createMetadata(1);
         const song: Song = {
             id: 0,

@@ -485,4 +485,80 @@ describe("save() creates one entity", () => {
             expect(saved).toBe(windforce.input);
         });
     });
+
+    it("save one entity incl. related", async () => {
+        // arrange
+        const windforce: ItemSavable = {
+            assignId: 1,
+            typeId: 7,
+            attributes: [
+                {
+                    typeId: 100,
+                    values: [1, 2, 3],
+                },
+            ],
+            name: "Windforce",
+            sockets: [
+                {
+                    assignId: 10,
+                    itemId: 0,
+                    socketedItemId: 2,
+                },
+            ],
+        };
+
+        const windforcePassedToSave: ItemSavable = {
+            assignId: 1,
+            typeId: 7,
+            attributes: [
+                {
+                    typeId: 100,
+                    values: [1, 2, 3],
+                },
+            ],
+            name: "Windforce",
+            sockets: [
+                {
+                    assignId: 10,
+                    itemId: 0,
+                    socketedItemId: 2,
+                },
+            ],
+        };
+
+        const windforceSaved: Item = {
+            id: 1,
+            typeId: 7,
+            assignId: 1,
+            attributes: [
+                {
+                    typeId: 100,
+                    values: [1, 2, 3],
+                },
+            ],
+            createdAt,
+            name: "Windforce",
+            updatedAt,
+            sockets: [
+                {
+                    id: 10,
+                    assignId: 10,
+                    itemId: 1,
+                    socketedItemId: 2,
+                    createdAt,
+                    updatedAt: null,
+                },
+            ],
+        };
+
+        const saveItem = repository.useSaveItems_deprecated(createdAt, updatedAt);
+
+        // act
+        const saved = await workspace.in(ItemBlueprint).select({ sockets: true }).save([windforce]);
+
+        // assert
+        expect(saveItem).toHaveBeenCalledWith({ entities: [windforcePassedToSave], selection: { sockets: true } });
+        expect(saved).toEqual([windforceSaved]);
+        expect(saved[0]).toBe(windforce);
+    });
 });
