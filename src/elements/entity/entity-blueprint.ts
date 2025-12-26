@@ -18,6 +18,7 @@ import {
     OptionalAttribute,
     ParentAttribute,
     ReadonlyAttribute,
+    UnionAttribute,
     isProperty,
 } from "./entity-blueprint-property";
 import { RelationshipType } from "./entity-relation-property";
@@ -64,6 +65,7 @@ export function getNamedProperties(blueprint: Class): NamedProperty[] {
 
 export namespace EntityBlueprint {
     export type Instance<T> = EntityBlueprintInstance<T>;
+    export type Type<T> = EntityBlueprintInstance<T>;
     export type Creatable<T> = EntityBlueprintCreatableInstance<T>;
     export type Updatable<T> = EntityBlueprintUpdatableInstance<T>;
     export type Savable<T> = EntityBlueprintSavableInstance<T>;
@@ -118,8 +120,8 @@ export namespace EntityBlueprint {
     export function union<T extends Record<string, any>, O extends PrimitiveOptions>(
         valueType: T,
         options?: O,
-    ): BlueprintProperty<CustomPrimitive<T[keyof T]>> & O {
-        return { valueType: enumToPrimitive(valueType), ...(options ?? {}) } as any;
+    ): BlueprintProperty<CustomPrimitive<T[keyof T]>> & UnionAttribute & O {
+        return { valueType: enumToPrimitive(valueType), ...{ ...(options ?? {}), union: true } } as any;
     }
 
     type EmbeddedEntityOptions = Partial<

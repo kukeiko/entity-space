@@ -1,0 +1,25 @@
+{
+    "name": "@entity-space/angular",
+    "version": "0.7.0-alpha.6",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/kukeiko/entity-space"
+    },
+    "exports": {
+        "types": "./index.d.ts",
+        "import": "./index.js",
+        "require": "./cjs/index.js"
+    },
+    "dependencies": {
+        "@entity-space/elements": "0.7.0-alpha.6",
+        "@entity-space/execution": "0.7.0-alpha.6",
+        "@entity-space/utils": "0.7.0-alpha.6"
+    },
+    "peerDependencies": {
+        "@angular/core": "^17.0.0",
+        "@angular/router": "^17.0.0",
+        "lodash": "4.17.21",
+        "rxjs": "^7.4.0"
+    }
+}

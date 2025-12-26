@@ -49,6 +49,14 @@ export class EntityWorkspace {
         return new EntityMutationBuilder(schema, operation => this.#mutate(operation));
     }
 
+    getOrCreateCacheBucket(key: unknown): EntityCache {
+        return this.#services.getOrCreateCacheBucket(key);
+    }
+
+    destroyCache(key: unknown): void {
+        return this.#services.destroyCache(key);
+    }
+
     #query$<T>(args: QueryArguments): Observable<T[]> {
         return defer(() => {
             const schema = args.schema;

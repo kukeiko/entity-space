@@ -1,0 +1,15 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "module": "CommonJS",
+        "moduleResolution": "node",
+        "outDir": "../../dist/angular/cjs",
+        "rootDir": "./"
+    },
+    "include": ["./**/*.ts"],
+    "references": [
+        { "path": "../elements/tsconfig.json" },
+        { "path": "../execution/tsconfig.json" },
+        { "path": "../utils/tsconfig.json" }
+    ]
+}

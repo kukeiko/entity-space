@@ -25,6 +25,7 @@ export interface ReadonlyAttribute {
     readonly: true;
 }
 
+// [todo] ❌ remove, no longer needed as there is better 1:1 and m:n support
 export interface ParentAttribute {
     parent: true;
 }
@@ -42,6 +43,10 @@ export interface EntityAttribute {
 
 export interface OptionalAttribute {
     optional: true;
+}
+
+export interface UnionAttribute {
+    union: true;
 }
 
 export interface UniqueAttribute {
@@ -62,6 +67,7 @@ export type AllAttributes =
     | OptionalAttribute
     | ParentAttribute
     | ReadonlyAttribute
+    | UnionAttribute
     | UniqueAttribute;
 
 export function isProperty(value: unknown): value is BlueprintProperty {
