@@ -8,7 +8,7 @@ import {
     writeRelationJoins,
 } from "@entity-space/elements";
 import { Class } from "@entity-space/utils";
-import { concat, defer, delay, finalize, from, map, Observable, of, switchMap } from "rxjs";
+import { concat, defer, delay, finalize, from, map, Observable, of, Subject, switchMap } from "rxjs";
 import { EntityCache } from "./cache/entity-cache";
 import { EntityHydrationBuilder } from "./entity-hydration-builder";
 import { EntityMutationBuilder } from "./entity-mutation-builder";
@@ -60,6 +60,7 @@ export class EntityWorkspace {
     #query$<T>({
         schema,
         cache,
+        isLoading$,
         parameters: parametersArg,
         select,
         where,
@@ -83,11 +84,11 @@ export class EntityWorkspace {
             let stream$: Observable<T[]>;
 
             if (cacheOptions === false) {
-                stream$ = this.#loadFromSource$<T>(query);
+                stream$ = this.#loadFromSource$<T>(query, isLoading$);
             } else if (!cacheOptions.refresh) {
-                stream$ = this.#loadFromCacheAndSource$<T>(query, cacheKey);
+                stream$ = this.#loadFromCacheAndSource$<T>(query, cacheKey, isLoading$);
             } else {
-                stream$ = this.#loadFromCacheThenRefreshFromSource$<T>(query, cacheKey, loadFreshDelay);
+                stream$ = this.#loadFromCacheThenRefreshFromSource$<T>(query, cacheKey, loadFreshDelay, isLoading$);
             }
 
             return stream$.pipe(
@@ -98,16 +99,18 @@ export class EntityWorkspace {
         });
     }
 
-    #loadFromSource$<T>(query: EntityQuery): Observable<T[]> {
+    #loadFromSource$<T>(query: EntityQuery, isLoading$?: Subject<boolean>): Observable<T[]> {
         const cache = new EntityCache();
         const context = new EntityQueryExecutionContext(cache, { loadFromSource: true });
 
         return defer(() => {
+            isLoading$?.next(true);
+
             return this.#executor.executeQuery<T>(query, context);
-        });
+        }).pipe(finalize(() => isLoading$?.next(false)));
     }
 
-    #loadFromCacheAndSource$<T>(query: EntityQuery, cacheKey: unknown): Observable<T[]> {
+    #loadFromCacheAndSource$<T>(query: EntityQuery, cacheKey: unknown, isLoading$?: Subject<boolean>): Observable<T[]> {
         const cache = this.#services.getOrCreateCacheBucket(cacheKey);
         const context = new EntityQueryExecutionContext(cache, {
             loadFromSource: true,
@@ -116,14 +119,16 @@ export class EntityWorkspace {
         });
 
         return defer(() => {
+            isLoading$?.next(true);
             return this.#executor.executeQuery<T>(query, context);
-        });
+        }).pipe(finalize(() => isLoading$?.next(false)));
     }
 
     #loadFromCacheThenRefreshFromSource$<T>(
         query: EntityQuery,
         cacheKey: unknown,
         refreshDelay: number,
+        isLoading$?: Subject<boolean>,
     ): Observable<T[]> {
         const cache = this.#services.getOrCreateCacheBucket(cacheKey);
 
@@ -140,6 +145,7 @@ export class EntityWorkspace {
                 return of(undefined).pipe(
                     delay(refreshDelay),
                     switchMap(() => {
+                        isLoading$?.next(true);
                         const context = new EntityQueryExecutionContext(cache, {
                             loadFromSource: true,
                             readFromCache: false,
@@ -147,6 +153,9 @@ export class EntityWorkspace {
                         });
 
                         return this.#executor.executeQuery<T>(query, context);
+                    }),
+                    finalize(() => {
+                        isLoading$?.next(false);
                     }),
                 );
             }),

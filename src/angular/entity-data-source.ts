@@ -1,16 +1,7 @@
 import { EntityBlueprint, PackedEntitySelection, SelectEntity } from "@entity-space/elements";
 import { EntityWorkspace } from "@entity-space/execution";
 import { Class, moveArrayItem } from "@entity-space/utils";
-import {
-    BehaviorSubject,
-    combineLatest,
-    finalize,
-    firstValueFrom,
-    map,
-    Observable,
-    shareReplay,
-    switchMap,
-} from "rxjs";
+import { BehaviorSubject, combineLatest, firstValueFrom, map, Observable, shareReplay, switchMap } from "rxjs";
 import { EntityFilter } from "./entity-filter";
 
 // a little delay to not spam server on frequent filter change
@@ -35,14 +26,7 @@ export class EntityDataSource<B, F, S extends PackedEntitySelection<EntityBluepr
             refresh: this.#refresh$,
         }).pipe(
             switchMap(({ filter }) => {
-                this.#isLoading.next(true);
-
-                return this.#load$(filter).pipe(
-                    map(entities => this.#filter.filterClientSide(filter, entities)),
-                    finalize(() => {
-                        this.#isLoading.next(false);
-                    }),
-                );
+                return this.#load$(filter).pipe(map(entities => this.#filter.filterClientSide(filter, entities)));
             }),
             shareReplay(1),
         );
@@ -53,7 +37,7 @@ export class EntityDataSource<B, F, S extends PackedEntitySelection<EntityBluepr
     readonly #select?: S;
     readonly #filter: EntityFilter<B, F, S>;
     readonly #refresh$ = new BehaviorSubject(undefined);
-    readonly #isLoading = new BehaviorSubject(false);
+    readonly #isLoading$ = new BehaviorSubject(false);
     readonly #entities$: Observable<SelectEntity<EntityBlueprint.Instance<B>, S>[]>;
     readonly #cacheKey?: unknown;
 
@@ -79,9 +63,9 @@ export class EntityDataSource<B, F, S extends PackedEntitySelection<EntityBluepr
             assignIndex(next[index], index);
         }
 
-        this.#isLoading.next(true);
+        this.#isLoading$.next(true);
         await this.#workspace.in(this.#blueprint).update(next as any, previous as any);
-        this.#isLoading.next(false);
+        this.#isLoading$.next(false);
         // [todo] ❌ instead of reloading, we could just emit "next" as the new entities
         this.refresh();
     }
@@ -95,7 +79,7 @@ export class EntityDataSource<B, F, S extends PackedEntitySelection<EntityBluepr
     }
 
     isLoading$(): Observable<boolean> {
-        return this.#isLoading;
+        return this.#isLoading$.asObservable();
     }
 
     refresh(): void {
@@ -113,6 +97,7 @@ export class EntityDataSource<B, F, S extends PackedEntitySelection<EntityBluepr
                 refresh: true,
                 refreshDelay: REFRESH_DELAY,
             })
+            .indicate(this.#isLoading$)
             .get$();
     }
 }

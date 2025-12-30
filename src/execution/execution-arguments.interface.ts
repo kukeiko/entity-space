@@ -1,5 +1,6 @@
 import { Entity, EntitySchema, PackedEntitySelection, WhereEntity } from "@entity-space/elements";
 import { Class } from "@entity-space/utils";
+import { Subject } from "rxjs";
 
 export interface QueryCacheOptions {
     key?: unknown;
@@ -13,6 +14,7 @@ export interface QueryArguments {
     where?: WhereEntity;
     parameters?: QueryArgumentsParameters;
     cache?: boolean | QueryCacheOptions;
+    isLoading$?: Subject<boolean>;
 }
 
 export interface QueryArgumentsParameters {

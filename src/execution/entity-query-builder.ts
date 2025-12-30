@@ -9,7 +9,7 @@ import {
     WhereEntity,
 } from "@entity-space/elements";
 import { Class } from "@entity-space/utils";
-import { lastValueFrom, map, Observable } from "rxjs";
+import { lastValueFrom, map, Observable, Subject } from "rxjs";
 import { QueryArguments, QueryArgumentsParameters, QueryCacheOptions } from "./execution-arguments.interface";
 
 export class EntityQueryBuilder<T extends Entity = Entity, S extends PackedEntitySelection<T> = {}> {
@@ -24,6 +24,7 @@ export class EntityQueryBuilder<T extends Entity = Entity, S extends PackedEntit
     #criteria: WhereEntity<T> = {};
     #parameters?: QueryArgumentsParameters;
     #cache: QueryCacheOptions | boolean = false;
+    #indicate?: Subject<boolean>;
 
     select<E extends PackedEntitySelection<T>>(select: E | PackedEntitySelection<T>): EntityQueryBuilder<T, E> {
         this.#selection = select;
@@ -42,6 +43,11 @@ export class EntityQueryBuilder<T extends Entity = Entity, S extends PackedEntit
 
     cache(options: QueryCacheOptions | boolean): this {
         this.#cache = options;
+        return this;
+    }
+
+    indicate(isLoading$: Subject<boolean>): this {
+        this.#indicate = isLoading$;
         return this;
     }
 
@@ -134,6 +140,7 @@ export class EntityQueryBuilder<T extends Entity = Entity, S extends PackedEntit
             parameters: this.#parameters,
             select: this.#selection,
             where: this.#criteria,
+            isLoading$: this.#indicate,
         };
     }
 }
