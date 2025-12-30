@@ -57,20 +57,25 @@ export class EntityWorkspace {
         return this.#services.destroyCache(key);
     }
 
-    #query$<T>(args: QueryArguments): Observable<T[]> {
+    #query$<T>({
+        schema,
+        cache,
+        parameters: parametersArg,
+        select,
+        where,
+    }: QueryArguments): Observable<T[]> {
         return defer(() => {
-            const schema = args.schema;
-            const criteria = args.where ? whereEntityToCriterion(args.where) : undefined;
-            const selection = unpackSelection(schema, args.select ?? {});
-            const parameters = args.parameters
+            const criteria = where ? whereEntityToCriterion(where) : undefined;
+            const selection = unpackSelection(schema, select ?? {});
+            const parameters = parametersArg
                 ? new EntityQueryParameters(
-                      this.#services.getCatalog().getSchemaByBlueprint(args.parameters.blueprint),
-                      args.parameters.value,
+                      this.#services.getCatalog().getSchemaByBlueprint(parametersArg.blueprint),
+                      parametersArg.value,
                   )
                 : undefined;
 
             const query = new EntityQuery(schema, selection, criteria, parameters);
-            const cacheOptions = this.#toCacheOptions(args.cache);
+            const cacheOptions = this.#toCacheOptions(cache);
             const cacheKey = cacheOptions ? cacheOptions.key : undefined;
             const loadFreshDelay = cacheOptions === false ? 0 : (cacheOptions.refreshDelay ?? 0);
             this.#services.getTracing().querySpawned(query);

@@ -102,6 +102,9 @@ export class RecursiveEntityHydrator extends EntityHydrator {
             getTargetSelection() {
                 return mergeSelection(cutAvailableSelection, nonRecursiveOpenSelection);
             },
+            getParametersSchema() {
+                return undefined;
+            },
         });
 
         if (describedHydration === false) {

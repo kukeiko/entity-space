@@ -5,6 +5,7 @@ export type HydrateEntitiesFunction = (
     entities: Entity[],
     selection: EntitySelection,
     context: EntityQueryExecutionContext,
+    parameters?: Entity,
 ) => Promise<void>;
 
 export class AcceptedEntityHydration {
@@ -30,11 +31,11 @@ export class AcceptedEntityHydration {
         return this.#requiredSelection;
     }
 
-    hydrateEntities(entities: Entity[], context: EntityQueryExecutionContext): Promise<void> {
-        return this.#hydrateFn(entities, this.#acceptedSelection, context);
+    hydrateEntities(entities: Entity[], context: EntityQueryExecutionContext, parameters?: Entity): Promise<void> {
+        return this.#hydrateFn(entities, this.#acceptedSelection, context, parameters);
     }
 
-    toString() : string {
+    toString(): string {
         // to make debugging easier. should not be relied upon as actual logic
         return selectionToString(this.#acceptedSelection);
     }

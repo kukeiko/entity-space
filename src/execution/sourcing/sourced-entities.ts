@@ -23,6 +23,10 @@ export class SourcedEntities implements EntitySourcingState {
         return this.#schema;
     }
 
+    getParametersSchema(): EntitySchema | undefined {
+        return undefined
+    }
+
     getTargetSelection(): EntitySelection {
         return this.#targetSelection;
     }

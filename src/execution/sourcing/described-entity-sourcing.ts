@@ -3,8 +3,14 @@ import { AcceptedEntitySourcing } from "./accepted-entity-sourcing";
 import { EntitySourcingState } from "./entity-sourcing-state.interface";
 
 export class DescribedEntitySourcing implements EntitySourcingState {
-    constructor(schema: EntitySchema, targetSelection: EntitySelection, acceptedSourcing: AcceptedEntitySourcing[]) {
+    constructor(
+        schema: EntitySchema,
+        targetSelection: EntitySelection,
+        acceptedSourcing: AcceptedEntitySourcing[],
+        parametersSchema?: EntitySchema,
+    ) {
         this.#schema = schema;
+        this.#parametersSchema = parametersSchema;
         this.#targetSelection = targetSelection;
         this.#acceptedSourcings = Object.freeze(acceptedSourcing.slice());
 
@@ -20,12 +26,17 @@ export class DescribedEntitySourcing implements EntitySourcingState {
     }
 
     readonly #schema: EntitySchema;
+    readonly #parametersSchema: EntitySchema | undefined;
     readonly #targetSelection: EntitySelection;
     readonly #availableSelection: EntitySelection;
     readonly #acceptedSourcings: readonly AcceptedEntitySourcing[];
 
     getSchema(): EntitySchema {
         return this.#schema;
+    }
+
+    getParametersSchema(): EntitySchema | undefined {
+        return this.#parametersSchema;
     }
 
     getAcceptedSourcings(): readonly AcceptedEntitySourcing[] {

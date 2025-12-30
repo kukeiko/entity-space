@@ -88,25 +88,31 @@ export class EntitySchemaScopedServiceContainer<B> {
         return this;
     }
 
-    addHydrator<S extends PackedEntitySelection<EntityBlueprint.Instance<B>>>({
+    addHydrator<S extends PackedEntitySelection<EntityBlueprint.Instance<B>>, P>({
         hydrate,
         requires,
         select,
+        parameters,
     }: {
         select: PackedEntitySelection<EntityBlueprint.Instance<B>>;
         requires: S;
-        hydrate: HydrateEntitiesFn<B, S>;
+        hydrate: HydrateEntitiesFn<B, S, P>;
+        parameters?: Class<P>;
     }): this {
+        const parametersSchema = parameters ? this.#services.getCatalog().getSchemaByBlueprint(parameters) : undefined;
+
         this.#addHydratorFn(
             new ExplicitEntityHydrator(
                 this.#schema,
+                parametersSchema,
                 unpackSelectionWithoutDefault(this.#schema, requires),
                 unpackSelectionWithoutDefault(this.#schema, select),
-                async (entities, selection, context) => {
+                async (entities, selection, context, parameters) => {
                     await hydrate(
                         entities as SelectEntity<EntityBlueprint.Instance<B>, S>[],
                         selection as PackedEntitySelection<EntityBlueprint.Instance<B>>,
                         context,
+                        (parameters ?? {}) as EntityBlueprint.Type<P>,
                     );
                 },
             ),

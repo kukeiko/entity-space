@@ -1,6 +1,9 @@
-import { User, UserBlueprint, UserRequestBlueprint } from "@entity-space/elements/testing";
-import { beforeEach, describe, expect, it } from "vitest";
+import { EntityBlueprint } from "@entity-space/elements";
+import { Song, SongBlueprint, User, UserBlueprint, UserRequestBlueprint } from "@entity-space/elements/testing";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { EntityWorkspace } from "../../entity-workspace";
+import { HydrateEntitiesFn } from "../../hydration/entity-hydrator";
+import { LoadEntitiesFn } from "../../sourcing/entity-source";
 import { TestFacade, TestRepository } from "../../testing";
 
 describe("get()", () => {
@@ -67,5 +70,48 @@ describe("get()", () => {
         // assert
         expect(loadedFromCache).toStrictEqual(expected);
         expect(loadedFromCache).toStrictEqual(loadedFromSource);
+    });
+
+    it("should forward parameters to explicit hydrators", async () => {
+        // arrange
+        const { register, string } = EntityBlueprint;
+
+        class SongRequestBlueprint {
+            language = string();
+        }
+
+        register(SongRequestBlueprint);
+
+        const load = vi.fn<LoadEntitiesFn<SongBlueprint>>(() => {
+            const songs: Song[] = [facade.getWorkspace().from(SongBlueprint).constructDefault()];
+            return songs;
+        });
+
+        const hydrate = vi.fn<HydrateEntitiesFn<SongBlueprint>>((_entities, _selection, _context, parameters) => {});
+
+        facade
+            .getServices()
+            .for(SongBlueprint)
+            .addHydrator({
+                parameters: SongRequestBlueprint,
+                requires: {},
+                select: { artist: true },
+                hydrate,
+            })
+            .addSource({ parameters: SongRequestBlueprint, load });
+
+        // act
+        await workspace
+            .from(SongBlueprint)
+            .use(SongRequestBlueprint, { language: "bisaya" })
+            .select({ artist: true })
+            .get();
+
+        // assert
+        expect(load).toHaveBeenCalledTimes(1);
+        expect(hydrate).toHaveBeenCalledTimes(1);
+        expect(hydrate).toHaveBeenCalledWith(expect.any(Object), expect.any(Object), expect.any(Object), {
+            language: "bisaya",
+        });
     });
 });

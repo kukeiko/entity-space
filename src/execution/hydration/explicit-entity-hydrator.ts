@@ -13,18 +13,21 @@ import { EntityHydrator } from "./entity-hydrator";
 export class ExplicitEntityHydrator extends EntityHydrator {
     constructor(
         schema: EntitySchema,
+        parametersSchema: EntitySchema | undefined,
         requiredSelection: EntitySelection,
         hydratedSelection: EntitySelection,
         hydrateFn: HydrateEntitiesFunction,
     ) {
         super();
         this.#schema = schema;
+        this.#parametersSchema = parametersSchema;
         this.#requiredSelection = requiredSelection;
         this.#hydratedSelection = hydratedSelection;
         this.#hydrateFn = hydrateFn;
     }
 
     readonly #schema: EntitySchema;
+    readonly #parametersSchema: EntitySchema | undefined;
     readonly #requiredSelection: EntitySelection;
     readonly #hydratedSelection: EntitySelection;
     readonly #hydrateFn: HydrateEntitiesFunction;
@@ -45,8 +48,11 @@ export class ExplicitEntityHydrator extends EntityHydrator {
         schema: EntitySchema,
         availableSelection: EntitySelection,
         openSelection: EntitySelection,
+        parametersSchema?: EntitySchema,
     ): AcceptedEntityHydration | false {
         if (this.#schema.getName() !== schema.getName()) {
+            return false;
+        } else if (this.#parametersSchema?.getName() !== parametersSchema?.getName()) {
             return false;
         }
 
@@ -63,8 +69,8 @@ export class ExplicitEntityHydrator extends EntityHydrator {
         return new AcceptedEntityHydration(
             acceptedSelection,
             this.#requiredSelection,
-            async (entities, selection, context) => {
-                await this.#hydrateFn(entities, selection, context);
+            async (entities, selection, context, parameters) => {
+                await this.#hydrateFn(entities, selection, context, parameters);
             },
         );
     }

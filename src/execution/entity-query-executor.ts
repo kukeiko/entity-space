@@ -78,11 +78,6 @@ export class EntityQueryExecutor {
                 targetSelection = mergeSelections([targetSelection, bestAccepted[1]]);
             }
 
-            // targetSelection = mergeSelections([
-            //     targetSelection,
-            //     bestAccepted.getReshapedShape().getReshaped().getUnpackedSelection(),
-            // ]);
-
             acceptedSourcings.push(bestAccepted[0]);
             nextQueryShape = bestAccepted[0].getReshapedShape().getOpenForCriteria();
 
@@ -95,11 +90,17 @@ export class EntityQueryExecutor {
             return false;
         }
 
-        return new DescribedEntitySourcing(queryShape.getSchema(), targetSelection, acceptedSourcings);
+        return new DescribedEntitySourcing(
+            queryShape.getSchema(),
+            targetSelection,
+            acceptedSourcings,
+            queryShape.getParametersSchema(),
+        );
     }
 
     describeHydration(sourcing: EntitySourcingState): DescribedEntityHydration | false {
         const schema = sourcing.getSchema();
+        const parametersSchema = sourcing.getParametersSchema();
         const targetSelection = sourcing.getTargetSelection();
         let availableSelection = sourcing.getAvailableSelection();
         let openSelection = sourcing.getOpenSelection();
@@ -115,7 +116,7 @@ export class EntityQueryExecutor {
             const currentAcceptedHydrations: AcceptedEntityHydration[] = [];
 
             for (const hydrator of hydrators) {
-                const accepted = hydrator.accept(schema, availableSelection, openSelection);
+                const accepted = hydrator.accept(schema, availableSelection, openSelection, parametersSchema);
 
                 if (accepted === false) {
                     continue;
@@ -198,6 +199,7 @@ export class EntityQueryExecutor {
             describedHydration,
             context,
             query.getCriterion(),
+            query.getParameters()?.getValue(),
         );
 
         entities = entities.filter(entity => isHydrated(entity, query.getSelection()));
@@ -245,12 +247,15 @@ export class EntityQueryExecutor {
         hydrationDescription: DescribedEntityHydration,
         context: EntityQueryExecutionContext,
         criterion?: Criterion,
+        parameters?: Entity,
     ): Promise<Entity[]> {
         let availableSelection = initialAvailableSelection;
 
         for (const acceptedHydrations of hydrationDescription.getAcceptedHydrations()) {
             await Promise.all(
-                acceptedHydrations.map(acceptedHydration => acceptedHydration.hydrateEntities(entities, context)),
+                acceptedHydrations.map(acceptedHydration =>
+                    acceptedHydration.hydrateEntities(entities, context, parameters),
+                ),
             );
 
             availableSelection = mergeSelections([
