@@ -34,7 +34,7 @@ export function copyEntities(
                     continue;
                 }
 
-                const value = primitive.copyValue(entities[i]);
+                const value = primitive.copyValueOf(entities[i]);
 
                 if (value !== undefined) {
                     copies[i][key] = value;

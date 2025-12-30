@@ -1,4 +1,4 @@
-import { Class, CustomPrimitive, Path, Primitive, entryValueIs, enumToPrimitive, isDefined } from "@entity-space/utils";
+import { Class, EnumPrimitive, Path, Primitive, entryValueIs, enumToPrimitive, isDefined } from "@entity-space/utils";
 import { isPlainObject } from "lodash";
 import { Entity } from "./entity";
 import {
@@ -120,7 +120,7 @@ export namespace EntityBlueprint {
     export function union<T extends Record<string, any>, O extends PrimitiveOptions>(
         valueType: T,
         options?: O,
-    ): BlueprintProperty<CustomPrimitive<T[keyof T]>> & UnionAttribute & O {
+    ): BlueprintProperty<EnumPrimitive<T[keyof T]>> & UnionAttribute & O {
         return { valueType: enumToPrimitive(valueType), ...{ ...(options ?? {}), union: true } } as any;
     }
 

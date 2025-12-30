@@ -59,7 +59,7 @@ export class EntityPrimitiveProperty extends EntityProperty {
         }
     }
 
-    copyValue(entity: Entity): ReturnType<Primitive> | ReturnType<Primitive>[] {
+    copyValueOf(entity: Entity): ReturnType<Primitive> | ReturnType<Primitive>[] {
         const value = entity[this.getName()];
 
         if (value == null || !this.isArray()) {

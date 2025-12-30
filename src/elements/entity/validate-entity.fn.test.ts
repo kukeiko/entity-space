@@ -1,3 +1,4 @@
+import { enumToPrimitive } from "@entity-space/utils";
 import { describe, expect, it } from "vitest";
 import { Entity } from "./entity";
 import { ContainerType } from "./entity-property";
@@ -6,12 +7,20 @@ import { isCreatableEntityProperty } from "./is-creatable-entity-property.fn";
 import { EntityValidationErrors, validateEntity } from "./validate-entity.fn";
 
 describe(validateEntity, () => {
+    enum SomeEnum {
+        Khaz = "khaz",
+        Mo = "mo",
+        Dan = "dan",
+    }
+
     const schema = new EntitySchema("foo")
         .addPrimitive("optionalNumber", Number, { optional: true })
         .addPrimitive("nullableNumber", Number, { nullable: true })
         .addPrimitive("requiredNumber", Number)
         .addPrimitive("numberArray", Number, { container: ContainerType.Array })
-        .addPrimitive("string", String, { optional: true });
+        .addPrimitive("string", String, { optional: true })
+        .addPrimitive("union", enumToPrimitive(SomeEnum), { optional: true })
+        .addPrimitive("unionArray", enumToPrimitive(SomeEnum), { optional: true, container: ContainerType.Array });
 
     // reusing the same schema to test validation of related entities
     schema.addRelation("parent", schema, { optional: true });
@@ -31,6 +40,8 @@ describe(validateEntity, () => {
                 numberArray: [1, 2, 3],
             },
             children: [{ optionalNumber: undefined, nullableNumber: null, requiredNumber: 3, numberArray: [1, 2, 3] }],
+            union: SomeEnum.Dan,
+            unionArray: [SomeEnum.Khaz, SomeEnum.Mo],
         };
 
         // act & assert
@@ -43,6 +54,8 @@ describe(validateEntity, () => {
             optionalNumber: null, // should not be null
             requiredNumber: "foo", // should not be string
             numberArray: [1, "2", null, undefined], // contains non-numbers
+            union: "not-in-enum", // not a valid value for "SomeEnum"
+            unionArray: ["mo", "not-in-enum"], // not a valid value for "SomeEnum"
         };
 
         const parent = { ...entity };
@@ -55,22 +68,28 @@ describe(validateEntity, () => {
             nullableNumber: "property is required",
             "parent.nullableNumber": "property is required",
             "children[0].nullableNumber": "property is required",
-            "numberArray[1]": "value at index 1 is not of type number (got string)",
-            "parent.numberArray[1]": "value at index 1 is not of type number (got string)",
-            "children[0].numberArray[1]": "value at index 1 is not of type number (got string)",
+            "numberArray[1]": 'value at index 1 is not of type number (got "2")',
+            "parent.numberArray[1]": 'value at index 1 is not of type number (got "2")',
+            "children[0].numberArray[1]": 'value at index 1 is not of type number (got "2")',
             "numberArray[2]": "value at index 2 is not of type number (got null)",
             "parent.numberArray[2]": "value at index 2 is not of type number (got null)",
             "children[0].numberArray[2]": "value at index 2 is not of type number (got null)",
             "numberArray[3]": "value at index 3 is not of type number (got undefined)",
             "parent.numberArray[3]": "value at index 3 is not of type number (got undefined)",
             "children[0].numberArray[3]": "value at index 3 is not of type number (got undefined)",
-            requiredNumber: "value is not of type number (got string)",
-            "parent.requiredNumber": "value is not of type number (got string)",
-            "children[0].requiredNumber": "value is not of type number (got string)",
+            requiredNumber: 'value is not of type number (got "foo")',
+            "parent.requiredNumber": 'value is not of type number (got "foo")',
+            "children[0].requiredNumber": 'value is not of type number (got "foo")',
             optionalNumber: "property is not nullable",
             "parent.optionalNumber": "property is not nullable",
             "children[0].optionalNumber": "property is not nullable",
             string: "property is not an array",
+            union: "value is not part of the enum (got not-in-enum)",
+            "unionArray[1]": "value at index 1 is not part of the enum (got not-in-enum)",
+            "parent.union": "value is not part of the enum (got not-in-enum)",
+            "parent.unionArray[1]": "value at index 1 is not part of the enum (got not-in-enum)",
+            "children[0].union": "value is not part of the enum (got not-in-enum)",
+            "children[0].unionArray[1]": "value at index 1 is not part of the enum (got not-in-enum)",
         };
 
         // act

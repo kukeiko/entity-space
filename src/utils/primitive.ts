@@ -1,9 +1,14 @@
 export const Null = () => null;
 export const Undefined = () => undefined;
 
-const $primitive: unique symbol = Symbol();
+const $enumPrimitive: unique symbol = Symbol();
+const $enumPrimitiveValues: unique symbol = Symbol();
 
-export type CustomPrimitive<T> = (() => T) & { readonly [$primitive]: true };
+export type EnumPrimitive<T> = (() => T) & { readonly [$enumPrimitive]: true; readonly [$enumPrimitiveValues]: Set<T> };
+
+export function isEnumPrimitive(primitive: unknown): primitive is EnumPrimitive<string> {
+    return primitive != null && (primitive as any)[$enumPrimitive] === true;
+}
 
 export type Primitive =
     | typeof Boolean
@@ -11,7 +16,7 @@ export type Primitive =
     | typeof String
     | typeof Null
     | typeof Undefined
-    | CustomPrimitive<string>;
+    | EnumPrimitive<string>;
 
 export function primitiveToString(value: ReturnType<Primitive>): string {
     if (value === null) {
@@ -42,7 +47,7 @@ export function primitiveToType(value: ReturnType<Primitive>): Primitive {
 }
 
 export function isPrimitiveType(value: any): value is Primitive {
-    return value?.[$primitive] === true || [Number, String, Boolean, Null, Undefined].includes(value);
+    return value?.[$enumPrimitive] === true || [Number, String, Boolean, Null, Undefined].includes(value);
 }
 
 export function isPrimitive(value: any): value is ReturnType<Primitive> {
@@ -51,15 +56,17 @@ export function isPrimitive(value: any): value is ReturnType<Primitive> {
 
 export function isPrimitiveOfType(types: readonly Primitive[]): (value: unknown) => value is Primitive {
     return (value: unknown): value is Primitive => {
-        const check = (valueType: Primitive) => {
-            const typeValue = valueType();
+        const check = (primitive: Primitive) => {
+            const expectedValue = primitive();
 
-            if (typeValue === null) {
+            if (isEnumPrimitive(primitive)) {
+                return primitive[$enumPrimitiveValues].has(value as any);
+            } else if (expectedValue === null) {
                 return value === null;
-            } else if (typeValue === undefined) {
+            } else if (expectedValue === undefined) {
                 return value === undefined;
             } else {
-                return typeof typeValue === typeof value;
+                return typeof expectedValue === typeof value;
             }
         };
 
@@ -78,18 +85,17 @@ export function primitiveTypeToString(type: Primitive): string {
         return "string";
     } else if (type === Boolean) {
         return "boolean";
-    } else if ((type as any)[$primitive] === true) {
-        return "custom";
+    } else if ((type as any)[$enumPrimitive] === true) {
+        return "enum";
     } else {
         throw new Error(`type ${type} is not a Primitive`);
     }
 }
 
-export function enumToPrimitive<T extends Record<string, string>>(
-    enum_: T,
-): (() => T[keyof T]) & { readonly [$primitive]: true } {
+export function enumToPrimitive<T extends Record<string, string>>(enum_: T): EnumPrimitive<string> {
     const primitive = () => enum_[Object.keys(enum_)[0]];
-    primitive[$primitive] = true;
+    primitive[$enumPrimitive] = true;
+    primitive[$enumPrimitiveValues] = new Set<string>(Object.values(enum_));
 
-    return primitive as (() => T[keyof T]) & { readonly [$primitive]: true };
+    return primitive as EnumPrimitive<string>;
 }

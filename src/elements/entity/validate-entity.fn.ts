@@ -1,4 +1,4 @@
-import { primitiveToType, primitiveTypeToString } from "@entity-space/utils";
+import { isEnumPrimitive, isPrimitiveOfType, primitiveToString, primitiveTypeToString } from "@entity-space/utils";
 import { Entity } from "./entity";
 import { isEntityPrimitiveProperty } from "./entity-primitive-property";
 import { EntityProperty } from "./entity-property";
@@ -32,14 +32,17 @@ export function validateEntity(
             if (!property.isArray()) {
                 errors[path] = `property is not an array`;
             } else if (isEntityPrimitiveProperty(property)) {
-                const expectedTypeName = primitiveTypeToString(property.getPrimitiveType());
+                const primitiveType = property.getPrimitiveType();
 
                 entity[key].forEach((value, index) => {
-                    const valueType = primitiveToType(value);
-
-                    if (valueType !== property.getPrimitiveType()) {
-                        errors[`${path}[${index}]`] =
-                            `value at index ${index} is not of type ${expectedTypeName} (got ${primitiveTypeToString(valueType)})`;
+                    if (!isPrimitiveOfType([primitiveType])(value)) {
+                        if (isEnumPrimitive(primitiveType)) {
+                            errors[`${path}[${index}]`] =
+                                `value at index ${index} is not part of the enum (got ${value})`;
+                        } else {
+                            errors[`${path}[${index}]`] =
+                                `value at index ${index} is not of type ${primitiveTypeToString(primitiveType)} (got ${primitiveToString(value)})`;
+                        }
                     }
                 });
             } else if (isEntityRelationProperty(property)) {
@@ -52,12 +55,16 @@ export function validateEntity(
                 });
             }
         } else if (isEntityPrimitiveProperty(property)) {
-            const valueType = primitiveToType(entity[key]);
-            const expectedTypeName = primitiveTypeToString(property.getPrimitiveType());
+            const value = entity[key];
+            const primitiveType = property.getPrimitiveType();
 
-            if (valueType !== property.getPrimitiveType() && expectedTypeName !== "custom") {
-                errors[`${path}`] =
-                    `value is not of type ${expectedTypeName} (got ${primitiveTypeToString(valueType)})`;
+            if (!isPrimitiveOfType([primitiveType])(value)) {
+                if (isEnumPrimitive(primitiveType)) {
+                    errors[`${path}`] = `value is not part of the enum (got ${value})`;
+                } else {
+                    errors[`${path}`] =
+                        `value is not of type ${primitiveTypeToString(primitiveType)} (got ${primitiveToString(value)})`;
+                }
             }
         } else if (isEntityRelationProperty(property)) {
             const relatedErrors = validateEntity(property.getRelatedSchema(), entity[key], path);
