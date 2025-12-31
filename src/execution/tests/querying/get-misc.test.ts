@@ -1,7 +1,17 @@
-import { Artist, ArtistBlueprint, Song, SongTag, Tag, User, UserBlueprint } from "@entity-space/elements/testing";
-import { beforeEach, describe, expect, it } from "vitest";
+import {
+    Artist,
+    ArtistBlueprint,
+    Song,
+    SongBlueprint,
+    SongTag,
+    Tag,
+    User,
+    UserBlueprint,
+} from "@entity-space/elements/testing";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { EntityWorkspace } from "../../entity-workspace";
 import { TestFacade, TestRepository } from "../../testing";
+import { createMetadata } from "../../testing/create-metadata.fn";
 
 describe("get()", () => {
     let facade: TestFacade;
@@ -50,47 +60,44 @@ describe("get()", () => {
         expect(loadedFromSource).toStrictEqual(expected);
     });
 
-    it.skip("should only return entities that are hydrated according to the selection", async () => {
-        // [todo] ❌ this test is no longer valid as i've changed joinEntities() to provide a default value
-        // (null in case of nullable, [] in case of array)
+    it("should only return entities that are hydrated according to the selection", async () => {
         // arrange
-        const users: User[] = [
+        const defaultArtist = workspace.from(ArtistBlueprint).constructDefault();
+        const defaultSong = workspace.from(SongBlueprint).constructDefault();
+
+        const artists: Artist[] = [
+            { ...defaultArtist, id: 1, namespace: "dev" },
+            { ...defaultArtist, id: 2, namespace: "dev" },
+        ];
+        const longestSong = { ...defaultSong, artistId: artists[0].id, namespace: artists[0].namespace };
+
+        const expected: Artist[] = [
             {
-                // we're expecting to only receive "Susi Sonne"
-                id: 1,
-                name: "Susi Sonne",
-                metadata: {
-                    createdById: 3,
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString(),
-                    updatedById: 3,
-                },
-            },
-            {
-                id: 2,
-                name: "Mara Mauzi",
-                metadata: { createdById: 3, createdAt: new Date().toISOString(), updatedAt: null, updatedById: null },
-            },
-            {
-                id: 3,
-                name: "Dana Dandy",
-                metadata: { createdById: 0, createdAt: new Date().toISOString(), updatedAt: null, updatedById: null },
+                ...artists[0],
+                longestSong: { ...longestSong },
             },
         ];
 
-        const expected = users
-            .slice(0, 1)
-            .map(user => ({ ...user, metadata: { ...user.metadata, createdBy: users[2], updatedBy: users[2] } }));
+        const loadArtists = vi.fn(() => artists);
 
-        repository.useCommon().useEntities({ users });
-        repository.useCommon().useLoadAllUsers();
+        facade
+            .getServices()
+            .for(ArtistBlueprint)
+            .addSource({ load: loadArtists })
+            .addHydrator({
+                requires: { id: true },
+                select: { longestSong: true },
+                hydrate: artists => {
+                    for (const artist of artists) {
+                        if (artist.id === 1) {
+                            artist.longestSong = structuredClone(longestSong);
+                        }
+                    }
+                },
+            });
 
         // act
-        const actual = await workspace
-            .from(UserBlueprint)
-            .select({ metadata: { createdBy: true, updatedBy: true } })
-            .cache(true)
-            .get();
+        const actual = await workspace.from(ArtistBlueprint).select({ longestSong: true }).get();
 
         // assert
         expect(actual).toStrictEqual(expected);
@@ -102,17 +109,17 @@ describe("get()", () => {
             {
                 id: 1,
                 name: "Mara Mauzi",
-                metadata: { createdById: 2, createdAt: new Date().toISOString(), updatedAt: null, updatedById: null },
+                metadata: createMetadata(2),
             },
             {
                 id: 2,
                 name: "Susi Sonne",
-                metadata: { createdById: 2, createdAt: new Date().toISOString(), updatedAt: null, updatedById: null },
+                metadata: createMetadata(2),
             },
             {
                 id: 3,
                 name: "Dana Dandy",
-                metadata: { createdById: 1, createdAt: new Date().toISOString(), updatedAt: null, updatedById: null },
+                metadata: createMetadata(1),
             },
         ];
 
@@ -131,16 +138,15 @@ describe("get()", () => {
     });
 
     it("should work (complex)", async () => {
-        /**
-         * This test is a temporary one to actively check lots of features to reduce change of breaking something while developing.
-         * It should be split into smaller ones at some point.
-         */
         // arrange
+        const createdAt = "2025-05-19T03:27:16.292Z";
+        const updatedAt = "2025-05-19T03:33:16.292Z";
+
         const users: User[] = [
             {
                 id: 1,
                 name: "Admin",
-                metadata: { createdAt: "2025-05-19T03:27:16.292Z", createdById: 1, updatedAt: null, updatedById: null },
+                metadata: createMetadata(1, undefined, createdAt),
             },
         ];
 
@@ -154,13 +160,13 @@ describe("get()", () => {
                 id: 1,
                 namespace: "dev",
                 name: "N'to",
-                metadata: { createdAt: "2025-05-19T03:27:16.292Z", createdById: 1, updatedAt: null, updatedById: null },
+                metadata: createMetadata(1, undefined, createdAt),
             },
             {
                 id: 2,
                 namespace: "prod",
                 name: "So Below",
-                metadata: { createdAt: "2025-05-19T03:27:16.292Z", createdById: 1, updatedAt: null, updatedById: null },
+                metadata: createMetadata(1, undefined, createdAt),
             },
         ];
 
@@ -172,12 +178,7 @@ describe("get()", () => {
                 namespace: "dev",
                 name: "Comite",
                 duration: 336,
-                metadata: {
-                    createdAt: "2025-05-19T03:27:16.292Z",
-                    createdById: 1,
-                    updatedAt: "2025-05-19T03:33:16.292Z",
-                    updatedById: 2,
-                },
+                metadata: createMetadata(1, 2, createdAt, updatedAt),
             },
         ];
 
@@ -197,26 +198,22 @@ describe("get()", () => {
             .select({
                 metadata: true,
                 songs: {
-                    // [todo] ❌ tagIds is optional, so we have to add it. should be removed once hydrators can specify which properties
-                    // need to be hydrated in order for them to hydrate a relation. also, EntitySource has to explicitly specify that
-                    // it includes tagIds - that is a source of confusion, either not require it or warn the user that entities returned
-                    // include it without the source specifying that it does.
                     tags: true,
                     metadata: {
-                        // [todo] ❌ use "updatedBy: true" once setting unhydrated values to null works (because it could not find the updatedBy user)
                         createdBy: true,
+                        updatedBy: true,
                     },
                 },
             })
             .where({ id: [1] })
-            .findOne();
+            .getOne();
 
         // assert
         expect(artist).toEqual({
             id: 1,
             namespace: "dev",
             name: "N'to",
-            metadata: { createdAt: "2025-05-19T03:27:16.292Z", createdById: 1, updatedAt: null, updatedById: null },
+            metadata: { createdAt, createdById: 1, updatedAt: null, updatedById: null },
             songs: [
                 {
                     id: 1,
@@ -227,20 +224,21 @@ describe("get()", () => {
                     duration: 336,
                     tagIds: ["upbeat"],
                     metadata: {
-                        createdAt: "2025-05-19T03:27:16.292Z",
+                        createdAt,
                         createdById: 1,
-                        updatedAt: "2025-05-19T03:33:16.292Z",
+                        updatedAt,
                         updatedById: 2,
                         createdBy: {
                             id: 1,
                             name: "Admin",
                             metadata: {
-                                createdAt: "2025-05-19T03:27:16.292Z",
+                                createdAt,
                                 createdById: 1,
                                 updatedAt: null,
                                 updatedById: null,
                             },
                         },
+                        updatedBy: null,
                     },
                     tags: [{ id: "upbeat", name: "Upbeat" }],
                 },
