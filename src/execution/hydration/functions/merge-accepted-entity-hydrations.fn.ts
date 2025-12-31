@@ -5,7 +5,7 @@ export function mergeAcceptedEntityHydrations(hydrations: AcceptedEntityHydratio
     const acceptedSelection = mergeSelections(hydrations.map(hydration => hydration.getAcceptedSelection()));
     const requiredSelection = mergeSelections(hydrations.map(hydration => hydration.getRequiredSelection()));
 
-    return new AcceptedEntityHydration(acceptedSelection, requiredSelection, async (entities, _, context) => {
+    return new AcceptedEntityHydration(acceptedSelection, requiredSelection, async ({ entities, context }) => {
         await Promise.all(hydrations.map(hydrator => hydrator.hydrateEntities(entities, context)));
     });
 }

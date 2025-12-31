@@ -1,18 +1,18 @@
 import { Entity, EntitySelection, selectionToString } from "@entity-space/elements";
 import { EntityQueryExecutionContext } from "../entity-query-execution-context";
 
-export type HydrateEntitiesFunction = (
-    entities: Entity[],
-    selection: EntitySelection,
-    context: EntityQueryExecutionContext,
-    parameters?: Entity,
-) => Promise<void>;
+export type HydrateEntitiesFnInternal = (args: {
+    entities: Entity[];
+    selection: EntitySelection;
+    context: EntityQueryExecutionContext;
+    parameters?: Entity;
+}) => Promise<void>;
 
 export class AcceptedEntityHydration {
     constructor(
         acceptedSelection: EntitySelection,
         requiredSelection: EntitySelection,
-        hydrateFn: HydrateEntitiesFunction,
+        hydrateFn: HydrateEntitiesFnInternal,
     ) {
         this.#acceptedSelection = acceptedSelection;
         this.#requiredSelection = requiredSelection;
@@ -21,7 +21,7 @@ export class AcceptedEntityHydration {
 
     readonly #acceptedSelection: EntitySelection;
     readonly #requiredSelection: EntitySelection;
-    readonly #hydrateFn: HydrateEntitiesFunction;
+    readonly #hydrateFn: HydrateEntitiesFnInternal;
 
     getAcceptedSelection(): EntitySelection {
         return this.#acceptedSelection;
@@ -32,7 +32,7 @@ export class AcceptedEntityHydration {
     }
 
     hydrateEntities(entities: Entity[], context: EntityQueryExecutionContext, parameters?: Entity): Promise<void> {
-        return this.#hydrateFn(entities, this.#acceptedSelection, context, parameters);
+        return this.#hydrateFn({ entities, selection: this.#acceptedSelection, context, parameters });
     }
 
     toString(): string {

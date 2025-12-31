@@ -107,13 +107,13 @@ export class EntitySchemaScopedServiceContainer<B> {
                 parametersSchema,
                 unpackSelectionWithoutDefault(this.#schema, requires),
                 unpackSelectionWithoutDefault(this.#schema, select),
-                async (entities, selection, context, parameters) => {
-                    await hydrate(
-                        entities as SelectEntity<EntityBlueprint.Instance<B>, S>[],
-                        selection as PackedEntitySelection<EntityBlueprint.Instance<B>>,
+                async ({ entities, selection, context, parameters }) => {
+                    await hydrate({
+                        entities: entities as SelectEntity<EntityBlueprint.Instance<B>, S>[],
+                        selection: selection as PackedEntitySelection<EntityBlueprint.Instance<B>>,
                         context,
-                        (parameters ?? {}) as EntityBlueprint.Type<P>,
-                    );
+                        parameters: (parameters ?? {}) as EntityBlueprint.Type<P>,
+                    });
                 },
             ),
         );

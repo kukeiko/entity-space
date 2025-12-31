@@ -13,7 +13,7 @@ import {
 import { isNot, writePath } from "@entity-space/utils";
 import { EntityQueryExecutor } from "../entity-query-executor";
 import { EntityQueryTracing } from "../entity-query-tracing";
-import { AcceptedEntityHydration, HydrateEntitiesFunction } from "./accepted-entity-hydration";
+import { AcceptedEntityHydration, HydrateEntitiesFnInternal } from "./accepted-entity-hydration";
 import { EntityHydrator } from "./entity-hydrator";
 import { mergeAcceptedEntityHydrations } from "./functions/merge-accepted-entity-hydrations.fn";
 
@@ -111,7 +111,7 @@ export class AutoJoinEntityHydrator extends EntityHydrator {
             return false;
         }
 
-        const hydrate: HydrateEntitiesFunction = async (entities, selection, context) => {
+        const hydrate: HydrateEntitiesFnInternal = async ({ entities, selection, context }) => {
             if (!entities.length) {
                 return;
             }

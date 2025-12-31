@@ -7,7 +7,7 @@ import {
     selectionToString,
     subtractSelection,
 } from "@entity-space/elements";
-import { AcceptedEntityHydration, HydrateEntitiesFunction } from "./accepted-entity-hydration";
+import { AcceptedEntityHydration, HydrateEntitiesFnInternal } from "./accepted-entity-hydration";
 import { EntityHydrator } from "./entity-hydrator";
 
 export class ExplicitEntityHydrator extends EntityHydrator {
@@ -16,7 +16,7 @@ export class ExplicitEntityHydrator extends EntityHydrator {
         parametersSchema: EntitySchema | undefined,
         requiredSelection: EntitySelection,
         hydratedSelection: EntitySelection,
-        hydrateFn: HydrateEntitiesFunction,
+        hydrateFn: HydrateEntitiesFnInternal,
     ) {
         super();
         this.#schema = schema;
@@ -30,7 +30,7 @@ export class ExplicitEntityHydrator extends EntityHydrator {
     readonly #parametersSchema: EntitySchema | undefined;
     readonly #requiredSelection: EntitySelection;
     readonly #hydratedSelection: EntitySelection;
-    readonly #hydrateFn: HydrateEntitiesFunction;
+    readonly #hydrateFn: HydrateEntitiesFnInternal;
 
     override expand(schema: EntitySchema, openSelection: EntitySelection): false | EntitySelection {
         if (this.#schema.getName() !== schema.getName()) {
@@ -66,13 +66,7 @@ export class ExplicitEntityHydrator extends EntityHydrator {
             return false;
         }
 
-        return new AcceptedEntityHydration(
-            acceptedSelection,
-            this.#requiredSelection,
-            async (entities, selection, context, parameters) => {
-                await this.#hydrateFn(entities, selection, context, parameters);
-            },
-        );
+        return new AcceptedEntityHydration(acceptedSelection, this.#requiredSelection, args => this.#hydrateFn(args));
     }
 
     override toString(): string {

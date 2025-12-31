@@ -87,8 +87,8 @@ describe("get()", () => {
             .addHydrator({
                 requires: { id: true },
                 select: { longestSong: true },
-                hydrate: artists => {
-                    for (const artist of artists) {
+                hydrate: ({ entities }) => {
+                    for (const artist of entities) {
                         if (artist.id === 1) {
                             artist.longestSong = structuredClone(longestSong);
                         }

@@ -87,7 +87,7 @@ describe("get()", () => {
             return songs;
         });
 
-        const hydrate = vi.fn<HydrateEntitiesFn<SongBlueprint>>((_entities, _selection, _context, parameters) => {});
+        const hydrate = vi.fn<HydrateEntitiesFn<SongBlueprint>>(() => {});
 
         facade
             .getServices()
@@ -110,8 +110,13 @@ describe("get()", () => {
         // assert
         expect(load).toHaveBeenCalledTimes(1);
         expect(hydrate).toHaveBeenCalledTimes(1);
-        expect(hydrate).toHaveBeenCalledWith(expect.any(Object), expect.any(Object), expect.any(Object), {
-            language: "bisaya",
+        expect(hydrate).toHaveBeenCalledWith({
+            context: expect.any(Object),
+            selection: expect.any(Object),
+            entities: expect.any(Object),
+            parameters: {
+                language: "bisaya",
+            },
         });
     });
 });

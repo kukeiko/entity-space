@@ -18,6 +18,7 @@ import { jsonClone } from "@entity-space/utils";
 import { uniqBy } from "lodash";
 import { vi } from "vitest";
 import { EntityServiceContainer } from "../../entity-service-container";
+import { HydrateEntitiesFn } from "../../hydration/entity-hydrator";
 import { CreateEntityFn, DeleteEntityFn, UpdateEntityFn } from "../../mutation/entity-mutation-function.type";
 import { InMemoryRepository } from "./in-memory-repository";
 
@@ -187,8 +188,8 @@ export class MusicRepository extends InMemoryRepository<MusicEntities, "tags" | 
     }
 
     useHydrateArtistTitle() {
-        const hydrate = vi.fn((artists: Artist[]) => {
-            artists.forEach(entity => (entity.title = this.toArtistTitle(entity)));
+        const hydrate = vi.fn<HydrateEntitiesFn<ArtistBlueprint>>(({ entities }) => {
+            entities.forEach(entity => (entity.title = this.toArtistTitle(entity)));
         });
 
         this.#services.for(ArtistBlueprint).addHydrator({
@@ -201,8 +202,8 @@ export class MusicRepository extends InMemoryRepository<MusicEntities, "tags" | 
     }
 
     useHydrateArtistLongestSong() {
-        const hydrate = vi.fn((artists: Artist[]) => {
-            artists.forEach(artist => (artist.longestSong = this.findLongestSong(artist.songs ?? [])));
+        const hydrate = vi.fn<HydrateEntitiesFn<ArtistBlueprint>>(({ entities }) => {
+            entities.forEach(artist => (artist.longestSong = this.findLongestSong(artist.songs ?? [])));
         });
 
         this.#services.for(ArtistBlueprint).addHydrator({
@@ -218,7 +219,7 @@ export class MusicRepository extends InMemoryRepository<MusicEntities, "tags" | 
         this.#services.for(ArtistBlueprint).addHydrator({
             select: { songTags: true },
             requires: { songs: { tags: true } },
-            hydrate: entities => {
+            hydrate: ({ entities }) => {
                 for (const entity of entities) {
                     entity.songTags = uniqBy(
                         entity.songs.flatMap(song => song.tags),
@@ -318,9 +319,9 @@ export class MusicRepository extends InMemoryRepository<MusicEntities, "tags" | 
     }
 
     useHydrateSongTagIds() {
-        const hydrate = vi.fn((songs: Song[]) => {
+        const hydrate = vi.fn<HydrateEntitiesFn<SongBlueprint>>(({ entities }) => {
             {
-                songs.forEach(
+                entities.forEach(
                     song =>
                         (song.tagIds = this.filter("songTags", songTag => songTag.songId === song.id).map(
                             songTag => songTag.tagId,

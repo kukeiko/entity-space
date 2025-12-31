@@ -72,7 +72,7 @@ export class PathedEntityHydrator extends EntityHydrator {
         return new AcceptedEntityHydration(
             pathedAcceptedSelection,
             pathedRequiredSelection,
-            async (entities, _, context) => {
+            async ({ entities, context }) => {
                 const pathedEntities = readPath<Entity>(this.#path, entities);
                 await accepted.hydrateEntities(pathedEntities, context);
             },

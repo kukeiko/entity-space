@@ -10,6 +10,7 @@ import {
 import { vi } from "vitest";
 import { EntityServiceContainer } from "../../entity-service-container";
 import { InMemoryRepository } from "./in-memory-repository";
+import { HydrateEntitiesFn } from "../../hydration/entity-hydrator";
 
 type CommonEntities = {
     users: User[];
@@ -63,8 +64,8 @@ export class CommonRepository extends InMemoryRepository<CommonEntities> {
     }
 
     useHydrateUserCreatedByName() {
-        const hydrate = vi.fn((users: User[]) => {
-            users.forEach(user => (user.createdByName = user.metadata.createdBy!.name));
+        const hydrate = vi.fn<HydrateEntitiesFn<UserBlueprint>>(({ entities }) => {
+            entities.forEach(user => (user.createdByName = user.metadata.createdBy!.name));
         });
 
         this.#services.for(UserBlueprint).addHydrator({

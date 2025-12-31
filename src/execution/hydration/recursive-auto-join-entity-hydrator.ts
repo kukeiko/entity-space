@@ -12,7 +12,7 @@ import {
 import { isNot, joinPaths, Path, readPath, toPath, writePath } from "@entity-space/utils";
 import { EntityQueryExecutor } from "../entity-query-executor";
 import { EntityQueryTracing } from "../entity-query-tracing";
-import { AcceptedEntityHydration, HydrateEntitiesFunction } from "./accepted-entity-hydration";
+import { AcceptedEntityHydration, HydrateEntitiesFnInternal } from "./accepted-entity-hydration";
 import { EntityHydrator } from "./entity-hydrator";
 import { getOpenEntityProperties } from "./functions/get-open-entity-properties.fn";
 import { mergeAcceptedEntityHydrations } from "./functions/merge-accepted-entity-hydrations.fn";
@@ -157,7 +157,7 @@ export class RecursiveAutoJoinEntityHydrator extends EntityHydrator {
             return false;
         }
 
-        const hydrate: HydrateEntitiesFunction = async (entities, selection, context) => {
+        const hydrate: HydrateEntitiesFnInternal = async ({ entities, selection, context }) => {
             while (entities.length) {
                 const criteria = entitiesToCriterion(entities, relation.getJoinFrom(), relation.getJoinTo());
 

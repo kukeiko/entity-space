@@ -135,7 +135,7 @@ export class RecursiveEntityHydrator extends EntityHydrator {
         return new AcceptedEntityHydration(
             pathedAcceptedSelection,
             pathedRequiredSelection,
-            async (entities, _, context) => {
+            async ({ entities, context }) => {
                 entities = path ? readPath(path, entities) : entities;
 
                 await this.#queryExecutor.executeDescribedHydration(
