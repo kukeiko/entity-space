@@ -1,9 +1,9 @@
 import { PackedEntitySelection } from "@entity-space/elements";
 import { Folder, FolderBlueprint, Tree, TreeBlueprint, TreeBranch, User } from "@entity-space/elements/testing";
 import { beforeEach, describe, expect, it } from "vitest";
-import { EntityWorkspace } from "../entity-workspace";
-import { TestFacade, TestRepository } from "../testing";
-import { createMetadata } from "../testing/create-metadata.fn";
+import { EntityWorkspace } from "../../entity-workspace";
+import { TestFacade, TestRepository } from "../../testing";
+import { createMetadata } from "../../testing/create-metadata.fn";
 
 describe("get()", () => {
     let facade: TestFacade;
