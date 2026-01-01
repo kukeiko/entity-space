@@ -7,9 +7,11 @@ import {
     mergeSelections,
 } from "@entity-space/elements";
 import { joinPaths, Path, readPath, toPath, writePath } from "@entity-space/utils";
-import { EntityQueryExecutor } from "../entity-query-executor";
+import { EntityServiceContainer } from "../entity-service-container";
 import { AcceptedEntityHydration } from "./accepted-entity-hydration";
 import { EntityHydrator } from "./entity-hydrator";
+import { describeHydration } from "./functions/describe-hydration.fn";
+import { executeDescribedHydration } from "./functions/execute-described-hydration.fn";
 
 function getFirstRecursiveSelection(
     selection: EntitySelection,
@@ -34,12 +36,12 @@ function getFirstRecursiveSelection(
 }
 
 export class RecursiveEntityHydrator extends EntityHydrator {
-    constructor(queryExecutor: EntityQueryExecutor) {
+    constructor(services: EntityServiceContainer) {
         super();
-        this.#queryExecutor = queryExecutor;
+        this.#services = services;
     }
 
-    readonly #queryExecutor: EntityQueryExecutor;
+    readonly #services: EntityServiceContainer;
 
     override expand(schema: EntitySchema, openSelection: EntitySelection): false | EntitySelection {
         // [todo] ❌ implement
@@ -89,7 +91,7 @@ export class RecursiveEntityHydrator extends EntityHydrator {
             delete nonRecursiveOpenSelection[key];
         }
 
-        const describedHydration = this.#queryExecutor.describeHydration({
+        const describedHydration = describeHydration(this.#services, {
             getSchema() {
                 return relatedSchema;
             },
@@ -138,18 +140,13 @@ export class RecursiveEntityHydrator extends EntityHydrator {
             async ({ entities, context }) => {
                 entities = path ? readPath(path, entities) : entities;
 
-                await this.#queryExecutor.executeDescribedHydration(
-                    entities,
-                    availableSelection,
-                    describedHydration,
-                    context,
-                );
+                await executeDescribedHydration(entities, availableSelection, describedHydration, context);
 
                 for (const key of recursiveKeys) {
                     let recursiveEntities = readPath<Entity>(toPath(key), entities);
 
                     while (recursiveEntities.length) {
-                        await this.#queryExecutor.executeDescribedHydration(
+                        await executeDescribedHydration(
                             recursiveEntities,
                             availableSelection,
                             describedHydration,

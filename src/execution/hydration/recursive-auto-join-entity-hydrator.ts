@@ -10,8 +10,9 @@ import {
     relationToCriterionShape,
 } from "@entity-space/elements";
 import { isNot, joinPaths, Path, readPath, toPath, writePath } from "@entity-space/utils";
-import { EntityQueryExecutor } from "../entity-query-executor";
-import { EntityQueryTracing } from "../entity-query-tracing";
+import { EntityServiceContainer } from "../entity-service-container";
+import { describeSourcing } from "../sourcing/functions/describe-sourcing.fn";
+import { executeDescribedSourcing } from "../sourcing/functions/execute-described-sourcing.fn";
 import { AcceptedEntityHydration, HydrateEntitiesFnInternal } from "./accepted-entity-hydration";
 import { EntityHydrator } from "./entity-hydrator";
 import { getOpenEntityProperties } from "./functions/get-open-entity-properties.fn";
@@ -75,14 +76,12 @@ function getFirstSelectionContainingRecursiveOpenEntityProperty(
 }
 
 export class RecursiveAutoJoinEntityHydrator extends EntityHydrator {
-    constructor(queryExecutor: EntityQueryExecutor, tracing: EntityQueryTracing) {
+    constructor(services: EntityServiceContainer) {
         super();
-        this.#queryExecutor = queryExecutor;
-        this.#tracing = tracing;
+        this.#services = services;
     }
 
-    readonly #queryExecutor: EntityQueryExecutor;
-    readonly #tracing: EntityQueryTracing;
+    readonly #services: EntityServiceContainer;
 
     override expand(schema: EntitySchema, openSelection: EntitySelection): false | EntitySelection {
         // [todo] ❌ implement
@@ -151,7 +150,7 @@ export class RecursiveAutoJoinEntityHydrator extends EntityHydrator {
             relationToCriterionShape(relation),
         );
 
-        const description = this.#queryExecutor.describeSourcing(relationQueryShape);
+        const description = describeSourcing(this.#services, relationQueryShape);
 
         if (!description) {
             return false;
@@ -173,8 +172,8 @@ export class RecursiveAutoJoinEntityHydrator extends EntityHydrator {
                     criteria,
                 );
 
-                this.#tracing.hydrationQuerySpawned(query);
-                const relatedEntities = await this.#queryExecutor.executeDescribedSourcing(description, context, query);
+                this.#services.getTracing().hydrationQuerySpawned(query);
+                const relatedEntities = await executeDescribedSourcing(description, context, query);
                 joinEntities(entities, relatedEntities, relation);
 
                 entities = readPath(toPath(relation.getName()), entities);

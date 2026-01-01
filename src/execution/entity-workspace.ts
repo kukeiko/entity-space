@@ -14,9 +14,11 @@ import { EntityHydrationBuilder } from "./entity-hydration-builder";
 import { EntityMutationBuilder } from "./entity-mutation-builder";
 import { EntityQueryBuilder } from "./entity-query-builder";
 import { EntityQueryExecutionContext } from "./entity-query-execution-context";
-import { EntityQueryExecutor } from "./entity-query-executor";
 import { EntityServiceContainer } from "./entity-service-container";
 import { HydrateArguments, QueryArguments, QueryCacheOptions } from "./execution-arguments.interface";
+import { executeQuery } from "./functions/execute-query.fn";
+import { describeHydration } from "./hydration/functions/describe-hydration.fn";
+import { executeDescribedHydration } from "./hydration/functions/execute-described-hydration.fn";
 import { AcceptedEntityMutation } from "./mutation/accepted-entity-mutation";
 import { EntityChanges } from "./mutation/entity-changes";
 import { EntityMutation } from "./mutation/entity-mutation";
@@ -29,11 +31,9 @@ import { toSourcedEntities } from "./sourcing/to-sourced-entities.fn";
 export class EntityWorkspace {
     constructor(services: EntityServiceContainer) {
         this.#services = services;
-        this.#executor = new EntityQueryExecutor(services);
     }
 
     readonly #services: EntityServiceContainer;
-    readonly #executor: EntityQueryExecutor;
 
     for<T>(blueprint: Class<T>): EntityHydrationBuilder<EntityBlueprint.Instance<T>> {
         return new EntityHydrationBuilder(blueprint, args => this.#hydrate$(args));
@@ -106,7 +106,7 @@ export class EntityWorkspace {
         return defer(() => {
             isLoading$?.next(true);
 
-            return this.#executor.executeQuery<T>(query, context);
+            return executeQuery<T>(this.#services, query, context);
         }).pipe(finalize(() => isLoading$?.next(false)));
     }
 
@@ -120,7 +120,7 @@ export class EntityWorkspace {
 
         return defer(() => {
             isLoading$?.next(true);
-            return this.#executor.executeQuery<T>(query, context);
+            return executeQuery<T>(this.#services, query, context);
         }).pipe(finalize(() => isLoading$?.next(false)));
     }
 
@@ -139,7 +139,7 @@ export class EntityWorkspace {
                 }
 
                 const context = new EntityQueryExecutionContext(cache, { loadFromSource: false, readFromCache: true });
-                return this.#executor.executeQuery<T>(query, context);
+                return executeQuery<T>(this.#services, query, context);
             }),
             defer(() => {
                 return of(undefined).pipe(
@@ -152,7 +152,7 @@ export class EntityWorkspace {
                             writeToCache: true,
                         });
 
-                        return this.#executor.executeQuery<T>(query, context);
+                        return executeQuery<T>(this.#services, query, context);
                     }),
                     finalize(() => {
                         isLoading$?.next(false);
@@ -174,7 +174,7 @@ export class EntityWorkspace {
             const cacheOptions = this.#toCacheOptions(args.cache);
             const cacheKey = cacheOptions ? cacheOptions.key : undefined;
             const cache = this.#services.getOrCreateCacheBucket(cacheKey);
-            const hydrationDescription = this.#executor.describeHydration(sourcedEntities);
+            const hydrationDescription = describeHydration(this.#services, sourcedEntities);
 
             if (!hydrationDescription) {
                 throw new Error("no idea how to hydrate that");
@@ -186,7 +186,7 @@ export class EntityWorkspace {
             });
 
             return from(
-                this.#executor.executeDescribedHydration(
+                executeDescribedHydration(
                     args.entities,
                     sourcedEntities.getAvailableSelection(),
                     hydrationDescription,
