@@ -109,6 +109,12 @@ export class EntityQueryTracing {
         });
     }
 
+    reissuedReactiveQuery(query: EntityQuery): void {
+        this.#logForQuery(query, builder => {
+            builder.addLine("⚡ query reissued due to reactivity:").addLine(`- query: ${query}`, 1);
+        });
+    }
+
     hydratorAcceptedSelection(
         hydrator: EntityHydrator,
         openSelection: EntitySelection,

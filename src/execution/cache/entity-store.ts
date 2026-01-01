@@ -2,6 +2,7 @@ import {
     copyEntities,
     Entity,
     EntityQuery,
+    EntityQueryParameters,
     EntitySchema,
     entityToId,
     isHydrated,
@@ -9,6 +10,9 @@ import {
     mergeEntities,
 } from "@entity-space/elements";
 import { isDefined } from "@entity-space/utils";
+import { isEqual } from "lodash";
+import { Observable, Subject } from "rxjs";
+import { EntityQueryExecutionContext } from "../entity-query-execution-context";
 import { EntityStoreUniqueIndex } from "./entity-store-unique-index";
 import { ParametersCache } from "./parameters-cache";
 
@@ -25,6 +29,7 @@ export class EntityStore {
     readonly #schema: EntitySchema;
     readonly #idIndex: EntityStoreUniqueIndex;
     readonly #parametersCache = new ParametersCache();
+    readonly #changed = new Subject<EntityQueryExecutionContext | undefined>();
     #entities: (Entity | undefined)[] = [];
 
     getAll(): Entity[] {
@@ -68,26 +73,42 @@ export class EntityStore {
         return entities;
     }
 
-    upsert(query: EntityQuery, entities: Entity[]): void {
+    upsert(entities: Entity[], parameters?: EntityQueryParameters, context?: EntityQueryExecutionContext): void {
+        let madeChanges = false;
+
         for (const entity of entities) {
             const slot = this.#idIndex.get(entity);
 
             if (slot === undefined) {
                 this.#idIndex.set(entity, this.#entities.length);
                 this.#entities.push(entity);
+                madeChanges = true;
             } else {
                 const previous = this.#entities[slot]!;
-                this.#entities[slot] = mergeEntities([previous, entity]);
+
+                if (!isEqual(previous, entity)) {
+                    this.#entities[slot] = mergeEntities([previous, entity]);
+                    madeChanges = true;
+                }
             }
         }
 
-        const parameters = query.getParameters();
-
         if (parameters !== undefined) {
-            this.#parametersCache.set(
-                parameters,
-                entities.map(entity => entityToId(this.#schema, entity)),
-            );
+            const previous = this.#parametersCache.get(parameters);
+            const next = entities.map(entity => entityToId(this.#schema, entity));
+
+            if (!isEqual(previous, next)) {
+                this.#parametersCache.set(
+                    parameters,
+                    entities.map(entity => entityToId(this.#schema, entity)),
+                );
+
+                madeChanges = true;
+            }
+        }
+
+        if (madeChanges) {
+            this.#changed.next(context);
         }
     }
 
@@ -100,6 +121,10 @@ export class EntityStore {
 
         this.#entities[slot] = undefined;
         this.#idIndex.delete(entity);
+    }
+
+    onChange(): Observable<EntityQueryExecutionContext | undefined> {
+        return this.#changed.asObservable();
     }
 
     clear(): void {

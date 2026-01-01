@@ -3,12 +3,28 @@ import {
     EntityBlueprint,
     EntityQuery,
     EntityQueryParameters,
+    getSelectedSchemas,
     unpackSelection,
     whereEntityToCriterion,
     writeRelationJoins,
 } from "@entity-space/elements";
 import { Class } from "@entity-space/utils";
-import { concat, defer, delay, finalize, from, map, Observable, of, Subject, switchMap } from "rxjs";
+import { uniqBy } from "lodash";
+import {
+    concat,
+    defer,
+    delay,
+    filter,
+    finalize,
+    from,
+    map,
+    Observable,
+    of,
+    startWith,
+    Subject,
+    switchMap,
+    tap,
+} from "rxjs";
 import { EntityCache } from "./cache/entity-cache";
 import { EntityHydrationBuilder } from "./entity-hydration-builder";
 import { EntityMutationBuilder } from "./entity-mutation-builder";
@@ -26,6 +42,7 @@ import { EntityMutator } from "./mutation/entity-mutator";
 import { generatePathedMutators } from "./mutation/generate-pathed-mutators.fn";
 import { sortAcceptedMutationsByDependency } from "./mutation/sort-accepted-mutations-by-dependency.fn";
 import { toEntityChanges } from "./mutation/to-entity-changes.fn";
+import { expandSourcedSelection } from "./sourcing/functions/expand-source-selection.fn";
 import { toSourcedEntities } from "./sourcing/to-sourced-entities.fn";
 
 export class EntityWorkspace {
@@ -57,6 +74,12 @@ export class EntityWorkspace {
         return this.#services.destroyCache(key);
     }
 
+    upsertToCache<B>(blueprint: Class<B>, entity: EntityBlueprint.Type<B>, cacheKey?: unknown): void {
+        const cache = this.#services.getOrCreateCacheBucket(cacheKey);
+        const schema = this.#services.getCatalog().getSchemaByBlueprint(blueprint);
+        cache.upsert(schema, [entity]);
+    }
+
     #query$<T>({
         schema,
         cache,
@@ -80,15 +103,27 @@ export class EntityWorkspace {
             const cacheKey = cacheOptions ? cacheOptions.key : undefined;
             const loadFreshDelay = cacheOptions === false ? 0 : (cacheOptions.refreshDelay ?? 0);
             this.#services.getTracing().querySpawned(query);
-
             let stream$: Observable<T[]>;
 
             if (cacheOptions === false) {
                 stream$ = this.#loadFromSource$<T>(query, isLoading$);
-            } else if (!cacheOptions.refresh) {
-                stream$ = this.#loadFromCacheAndSource$<T>(query, cacheKey, isLoading$);
             } else {
-                stream$ = this.#loadFromCacheThenRefreshFromSource$<T>(query, cacheKey, loadFreshDelay, isLoading$);
+                const cache = this.#services.getOrCreateCacheBucket(cacheKey);
+                const reactiveAdditionalBlueprints =
+                    typeof cacheOptions.reactive === "object" ? cacheOptions.reactive.additionalBlueprints : undefined;
+
+                const reload$ = cacheOptions.reactive
+                    ? this.#getReactiveReloadTrigger(query, cache, reactiveAdditionalBlueprints)
+                    : of(undefined);
+                let load$: Observable<T[]>;
+
+                if (!cacheOptions.refresh) {
+                    load$ = this.#loadFromCacheAndSource$<T>(query, cache, isLoading$);
+                } else {
+                    load$ = this.#loadFromCacheThenRefreshFromSource$<T>(query, cache, loadFreshDelay, isLoading$);
+                }
+
+                stream$ = reload$.pipe(switchMap(() => load$));
             }
 
             return stream$.pipe(
@@ -101,7 +136,7 @@ export class EntityWorkspace {
 
     #loadFromSource$<T>(query: EntityQuery, isLoading$?: Subject<boolean>): Observable<T[]> {
         const cache = new EntityCache();
-        const context = new EntityQueryExecutionContext(cache, { loadFromSource: true });
+        const context = new EntityQueryExecutionContext(query, cache, { loadFromSource: true });
 
         return defer(() => {
             isLoading$?.next(true);
@@ -110,9 +145,12 @@ export class EntityWorkspace {
         }).pipe(finalize(() => isLoading$?.next(false)));
     }
 
-    #loadFromCacheAndSource$<T>(query: EntityQuery, cacheKey: unknown, isLoading$?: Subject<boolean>): Observable<T[]> {
-        const cache = this.#services.getOrCreateCacheBucket(cacheKey);
-        const context = new EntityQueryExecutionContext(cache, {
+    #loadFromCacheAndSource$<T>(
+        query: EntityQuery,
+        cache: EntityCache,
+        isLoading$?: Subject<boolean>,
+    ): Observable<T[]> {
+        const context = new EntityQueryExecutionContext(query, cache, {
             loadFromSource: true,
             readFromCache: true,
             writeToCache: true,
@@ -126,19 +164,20 @@ export class EntityWorkspace {
 
     #loadFromCacheThenRefreshFromSource$<T>(
         query: EntityQuery,
-        cacheKey: unknown,
-        refreshDelay: number,
+        cache: EntityCache,
+        refreshDelay = 0,
         isLoading$?: Subject<boolean>,
     ): Observable<T[]> {
-        const cache = this.#services.getOrCreateCacheBucket(cacheKey);
-
         return concat(
             defer(() => {
                 if (!cache.subtractByCache(query)) {
                     refreshDelay = 0;
                 }
 
-                const context = new EntityQueryExecutionContext(cache, { loadFromSource: false, readFromCache: true });
+                const context = new EntityQueryExecutionContext(query, cache, {
+                    loadFromSource: false,
+                    readFromCache: true,
+                });
                 return executeQuery<T>(this.#services, query, context);
             }),
             defer(() => {
@@ -146,7 +185,7 @@ export class EntityWorkspace {
                     delay(refreshDelay),
                     switchMap(() => {
                         isLoading$?.next(true);
-                        const context = new EntityQueryExecutionContext(cache, {
+                        const context = new EntityQueryExecutionContext(query, cache, {
                             loadFromSource: true,
                             readFromCache: false,
                             writeToCache: true,
@@ -180,7 +219,11 @@ export class EntityWorkspace {
                 throw new Error("no idea how to hydrate that");
             }
 
-            const context = new EntityQueryExecutionContext(cache, {
+            // [todo] ❌ this is a fake query - just to temporarily satisfy the context requiring a query.
+            // not yet sure how to solve this, as I want a context to always have a query attached.
+            const query = new EntityQuery(schema, {});
+
+            const context = new EntityQueryExecutionContext(query, cache, {
                 readFromCache: cacheOptions !== false,
                 loadFromSource: true,
             });
@@ -249,5 +292,29 @@ export class EntityWorkspace {
         } else {
             return options;
         }
+    }
+
+    #getReactiveReloadTrigger(
+        query: EntityQuery,
+        cache: EntityCache,
+        additionalBlueprints?: readonly Class[],
+    ): Observable<void> {
+        const expandedSelection = expandSourcedSelection(this.#services, query.getSchema(), query.getSelection());
+        let selectedSchemas = getSelectedSchemas(query.getSchema(), expandedSelection);
+
+        if (additionalBlueprints?.length) {
+            const additionalSchemas = additionalBlueprints.map(blueprint =>
+                this.#services.getCatalog().getSchemaByBlueprint(blueprint),
+            );
+
+            selectedSchemas = uniqBy([...selectedSchemas, ...additionalSchemas], schema => schema.getName());
+        }
+
+        return cache.onChanges(selectedSchemas).pipe(
+            filter(change => change?.getQuery() !== query),
+            tap(() => this.#services.getTracing().reissuedReactiveQuery(query)),
+            map(() => undefined),
+            startWith(undefined),
+        );
     }
 }

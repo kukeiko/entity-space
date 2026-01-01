@@ -68,6 +68,7 @@ export * from "./selection/get-default-selection.fn";
 export * from "./selection/get-hydrated-selection.fn";
 export * from "./selection/get-id-selection.fn";
 export * from "./selection/get-open-relation-selections.fn";
+export * from "./selection/get-selected-schemas.fn";
 export * from "./selection/get-selection.fn";
 export * from "./selection/intersect-relation-selection.fn";
 export * from "./selection/intersect-selection.fn";

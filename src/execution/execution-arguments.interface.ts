@@ -1,11 +1,21 @@
-import { Entity, EntitySchema, PackedEntitySelection, WhereEntity } from "@entity-space/elements";
+import { Entity, EntitySchema, EntitySelection, PackedEntitySelection, WhereEntity } from "@entity-space/elements";
 import { Class } from "@entity-space/utils";
 import { Subject } from "rxjs";
+
+export interface QueryOptions {
+    schema: EntitySchema;
+    selection: EntitySelection;
+}
+
+export interface QueryReactivityOptions {
+    additionalBlueprints?: Class[];
+}
 
 export interface QueryCacheOptions {
     key?: unknown;
     refresh?: boolean;
     refreshDelay?: number;
+    reactive?: boolean | QueryReactivityOptions;
 }
 
 export interface QueryArguments {

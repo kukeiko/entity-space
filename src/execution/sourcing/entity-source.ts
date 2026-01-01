@@ -72,7 +72,7 @@ export class EntitySource {
                     const entities = await this.#loadQuery(reshapedQuery, query);
 
                     if (context.writeToCache()) {
-                        context.getCache().upsert(reshapedQuery, entities);
+                        context.getCache().upsertQuery(reshapedQuery, entities, context);
                     }
 
                     return entities;
@@ -94,7 +94,7 @@ export class EntitySource {
                     const entities = await this.#loadQuery(uncachedQuery, query);
 
                     if (context.writeToCache()) {
-                        context.getCache().upsert(uncachedQuery, entities);
+                        context.getCache().upsertQuery(uncachedQuery, entities, context);
                     }
                 }),
             );

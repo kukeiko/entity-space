@@ -1,6 +1,6 @@
 import { ActivatedRoute, Router } from "@angular/router";
 import { EntityBlueprint, PackedEntitySelection, SelectEntity, WhereEntity } from "@entity-space/elements";
-import { EntityWorkspace } from "@entity-space/execution";
+import { EntityWorkspace, QueryReactivityOptions } from "@entity-space/execution";
 import { Class } from "@entity-space/utils";
 import { EntityDataSource } from "./entity-data-source";
 import { EntityFilter, RoutedEntityFilterSource } from "./entity-filter";
@@ -13,6 +13,7 @@ export function createRoutedEntityDataSource<B, F, S extends PackedEntitySelecti
     entityBlueprint,
     filter,
     filterBlueprint,
+    reactive,
     router,
     select,
     workspace,
@@ -28,6 +29,7 @@ export function createRoutedEntityDataSource<B, F, S extends PackedEntitySelecti
      * once you no longer need the cache (e.g. during ngOnDestroy() in case of an Angular component).
      */
     cacheKey?: unknown;
+    reactive?: boolean | QueryReactivityOptions;
     /**
      * Function that maps a filter object to the criteria that will be passed to one of the entity sources you have defined in the workspace.
      */
@@ -61,5 +63,5 @@ export function createRoutedEntityDataSource<B, F, S extends PackedEntitySelecti
     const entityFilterSource = new RoutedEntityFilterSource(entityFilterSchema, router, activatedRoute);
     const entityFilter = new EntityFilter(entityFilterSource, criteria, filter, select);
 
-    return new EntityDataSource(workspace, entityBlueprint, entityFilter, select, cacheKey);
+    return new EntityDataSource(workspace, entityBlueprint, entityFilter, select, cacheKey, reactive);
 }

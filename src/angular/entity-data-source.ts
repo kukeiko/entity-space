@@ -1,5 +1,5 @@
 import { EntityBlueprint, PackedEntitySelection, SelectEntity } from "@entity-space/elements";
-import { EntityWorkspace } from "@entity-space/execution";
+import { EntityWorkspace, QueryReactivityOptions } from "@entity-space/execution";
 import { Class, moveArrayItem } from "@entity-space/utils";
 import { BehaviorSubject, combineLatest, firstValueFrom, map, Observable, shareReplay, switchMap } from "rxjs";
 import { EntityFilter } from "./entity-filter";
@@ -14,12 +14,14 @@ export class EntityDataSource<B, F, S extends PackedEntitySelection<EntityBluepr
         filter: EntityFilter<B, F, S>,
         select?: S,
         cacheKey?: unknown,
+        reactive?: boolean | QueryReactivityOptions,
     ) {
         this.#workspace = workspace;
         this.#blueprint = blueprint;
         this.#filter = filter;
         this.#select = select;
         this.#cacheKey = cacheKey;
+        this.#reactive = reactive ?? false;
 
         this.#entities$ = combineLatest({
             filter: this.#filter.getFilter$(),
@@ -40,6 +42,7 @@ export class EntityDataSource<B, F, S extends PackedEntitySelection<EntityBluepr
     readonly #isLoading$ = new BehaviorSubject(false);
     readonly #entities$: Observable<SelectEntity<EntityBlueprint.Instance<B>, S>[]>;
     readonly #cacheKey?: unknown;
+    readonly #reactive?: boolean | QueryReactivityOptions;
 
     getEntities$(): Observable<SelectEntity<EntityBlueprint.Instance<B>, S>[]> {
         return this.#entities$;
@@ -96,6 +99,7 @@ export class EntityDataSource<B, F, S extends PackedEntitySelection<EntityBluepr
                 key: this.#cacheKey,
                 refresh: true,
                 refreshDelay: REFRESH_DELAY,
+                reactive: this.#reactive,
             })
             .indicate(this.#isLoading$)
             .get$();

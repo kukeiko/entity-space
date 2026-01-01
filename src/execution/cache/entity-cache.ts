@@ -3,6 +3,7 @@ import {
     entitiesToCriterion,
     Entity,
     EntityQuery,
+    EntityQueryParameters,
     EntityRelationProperty,
     EntitySchema,
     EntitySelection,
@@ -15,6 +16,8 @@ import {
     omitRelationalSelections,
     subtractQueries,
 } from "@entity-space/elements";
+import { merge, Observable } from "rxjs";
+import { EntityQueryExecutionContext } from "../entity-query-execution-context";
 import { EntityStore } from "./entity-store";
 
 export class EntityCache {
@@ -50,19 +53,31 @@ export class EntityCache {
         return entities;
     }
 
-    upsert(query: EntityQuery, entities: readonly Entity[]): void {
+    onChanges(schemas: readonly EntitySchema[]): Observable<EntityQueryExecutionContext | undefined> {
+        return merge(...schemas.map(schema => this.#getStore(schema).onChange()));
+    }
+
+    upsertQuery(query: EntityQuery, entities: readonly Entity[], context?: EntityQueryExecutionContext): void {
         const schema = query.getSchema();
-        entities = copyEntities(query.getSchema(), entities);
+        this.upsert(schema, entities, query.getParameters(), context);
+        const cacheKey = query.getSchema().getName();
+        const cachedQueries = this.#cachedQueries.get(cacheKey) ?? [];
+        this.#cachedQueries.set(cacheKey, mergeQueries([query, ...cachedQueries]) || [query, ...cachedQueries]);
+    }
+
+    upsert(
+        schema: EntitySchema,
+        entities: readonly Entity[],
+        parameters?: EntityQueryParameters,
+        context?: EntityQueryExecutionContext,
+    ): void {
+        entities = copyEntities(schema, entities);
         const normalized = normalizeEntities(schema, entities);
 
         for (const [schema, entities] of normalized) {
             const store = this.#getStore(schema);
-            store.upsert(query, entities);
+            store.upsert(entities, parameters, context);
         }
-
-        const cacheKey = query.getSchema().getName();
-        const cachedQueries = this.#cachedQueries.get(cacheKey) ?? [];
-        this.#cachedQueries.set(cacheKey, mergeQueries([query, ...cachedQueries]) || [query, ...cachedQueries]);
     }
 
     subtractByCache(query: EntityQuery): EntityQuery[] | boolean {
