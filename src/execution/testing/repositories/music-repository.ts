@@ -127,6 +127,25 @@ export class MusicRepository extends InMemoryRepository<MusicEntities, "tags" | 
         return load;
     }
 
+    useLoadAllArtists() {
+        const load = vi.fn(() => this.filter("artists"));
+
+        this.#services.for(ArtistBlueprint).addSource({
+            select: { country: true },
+            load: ({ criteria: { id }, selection }) => {
+                return load().map(artist => {
+                    if (!selection.country) {
+                        delete artist.country;
+                    }
+
+                    return artist;
+                });
+            },
+        });
+
+        return load;
+    }
+
     useLoadArtistById() {
         const load = vi.fn((id: number) => this.filter("artists", filterById(id)));
 
