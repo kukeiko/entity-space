@@ -1,6 +1,5 @@
-import { Entity, EntityRelationSelection, EntitySchema } from "@entity-space/elements";
-import { Path, joinPaths, toPath } from "@entity-space/utils";
-import { entityHasId } from "../../elements/entity/entity-has-id.fn";
+import { Entity, entityHasId, EntityRelationSelection, EntitySchema } from "@entity-space/elements";
+import { joinPaths, Path, toPath } from "@entity-space/utils";
 import { EntityMutationDependency } from "./entity-mutation-dependency";
 
 export function getCreateDependencies(

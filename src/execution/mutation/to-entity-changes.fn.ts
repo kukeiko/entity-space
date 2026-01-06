@@ -1,5 +1,6 @@
 import {
     Entity,
+    entityHasId,
     EntityRelationSelection,
     EntitySchema,
     getEntityDifference,
@@ -9,7 +10,6 @@ import {
 } from "@entity-space/elements";
 import { ComplexKeyMap, readPath, writePath } from "@entity-space/utils";
 import { isEmpty, uniqBy } from "lodash";
-import { entityHasId } from "../../elements/entity/entity-has-id.fn";
 import { EntityChange } from "./entity-change";
 import { EntityChanges } from "./entity-changes";
 import { EntityMutation, EntityMutationType } from "./entity-mutation";
