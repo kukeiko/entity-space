@@ -310,6 +310,8 @@ export class EntityWorkspace {
             selectedSchemas = uniqBy([...selectedSchemas, ...additionalSchemas], schema => schema.getName());
         }
 
+        selectedSchemas = selectedSchemas.filter(schema => schema.hasId());
+
         return cache.onChanges(selectedSchemas).pipe(
             filter(change => change?.getQuery() !== query),
             tap(() => this.#services.getTracing().reissuedReactiveQuery(query)),
