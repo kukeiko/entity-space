@@ -26,7 +26,7 @@ export interface EntityRelationPropertyOptions {
     joinTo: readonly Path[];
     joinToIsContainer: boolean;
     joinsToId: boolean;
-    parent: boolean;
+    outbound?: boolean;
 }
 
 export class EntityRelationProperty extends EntityProperty {
@@ -82,7 +82,7 @@ export class EntityRelationProperty extends EntityProperty {
             joinTo: Object.freeze(joinTo.slice()),
             joinToIsContainer: options?.joinToIsContainer === true,
             joinsToId: options?.joinsToId === true,
-            parent: options?.parent === true,
+            outbound: options?.outbound,
         });
     }
 
@@ -125,20 +125,22 @@ export class EntityRelationProperty extends EntityProperty {
         return this.#options.joinsToId;
     }
 
-    isParent(): boolean {
-        return this.#options.parent;
-    }
-
     isOutbound(): boolean {
-        if (!this.isJoined()) {
+        if (this.#options.outbound !== undefined) {
+            return this.#options.outbound === true;
+        } else if (!this.isJoined()) {
             throw new Error(`relation ${this.getNameWithSchema()} is not a joined relation`);
         } else if (this.joinsToId() && this.joinsFromId()) {
             const lastJoinFrom = this.getJoinFrom().at(-1)!;
             const lastJoinTo = this.getJoinTo().at(-1)!;
+            const isLastJoinFromCreatable = this.getSchema().getPrimitive(lastJoinFrom.valueOf()).isCreatable();
+            const isLastJoinToCreatable = this.getRelatedSchema().getPrimitive(lastJoinTo.valueOf()).isCreatable();
 
-            if (this.getSchema().getPrimitive(lastJoinFrom.valueOf()).isCreatable()) {
+            if (isLastJoinFromCreatable && isLastJoinToCreatable) {
+                throw new Error(`could not determine if relation ${this.getNameWithSchema()} is outbound`);
+            } else if (isLastJoinFromCreatable) {
                 return true;
-            } else if (this.getRelatedSchema().getPrimitive(lastJoinTo.valueOf()).isCreatable()) {
+            } else if (isLastJoinToCreatable) {
                 return false;
             } else {
                 throw new Error(`could not determine if relation ${this.getNameWithSchema()} is outbound`);

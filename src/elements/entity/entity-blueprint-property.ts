@@ -25,9 +25,12 @@ export interface ReadonlyAttribute {
     readonly: true;
 }
 
-// [todo] ❌ remove, no longer needed as there is better 1:1 and m:n support
-export interface ParentAttribute {
-    parent: true;
+export interface OutboundAttribute {
+    outbound: true;
+}
+
+export interface InboundAttribute {
+    inbound: true;
 }
 
 export interface CreatableAttribute {
@@ -65,7 +68,8 @@ export type AllAttributes =
     | IdAttribute
     | NullableAttribute
     | OptionalAttribute
-    | ParentAttribute
+    | OutboundAttribute
+    | InboundAttribute
     | ReadonlyAttribute
     | UnionAttribute
     | UniqueAttribute;

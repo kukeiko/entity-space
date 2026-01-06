@@ -14,9 +14,10 @@ import {
     DtoAttribute,
     EntityAttribute,
     IdAttribute,
+    InboundAttribute,
     NullableAttribute,
     OptionalAttribute,
-    ParentAttribute,
+    OutboundAttribute,
     ReadonlyAttribute,
     UnionAttribute,
     isProperty,
@@ -83,7 +84,8 @@ export namespace EntityBlueprint {
     export const optional = true;
     export const readonly = true;
     export const unique = true;
-    export const parent = true;
+    export const inbound = true;
+    export const outbound = true;
 
     type IdOptions = Partial<DtoAttribute & CreatableAttribute>;
 
@@ -125,11 +127,11 @@ export namespace EntityBlueprint {
     }
 
     type EmbeddedEntityOptions = Partial<
-        ArrayAttribute & DtoAttribute & NullableAttribute & OptionalAttribute & ReadonlyAttribute & ParentAttribute
+        ArrayAttribute & DtoAttribute & NullableAttribute & OptionalAttribute & ReadonlyAttribute
     >;
 
     type JoinedEntityOptions = Partial<
-        ArrayAttribute & DtoAttribute & NullableAttribute & ReadonlyAttribute & ParentAttribute
+        ArrayAttribute & DtoAttribute & NullableAttribute & ReadonlyAttribute & OutboundAttribute & InboundAttribute
     >;
 
     export function entity<V extends Class, O extends EmbeddedEntityOptions>(

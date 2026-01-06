@@ -102,7 +102,6 @@ export class EntitySchemaCatalog {
                 nullable: hasAttribute("nullable", property),
                 optional: hasAttribute("optional", property),
                 readonly: hasAttribute("readonly", property),
-                parent: hasAttribute("parent", property)
             });
         }
 
@@ -121,6 +120,7 @@ export class EntitySchemaCatalog {
                 joinTo: this.#toJoinToPath(property),
                 nullable: hasAttribute("nullable", property),
                 optional: hasAttribute("optional", property),
+                outbound: hasAttribute("outbound", property) || (hasAttribute("inbound", property) ? false : undefined),
             });
         }
     }
