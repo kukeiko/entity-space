@@ -3,13 +3,23 @@ import { Class } from "@entity-space/utils";
 import { Observable } from "rxjs";
 
 function toOptionalInteger(value?: string): number | undefined {
-    if (value === undefined) {
+    if (value == null) {
         return undefined;
     }
 
     const int = parseInt(value);
 
     return isNaN(int) ? undefined : int;
+}
+
+function toNullableInteger(value?: string): number | null {
+    if (value == null) {
+        return null;
+    }
+
+    const int = parseInt(value);
+
+    return isNaN(int) ? null : int;
 }
 
 function toIntegerArray(value?: string): number[] {
@@ -36,9 +46,29 @@ function toOptionalBoolean(value?: string): boolean | undefined {
     }
 }
 
+function toNullableBoolean(value?: string): boolean | null {
+    const str = (value ?? "").toLocaleLowerCase();
+
+    if (str === "true") {
+        return true;
+    } else if (str === "false") {
+        return false;
+    } else {
+        return null;
+    }
+}
+
 function toOptionalString(value?: string): string | undefined {
-    if (value === undefined) {
+    if (value == null) {
         return undefined;
+    } else {
+        return value;
+    }
+}
+
+function toNullableString(value?: string): string | null {
+    if (value == null) {
+        return null;
     } else {
         return value;
     }
@@ -77,7 +107,7 @@ function toEntityFilterSchemaProperty(property: NamedProperty): EntityFilterSche
     let parse: EntityFilterSchemaProperty["parse"];
 
     const errorMessagePrefix = `can't create filter schema for property "${property.name}"`;
-    const isNullable = hasAttribute("optional", property);
+    const isNullable = hasAttribute("nullable", property);
     const isArray = hasAttribute("array", property);
     const isUnion = hasAttribute("union", property);
 
@@ -85,33 +115,33 @@ function toEntityFilterSchemaProperty(property: NamedProperty): EntityFilterSche
         if (isArray) {
             parse = toIntegerArray;
         } else if (isNullable) {
-            parse = toOptionalInteger;
+            parse = toNullableInteger;
         } else {
-            throw new Error(`${errorMessagePrefix}: only optional integers are supported`);
+            parse = toOptionalInteger;
         }
     } else if (property.valueType === String) {
         if (isArray) {
             parse = toStringArray;
         } else if (isNullable) {
-            parse = toOptionalString;
+            parse = toNullableString;
         } else {
-            throw new Error(`${errorMessagePrefix}: only optional strings are supported`);
+            parse = toOptionalString;
         }
     } else if (property.valueType === Boolean) {
         if (isArray) {
             throw new Error(`${errorMessagePrefix}: boolean arrays not yet supported`);
         } else if (isNullable) {
-            parse = toOptionalBoolean;
+            parse = toNullableBoolean;
         } else {
-            throw new Error(`${errorMessagePrefix}: only optional booleans are supported`);
+            parse = toOptionalBoolean;
         }
     } else if (isUnion) {
         if (isArray) {
             parse = toStringArray;
         } else if (isNullable) {
-            parse = toOptionalString;
+            parse = toNullableString;
         } else {
-            throw new Error(`${errorMessagePrefix}: only optional unions are supported`);
+            parse = toOptionalString;
         }
     } else {
         throw new Error(`${errorMessagePrefix}: unsupported value type`);
