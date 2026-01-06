@@ -24,36 +24,22 @@ export class EntityHydrationBuilder<T extends Entity = Entity, S extends PackedE
         return this;
     }
 
-    hydrate$<E extends T>(entities: E[]): Observable<E[]> {
-        return this.#hydrateFn(this.#toHydrateArguments(entities)) as Observable<E[]>;
+    hydrate$<E extends T>(entities: E[]): Observable<SelectEntity<E, S>[]> {
+        return this.#hydrateFn(this.#toHydrateArguments(entities)) as Observable<SelectEntity<E, S>[]>;
     }
 
-    hydrate<E extends T>(entities: E[]): Promise<E[]> {
+    hydrate<E extends T>(entities: E[]): Promise<SelectEntity<E, S>[]> {
         return lastValueFrom(this.hydrate$(entities));
     }
 
-    hydrateTyped$<E extends T>(entities: E[]): Observable<SelectEntity<E, S>[]> {
-        return this.hydrate$(entities) as Observable<SelectEntity<E, S>[]>;
+    hydrateOne$<E extends T>(entity: E): Observable<SelectEntity<E, S>> {
+        return this.#hydrateFn(this.#toHydrateArguments([entity])).pipe(map(entities => entities[0])) as Observable<
+            SelectEntity<E, S>
+        >;
     }
 
-    hydrateTyped<E extends T>(entities: E[]): Promise<SelectEntity<E, S>[]> {
-        return lastValueFrom(this.hydrateTyped$(entities));
-    }
-
-    hydrateOne$<E extends T>(entity: E): Observable<E> {
-        return this.#hydrateFn(this.#toHydrateArguments([entity])).pipe(map(entities => entities[0])) as Observable<E>;
-    }
-
-    hydrateOne<E extends T>(entity: E): Promise<E> {
+    hydrateOne<E extends T>(entity: E): Promise<SelectEntity<E, S>> {
         return lastValueFrom(this.hydrateOne$(entity));
-    }
-
-    hydrateOneTyped$<E extends T>(entity: E): Observable<SelectEntity<E, S>> {
-        return this.hydrateOne$(entity) as Observable<SelectEntity<E, S>>;
-    }
-
-    hydrateOneTyped<E extends T>(entity: E): Promise<SelectEntity<E, S>> {
-        return lastValueFrom(this.hydrateOneTyped$(entity));
     }
 
     #toHydrateArguments(entities: Entity[]): HydrateArguments {
