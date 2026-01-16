@@ -6,9 +6,5 @@ export {
     PackedEntitySelection,
     SelectEntity,
     WhereEntity,
-    dtoToEntity,
-    dtosToEntities,
-    entitiesToDtos,
-    entityToDto,
 } from "@entity-space/elements";
 export { EntityServiceContainer, EntityWorkspace } from "@entity-space/execution";

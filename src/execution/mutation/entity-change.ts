@@ -26,6 +26,22 @@ export class EntityChange {
         return this.#type;
     }
 
+    isCreate(): boolean {
+        return this.getType() === "create";
+    }
+
+    isUpdate(): boolean {
+        return this.getType() === "update";
+    }
+
+    isCreateOrUpdate(): boolean {
+        return this.isCreate() || this.isUpdate();
+    }
+
+    isDelete(): boolean {
+        return this.getType() === "delete";
+    }
+
     getSchema(): EntitySchema {
         return this.#schema;
     }

@@ -20,8 +20,6 @@ export * from "./entity/copy-entities.fn";
 export * from "./entity/copy-entity.fn";
 export * from "./entity/deduplicate-entities.fn";
 export * from "./entity/dto-to-entity.fn";
-export * from "./entity/dtos-to-entities.fn";
-export * from "./entity/entities-to-dtos.fn";
 export * from "./entity/entity";
 export * from "./entity/entity-blueprint";
 export * from "./entity/entity-blueprint-property";

@@ -1,16 +1,22 @@
-import { Entity, EntityRelationSelection } from "@entity-space/elements";
+import { Entity, EntityRelationSelection, EntitySchema } from "@entity-space/elements";
 import { EntityChange } from "./entity-change";
+import { EntityMutationType } from "./entity-mutation";
 import { EntityMutationDependency } from "./entity-mutation-dependency";
+import { EntityMutationFn } from "./entity-mutator";
 
 export class AcceptedEntityMutation {
     constructor(
+        schema: EntitySchema,
+        type: EntityMutationType,
         entities: readonly Entity[],
         acceptedChanges: readonly EntityChange[],
         dependencies: readonly EntityMutationDependency[],
-        mutateFn: (mutation: AcceptedEntityMutation) => Promise<void>, // [todo] ❌ hacky
+        mutateFn: EntityMutationFn,
         selection: EntityRelationSelection,
         previous?: readonly Entity[],
     ) {
+        this.#schema = schema;
+        this.#type = type;
         this.#entities = Object.freeze(entities.slice());
         this.#changes = Object.freeze(acceptedChanges.slice());
         this.#dependencies = Object.freeze(dependencies.slice());
@@ -19,26 +25,48 @@ export class AcceptedEntityMutation {
         this.#previous = previous;
     }
 
+    readonly #schema: EntitySchema;
+    readonly #type: EntityMutationType;
     readonly #entities: readonly Entity[];
     readonly #changes: readonly EntityChange[];
     readonly #dependencies: readonly EntityMutationDependency[];
-    readonly #mutateFn: (mutation: AcceptedEntityMutation) => Promise<void>;
+    readonly #mutateFn: EntityMutationFn;
     readonly #selection: EntityRelationSelection;
     readonly #previous?: readonly Entity[];
 
-    async mutate(): Promise<void> {
-        await this.#mutateFn(this);
+    getSchema(): EntitySchema {
+        return this.#schema;
+    }
+
+    getType(): EntityMutationType {
+        return this.#type;
+    }
+
+    isCreate(): boolean {
+        return this.getType() === "create";
+    }
+
+    isUpdate(): boolean {
+        return this.getType() === "update";
+    }
+
+    isDelete(): boolean {
+        return this.getType() === "delete";
+    }
+
+    isSave(): boolean {
+        return this.getType() === "save";
+    }
+
+    mutate(entities: Entity[], selection: EntityRelationSelection): Promise<Entity[]> {
+        return this.#mutateFn(entities, selection);
     }
 
     getEntities(): readonly Entity[] {
-        return this.#entities;
-    }
-
-    getContainedRootEntities(): readonly Entity[] {
         return this.#entities.filter(entity => this.#changes.some(change => change.getEntity() === entity));
     }
 
-    getPreviousContainedRootEntities(): readonly Entity[] {
+    getPreviousEntities(): readonly Entity[] {
         return (this.#previous ?? []).filter(entity => this.#changes.some(change => change.getEntity() === entity));
     }
 

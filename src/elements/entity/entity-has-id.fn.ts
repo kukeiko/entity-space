@@ -15,11 +15,5 @@ export function entityHasId(schema: EntitySchema, entity: Entity): boolean {
         return false;
     }
 
-    for (const idPath of schema.getLeadingIdPaths()) {
-        if (!isValidIdValue(readPath(idPath, entity))) {
-            return false;
-        }
-    }
-
-    return isValidIdValue(readPath(schema.getLastIdPath(), entity));
+    return schema.getIdPaths().every(idPath => isValidIdValue(readPath(idPath, entity)));
 }

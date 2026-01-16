@@ -1,6 +1,7 @@
-import { isNotNullsy, Path, readPath, writePath } from "@entity-space/utils";
-import { isNull, isPlainObject, isUndefined } from "lodash";
+import { isNotNullsy, isNullsy, Path, readPath, writePath } from "@entity-space/utils";
+import { isPlainObject } from "lodash";
 import { Entity } from "./entity";
+import { EntityPrimitiveProperty } from "./entity-primitive-property";
 import { EntityProperty, EntityPropertyOptions } from "./entity-property";
 import { EntitySchema } from "./entity-schema";
 
@@ -89,6 +90,14 @@ export class EntityRelationProperty extends EntityProperty {
     readonly #relatedSchema: EntitySchema;
     readonly #options: Readonly<EntityRelationPropertyOptions>;
 
+    override isPrimitive(): this is EntityPrimitiveProperty {
+        return false;
+    }
+
+    override isRelation(): this is EntityRelationProperty {
+        return true;
+    }
+
     getRelatedSchema(): EntitySchema {
         return this.#relatedSchema;
     }
@@ -154,11 +163,15 @@ export class EntityRelationProperty extends EntityProperty {
         }
     }
 
-    readValue(entity: Entity): Entity | Entity[] | undefined | null {
+    isInbound(): boolean {
+        return !this.isOutbound();
+    }
+
+    override readValue(entity: Entity): Entity | Entity[] | undefined | null {
         const name = this.getName();
         const value = entity[name];
 
-        if (isNull(value) || isUndefined(value)) {
+        if (isNullsy(value)) {
             return value;
         } else if (this.isArray()) {
             if (!Array.isArray(value)) {
@@ -175,13 +188,6 @@ export class EntityRelationProperty extends EntityProperty {
         }
     }
 
-    readValues(entities: readonly Entity[]): Entity[] {
-        return entities
-            .map(entity => this.readValue(entity))
-            .filter(isNotNullsy)
-            .flat();
-    }
-
     readValueAsArray(entity: Entity): Entity[] {
         const value = this.readValue(entity);
 
@@ -192,6 +198,13 @@ export class EntityRelationProperty extends EntityProperty {
         } else {
             return value;
         }
+    }
+
+    readValuesFlat(entities: readonly Entity[]): Entity[] {
+        return entities
+            .map(entity => this.readValue(entity))
+            .filter(isNotNullsy)
+            .flat();
     }
 
     writeJoins(entities: readonly Entity[]): void {

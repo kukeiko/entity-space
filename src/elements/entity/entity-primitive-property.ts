@@ -1,6 +1,7 @@
 import { isPrimitiveType, Primitive } from "@entity-space/utils";
 import { Entity } from "./entity";
 import { EntityProperty, EntityPropertyOptions } from "./entity-property";
+import { EntityRelationProperty } from "./entity-relation-property";
 import { EntitySchema } from "./entity-schema";
 
 export function isEntityPrimitiveProperty(value: unknown): value is EntityPrimitiveProperty {
@@ -34,6 +35,14 @@ export class EntityPrimitiveProperty extends EntityProperty {
 
     readonly #primitive: Primitive;
     readonly #options: Readonly<EntityPrimitivePropertyOptions>;
+
+    override isPrimitive(): this is EntityPrimitiveProperty {
+        return true;
+    }
+
+    override isRelation(): this is EntityRelationProperty {
+        return false;
+    }
 
     getPrimitiveType(): Primitive {
         return this.#primitive;

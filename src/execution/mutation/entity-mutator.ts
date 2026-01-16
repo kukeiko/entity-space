@@ -10,6 +10,4 @@ export abstract class EntityMutator {
         changes: EntityChanges,
         path?: Path,
     ): [accepted: AcceptedEntityMutation | undefined, open: EntityChanges | undefined];
-
-    abstract mutate(mutation: AcceptedEntityMutation): Promise<void>;
 }

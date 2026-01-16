@@ -19,7 +19,7 @@ export function writeRelationJoins(
         const selectedRelation = relationSelection[relation.getName()];
 
         if (selectedRelation !== undefined) {
-            writeRelationJoins(relation.getRelatedSchema(), relation.readValues(entities), selectedRelation);
+            writeRelationJoins(relation.getRelatedSchema(), relation.readValuesFlat(entities), selectedRelation);
         }
     }
 }

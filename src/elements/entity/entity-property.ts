@@ -1,3 +1,6 @@
+import { Entity } from "./entity";
+import { EntityPrimitiveProperty } from "./entity-primitive-property";
+import { EntityRelationProperty } from "./entity-relation-property";
 import { EntitySchema } from "./entity-schema";
 
 export enum ContainerType {
@@ -59,7 +62,11 @@ export abstract class EntityProperty {
     }
 
     getNameWithSchema(): string {
-        return `${this.#schema.getName()}.${this.#name}`;
+        return `${this.#schema.getName()}.${this.getName()}`;
+    }
+
+    getDtoNameWithSchema(): string {
+        return `${this.#schema.getName()}.${this.getDtoName()}`;
     }
 
     getDtoName(): string {
@@ -85,5 +92,24 @@ export abstract class EntityProperty {
 
     isReadonly(): boolean {
         return this.#options.readonly;
+    }
+
+    abstract isPrimitive(): this is EntityPrimitiveProperty;
+    abstract isRelation(): this is EntityRelationProperty;
+
+    readValue(entity: Entity): any {
+        return entity[this.getName()];
+    }
+
+    writeValue(entity: Entity, value: any): void {
+        entity[this.getName()] = value;
+    }
+
+    readDtoValue(dto: Entity): any {
+        return dto[this.getDtoName()];
+    }
+
+    writeDtoValue(dto: Entity, value: any): void {
+        dto[this.getDtoName()] = value;
     }
 }

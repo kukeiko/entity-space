@@ -27,6 +27,7 @@ import {
 } from "rxjs";
 import { EntityCache } from "./cache/entity-cache";
 import { EntityHydrationBuilder } from "./entity-hydration-builder";
+import { EntityMapper } from "./entity-mapper";
 import { EntityMutationBuilder } from "./entity-mutation-builder";
 import { EntityQueryBuilder } from "./entity-query-builder";
 import { EntityQueryExecutionContext } from "./entity-query-execution-context";
@@ -39,9 +40,10 @@ import { AcceptedEntityMutation } from "./mutation/accepted-entity-mutation";
 import { EntityChanges } from "./mutation/entity-changes";
 import { EntityMutation } from "./mutation/entity-mutation";
 import { EntityMutator } from "./mutation/entity-mutator";
+import { executeMutation } from "./mutation/functions/execute-mutation.fn";
+import { toEntityChanges } from "./mutation/functions/to-entity-changes.fn";
 import { generatePathedMutators } from "./mutation/generate-pathed-mutators.fn";
 import { sortAcceptedMutationsByDependency } from "./mutation/sort-accepted-mutations-by-dependency.fn";
-import { toEntityChanges } from "./mutation/to-entity-changes.fn";
 import { expandSourcedSelection } from "./sourcing/functions/expand-source-selection.fn";
 import { toSourcedEntities } from "./sourcing/to-sourced-entities.fn";
 
@@ -64,6 +66,11 @@ export class EntityWorkspace {
     in<T>(blueprint: Class<T>): EntityMutationBuilder<T> {
         const schema = this.#services.getCatalog().getSchemaByBlueprint(blueprint);
         return new EntityMutationBuilder(schema, operation => this.#mutate(operation));
+    }
+
+    map<B>(blueprint: Class<B>): EntityMapper<B> {
+        const schema = this.#services.getCatalog().getSchemaByBlueprint(blueprint);
+        return new EntityMapper(schema);
     }
 
     getOrCreateCacheBucket(key: unknown): EntityCache {
@@ -278,7 +285,7 @@ export class EntityWorkspace {
         }
 
         for (const mutation of sortAcceptedMutationsByDependency(allAccepted)) {
-            await mutation.mutate();
+            await executeMutation(mutation, this.#services.getTracing());
         }
 
         return mutation.getEntities();

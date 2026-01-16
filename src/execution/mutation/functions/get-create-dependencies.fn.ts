@@ -1,8 +1,8 @@
 import { Entity, entityHasId, EntityRelationSelection, EntitySchema } from "@entity-space/elements";
 import { joinPaths, Path, toPath } from "@entity-space/utils";
-import { EntityMutationDependency } from "./entity-mutation-dependency";
+import { EntityMutationDependency } from "../entity-mutation-dependency";
 
-export function getDeleteDependencies(
+export function getCreateDependencies(
     schema: EntitySchema,
     entities: readonly Entity[],
     required: EntityRelationSelection,
@@ -19,7 +19,7 @@ export function getDeleteDependencies(
         if (relation.isEmbedded()) {
             const related = entities.flatMap(entity => relation.readValueAsArray(entity));
 
-            return getDeleteDependencies(
+            return getCreateDependencies(
                 relation.getRelatedSchema(),
                 related,
                 selected,
@@ -27,26 +27,36 @@ export function getDeleteDependencies(
                 path === undefined ? toPath(key) : joinPaths([path, key]),
             );
         } else if (supported === undefined || supported[key] === undefined) {
-            if (relation.joinsFromId() && relation.joinsToId()) {
-                throw new Error(
-                    "unsupported: trying to delete dependency to a created relation that joins both from & to an id",
-                );
-            }
-
             const relatedSchema = relation.getRelatedSchema();
-            const relatedDeletable = entities.flatMap(entity =>
-                relation.readValueAsArray(entity).filter(entity => entityHasId(relatedSchema, entity)),
+            const relatedCreatable = entities.flatMap(entity =>
+                relation.readValueAsArray(entity).filter(entity => !entityHasId(relatedSchema, entity)),
             );
 
             const dependencies: EntityMutationDependency[] = [];
 
-            if (relatedDeletable.length) {
+            if (relatedCreatable.length) {
                 dependencies.push(
                     new EntityMutationDependency(
-                        "delete",
+                        "create",
                         relatedSchema,
-                        relatedDeletable,
-                        relation.joinsFromId(),
+                        relatedCreatable,
+                        relation.isOutbound(),
+                        path === undefined ? toPath(key) : joinPaths([path, key]),
+                    ),
+                );
+            }
+
+            const relatedUpdatable = entities.flatMap(entity =>
+                relation.readValueAsArray(entity).filter(entity => entityHasId(relatedSchema, entity)),
+            );
+
+            if (relatedUpdatable.length) {
+                dependencies.push(
+                    new EntityMutationDependency(
+                        "update",
+                        relatedSchema,
+                        relatedUpdatable,
+                        relation.isOutbound(),
                         path === undefined ? toPath(key) : joinPaths([path, key]),
                     ),
                 );

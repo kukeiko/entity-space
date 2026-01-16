@@ -25,7 +25,7 @@ function getHydratedSelectionCore(schema: EntitySchema, hydratedSelection: Entit
             continue;
         }
 
-        const relatedEntities = relation.readValues(entities);
+        const relatedEntities = relation.readValuesFlat(entities);
 
         if (!relatedEntities.length) {
             continue;

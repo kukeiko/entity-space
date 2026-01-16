@@ -1,47 +1,34 @@
-import { Class, isPrimitiveType } from "@entity-space/utils";
 import { Entity } from "./entity";
-import { EntityBlueprint, getNamedProperties } from "./entity-blueprint";
-import { hasAttribute } from "./entity-blueprint-property";
+import { EntitySchema } from "./entity-schema";
 
-export function dtoToEntity<T>(blueprint: Class<T>, dto: Entity): EntityBlueprint.Instance<T> {
-    const properties = getNamedProperties(blueprint);
+export function dtoToEntity(schema: EntitySchema, dto: Entity): Entity {
+    const properties = schema.getProperties();
     const entity: Entity = {};
 
-    properties.forEach(property => {
-        if (hasAttribute("dto", property) && dto[property.dto] === undefined) {
-            return;
-        } else if (!hasAttribute("dto", property) && dto[property.name] === undefined) {
-            return;
-        }
+    for (const property of properties) {
+        const value = property.readDtoValue(dto);
 
-        if (hasAttribute("dto", property) && dto[property.dto] === null) {
-            entity[property.name] = dto[property.dto];
-        } else if (!hasAttribute("dto", property) && dto[property.name] === null) {
-            entity[property.name] = dto[property.name];
-        } else if (isPrimitiveType(property.valueType)) {
-            if (hasAttribute("dto", property)) {
-                entity[property.name] = dto[property.dto];
-            } else {
-                entity[property.name] = dto[property.name];
-            }
-        } else if (hasAttribute("array", property) && hasAttribute("entity", property)) {
-            if (hasAttribute("dto", property)) {
-                entity[property.name] = (dto[property.dto] as any[]).map(dto =>
-                    dtoToEntity(property.valueType as Class, dto),
+        if (value === undefined) {
+            continue;
+        } else if (value === null) {
+            property.writeValue(entity, value);
+        } else if (property.isPrimitive()) {
+            property.writeValue(entity, value);
+        } else if (property.isRelation()) {
+            if (property.isArray()) {
+                if (!Array.isArray(value)) {
+                    throw new Error(`expected ${property.getDtoNameWithSchema()} to be an array`);
+                }
+
+                property.writeValue(
+                    entity,
+                    value.map(relatedDto => dtoToEntity(property.getRelatedSchema(), relatedDto)),
                 );
             } else {
-                entity[property.name] = (dto[property.name] as any[]).map(dto =>
-                    dtoToEntity(property.valueType as Class, dto),
-                );
-            }
-        } else if (hasAttribute("entity", property)) {
-            if (hasAttribute("dto", property)) {
-                entity[property.name] = dtoToEntity(property.valueType as Class, dto[property.dto] as any);
-            } else {
-                entity[property.name] = dtoToEntity(property.valueType as Class, dto[property.name] as any);
+                property.writeValue(entity, dtoToEntity(property.getRelatedSchema(), value));
             }
         }
-    });
+    }
 
-    return entity as EntityBlueprint.Instance<T>;
+    return entity;
 }

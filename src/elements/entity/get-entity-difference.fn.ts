@@ -1,4 +1,4 @@
-import { isEmpty, isEqual } from "lodash";
+import { isEmpty, isEqual,isPlainObject } from "lodash";
 import { EntityRelationSelection } from "../selection/entity-selection";
 import { Entity } from "./entity";
 import { EntitySchema } from "./entity-schema";
@@ -13,11 +13,10 @@ export function getEntityDifference(
     const difference: Entity = {};
 
     for (const [key, value] of Object.entries(current)) {
-        if (schema.isRelation(key) && (!schema.getRelation(key).isEmbedded() || !(selection && selection[key]))) {
+        if (schema.isRelation(key) && (!schema.getRelation(key).isEmbedded() && selection?.[key] === undefined)) {
+            // skip joined relations if not selected
             continue;
-        }
-
-        if (value === undefined || previous[key] === undefined) {
+        } else if (value === undefined || previous[key] === undefined) {
             continue;
         } else if (value === null && previous[key] !== null) {
             difference[key] = null;

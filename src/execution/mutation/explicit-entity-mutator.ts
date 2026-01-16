@@ -1,49 +1,34 @@
 import {
-    addIdSelection,
-    assignCreatedIds,
-    assignEntitiesUsingIds,
-    copyEntity,
-    entityHasId,
     EntityRelationSelection,
     EntitySchema,
     EntitySelection,
-    getSelection,
     intersectRelationSelection,
-    isCreatableEntityProperty,
-    isSavableEntityProperty,
-    isUpdatableEntityProperty,
-    toEntityPairs,
     toRelationSelection,
 } from "@entity-space/elements";
 import { joinPaths, Path, toPath } from "@entity-space/utils";
 import { isEmpty, uniq } from "lodash";
-import { EntityQueryTracing } from "../entity-query-tracing";
 import { AcceptedEntityMutation } from "./accepted-entity-mutation";
 import { EntityChange } from "./entity-change";
 import { EntityChanges } from "./entity-changes";
 import { EntityMutationType } from "./entity-mutation";
 import { EntityMutationDependency } from "./entity-mutation-dependency";
 import { EntityMutationFn, EntityMutator } from "./entity-mutator";
-import { getCreateDependencies } from "./get-create-dependencies.fn";
-import { getDeleteDependencies } from "./get-delete-dependencies.fn";
+import { getMutationDependencies } from "./functions/get-mutation-dependencies.fn";
 
 export class ExplicitEntityMutator extends EntityMutator {
     constructor(
-        tracing: EntityQueryTracing,
         type: EntityMutationType,
         schema: EntitySchema,
         mutateFn: EntityMutationFn,
         selection: EntityRelationSelection,
     ) {
         super();
-        this.#tracing = tracing;
         this.#type = type;
         this.#schema = schema;
         this.#mutateFn = mutateFn;
         this.#selection = selection;
     }
 
-    readonly #tracing: EntityQueryTracing;
     readonly #type: EntityMutationType;
     readonly #schema: EntitySchema;
     readonly #mutateFn: EntityMutationFn;
@@ -59,182 +44,28 @@ export class ExplicitEntityMutator extends EntityMutator {
             return [undefined, changes];
         }
 
-        const [accepted, open, dependencies] = this.#accept(changes, this.#selection, path, true);
+        const [acceptedChanges, openChanges, dependencies] = this.#accept(changes, this.#selection, path, true);
 
-        if (!accepted.length) {
+        if (!acceptedChanges.length) {
             return [undefined, changes];
         } else {
             const acceptedSelection = intersectRelationSelection(changes.getSelection(path), this.#selection);
+            const entities = changes.getEntities(path);
             const previous = changes.getPrevious(path);
 
             return [
                 new AcceptedEntityMutation(
-                    uniq(changes.getEntities(path)),
-                    accepted,
+                    this.#schema,
+                    this.#type,
+                    uniq(entities),
+                    acceptedChanges,
                     dependencies,
-                    mutation => this.mutate(mutation),
+                    this.#mutateFn,
                     acceptedSelection,
                     previous ? uniq(previous) : undefined,
                 ),
-                open,
+                openChanges,
             ];
-        }
-    }
-
-    override async mutate(mutation: AcceptedEntityMutation): Promise<void> {
-        if (this.#type === "create") {
-            for (const dependency of mutation.getOutboundDependencies()) {
-                this.#tracing.writingDependency(dependency.getType(), dependency.getPath(), true);
-                dependency.writeIds(this.#schema, mutation.getContainedRootEntities());
-            }
-
-            const creatableSelection = getSelection(this.#schema, mutation.getSelection(), isCreatableEntityProperty);
-
-            const map = new Map(
-                mutation.getContainedRootEntities().map(entity => {
-                    const copy = copyEntity(
-                        this.#schema,
-                        entity,
-                        creatableSelection,
-                        (relation, entity) =>
-                            relation.isEmbedded() ||
-                            mutation.getChanges().some(change => change.getEntity() === entity),
-                    );
-
-                    return [copy, entity];
-                }),
-            );
-
-            const copies = Array.from(map.keys());
-            this.#tracing.dispatchedMutation(this.#schema, this.#type, copies);
-            const created = await this.#mutateFn(copies, mutation.getSelection() ?? {});
-            assignCreatedIds(this.#schema, mutation.getSelection() ?? {}, mutation.getContainedRootEntities(), created);
-            const selection = getSelection(this.#schema, mutation.getSelection() ?? {});
-            const originals = Array.from(map.values());
-            assignEntitiesUsingIds(this.#schema, selection, originals, created);
-
-            for (const dependency of mutation.getInboundDependencies()) {
-                this.#tracing.writingDependency(dependency.getType(), dependency.getPath(), false);
-                dependency.writeIds(this.#schema, originals);
-            }
-        } else if (this.#type === "update") {
-            for (const dependency of mutation.getOutboundDependencies()) {
-                this.#tracing.writingDependency(dependency.getType(), dependency.getPath(), true);
-                dependency.writeIds(this.#schema, mutation.getContainedRootEntities());
-            }
-
-            const updatableSelection = addIdSelection(
-                this.#schema,
-                getSelection(this.#schema, mutation.getSelection(), isUpdatableEntityProperty),
-            );
-
-            const map = new Map(
-                mutation.getContainedRootEntities().map(entity => {
-                    const copy = copyEntity(
-                        this.#schema,
-                        entity,
-                        updatableSelection,
-                        (relation, entity) =>
-                            relation.isEmbedded() ||
-                            mutation.getChanges().some(change => change.getEntity() === entity),
-                    );
-
-                    return [copy, entity];
-                }),
-            );
-
-            const copies = Array.from(map.keys());
-            this.#tracing.dispatchedMutation(this.#schema, this.#type, copies);
-            const updated = await this.#mutateFn(copies, mutation.getSelection() ?? {});
-            const originals = Array.from(map.values());
-            const selection = getSelection(this.#schema, mutation.getSelection() ?? {});
-            assignEntitiesUsingIds(this.#schema, selection, originals, updated);
-
-            for (const dependency of mutation.getInboundDependencies()) {
-                this.#tracing.writingDependency(dependency.getType(), dependency.getPath(), false);
-                dependency.writeIds(this.#schema, originals);
-            }
-        } else if (this.#type === "delete") {
-            // [todo] ❌ we need splice the original entities if the user just wants do "delete" (i.e. there is no previous),
-            // so that in case of an error (service temporarily unavailable), and some entities have already been deleted successfully,
-            // entity-space doesn't try to delete those again.
-
-            const deletableSelection = getSelection(this.#schema, mutation.getSelection());
-
-            const map = new Map(
-                mutation.getPreviousContainedRootEntities().map(entity => {
-                    const copy = copyEntity(
-                        this.#schema,
-                        entity,
-                        deletableSelection,
-                        (relation, entity) =>
-                            relation.isEmbedded() ||
-                            mutation.getChanges().some(change => change.getEntity() === entity),
-                    );
-
-                    return [copy, entity];
-                }),
-            );
-
-            const copies = Array.from(map.keys());
-            this.#tracing.dispatchedMutation(this.#schema, this.#type, copies);
-            const deleted = await this.#mutateFn(copies, mutation.getSelection() ?? {});
-            const originals = Array.from(map.values());
-
-            for (const [current, previous] of toEntityPairs(this.#schema, originals, deleted)) {
-                if (!previous) {
-                    throw new Error("failed to find deleted match");
-                }
-
-                const change = mutation.getChanges().find(change => change.getEntity() === current);
-
-                if (!change) {
-                    throw new Error("failed to find deletion change");
-                }
-
-                change.removeEntity();
-            }
-        } else if (this.#type === "save") {
-            for (const dependency of mutation.getOutboundDependencies()) {
-                this.#tracing.writingDependency(dependency.getType(), dependency.getPath(), true);
-                dependency.writeIds(this.#schema, mutation.getContainedRootEntities());
-            }
-
-            const savableSelection = addIdSelection(
-                this.#schema,
-                getSelection(this.#schema, mutation.getSelection(), isSavableEntityProperty),
-            );
-
-            const map = new Map(
-                mutation.getContainedRootEntities().map(entity => {
-                    const copy = copyEntity(this.#schema, entity, savableSelection, undefined, (property, entity) => {
-                        if (property.getSchema().isIdProperty(property.getName())) {
-                            return true;
-                        }
-
-                        return entityHasId(property.getSchema(), entity)
-                            ? isUpdatableEntityProperty(property)
-                            : isCreatableEntityProperty(property);
-                    });
-
-                    return [copy, entity];
-                }),
-            );
-
-            const copies = Array.from(map.keys());
-            this.#tracing.dispatchedMutation(this.#schema, this.#type, copies);
-            const saved = await this.#mutateFn(copies, mutation.getSelection() ?? {});
-            assignCreatedIds(this.#schema, mutation.getSelection() ?? {}, mutation.getContainedRootEntities(), saved);
-            const selection = getSelection(this.#schema, mutation.getSelection() ?? {});
-            const originals = Array.from(map.values());
-            assignEntitiesUsingIds(this.#schema, selection, originals, saved);
-
-            for (const dependency of mutation.getInboundDependencies()) {
-                this.#tracing.writingDependency(dependency.getType(), dependency.getPath(), false);
-                dependency.writeIds(this.#schema, originals);
-            }
-
-            // [todo] ❓"save" also handles delete, so we need to remove deleted entities as well somehow
         }
     }
 
@@ -245,67 +76,48 @@ export class ExplicitEntityMutator extends EntityMutator {
         isRoot?: boolean,
     ): [accepted: EntityChange[], open: EntityChanges | undefined, dependencies: EntityMutationDependency[]] {
         const entities = changes.getEntities(path);
-        const schema = changes.getSchema(path);
-        let [acceptedChanges, open] = schema.hasId()
-            ? changes.subtractChanges(this.#type === "save" ? ["create", "update"] : [this.#type], schema, entities)
-            : [[], changes];
-
         const previous = changes.getPrevious(path);
 
         if (!entities.length && !previous?.length) {
             return [[], changes, []];
         }
 
+        const schema = changes.getSchema(path);
+
+        let acceptedChanges: EntityChange[] = [];
+        let open: EntityChanges | undefined = changes;
         let dependencies: EntityMutationDependency[] = [];
         const changeSelection = changes.getSelection(path);
 
-        if (previous && open && (this.#type === "delete" || (!isRoot && this.#type === "save"))) {
-            const [acceptedDeletionChanges, nextOpen] = schema.hasId()
-                ? open.subtractChanges(["delete"], schema, previous)
-                : [[], open];
-            acceptedChanges.push(...acceptedDeletionChanges);
-            open = nextOpen;
-
-            if (acceptedDeletionChanges.length) {
-                dependencies.push(
-                    ...getDeleteDependencies(
-                        schema,
-                        acceptedDeletionChanges.map(change => change.getEntity()),
-                        changeSelection,
-                        supportedSelection,
-                    ),
-                );
-            }
-        }
-
-        if (!acceptedChanges.length && schema.hasId()) {
-            return [[], open, []];
-        }
-
-        if (!isEmpty(changeSelection)) {
-            const createChanges = acceptedChanges.filter(
-                change => change.getType() === "create" || change.getType() === "update",
+        if (schema.hasId()) {
+            [acceptedChanges, open] = changes.subtractChanges(
+                this.#type === "save" ? ["create", "update"] : [this.#type],
+                schema,
+                entities,
             );
 
-            if (createChanges.length) {
-                dependencies.push(
-                    ...getCreateDependencies(
-                        schema,
-                        createChanges.map(change => change.getEntity()),
-                        changeSelection,
-                        supportedSelection,
-                    ),
-                );
+            if (previous && open && (this.#type === "delete" || (!isRoot && this.#type === "save"))) {
+                const [acceptedDeletionChanges, nextOpen] = open.subtractChanges(["delete"], schema, previous);
+                acceptedChanges.push(...acceptedDeletionChanges);
+                open = nextOpen;
             }
-        }
 
-        if (open === undefined) {
-            return [acceptedChanges, undefined, dependencies];
+            if (!acceptedChanges.length) {
+                return [[], open, []];
+            }
+
+            dependencies = isEmpty(changeSelection)
+                ? []
+                : getMutationDependencies(schema, acceptedChanges, changeSelection, supportedSelection);
+
+            if (open === undefined) {
+                return [acceptedChanges, undefined, dependencies];
+            }
         }
 
         let openChanges: EntityChanges | undefined = open;
 
-        if (changeSelection !== undefined && supportedSelection !== undefined) {
+        if (!isEmpty(changeSelection) && supportedSelection !== undefined) {
             const intersection = intersectRelationSelection(supportedSelection, changeSelection);
             const [relatedChanges, relatedDependencies, openAfterRelated] = this.#acceptRelated(
                 intersection,

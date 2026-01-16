@@ -18,8 +18,4 @@ export class PathedEntityMutator extends EntityMutator {
     ): [accepted: AcceptedEntityMutation | undefined, open: EntityChanges | undefined] {
         return this.#mutator.accept(changes, this.#path);
     }
-
-    override async mutate(mutation: AcceptedEntityMutation): Promise<void> {
-        await this.#mutator.mutate(mutation);
-    }
 }

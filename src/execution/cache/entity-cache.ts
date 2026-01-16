@@ -103,7 +103,7 @@ export class EntityCache {
             const relation = schema.getRelation(name);
 
             if (relation.isEmbedded()) {
-                const embeddedEntities = relation.readValues(entities);
+                const embeddedEntities = relation.readValuesFlat(entities);
                 this.#hydrate(embeddedEntities, relation.getRelatedSchema(), selectionValue);
             } else if (relation.isJoined()) {
                 this.#hydrateJoin(entities, relation, selectionValue);

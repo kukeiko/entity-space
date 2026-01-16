@@ -10,7 +10,7 @@ export class EntityChanges {
         selection: EntityRelationSelection,
         changes: readonly EntityChange[],
         entities: readonly Entity[],
-        previous?: Entity[],
+        previous?: readonly Entity[],
     ) {
         this.#schema = schema;
         this.#changes = Object.freeze(changes.slice());
@@ -23,7 +23,7 @@ export class EntityChanges {
     readonly #selection: EntityRelationSelection;
     readonly #changes: readonly EntityChange[];
     readonly #entities: readonly Entity[];
-    readonly #previous?: Entity[];
+    readonly #previous?: readonly Entity[];
 
     getSchema(path?: Path): EntitySchema {
         return path ? this.#schema.getRelation(path).getRelatedSchema() : this.#schema;

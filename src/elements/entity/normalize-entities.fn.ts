@@ -8,7 +8,7 @@ function normalizeEntitiesCore(
 ): void {
     for (const relation of schema.getRelations()) {
         const name = relation.getName();
-        const relatedEntities = relation.readValues(entities);
+        const relatedEntities = relation.readValuesFlat(entities);
 
         if (!relatedEntities.length) {
             continue;

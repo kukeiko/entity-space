@@ -327,7 +327,7 @@ export class EntitySchemaScopedServiceContainer<B> {
     }
 
     #addMutator(type: EntityMutationType, mutate: EntityMutationFn, selection: EntityRelationSelection): this {
-        const mutator = new ExplicitEntityMutator(this.#services.getTracing(), type, this.#schema, mutate, selection);
+        const mutator = new ExplicitEntityMutator(type, this.#schema, mutate, selection);
         this.#addMutatorFn(mutator);
 
         return this;

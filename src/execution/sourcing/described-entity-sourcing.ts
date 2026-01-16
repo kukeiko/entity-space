@@ -6,13 +6,13 @@ export class DescribedEntitySourcing implements EntitySourcingState {
     constructor(
         schema: EntitySchema,
         targetSelection: EntitySelection,
-        acceptedSourcing: AcceptedEntitySourcing[],
+        acceptedSourcings: AcceptedEntitySourcing[],
         parametersSchema?: EntitySchema,
     ) {
         this.#schema = schema;
         this.#parametersSchema = parametersSchema;
         this.#targetSelection = targetSelection;
-        this.#acceptedSourcings = Object.freeze(acceptedSourcing.slice());
+        this.#acceptedSourcings = Object.freeze(acceptedSourcings.slice());
 
         const availableSelection = intersectSelections(
             this.#acceptedSourcings.map(sourcing => sourcing.getReshapedShape().getReshaped().getUnpackedSelection()),
