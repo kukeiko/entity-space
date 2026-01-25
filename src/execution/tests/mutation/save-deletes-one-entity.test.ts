@@ -1,6 +1,7 @@
-import { Item, ItemBlueprint, ItemSocket } from "@entity-space/elements/testing";
+import { Item, ItemBlueprint, ItemSocket, ItemSocketBlueprint } from "@entity-space/elements/testing";
 import { beforeEach, describe, expect, it } from "vitest";
 import { EntityWorkspace } from "../../entity-workspace";
+import { DeleteEntitiesFn } from "../../mutation/entity-mutation-function.type";
 import { TestFacade, TestRepository } from "../../testing";
 
 describe("save() deletes one entity", () => {
@@ -57,7 +58,10 @@ describe("save() deletes one entity", () => {
             const saved = await workspace.in(ItemBlueprint).save([], [windforce.input]);
 
             // assert
-            expect(deleteItems).toHaveBeenCalledWith({ entities: [windforce.dispatched], selection: {} });
+            expect(deleteItems).toHaveBeenCalledWith<Parameters<DeleteEntitiesFn<ItemBlueprint>>>({
+                entities: [windforce.dispatched],
+                selection: {},
+            });
             expect(saved).toEqual(windforce.output);
         });
     });
@@ -117,9 +121,13 @@ describe("save() deletes one entity", () => {
             const saved = await workspace.in(ItemBlueprint).select({ sockets: true }).save([], [windforce.input]);
 
             // assert
-            expect(deleteItems).toHaveBeenCalledWith({ entities: [windforce.dispatched.item], selection: {} });
-            expect(deleteItemSockets).toHaveBeenCalledWith({
+            expect(deleteItemSockets).toHaveBeenCalledBefore(deleteItems);
+            expect(deleteItemSockets).toHaveBeenCalledWith<Parameters<DeleteEntitiesFn<ItemSocketBlueprint>>>({
                 entities: windforce.dispatched.itemSockets,
+                selection: {},
+            });
+            expect(deleteItems).toHaveBeenCalledWith<Parameters<DeleteEntitiesFn<ItemBlueprint>>>({
+                entities: [windforce.dispatched.item],
                 selection: {},
             });
             expect(saved).toEqual(windforce.output);

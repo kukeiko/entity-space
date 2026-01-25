@@ -1,6 +1,7 @@
 import { Item, ItemBlueprint } from "@entity-space/elements/testing";
 import { beforeEach, describe, expect, it } from "vitest";
 import { EntityWorkspace } from "../../entity-workspace";
+import { CreateEntitiesFn, SaveEntitiesFn } from "../../mutation/entity-mutation-function.type";
 import { TestFacade, TestRepository } from "../../testing";
 
 describe("save() creates many entities", () => {
@@ -101,7 +102,10 @@ describe("save() creates many entities", () => {
             const saved = await workspace.in(ItemBlueprint).save(windforce.input);
 
             // assert
-            expect(saveItems).toHaveBeenCalledWith({ entities: windforce.dispatched, selection: {} });
+            expect(saveItems).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemBlueprint>>>({
+                entities: windforce.dispatched,
+                selection: {},
+            });
             expect(saved).toEqual(windforce.output);
             expect(saved).toBe(windforce.input);
         });
@@ -114,7 +118,10 @@ describe("save() creates many entities", () => {
             const saved = await workspace.in(ItemBlueprint).save(windforce.input);
 
             // assert
-            expect(createItems).toHaveBeenCalledWith({ entities: windforce.dispatched, selection: {} });
+            expect(createItems).toHaveBeenCalledWith<Parameters<CreateEntitiesFn<ItemBlueprint>>>({
+                entities: windforce.dispatched,
+                selection: {},
+            });
             expect(saved).toEqual(windforce.output);
             expect(saved).toBe(windforce.input);
         });

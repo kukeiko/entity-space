@@ -1,6 +1,7 @@
-import { Item, ItemBlueprint } from "@entity-space/elements/testing";
+import { Item, ItemBlueprint, ItemSocketBlueprint } from "@entity-space/elements/testing";
 import { beforeEach, describe, expect, it } from "vitest";
 import { EntityWorkspace } from "../../entity-workspace";
+import { DeleteEntitiesFn } from "../../mutation/entity-mutation-function.type";
 import { TestFacade, TestRepository } from "../../testing";
 
 describe("save()", () => {
@@ -57,7 +58,7 @@ describe("save()", () => {
             await workspace.in(ItemBlueprint).select({ sockets: true }).save([windforce], [windforcePrevious]);
 
             // assert
-            expect(deleteItemSocket).toHaveBeenCalledWith({
+            expect(deleteItemSocket).toHaveBeenCalledWith<Parameters<DeleteEntitiesFn<ItemSocketBlueprint>>>({
                 entities: [
                     {
                         id: 2,

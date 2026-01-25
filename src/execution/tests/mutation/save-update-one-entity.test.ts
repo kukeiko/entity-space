@@ -1,6 +1,19 @@
-import { Item, ItemBlueprint, ItemSocket, ItemType } from "@entity-space/elements/testing";
+import {
+    Item,
+    ItemBlueprint,
+    ItemSocket,
+    ItemSocketBlueprint,
+    ItemType,
+    ItemTypeBlueprint,
+} from "@entity-space/elements/testing";
 import { beforeEach, describe, expect, it } from "vitest";
 import { EntityWorkspace } from "../../entity-workspace";
+import {
+    CreateEntitiesFn,
+    DeleteEntitiesFn,
+    SaveEntitiesFn,
+    UpdateEntitiesFn,
+} from "../../mutation/entity-mutation-function.type";
 import { TestFacade, TestRepository } from "../../testing";
 
 describe("save() updates one entity", () => {
@@ -66,7 +79,10 @@ describe("save() updates one entity", () => {
             const saved = await workspace.in(ItemBlueprint).save(windforce.input);
 
             // assert
-            expect(saveItems).toHaveBeenCalledWith({ entities: [windforce.dispatched], selection: {} });
+            expect(saveItems).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemBlueprint>>>({
+                entities: [windforce.dispatched],
+                selection: {},
+            });
             expect(saved).toEqual(windforce.output);
             expect(saved).toBe(windforce.input);
         });
@@ -79,7 +95,10 @@ describe("save() updates one entity", () => {
             const saved = await workspace.in(ItemBlueprint).save(windforce.input);
 
             // assert
-            expect(updateItems).toHaveBeenCalledWith({ entities: [windforce.dispatched], selection: {} });
+            expect(updateItems).toHaveBeenCalledWith<Parameters<UpdateEntitiesFn<ItemBlueprint>>>({
+                entities: [windforce.dispatched],
+                selection: {},
+            });
             expect(saved).toEqual(windforce.output);
             expect(saved).toBe(windforce.input);
         });
@@ -143,11 +162,12 @@ describe("save() updates one entity", () => {
             const saved = await workspace.in(ItemBlueprint).select({ type: true }).save(windforce.input);
 
             // assert
-            expect(saveItemTypes).toHaveBeenCalledWith({
+            expect(saveItemTypes).toHaveBeenCalledBefore(saveItems);
+            expect(saveItemTypes).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemTypeBlueprint>>>({
                 entities: [windforce.dispatched.itemType],
                 selection: {},
             });
-            expect(saveItems).toHaveBeenCalledWith({
+            expect(saveItems).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemBlueprint>>>({
                 entities: [windforce.dispatched.item],
                 selection: {},
             });
@@ -164,11 +184,12 @@ describe("save() updates one entity", () => {
             const saved = await workspace.in(ItemBlueprint).select({ type: true }).save(windforce.input);
 
             // assert
-            expect(createItemTypes).toHaveBeenCalledWith({
+            expect(createItemTypes).toHaveBeenCalledBefore(updateItems);
+            expect(createItemTypes).toHaveBeenCalledWith<Parameters<CreateEntitiesFn<ItemTypeBlueprint>>>({
                 entities: [windforce.dispatched.itemType],
                 selection: {},
             });
-            expect(updateItems).toHaveBeenCalledWith({
+            expect(updateItems).toHaveBeenCalledWith<Parameters<UpdateEntitiesFn<ItemBlueprint>>>({
                 entities: [windforce.dispatched.item],
                 selection: {},
             });
@@ -235,11 +256,12 @@ describe("save() updates one entity", () => {
             const saved = await workspace.in(ItemBlueprint).select({ type: true }).save(windforce.input);
 
             // assert
-            expect(saveItemTypes).toHaveBeenCalledWith({
+            expect(saveItemTypes).toHaveBeenCalledBefore(saveItems);
+            expect(saveItemTypes).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemTypeBlueprint>>>({
                 entities: [windforce.dispatched.itemType],
                 selection: {},
             });
-            expect(saveItems).toHaveBeenCalledWith({
+            expect(saveItems).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemBlueprint>>>({
                 entities: [windforce.dispatched.item],
                 selection: {},
             });
@@ -256,11 +278,12 @@ describe("save() updates one entity", () => {
             const saved = await workspace.in(ItemBlueprint).select({ type: true }).save(windforce.input);
 
             // assert
-            expect(updateItemTypes).toHaveBeenCalledWith({
+            expect(updateItemTypes).toHaveBeenCalledBefore(updateItems);
+            expect(updateItemTypes).toHaveBeenCalledWith<Parameters<UpdateEntitiesFn<ItemTypeBlueprint>>>({
                 entities: [windforce.dispatched.itemType],
                 selection: {},
             });
-            expect(updateItems).toHaveBeenCalledWith({
+            expect(updateItems).toHaveBeenCalledWith<Parameters<UpdateEntitiesFn<ItemBlueprint>>>({
                 entities: [windforce.dispatched.item],
                 selection: {},
             });
@@ -334,11 +357,15 @@ describe("save() updates one entity", () => {
             const saved = await workspace.in(ItemBlueprint).select({ sockets: true }).save(windforce.input);
 
             // assert
-            expect(saveItemSockets).toHaveBeenCalledWith({
+            expect(saveItems).toHaveBeenCalledBefore(saveItemSockets);
+            expect(saveItems).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemBlueprint>>>({
+                entities: [windforce.dispatched.item],
+                selection: {},
+            });
+            expect(saveItemSockets).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemSocketBlueprint>>>({
                 entities: windforce.dispatched.itemSockets,
                 selection: {},
             });
-            expect(saveItems).toHaveBeenCalledWith({ entities: [windforce.dispatched.item], selection: {} });
             expect(saved).toEqual(windforce.output);
             expect(saved).toBe(windforce.input);
         });
@@ -352,11 +379,15 @@ describe("save() updates one entity", () => {
             const saved = await workspace.in(ItemBlueprint).select({ sockets: true }).save(windforce.input);
 
             // assert
-            expect(createItemSockets).toHaveBeenCalledWith({
+            expect(updateItems).toHaveBeenCalledBefore(createItemSockets);
+            expect(updateItems).toHaveBeenCalledWith<Parameters<UpdateEntitiesFn<ItemBlueprint>>>({
+                entities: [windforce.dispatched.item],
+                selection: {},
+            });
+            expect(createItemSockets).toHaveBeenCalledWith<Parameters<CreateEntitiesFn<ItemSocketBlueprint>>>({
                 entities: windforce.dispatched.itemSockets,
                 selection: {},
             });
-            expect(updateItems).toHaveBeenCalledWith({ entities: [windforce.dispatched.item], selection: {} });
             expect(saved).toEqual(windforce.output);
             expect(saved).toBe(windforce.input);
         });
@@ -427,11 +458,15 @@ describe("save() updates one entity", () => {
             const saved = await workspace.in(ItemBlueprint).select({ sockets: true }).save(windforce.input);
 
             // assert
-            expect(saveItemSockets).toHaveBeenCalledWith({
+            expect(saveItems).toHaveBeenCalledBefore(saveItemSockets);
+            expect(saveItems).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemBlueprint>>>({
+                entities: [windforce.dispatched.item],
+                selection: {},
+            });
+            expect(saveItemSockets).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemSocketBlueprint>>>({
                 entities: windforce.dispatched.itemSockets,
                 selection: {},
             });
-            expect(saveItems).toHaveBeenCalledWith({ entities: [windforce.dispatched.item], selection: {} });
             expect(saved).toEqual(windforce.output);
             expect(saved).toBe(windforce.input);
         });
@@ -445,11 +480,15 @@ describe("save() updates one entity", () => {
             const saved = await workspace.in(ItemBlueprint).select({ sockets: true }).save(windforce.input);
 
             // assert
-            expect(updateItemSockets).toHaveBeenCalledWith({
+            expect(createItems).toHaveBeenCalledBefore(updateItemSockets);
+            expect(createItems).toHaveBeenCalledWith<Parameters<CreateEntitiesFn<ItemBlueprint>>>({
+                entities: [windforce.dispatched.item],
+                selection: {},
+            });
+            expect(updateItemSockets).toHaveBeenCalledWith<Parameters<UpdateEntitiesFn<ItemSocketBlueprint>>>({
                 entities: windforce.dispatched.itemSockets,
                 selection: {},
             });
-            expect(createItems).toHaveBeenCalledWith({ entities: [windforce.dispatched.item], selection: {} });
             expect(saved).toEqual(windforce.output);
             expect(saved).toBe(windforce.input);
         });
@@ -551,7 +590,7 @@ describe("save() updates one entity", () => {
                 .save(windforce.input, windforce.previous);
 
             // assert
-            expect(saveItems).toHaveBeenCalledWith({
+            expect(saveItems).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemBlueprint>>>({
                 entities: [
                     {
                         ...windforce.dispatched.item,
@@ -585,18 +624,23 @@ describe("save() updates one entity", () => {
                 .save(windforce.input, windforce.previous);
 
             // assert
-            expect(deleteItemSockets).toHaveBeenCalledWith({
+            // [todo] ❌ doesn't work yet
+            // expect(deleteItemSockets).toHaveBeenCalledBefore(saveItems);
+            expect(deleteItemSockets).toHaveBeenCalledWith<Parameters<DeleteEntitiesFn<ItemSocketBlueprint>>>({
                 entities: windforce.dispatched.itemSockets,
                 selection: {},
             });
-            expect(saveItems).toHaveBeenCalledWith({ entities: [windforce.dispatched.item], selection: {} });
+            expect(saveItems).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemBlueprint>>>({
+                entities: [windforce.dispatched.item],
+                selection: {},
+            });
             expect(saved).toEqual(windforce.output);
             expect(saved).toBe(windforce.input);
         });
 
         it("using an update and a delete mutator", async () => {
             // arrange
-            const saveItems = repository.useRpg().useUpdateItems(updatedAt);
+            const updateItems = repository.useRpg().useUpdateItems(updatedAt);
             const deleteItemSockets = repository.useRpg().useDeleteItemSockets();
 
             // act
@@ -606,11 +650,16 @@ describe("save() updates one entity", () => {
                 .save(windforce.input, windforce.previous);
 
             // assert
-            expect(deleteItemSockets).toHaveBeenCalledWith({
+            // [todo] ❌ doesn't work yet
+            // expect(deleteItemSockets).toHaveBeenCalledBefore(updateItems);
+            expect(deleteItemSockets).toHaveBeenCalledWith<Parameters<DeleteEntitiesFn<ItemSocketBlueprint>>>({
                 entities: windforce.dispatched.itemSockets,
                 selection: {},
             });
-            expect(saveItems).toHaveBeenCalledWith({ entities: [windforce.dispatched.item], selection: {} });
+            expect(updateItems).toHaveBeenCalledWith<Parameters<UpdateEntitiesFn<ItemBlueprint>>>({
+                entities: [windforce.dispatched.item],
+                selection: {},
+            });
             expect(saved).toEqual(windforce.output);
             expect(saved).toBe(windforce.input);
         });

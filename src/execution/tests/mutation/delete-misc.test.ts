@@ -1,6 +1,15 @@
-import { Artist, Item, ItemBlueprint, Song, SongBlueprint } from "@entity-space/elements/testing";
+import {
+    Artist,
+    Item,
+    ItemAttributeTypeBlueprint,
+    ItemBlueprint,
+    ItemSocketBlueprint,
+    Song,
+    SongBlueprint,
+} from "@entity-space/elements/testing";
 import { beforeEach, describe, expect, it } from "vitest";
 import { EntityWorkspace } from "../../entity-workspace";
+import { DeleteEntitiesFn } from "../../mutation/entity-mutation-function.type";
 import { TestFacade, TestRepository } from "../../testing";
 import { createMetadata } from "../../testing/create-metadata.fn";
 
@@ -117,7 +126,7 @@ describe("delete()", () => {
 
         // assert
         expect(deleteItems).toHaveBeenCalledTimes(1);
-        expect(deleteItems).toHaveBeenCalledWith({
+        expect(deleteItems).toHaveBeenCalledWith<Parameters<DeleteEntitiesFn<ItemBlueprint>>>({
             entities: [
                 {
                     id: 1,
@@ -133,7 +142,8 @@ describe("delete()", () => {
         });
 
         expect(deleteItemSockets).toHaveBeenCalledTimes(1);
-        expect(deleteItemSockets).toHaveBeenCalledWith({
+        expect(deleteItemSockets).toHaveBeenCalledBefore(deleteItems);
+        expect(deleteItemSockets).toHaveBeenCalledWith<Parameters<DeleteEntitiesFn<ItemSocketBlueprint>>>({
             entities: [
                 {
                     id: 2,
@@ -156,17 +166,20 @@ describe("delete()", () => {
         });
 
         expect(deleteItemAttributeTypes).toHaveBeenCalledTimes(1);
-        expect(deleteItemAttributeTypes).toHaveBeenCalledWith({
-            entities: [
-                {
-                    id: 10,
-                    assignId: 10,
-                    name: "Increased Attack Speed",
-                    createdAt,
-                    updatedAt,
-                },
-            ],
-            selection: {},
-        });
+        expect(deleteItemAttributeTypes).toHaveBeenCalledAfter(deleteItems);
+        expect(deleteItemAttributeTypes).toHaveBeenCalledWith<Parameters<DeleteEntitiesFn<ItemAttributeTypeBlueprint>>>(
+            {
+                entities: [
+                    {
+                        id: 10,
+                        assignId: 10,
+                        name: "Increased Attack Speed",
+                        createdAt,
+                        updatedAt,
+                    },
+                ],
+                selection: {},
+            },
+        );
     });
 });

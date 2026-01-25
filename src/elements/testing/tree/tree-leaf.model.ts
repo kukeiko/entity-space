@@ -1,7 +1,7 @@
 import { EntityBlueprint } from "../../entity/entity-blueprint";
 import { RecordMetadataBlueprint } from "../common/record-metadata.model";
 
-const { register, string, entity, readonly } = EntityBlueprint;
+const { register, string, entity } = EntityBlueprint;
 
 export class TreeLeafBlueprint {
     color = string();

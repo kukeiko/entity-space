@@ -1,17 +1,13 @@
-import { PackedEntitySelection } from "@entity-space/elements";
 import { Tree, TreeBlueprint, User } from "@entity-space/elements/testing";
 import { vi } from "vitest";
 import { EntityServiceContainer } from "../../entity-service-container";
+import { DeleteEntitiesFn, SaveEntitiesFn } from "../../mutation/entity-mutation-function.type";
 import { InMemoryRepository } from "./in-memory-repository";
 
 type TreeEntities = {
     trees: Tree[];
     users: User[];
 };
-
-function filterById<T extends { id: string | number }>(id: string | number): (entity: T) => boolean {
-    return entity => entity.id === id;
-}
 
 export class TreeRepository extends InMemoryRepository<TreeEntities> {
     constructor(services: EntityServiceContainer) {
@@ -23,10 +19,7 @@ export class TreeRepository extends InMemoryRepository<TreeEntities> {
 
     useLoadAllTrees() {
         const load = vi.fn(() => this.filter("trees"));
-
-        this.#services.for(TreeBlueprint).addSource({
-            load: () => load(),
-        });
+        this.#services.for(TreeBlueprint).addSource({ load });
 
         return load;
     }
@@ -58,7 +51,7 @@ export class TreeRepository extends InMemoryRepository<TreeEntities> {
     }
 
     useSaveTrees() {
-        const save = vi.fn(({ entities, selection }: { entities: Tree[]; selection: PackedEntitySelection<Tree> }) => {
+        const save = vi.fn<SaveEntitiesFn<TreeBlueprint>>(({ entities }) => {
             entities = structuredClone(entities);
 
             for (const entity of entities) {
@@ -81,13 +74,8 @@ export class TreeRepository extends InMemoryRepository<TreeEntities> {
     }
 
     useDeleteTrees() {
-        const deleteTrees = vi.fn(
-            ({ entities, selection }: { entities: Tree[]; selection: PackedEntitySelection<Tree> }) => {},
-        );
-
-        this.#services.for(TreeBlueprint).addDeleteMutator({
-            delete: deleteTrees,
-        });
+        const deleteTrees = vi.fn<DeleteEntitiesFn<TreeBlueprint>>(() => {});
+        this.#services.for(TreeBlueprint).addDeleteMutator({ delete: deleteTrees });
 
         return deleteTrees;
     }

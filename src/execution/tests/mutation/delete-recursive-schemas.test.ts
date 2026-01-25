@@ -1,15 +1,22 @@
-import { Folder, FolderBlueprint, Tree, TreeBlueprint, User } from "@entity-space/elements/testing";
+import {
+    FileBlueprint,
+    Folder,
+    FolderBlueprint,
+    Tree,
+    TreeBlueprint,
+    User,
+    UserBlueprint,
+} from "@entity-space/elements/testing";
 import { beforeEach, describe, expect, it } from "vitest";
 import { EntityWorkspace } from "../../entity-workspace";
+import { DeleteEntitiesFn } from "../../mutation/entity-mutation-function.type";
 import { TestFacade, TestRepository } from "../../testing";
+import { createMetadata_V2 } from "../../testing/create-metadata.fn";
 
 describe("delete()", () => {
     let facade: TestFacade;
     let repository: TestRepository;
     let workspace: EntityWorkspace;
-
-    const createdAt = new Date().toISOString();
-    const updatedAt = new Date(Date.now() + 1000).toISOString();
 
     beforeEach(() => {
         facade = new TestFacade();
@@ -21,51 +28,27 @@ describe("delete()", () => {
         // arrange
         const deleteTrees = repository.useTree().useDeleteTrees();
         const deleteUsers = repository.useCommon().useDeleteUsers();
-
-        const createdBy: User = {
-            id: 1,
-            name: "Susi Sonne",
-            metadata: {
-                createdAt,
-                createdById: 0,
-                updatedAt: null,
-                updatedById: null,
-            },
-        };
+        const createdBy: User = { id: 1, name: "Susi Sonne", metadata: createMetadata_V2(0) };
+        const metadata = createMetadata_V2(createdBy);
+        const deletedMetadata = createMetadata_V2(createdBy.id);
 
         const tree: Tree = {
             id: 1,
             name: "Mighty Oak",
             branches: [
                 {
-                    metadata: { createdAt, createdBy, createdById: 1, updatedAt, updatedById: null },
-                    leaves: [
-                        {
-                            color: "green",
-                            metadata: { createdAt, createdBy, createdById: 1, updatedAt, updatedById: null },
-                        },
-                    ],
+                    metadata,
+                    leaves: [{ color: "green", metadata }],
                     branches: [
                         {
                             branches: [],
-                            leaves: [
-                                {
-                                    color: "red",
-                                    metadata: {
-                                        createdAt,
-                                        createdBy,
-                                        createdById: 1,
-                                        updatedAt,
-                                        updatedById: null,
-                                    },
-                                },
-                            ],
-                            metadata: { createdAt, createdBy, createdById: 1, updatedAt, updatedById: null },
+                            leaves: [{ color: "red", metadata }],
+                            metadata,
                         },
                     ],
                 },
             ],
-            metadata: { createdAt, createdBy, createdById: 1, updatedAt, updatedById: null },
+            metadata,
         };
 
         // act
@@ -75,57 +58,31 @@ describe("delete()", () => {
                 metadata: { createdBy: true },
                 branches: { branches: "*", metadata: { createdBy: true } },
             })
-            .delete([tree]);
+            .delete(tree);
 
         // assert
         {
             // Tree
             expect(deleteTrees).toHaveBeenCalledTimes(1);
-            expect(deleteTrees).toHaveBeenCalledWith({
+            expect(deleteTrees).toHaveBeenCalledWith<Parameters<DeleteEntitiesFn<TreeBlueprint>>>({
                 entities: [
                     {
                         id: 1,
                         name: "Mighty Oak",
+                        metadata: deletedMetadata,
                         branches: [
                             {
-                                metadata: { createdAt, createdById: 1, updatedAt, updatedById: null },
-                                leaves: [
-                                    {
-                                        color: "green",
-                                        metadata: {
-                                            createdAt,
-                                            createdById: 1,
-                                            updatedAt,
-                                            updatedById: null,
-                                        },
-                                    },
-                                ],
+                                metadata: deletedMetadata,
+                                leaves: [{ color: "green", metadata: deletedMetadata }],
                                 branches: [
                                     {
-                                        // [todo] ❌ had to comment out - behavior that I did not expect, analyse and adapt
-                                        // branches: [],
-                                        leaves: [
-                                            {
-                                                color: "red",
-                                                metadata: {
-                                                    createdAt,
-                                                    createdById: 1,
-                                                    updatedAt,
-                                                    updatedById: null,
-                                                },
-                                            },
-                                        ],
-                                        metadata: {
-                                            createdAt,
-                                            createdById: 1,
-                                            updatedAt,
-                                            updatedById: null,
-                                        },
+                                        branches: [],
+                                        leaves: [{ color: "red", metadata: deletedMetadata }],
+                                        metadata: deletedMetadata,
                                     },
                                 ],
                             },
                         ],
-                        metadata: { createdAt, createdById: 1, updatedAt, updatedById: null },
                     },
                 ],
                 selection: {},
@@ -135,19 +92,9 @@ describe("delete()", () => {
         {
             // User
             expect(deleteUsers).toHaveBeenCalledTimes(1);
-            expect(deleteUsers).toHaveBeenCalledWith({
-                entities: [
-                    {
-                        id: 1,
-                        name: "Susi Sonne",
-                        metadata: {
-                            createdAt,
-                            createdById: 0,
-                            updatedAt: null,
-                            updatedById: null,
-                        },
-                    },
-                ],
+            expect(deleteUsers).toHaveBeenCalledAfter(deleteTrees);
+            expect(deleteUsers).toHaveBeenCalledWith<Parameters<DeleteEntitiesFn<UserBlueprint>>>({
+                entities: [{ id: 1, name: "Susi Sonne", metadata: createMetadata_V2(0) }],
                 selection: {},
             });
         }
@@ -156,43 +103,41 @@ describe("delete()", () => {
     it("should work for recursive joined relations", async () => {
         // arrange
         const deleteFolders = repository.useFileSystem().useDeleteFolders();
-        const saveFiles = repository.useFileSystem().useDeleteFiles();
-        const saveUsers = repository.useCommon().useDeleteUsers();
+        const deleteFiles = repository.useFileSystem().useDeleteFiles();
+        const deleteUsers = repository.useCommon().useDeleteUsers();
 
         const createdBy: User = {
             id: 1,
             name: "Susi Sonne",
-            metadata: {
-                createdAt,
-                createdById: 0,
-                updatedAt: null,
-                updatedById: null,
-            },
+            metadata: createMetadata_V2(0),
         };
+
+        const metadata = createMetadata_V2(createdBy);
+        const deletedMetadata = createMetadata_V2(createdBy.id);
 
         const folder: Folder = {
             id: 2,
             name: "Morcheeba",
-            metadata: { createdAt, createdBy, createdById: 1, updatedAt, updatedById: null },
+            metadata,
             parentId: 1,
             parent: {
                 id: 1,
                 name: "Music",
                 parentId: null,
-                metadata: { createdAt, createdBy, createdById: 1, updatedAt, updatedById: null },
+                metadata,
             },
             folders: [
                 {
                     id: 3,
                     name: "Dive Deep",
                     parentId: 2,
-                    metadata: { createdAt, createdBy, createdById: 1, updatedAt, updatedById: null },
+                    metadata,
                     files: [
                         {
                             id: 1,
                             name: "Enjoy The Ride",
                             folderId: 3,
-                            metadata: { createdAt, createdBy, createdById: 1, updatedAt, updatedById: null },
+                            metadata,
                         },
                     ],
                 },
@@ -203,16 +148,9 @@ describe("delete()", () => {
         await workspace
             .in(FolderBlueprint)
             .select({
-                metadata: {
-                    createdBy: true,
-                },
-                folders: {
-                    folders: "*",
-                    files: true,
-                },
-                parent: {
-                    parent: "*",
-                },
+                metadata: { createdBy: true },
+                folders: { folders: "*", files: true },
+                parent: { parent: "*" },
             })
             .delete([folder]);
 
@@ -220,89 +158,38 @@ describe("delete()", () => {
 
         {
             // Folders
-            expect(deleteFolders).toHaveBeenNthCalledWith(1, {
-                entities: [
-                    {
-                        id: 3,
-                        name: "Dive Deep",
-                        parentId: 2,
-                        metadata: {
-                            createdAt,
-                            createdById: 1,
-                            updatedAt,
-                            updatedById: null,
-                        },
-                    },
-                ],
-                selection: {},
-            });
-            expect(deleteFolders).toHaveBeenNthCalledWith(2, {
-                entities: [
-                    {
-                        id: 2,
-                        name: "Morcheeba",
-                        parentId: 1,
-                        metadata: {
-                            createdAt,
-                            createdById: 1,
-                            updatedAt,
-                            updatedById: null,
-                        },
-                    },
-                ],
+            expect(deleteFolders).toHaveBeenNthCalledWith<Parameters<DeleteEntitiesFn<FolderBlueprint>>>(1, {
+                entities: [{ id: 3, name: "Dive Deep", parentId: 2, metadata: deletedMetadata }],
                 selection: {},
             });
 
-            expect(deleteFolders).toHaveBeenNthCalledWith(3, {
-                entities: [
-                    {
-                        id: 1,
-                        name: "Music",
-                        parentId: null,
-                        metadata: { createdAt, createdById: 1, updatedAt, updatedById: null },
-                    },
-                ],
+            expect(deleteFolders).toHaveBeenNthCalledWith<Parameters<DeleteEntitiesFn<FolderBlueprint>>>(2, {
+                entities: [{ id: 2, name: "Morcheeba", parentId: 1, metadata: deletedMetadata }],
+                selection: {},
+            });
+
+            expect(deleteFolders).toHaveBeenNthCalledWith<Parameters<DeleteEntitiesFn<FolderBlueprint>>>(3, {
+                entities: [{ id: 1, name: "Music", parentId: null, metadata: deletedMetadata }],
                 selection: {},
             });
         }
 
         {
             // File
-            expect(saveFiles).toHaveBeenCalledTimes(1);
-            expect(saveFiles).toHaveBeenCalledWith({
-                entities: [
-                    {
-                        id: 1,
-                        name: "Enjoy The Ride",
-                        folderId: 3,
-                        metadata: {
-                            createdAt,
-                            createdById: 1,
-                            updatedAt,
-                            updatedById: null,
-                        },
-                    },
-                ],
+            expect(deleteFiles).toHaveBeenCalledTimes(1);
+            expect(deleteFiles).toHaveBeenCalledBefore(deleteFolders);
+            expect(deleteFiles).toHaveBeenCalledWith<Parameters<DeleteEntitiesFn<FileBlueprint>>>({
+                entities: [{ id: 1, name: "Enjoy The Ride", folderId: 3, metadata: deletedMetadata }],
                 selection: {},
             });
         }
 
         {
             // User
-            expect(saveUsers).toHaveBeenCalledTimes(1);
-            expect(saveUsers).toHaveBeenCalledWith({
-                entities: [
-                    {
-                        id: 1,
-                        name: "Susi Sonne",
-                        metadata: {
-                            createdAt,
-                            createdById: 0,
-                            updatedAt: null,
-                            updatedById: null,
-                        },
-                    },
-                ],
+            expect(deleteUsers).toHaveBeenCalledTimes(1);
+            expect(deleteUsers).toHaveBeenCalledAfter(deleteFolders);
+            expect(deleteUsers).toHaveBeenCalledWith<Parameters<DeleteEntitiesFn<UserBlueprint>>>({
+                entities: [{ id: 1, name: "Susi Sonne", metadata: createMetadata_V2(0) }],
                 selection: {},
             });
         }

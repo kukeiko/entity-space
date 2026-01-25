@@ -1,8 +1,8 @@
-import { PackedEntitySelection } from "@entity-space/elements";
-import { Item, User, UserBlueprint, UserRequest, UserRequestBlueprint } from "@entity-space/elements/testing";
+import { User, UserBlueprint, UserRequest, UserRequestBlueprint } from "@entity-space/elements/testing";
 import { vi } from "vitest";
 import { EntityServiceContainer } from "../../entity-service-container";
 import { HydrateEntitiesFn } from "../../hydration/entity-hydrator";
+import { DeleteEntitiesFn, SaveEntitiesFn } from "../../mutation/entity-mutation-function.type";
 import { InMemoryRepository } from "./in-memory-repository";
 
 type CommonEntities = {
@@ -71,37 +71,25 @@ export class CommonRepository extends InMemoryRepository<CommonEntities> {
     }
 
     useSaveUsers() {
-        const save = vi.fn(({ entities, selection }: { entities: User[]; selection: PackedEntitySelection<Item> }) => {
+        const save = vi.fn<SaveEntitiesFn<UserBlueprint>>(({ entities }) => {
             entities = structuredClone(entities);
 
             for (const entity of entities) {
                 entity.id = this.nextId("users");
-                // entity.metadata = createMetadata(createdById, undefined, createdAt);
-
-                // [todo] ❌ commented out to remind myself of: add validation to entities returned from user mutation functions
-                // making sure entities are properly hydrated
-                // item.updatedAt = null;
             }
 
-            return entities as User[];
+            return entities;
         });
 
-        this.#services.for(UserBlueprint).addSaveMutator({
-            save,
-        });
+        this.#services.for(UserBlueprint).addSaveMutator({ save });
 
         return save;
     }
 
     useDeleteUsers() {
-        const deleteUsers = vi.fn(
-            ({ entities, selection }: { entities: User[]; selection: PackedEntitySelection<User> }) => {},
-        );
+        const del = vi.fn<DeleteEntitiesFn<UserBlueprint>>(() => {});
+        this.#services.for(UserBlueprint).addDeleteMutator({ delete: del });
 
-        this.#services.for(UserBlueprint).addDeleteMutator({
-            delete: deleteUsers,
-        });
-
-        return deleteUsers;
+        return del;
     }
 }

@@ -1,6 +1,14 @@
-import { Item, ItemBlueprint, ItemSocket, ItemType } from "@entity-space/elements/testing";
+import {
+    Item,
+    ItemBlueprint,
+    ItemSocket,
+    ItemSocketBlueprint,
+    ItemType,
+    ItemTypeBlueprint,
+} from "@entity-space/elements/testing";
 import { beforeEach, describe, expect, it } from "vitest";
 import { EntityWorkspace } from "../../entity-workspace";
+import { CreateEntitiesFn, SaveEntitiesFn, UpdateEntitiesFn } from "../../mutation/entity-mutation-function.type";
 import { TestFacade, TestRepository } from "../../testing";
 
 describe("save() creates one entity", () => {
@@ -57,7 +65,10 @@ describe("save() creates one entity", () => {
             const saved = await workspace.in(ItemBlueprint).save(windforce.input);
 
             // assert
-            expect(saveItems).toHaveBeenCalledWith({ entities: [windforce.dispatched], selection: {} });
+            expect(saveItems).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemBlueprint>>>({
+                entities: [windforce.dispatched],
+                selection: {},
+            });
             expect(saved).toEqual(windforce.output);
             expect(saved).toBe(windforce.input);
         });
@@ -70,7 +81,10 @@ describe("save() creates one entity", () => {
             const saved = await workspace.in(ItemBlueprint).save(windforce.input);
 
             // assert
-            expect(createItems).toHaveBeenCalledWith({ entities: [windforce.dispatched], selection: {} });
+            expect(createItems).toHaveBeenCalledWith<Parameters<CreateEntitiesFn<ItemBlueprint>>>({
+                entities: [windforce.dispatched],
+                selection: {},
+            });
             expect(saved).toEqual(windforce.output);
             expect(saved).toBe(windforce.input);
         });
@@ -114,7 +128,10 @@ describe("save() creates one entity", () => {
             const saved = await workspace.in(ItemBlueprint).save(windforce.input);
 
             // assert
-            expect(saveItems).toHaveBeenCalledWith({ entities: [windforce.dispatched], selection: {} });
+            expect(saveItems).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemBlueprint>>>({
+                entities: [windforce.dispatched],
+                selection: {},
+            });
             expect(saved).toEqual(windforce.output);
             expect(saved).toBe(windforce.input);
         });
@@ -127,7 +144,10 @@ describe("save() creates one entity", () => {
             const saved = await workspace.in(ItemBlueprint).save(windforce.input);
 
             // assert
-            expect(createItems).toHaveBeenCalledWith({ entities: [windforce.dispatched], selection: {} });
+            expect(createItems).toHaveBeenCalledWith<Parameters<CreateEntitiesFn<ItemBlueprint>>>({
+                entities: [windforce.dispatched],
+                selection: {},
+            });
             expect(saved).toEqual(windforce.output);
             expect(saved).toBe(windforce.input);
         });
@@ -186,11 +206,15 @@ describe("save() creates one entity", () => {
             const saved = await workspace.in(ItemBlueprint).select({ type: true }).save(windforce.input);
 
             // assert
-            expect(saveItemTypes).toHaveBeenCalledWith({
+            expect(saveItemTypes).toHaveBeenCalledBefore(saveItems);
+            expect(saveItemTypes).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemTypeBlueprint>>>({
                 entities: [windforce.dispatched.itemType],
                 selection: {},
             });
-            expect(saveItems).toHaveBeenCalledWith({ entities: [windforce.dispatched.item], selection: {} });
+            expect(saveItems).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemBlueprint>>>({
+                entities: [windforce.dispatched.item],
+                selection: {},
+            });
             expect(saved).toEqual(windforce.output);
             expect(saved).toBe(windforce.input);
         });
@@ -204,11 +228,15 @@ describe("save() creates one entity", () => {
             const saved = await workspace.in(ItemBlueprint).select({ type: true }).save(windforce.input);
 
             // assert
-            expect(createItemTypes).toHaveBeenCalledWith({
+            expect(createItemTypes).toHaveBeenCalledBefore(createItems);
+            expect(createItemTypes).toHaveBeenCalledWith<Parameters<CreateEntitiesFn<ItemTypeBlueprint>>>({
                 entities: [windforce.dispatched.itemType],
                 selection: {},
             });
-            expect(createItems).toHaveBeenCalledWith({ entities: [windforce.dispatched.item], selection: {} });
+            expect(createItems).toHaveBeenCalledWith<Parameters<CreateEntitiesFn<ItemBlueprint>>>({
+                entities: [windforce.dispatched.item],
+                selection: {},
+            });
             expect(saved).toEqual(windforce.output);
             expect(saved).toBe(windforce.input);
         });
@@ -258,11 +286,12 @@ describe("save() creates one entity", () => {
             const saved = await workspace.in(ItemBlueprint).select({ type: true }).save(windforce.input);
 
             // assert
-            expect(saveItemTypes).toHaveBeenCalledWith({
+            expect(saveItemTypes).toHaveBeenCalledBefore(saveItems);
+            expect(saveItemTypes).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemTypeBlueprint>>>({
                 entities: [windforce.dispatched.itemType],
                 selection: {},
             });
-            expect(saveItems).toHaveBeenCalledWith({
+            expect(saveItems).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemBlueprint>>>({
                 entities: [windforce.dispatched.item],
                 selection: {},
             });
@@ -279,11 +308,12 @@ describe("save() creates one entity", () => {
             const saved = await workspace.in(ItemBlueprint).select({ type: true }).save(windforce.input);
 
             // assert
-            expect(updateItemTypes).toHaveBeenCalledWith({
+            expect(updateItemTypes).toHaveBeenCalledBefore(createItems);
+            expect(updateItemTypes).toHaveBeenCalledWith<Parameters<UpdateEntitiesFn<ItemTypeBlueprint>>>({
                 entities: [windforce.dispatched.itemType],
                 selection: {},
             });
-            expect(createItems).toHaveBeenCalledWith({
+            expect(createItems).toHaveBeenCalledWith<Parameters<CreateEntitiesFn<ItemBlueprint>>>({
                 entities: [windforce.dispatched.item],
                 selection: {},
             });
@@ -345,11 +375,15 @@ describe("save() creates one entity", () => {
             const saved = await workspace.in(ItemBlueprint).select({ sockets: true }).save(windforce.input);
 
             // assert
-            expect(saveItemSockets).toHaveBeenCalledWith({
+            expect(saveItems).toHaveBeenCalledBefore(saveItemSockets);
+            expect(saveItems).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemBlueprint>>>({
+                entities: [windforce.dispatched.item],
+                selection: {},
+            });
+            expect(saveItemSockets).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemSocketBlueprint>>>({
                 entities: windforce.dispatched.itemSockets,
                 selection: {},
             });
-            expect(saveItems).toHaveBeenCalledWith({ entities: [windforce.dispatched.item], selection: {} });
             expect(saved).toEqual(windforce.output);
             expect(saved).toBe(windforce.input);
         });
@@ -363,11 +397,15 @@ describe("save() creates one entity", () => {
             const saved = await workspace.in(ItemBlueprint).select({ sockets: true }).save(windforce.input);
 
             // assert
-            expect(createItemSockets).toHaveBeenCalledWith({
+            expect(createItems).toHaveBeenCalledBefore(createItemSockets);
+            expect(createItems).toHaveBeenCalledWith<Parameters<CreateEntitiesFn<ItemBlueprint>>>({
+                entities: [windforce.dispatched.item],
+                selection: {},
+            });
+            expect(createItemSockets).toHaveBeenCalledWith<Parameters<CreateEntitiesFn<ItemSocketBlueprint>>>({
                 entities: windforce.dispatched.itemSockets,
                 selection: {},
             });
-            expect(createItems).toHaveBeenCalledWith({ entities: [windforce.dispatched.item], selection: {} });
             expect(saved).toEqual(windforce.output);
             expect(saved).toBe(windforce.input);
         });
@@ -449,11 +487,15 @@ describe("save() creates one entity", () => {
             const saved = await workspace.in(ItemBlueprint).select({ sockets: true }).save(windforce.input);
 
             // assert
-            expect(saveItemSockets).toHaveBeenCalledWith({
+            expect(saveItems).toHaveBeenCalledBefore(saveItemSockets);
+            expect(saveItems).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemBlueprint>>>({
+                entities: [windforce.dispatched.item],
+                selection: {},
+            });
+            expect(saveItemSockets).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemSocketBlueprint>>>({
                 entities: windforce.dispatched.itemSockets,
                 selection: {},
             });
-            expect(saveItems).toHaveBeenCalledWith({ entities: [windforce.dispatched.item], selection: {} });
             expect(saved).toEqual(windforce.output);
             expect(saved).toBe(windforce.input);
         });
@@ -467,11 +509,15 @@ describe("save() creates one entity", () => {
             const saved = (await workspace.in(ItemBlueprint).select({ sockets: true }).save([windforce.input], []))[0];
 
             // assert
-            expect(saveItemSockets).toHaveBeenCalledWith({
+            expect(saveItems).toHaveBeenCalledBefore(saveItemSockets);
+            expect(saveItems).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemBlueprint>>>({
+                entities: [windforce.dispatched.item],
+                selection: {},
+            });
+            expect(saveItemSockets).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemSocketBlueprint>>>({
                 entities: windforce.dispatched.itemSockets,
                 selection: {},
             });
-            expect(saveItems).toHaveBeenCalledWith({ entities: [windforce.dispatched.item], selection: {} });
             expect(saved).toEqual(windforce.output);
             expect(saved).toBe(windforce.input);
         });
@@ -485,11 +531,15 @@ describe("save() creates one entity", () => {
             const saved = await workspace.in(ItemBlueprint).select({ sockets: true }).save(windforce.input);
 
             // assert
-            expect(saveItemSockets).toHaveBeenCalledWith({
+            expect(createItems).toHaveBeenCalledBefore(saveItemSockets);
+            expect(createItems).toHaveBeenCalledWith<Parameters<CreateEntitiesFn<ItemBlueprint>>>({
+                entities: [windforce.dispatched.item],
+                selection: {},
+            });
+            expect(saveItemSockets).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemSocketBlueprint>>>({
                 entities: windforce.dispatched.itemSockets,
                 selection: {},
             });
-            expect(createItems).toHaveBeenCalledWith({ entities: [windforce.dispatched.item], selection: {} });
             expect(saved).toEqual(windforce.output);
             expect(saved).toBe(windforce.input);
         });
@@ -559,7 +609,7 @@ describe("save() creates one entity", () => {
             ],
             createdAt,
             name: "Windforce",
-            updatedAt,
+            updatedAt: null,
             sockets: [
                 {
                     id: 10,
@@ -572,13 +622,16 @@ describe("save() creates one entity", () => {
             ],
         };
 
-        const saveItem = repository.useRpg().useSaveItems_deprecated(createdAt, updatedAt);
+        const saveItem = repository.useRpg().useSaveItems(createdAt, updatedAt, true);
 
         // act
         const saved = await workspace.in(ItemBlueprint).select({ sockets: true }).save([windforce]);
 
         // assert
-        expect(saveItem).toHaveBeenCalledWith({ entities: [windforcePassedToSave], selection: { sockets: true } });
+        expect(saveItem).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemBlueprint>>>({
+            entities: [windforcePassedToSave],
+            selection: { sockets: true },
+        });
         expect(saved).toEqual([windforceSaved]);
         expect(saved[0]).toBe(windforce);
     });

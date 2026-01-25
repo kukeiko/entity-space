@@ -1,6 +1,7 @@
 import { Folder, FolderBlueprint, Tree, TreeBlueprint, User } from "@entity-space/elements/testing";
 import { beforeEach, describe, expect, it } from "vitest";
 import { EntityWorkspace } from "../../entity-workspace";
+import { SaveEntitiesFn } from "../../mutation/entity-mutation-function.type";
 import { TestFacade, TestRepository } from "../../testing";
 import { createMetadata } from "../../testing/create-metadata.fn";
 
@@ -87,7 +88,8 @@ describe("save()", () => {
             // Tree
 
             expect(saveTrees).toHaveBeenCalledTimes(1);
-            expect(saveTrees).toHaveBeenCalledWith({
+            expect(saveTrees).toHaveBeenCalledAfter(saveUsers);
+            expect(saveTrees).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<TreeBlueprint>>>({
                 entities: [
                     {
                         id: 0,
@@ -103,6 +105,7 @@ describe("save()", () => {
                                 ],
                                 branches: [
                                     {
+                                        branches: [],
                                         leaves: [
                                             {
                                                 color: "red",
@@ -239,6 +242,7 @@ describe("save()", () => {
 
         {
             // File
+            expect(saveFiles).toHaveBeenCalledAfter(saveFolders);
             expect(saveFiles).toHaveBeenCalledTimes(1);
             expect(saveFiles).toHaveBeenCalledWith({
                 entities: [
@@ -255,6 +259,8 @@ describe("save()", () => {
 
         {
             // User
+            expect(saveUsers).toHaveBeenCalledBefore(saveFolders);
+            expect(saveUsers).toHaveBeenCalledBefore(saveFiles);
             expect(saveUsers).toHaveBeenCalledTimes(1);
             expect(saveUsers).toHaveBeenCalledWith({
                 entities: [

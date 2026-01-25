@@ -12,6 +12,6 @@
             "@entity-space/utils": ["src/utils/index.ts"]
         }
     },
-    "include": ["./**/*.ts"],
+    "include": ["./**/*.ts", "./**/*.d.ts"],
     "exclude": ["node_modules", "dist"]
 }

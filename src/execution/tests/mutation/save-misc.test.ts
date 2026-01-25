@@ -2,14 +2,21 @@ import {
     Artist,
     Item,
     ItemAttributeType,
+    ItemAttributeTypeBlueprint,
     ItemBlueprint,
     ItemSocket,
+    ItemSocketBlueprint,
     Song,
     SongBlueprint,
 } from "@entity-space/elements/testing";
 import { beforeEach, describe, expect, it } from "vitest";
 import { EntityWorkspace } from "../../entity-workspace";
-import { CreateEntityFn } from "../../mutation/entity-mutation-function.type";
+import {
+    CreateEntitiesFn,
+    CreateEntityFn,
+    DeleteEntitiesFn,
+    UpdateEntitiesFn,
+} from "../../mutation/entity-mutation-function.type";
 import { TestFacade, TestRepository } from "../../testing";
 import { createMetadata } from "../../testing/create-metadata.fn";
 
@@ -99,6 +106,7 @@ describe("save()", () => {
 
         // assert
         expect(actual).toEqual(expected);
+        expect(createSong).toHaveBeenCalledAfter(createArtist);
         expect(createSong).toHaveBeenCalledTimes(2);
         expect(createArtist).toHaveBeenCalledTimes(1);
         expect(createSong).toHaveBeenCalledWith<Parameters<CreateEntityFn<SongBlueprint>>>({
@@ -153,6 +161,7 @@ describe("save()", () => {
             await workspace.in(SongBlueprint).select({ artist: true }).save(songs);
 
             // assert
+            expect(updateSong).toHaveBeenCalledAfter(updateArtist);
             expect(updateSong).toHaveBeenCalledTimes(2);
             expect(updateArtist).toHaveBeenCalledTimes(1);
         });
@@ -208,6 +217,7 @@ describe("save()", () => {
             await workspace.in(SongBlueprint).select({ artist: true }).save(updatedSongs, songs);
 
             // assert
+            expect(updateSong).toHaveBeenCalledAfter(updateArtist);
             expect(updateSong).toHaveBeenCalledTimes(2);
             expect(updateArtist).toHaveBeenCalledTimes(1);
         });
@@ -265,7 +275,7 @@ describe("save()", () => {
         await workspace.in(ItemBlueprint).save([windforceChanged], [windforceOriginal]);
 
         // assert
-        expect(updateItems).toHaveBeenCalledWith({
+        expect(updateItems).toHaveBeenCalledWith<Parameters<UpdateEntitiesFn<ItemBlueprint>>>({
             entities: [windforcePassedToUpdate],
             selection: {},
         });
@@ -527,7 +537,7 @@ describe("save()", () => {
         // Item
         {
             expect(createItems).toHaveBeenCalledTimes(2);
-            expect(createItems).toHaveBeenCalledWith({
+            expect(createItems).toHaveBeenCalledWith<Parameters<CreateEntitiesFn<ItemBlueprint>>>({
                 entities: [
                     {
                         createdAt: "",
@@ -540,11 +550,11 @@ describe("save()", () => {
                             { typeId: 2, values: [40] },
                             { typeId: 3, values: [20] },
                         ],
-                    } satisfies Item,
+                    },
                 ],
                 selection: {},
             });
-            expect(createItems).toHaveBeenCalledWith({
+            expect(createItems).toHaveBeenCalledWith<Parameters<CreateEntitiesFn<ItemBlueprint>>>({
                 entities: [
                     {
                         createdAt: "",
@@ -557,12 +567,12 @@ describe("save()", () => {
                             { values: [15], typeId: 2 },
                             { values: [40], typeId: 5 },
                         ],
-                    } satisfies Item,
+                    },
                 ],
                 selection: {},
             });
             expect(updateItems).toHaveBeenCalledTimes(1);
-            expect(updateItems).toHaveBeenCalledWith({
+            expect(updateItems).toHaveBeenCalledWith<Parameters<UpdateEntitiesFn<ItemBlueprint>>>({
                 entities: [
                     {
                         id: 2,
@@ -572,12 +582,12 @@ describe("save()", () => {
                         updatedAt: null,
                         name: "Shako 1.09",
                         attributes: [{ values: [2], typeId: 1 }],
-                    } satisfies Item,
+                    },
                 ],
                 selection: {},
             });
             expect(deleteItems).toHaveBeenCalledTimes(1);
-            expect(deleteItems).toHaveBeenCalledWith({
+            expect(deleteItems).toHaveBeenCalledWith<Parameters<DeleteEntitiesFn<ItemBlueprint>>>({
                 entities: [
                     {
                         id: 3,
@@ -596,7 +606,7 @@ describe("save()", () => {
         // ItemSocket
         {
             expect(createItemSockets).toHaveBeenCalledTimes(1);
-            expect(createItemSockets).toHaveBeenCalledWith({
+            expect(createItemSockets).toHaveBeenCalledWith<Parameters<CreateEntitiesFn<ItemSocketBlueprint>>>({
                 entities: [
                     {
                         assignId: 2,
@@ -605,12 +615,12 @@ describe("save()", () => {
                         createdAt: "",
                         id: 0,
                         updatedAt: null,
-                    } satisfies ItemSocket,
+                    },
                 ],
                 selection: {},
             });
             expect(updateItemSockets).toHaveBeenCalledTimes(1);
-            expect(updateItemSockets).toHaveBeenCalledWith({
+            expect(updateItemSockets).toHaveBeenCalledWith<Parameters<UpdateEntitiesFn<ItemSocketBlueprint>>>({
                 entities: [
                     {
                         id: 3,
@@ -619,13 +629,13 @@ describe("save()", () => {
                         assignId: 3,
                         createdAt: "",
                         updatedAt: null,
-                    } satisfies ItemSocket,
-                    { id: 4, itemId: 1, socketedItemId: 400, assignId: 4, createdAt, updatedAt } satisfies ItemSocket,
+                    },
+                    { id: 4, itemId: 1, socketedItemId: 400, assignId: 4, createdAt, updatedAt },
                 ],
                 selection: {},
             });
             expect(deleteItemSocket).toHaveBeenCalledTimes(1);
-            expect(deleteItemSocket).toHaveBeenCalledWith({
+            expect(deleteItemSocket).toHaveBeenCalledWith<Parameters<DeleteEntitiesFn<ItemSocketBlueprint>>>({
                 entities: [{ id: 21, assignId: 21, itemId: 2, socketedItemId: 300, createdAt, updatedAt }],
                 selection: {},
             });
@@ -634,7 +644,9 @@ describe("save()", () => {
         // ItemAttributeType
         {
             expect(createItemAttributeTypes).toHaveBeenCalledTimes(2);
-            expect(createItemAttributeTypes).toHaveBeenCalledWith({
+            expect(createItemAttributeTypes).toHaveBeenCalledWith<
+                Parameters<CreateEntitiesFn<ItemAttributeTypeBlueprint>>
+            >({
                 entities: [
                     {
                         assignId: 2,
@@ -642,18 +654,20 @@ describe("save()", () => {
                         createdAt: "",
                         id: 0,
                         updatedAt: null,
-                    } satisfies ItemAttributeType,
+                    },
                     {
                         assignId: 1,
                         name: "+X to all Skills",
                         createdAt: "",
                         id: 0,
                         updatedAt: null,
-                    } satisfies ItemAttributeType,
+                    },
                 ],
                 selection: {},
             });
-            expect(createItemAttributeTypes).toHaveBeenCalledWith({
+            expect(createItemAttributeTypes).toHaveBeenCalledWith<
+                Parameters<CreateEntitiesFn<ItemAttributeTypeBlueprint>>
+            >({
                 entities: [
                     {
                         assignId: 5,
@@ -661,12 +675,14 @@ describe("save()", () => {
                         createdAt: "",
                         id: 0,
                         updatedAt: null,
-                    } satisfies ItemAttributeType,
+                    },
                 ],
                 selection: {},
             });
             expect(updateItemAttributeTypes).toHaveBeenCalledTimes(1);
-            expect(updateItemAttributeTypes).toHaveBeenCalledWith({
+            expect(updateItemAttributeTypes).toHaveBeenCalledWith<
+                Parameters<UpdateEntitiesFn<ItemAttributeTypeBlueprint>>
+            >({
                 entities: [
                     {
                         id: 3,
@@ -674,7 +690,7 @@ describe("save()", () => {
                         assignId: 3,
                         createdAt,
                         updatedAt: null,
-                    } satisfies ItemAttributeType,
+                    },
                 ],
                 selection: {},
             });

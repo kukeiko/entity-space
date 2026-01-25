@@ -29,45 +29,6 @@ export class RpgRepository extends InMemoryRepository<RpgEntities> {
 
     readonly #services: EntityServiceContainer;
 
-    useSaveItems_deprecated(createdAt: string, updatedAt: string, includeSockets = true) {
-        const saveItems = vi.fn(
-            ({ entities, selection }: { entities: Item[]; selection: PackedEntitySelection<Item> }) => {
-                const items = structuredClone(entities) as Item[];
-
-                for (const item of items) {
-                    if (!item.id) {
-                        item.id = item.assignId;
-                        item.createdAt = createdAt;
-                    }
-
-                    if (includeSockets && selection.sockets && item.sockets) {
-                        for (const socket of item.sockets) {
-                            if (!socket.id) {
-                                socket.id = socket.assignId;
-                                socket.createdAt = createdAt;
-                                socket.updatedAt = null;
-                                socket.itemId = item.id;
-                            } else {
-                                socket.updatedAt = updatedAt;
-                            }
-                        }
-                    }
-
-                    item.updatedAt = updatedAt;
-                }
-
-                return items as Item[];
-            },
-        );
-
-        this.#services.for(ItemBlueprint).addSaveMutator({
-            select: includeSockets ? { sockets: true } : {},
-            save: saveItems,
-        });
-
-        return saveItems;
-    }
-
     useSaveItems(createdAt: string, updatedAt: string, includeSockets = false) {
         const saveItems = vi.fn(({ entities }: Parameters<SaveEntitiesFn<ItemBlueprint, {}>>[0]) => {
             const items = structuredClone(entities) as Item[];
@@ -83,6 +44,8 @@ export class RpgRepository extends InMemoryRepository<RpgEntities> {
 
                 if (includeSockets && item.sockets) {
                     for (const itemSocket of item.sockets) {
+                        itemSocket.itemId = item.id;
+
                         if (!itemSocket.id) {
                             itemSocket.id = itemSocket.assignId;
                             itemSocket.createdAt = createdAt;

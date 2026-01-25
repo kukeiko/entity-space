@@ -55,6 +55,7 @@ describe("save()", () => {
 
         // assert
         expect(actual).toEqual(expected);
+        expect(createSongTag).toHaveBeenCalledAfter(createSong);
         expect(createSong).toHaveBeenCalledTimes(1);
         expect(createSongTag).toHaveBeenCalledTimes(2);
         expect(createSong).toHaveBeenCalledWith<Parameters<CreateEntityFn<SongBlueprint>>>({
@@ -112,6 +113,7 @@ describe("save()", () => {
 
         // assert
         expect(actual).toEqual(expected);
+        expect(createSongTag).toHaveBeenCalledAfter(createSong);
         expect(createSong).toHaveBeenCalledTimes(1);
         expect(createSongTag).toHaveBeenCalledTimes(2);
         expect(createSong).toHaveBeenCalledWith<Parameters<CreateEntityFn<SongBlueprint>>>({

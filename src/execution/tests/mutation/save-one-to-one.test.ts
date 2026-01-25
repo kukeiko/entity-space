@@ -47,6 +47,7 @@ describe("save()", () => {
         expect(actual).toEqual(expected);
         expect(createProduct).toHaveBeenCalledTimes(1);
         expect(createWashingMachine).toHaveBeenCalledTimes(1);
+        expect(createProduct).toHaveBeenCalledBefore(createWashingMachine);
         expect(createProduct).toHaveBeenCalledWith<Parameters<CreateEntityFn<ProductBlueprint>>>({
             selection: {},
             entity: { name: "HydroSpin 2000", price: 699, id: 0 },
@@ -87,6 +88,7 @@ describe("save()", () => {
 
         // assert
         expect(actual).toEqual(expected);
+        expect(createProduct).toHaveBeenCalledBefore(createWashingMachine);
         expect(createProduct).toHaveBeenCalledTimes(1);
         expect(createWashingMachine).toHaveBeenCalledTimes(1);
         expect(createProduct).toHaveBeenCalledWith<Parameters<CreateEntityFn<ProductBlueprint>>>({
