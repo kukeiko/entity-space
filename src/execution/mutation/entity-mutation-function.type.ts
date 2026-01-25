@@ -2,41 +2,38 @@ import { EntityBlueprint } from "@entity-space/elements";
 import { MaybeAsync } from "@entity-space/utils";
 
 export type CreateEntityFn<B, S = {}> = (args: {
-    entity: EntityBlueprint.Creatable<B>;
+    entity: EntityBlueprint.Type<B>;
     selection: S;
-}) => MaybeAsync<EntityBlueprint.Instance<B>>;
+}) => MaybeAsync<EntityBlueprint.Type<B>>;
 
 export type CreateEntitiesFn<B, S = {}> = (args: {
-    entities: EntityBlueprint.Creatable<B>[];
+    entities: EntityBlueprint.Type<B>[];
     selection: S;
-}) => MaybeAsync<EntityBlueprint.Instance<B>[]>;
+}) => MaybeAsync<EntityBlueprint.Type<B>[]>;
 
 export type UpdateEntityFn<B, S = {}> = (args: {
-    entity: EntityBlueprint.Updatable<B>;
+    entity: EntityBlueprint.Type<B>;
     selection: S;
-}) => MaybeAsync<EntityBlueprint.Instance<B>>;
+}) => MaybeAsync<EntityBlueprint.Type<B>>;
 
 export type UpdateEntitiesFn<B, S = {}> = (args: {
-    entities: EntityBlueprint.Updatable<B>[];
+    entities: EntityBlueprint.Type<B>[];
     selection: S;
-}) => MaybeAsync<EntityBlueprint.Instance<B>[]>;
+}) => MaybeAsync<EntityBlueprint.Type<B>[]>;
 
 export type SaveEntityFn<B, S = {}> = (args: {
-    entity: EntityBlueprint.Savable<B>;
+    entity: EntityBlueprint.Type<B>;
     selection: S;
-}) => MaybeAsync<EntityBlueprint.Instance<B>>;
+}) => MaybeAsync<EntityBlueprint.Type<B>>;
 
 export type SaveEntitiesFn<B, S = {}> = (args: {
-    entities: EntityBlueprint.Savable<B>[];
+    entities: EntityBlueprint.Type<B>[];
     selection: S;
-}) => MaybeAsync<EntityBlueprint.Instance<B>[]>;
+}) => MaybeAsync<EntityBlueprint.Type<B>[]>;
 
-export type DeleteEntityFn<B, S = {}> = (args: {
-    entity: EntityBlueprint.Instance<B>;
-    selection: S;
-}) => MaybeAsync<void>;
+export type DeleteEntityFn<B, S = {}> = (args: { entity: EntityBlueprint.Type<B>; selection: S }) => MaybeAsync<void>;
 
 export type DeleteEntitiesFn<B, S = {}> = (args: {
-    entities: EntityBlueprint.Instance<B>[];
+    entities: EntityBlueprint.Type<B>[];
     selection: S;
 }) => MaybeAsync<void>;

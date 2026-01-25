@@ -10,8 +10,6 @@ export class ItemAttributeTypeBlueprint {
     updatedAt = string({ readonly, nullable });
 }
 
-export type ItemAttributeTypeCreatable = EntityBlueprint.Creatable<ItemAttributeTypeBlueprint>;
-export type ItemAttributeTypeUpdatable = EntityBlueprint.Updatable<ItemAttributeTypeBlueprint>;
-export type ItemAttributeTypeSavable = EntityBlueprint.Savable<ItemAttributeTypeBlueprint>;
-export type ItemAttributeType = EntityBlueprint.Instance<ItemAttributeTypeBlueprint>;
 register(ItemAttributeTypeBlueprint, { name: "item-attribute-type" });
+
+export type ItemAttributeType = EntityBlueprint.Type<ItemAttributeTypeBlueprint>;

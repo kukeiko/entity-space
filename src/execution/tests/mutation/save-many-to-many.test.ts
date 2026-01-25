@@ -59,7 +59,7 @@ describe("save()", () => {
         expect(createSongTag).toHaveBeenCalledTimes(2);
         expect(createSong).toHaveBeenCalledWith<Parameters<CreateEntityFn<SongBlueprint>>>({
             selection: {},
-            entity: { albumId: 1, artistId: 2, duration: 100, metadata, name: "foo", namespace: "dev" },
+            entity: { ...song, id: 0, songTags: undefined },
         });
         expect(createSongTag).toHaveBeenCalledWith<Parameters<CreateEntityFn<SongTagBlueprint>>>({
             selection: {},
@@ -116,7 +116,7 @@ describe("save()", () => {
         expect(createSongTag).toHaveBeenCalledTimes(2);
         expect(createSong).toHaveBeenCalledWith<Parameters<CreateEntityFn<SongBlueprint>>>({
             selection: {},
-            entity: { albumId: 1, artistId: 2, duration: 100, metadata, name: "foo", namespace: "dev" },
+            entity: { id: 0, albumId: 1, artistId: 2, duration: 100, metadata, name: "foo", namespace: "dev" },
         });
         expect(createSongTag).toHaveBeenCalledWith<Parameters<CreateEntityFn<SongTagBlueprint>>>({
             selection: {},

@@ -2,11 +2,8 @@ import {
     Artist,
     Item,
     ItemAttributeType,
-    ItemAttributeTypeCreatable,
     ItemBlueprint,
-    ItemSavable,
     ItemSocket,
-    ItemUpdatable,
     Song,
     SongBlueprint,
 } from "@entity-space/elements/testing";
@@ -106,11 +103,11 @@ describe("save()", () => {
         expect(createArtist).toHaveBeenCalledTimes(1);
         expect(createSong).toHaveBeenCalledWith<Parameters<CreateEntityFn<SongBlueprint>>>({
             selection: {},
-            entity: { albumId: 1, artistId: 1, duration: 100, metadata, name: "bar", namespace: "dev" },
+            entity: { albumId: 1, artistId: 1, duration: 100, metadata, name: "bar", namespace: "dev", id: 0 },
         });
         expect(createSong).toHaveBeenCalledWith<Parameters<CreateEntityFn<SongBlueprint>>>({
             selection: {},
-            entity: { albumId: 1, artistId: 1, duration: 100, metadata, name: "bar", namespace: "dev" },
+            entity: { albumId: 1, artistId: 1, duration: 100, metadata, name: "bar", namespace: "dev", id: 0 },
         });
     });
 
@@ -250,10 +247,13 @@ describe("save()", () => {
             sockets: [],
         };
 
-        const windforcePassedToUpdate: ItemUpdatable = {
+        const windforcePassedToUpdate: Item = {
             id: 1,
+            assignId: 1,
             name: "Windforce",
             typeId: 7,
+            createdAt,
+            updatedAt,
             attributes: [
                 { typeId: 1, values: [30] },
                 { typeId: 2, values: [100] },
@@ -351,9 +351,27 @@ describe("save()", () => {
 
     it("should work (complex)", async () => {
         // arrange
-        const plusToAllSkills: ItemAttributeTypeCreatable = { assignId: 1, name: "+X to all Skills" };
-        const increasedAttackSpeed: ItemAttributeTypeCreatable = { assignId: 2, name: "Increased Attack Speed" };
-        const enhancedDamage: ItemAttributeTypeCreatable = { assignId: 5, name: "Enhanced Damage" };
+        const plusToAllSkills: ItemAttributeType = {
+            id: 0,
+            assignId: 1,
+            name: "+X to all Skills",
+            createdAt: "",
+            updatedAt: null,
+        };
+        const increasedAttackSpeed: ItemAttributeType = {
+            id: 0,
+            assignId: 2,
+            name: "Increased Attack Speed",
+            createdAt: "",
+            updatedAt: null,
+        };
+        const enhancedDamage: ItemAttributeType = {
+            id: 0,
+            assignId: 5,
+            name: "Enhanced Damage",
+            createdAt: "",
+            updatedAt: null,
+        };
 
         // will always be updated because it does not exist on an item in "previous" causing no diff to be created for it
         // that could be used to understand any changes made to it
@@ -382,31 +400,42 @@ describe("save()", () => {
             socketedItemId: 400,
         };
 
-        const windforce: ItemSavable = {
+        const windforce: Item = {
+            createdAt: "",
+            id: 0,
+            updatedAt: null,
             assignId: 1,
             typeId: 7,
             attributes: [
-                { type: increasedAttackSpeed, values: [40] },
-                { type: plusStrength, values: [20] },
+                { typeId: 0, type: increasedAttackSpeed, values: [40] },
+                { typeId: 0, type: plusStrength, values: [20] },
             ],
             name: "Windforce",
             sockets: [
                 {
                     // this socket will be created
+                    id: 0,
+                    createdAt: "",
+                    updatedAt: null,
                     assignId: 2,
                     itemId: 0, // will be set to "1" before creation
                     socketedItemId: 0,
                     socketedItem: {
                         // this item will be created
+                        id: 0,
+                        createdAt: "",
+                        updatedAt: null,
                         assignId: 10,
                         typeId: 13,
                         name: "Ruby Jewel of Fervor",
                         attributes: [
                             {
+                                typeId: 0,
                                 type: increasedAttackSpeed,
                                 values: [15],
                             },
                             {
+                                typeId: 0,
                                 type: enhancedDamage,
                                 values: [40],
                             },
@@ -419,21 +448,28 @@ describe("save()", () => {
                     assignId: 3,
                     itemId: 0, // will be set to "1" before update
                     socketedItemId: 300, // [todo] ❌ add socketed item that is moved from another item
+                    createdAt: "",
+                    updatedAt: null,
                 },
                 istRuneSocket,
             ],
         };
 
-        const shako: ItemSavable = {
+        const shako: Item = {
             id: 2,
             name: "Shako 1.09",
             attributes: [
                 {
+                    typeId: 0,
                     values: [2],
                     type: plusToAllSkills, // "type" will be created, and we expect "typeId" to be assigned after
                 },
             ],
             sockets: [],
+            assignId: 2,
+            createdAt: "",
+            typeId: 0,
+            updatedAt: null,
         };
 
         const previousShako: Item = {
@@ -468,7 +504,7 @@ describe("save()", () => {
             updatedAt,
         };
 
-        const items: ItemSavable[] = [windforce, shako];
+        const items: Item[] = [windforce, shako];
         const previous: Item[] = [previousShako, wizardSpike];
 
         const createItems = repository.useRpg().useCreateItems(createdAt);
@@ -494,6 +530,9 @@ describe("save()", () => {
             expect(createItems).toHaveBeenCalledWith({
                 entities: [
                     {
+                        createdAt: "",
+                        id: 0,
+                        updatedAt: null,
                         assignId: 1,
                         typeId: 7,
                         name: "Windforce",
@@ -501,13 +540,16 @@ describe("save()", () => {
                             { typeId: 2, values: [40] },
                             { typeId: 3, values: [20] },
                         ],
-                    },
+                    } satisfies Item,
                 ],
                 selection: {},
             });
             expect(createItems).toHaveBeenCalledWith({
                 entities: [
                     {
+                        createdAt: "",
+                        id: 0,
+                        updatedAt: null,
                         assignId: 10,
                         typeId: 13,
                         name: "Ruby Jewel of Fervor",
@@ -515,13 +557,23 @@ describe("save()", () => {
                             { values: [15], typeId: 2 },
                             { values: [40], typeId: 5 },
                         ],
-                    },
+                    } satisfies Item,
                 ],
                 selection: {},
             });
             expect(updateItems).toHaveBeenCalledTimes(1);
             expect(updateItems).toHaveBeenCalledWith({
-                entities: [{ id: 2, name: "Shako 1.09", attributes: [{ values: [2], typeId: 1 }] }],
+                entities: [
+                    {
+                        id: 2,
+                        assignId: 2,
+                        createdAt: "",
+                        typeId: 0,
+                        updatedAt: null,
+                        name: "Shako 1.09",
+                        attributes: [{ values: [2], typeId: 1 }],
+                    } satisfies Item,
+                ],
                 selection: {},
             });
             expect(deleteItems).toHaveBeenCalledTimes(1);
@@ -545,14 +597,30 @@ describe("save()", () => {
         {
             expect(createItemSockets).toHaveBeenCalledTimes(1);
             expect(createItemSockets).toHaveBeenCalledWith({
-                entities: [{ assignId: 2, itemId: 1, socketedItemId: 10 }],
+                entities: [
+                    {
+                        assignId: 2,
+                        itemId: 1,
+                        socketedItemId: 10,
+                        createdAt: "",
+                        id: 0,
+                        updatedAt: null,
+                    } satisfies ItemSocket,
+                ],
                 selection: {},
             });
             expect(updateItemSockets).toHaveBeenCalledTimes(1);
             expect(updateItemSockets).toHaveBeenCalledWith({
                 entities: [
-                    { id: 3, itemId: 1, socketedItemId: 300 },
-                    { id: 4, itemId: 1, socketedItemId: 400 },
+                    {
+                        id: 3,
+                        itemId: 1,
+                        socketedItemId: 300,
+                        assignId: 3,
+                        createdAt: "",
+                        updatedAt: null,
+                    } satisfies ItemSocket,
+                    { id: 4, itemId: 1, socketedItemId: 400, assignId: 4, createdAt, updatedAt } satisfies ItemSocket,
                 ],
                 selection: {},
             });
@@ -568,18 +636,46 @@ describe("save()", () => {
             expect(createItemAttributeTypes).toHaveBeenCalledTimes(2);
             expect(createItemAttributeTypes).toHaveBeenCalledWith({
                 entities: [
-                    { assignId: 2, name: "Increased Attack Speed" },
-                    { assignId: 1, name: "+X to all Skills" },
+                    {
+                        assignId: 2,
+                        name: "Increased Attack Speed",
+                        createdAt: "",
+                        id: 0,
+                        updatedAt: null,
+                    } satisfies ItemAttributeType,
+                    {
+                        assignId: 1,
+                        name: "+X to all Skills",
+                        createdAt: "",
+                        id: 0,
+                        updatedAt: null,
+                    } satisfies ItemAttributeType,
                 ],
                 selection: {},
             });
             expect(createItemAttributeTypes).toHaveBeenCalledWith({
-                entities: [{ assignId: 5, name: "Enhanced Damage" }],
+                entities: [
+                    {
+                        assignId: 5,
+                        name: "Enhanced Damage",
+                        createdAt: "",
+                        id: 0,
+                        updatedAt: null,
+                    } satisfies ItemAttributeType,
+                ],
                 selection: {},
             });
             expect(updateItemAttributeTypes).toHaveBeenCalledTimes(1);
             expect(updateItemAttributeTypes).toHaveBeenCalledWith({
-                entities: [{ id: 3, name: "+ to Strength" }],
+                entities: [
+                    {
+                        id: 3,
+                        name: "+ to Strength",
+                        assignId: 3,
+                        createdAt,
+                        updatedAt: null,
+                    } satisfies ItemAttributeType,
+                ],
                 selection: {},
             });
             expect(deleteItemAttributeTypes).not.toHaveBeenCalled();

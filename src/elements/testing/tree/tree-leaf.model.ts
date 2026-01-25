@@ -10,4 +10,4 @@ export class TreeLeafBlueprint {
 
 register(TreeLeafBlueprint, { name: "tree-leaves" });
 
-export type TreeLeaf = EntityBlueprint.Instance<TreeLeafBlueprint>;
+export type TreeLeaf = EntityBlueprint.Type<TreeLeafBlueprint>;

@@ -21,7 +21,4 @@ export class ArtistBlueprint {
 
 register(ArtistBlueprint, { name: "artist" });
 
-export type ArtistCreatable = EntityBlueprint.Creatable<ArtistBlueprint>;
-export type ArtistUpdatable = EntityBlueprint.Updatable<ArtistBlueprint>;
-export type ArtistSavable = EntityBlueprint.Savable<ArtistBlueprint>;
-export type Artist = EntityBlueprint.Instance<ArtistBlueprint>;
+export type Artist = EntityBlueprint.Type<ArtistBlueprint>;

@@ -253,7 +253,7 @@ export class MusicRepository extends InMemoryRepository<MusicEntities, "tags" | 
         const create = vi.fn<CreateEntityFn<ArtistBlueprint>>(({ entity: artist }) => {
             const nextId = this.nextId("artists");
 
-            const created: EntityBlueprint.Instance<ArtistBlueprint> = {
+            const created: EntityBlueprint.Type<ArtistBlueprint> = {
                 id: nextId,
                 namespace: artist.namespace,
                 metadata: { createdAt: new Date().toISOString(), createdById: 1, updatedAt: null, updatedById: null },
@@ -376,7 +376,7 @@ export class MusicRepository extends InMemoryRepository<MusicEntities, "tags" | 
         const create = vi.fn<CreateEntityFn<SongBlueprint>>(({ entity: song }) => {
             const nextId = this.nextId("songs");
 
-            const created: EntityBlueprint.Instance<SongBlueprint> = {
+            const created: EntityBlueprint.Type<SongBlueprint> = {
                 id: nextId,
                 name: song.name,
                 albumId: song.albumId,
@@ -419,7 +419,7 @@ export class MusicRepository extends InMemoryRepository<MusicEntities, "tags" | 
 
     useCreateSongTag() {
         const create = vi.fn<CreateEntityFn<SongTagBlueprint>>(({ entity: songTag }) => {
-            const created: EntityBlueprint.Instance<SongTagBlueprint> = {
+            const created: EntityBlueprint.Type<SongTagBlueprint> = {
                 songId: songTag.songId!, // [todo] ❌ type assertion
                 tagId: songTag.tagId!, // [todo] ❌ type assertion
             };

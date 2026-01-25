@@ -14,8 +14,6 @@ export class ItemSocketBlueprint {
     updatedAt = string({ readonly, nullable });
 }
 
-export type ItemSocketCreatable = EntityBlueprint.Creatable<ItemSocketBlueprint>;
-export type ItemSocketUpdatable = EntityBlueprint.Updatable<ItemSocketBlueprint>;
-export type ItemSocketSavable = EntityBlueprint.Savable<ItemSocketBlueprint>;
-export type ItemSocket = EntityBlueprint.Instance<ItemSocketBlueprint>;
 register(ItemSocketBlueprint);
+
+export type ItemSocket = EntityBlueprint.Type<ItemSocketBlueprint>;

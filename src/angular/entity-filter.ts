@@ -18,7 +18,7 @@ export class EntityFilter<B, F, S extends PackedEntitySelection<EntityBlueprint.
     }
 
     #source: EntityFilterSource<F>;
-    #toWhereEntityFn?: (filter: F) => WhereEntity<EntityBlueprint.Instance<B>>;
+    #toWhereEntityFn?: (filter: F) => WhereEntity<EntityBlueprint.Type<B>>;
     #clientSideFilterFn?: (filter: F, entity: SelectEntity<EntityBlueprint.Type<B>, S>) => boolean;
     #select?: S;
 

@@ -11,4 +11,4 @@ export class SongTagBlueprint {
 
 register(SongTagBlueprint, { name: "song-tag" });
 
-export type SongTag = EntityBlueprint.Instance<SongTagBlueprint>;
+export type SongTag = EntityBlueprint.Type<SongTagBlueprint>;

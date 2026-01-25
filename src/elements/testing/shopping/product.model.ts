@@ -12,4 +12,4 @@ export class ProductBlueprint {
 
 register(ProductBlueprint, { name: "product" });
 
-export type Product = EntityBlueprint.Instance<ProductBlueprint>;
+export type Product = EntityBlueprint.Type<ProductBlueprint>;

@@ -1,6 +1,7 @@
-import { copyEntity, getSelection, toEntityPairs } from "@entity-space/elements";
+import { toEntityPairs } from "@entity-space/elements";
 import { EntityQueryTracing } from "../../entity-query-tracing";
 import { AcceptedEntityMutation } from "../accepted-entity-mutation";
+import { copyEntityForMutation } from "./copy-entity-for-mutation.fn";
 
 export async function executeDeleteMutation(
     mutation: AcceptedEntityMutation,
@@ -12,17 +13,9 @@ export async function executeDeleteMutation(
     // so that in case of an error (service temporarily unavailable), and some entities have already been deleted successfully,
     // entity-space doesn't try to delete those again.
 
-    const deletableSelection = getSelection(schema, mutation.getSelection());
-
     const map = new Map(
         mutation.getPreviousEntities().map(entity => {
-            const copy = copyEntity(
-                schema,
-                entity,
-                deletableSelection,
-                (relation, entity) =>
-                    relation.isEmbedded() || mutation.getChanges().some(change => change.getEntity() === entity),
-            );
+            const copy = copyEntityForMutation(mutation, entity);
 
             return [copy, entity];
         }),

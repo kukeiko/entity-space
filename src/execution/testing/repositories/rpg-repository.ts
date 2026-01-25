@@ -3,20 +3,11 @@ import {
     Item,
     ItemAttributeType,
     ItemAttributeTypeBlueprint,
-    ItemAttributeTypeCreatable,
-    ItemAttributeTypeUpdatable,
     ItemBlueprint,
-    ItemCreatable,
-    ItemSavable,
     ItemSocket,
     ItemSocketBlueprint,
-    ItemSocketCreatable,
-    ItemSocketSavable,
-    ItemSocketUpdatable,
     ItemType,
     ItemTypeBlueprint,
-    ItemTypeSavable,
-    ItemUpdatable,
 } from "@entity-space/elements/testing";
 import { vi } from "vitest";
 import { EntityServiceContainer } from "../../entity-service-container";
@@ -40,8 +31,8 @@ export class RpgRepository extends InMemoryRepository<RpgEntities> {
 
     useSaveItems_deprecated(createdAt: string, updatedAt: string, includeSockets = true) {
         const saveItems = vi.fn(
-            ({ entities, selection }: { entities: ItemSavable[]; selection: PackedEntitySelection<Item> }) => {
-                const items = structuredClone(entities) as ItemSavable[];
+            ({ entities, selection }: { entities: Item[]; selection: PackedEntitySelection<Item> }) => {
+                const items = structuredClone(entities) as Item[];
 
                 for (const item of items) {
                     if (!item.id) {
@@ -79,7 +70,7 @@ export class RpgRepository extends InMemoryRepository<RpgEntities> {
 
     useSaveItems(createdAt: string, updatedAt: string, includeSockets = false) {
         const saveItems = vi.fn(({ entities }: Parameters<SaveEntitiesFn<ItemBlueprint, {}>>[0]) => {
-            const items = structuredClone(entities) as ItemSavable[];
+            const items = structuredClone(entities) as Item[];
 
             for (const item of items) {
                 if (!item.id) {
@@ -116,7 +107,7 @@ export class RpgRepository extends InMemoryRepository<RpgEntities> {
 
     useCreateItems(createdAt: string) {
         const createItem = vi.fn(
-            ({ entities, selection }: { entities: ItemCreatable[]; selection: PackedEntitySelection<Item> }) => {
+            ({ entities, selection }: { entities: Item[]; selection: PackedEntitySelection<Item> }) => {
                 const items = structuredClone(entities);
 
                 for (const item of items) {
@@ -141,7 +132,7 @@ export class RpgRepository extends InMemoryRepository<RpgEntities> {
     }
 
     useUpdateItems(updatedAt: string) {
-        const updateItems = vi.fn(({ entities }: { entities: ItemUpdatable[] }) => {
+        const updateItems = vi.fn(({ entities }: { entities: Item[] }) => {
             const items = structuredClone(entities);
 
             for (const item of items) {
@@ -173,7 +164,7 @@ export class RpgRepository extends InMemoryRepository<RpgEntities> {
 
     useSaveItemTypes() {
         const saveItemTypes = vi.fn(({ entities }: Parameters<SaveEntitiesFn<ItemTypeBlueprint, {}>>[0]) => {
-            const items = structuredClone(entities) as ItemTypeSavable[];
+            const items = structuredClone(entities) as ItemType[];
 
             for (const item of items) {
                 if (!item.id) {
@@ -218,7 +209,7 @@ export class RpgRepository extends InMemoryRepository<RpgEntities> {
 
     useSaveItemSockets(createdAt: string, updatedAt: string) {
         const saveItemSockets = vi.fn(({ entities }: Parameters<SaveEntitiesFn<ItemSocketBlueprint, {}>>[0]) => {
-            const itemSockets = structuredClone(entities) as ItemSocketSavable[];
+            const itemSockets = structuredClone(entities) as ItemSocket[];
 
             for (const itemSocket of itemSockets) {
                 if (!itemSocket.id) {
@@ -240,13 +231,7 @@ export class RpgRepository extends InMemoryRepository<RpgEntities> {
 
     useCreateItemSockets(createdAt: string) {
         const createItemSockets = vi.fn(
-            ({
-                entities,
-                selection,
-            }: {
-                entities: ItemSocketCreatable[];
-                selection: PackedEntitySelection<ItemSocket>;
-            }) => {
+            ({ entities, selection }: { entities: ItemSocket[]; selection: PackedEntitySelection<ItemSocket> }) => {
                 const itemSockets = structuredClone(entities);
 
                 for (const itemSocket of itemSockets) {
@@ -268,13 +253,7 @@ export class RpgRepository extends InMemoryRepository<RpgEntities> {
 
     useUpdateItemSockets(updatedAt: string) {
         const updateItemSockets = vi.fn(
-            ({
-                entities,
-                selection,
-            }: {
-                entities: ItemSocketUpdatable[];
-                selection: PackedEntitySelection<ItemSocket>;
-            }) => {
+            ({ entities, selection }: { entities: ItemSocket[]; selection: PackedEntitySelection<ItemSocket> }) => {
                 const items = structuredClone(entities);
 
                 for (const item of items) {
@@ -310,10 +289,10 @@ export class RpgRepository extends InMemoryRepository<RpgEntities> {
                 entities,
                 selection,
             }: {
-                entities: ItemAttributeTypeCreatable[];
+                entities: ItemAttributeType[];
                 selection: PackedEntitySelection<ItemSocket>;
             }) => {
-                const itemAttributeTypes = structuredClone(entities) as ItemAttributeTypeCreatable[];
+                const itemAttributeTypes = structuredClone(entities) as ItemAttributeType[];
 
                 for (const itemAttributeType of itemAttributeTypes) {
                     itemAttributeType.id = itemAttributeType.assignId;
@@ -337,7 +316,7 @@ export class RpgRepository extends InMemoryRepository<RpgEntities> {
                 entities,
                 selection,
             }: {
-                entities: ItemAttributeTypeUpdatable[];
+                entities: ItemAttributeType[];
                 selection: PackedEntitySelection<ItemSocket>;
             }) => {
                 const items = structuredClone(entities);

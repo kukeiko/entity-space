@@ -1,12 +1,5 @@
 import { PackedEntitySelection } from "@entity-space/elements";
-import {
-    File,
-    FileBlueprint,
-    FileSavable,
-    Folder,
-    FolderBlueprint,
-    FolderSavable,
-} from "@entity-space/elements/testing";
+import { File, FileBlueprint, Folder, FolderBlueprint } from "@entity-space/elements/testing";
 import { vi } from "vitest";
 import { EntityServiceContainer } from "../../entity-service-container";
 import { InMemoryRepository } from "./in-memory-repository";
@@ -40,7 +33,7 @@ export class FileSystemRepository extends InMemoryRepository<FileSystemEntities>
 
     useSaveFolders() {
         const save = vi.fn(
-            ({ entities, selection }: { entities: FolderSavable[]; selection: PackedEntitySelection<Folder> }) => {
+            ({ entities, selection }: { entities: Folder[]; selection: PackedEntitySelection<Folder> }) => {
                 entities = structuredClone(entities);
 
                 for (const entity of entities) {
@@ -72,22 +65,20 @@ export class FileSystemRepository extends InMemoryRepository<FileSystemEntities>
     }
 
     useSaveFiles() {
-        const save = vi.fn(
-            ({ entities, selection }: { entities: FileSavable[]; selection: PackedEntitySelection<File> }) => {
-                entities = structuredClone(entities);
+        const save = vi.fn(({ entities, selection }: { entities: File[]; selection: PackedEntitySelection<File> }) => {
+            entities = structuredClone(entities);
 
-                // for (const entity of entities) {
-                //     entity.id = this.#nextId("trees");
-                //     entity.metadata = createMetadata(createdById, undefined, createdAt);
+            // for (const entity of entities) {
+            //     entity.id = this.#nextId("trees");
+            //     entity.metadata = createMetadata(createdById, undefined, createdAt);
 
-                //     // [todo] ❌ commented out to remind myself of: add validation to entities returned from user mutation functions
-                //     // making sure entities are properly hydrated
-                //     // item.updatedAt = null;
-                // }
+            //     // [todo] ❌ commented out to remind myself of: add validation to entities returned from user mutation functions
+            //     // making sure entities are properly hydrated
+            //     // item.updatedAt = null;
+            // }
 
-                return entities as File[];
-            },
-        );
+            return entities as File[];
+        });
 
         this.#services.for(FileBlueprint).addSaveMutator({
             save,

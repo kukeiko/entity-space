@@ -7,7 +7,7 @@ import { EntityFilter } from "./entity-filter";
 // a little delay to not spam server on frequent filter change
 const REFRESH_DELAY = 1000;
 
-export class EntityDataSource<B, F, S extends PackedEntitySelection<EntityBlueprint.Instance<B>>> {
+export class EntityDataSource<B, F, S extends PackedEntitySelection<EntityBlueprint.Type<B>>> {
     constructor(
         workspace: EntityWorkspace,
         blueprint: Class<B>,
@@ -40,22 +40,22 @@ export class EntityDataSource<B, F, S extends PackedEntitySelection<EntityBluepr
     readonly #filter: EntityFilter<B, F, S>;
     readonly #refresh$ = new BehaviorSubject(undefined);
     readonly #isLoading$ = new BehaviorSubject(false);
-    readonly #entities$: Observable<SelectEntity<EntityBlueprint.Instance<B>, S>[]>;
+    readonly #entities$: Observable<SelectEntity<EntityBlueprint.Type<B>, S>[]>;
     readonly #cacheKey?: unknown;
     readonly #reactive?: boolean | QueryReactivityOptions;
 
-    getEntities$(): Observable<SelectEntity<EntityBlueprint.Instance<B>, S>[]> {
+    getEntities$(): Observable<SelectEntity<EntityBlueprint.Type<B>, S>[]> {
         return this.#entities$;
     }
 
-    getEntities(): Promise<SelectEntity<EntityBlueprint.Instance<B>, S>[]> {
+    getEntities(): Promise<SelectEntity<EntityBlueprint.Type<B>, S>[]> {
         return firstValueFrom(this.#entities$);
     }
 
     async moveEntity(
         from: number,
         to: number,
-        assignIndex: (entity: SelectEntity<EntityBlueprint.Instance<B>, S>, index: number) => void,
+        assignIndex: (entity: SelectEntity<EntityBlueprint.Type<B>, S>, index: number) => void,
     ): Promise<void> {
         const previous = await this.getEntities();
         const next = structuredClone(previous.slice());
@@ -90,7 +90,7 @@ export class EntityDataSource<B, F, S extends PackedEntitySelection<EntityBluepr
     }
 
     // [todo] ❌ should skip REFRESH_DELAY if the criteria are only partially cached
-    #load$(filter: F): Observable<SelectEntity<EntityBlueprint.Instance<B>, S>[]> {
+    #load$(filter: F): Observable<SelectEntity<EntityBlueprint.Type<B>, S>[]> {
         return this.#workspace
             .from(this.#blueprint)
             .select(this.#select ?? {})

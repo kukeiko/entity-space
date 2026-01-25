@@ -59,8 +59,8 @@ export class EntitySchemaScopedServiceContainer<B> {
     readonly #addMutatorFn: (mutator: ExplicitEntityMutator) => void;
 
     addSource<
-        W extends WhereEntityShape<EntityBlueprint.Instance<B>>,
-        S extends PackedEntitySelection<EntityBlueprint.Instance<B>>,
+        W extends WhereEntityShape<EntityBlueprint.Type<B>>,
+        S extends PackedEntitySelection<EntityBlueprint.Type<B>>,
         P,
     >({
         where,
@@ -68,8 +68,8 @@ export class EntitySchemaScopedServiceContainer<B> {
         load,
         parameters,
     }: {
-        where?: W | WhereEntityShape<EntityBlueprint.Instance<B>>;
-        select?: S | PackedEntitySelection<EntityBlueprint.Instance<B>>;
+        where?: W | WhereEntityShape<EntityBlueprint.Type<B>>;
+        select?: S | PackedEntitySelection<EntityBlueprint.Type<B>>;
         parameters?: Class<P>;
         load: LoadEntitiesFn<B, W, S, P>;
     }): this {
@@ -88,13 +88,13 @@ export class EntitySchemaScopedServiceContainer<B> {
         return this;
     }
 
-    addHydrator<S extends PackedEntitySelection<EntityBlueprint.Instance<B>>, P>({
+    addHydrator<S extends PackedEntitySelection<EntityBlueprint.Type<B>>, P>({
         hydrate,
         requires,
         select,
         parameters,
     }: {
-        select: PackedEntitySelection<EntityBlueprint.Instance<B>>;
+        select: PackedEntitySelection<EntityBlueprint.Type<B>>;
         requires: S;
         hydrate: HydrateEntitiesFn<B, S, P>;
         parameters?: Class<P>;
@@ -109,8 +109,8 @@ export class EntitySchemaScopedServiceContainer<B> {
                 unpackSelectionWithoutDefault(this.#schema, select),
                 async ({ entities, selection, context, parameters }) => {
                     await hydrate({
-                        entities: entities as SelectEntity<EntityBlueprint.Instance<B>, S>[],
-                        selection: selection as PackedEntitySelection<EntityBlueprint.Instance<B>>,
+                        entities: entities as SelectEntity<EntityBlueprint.Type<B>, S>[],
+                        selection: selection as PackedEntitySelection<EntityBlueprint.Type<B>>,
                         context,
                         parameters: (parameters ?? {}) as EntityBlueprint.Type<P>,
                     });
@@ -120,11 +120,11 @@ export class EntitySchemaScopedServiceContainer<B> {
         return this;
     }
 
-    addSaveOneMutator<S extends PackedEntitySelection<EntityBlueprint.Instance<B>>>({
+    addSaveOneMutator<S extends PackedEntitySelection<EntityBlueprint.Type<B>>>({
         save,
         select,
     }: {
-        select?: S | PackedEntitySelection<EntityBlueprint.Instance<B>>;
+        select?: S | PackedEntitySelection<EntityBlueprint.Type<B>>;
         save: SaveEntityFn<B, S>;
     }): this {
         const mutate: EntityMutationFn = (entities, selection) => {
@@ -132,7 +132,7 @@ export class EntitySchemaScopedServiceContainer<B> {
                 entities.map(entity => {
                     return unwrapMaybeAsync(
                         save({
-                            entity: entity as EntityBlueprint.Savable<B>,
+                            entity: entity as EntityBlueprint.Type<B>,
                             selection: packEntitySelection(this.#schema, selection) as S,
                         }),
                     );
@@ -148,17 +148,17 @@ export class EntitySchemaScopedServiceContainer<B> {
         return this.#addMutator("save", mutate, selection);
     }
 
-    addSaveMutator<S extends PackedEntitySelection<EntityBlueprint.Instance<B>>>({
+    addSaveMutator<S extends PackedEntitySelection<EntityBlueprint.Type<B>>>({
         save,
         select,
     }: {
-        select?: S | PackedEntitySelection<EntityBlueprint.Instance<B>>;
+        select?: S | PackedEntitySelection<EntityBlueprint.Type<B>>;
         save: SaveEntitiesFn<B, S>;
     }): this {
         const mutate: EntityMutationFn = (entities, selection) => {
             return unwrapMaybeAsync(
                 save({
-                    entities: entities as EntityBlueprint.Savable<B>[],
+                    entities: entities as EntityBlueprint.Type<B>[],
                     selection: packEntitySelection(this.#schema, selection) as S,
                 }),
             );
@@ -172,11 +172,11 @@ export class EntitySchemaScopedServiceContainer<B> {
         return this.#addMutator("save", mutate, selection);
     }
 
-    addCreateOneMutator<S extends PackedEntitySelection<EntityBlueprint.Instance<B>>>({
+    addCreateOneMutator<S extends PackedEntitySelection<EntityBlueprint.Type<B>>>({
         create,
         select,
     }: {
-        select?: S | PackedEntitySelection<EntityBlueprint.Instance<B>>;
+        select?: S | PackedEntitySelection<EntityBlueprint.Type<B>>;
         create: CreateEntityFn<B, S>;
     }): this {
         const mutate: EntityMutationFn = (entities, selection) => {
@@ -184,7 +184,7 @@ export class EntitySchemaScopedServiceContainer<B> {
                 entities.map(entity => {
                     return unwrapMaybeAsync(
                         create({
-                            entity: entity as EntityBlueprint.Creatable<B>,
+                            entity: entity as EntityBlueprint.Type<B>,
                             selection: packEntitySelection(this.#schema, selection) as S,
                         }),
                     );
@@ -200,17 +200,17 @@ export class EntitySchemaScopedServiceContainer<B> {
         return this.#addMutator("create", mutate, selection);
     }
 
-    addCreateMutator<S extends PackedEntitySelection<EntityBlueprint.Instance<B>>>({
+    addCreateMutator<S extends PackedEntitySelection<EntityBlueprint.Type<B>>>({
         create,
         select,
     }: {
-        select?: S | PackedEntitySelection<EntityBlueprint.Instance<B>>;
+        select?: S | PackedEntitySelection<EntityBlueprint.Type<B>>;
         create: CreateEntitiesFn<B, S>;
     }): this {
         const mutate: EntityMutationFn = (entities, selection) => {
             return unwrapMaybeAsync(
                 create({
-                    entities: entities as EntityBlueprint.Creatable<B>[],
+                    entities: entities as EntityBlueprint.Type<B>[],
                     selection: packEntitySelection(this.#schema, selection) as S,
                 }),
             );
@@ -224,11 +224,11 @@ export class EntitySchemaScopedServiceContainer<B> {
         return this.#addMutator("create", mutate, selection);
     }
 
-    addUpdateOneMutator<S extends PackedEntitySelection<EntityBlueprint.Instance<B>>>({
+    addUpdateOneMutator<S extends PackedEntitySelection<EntityBlueprint.Type<B>>>({
         update,
         select,
     }: {
-        select?: S | PackedEntitySelection<EntityBlueprint.Instance<B>>;
+        select?: S | PackedEntitySelection<EntityBlueprint.Type<B>>;
         update: UpdateEntityFn<B, S>;
     }): this {
         const mutate: EntityMutationFn = (entities, selection) => {
@@ -236,7 +236,7 @@ export class EntitySchemaScopedServiceContainer<B> {
                 entities.map(entity => {
                     return unwrapMaybeAsync(
                         update({
-                            entity: entity as EntityBlueprint.Updatable<B>,
+                            entity: entity as EntityBlueprint.Type<B>,
                             selection: packEntitySelection(this.#schema, selection) as S,
                         }),
                     );
@@ -252,17 +252,17 @@ export class EntitySchemaScopedServiceContainer<B> {
         return this.#addMutator("update", mutate, selection);
     }
 
-    addUpdateMutator<S extends PackedEntitySelection<EntityBlueprint.Instance<B>>>({
+    addUpdateMutator<S extends PackedEntitySelection<EntityBlueprint.Type<B>>>({
         update,
         select,
     }: {
-        select?: S | PackedEntitySelection<EntityBlueprint.Instance<B>>;
+        select?: S | PackedEntitySelection<EntityBlueprint.Type<B>>;
         update: UpdateEntitiesFn<B, S>;
     }): this {
         const mutate: EntityMutationFn = (entities, selection) => {
             return unwrapMaybeAsync(
                 update({
-                    entities: entities as EntityBlueprint.Updatable<B>[],
+                    entities: entities as EntityBlueprint.Type<B>[],
                     selection: packEntitySelection(this.#schema, selection) as S,
                 }),
             );
@@ -276,11 +276,11 @@ export class EntitySchemaScopedServiceContainer<B> {
         return this.#addMutator("update", mutate, selection);
     }
 
-    addDeleteOneMutator<S extends PackedEntitySelection<EntityBlueprint.Instance<B>>>({
+    addDeleteOneMutator<S extends PackedEntitySelection<EntityBlueprint.Type<B>>>({
         delete: del,
         select,
     }: {
-        select?: S | PackedEntitySelection<EntityBlueprint.Instance<B>>;
+        select?: S | PackedEntitySelection<EntityBlueprint.Type<B>>;
         delete: DeleteEntityFn<B, S>;
     }): this {
         const mutate: EntityMutationFn = async (entities, selection) => {
@@ -288,7 +288,7 @@ export class EntitySchemaScopedServiceContainer<B> {
                 entities.map(entity => {
                     return unwrapMaybeAsync(
                         del({
-                            entity: entity as EntityBlueprint.Instance<B>,
+                            entity: entity as EntityBlueprint.Type<B>,
                             selection: packEntitySelection(this.#schema, selection) as S,
                         }),
                     );
@@ -303,17 +303,17 @@ export class EntitySchemaScopedServiceContainer<B> {
         return this.#addMutator("delete", mutate, selection);
     }
 
-    addDeleteMutator<S extends PackedEntitySelection<EntityBlueprint.Instance<B>>>({
+    addDeleteMutator<S extends PackedEntitySelection<EntityBlueprint.Type<B>>>({
         delete: del,
         select,
     }: {
-        select?: S | PackedEntitySelection<EntityBlueprint.Instance<B>>;
+        select?: S | PackedEntitySelection<EntityBlueprint.Type<B>>;
         delete: DeleteEntitiesFn<B, S>;
     }): this {
         const mutate: EntityMutationFn = async (entities, selection) => {
             await unwrapMaybeAsync(
                 del({
-                    entities: entities as EntityBlueprint.Instance<B>[],
+                    entities: entities as EntityBlueprint.Type<B>[],
                     selection: packEntitySelection(this.#schema, selection) as S,
                 }),
             );

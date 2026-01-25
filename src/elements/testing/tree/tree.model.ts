@@ -17,7 +17,4 @@ export class TreeBlueprint {
 
 register(TreeBlueprint, { name: "trees" });
 
-export type Tree = EntityBlueprint.Instance<TreeBlueprint>;
-export type TreeCreatable = EntityBlueprint.Creatable<TreeBlueprint>;
-export type TreeUpdatable = EntityBlueprint.Updatable<TreeBlueprint>;
-export type TreeSavable = EntityBlueprint.Savable<TreeBlueprint>;
+export type Tree = EntityBlueprint.Type<TreeBlueprint>;

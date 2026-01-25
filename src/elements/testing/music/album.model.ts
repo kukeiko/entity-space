@@ -15,4 +15,4 @@ export class AlbumBlueprint {
 
 register(AlbumBlueprint, { name: "album" });
 
-export type Album = EntityBlueprint.Instance<AlbumBlueprint>;
+export type Album = EntityBlueprint.Type<AlbumBlueprint>;

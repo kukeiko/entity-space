@@ -1,12 +1,7 @@
-import {
-    addIdSelection,
-    assignEntitiesUsingIds,
-    copyEntity,
-    getSelection,
-    isUpdatableEntityProperty,
-} from "@entity-space/elements";
+import { assignEntitiesUsingIds, getSelection } from "@entity-space/elements";
 import { EntityQueryTracing } from "../../entity-query-tracing";
 import { AcceptedEntityMutation } from "../accepted-entity-mutation";
+import { copyEntityForMutation } from "./copy-entity-for-mutation.fn";
 
 export async function executeUpdateMutation(
     mutation: AcceptedEntityMutation,
@@ -19,20 +14,9 @@ export async function executeUpdateMutation(
         dependency.writeIds(schema, mutation.getEntities());
     }
 
-    const updatableSelection = addIdSelection(
-        schema,
-        getSelection(schema, mutation.getSelection(), isUpdatableEntityProperty),
-    );
-
     const map = new Map(
         mutation.getEntities().map(entity => {
-            const copy = copyEntity(
-                schema,
-                entity,
-                updatableSelection,
-                (relation, entity) =>
-                    relation.isEmbedded() || mutation.getChanges().some(change => change.getEntity() === entity),
-            );
+            const copy = copyEntityForMutation(mutation, entity);
 
             return [copy, entity];
         }),

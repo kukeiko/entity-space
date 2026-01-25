@@ -9,4 +9,4 @@ export class UserRequestBlueprint {
 
 register(UserRequestBlueprint, { name: "user-request" });
 
-export type UserRequest = EntityBlueprint.Instance<UserRequestBlueprint>;
+export type UserRequest = EntityBlueprint.Type<UserRequestBlueprint>;

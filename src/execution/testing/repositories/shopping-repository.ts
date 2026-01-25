@@ -37,7 +37,7 @@ export class ShoppingRepository extends InMemoryRepository<ShoppingEntities> {
         const create = vi.fn<CreateEntityFn<ProductBlueprint>>(({ entity: product }) => {
             const nextId = this.nextId("products");
 
-            const created: EntityBlueprint.Instance<ProductBlueprint> = {
+            const created: EntityBlueprint.Type<ProductBlueprint> = {
                 id: nextId,
                 name: product.name,
                 price: product.price,
@@ -63,7 +63,7 @@ export class ShoppingRepository extends InMemoryRepository<ShoppingEntities> {
 
     useCreateWashingMachine() {
         const create = vi.fn<CreateEntityFn<WashingMachineBlueprint>>(({ entity: washingMachine }) => {
-            const created: EntityBlueprint.Instance<WashingMachineBlueprint> = {
+            const created: EntityBlueprint.Type<WashingMachineBlueprint> = {
                 id: washingMachine.id,
                 maxLoadKg: washingMachine.maxLoadKg,
             };

@@ -10,4 +10,4 @@ export class TagBlueprint {
 
 register(TagBlueprint, { name: "tag" });
 
-export type Tag = EntityBlueprint.Instance<TagBlueprint>;
+export type Tag = EntityBlueprint.Type<TagBlueprint>;

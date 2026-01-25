@@ -11,4 +11,4 @@ export class WashingMachineBlueprint {
 
 register(WashingMachineBlueprint, { name: "washing-machine" });
 
-export type WashingMachine = EntityBlueprint.Instance<WashingMachineBlueprint>;
+export type WashingMachine = EntityBlueprint.Type<WashingMachineBlueprint>;

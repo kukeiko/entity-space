@@ -1,16 +1,9 @@
 import { PackedEntitySelection } from "@entity-space/elements";
-import {
-    Item,
-    User,
-    UserBlueprint,
-    UserRequest,
-    UserRequestBlueprint,
-    UserSavable,
-} from "@entity-space/elements/testing";
+import { Item, User, UserBlueprint, UserRequest, UserRequestBlueprint } from "@entity-space/elements/testing";
 import { vi } from "vitest";
 import { EntityServiceContainer } from "../../entity-service-container";
-import { InMemoryRepository } from "./in-memory-repository";
 import { HydrateEntitiesFn } from "../../hydration/entity-hydrator";
+import { InMemoryRepository } from "./in-memory-repository";
 
 type CommonEntities = {
     users: User[];
@@ -78,22 +71,20 @@ export class CommonRepository extends InMemoryRepository<CommonEntities> {
     }
 
     useSaveUsers() {
-        const save = vi.fn(
-            ({ entities, selection }: { entities: UserSavable[]; selection: PackedEntitySelection<Item> }) => {
-                entities = structuredClone(entities);
+        const save = vi.fn(({ entities, selection }: { entities: User[]; selection: PackedEntitySelection<Item> }) => {
+            entities = structuredClone(entities);
 
-                for (const entity of entities) {
-                    entity.id = this.nextId("users");
-                    // entity.metadata = createMetadata(createdById, undefined, createdAt);
+            for (const entity of entities) {
+                entity.id = this.nextId("users");
+                // entity.metadata = createMetadata(createdById, undefined, createdAt);
 
-                    // [todo] ❌ commented out to remind myself of: add validation to entities returned from user mutation functions
-                    // making sure entities are properly hydrated
-                    // item.updatedAt = null;
-                }
+                // [todo] ❌ commented out to remind myself of: add validation to entities returned from user mutation functions
+                // making sure entities are properly hydrated
+                // item.updatedAt = null;
+            }
 
-                return entities as User[];
-            },
-        );
+            return entities as User[];
+        });
 
         this.#services.for(UserBlueprint).addSaveMutator({
             save,

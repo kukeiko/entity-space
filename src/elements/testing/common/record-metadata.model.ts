@@ -14,4 +14,4 @@ export class RecordMetadataBlueprint {
 
 register(RecordMetadataBlueprint, { name: "record-metadata" });
 
-export type RecordMetadata = EntityBlueprint.Instance<RecordMetadataBlueprint>;
+export type RecordMetadata = EntityBlueprint.Type<RecordMetadataBlueprint>;

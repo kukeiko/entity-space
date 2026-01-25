@@ -12,4 +12,4 @@ export class TreeBranchBlueprint {
 
 register(TreeBranchBlueprint, { name: "tree-branches" });
 
-export type TreeBranch = EntityBlueprint.Instance<TreeBranchBlueprint>;
+export type TreeBranch = EntityBlueprint.Type<TreeBranchBlueprint>;

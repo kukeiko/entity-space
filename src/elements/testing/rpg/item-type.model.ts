@@ -8,8 +8,6 @@ export class ItemTypeBlueprint {
     name = string();
 }
 
-export type ItemTypeCreatable = EntityBlueprint.Creatable<ItemTypeBlueprint>;
-export type ItemTypeUpdatable = EntityBlueprint.Updatable<ItemTypeBlueprint>;
-export type ItemTypeSavable = EntityBlueprint.Savable<ItemTypeBlueprint>;
-export type ItemType = EntityBlueprint.Instance<ItemTypeBlueprint>;
 register(ItemTypeBlueprint, { name: "item-type" });
+
+export type ItemType = EntityBlueprint.Type<ItemTypeBlueprint>;

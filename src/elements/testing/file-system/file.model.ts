@@ -14,7 +14,4 @@ export class FileBlueprint {
 
 register(FileBlueprint, { name: "files" });
 
-export type File = EntityBlueprint.Instance<FileBlueprint>;
-export type FileCreatable = EntityBlueprint.Creatable<FileBlueprint>;
-export type FileUpdatable = EntityBlueprint.Updatable<FileBlueprint>;
-export type FileSavable = EntityBlueprint.Savable<FileBlueprint>;
+export type File = EntityBlueprint.Type<FileBlueprint>;

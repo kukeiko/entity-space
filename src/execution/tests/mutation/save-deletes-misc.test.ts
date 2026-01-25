@@ -1,9 +1,9 @@
-import { Item, ItemBlueprint, ItemUpdatable } from "@entity-space/elements/testing";
+import { Item, ItemBlueprint } from "@entity-space/elements/testing";
 import { beforeEach, describe, expect, it } from "vitest";
 import { EntityWorkspace } from "../../entity-workspace";
 import { TestFacade, TestRepository } from "../../testing";
 
-describe("dave()", () => {
+describe("save()", () => {
     let facade: TestFacade;
     let repository: TestRepository;
     let workspace: EntityWorkspace;
@@ -22,10 +22,15 @@ describe("dave()", () => {
             // arrange
             const deleteItemSocket = repository.useRpg().useDeleteItemSockets();
 
-            const windforce: ItemUpdatable = {
+            const windforce: Item = {
                 id: 1,
                 name: "Windforce",
                 sockets: [], // empty array is explicitly provided, expecting the previous sockets to be deleted
+                assignId: 1,
+                attributes: [],
+                createdAt,
+                typeId: 7,
+                updatedAt,
             };
 
             const windforcePrevious: Item = {
@@ -71,10 +76,15 @@ describe("dave()", () => {
             // arrange
             const deleteItemSocket = repository.useRpg().useDeleteItemSockets();
 
-            const windforce: ItemUpdatable = {
+            const windforce: Item = {
                 id: 1,
                 name: "Windforce",
                 // no sockets array is provided -> no sockets should be deleted
+                attributes: [],
+                createdAt,
+                typeId: 7,
+                updatedAt,
+                assignId: 1,
             };
 
             const windforcePrevious: Item = {

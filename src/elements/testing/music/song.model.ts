@@ -24,4 +24,4 @@ export class SongBlueprint {
 
 register(SongBlueprint, { name: "song", sort: (a, b) => a.name.localeCompare(b.name) });
 
-export type Song = EntityBlueprint.Instance<SongBlueprint>;
+export type Song = EntityBlueprint.Type<SongBlueprint>;

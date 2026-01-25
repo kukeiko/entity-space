@@ -9,10 +9,10 @@ import { EntityQueryExecutionContext } from "../entity-query-execution-context";
 import { AcceptedEntityHydration } from "./accepted-entity-hydration";
 
 export type HydrateEntitiesFn<B = {}, S = {}, P = {}> = (args: {
-    entities: SelectEntity<EntityBlueprint.Instance<B>, S>[];
-    selection: PackedEntitySelection<EntityBlueprint.Instance<B>>;
+    entities: SelectEntity<EntityBlueprint.Type<B>, S>[];
+    selection: PackedEntitySelection<EntityBlueprint.Type<B>>;
     context: EntityQueryExecutionContext;
-    parameters: EntityBlueprint.Instance<P>;
+    parameters: EntityBlueprint.Type<P>;
 }) => void | Promise<void>;
 
 export abstract class EntityHydrator {

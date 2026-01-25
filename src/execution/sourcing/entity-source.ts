@@ -23,9 +23,9 @@ export type LoadEntitiesFnResult<T extends Entity = Entity> = MaybeAsync<T> | Ma
 export type LoadEntitiesFn<B = {}, W = {}, S = {}, P = {}> = (args: {
     query: EntityQuery;
     selection: DeepPartial<S>;
-    criteria: WhereEntityShapeInstance<W, EntityBlueprint.Instance<B>>;
-    parameters: EntityBlueprint.Instance<P>;
-}) => MaybeAsync<EntityBlueprint.Instance<B>> | MaybeAsync<EntityBlueprint.Instance<B>[]>;
+    criteria: WhereEntityShapeInstance<W, EntityBlueprint.Type<B>>;
+    parameters: EntityBlueprint.Type<P>;
+}) => MaybeAsync<EntityBlueprint.Type<B>> | MaybeAsync<EntityBlueprint.Type<B>[]>;
 
 export class EntitySource {
     constructor(

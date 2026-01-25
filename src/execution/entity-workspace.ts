@@ -54,11 +54,11 @@ export class EntityWorkspace {
 
     readonly #services: EntityServiceContainer;
 
-    for<T>(blueprint: Class<T>): EntityHydrationBuilder<EntityBlueprint.Instance<T>> {
+    for<T>(blueprint: Class<T>): EntityHydrationBuilder<EntityBlueprint.Type<T>> {
         return new EntityHydrationBuilder(blueprint, args => this.#hydrate$(args));
     }
 
-    from<T>(blueprint: Class<T>): EntityQueryBuilder<EntityBlueprint.Instance<T>> {
+    from<T>(blueprint: Class<T>): EntityQueryBuilder<EntityBlueprint.Type<T>> {
         const schema = this.#services.getCatalog().getSchemaByBlueprint(blueprint);
         return new EntityQueryBuilder(schema, args => this.#query$(args));
     }

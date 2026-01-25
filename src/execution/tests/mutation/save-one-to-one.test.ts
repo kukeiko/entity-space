@@ -49,7 +49,7 @@ describe("save()", () => {
         expect(createWashingMachine).toHaveBeenCalledTimes(1);
         expect(createProduct).toHaveBeenCalledWith<Parameters<CreateEntityFn<ProductBlueprint>>>({
             selection: {},
-            entity: { name: "HydroSpin 2000", price: 699 },
+            entity: { name: "HydroSpin 2000", price: 699, id: 0 },
         });
         expect(createWashingMachine).toHaveBeenCalledWith<Parameters<CreateEntityFn<WashingMachineBlueprint>>>({
             selection: {},
@@ -91,7 +91,7 @@ describe("save()", () => {
         expect(createWashingMachine).toHaveBeenCalledTimes(1);
         expect(createProduct).toHaveBeenCalledWith<Parameters<CreateEntityFn<ProductBlueprint>>>({
             selection: {},
-            entity: { name: "HydroSpin 2000", price: 699 },
+            entity: { name: "HydroSpin 2000", price: 699, id: 0 },
         });
         expect(createWashingMachine).toHaveBeenCalledWith<Parameters<CreateEntityFn<WashingMachineBlueprint>>>({
             selection: {},

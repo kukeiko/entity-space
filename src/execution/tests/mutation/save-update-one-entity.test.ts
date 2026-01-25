@@ -1,4 +1,4 @@
-import { Item, ItemBlueprint, ItemSavable, ItemSocketSavable, ItemTypeSavable } from "@entity-space/elements/testing";
+import { Item, ItemBlueprint, ItemSocket, ItemType } from "@entity-space/elements/testing";
 import { beforeEach, describe, expect, it } from "vitest";
 import { EntityWorkspace } from "../../entity-workspace";
 import { TestFacade, TestRepository } from "../../testing";
@@ -19,8 +19,8 @@ describe("save() updates one entity", () => {
 
     describe("w/o any relations", () => {
         let windforce: {
-            input: ItemSavable;
-            dispatched: ItemSavable;
+            input: Item;
+            dispatched: Item;
             output: Item;
         };
 
@@ -34,12 +34,16 @@ describe("save() updates one entity", () => {
                     name: "Windforce",
                     sockets: [],
                     createdAt,
+                    updatedAt: null,
                 },
                 dispatched: {
                     id: 1,
+                    assignId: 1,
                     typeId: 7,
                     attributes: [],
                     name: "Windforce",
+                    createdAt,
+                    updatedAt: null,
                 },
                 output: {
                     id: 1,
@@ -83,10 +87,10 @@ describe("save() updates one entity", () => {
 
     describe("and create one reference", () => {
         let windforce: {
-            input: ItemSavable;
+            input: Item;
             dispatched: {
-                item: ItemSavable;
-                itemType: ItemTypeSavable;
+                item: Item;
+                itemType: ItemType;
             };
             output: Item;
         };
@@ -97,19 +101,23 @@ describe("save() updates one entity", () => {
                     id: 1,
                     assignId: 1,
                     typeId: 0,
-                    type: { assignId: 7, name: "Hydra Bow" },
+                    type: { id: 0, assignId: 7, name: "Hydra Bow" },
                     attributes: [],
                     name: "Windforce",
                     sockets: [],
                     createdAt,
+                    updatedAt: null,
                 },
                 dispatched: {
-                    itemType: { assignId: 7, name: "Hydra Bow" },
+                    itemType: { id: 0, assignId: 7, name: "Hydra Bow" },
                     item: {
                         id: 1,
                         typeId: 7,
                         attributes: [],
                         name: "Windforce",
+                        assignId: 1,
+                        createdAt,
+                        updatedAt: null,
                     },
                 },
                 output: {
@@ -171,10 +179,10 @@ describe("save() updates one entity", () => {
 
     describe("and update one reference", () => {
         let windforce: {
-            input: ItemSavable;
+            input: Item;
             dispatched: {
-                item: ItemSavable;
-                itemType: ItemTypeSavable;
+                item: Item;
+                itemType: ItemType;
             };
             output: Item;
         };
@@ -190,14 +198,18 @@ describe("save() updates one entity", () => {
                     name: "Windforce",
                     sockets: [],
                     createdAt,
+                    updatedAt: null,
                 },
                 dispatched: {
-                    itemType: { id: 7, name: "Hydra Bow" },
+                    itemType: { id: 7, assignId: 7, name: "Hydra Bow" },
                     item: {
                         id: 1,
                         typeId: 7,
                         attributes: [],
                         name: "Windforce",
+                        assignId: 1,
+                        createdAt,
+                        updatedAt: null,
                     },
                 },
                 output: {
@@ -259,10 +271,10 @@ describe("save() updates one entity", () => {
 
     describe("and create children", () => {
         let windforce: {
-            input: ItemSavable;
+            input: Item;
             dispatched: {
-                item: ItemSavable;
-                itemSockets: ItemSocketSavable[];
+                item: Item;
+                itemSockets: ItemSocket[];
             };
             output: Item;
         };
@@ -276,10 +288,11 @@ describe("save() updates one entity", () => {
                     attributes: [],
                     name: "Windforce",
                     sockets: [
-                        { assignId: 10, itemId: 0, socketedItemId: 100 },
-                        { assignId: 20, itemId: 0, socketedItemId: 200 },
+                        { id: 0, createdAt: "", updatedAt: null, assignId: 10, itemId: 0, socketedItemId: 100 },
+                        { id: 0, createdAt: "", updatedAt: null, assignId: 20, itemId: 0, socketedItemId: 200 },
                     ],
                     createdAt,
+                    updatedAt: null,
                 },
                 dispatched: {
                     item: {
@@ -287,10 +300,13 @@ describe("save() updates one entity", () => {
                         typeId: 7,
                         attributes: [],
                         name: "Windforce",
+                        assignId: 1,
+                        createdAt,
+                        updatedAt: null,
                     },
                     itemSockets: [
-                        { assignId: 10, itemId: 1, socketedItemId: 100 },
-                        { assignId: 20, itemId: 1, socketedItemId: 200 },
+                        { id: 0, createdAt: "", updatedAt: null, assignId: 10, itemId: 1, socketedItemId: 100 },
+                        { id: 0, createdAt: "", updatedAt: null, assignId: 20, itemId: 1, socketedItemId: 200 },
                     ],
                 },
                 output: {
@@ -348,10 +364,10 @@ describe("save() updates one entity", () => {
 
     describe("and update children", () => {
         let windforce: {
-            input: ItemSavable;
+            input: Item;
             dispatched: {
-                item: ItemSavable;
-                itemSockets: ItemSocketSavable[];
+                item: Item;
+                itemSockets: ItemSocket[];
             };
             output: Item;
         };
@@ -365,10 +381,11 @@ describe("save() updates one entity", () => {
                     attributes: [],
                     name: "Windforce",
                     sockets: [
-                        { id: 10, assignId: 10, itemId: 2, socketedItemId: 100, createdAt },
-                        { id: 20, assignId: 20, itemId: 2, socketedItemId: 200, createdAt },
+                        { id: 10, assignId: 10, itemId: 2, socketedItemId: 100, createdAt, updatedAt: null },
+                        { id: 20, assignId: 20, itemId: 2, socketedItemId: 200, createdAt, updatedAt: null },
                     ],
                     createdAt,
+                    updatedAt: null,
                 },
                 dispatched: {
                     item: {
@@ -376,10 +393,13 @@ describe("save() updates one entity", () => {
                         typeId: 7,
                         attributes: [],
                         name: "Windforce",
+                        assignId: 1,
+                        createdAt,
+                        updatedAt: null,
                     },
                     itemSockets: [
-                        { id: 10, itemId: 1, socketedItemId: 100 },
-                        { id: 20, itemId: 1, socketedItemId: 200 },
+                        { id: 10, itemId: 1, socketedItemId: 100, assignId: 10, createdAt, updatedAt: null },
+                        { id: 20, itemId: 1, socketedItemId: 200, assignId: 20, createdAt, updatedAt: null },
                     ],
                 },
                 output: {
@@ -437,16 +457,43 @@ describe("save() updates one entity", () => {
 
     describe("and delete children", () => {
         let windforce: {
-            input: ItemSavable;
+            input: Item;
             previous: Item;
             dispatched: {
-                item: ItemSavable;
-                itemSockets: ItemSocketSavable[];
+                item: Item;
+                itemSockets: ItemSocket[];
             };
             output: Item;
         };
 
         beforeEach(() => {
+            const socketA: ItemSocket = {
+                id: 10,
+                assignId: 10,
+                itemId: 1,
+                socketedItemId: 100,
+                createdAt,
+                updatedAt: null,
+            };
+
+            const socketB: ItemSocket = {
+                id: 20,
+                assignId: 20,
+                itemId: 1,
+                socketedItemId: 200,
+                createdAt,
+                updatedAt: null,
+            };
+
+            const socketC: ItemSocket = {
+                id: 30,
+                assignId: 30,
+                itemId: 1,
+                socketedItemId: 300,
+                createdAt,
+                updatedAt: null,
+            };
+
             windforce = {
                 input: {
                     id: 1,
@@ -454,11 +501,9 @@ describe("save() updates one entity", () => {
                     typeId: 7,
                     attributes: [],
                     name: "Windforce",
-                    sockets: [
-                        { id: 10, assignId: 10, itemId: 1, socketedItemId: 100, createdAt, updatedAt: null },
-                        { id: 30, assignId: 30, itemId: 1, socketedItemId: 300, createdAt, updatedAt: null },
-                    ],
+                    sockets: [{ ...socketA }, { ...socketC }],
                     createdAt,
+                    updatedAt: null,
                 },
                 previous: {
                     id: 1,
@@ -466,11 +511,7 @@ describe("save() updates one entity", () => {
                     typeId: 7,
                     attributes: [],
                     name: "Windforce 1.08",
-                    sockets: [
-                        { id: 10, assignId: 10, itemId: 1, socketedItemId: 100, createdAt, updatedAt: null },
-                        { id: 20, assignId: 20, itemId: 1, socketedItemId: 200, createdAt, updatedAt: null },
-                        { id: 30, assignId: 30, itemId: 1, socketedItemId: 300, createdAt, updatedAt: null },
-                    ],
+                    sockets: [{ ...socketA }, { ...socketB }, { ...socketC }],
                     createdAt,
                     updatedAt: null,
                 },
@@ -480,8 +521,11 @@ describe("save() updates one entity", () => {
                         typeId: 7,
                         attributes: [],
                         name: "Windforce",
+                        assignId: 1,
+                        createdAt,
+                        updatedAt: null,
                     },
-                    itemSockets: [{ id: 20, assignId: 20, itemId: 1, socketedItemId: 200, createdAt, updatedAt: null }],
+                    itemSockets: [{ ...socketB }],
                 },
                 output: {
                     id: 1,
@@ -490,10 +534,7 @@ describe("save() updates one entity", () => {
                     attributes: [],
                     createdAt,
                     name: "Windforce",
-                    sockets: [
-                        { id: 10, assignId: 10, itemId: 1, socketedItemId: 100, createdAt, updatedAt: null },
-                        { id: 30, assignId: 30, itemId: 1, socketedItemId: 300, createdAt, updatedAt: null },
-                    ],
+                    sockets: [socketA, socketC],
                     updatedAt,
                 },
             };
@@ -515,8 +556,8 @@ describe("save() updates one entity", () => {
                     {
                         ...windforce.dispatched.item,
                         sockets: [
-                            { id: 10, itemId: 1, socketedItemId: 100 },
-                            { id: 30, itemId: 1, socketedItemId: 300 },
+                            { id: 10, assignId: 10, itemId: 1, socketedItemId: 100, createdAt, updatedAt: null },
+                            { id: 30, assignId: 30, itemId: 1, socketedItemId: 300, createdAt, updatedAt: null },
                         ],
                     },
                 ],

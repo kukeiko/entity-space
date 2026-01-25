@@ -1,5 +1,5 @@
 import { PackedEntitySelection } from "@entity-space/elements";
-import { Tree, TreeBlueprint, TreeSavable, User } from "@entity-space/elements/testing";
+import { Tree, TreeBlueprint, User } from "@entity-space/elements/testing";
 import { vi } from "vitest";
 import { EntityServiceContainer } from "../../entity-service-container";
 import { InMemoryRepository } from "./in-memory-repository";
@@ -58,17 +58,15 @@ export class TreeRepository extends InMemoryRepository<TreeEntities> {
     }
 
     useSaveTrees() {
-        const save = vi.fn(
-            ({ entities, selection }: { entities: TreeSavable[]; selection: PackedEntitySelection<Tree> }) => {
-                entities = structuredClone(entities);
+        const save = vi.fn(({ entities, selection }: { entities: Tree[]; selection: PackedEntitySelection<Tree> }) => {
+            entities = structuredClone(entities);
 
-                for (const entity of entities) {
-                    entity.id = this.nextId("trees");
-                }
+            for (const entity of entities) {
+                entity.id = this.nextId("trees");
+            }
 
-                return entities as Tree[];
-            },
-        );
+            return entities as Tree[];
+        });
 
         this.#services.for(TreeBlueprint).addSaveMutator({
             save,

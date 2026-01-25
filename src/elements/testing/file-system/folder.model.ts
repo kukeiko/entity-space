@@ -19,7 +19,4 @@ export class FolderBlueprint {
 
 register(FolderBlueprint, { name: "folders" });
 
-export type Folder = EntityBlueprint.Instance<FolderBlueprint>;
-export type FolderCreatable = EntityBlueprint.Creatable<FolderBlueprint>;
-export type FolderUpdatable = EntityBlueprint.Updatable<FolderBlueprint>;
-export type FolderSavable = EntityBlueprint.Savable<FolderBlueprint>;
+export type Folder = EntityBlueprint.Type<FolderBlueprint>;

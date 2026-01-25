@@ -1,13 +1,8 @@
-import {
-    FolderBlueprint,
-    FolderSavable,
-    TreeBlueprint,
-    TreeSavable,
-    UserSavable,
-} from "@entity-space/elements/testing";
+import { Folder, FolderBlueprint, Tree, TreeBlueprint, User } from "@entity-space/elements/testing";
 import { beforeEach, describe, expect, it } from "vitest";
 import { EntityWorkspace } from "../../entity-workspace";
 import { TestFacade, TestRepository } from "../../testing";
+import { createMetadata } from "../../testing/create-metadata.fn";
 
 describe("save()", () => {
     let facade: TestFacade;
@@ -27,28 +22,51 @@ describe("save()", () => {
         const saveTrees = repository.useTree().useSaveTrees();
         const saveUsers = repository.useCommon().useSaveUsers();
 
-        const createdBy: UserSavable = {
+        const createdBy: User = {
+            id: 0,
             name: "Susi Sonne",
-            metadata: {
-                createdAt,
-                createdById: 0,
-            },
+            metadata: createMetadata(0, undefined, createdAt),
         };
 
-        const tree: TreeSavable = {
+        const tree: Tree = {
+            id: 0,
             name: "Mighty Oak",
             branches: [
                 {
-                    leaves: [{ color: "green", metadata: { createdAt, createdBy } }],
+                    metadata: { createdAt, createdBy, createdById: 0, updatedAt: null, updatedById: null },
+                    leaves: [
+                        {
+                            color: "green",
+                            metadata: {
+                                createdAt,
+                                createdBy,
+                                createdById: 0,
+                                updatedAt: null,
+                                updatedById: null,
+                            },
+                        },
+                    ],
                     branches: [
                         {
-                            leaves: [{ color: "red", metadata: { createdAt, createdBy } }],
-                            metadata: { createdAt, createdBy },
+                            branches: [],
+                            leaves: [
+                                {
+                                    color: "red",
+                                    metadata: {
+                                        createdAt,
+                                        createdBy,
+                                        createdById: 0,
+                                        updatedAt: null,
+                                        updatedById: null,
+                                    },
+                                },
+                            ],
+                            metadata: { createdAt, createdBy, createdById: 0, updatedAt: null, updatedById: null },
                         },
                     ],
                 },
             ],
-            metadata: { createdAt, createdBy },
+            metadata: { createdAt, createdBy, createdById: 0, updatedAt: null, updatedById: null },
         };
 
         // act
@@ -72,19 +90,36 @@ describe("save()", () => {
             expect(saveTrees).toHaveBeenCalledWith({
                 entities: [
                     {
+                        id: 0,
                         name: "Mighty Oak",
                         branches: [
                             {
-                                leaves: [{ color: "green", metadata: { createdAt, createdById: 1 } }],
+                                metadata: { createdAt, createdById: 1, updatedAt: null, updatedById: null },
+                                leaves: [
+                                    {
+                                        color: "green",
+                                        metadata: { createdAt, createdById: 1, updatedAt: null, updatedById: null },
+                                    },
+                                ],
                                 branches: [
                                     {
-                                        leaves: [{ color: "red", metadata: { createdAt, createdById: 1 } }],
-                                        metadata: { createdAt, createdById: 1 },
+                                        leaves: [
+                                            {
+                                                color: "red",
+                                                metadata: {
+                                                    createdAt,
+                                                    createdById: 1,
+                                                    updatedAt: null,
+                                                    updatedById: null,
+                                                },
+                                            },
+                                        ],
+                                        metadata: { createdAt, createdById: 1, updatedAt: null, updatedById: null },
                                     },
                                 ],
                             },
                         ],
-                        metadata: { createdAt, createdById: 1 },
+                        metadata: { createdAt, createdById: 1, updatedAt: null, updatedById: null },
                     },
                 ],
                 selection: {},
@@ -97,8 +132,9 @@ describe("save()", () => {
             expect(saveUsers).toHaveBeenCalledWith({
                 entities: [
                     {
+                        id: 0,
                         name: "Susi Sonne",
-                        metadata: { createdAt, createdById: 0 },
+                        metadata: { createdAt, createdById: 0, updatedAt: null, updatedById: null },
                     },
                 ],
                 selection: {},
@@ -112,33 +148,40 @@ describe("save()", () => {
         const saveFiles = repository.useFileSystem().useSaveFiles();
         const saveUsers = repository.useCommon().useSaveUsers();
 
-        const createdBy: UserSavable = {
+        const createdBy: User = {
+            id: 0,
             name: "Susi Sonne",
             metadata: {
                 createdAt,
                 createdById: 0,
+                updatedAt: null,
+                updatedById: null,
             },
         };
 
-        const folder: FolderSavable = {
+        const folder: Folder = {
+            id: 0,
             name: "Morcheeba",
-            metadata: { createdAt, createdBy },
+            metadata: { createdAt, createdBy, createdById: 0, updatedAt: null, updatedById: null },
             parentId: 0,
             parent: {
+                id: 0,
                 name: "Music",
                 parentId: null,
-                metadata: { createdAt, createdBy },
+                metadata: { createdAt, createdBy, createdById: 0, updatedAt: null, updatedById: null },
             },
             folders: [
                 {
+                    id: 0,
                     name: "Dive Deep",
                     parentId: 0,
-                    metadata: { createdAt, createdBy },
+                    metadata: { createdAt, createdBy, createdById: 0, updatedAt: null, updatedById: null },
                     files: [
                         {
+                            id: 0,
                             name: "Enjoy The Ride",
                             folderId: 0,
-                            metadata: { createdAt, createdBy },
+                            metadata: { createdAt, createdBy, createdById: 0, updatedAt: null, updatedById: null },
                         },
                     ],
                 },
@@ -160,15 +203,36 @@ describe("save()", () => {
         {
             // Folders
             expect(saveFolders).toHaveBeenNthCalledWith(1, {
-                entities: [{ name: "Music", parentId: null, metadata: { createdAt, createdById: 1 } }],
+                entities: [
+                    {
+                        id: 0,
+                        name: "Music",
+                        parentId: null,
+                        metadata: { createdAt, createdById: 1, updatedAt: null, updatedById: null },
+                    },
+                ],
                 selection: {},
             });
             expect(saveFolders).toHaveBeenNthCalledWith(2, {
-                entities: [{ name: "Morcheeba", parentId: 1, metadata: { createdAt, createdById: 1 } }],
+                entities: [
+                    {
+                        id: 0,
+                        name: "Morcheeba",
+                        parentId: 1,
+                        metadata: { createdAt, createdById: 1, updatedAt: null, updatedById: null },
+                    },
+                ],
                 selection: {},
             });
             expect(saveFolders).toHaveBeenNthCalledWith(3, {
-                entities: [{ name: "Dive Deep", parentId: 2, metadata: { createdAt, createdById: 1 } }],
+                entities: [
+                    {
+                        id: 0,
+                        name: "Dive Deep",
+                        parentId: 2,
+                        metadata: { createdAt, createdById: 1, updatedAt: null, updatedById: null },
+                    },
+                ],
                 selection: {},
             });
         }
@@ -177,7 +241,14 @@ describe("save()", () => {
             // File
             expect(saveFiles).toHaveBeenCalledTimes(1);
             expect(saveFiles).toHaveBeenCalledWith({
-                entities: [{ name: "Enjoy The Ride", folderId: 3, metadata: { createdAt, createdById: 1 } }],
+                entities: [
+                    {
+                        id: 0,
+                        name: "Enjoy The Ride",
+                        folderId: 3,
+                        metadata: { createdAt, createdById: 1, updatedAt: null, updatedById: null },
+                    },
+                ],
                 selection: {},
             });
         }
@@ -186,7 +257,13 @@ describe("save()", () => {
             // User
             expect(saveUsers).toHaveBeenCalledTimes(1);
             expect(saveUsers).toHaveBeenCalledWith({
-                entities: [{ name: "Susi Sonne", metadata: { createdAt, createdById: 0 } }],
+                entities: [
+                    {
+                        id: 0,
+                        name: "Susi Sonne",
+                        metadata: { createdAt, createdById: 0, updatedAt: null, updatedById: null },
+                    },
+                ],
                 selection: {},
             });
         }

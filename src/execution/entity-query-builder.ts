@@ -36,7 +36,7 @@ export class EntityQueryBuilder<T extends Entity = Entity, S extends PackedEntit
         return this;
     }
 
-    use<P>(blueprint: Class<P>, parameters: EntityBlueprint.Instance<P>): this {
+    use<P>(blueprint: Class<P>, parameters: EntityBlueprint.Type<P>): this {
         this.#parameters = { blueprint, value: parameters };
         return this;
     }

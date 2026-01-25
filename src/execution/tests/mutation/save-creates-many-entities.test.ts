@@ -1,4 +1,4 @@
-import { Item, ItemBlueprint, ItemSavable } from "@entity-space/elements/testing";
+import { Item, ItemBlueprint } from "@entity-space/elements/testing";
 import { beforeEach, describe, expect, it } from "vitest";
 import { EntityWorkspace } from "../../entity-workspace";
 import { TestFacade, TestRepository } from "../../testing";
@@ -19,8 +19,8 @@ describe("save() creates many entities", () => {
 
     describe("w/o any relations", () => {
         let windforce: {
-            input: ItemSavable[];
-            dispatched: ItemSavable[];
+            input: Item[];
+            dispatched: Item[];
             output: Item[];
         };
 
@@ -28,6 +28,9 @@ describe("save() creates many entities", () => {
             windforce = {
                 input: [
                     {
+                        createdAt: "",
+                        id: 0,
+                        updatedAt: null,
                         assignId: 1,
                         typeId: 7,
                         attributes: [],
@@ -35,6 +38,9 @@ describe("save() creates many entities", () => {
                         sockets: [],
                     },
                     {
+                        createdAt: "",
+                        id: 0,
+                        updatedAt: null,
                         assignId: 2,
                         typeId: 3,
                         attributes: [],
@@ -44,12 +50,18 @@ describe("save() creates many entities", () => {
                 ],
                 dispatched: [
                     {
+                        createdAt: "",
+                        id: 0,
+                        updatedAt: null,
                         assignId: 1,
                         typeId: 7,
                         attributes: [],
                         name: "Windforce",
                     },
                     {
+                        createdAt: "",
+                        id: 0,
+                        updatedAt: null,
                         assignId: 2,
                         typeId: 3,
                         attributes: [],

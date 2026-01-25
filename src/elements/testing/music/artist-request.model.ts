@@ -9,4 +9,4 @@ export class ArtistRequestBlueprint {
 
 register(ArtistRequestBlueprint, { name: "artist-request" });
 
-export type ArtistRequest = EntityBlueprint.Instance<ArtistRequestBlueprint>;
+export type ArtistRequest = EntityBlueprint.Type<ArtistRequestBlueprint>;

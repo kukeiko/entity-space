@@ -17,8 +17,6 @@ export class ItemBlueprint {
     updatedAt = string({ readonly, nullable });
 }
 
-export type ItemCreatable = EntityBlueprint.Creatable<ItemBlueprint>;
-export type ItemUpdatable = EntityBlueprint.Updatable<ItemBlueprint>;
-export type ItemSavable = EntityBlueprint.Savable<ItemBlueprint>;
-export type Item = EntityBlueprint.Instance<ItemBlueprint>;
 register(ItemBlueprint, { name: "item" });
+
+export type Item = EntityBlueprint.Type<ItemBlueprint>;

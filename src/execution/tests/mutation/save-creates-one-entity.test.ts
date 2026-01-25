@@ -1,4 +1,4 @@
-import { Item, ItemBlueprint, ItemSavable, ItemSocketSavable, ItemTypeSavable } from "@entity-space/elements/testing";
+import { Item, ItemBlueprint, ItemSocket, ItemType } from "@entity-space/elements/testing";
 import { beforeEach, describe, expect, it } from "vitest";
 import { EntityWorkspace } from "../../entity-workspace";
 import { TestFacade, TestRepository } from "../../testing";
@@ -19,35 +19,32 @@ describe("save() creates one entity", () => {
 
     describe("w/o any relations", () => {
         let windforce: {
-            input: ItemSavable;
-            dispatched: ItemSavable;
+            input: Item;
+            dispatched: Item;
             output: Item;
         };
 
         beforeEach(() => {
+            const input: Item = {
+                ...workspace.from(ItemBlueprint).constructDefault(),
+                assignId: 1,
+                typeId: 7,
+                name: "Windforce",
+                sockets: [],
+            };
+
             windforce = {
-                input: {
-                    assignId: 1,
-                    typeId: 7,
-                    attributes: [],
-                    name: "Windforce",
-                    sockets: [],
-                },
+                input,
                 dispatched: {
-                    assignId: 1,
-                    typeId: 7,
-                    attributes: [],
-                    name: "Windforce",
+                    ...input,
+                    sockets: undefined,
                 },
                 output: {
+                    ...input,
                     id: 1,
-                    assignId: 1,
-                    typeId: 7,
-                    attributes: [],
                     createdAt,
-                    name: "Windforce",
-                    sockets: [],
                     updatedAt: null,
+                    sockets: [],
                 },
             };
         });
@@ -81,33 +78,30 @@ describe("save() creates one entity", () => {
 
     describe("with one embedded relation", () => {
         let windforce: {
-            input: ItemSavable;
-            dispatched: ItemSavable;
+            input: Item;
+            dispatched: Item;
             output: Item;
         };
 
         beforeEach(() => {
+            const input: Item = {
+                ...workspace.from(ItemBlueprint).constructDefault(),
+                assignId: 1,
+                typeId: 7,
+                name: "Windforce",
+                attributes: [{ typeId: 100, values: [1, 2, 3] }],
+            };
+
             windforce = {
-                input: {
-                    assignId: 1,
-                    typeId: 7,
-                    attributes: [{ typeId: 100, values: [1, 2, 3] }],
-                    name: "Windforce",
-                },
+                input,
                 dispatched: {
-                    assignId: 1,
-                    typeId: 7,
-                    attributes: [{ typeId: 100, values: [1, 2, 3] }],
-                    name: "Windforce",
+                    ...input,
                 },
                 output: {
+                    ...input,
                     id: 1,
-                    assignId: 1,
-                    typeId: 7,
-                    attributes: [{ typeId: 100, values: [1, 2, 3] }],
                     createdAt,
                     name: "Windforce",
-                    updatedAt: null,
                 },
             };
         });
@@ -141,42 +135,44 @@ describe("save() creates one entity", () => {
 
     describe("and create one reference", () => {
         let windforce: {
-            input: ItemSavable;
-            dispatched: { item: ItemSavable; itemType: ItemTypeSavable };
+            input: Item;
+            dispatched: { item: Item; itemType: ItemType };
             output: Item;
         };
 
         beforeEach(() => {
-            windforce = {
-                input: {
-                    assignId: 1,
-                    typeId: 0,
-                    type: {
-                        assignId: 2,
-                        name: "Hydra Bow",
-                    },
-                    attributes: [],
-                    name: "Windforce",
-                    sockets: [],
+            const input: Item = {
+                ...workspace.from(ItemBlueprint).constructDefault(),
+                assignId: 1,
+                name: "Windforce",
+                type: {
+                    id: 0,
+                    assignId: 2,
+                    name: "Hydra Bow",
                 },
+                sockets: [],
+            };
+
+            windforce = {
+                input,
                 dispatched: {
-                    itemType: { assignId: 2, name: "Hydra Bow" },
-                    item: { assignId: 1, typeId: 2, attributes: [], name: "Windforce" },
+                    itemType: { ...input.type! },
+                    item: {
+                        ...input,
+                        type: undefined,
+                        sockets: undefined,
+                        typeId: 2,
+                    },
                 },
                 output: {
+                    ...input,
                     id: 1,
-                    assignId: 1,
+                    createdAt,
                     typeId: 2,
                     type: {
+                        ...input.type!,
                         id: 2,
-                        assignId: 2,
-                        name: "Hydra Bow",
                     },
-                    attributes: [],
-                    createdAt,
-                    name: "Windforce",
-                    sockets: [],
-                    updatedAt: null,
                 },
             };
         });
@@ -220,35 +216,35 @@ describe("save() creates one entity", () => {
 
     describe("and update one reference", () => {
         let windforce: {
-            input: ItemSavable;
-            dispatched: { item: ItemSavable; itemType: ItemTypeSavable };
+            input: Item;
+            dispatched: { item: Item; itemType: ItemType };
             output: Item;
         };
 
         beforeEach(() => {
+            const input: Item = {
+                ...workspace.from(ItemBlueprint).constructDefault(),
+                assignId: 1,
+                name: "Windforce",
+                typeId: 2,
+                type: { id: 2, assignId: 2, name: "Hydra Bow" },
+                sockets: [],
+            };
+
             windforce = {
-                input: {
-                    assignId: 1,
-                    typeId: 2,
-                    type: { id: 2, assignId: 2, name: "Hydra Bow" },
-                    attributes: [],
-                    name: "Windforce",
-                    sockets: [],
-                },
+                input,
                 dispatched: {
-                    itemType: { id: 2, name: "Hydra Bow" },
-                    item: { assignId: 1, typeId: 2, attributes: [], name: "Windforce" },
+                    itemType: { ...input.type! },
+                    item: {
+                        ...input,
+                        sockets: undefined,
+                        type: undefined,
+                    },
                 },
                 output: {
+                    ...input,
                     id: 1,
-                    assignId: 1,
-                    typeId: 2,
-                    type: { id: 2, assignId: 2, name: "Hydra Bow" },
-                    attributes: [],
                     createdAt,
-                    name: "Windforce",
-                    sockets: [],
-                    updatedAt: null,
                 },
             };
         });
@@ -298,28 +294,30 @@ describe("save() creates one entity", () => {
 
     describe("and create children", () => {
         let windforce: {
-            input: ItemSavable;
-            dispatched: { item: ItemSavable; itemSockets: ItemSocketSavable[] };
+            input: Item;
+            dispatched: { item: Item; itemSockets: ItemSocket[] };
             output: Item;
         };
 
         beforeEach(() => {
+            const input: Item = {
+                ...workspace.from(ItemBlueprint).constructDefault(),
+                assignId: 1,
+                name: "Windforce",
+                typeId: 2,
+                sockets: [
+                    { id: 0, createdAt: "", updatedAt: null, assignId: 10, itemId: 0, socketedItemId: 100 },
+                    { id: 0, createdAt: "", updatedAt: null, assignId: 20, itemId: 0, socketedItemId: 200 },
+                ],
+            };
+
             windforce = {
-                input: {
-                    assignId: 1,
-                    typeId: 2,
-                    attributes: [],
-                    name: "Windforce",
-                    sockets: [
-                        { assignId: 10, itemId: 0, socketedItemId: 100 },
-                        { assignId: 20, itemId: 0, socketedItemId: 200 },
-                    ],
-                },
+                input,
                 dispatched: {
-                    item: { assignId: 1, typeId: 2, attributes: [], name: "Windforce" },
+                    item: { ...input, sockets: undefined },
                     itemSockets: [
-                        { assignId: 10, itemId: 1, socketedItemId: 100 },
-                        { assignId: 20, itemId: 1, socketedItemId: 200 },
+                        { id: 0, createdAt: "", updatedAt: null, assignId: 10, itemId: 1, socketedItemId: 100 },
+                        { id: 0, createdAt: "", updatedAt: null, assignId: 20, itemId: 1, socketedItemId: 200 },
                     ],
                 },
                 output: {
@@ -377,14 +375,17 @@ describe("save() creates one entity", () => {
 
     describe("and update children", () => {
         let windforce: {
-            input: ItemSavable;
-            dispatched: { item: ItemSavable; itemSockets: ItemSocketSavable[] };
+            input: Item;
+            dispatched: { item: Item; itemSockets: ItemSocket[] };
             output: Item;
         };
 
         beforeEach(() => {
             windforce = {
                 input: {
+                    id: 0,
+                    createdAt: "",
+                    updatedAt: "",
                     assignId: 1,
                     typeId: 2,
                     attributes: [],
@@ -396,6 +397,7 @@ describe("save() creates one entity", () => {
                             itemId: 2,
                             socketedItemId: 100,
                             createdAt,
+                            updatedAt: null,
                         },
                         {
                             id: 20,
@@ -403,15 +405,24 @@ describe("save() creates one entity", () => {
                             itemId: 2,
                             socketedItemId: 200,
                             createdAt,
+                            updatedAt: null,
                         },
                     ],
                 },
                 dispatched: {
                     itemSockets: [
-                        { id: 10, itemId: 1, socketedItemId: 100 },
-                        { id: 20, itemId: 1, socketedItemId: 200 },
+                        { id: 10, itemId: 1, socketedItemId: 100, createdAt, assignId: 10, updatedAt: null },
+                        { id: 20, itemId: 1, socketedItemId: 200, createdAt, assignId: 20, updatedAt: null },
                     ],
-                    item: { assignId: 1, typeId: 2, attributes: [], name: "Windforce" },
+                    item: {
+                        id: 0,
+                        createdAt: "",
+                        updatedAt: "",
+                        assignId: 1,
+                        typeId: 2,
+                        attributes: [],
+                        name: "Windforce",
+                    },
                 },
                 output: {
                     id: 1,
@@ -486,7 +497,10 @@ describe("save() creates one entity", () => {
 
     it("save one entity incl. related", async () => {
         // arrange
-        const windforce: ItemSavable = {
+        const windforce: Item = {
+            createdAt: "",
+            id: 0,
+            updatedAt: null,
             assignId: 1,
             typeId: 7,
             attributes: [
@@ -501,11 +515,17 @@ describe("save() creates one entity", () => {
                     assignId: 10,
                     itemId: 0,
                     socketedItemId: 2,
+                    createdAt: "",
+                    id: 0,
+                    updatedAt: null,
                 },
             ],
         };
 
-        const windforcePassedToSave: ItemSavable = {
+        const windforcePassedToSave: Item = {
+            createdAt: "",
+            id: 0,
+            updatedAt: null,
             assignId: 1,
             typeId: 7,
             attributes: [
@@ -520,6 +540,9 @@ describe("save() creates one entity", () => {
                     assignId: 10,
                     itemId: 0,
                     socketedItemId: 2,
+                    createdAt: "",
+                    id: 0,
+                    updatedAt: null,
                 },
             ],
         };
