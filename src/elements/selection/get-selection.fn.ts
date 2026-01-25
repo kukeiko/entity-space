@@ -20,11 +20,15 @@ export function getSelection(
             predicate(property) &&
             (relations === undefined || relations[property.getName()])
         ) {
-            selection[property.getName()] = getSelection(
-                property.getRelatedSchema(),
-                relations === undefined ? undefined : (relations?.[property.getName()] ?? {}),
-                candidate => candidate !== property && predicate(candidate),
-            );
+            if (relations && relations[property.getName()] === relations) {
+                selection[property.getName()] = selection;
+            } else {
+                selection[property.getName()] = getSelection(
+                    property.getRelatedSchema(),
+                    relations === undefined ? undefined : (relations?.[property.getName()] ?? {}),
+                    candidate => candidate !== property && predicate(candidate),
+                );
+            }
         }
     }
 
