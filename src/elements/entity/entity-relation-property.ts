@@ -167,7 +167,7 @@ export class EntityRelationProperty extends EntityProperty {
         return !this.isOutbound();
     }
 
-    override readValue(entity: Entity): Entity | Entity[] | undefined | null {
+    override readValue<T extends Entity | Entity[] | undefined | null>(entity: Entity): T {
         const name = this.getName();
         const value = entity[name];
 
@@ -178,13 +178,13 @@ export class EntityRelationProperty extends EntityProperty {
                 throw new Error(`expected property ${name} to be an array, got ${typeof value}`);
             }
 
-            return value as Entity[];
+            return value;
         } else {
             if (!isPlainObject(value)) {
                 throw new Error(`expected property ${name} to be an object, got ${typeof value}`);
             }
 
-            return value as Entity;
+            return value;
         }
     }
 

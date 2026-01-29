@@ -24,12 +24,14 @@ export interface EntityPropertyOptions {
     optional: boolean;
     nullable: boolean;
     readonly: boolean;
+    creatable: boolean;
     dtoName: string;
 }
 
 export abstract class EntityProperty {
     constructor(name: string, schema: EntitySchema, options: Partial<EntityPropertyOptions> = {}) {
         assertValidPropertyName(name);
+
         if (options.container) {
             assertValidPropertyContainerType(options.container);
         }
@@ -46,6 +48,7 @@ export abstract class EntityProperty {
             nullable: options.nullable === true,
             dtoName: options.dtoName ?? name,
             readonly: options.readonly === true,
+            creatable: options.creatable === true,
         });
     }
 
@@ -92,6 +95,10 @@ export abstract class EntityProperty {
 
     isReadonly(): boolean {
         return this.#options.readonly;
+    }
+
+    isCreatable(): boolean {
+        return this.#options.creatable;
     }
 
     abstract isPrimitive(): this is EntityPrimitiveProperty;

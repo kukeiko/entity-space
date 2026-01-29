@@ -10,7 +10,6 @@ export function isEntityPrimitiveProperty(value: unknown): value is EntityPrimit
 
 export interface EntityPrimitivePropertyOptions {
     unique: boolean;
-    creatable: boolean;
 }
 
 export class EntityPrimitiveProperty extends EntityProperty {
@@ -29,7 +28,6 @@ export class EntityPrimitiveProperty extends EntityProperty {
         this.#primitive = primitive;
         this.#options = Object.freeze({
             unique: options.unique === true,
-            creatable: options.creatable === true,
         });
     }
 
@@ -50,10 +48,6 @@ export class EntityPrimitiveProperty extends EntityProperty {
 
     isString(): boolean {
         return this.#primitive === String;
-    }
-
-    isCreatable(): boolean {
-        return this.#options.creatable;
     }
 
     isUnique(): boolean {

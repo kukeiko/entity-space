@@ -51,7 +51,7 @@ export class EntitySchemaCatalog {
         const properties = toPropertyRecord(new blueprint());
         const ids: Record<string, BlueprintProperty & IdAttribute> = {};
         const primitives: Record<string, BlueprintProperty> = {};
-        const entities: Record<string, BlueprintProperty & EntityAttribute> = {};
+        const embeddedEntities: Record<string, BlueprintProperty & EntityAttribute> = {};
         const joinedEntities: Record<string, BlueprintProperty & EntityAttribute> = {};
 
         for (const [name, property] of Object.entries(properties)) {
@@ -59,7 +59,7 @@ export class EntitySchemaCatalog {
                 if (property.relationshipType === RelationshipType.Joined) {
                     joinedEntities[name] = property;
                 } else {
-                    entities[name] = property;
+                    embeddedEntities[name] = property;
                 }
             } else {
                 primitives[name] = property;
@@ -75,7 +75,7 @@ export class EntitySchemaCatalog {
         for (const [name, property] of Object.entries(primitives)) {
             schema.addPrimitive(name, property.valueType as Primitive, {
                 container: toContainerType(property),
-                creatable: hasAttribute("creatable", property),
+                creatable: hasAttribute("creatable", property) || !hasAttribute("readonly", property),
                 dtoName: hasAttribute("dto", property) ? property.dto : undefined,
                 nullable: hasAttribute("nullable", property),
                 optional: hasAttribute("optional", property),
@@ -88,7 +88,7 @@ export class EntitySchemaCatalog {
             schema.setId(toPaths(Object.keys(ids)));
         }
 
-        for (const [name, property] of Object.entries(entities)) {
+        for (const [name, property] of Object.entries(embeddedEntities)) {
             if (!isEntityBlueprint(property.valueType)) {
                 throw new Error(`valueType of property ${name} is not a blueprint`);
             }
@@ -102,6 +102,7 @@ export class EntitySchemaCatalog {
                 nullable: hasAttribute("nullable", property),
                 optional: hasAttribute("optional", property),
                 readonly: hasAttribute("readonly", property),
+                creatable: hasAttribute("creatable", property) || !hasAttribute("readonly", property),
             });
         }
 
