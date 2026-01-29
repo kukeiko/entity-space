@@ -319,7 +319,7 @@ export class EntityWorkspace {
 
         selectedSchemas = selectedSchemas.filter(schema => schema.hasId());
 
-        return cache.onChanges(selectedSchemas).pipe(
+        return cache.onChanges([query.getSchema(), ...selectedSchemas]).pipe(
             filter(change => change?.getQuery() !== query),
             tap(() => this.#services.getTracing().reissuedReactiveQuery(query)),
             map(() => undefined),
