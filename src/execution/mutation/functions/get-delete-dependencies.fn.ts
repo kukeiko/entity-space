@@ -17,7 +17,7 @@ export function getDeleteDependencies(
         const relation = schema.getRelation(key);
 
         if (relation.isEmbedded()) {
-            const related = entities.flatMap(entity => relation.readValueAsArray(entity));
+            const related = relation.readValuesFlat(entities);
 
             return getDeleteDependencies(
                 relation.getRelatedSchema(),
@@ -27,32 +27,24 @@ export function getDeleteDependencies(
                 path === undefined ? toPath(key) : joinPaths([path, key]),
             );
         } else if (supported === undefined || supported[key] === undefined) {
-            if (relation.joinsFromId() && relation.joinsToId()) {
-                throw new Error(
-                    "unsupported: trying to delete dependency to a created relation that joins both from & to an id",
-                );
-            }
-
             const relatedSchema = relation.getRelatedSchema();
-            const relatedDeletable = entities.flatMap(entity =>
-                relation.readValueAsArray(entity).filter(entity => entityHasId(relatedSchema, entity)),
-            );
+            const relatedDeletable = relation
+                .readValuesFlat(entities)
+                .filter(entity => entityHasId(relatedSchema, entity));
 
-            const dependencies: EntityMutationDependency[] = [];
-
-            if (relatedDeletable.length) {
-                dependencies.push(
-                    new EntityMutationDependency(
-                        "delete",
-                        relatedSchema,
-                        relatedDeletable,
-                        relation.joinsFromId(),
-                        path === undefined ? toPath(key) : joinPaths([path, key]),
-                    ),
-                );
+            if (!relatedDeletable.length) {
+                return [];
             }
 
-            return dependencies;
+            return [
+                new EntityMutationDependency(
+                    "delete",
+                    relatedSchema,
+                    relatedDeletable,
+                    relation.isInbound(),
+                    path === undefined ? toPath(key) : joinPaths([path, key]),
+                ),
+            ];
         } else {
             return [];
         }
