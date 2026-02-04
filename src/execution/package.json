@@ -1,6 +1,6 @@
 {
     "name": "@entity-space/execution",
-    "version": "0.7.0-alpha.7",
+    "version": "0.7.0-alpha.8",
     "license": "MIT",
     "repository": {
         "type": "git",
@@ -12,8 +12,8 @@
         "require": "./cjs/index.js"
     },
     "dependencies": {
-        "@entity-space/elements": "0.7.0-alpha.7",
-        "@entity-space/utils": "0.7.0-alpha.7"
+        "@entity-space/elements": "0.7.0-alpha.8",
+        "@entity-space/utils": "0.7.0-alpha.8"
     },
     "peerDependencies": {
         "rxjs": "^7.4.0"

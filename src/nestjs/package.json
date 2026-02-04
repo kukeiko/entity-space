@@ -1,6 +1,6 @@
 {
     "name": "@entity-space/nestjs",
-    "version": "0.7.0-alpha.7",
+    "version": "0.7.0-alpha.8",
     "license": "MIT",
     "repository": {
         "type": "git",
@@ -12,9 +12,9 @@
         "require": "./cjs/index.js"
     },
     "dependencies": {
-        "@entity-space/elements": "0.7.0-alpha.7",
-        "@entity-space/execution": "0.7.0-alpha.7",
-        "@entity-space/utils": "0.7.0-alpha.7"
+        "@entity-space/elements": "0.7.0-alpha.8",
+        "@entity-space/execution": "0.7.0-alpha.8",
+        "@entity-space/utils": "0.7.0-alpha.8"
     },
     "peerDependencies": {
         "@nestjs/common": "^11.0.0",
