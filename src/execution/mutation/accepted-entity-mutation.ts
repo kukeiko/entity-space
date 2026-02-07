@@ -1,8 +1,8 @@
 import { Entity, EntityRelationSelection, EntitySchema } from "@entity-space/elements";
-import { EntityChange } from "./entity-change";
 import { EntityMutationType } from "./entity-mutation";
-import { EntityMutationDependency } from "./entity-mutation-dependency";
 import { EntityMutationFn } from "./entity-mutator";
+import { EntityChange } from "./structures/entity-change";
+import { EntityChangeDependency } from "./structures/entity-change-dependency";
 
 export class AcceptedEntityMutation {
     constructor(
@@ -10,7 +10,6 @@ export class AcceptedEntityMutation {
         type: EntityMutationType,
         entities: readonly Entity[],
         acceptedChanges: readonly EntityChange[],
-        dependencies: readonly EntityMutationDependency[],
         mutateFn: EntityMutationFn,
         selection: EntityRelationSelection,
         previous?: readonly Entity[],
@@ -19,7 +18,6 @@ export class AcceptedEntityMutation {
         this.#type = type;
         this.#entities = Object.freeze(entities.slice());
         this.#changes = Object.freeze(acceptedChanges.slice());
-        this.#dependencies = Object.freeze(dependencies.slice());
         this.#mutateFn = mutateFn;
         this.#selection = selection;
         this.#previous = previous;
@@ -29,7 +27,6 @@ export class AcceptedEntityMutation {
     readonly #type: EntityMutationType;
     readonly #entities: readonly Entity[];
     readonly #changes: readonly EntityChange[];
-    readonly #dependencies: readonly EntityMutationDependency[];
     readonly #mutateFn: EntityMutationFn;
     readonly #selection: EntityRelationSelection;
     readonly #previous?: readonly Entity[];
@@ -78,25 +75,16 @@ export class AcceptedEntityMutation {
         return this.#selection;
     }
 
-    getDependencies(): readonly EntityMutationDependency[] {
-        return this.#dependencies;
+    getOutboundDependencies(): readonly EntityChangeDependency[] {
+        return this.#changes.flatMap(change => change.getOutboundDependencies());
     }
 
-    getOutboundDependencies(): readonly EntityMutationDependency[] {
-        return this.#dependencies.filter(dependency => dependency.isOutbound());
+    getInboundDependencies(): readonly EntityChangeDependency[] {
+        return this.#changes.flatMap(change => change.getInboundDependencies());
     }
 
-    getInboundDependencies(): readonly EntityMutationDependency[] {
-        return this.#dependencies.filter(dependency => dependency.isInbound());
-    }
-
-    hasChangesRelatedToDependency(dependency: EntityMutationDependency): boolean {
-        return this.#changes.some(
-            change =>
-                change.getType() === dependency.getType() &&
-                change.getSchema().getName() === dependency.getSchema().getName() &&
-                dependency.getEntities().includes(change.getEntity()),
-        );
+    hasChangesRelatedToDependency(dependency: EntityChangeDependency): boolean {
+        return this.#changes.some(change => change.hasEntity(dependency.getEntity()));
     }
 
     isDependencyOf(other: AcceptedEntityMutation): boolean {

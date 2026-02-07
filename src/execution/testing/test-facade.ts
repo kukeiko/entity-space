@@ -1,3 +1,5 @@
+import { EntitySchema } from "@entity-space/elements";
+import { Class } from "@entity-space/utils";
 import { EntityServiceContainer } from "../entity-service-container";
 import { EntityWorkspace } from "../entity-workspace";
 import { TestRepository } from "./test-repository";
@@ -24,5 +26,10 @@ export class TestFacade {
     enableConsoleTracing(flag?: boolean): this {
         this.#services.getTracing().enableConsole(flag);
         return this;
+    }
+
+    // [todo] ❌ use this method in all tests where we currently call "face.getServices().getCatalog().getSchemaByBlueprint(...)"
+    getSchemaByBlueprint(blueprint: Class): EntitySchema {
+        return this.#services.getCatalog().getSchemaByBlueprint(blueprint);
     }
 }

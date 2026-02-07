@@ -8,12 +8,10 @@ import {
 import { joinPaths, Path, toPath } from "@entity-space/utils";
 import { isEmpty, uniq } from "lodash";
 import { AcceptedEntityMutation } from "./accepted-entity-mutation";
-import { EntityChange } from "./entity-change";
 import { EntityChanges } from "./entity-changes";
 import { EntityMutationType } from "./entity-mutation";
-import { EntityMutationDependency } from "./entity-mutation-dependency";
 import { EntityMutationFn, EntityMutator } from "./entity-mutator";
-import { getMutationDependencies } from "./functions/get-mutation-dependencies.fn";
+import { EntityChange } from "./structures/entity-change";
 
 export class ExplicitEntityMutator extends EntityMutator {
     constructor(
@@ -44,7 +42,7 @@ export class ExplicitEntityMutator extends EntityMutator {
             return [undefined, changes];
         }
 
-        const [acceptedChanges, openChanges, dependencies] = this.#accept(changes, this.#selection, path, true);
+        const [acceptedChanges, openChanges] = this.#accept(changes, this.#selection, path, true);
 
         if (!acceptedChanges.length) {
             return [undefined, changes];
@@ -59,7 +57,6 @@ export class ExplicitEntityMutator extends EntityMutator {
                     this.#type,
                     uniq(entities),
                     acceptedChanges,
-                    dependencies,
                     this.#mutateFn,
                     acceptedSelection,
                     previous ? uniq(previous) : undefined,
@@ -74,19 +71,18 @@ export class ExplicitEntityMutator extends EntityMutator {
         supportedSelection?: EntityRelationSelection,
         path?: Path,
         isRoot?: boolean,
-    ): [accepted: EntityChange[], open: EntityChanges | undefined, dependencies: EntityMutationDependency[]] {
+    ): [accepted: EntityChange[], open: EntityChanges | undefined] {
         const entities = changes.getEntities(path);
         const previous = changes.getPrevious(path);
 
         if (!entities.length && !previous?.length) {
-            return [[], changes, []];
+            return [[], changes];
         }
 
         const schema = changes.getSchema(path);
 
         let acceptedChanges: EntityChange[] = [];
         let open: EntityChanges | undefined = changes;
-        let dependencies: EntityMutationDependency[] = [];
         const changeSelection = changes.getSelection(path);
 
         if (schema.hasId()) {
@@ -103,15 +99,11 @@ export class ExplicitEntityMutator extends EntityMutator {
             }
 
             if (!acceptedChanges.length) {
-                return [[], open, []];
+                return [[], open];
             }
 
-            dependencies = isEmpty(changeSelection)
-                ? []
-                : getMutationDependencies(schema, acceptedChanges, changeSelection, supportedSelection);
-
             if (open === undefined) {
-                return [acceptedChanges, undefined, dependencies];
+                return [acceptedChanges, undefined];
             }
         }
 
@@ -119,39 +111,32 @@ export class ExplicitEntityMutator extends EntityMutator {
 
         if (!isEmpty(changeSelection) && supportedSelection !== undefined) {
             const intersection = intersectRelationSelection(supportedSelection, changeSelection);
-            const [relatedChanges, relatedDependencies, openAfterRelated] = this.#acceptRelated(
-                intersection,
-                open,
-                path,
-            );
+            const [relatedChanges, openAfterRelated] = this.#acceptRelated(intersection, open, path);
 
             acceptedChanges.push(...relatedChanges);
-            dependencies.push(...relatedDependencies);
             openChanges = openAfterRelated;
         }
 
-        return [acceptedChanges, openChanges, dependencies];
+        return [acceptedChanges, openChanges];
     }
 
     #acceptRelated(
         intersection: EntitySelection,
         changes: EntityChanges,
         path?: Path,
-    ): [EntityChange[], EntityMutationDependency[], EntityChanges | undefined] {
+    ): [EntityChange[], EntityChanges | undefined] {
         const entityChanges: EntityChange[] = [];
-        const dependencies: EntityMutationDependency[] = [];
         let openChanges: EntityChanges | undefined = changes;
         const schema = changes.getSchema(path);
 
         for (const [key, selected] of Object.entries(toRelationSelection(schema, intersection))) {
-            const [relatedRemovedChanges, nextOpenChanges, relatedDependencies] = this.#accept(
+            const [relatedRemovedChanges, nextOpenChanges] = this.#accept(
                 openChanges,
                 isEmpty(selected) ? undefined : selected,
                 path === undefined ? toPath(key) : joinPaths([path, key]),
             );
 
             entityChanges.push(...relatedRemovedChanges);
-            dependencies.push(...relatedDependencies);
             openChanges = nextOpenChanges;
 
             if (openChanges === undefined) {
@@ -159,6 +144,6 @@ export class ExplicitEntityMutator extends EntityMutator {
             }
         }
 
-        return [entityChanges, dependencies, openChanges];
+        return [entityChanges, openChanges];
     }
 }

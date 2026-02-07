@@ -650,8 +650,7 @@ describe("save() updates one entity", () => {
                 .save(windforce.input, windforce.previous);
 
             // assert
-            // [todo] ❌ doesn't work yet
-            // expect(deleteItemSockets).toHaveBeenCalledBefore(updateItems);
+            expect(deleteItemSockets).toHaveBeenCalledBefore(updateItems);
             expect(deleteItemSockets).toHaveBeenCalledWith<Parameters<DeleteEntitiesFn<ItemSocketBlueprint>>>({
                 entities: windforce.dispatched.itemSockets,
                 selection: {},

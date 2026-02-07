@@ -7,9 +7,9 @@ import {
     PackedEntitySelection,
     selectionToString,
 } from "@entity-space/elements";
-import { Path } from "@entity-space/utils";
 import { EntityHydrator } from "./hydration/entity-hydrator";
 import { EntityMutationType } from "./mutation/entity-mutation";
+import { EntityChangeDependency } from "./mutation/structures/entity-change-dependency";
 
 const TAB_WIDTH = 4;
 const MAX_FULLY_PRINTED_ENTITIES = 10;
@@ -175,11 +175,10 @@ export class EntityQueryTracing {
         });
     }
 
-    writingDependency(type: EntityMutationType, path: Path, isOutbound: boolean): void {
+    writingDependency(dependency: EntityChangeDependency): void {
         this.#log(builder => {
-            builder.addLine(`⚡ writing ${isOutbound ? "outbound" : "inbound"} dependency:`);
-            builder.addLine(` - type: ${type}`, 1);
-            builder.addLine(` - path: ${path.toString()}`, 1);
+            builder.addLine(`⚡ writing ${dependency.isOutbound() ? "outbound" : "inbound"} dependency:`);
+            builder.addLine(` - path: ${dependency.getPath().toString()}`, 1);
         });
     }
 

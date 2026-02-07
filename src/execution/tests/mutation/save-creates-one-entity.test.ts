@@ -545,6 +545,9 @@ describe("save() creates one entity", () => {
         });
     });
 
+    // [todo] 🧪 i thought this test was redundant, but when trying to move mutation dependencies to entity-changes,
+    // this was the only test that reported an issue, as "sortAcceptedMutationsByDependency" erroneously allowed
+    // a mutation to be a dependency of itself.
     it("save one entity incl. related", async () => {
         // arrange
         const windforce: Item = {

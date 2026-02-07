@@ -1,8 +1,8 @@
 import { Entity, EntityRelationSelection, EntitySchema } from "@entity-space/elements";
 import { Path, readPath } from "@entity-space/utils";
 import { partition } from "lodash";
-import { EntityChange } from "./entity-change";
 import { EntityMutationType } from "./entity-mutation";
+import { EntityChange } from "./structures/entity-change";
 
 export class EntityChanges {
     constructor(
@@ -10,7 +10,7 @@ export class EntityChanges {
         selection: EntityRelationSelection,
         changes: readonly EntityChange[],
         entities: readonly Entity[],
-        previous?: readonly Entity[],
+        previous: readonly Entity[],
     ) {
         this.#schema = schema;
         this.#changes = Object.freeze(changes.slice());
@@ -23,7 +23,7 @@ export class EntityChanges {
     readonly #selection: EntityRelationSelection;
     readonly #changes: readonly EntityChange[];
     readonly #entities: readonly Entity[];
-    readonly #previous?: readonly Entity[];
+    readonly #previous: readonly Entity[];
 
     getSchema(path?: Path): EntitySchema {
         return path ? this.#schema.getRelation(path).getRelatedSchema() : this.#schema;
@@ -37,23 +37,20 @@ export class EntityChanges {
         return readPath(path, this.#entities);
     }
 
-    getPrevious(path?: Path): Entity[] | undefined {
-        if (!this.#previous) {
-            return undefined;
-        }
-
+    getPrevious(path?: Path): Entity[] {
         return readPath(path, this.#previous);
     }
 
     subtractChanges(
         types: readonly EntityMutationType[],
+        // [todo] ❌ do we really need the schema here?
         schema: EntitySchema,
         entities: readonly Entity[],
     ): [changes: EntityChange[], open: EntityChanges | undefined] {
         const [subtracted, open] = partition(
             this.#changes,
             change =>
-                types.includes(change.getType()) &&
+                change.isType(types) &&
                 change.getSchema().getName() === schema.getName() &&
                 entities.includes(change.getEntity()),
         );

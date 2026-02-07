@@ -10,7 +10,7 @@ export async function executeSaveMutation(
     const schema = mutation.getSchema();
 
     for (const dependency of mutation.getOutboundDependencies()) {
-        tracing.writingDependency(dependency.getType(), dependency.getPath(), true);
+        tracing.writingDependency(dependency);
         dependency.writeIds(schema, mutation.getEntities());
     }
 
@@ -31,7 +31,7 @@ export async function executeSaveMutation(
     assignEntitiesUsingIds(schema, selection, originals, saved);
 
     for (const dependency of mutation.getInboundDependencies()) {
-        tracing.writingDependency(dependency.getType(), dependency.getPath(), false);
+        tracing.writingDependency(dependency);
         dependency.writeIds(schema, originals);
     }
 

@@ -39,7 +39,7 @@ export class EntityMutation {
         return this.#entities;
     }
 
-    getPrevious(): Entity[] | undefined {
-        return this.#previous;
+    getPrevious(): Entity[] {
+        return this.#previous ?? [];
     }
 }

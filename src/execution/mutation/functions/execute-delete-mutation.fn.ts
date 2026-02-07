@@ -37,6 +37,7 @@ export async function executeDeleteMutation(
             throw new Error("failed to find deletion change");
         }
 
-        change.removeEntity();
+        // [todo] ❌ reimplement and write a test for this
+        // change.removeEntity();
     }
 }

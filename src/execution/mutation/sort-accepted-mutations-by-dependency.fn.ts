@@ -12,7 +12,9 @@ export function sortAcceptedMutationsByDependency(
     }
 
     for (const acceptedMutation of acceptedMutations) {
-        for (const dependency of acceptedMutations.filter(mutation => mutation.isDependencyOf(acceptedMutation))) {
+        for (const dependency of acceptedMutations.filter(
+            mutation => mutation !== acceptedMutation && mutation.isDependencyOf(acceptedMutation),
+        )) {
             graph.get(dependency)!.push(acceptedMutation);
             inDegree.set(acceptedMutation, inDegree.get(acceptedMutation)! + 1);
         }

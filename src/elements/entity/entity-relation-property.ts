@@ -1,4 +1,4 @@
-import { isNotNullsy, isNullsy, Path, readPath, writePath } from "@entity-space/utils";
+import { entryValueIs, isNotNullsy, isNullsy, Path, readPath, writePath } from "@entity-space/utils";
 import { isPlainObject } from "lodash";
 import { Entity } from "./entity";
 import { EntityPrimitiveProperty } from "./entity-primitive-property";
@@ -188,6 +188,11 @@ export class EntityRelationProperty extends EntityProperty {
         }
     }
 
+    hasValue(entity: Entity): boolean {
+        return this.readValue(entity) !== undefined;
+    }
+
+    // [todo] ❓ rename to "readValueFlat()"? or "readFlatValue()" (and rename below to "readFlatValues()")
     readValueAsArray(entity: Entity): Entity[] {
         const value = this.readValue(entity);
 
@@ -205,6 +210,12 @@ export class EntityRelationProperty extends EntityProperty {
             .map(entity => this.readValue(entity))
             .filter(isNotNullsy)
             .flat();
+    }
+
+    readTuples(entities: readonly Entity[]): [Entity, Entity[]][] {
+        return entities
+            .map(entity => [entity, this.readValueAsArray(entity)] as [Entity, Entity[]])
+            .filter(entryValueIs(isNotNullsy));
     }
 
     writeJoins(entities: readonly Entity[]): void {
