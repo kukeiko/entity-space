@@ -29,10 +29,8 @@ export class EntityDataSource<B, F, S extends PackedEntitySelection<EntityBluepr
             filter: this.#filter.getFilter$(),
             refresh: this.#refresh$,
         }).pipe(
-            switchMap(({ filter }) => {
-                return this.#load$(filter).pipe(map(entities => this.#filter.filterClientSide(filter, entities)));
-            }),
-            shareReplay(1),
+            switchMap(({ filter }) => this.#load$(filter)),
+            shareReplay({ bufferSize: 1, refCount: true }),
         );
     }
 
@@ -106,6 +104,7 @@ export class EntityDataSource<B, F, S extends PackedEntitySelection<EntityBluepr
                 reactive: this.#reactive,
             })
             .indicate(this.#isLoading$)
-            .get$();
+            .get$()
+            .pipe(map(entities => this.#filter.filterClientSide(filter, entities)));
     }
 }
