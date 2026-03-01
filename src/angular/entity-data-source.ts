@@ -15,6 +15,7 @@ export class EntityDataSource<B, F, S extends PackedEntitySelection<EntityBluepr
         select?: S,
         cacheKey?: unknown,
         reactive?: boolean | QueryReactivityOptions,
+        interval?: number,
     ) {
         this.#workspace = workspace;
         this.#blueprint = blueprint;
@@ -22,6 +23,7 @@ export class EntityDataSource<B, F, S extends PackedEntitySelection<EntityBluepr
         this.#select = select;
         this.#cacheKey = cacheKey;
         this.#reactive = reactive ?? false;
+        this.#refreshInterval = interval;
 
         this.#entities$ = combineLatest({
             filter: this.#filter.getFilter$(),
@@ -43,6 +45,7 @@ export class EntityDataSource<B, F, S extends PackedEntitySelection<EntityBluepr
     readonly #entities$: Observable<SelectEntity<EntityBlueprint.Type<B>, S>[]>;
     readonly #cacheKey?: unknown;
     readonly #reactive?: boolean | QueryReactivityOptions;
+    readonly #refreshInterval?: number;
 
     getEntities$(): Observable<SelectEntity<EntityBlueprint.Type<B>, S>[]> {
         return this.#entities$;
@@ -99,6 +102,7 @@ export class EntityDataSource<B, F, S extends PackedEntitySelection<EntityBluepr
                 key: this.#cacheKey,
                 refresh: true,
                 refreshDelay: REFRESH_DELAY,
+                refreshInterval: this.#refreshInterval,
                 reactive: this.#reactive,
             })
             .indicate(this.#isLoading$)

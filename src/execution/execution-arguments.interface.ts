@@ -15,6 +15,7 @@ export interface QueryCacheOptions {
     key?: unknown;
     refresh?: boolean;
     refreshDelay?: number;
+    refreshInterval?: number;
     reactive?: boolean | QueryReactivityOptions;
 }
 

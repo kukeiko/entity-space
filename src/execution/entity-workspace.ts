@@ -20,6 +20,7 @@ import {
     map,
     Observable,
     of,
+    repeat,
     startWith,
     Subject,
     switchMap,
@@ -108,7 +109,7 @@ export class EntityWorkspace {
             const query = new EntityQuery(schema, selection, criteria, parameters);
             const cacheOptions = this.#toCacheOptions(cache);
             const cacheKey = cacheOptions ? cacheOptions.key : undefined;
-            const loadFreshDelay = cacheOptions === false ? 0 : (cacheOptions.refreshDelay ?? 0);
+
             this.#services.getTracing().querySpawned(query);
             let stream$: Observable<T[]>;
 
@@ -127,7 +128,16 @@ export class EntityWorkspace {
                 if (!cacheOptions.refresh) {
                     load$ = this.#loadFromCacheAndSource$<T>(query, cache, isLoading$);
                 } else {
-                    load$ = this.#loadFromCacheThenRefreshFromSource$<T>(query, cache, loadFreshDelay, isLoading$);
+                    const loadFreshDelay = cacheOptions.refreshDelay ?? 0;
+                    const refreshInterval = cacheOptions.refreshInterval;
+
+                    load$ = this.#loadFromCacheThenRefreshFromSource$<T>(
+                        query,
+                        cache,
+                        loadFreshDelay,
+                        refreshInterval,
+                        isLoading$,
+                    );
                 }
 
                 stream$ = reload$.pipe(switchMap(() => load$));
@@ -173,11 +183,13 @@ export class EntityWorkspace {
         query: EntityQuery,
         cache: EntityCache,
         refreshDelay = 0,
+        refreshInterval?: number,
         isLoading$?: Subject<boolean>,
     ): Observable<T[]> {
         return concat(
             defer(() => {
                 if (!cache.subtractByCache(query)) {
+                    // if the query is not fully cached, skip refresh delay and load from source immediately
                     refreshDelay = 0;
                 }
 
@@ -188,7 +200,7 @@ export class EntityWorkspace {
                 return executeQuery<T>(this.#services, query, context);
             }),
             defer(() => {
-                return of(undefined).pipe(
+                const loadFromSource$ = of(undefined).pipe(
                     delay(refreshDelay),
                     switchMap(() => {
                         isLoading$?.next(true);
@@ -204,6 +216,12 @@ export class EntityWorkspace {
                         isLoading$?.next(false);
                     }),
                 );
+
+                if (refreshInterval) {
+                    return loadFromSource$.pipe(repeat({ delay: refreshInterval }));
+                }
+
+                return loadFromSource$;
             }),
         );
     }
@@ -251,7 +269,8 @@ export class EntityWorkspace {
     }
 
     async #mutate(mutation: EntityMutation): Promise<Entity[]> {
-        writeRelationJoins(mutation.getSchema(), mutation.getEntities(), mutation.getSelection() ?? {});
+        const selection = mutation.getSelection() ?? {};
+        writeRelationJoins(mutation.getSchema(), mutation.getEntities(), selection);
         const entityChanges = toEntityChanges(mutation);
 
         if (entityChanges === undefined) {
@@ -260,7 +279,7 @@ export class EntityWorkspace {
 
         const mutators: EntityMutator[] = [
             ...this.#services.getExplicitMutatorsFor(mutation.getSchema()),
-            ...generatePathedMutators(this.#services, mutation.getSchema(), mutation.getSelection() ?? {}),
+            ...generatePathedMutators(this.#services, mutation.getSchema(), selection),
         ];
         let nextEntityChanges: EntityChanges | undefined = entityChanges;
         const allAccepted: AcceptedEntityMutation[] = [];
