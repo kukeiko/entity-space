@@ -4,7 +4,7 @@ import { EntityWorkspace } from "../../entity-workspace";
 import { CreateEntityFn } from "../../mutation/entity-mutation-function.type";
 import { TestFacade, TestRepository } from "../../testing";
 
-describe("save()", () => {
+describe("mutate one-to-one", () => {
     let facade: TestFacade;
     let repository: TestRepository;
     let workspace: EntityWorkspace;
@@ -15,7 +15,7 @@ describe("save()", () => {
         workspace = facade.getWorkspace();
     });
 
-    it("can create one-to-one relations: washingMachine.product", async () => {
+    it("save() can create one-to-one relations: washingMachine.product", async () => {
         // arrange
         const washingMachine: WashingMachine = {
             id: 0,
@@ -58,7 +58,7 @@ describe("save()", () => {
         });
     });
 
-    it("can create one-to-one relations: product.washingMachine", async () => {
+    it("save() can create one-to-one relations: product.washingMachine", async () => {
         // arrange
         const product: Product = {
             id: 0,

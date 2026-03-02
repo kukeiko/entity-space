@@ -1,5 +1,7 @@
 import {
     Item,
+    ItemAttribute,
+    ItemAttributeBlueprint,
     ItemBlueprint,
     ItemSocket,
     ItemSocketBlueprint,
@@ -34,7 +36,7 @@ describe("save() creates one entity", () => {
 
         beforeEach(() => {
             const input: Item = {
-                ...workspace.from(ItemBlueprint).constructDefault(),
+                ...facade.constructDefault(ItemBlueprint),
                 assignId: 1,
                 typeId: 7,
                 name: "Windforce",
@@ -161,22 +163,24 @@ describe("save() creates one entity", () => {
         };
 
         beforeEach(() => {
+            const type: ItemType = {
+                ...facade.constructDefault(ItemTypeBlueprint),
+                assignId: 2,
+                name: "Hydra Bow",
+            };
+
             const input: Item = {
-                ...workspace.from(ItemBlueprint).constructDefault(),
+                ...facade.constructDefault(ItemBlueprint),
                 assignId: 1,
                 name: "Windforce",
-                type: {
-                    id: 0,
-                    assignId: 2,
-                    name: "Hydra Bow",
-                },
+                type,
                 sockets: [],
             };
 
             windforce = {
                 input,
                 dispatched: {
-                    itemType: { ...input.type! },
+                    itemType: { ...type },
                     item: {
                         ...input,
                         type: undefined,
@@ -189,10 +193,7 @@ describe("save() creates one entity", () => {
                     id: 1,
                     createdAt,
                     typeId: 2,
-                    type: {
-                        ...input.type!,
-                        id: 2,
-                    },
+                    type: { ...type, id: 2 },
                 },
             };
         });
@@ -250,19 +251,26 @@ describe("save() creates one entity", () => {
         };
 
         beforeEach(() => {
+            const type: ItemType = {
+                ...facade.constructDefault(ItemTypeBlueprint),
+                id: 2,
+                assignId: 2,
+                name: "Hydra Bow",
+            };
+
             const input: Item = {
-                ...workspace.from(ItemBlueprint).constructDefault(),
+                ...facade.constructDefault(ItemBlueprint),
                 assignId: 1,
                 name: "Windforce",
                 typeId: 2,
-                type: { id: 2, assignId: 2, name: "Hydra Bow" },
+                type,
                 sockets: [],
             };
 
             windforce = {
                 input,
                 dispatched: {
-                    itemType: { ...input.type! },
+                    itemType: { ...type },
                     item: {
                         ...input,
                         sockets: undefined,
@@ -271,6 +279,7 @@ describe("save() creates one entity", () => {
                 },
                 output: {
                     ...input,
+                    type: { ...type },
                     id: 1,
                     createdAt,
                 },
@@ -330,15 +339,24 @@ describe("save() creates one entity", () => {
         };
 
         beforeEach(() => {
+            const socketA: ItemSocket = {
+                ...facade.constructDefault(ItemSocketBlueprint),
+                assignId: 10,
+                socketedItemId: 100,
+            };
+
+            const socketB: ItemSocket = {
+                ...facade.constructDefault(ItemSocketBlueprint),
+                assignId: 20,
+                socketedItemId: 200,
+            };
+
             const input: Item = {
-                ...workspace.from(ItemBlueprint).constructDefault(),
+                ...facade.constructDefault(ItemBlueprint),
                 assignId: 1,
                 name: "Windforce",
                 typeId: 2,
-                sockets: [
-                    { id: 0, createdAt: "", updatedAt: null, assignId: 10, itemId: 0, socketedItemId: 100 },
-                    { id: 0, createdAt: "", updatedAt: null, assignId: 20, itemId: 0, socketedItemId: 200 },
-                ],
+                sockets: [socketA, socketB],
             };
 
             windforce = {
@@ -346,22 +364,20 @@ describe("save() creates one entity", () => {
                 dispatched: {
                     item: { ...input, sockets: undefined },
                     itemSockets: [
-                        { id: 0, createdAt: "", updatedAt: null, assignId: 10, itemId: 1, socketedItemId: 100 },
-                        { id: 0, createdAt: "", updatedAt: null, assignId: 20, itemId: 1, socketedItemId: 200 },
+                        { ...socketA, itemId: 1 },
+                        { ...socketB, itemId: 1 },
                     ],
                 },
                 output: {
+                    ...input,
                     id: 1,
-                    assignId: 1,
-                    typeId: 2,
                     attributes: [],
                     createdAt,
-                    name: "Windforce",
-                    sockets: [
-                        { id: 10, assignId: 10, itemId: 1, socketedItemId: 100, createdAt, updatedAt: null },
-                        { id: 20, assignId: 20, itemId: 1, socketedItemId: 200, createdAt, updatedAt: null },
-                    ],
                     updatedAt: null,
+                    sockets: [
+                        { ...socketA, itemId: 1, id: 10, createdAt },
+                        { ...socketB, itemId: 1, id: 20, createdAt },
+                    ],
                 },
             };
         });
@@ -419,61 +435,45 @@ describe("save() creates one entity", () => {
         };
 
         beforeEach(() => {
+            const socketA: ItemSocket = {
+                ...facade.constructDefault(ItemSocketBlueprint),
+                id: 10,
+                itemId: 1,
+                socketedItemId: 100,
+                createdAt,
+            };
+
+            const socketB: ItemSocket = {
+                ...facade.constructDefault(ItemSocketBlueprint),
+                id: 20,
+                itemId: 1,
+                socketedItemId: 200,
+                createdAt,
+            };
+
+            const input: Item = {
+                ...facade.constructDefault(ItemBlueprint),
+                assignId: 1,
+                typeId: 2,
+                name: "Windforce",
+                sockets: [socketA, socketB],
+            };
+
             windforce = {
-                input: {
-                    id: 0,
-                    createdAt: "",
-                    updatedAt: "",
-                    assignId: 1,
-                    typeId: 2,
-                    attributes: [],
-                    name: "Windforce",
-                    sockets: [
-                        {
-                            id: 10,
-                            assignId: 10,
-                            itemId: 2,
-                            socketedItemId: 100,
-                            createdAt,
-                            updatedAt: null,
-                        },
-                        {
-                            id: 20,
-                            assignId: 20,
-                            itemId: 2,
-                            socketedItemId: 200,
-                            createdAt,
-                            updatedAt: null,
-                        },
-                    ],
-                },
+                input,
                 dispatched: {
-                    itemSockets: [
-                        { id: 10, itemId: 1, socketedItemId: 100, createdAt, assignId: 10, updatedAt: null },
-                        { id: 20, itemId: 1, socketedItemId: 200, createdAt, assignId: 20, updatedAt: null },
-                    ],
-                    item: {
-                        id: 0,
-                        createdAt: "",
-                        updatedAt: "",
-                        assignId: 1,
-                        typeId: 2,
-                        attributes: [],
-                        name: "Windforce",
-                    },
+                    itemSockets: [{ ...socketA }, { ...socketB }],
+                    item: { ...input, sockets: undefined },
                 },
                 output: {
+                    ...input,
                     id: 1,
-                    assignId: 1,
-                    typeId: 2,
-                    attributes: [],
                     createdAt,
-                    name: "Windforce",
-                    sockets: [
-                        { id: 10, assignId: 10, itemId: 1, socketedItemId: 100, createdAt, updatedAt },
-                        { id: 20, assignId: 20, itemId: 1, socketedItemId: 200, createdAt, updatedAt },
-                    ],
                     updatedAt: null,
+                    sockets: [
+                        { ...socketA, updatedAt },
+                        { ...socketB, updatedAt },
+                    ],
                 },
             };
         });
@@ -550,79 +550,35 @@ describe("save() creates one entity", () => {
     // a mutation to be a dependency of itself.
     it("save one entity incl. related", async () => {
         // arrange
-        const windforce: Item = {
-            createdAt: "",
-            id: 0,
-            updatedAt: null,
-            assignId: 1,
-            typeId: 7,
-            attributes: [
-                {
-                    typeId: 100,
-                    values: [1, 2, 3],
-                },
-            ],
-            name: "Windforce",
-            sockets: [
-                {
-                    assignId: 10,
-                    itemId: 0,
-                    socketedItemId: 2,
-                    createdAt: "",
-                    id: 0,
-                    updatedAt: null,
-                },
-            ],
+        const socket: ItemSocket = {
+            ...facade.constructDefault(ItemSocketBlueprint),
+            assignId: 10,
+            socketedItemId: 2,
         };
 
-        const windforcePassedToSave: Item = {
-            createdAt: "",
-            id: 0,
-            updatedAt: null,
+        const attribute: ItemAttribute = {
+            ...facade.constructDefault(ItemAttributeBlueprint),
+            typeId: 100,
+            values: [1, 2, 3],
+        };
+
+        const windforce: Item = {
+            ...facade.constructDefault(ItemBlueprint),
             assignId: 1,
             typeId: 7,
-            attributes: [
-                {
-                    typeId: 100,
-                    values: [1, 2, 3],
-                },
-            ],
             name: "Windforce",
-            sockets: [
-                {
-                    assignId: 10,
-                    itemId: 0,
-                    socketedItemId: 2,
-                    createdAt: "",
-                    id: 0,
-                    updatedAt: null,
-                },
-            ],
+            attributes: [attribute],
+            sockets: [socket],
         };
+
+        const windforcePassedToSave = structuredClone(windforce);
 
         const windforceSaved: Item = {
+            ...windforce,
             id: 1,
-            typeId: 7,
-            assignId: 1,
-            attributes: [
-                {
-                    typeId: 100,
-                    values: [1, 2, 3],
-                },
-            ],
+            attributes: [{ ...attribute }],
             createdAt,
-            name: "Windforce",
-            updatedAt: null,
-            sockets: [
-                {
-                    id: 10,
-                    assignId: 10,
-                    itemId: 1,
-                    socketedItemId: 2,
-                    createdAt,
-                    updatedAt: null,
-                },
-            ],
+            sockets: [{ ...socket, id: 10, itemId: 1, createdAt }],
         };
 
         const saveItem = repository.useRpg().useSaveItems(createdAt, updatedAt, true);
@@ -637,5 +593,90 @@ describe("save() creates one entity", () => {
         });
         expect(saved).toEqual([windforceSaved]);
         expect(saved[0]).toBe(windforce);
+    });
+});
+
+describe("save() creates many entities", () => {
+    let facade: TestFacade;
+    let repository: TestRepository;
+    let workspace: EntityWorkspace;
+
+    const createdAt = new Date().toISOString();
+    const updatedAt = new Date(Date.now() + 1000).toISOString();
+
+    beforeEach(() => {
+        facade = new TestFacade();
+        repository = facade.getTestRepository();
+        workspace = facade.getWorkspace();
+    });
+
+    describe("w/o any relations", () => {
+        let windforce: {
+            input: Item[];
+            dispatched: Item[];
+            output: Item[];
+        };
+
+        beforeEach(() => {
+            const itemA: Item = {
+                ...facade.constructDefault(ItemBlueprint),
+                assignId: 1,
+                typeId: 7,
+                name: "Windforce",
+                sockets: [],
+            };
+
+            const itemB: Item = {
+                ...facade.constructDefault(ItemBlueprint),
+                assignId: 2,
+                typeId: 3,
+                name: "Shako",
+                sockets: [],
+            };
+
+            windforce = {
+                input: [{ ...itemA }, { ...itemB }],
+                dispatched: [
+                    { ...itemA, sockets: undefined },
+                    { ...itemB, sockets: undefined },
+                ],
+                output: [
+                    { ...itemA, id: 1, createdAt },
+                    { ...itemB, id: 2, createdAt },
+                ],
+            };
+        });
+
+        it("using a save mutator", async () => {
+            // arrange
+            const saveItems = repository.useRpg().useSaveItems(createdAt, updatedAt);
+
+            // act
+            const saved = await workspace.in(ItemBlueprint).save(windforce.input);
+
+            // assert
+            expect(saveItems).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemBlueprint>>>({
+                entities: windforce.dispatched,
+                selection: {},
+            });
+            expect(saved).toEqual(windforce.output);
+            expect(saved).toBe(windforce.input);
+        });
+
+        it("using a create mutator", async () => {
+            // arrange
+            const createItems = repository.useRpg().useCreateItems(createdAt);
+
+            // act
+            const saved = await workspace.in(ItemBlueprint).save(windforce.input);
+
+            // assert
+            expect(createItems).toHaveBeenCalledWith<Parameters<CreateEntitiesFn<ItemBlueprint>>>({
+                entities: windforce.dispatched,
+                selection: {},
+            });
+            expect(saved).toEqual(windforce.output);
+            expect(saved).toBe(windforce.input);
+        });
     });
 });

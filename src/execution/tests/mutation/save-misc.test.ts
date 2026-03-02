@@ -1,24 +1,15 @@
 import {
-    Artist,
     Item,
     ItemAttributeType,
     ItemAttributeTypeBlueprint,
     ItemBlueprint,
     ItemSocket,
     ItemSocketBlueprint,
-    Song,
-    SongBlueprint,
 } from "@entity-space/elements/testing";
 import { beforeEach, describe, expect, it } from "vitest";
 import { EntityWorkspace } from "../../entity-workspace";
-import {
-    CreateEntitiesFn,
-    CreateEntityFn,
-    DeleteEntitiesFn,
-    UpdateEntitiesFn,
-} from "../../mutation/entity-mutation-function.type";
+import { CreateEntitiesFn, DeleteEntitiesFn, UpdateEntitiesFn } from "../../mutation/entity-mutation-function.type";
 import { TestFacade, TestRepository } from "../../testing";
-import { createMetadata } from "../../testing/create-metadata.fn";
 
 describe("save()", () => {
     let facade: TestFacade;
@@ -32,195 +23,6 @@ describe("save()", () => {
         facade = new TestFacade();
         repository = facade.getTestRepository();
         workspace = facade.getWorkspace();
-    });
-
-    it("does not create the same entity twice", async () => {
-        // arrange
-        const metadata = createMetadata(1);
-
-        const artist: Artist = {
-            id: 0,
-            metadata,
-            name: "foo",
-            namespace: "dev",
-        };
-
-        const songs: Song[] = [
-            {
-                id: 0,
-                albumId: 1,
-                artistId: 0,
-                artist,
-                duration: 100,
-                metadata,
-                name: "bar",
-                namespace: "dev",
-            },
-            {
-                id: 0,
-                albumId: 1,
-                artistId: 0,
-                artist,
-                duration: 100,
-                metadata,
-                name: "baz",
-                namespace: "dev",
-            },
-        ];
-
-        const expectedArtist: Artist = {
-            id: 1,
-            metadata,
-            name: "foo",
-            namespace: "dev",
-        };
-
-        const expected: Song[] = [
-            {
-                id: 1,
-                albumId: 1,
-                artistId: 1,
-                artist: expectedArtist,
-                duration: 100,
-                metadata,
-                name: "bar",
-                namespace: "dev",
-            },
-            {
-                id: 2,
-                albumId: 1,
-                artistId: 1,
-                artist: expectedArtist,
-                duration: 100,
-                metadata,
-                name: "baz",
-                namespace: "dev",
-            },
-        ];
-
-        const createSong = repository.useMusic().useCreateSong();
-        const createArtist = repository.useMusic().useCreateArtist();
-
-        // act
-        const actual = await workspace.in(SongBlueprint).select({ artist: true }).save(songs);
-
-        // assert
-        expect(actual).toEqual(expected);
-        expect(createSong).toHaveBeenCalledAfter(createArtist);
-        expect(createSong).toHaveBeenCalledTimes(2);
-        expect(createArtist).toHaveBeenCalledTimes(1);
-        expect(createSong).toHaveBeenCalledWith<Parameters<CreateEntityFn<SongBlueprint>>>({
-            selection: {},
-            entity: { albumId: 1, artistId: 1, duration: 100, metadata, name: "bar", namespace: "dev", id: 0 },
-        });
-        expect(createSong).toHaveBeenCalledWith<Parameters<CreateEntityFn<SongBlueprint>>>({
-            selection: {},
-            entity: { albumId: 1, artistId: 1, duration: 100, metadata, name: "bar", namespace: "dev", id: 0 },
-        });
-    });
-
-    describe("does not update the same entity twice", () => {
-        it("without previous entities", async () => {
-            // arrange
-            const metadata = createMetadata(1);
-
-            const artist: Artist = {
-                id: 1,
-                metadata,
-                name: "foo",
-                namespace: "dev",
-            };
-
-            const songs: Song[] = [
-                {
-                    id: 1,
-                    albumId: 1,
-                    artistId: 1,
-                    artist,
-                    duration: 100,
-                    metadata,
-                    name: "bar",
-                    namespace: "dev",
-                },
-                {
-                    id: 2,
-                    albumId: 1,
-                    artistId: 1,
-                    artist,
-                    duration: 100,
-                    metadata,
-                    name: "baz",
-                    namespace: "dev",
-                },
-            ];
-
-            const updateSong = repository.useMusic().useUpdateSong();
-            const updateArtist = repository.useMusic().useUpdateArtist();
-
-            // act
-            await workspace.in(SongBlueprint).select({ artist: true }).save(songs);
-
-            // assert
-            expect(updateSong).toHaveBeenCalledAfter(updateArtist);
-            expect(updateSong).toHaveBeenCalledTimes(2);
-            expect(updateArtist).toHaveBeenCalledTimes(1);
-        });
-
-        it("with previous entities", async () => {
-            // arrange
-            const metadata = createMetadata(1);
-
-            const artist: Artist = {
-                id: 1,
-                metadata,
-                name: "foo",
-                namespace: "dev",
-            };
-
-            const songs: Song[] = [
-                {
-                    id: 1,
-                    albumId: 1,
-                    artistId: 1,
-                    artist,
-                    duration: 100,
-                    metadata,
-                    name: "bar",
-                    namespace: "dev",
-                },
-                {
-                    id: 2,
-                    albumId: 1,
-                    artistId: 1,
-                    artist,
-                    duration: 100,
-                    metadata,
-                    name: "baz",
-                    namespace: "dev",
-                },
-            ];
-
-            const updatedArtist = structuredClone(artist);
-            const updatedSongs = structuredClone(songs);
-
-            updatedArtist.name = `${updatedArtist.name} (updated)`;
-
-            for (const song of updatedSongs) {
-                song.artist = updatedArtist;
-                song.name = `${song.name} (updated)`;
-            }
-
-            const updateSong = repository.useMusic().useUpdateSong();
-            const updateArtist = repository.useMusic().useUpdateArtist();
-
-            // act
-            await workspace.in(SongBlueprint).select({ artist: true }).save(updatedSongs, songs);
-
-            // assert
-            expect(updateSong).toHaveBeenCalledAfter(updateArtist);
-            expect(updateSong).toHaveBeenCalledTimes(2);
-            expect(updateArtist).toHaveBeenCalledTimes(1);
-        });
     });
 
     it("should recognize changes on embedded arrays", async () => {

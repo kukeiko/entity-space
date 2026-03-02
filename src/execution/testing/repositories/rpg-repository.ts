@@ -35,7 +35,7 @@ export class RpgRepository extends InMemoryRepository<RpgEntities> {
 
             for (const item of items) {
                 if (!item.id) {
-                    item.id = item.assignId;
+                    item.id = item.assignId!;
                     item.createdAt = createdAt;
                     item.updatedAt = null;
                 } else {
@@ -74,7 +74,7 @@ export class RpgRepository extends InMemoryRepository<RpgEntities> {
                 const items = structuredClone(entities);
 
                 for (const item of items) {
-                    item.id = item.assignId;
+                    item.id = item.assignId!;
                     item.createdAt = createdAt;
                     item.updatedAt = null;
 

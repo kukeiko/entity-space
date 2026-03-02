@@ -26,26 +26,20 @@ describe("save() deletes one entity", () => {
         };
 
         beforeEach(() => {
+            const item: Item = {
+                ...facade.constructDefault(ItemBlueprint),
+                id: 1,
+                assignId: 1,
+                typeId: 7,
+                name: "Windforce",
+                sockets: [],
+                createdAt,
+                updatedAt,
+            };
+
             windforce = {
-                input: {
-                    id: 1,
-                    assignId: 1,
-                    typeId: 7,
-                    attributes: [],
-                    name: "Windforce",
-                    sockets: [],
-                    createdAt,
-                    updatedAt,
-                },
-                dispatched: {
-                    id: 1,
-                    assignId: 1,
-                    typeId: 7,
-                    attributes: [],
-                    name: "Windforce",
-                    createdAt,
-                    updatedAt,
-                },
+                input: { ...item },
+                dispatched: { ...item, sockets: undefined },
                 output: [],
             };
         });
@@ -77,36 +71,53 @@ describe("save() deletes one entity", () => {
         };
 
         beforeEach(() => {
+            const socketA: ItemSocket = {
+                ...facade.constructDefault(ItemSocketBlueprint),
+                id: 10,
+                assignId: 10,
+                itemId: 1,
+                socketedItemId: 100,
+                createdAt,
+            };
+
+            const socketB: ItemSocket = {
+                ...facade.constructDefault(ItemSocketBlueprint),
+                id: 20,
+                assignId: 20,
+                itemId: 1,
+                socketedItemId: 200,
+                createdAt,
+            };
+
+            const socketC: ItemSocket = {
+                ...facade.constructDefault(ItemSocketBlueprint),
+                id: 30,
+                assignId: 30,
+                itemId: 1,
+                socketedItemId: 300,
+                createdAt,
+            };
+
+            const item: Item = {
+                ...facade.constructDefault(ItemBlueprint),
+                id: 1,
+                assignId: 1,
+                typeId: 7,
+                name: "Windforce",
+                createdAt,
+                updatedAt,
+            };
+
             windforce = {
                 input: {
-                    id: 1,
-                    assignId: 1,
-                    typeId: 7,
-                    attributes: [],
-                    name: "Windforce",
-                    sockets: [
-                        { id: 10, assignId: 10, itemId: 1, socketedItemId: 100, createdAt, updatedAt: null },
-                        { id: 20, assignId: 20, itemId: 1, socketedItemId: 200, createdAt, updatedAt: null },
-                        { id: 30, assignId: 30, itemId: 1, socketedItemId: 300, createdAt, updatedAt: null },
-                    ],
-                    createdAt,
-                    updatedAt,
+                    ...item,
+                    sockets: [{ ...socketA }, { ...socketB }, { ...socketC }],
                 },
                 dispatched: {
                     item: {
-                        id: 1,
-                        assignId: 1,
-                        typeId: 7,
-                        attributes: [],
-                        name: "Windforce",
-                        createdAt,
-                        updatedAt,
+                        ...item,
                     },
-                    itemSockets: [
-                        { id: 10, assignId: 10, itemId: 1, socketedItemId: 100, createdAt, updatedAt: null },
-                        { id: 20, assignId: 20, itemId: 1, socketedItemId: 200, createdAt, updatedAt: null },
-                        { id: 30, assignId: 30, itemId: 1, socketedItemId: 300, createdAt, updatedAt: null },
-                    ],
+                    itemSockets: [{ ...socketA }, { ...socketB }, { ...socketC }],
                 },
                 output: [],
             };

@@ -1,9 +1,8 @@
-import { Artist, Item, ItemBlueprint, ItemSocketBlueprint, Song, SongBlueprint } from "@entity-space/elements/testing";
+import { Item, ItemBlueprint, ItemSocketBlueprint } from "@entity-space/elements/testing";
 import { beforeEach, describe, expect, it } from "vitest";
 import { EntityWorkspace } from "../../entity-workspace";
 import { DeleteEntitiesFn } from "../../mutation/entity-mutation-function.type";
 import { TestFacade, TestRepository } from "../../testing";
-import { createMetadata } from "../../testing/create-metadata.fn";
 
 describe("delete()", () => {
     let facade: TestFacade;
@@ -19,54 +18,7 @@ describe("delete()", () => {
         workspace = facade.getWorkspace();
     });
 
-    // [todo] ❓ skipped while reimplementing entity changes: while writing the new behavior, I assumed that the case that is tested here
-    // is not wanted. Need to reconsider how it should work and adapt the logic or adapt this test to not and try to delete a reference.
-    it.skip("does not delete the same entity twice", async () => {
-        // arrange
-        const metadata = createMetadata(1);
-
-        const artist: Artist = {
-            id: 1,
-            metadata,
-            name: "foo",
-            namespace: "dev",
-        };
-
-        const songs: Song[] = [
-            {
-                id: 1,
-                albumId: 1,
-                artistId: 1,
-                artist,
-                duration: 100,
-                metadata,
-                name: "bar",
-                namespace: "dev",
-            },
-            {
-                id: 2,
-                albumId: 1,
-                artistId: 1,
-                artist,
-                duration: 100,
-                metadata,
-                name: "baz",
-                namespace: "dev",
-            },
-        ];
-
-        const deleteSong = repository.useMusic().useDeleteSong();
-        const deleteArtist = repository.useMusic().useDeleteArtist();
-
-        // act
-        await workspace.in(SongBlueprint).select({ artist: true }).delete(songs);
-
-        // assert
-        expect(deleteSong).toHaveBeenCalledTimes(2);
-        expect(deleteArtist).toHaveBeenCalledTimes(1);
-    });
-
-    it("should work", async () => {
+    it("should only delete inbound relations", async () => {
         // arrange
         const windforce: Item = {
             id: 1,

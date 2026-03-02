@@ -9,9 +9,7 @@ export class ArtistBlueprint {
     namespace = id(String, { creatable });
     id = id();
     name = string();
-    songs = entity(SongBlueprint, [this.namespace, this.id], song => [song.namespace, song.artistId], {
-        array,
-    });
+    songs = entity(SongBlueprint, [this.namespace, this.id], song => [song.namespace, song.artistId], { array });
     longestSong = entity(SongBlueprint, { optional });
     songTags = entity(TagBlueprint, { optional, array });
     country = string({ optional, nullable });

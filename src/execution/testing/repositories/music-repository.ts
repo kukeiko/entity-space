@@ -271,11 +271,7 @@ export class MusicRepository extends InMemoryRepository<MusicEntities, "tags" | 
     }
 
     useUpdateArtist() {
-        const update = vi.fn<UpdateEntityFn<ArtistBlueprint>>(({ entity }) => {
-            // [todo] ❌ type assertion
-            return structuredClone(entity) as Artist;
-        });
-
+        const update = vi.fn<UpdateEntityFn<ArtistBlueprint>>(({ entity }) => structuredClone(entity));
         this.#services.for(ArtistBlueprint).addUpdateOneMutator({ update });
 
         return update;
@@ -283,10 +279,7 @@ export class MusicRepository extends InMemoryRepository<MusicEntities, "tags" | 
 
     useDeleteArtist() {
         const del = vi.fn<DeleteEntityFn<ArtistBlueprint>>(() => {});
-
-        this.#services.for(ArtistBlueprint).addDeleteOneMutator({
-            delete: del,
-        });
+        this.#services.for(ArtistBlueprint).addDeleteOneMutator({ delete: del });
 
         return del;
     }
@@ -300,6 +293,20 @@ export class MusicRepository extends InMemoryRepository<MusicEntities, "tags" | 
         });
 
         return load;
+    }
+
+    useUpdateAlbum() {
+        const update = vi.fn<UpdateEntityFn<AlbumBlueprint>>(({ entity }) => structuredClone(entity));
+        this.#services.for(AlbumBlueprint).addUpdateOneMutator({ update });
+
+        return update;
+    }
+
+    useDeleteAlbum() {
+        const del = vi.fn<DeleteEntityFn<AlbumBlueprint>>(() => {});
+        this.#services.for(AlbumBlueprint).addDeleteOneMutator({ delete: del });
+
+        return del;
     }
 
     useLoadSongById() {
@@ -382,7 +389,7 @@ export class MusicRepository extends InMemoryRepository<MusicEntities, "tags" | 
                 albumId: song.albumId,
                 artistId: song.artistId,
                 duration: song.duration,
-                metadata: song.metadata as any, // [todo] ❌ type assertion
+                metadata: song.metadata,
                 namespace: song.namespace,
             };
 
@@ -397,11 +404,7 @@ export class MusicRepository extends InMemoryRepository<MusicEntities, "tags" | 
     }
 
     useUpdateSong() {
-        const update = vi.fn<UpdateEntityFn<SongBlueprint>>(({ entity }) => {
-            // [todo] ❌ type assertion
-            return structuredClone(entity) as Song;
-        });
-
+        const update = vi.fn<UpdateEntityFn<SongBlueprint>>(({ entity }) => structuredClone(entity));
         this.#services.for(SongBlueprint).addUpdateOneMutator({ update });
 
         return update;
@@ -409,10 +412,7 @@ export class MusicRepository extends InMemoryRepository<MusicEntities, "tags" | 
 
     useDeleteSong() {
         const del = vi.fn<DeleteEntityFn<SongBlueprint>>(() => {});
-
-        this.#services.for(SongBlueprint).addDeleteOneMutator({
-            delete: del,
-        });
+        this.#services.for(SongBlueprint).addDeleteOneMutator({ delete: del });
 
         return del;
     }

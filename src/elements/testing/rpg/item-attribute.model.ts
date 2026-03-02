@@ -10,3 +10,5 @@ export class ItemAttributeBlueprint {
 }
 
 register(ItemAttributeBlueprint);
+
+export type ItemAttribute = EntityBlueprint.Type<ItemAttributeBlueprint>;

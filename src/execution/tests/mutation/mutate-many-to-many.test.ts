@@ -5,7 +5,7 @@ import { CreateEntityFn } from "../../mutation/entity-mutation-function.type";
 import { TestFacade, TestRepository } from "../../testing";
 import { createMetadata } from "../../testing/create-metadata.fn";
 
-describe("save()", () => {
+describe("mutate many-to-many", () => {
     let facade: TestFacade;
     let repository: TestRepository;
     let workspace: EntityWorkspace;
@@ -16,7 +16,7 @@ describe("save()", () => {
         workspace = facade.getWorkspace();
     });
 
-    it("can create many-to-many relations: song.songTags", async () => {
+    it("save() can create many-to-many relations: song.songTags", async () => {
         // arrange
         const metadata = createMetadata(1);
         const song: Song = {
@@ -72,7 +72,7 @@ describe("save()", () => {
         });
     });
 
-    it("can create many-to-many relations: songTags.songs", async () => {
+    it("save() can create many-to-many relations: songTags.songs", async () => {
         // arrange
         const metadata = createMetadata(1);
         const song: Song = {

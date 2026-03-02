@@ -3,11 +3,11 @@ import { ItemAttributeBlueprint } from "./item-attribute.model";
 import { ItemSocketBlueprint } from "./item-socket.model";
 import { ItemTypeBlueprint } from "./item-type.model";
 
-const { register, id, string, number, entity, array, nullable, readonly, creatable } = EntityBlueprint;
+const { register, id, string, number, entity, array, nullable, readonly, creatable, optional } = EntityBlueprint;
 
 export class ItemBlueprint {
     id = id();
-    assignId = number({ readonly, creatable });
+    assignId = number({ readonly, creatable, optional });
     name = string();
     typeId = number();
     type = entity(ItemTypeBlueprint, this.typeId, type => type.id);
