@@ -1,3 +1,4 @@
+export * from "./create-entity-data-source.fn";
 export * from "./create-routed-entity-data-source.fn";
 export * from "./entity-data-source";
 export * from "./entity-filter";

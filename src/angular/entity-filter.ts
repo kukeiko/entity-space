@@ -1,7 +1,9 @@
 import { ActivatedRoute, Params, Router } from "@angular/router";
 import { EntityBlueprint, PackedEntitySelection, SelectEntity, WhereEntity } from "@entity-space/elements";
+import { EntityWorkspace } from "@entity-space/execution";
+import { Class } from "@entity-space/utils";
 import { isEqual } from "lodash";
-import { Observable, distinctUntilChanged, map } from "rxjs";
+import { BehaviorSubject, Observable, distinctUntilChanged, map } from "rxjs";
 import { EntityFilterSchema, EntityFilterSchemaProperty, EntityFilterSource } from "./entity-filter-schema";
 
 export class EntityFilter<B, F, S extends PackedEntitySelection<EntityBlueprint.Type<B>>> {
@@ -49,6 +51,24 @@ export class EntityFilter<B, F, S extends PackedEntitySelection<EntityBlueprint.
         }
 
         return entities.filter(entity => filterFn(filter, entity));
+    }
+}
+
+export class ObservableEntityFilterSource<B> implements EntityFilterSource<EntityBlueprint.Type<B>> {
+    constructor(workspace: EntityWorkspace, blueprint: Class<B>) {
+        this.#filter$ = new BehaviorSubject(workspace.from(blueprint).constructDefault());
+    }
+
+    #filter$: BehaviorSubject<EntityBlueprint.Type<B>>;
+
+    getFilter$(): Observable<EntityBlueprint.Type<B>> {
+        return this.#filter$.asObservable();
+    }
+
+    patchFilter(patch: Partial<EntityBlueprint.Type<B>>): void {
+        const value = this.#filter$.getValue();
+        const next = { ...value, ...patch };
+        this.#filter$.next(next);
     }
 }
 
