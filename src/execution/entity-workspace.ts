@@ -227,6 +227,10 @@ export class EntityWorkspace {
 
     #hydrate$<T>(args: HydrateArguments): Observable<T[]> {
         return defer(() => {
+            if (!args.entities.length) {
+                return of(args.entities as T[]);
+            }
+
             const schema = this.#services.getCatalog().getSchemaByBlueprint(args.blueprint);
             const sourcedEntities = toSourcedEntities(schema, args.entities, unpackSelection(schema, args.select));
 
