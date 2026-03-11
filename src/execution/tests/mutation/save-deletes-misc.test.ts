@@ -18,9 +18,6 @@ describe("save()", () => {
     let repository: TestRepository;
     let workspace: EntityWorkspace;
 
-    const createdAt = new Date().toISOString();
-    const updatedAt = new Date(Date.now() + 1000).toISOString();
-
     beforeEach(() => {
         facade = new TestFacade();
         repository = facade.getTestRepository();
@@ -138,7 +135,7 @@ describe("save()", () => {
             { ...keptAlbum, songs: [] },
         ];
 
-        const nextAlbums: Album[] = [{ ...keptAlbum, songs: [{ ...movedSong }] }];
+        const nextAlbums: Album[] = [{ ...keptAlbum, songs: [{ ...movedSong, albumId: 2 }] }];
 
         // act
         await workspace.in(AlbumBlueprint).select({ songs: true }).save(nextAlbums, previousAlbums);
