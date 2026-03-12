@@ -8,6 +8,8 @@ import {
     reshapeQuery,
     reshapeQueryShape,
     reshapeSelection,
+    sortRelatedEntities,
+    toRelationSelection,
     validateEntity,
     WhereEntityShape,
     WhereEntityShapeInstance,
@@ -93,7 +95,8 @@ export class EntitySource {
                     context.getCache().upsertQuery(query, entities, context);
                 }
 
-                // [todo] ❌ sort relations
+                const relationSelection = toRelationSelection(query.getSchema(), query.getSelection());
+                sortRelatedEntities(query.getSchema(), relationSelection, entities);
 
                 return entities;
             }),

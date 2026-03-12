@@ -36,6 +36,7 @@ export * from "./entity/entity-to-id.fn";
 export * from "./entity/entity-to-savable-dto.fn";
 export * from "./entity/entity-to-selection.fn";
 export * from "./entity/entity-to-updatable-dto.fn";
+export * from "./entity/functions/sort-related-entities.fn";
 export * from "./entity/functions/to-entity-map.fn";
 export * from "./entity/get-entity-difference.fn";
 export * from "./entity/is-creatable-entity-property.fn";
