@@ -27,5 +27,13 @@ export async function executeDescribed(
 
     entities = entities.filter(entity => isHydrated(entity, query.getSelection()));
 
+    if (query.getParameters() === undefined) {
+        const sorter = query.getSchema().getSorter();
+
+        if (sorter) {
+            entities.sort(sorter);
+        }
+    }
+
     return entities;
 }
