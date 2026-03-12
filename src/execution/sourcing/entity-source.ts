@@ -62,48 +62,47 @@ export class EntitySource {
             throw new Error(`failed to reshape query ${query.toString()} using ${this.#queryShape.toString()}`);
         }
 
-        if (!context.readFromCache() && !context.loadFromSource()) {
-            return [];
-        }
-
         if (!context.readFromCache()) {
-            const entities = await Promise.all(
-                reshaped.map(async reshapedQuery => {
-                    const entities = await this.#loadQuery(reshapedQuery, query);
-
-                    if (context.writeToCache()) {
-                        context.getCache().upsertQuery(reshapedQuery, entities, context);
-                    }
-
-                    return entities;
-                }),
-            );
-
-            return entities.flat();
+            return this.#loadFromSource(reshaped, context, query);
         }
 
-        const uncached = reshaped.flatMap(query => this.#subtractByCache(query, context));
+        const uncached = this.#subtractByCache(reshaped, context);
 
+        // [todo] ❌ should also log if there were partial cache hits
         if (!uncached.length) {
             reshaped.forEach(query => this.#tracing.queryWasLoadedFromCache(query));
         }
 
-        if (uncached.length && context.loadFromSource()) {
-            await Promise.all(
-                uncached.map(async uncachedQuery => {
-                    const entities = await this.#loadQuery(uncachedQuery, query);
-
-                    if (context.writeToCache()) {
-                        context.getCache().upsertQuery(uncachedQuery, entities, context);
-                    }
-                }),
-            );
+        if (uncached.length && context.loadFromSource() && context.writeToCache()) {
+            await this.#loadIntoCache(uncached, context, query);
         }
 
-        return reshaped.flatMap(query => context.getCache().query(query));
+        return this.#loadFromCache(reshaped, context);
     }
 
-    async #loadQuery(query: EntityQuery, originalQuery: EntityQuery): Promise<Entity[]> {
+    async #loadFromSource(
+        queries: readonly EntityQuery[],
+        context: EntityQueryExecutionContext,
+        originalQuery: EntityQuery,
+    ): Promise<Entity[]> {
+        const entities = await Promise.all(
+            queries.map(async query => {
+                const entities = await this.#loadOneFromSource(query, originalQuery);
+
+                if (context.writeToCache()) {
+                    context.getCache().upsertQuery(query, entities, context);
+                }
+
+                // [todo] ❌ sort relations
+
+                return entities;
+            }),
+        );
+
+        return entities.flat();
+    }
+
+    async #loadOneFromSource(query: EntityQuery, originalQuery: EntityQuery): Promise<Entity[]> {
         const criterion = query.getCriterion();
         let criteria: WhereEntityShapeInstance = {};
 
@@ -135,7 +134,28 @@ export class EntitySource {
         return validEntities;
     }
 
-    #subtractByCache(query: EntityQuery, context: EntityQueryExecutionContext): EntityQuery[] {
+    #loadFromCache(queries: readonly EntityQuery[], context: EntityQueryExecutionContext): Entity[] {
+        return queries.flatMap(query => context.getCache().query(query));
+    }
+
+    async #loadIntoCache(
+        queries: readonly EntityQuery[],
+        context: EntityQueryExecutionContext,
+        originalQuery: EntityQuery,
+    ): Promise<void> {
+        await Promise.all(
+            queries.map(async query => {
+                const entities = await this.#loadOneFromSource(query, originalQuery);
+                context.getCache().upsertQuery(query, entities, context);
+            }),
+        );
+    }
+
+    #subtractByCache(queries: readonly EntityQuery[], context: EntityQueryExecutionContext): EntityQuery[] {
+        return queries.flatMap(query => this.#subtractOneByCache(query, context));
+    }
+
+    #subtractOneByCache(query: EntityQuery, context: EntityQueryExecutionContext): EntityQuery[] {
         const openQueries = context.getCache().subtractByCache(query);
 
         if (openQueries === true) {

@@ -42,6 +42,15 @@ export class EntityQueryShape {
         return this.#parametersSchema;
     }
 
+    with(patch: { selection?: EntitySelection }): EntityQueryShape {
+        return new EntityQueryShape(
+            this.#schema,
+            patch.selection ?? this.#selection,
+            this.#criterionShape,
+            this.#parametersSchema,
+        );
+    }
+
     toString(): string {
         const parameters = this.#parametersSchema ? `<${this.#parametersSchema.getName()}>` : "";
         const criterion = this.#criterionShape !== undefined ? `(${this.#criterionShape.toString()})` : "";
