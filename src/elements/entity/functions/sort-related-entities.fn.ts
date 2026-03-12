@@ -14,7 +14,7 @@ export function sortRelatedEntities(
     }
 
     for (const [relation, relatedSchema, relationSelection] of relationEntries(schema, selection)) {
-        const sorter = schema.getSorter();
+        const sorter = relatedSchema.getSorter();
 
         if (relation.isArray()) {
             for (const entity of entities) {
