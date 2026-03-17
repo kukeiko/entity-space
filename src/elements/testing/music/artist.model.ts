@@ -17,6 +17,6 @@ export class ArtistBlueprint {
     metadata = entity(RecordMetadataBlueprint, { readonly });
 }
 
-register(ArtistBlueprint, { name: "artist" });
+register(ArtistBlueprint, { name: "artists" });
 
 export type Artist = EntityBlueprint.Type<ArtistBlueprint>;

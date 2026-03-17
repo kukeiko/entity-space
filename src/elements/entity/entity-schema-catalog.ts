@@ -24,6 +24,14 @@ export class EntitySchemaCatalog {
         return schema;
     }
 
+    addSchemaByBlueprint(blueprint: Class): void {
+        const metadata = getEntityBlueprintMetadata(blueprint);
+
+        if (!this.#schemas.has(metadata.name)) {
+            this.#addBlueprint(blueprint);
+        }
+    }
+
     getSchemaByBlueprint(blueprint: Class): EntitySchema {
         const metadata = getEntityBlueprintMetadata(blueprint);
 

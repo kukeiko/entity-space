@@ -15,6 +15,6 @@ export class AlbumBlueprint {
     metadata = entity(RecordMetadataBlueprint);
 }
 
-register(AlbumBlueprint, { name: "album" });
+register(AlbumBlueprint, { name: "albums" });
 
 export type Album = EntityBlueprint.Type<AlbumBlueprint>;

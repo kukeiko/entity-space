@@ -9,6 +9,6 @@ export class SongTagBlueprint {
     songs = entity(SongBlueprint, this.songId, song => song.id, { array });
 }
 
-register(SongTagBlueprint, { name: "song-tag" });
+register(SongTagBlueprint, { name: "song-tags" });
 
 export type SongTag = EntityBlueprint.Type<SongTagBlueprint>;

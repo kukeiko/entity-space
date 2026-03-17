@@ -22,6 +22,6 @@ export class SongBlueprint {
     songTags = entity(SongTagBlueprint, this.id, songTag => songTag.songId, { array });
 }
 
-register(SongBlueprint, { name: "song", sort: (a, b) => a.name.localeCompare(b.name) });
+register(SongBlueprint, { name: "songs", sort: (a, b) => a.name.localeCompare(b.name) });
 
 export type Song = EntityBlueprint.Type<SongBlueprint>;

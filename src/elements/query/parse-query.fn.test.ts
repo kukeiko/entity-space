@@ -50,36 +50,36 @@ describe(parseQuery, () => {
     const equals = (value: ReturnType<Primitive>) => new EqualsCriterion(value);
 
     // schema only
-    shouldParse("artist", createArtistQuery());
+    shouldParse("artists", createArtistQuery());
     // schema + criteria
-    shouldParse("artist({ id: 7 })", createArtistQuery(undefined, where({ id: 7 })));
-    shouldParse("artist({ id: 7 } | true)", createArtistQuery(undefined, or([where({ id: 7 }), equals(true)])));
+    shouldParse("artists({ id: 7 })", createArtistQuery(undefined, where({ id: 7 })));
+    shouldParse("artists({ id: 7 } | true)", createArtistQuery(undefined, or([where({ id: 7 }), equals(true)])));
     // schema + selection
     shouldParse(
-        "artist/{ id, name, songs: { id, name } }",
+        "artists/{ id, name, songs: { id, name } }",
         createArtistQuery({ id: true, name: true, songs: { id: true, name: true } }),
     );
     // schema + criteria + selection
     shouldParse(
-        "artist({ id: 7 })/{ id, name, songs: { id, name } }",
+        "artists({ id: 7 })/{ id, name, songs: { id, name } }",
         createArtistQuery({ id: true, name: true, songs: { id: true, name: true } }, where({ id: 7 })),
     );
 
     // schema + parameters
     shouldParse(
-        `artist<artist-request:{ "page": 3, "pageSize": 10 }>`,
+        `artists<artist-requests:{ "page": 3, "pageSize": 10 }>`,
         createArtistQuery(undefined, undefined, { page: 3, pageSize: 10 }),
     );
 
     // schema + parameters + criterion
     shouldParse(
-        `artist<artist-request:{ "page": 3, "pageSize": 10 }>({ id: 7 })`,
+        `artists<artist-requests:{ "page": 3, "pageSize": 10 }>({ id: 7 })`,
         createArtistQuery(undefined, where({ id: 7 }), { page: 3, pageSize: 10 }),
     );
 
     // schema + parameters + criterion + selection
     shouldParse(
-        `artist<artist-request:{ "page": 3, "pageSize": 10 }>({ id: 7 })/{ id, name, songs: { id, name } }`,
+        `artists<artist-requests:{ "page": 3, "pageSize": 10 }>({ id: 7 })/{ id, name, songs: { id, name } }`,
         createArtistQuery({ id: true, name: true, songs: { id: true, name: true } }, where({ id: 7 }), {
             page: 3,
             pageSize: 10,
@@ -87,9 +87,10 @@ describe(parseQuery, () => {
     );
 
     // invalid
-    shouldNotParse('artist<{searchText: "bar"}');
-    shouldNotParse("artist<>");
-    shouldNotParse("artist()");
-    shouldNotParse("artist/");
-    shouldNotParse("artist[0,7");
+    shouldNotParse('artists<{searchText: "bar"}');
+    shouldNotParse("artists<>");
+    shouldNotParse("artists()");
+    shouldNotParse("artists/");
+    shouldNotParse("artists[0,7");
+    shouldNotParse("artist");
 });

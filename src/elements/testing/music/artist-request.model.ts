@@ -7,6 +7,6 @@ export class ArtistRequestBlueprint {
     pageSize = number({ optional });
 }
 
-register(ArtistRequestBlueprint, { name: "artist-request" });
+register(ArtistRequestBlueprint, { name: "artist-requests" });
 
 export type ArtistRequest = EntityBlueprint.Type<ArtistRequestBlueprint>;

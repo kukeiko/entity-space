@@ -16,8 +16,10 @@ export function mergeQuery(queryA: EntityQuery, queryB: EntityQuery): EntityQuer
     const criterionA = queryA.getCriterion();
     const criterionB = queryB.getCriterion();
 
-    if (criterionA === undefined || criterionB === undefined) {
+    if (criterionA === undefined) {
         return queryA.with({ selection: mergeSelection(queryA.getSelection(), queryB.getSelection()) });
+    } else if (criterionB === undefined) {
+        return queryB.with({ selection: mergeSelection(queryA.getSelection(), queryB.getSelection()) });
     }
 
     const mergedCriterion = mergeCriterion(criterionA, criterionB);

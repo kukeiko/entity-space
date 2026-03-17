@@ -8,6 +8,6 @@ export class TagBlueprint {
     description = string({ optional });
 }
 
-register(TagBlueprint, { name: "tag" });
+register(TagBlueprint, { name: "tags" });
 
 export type Tag = EntityBlueprint.Type<TagBlueprint>;
