@@ -135,7 +135,7 @@ describe("save()", () => {
             { ...keptAlbum, songs: [] },
         ];
 
-        const nextAlbums: Album[] = [{ ...keptAlbum, songs: [{ ...movedSong, albumId: 2 }] }];
+        const nextAlbums: Album[] = [{ ...keptAlbum, songs: [{ ...movedSong }] }];
 
         // act
         await workspace.in(AlbumBlueprint).select({ songs: true }).save(nextAlbums, previousAlbums);

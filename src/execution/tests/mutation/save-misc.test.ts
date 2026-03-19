@@ -263,7 +263,7 @@ describe("save()", () => {
                     createdAt: "",
                     updatedAt: null,
                 },
-                { ...istRuneSocket, itemId: 0 },
+                { ...istRuneSocket },
             ],
         };
 

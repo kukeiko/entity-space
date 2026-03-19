@@ -6,6 +6,7 @@ import {
     getSelectedSchemas,
     unpackSelection,
     whereEntityToCriterion,
+    writeRelationJoins,
 } from "@entity-space/elements";
 import { Class } from "@entity-space/utils";
 import { uniqBy } from "lodash";
@@ -273,6 +274,7 @@ export class EntityWorkspace {
 
     async #mutate(mutation: EntityMutation): Promise<Entity[]> {
         const selection = mutation.getSelection() ?? {};
+        writeRelationJoins(mutation.getSchema(), mutation.getEntities(), selection);
         const entityChanges = toEntityChanges(mutation);
 
         if (entityChanges === undefined) {
@@ -302,6 +304,7 @@ export class EntityWorkspace {
         }
 
         if (nextEntityChanges !== undefined) {
+            console.warn("not all mutations have been accepted", nextEntityChanges);
             throw new Error("not all mutations have been accepted");
         }
 
