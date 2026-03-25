@@ -2,6 +2,7 @@ export * from "./criteria/criterion";
 export * from "./criteria/criterion-shape";
 export * from "./criteria/entity-criterion";
 export * from "./criteria/functions/entities-to-criterion.fn";
+export * from "./criteria/functions/is-readonly-criterion.fn";
 export * from "./criteria/functions/matches-criterion.fn";
 export * from "./criteria/functions/omit-relational-criteria.fn";
 export * from "./criteria/functions/relation-to-criterion-shape.fn";

@@ -7,6 +7,7 @@ import { EqualsCriterionShape } from "../equals-criterion-shape";
 import { InArrayCriterionShape } from "../in-array-criterion-shape";
 
 export function getCriterionShapeUniqueCount(schema: EntitySchema, shape: CriterionShape): number {
+    // [todo] ❌ implement OrCriterionShape
     if (!(shape instanceof EntityCriterionShape)) {
         return 0;
     }

@@ -177,6 +177,17 @@ export class MusicRepository extends InMemoryRepository<MusicEntities, "tags" | 
         return loadArtistsById;
     }
 
+    useLoadArtistsByNamespace() {
+        const load = vi.fn((namespace: string) => this.filter("artists", artist => artist.namespace === namespace));
+
+        this.#services.for(ArtistBlueprint).addSource({
+            where: { namespace: { $equals: true } },
+            load: ({ criteria: { namespace } }) => load(namespace.value),
+        });
+
+        return load;
+    }
+
     useLoadArtistsByCountry() {
         const load = vi.fn((country?: string | null) => this.filter("artists", artist => artist.country === country));
 

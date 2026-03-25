@@ -1,8 +1,8 @@
 import { User, UserBlueprint } from "@entity-space/elements/testing";
 import { beforeEach, describe, expect, it } from "vitest";
-import { EntityWorkspace } from "../entity-workspace";
-import { TestFacade, TestRepository } from "../testing";
-import { createMetadata } from "../testing/create-metadata.fn";
+import { EntityWorkspace } from "../../entity-workspace";
+import { TestFacade, TestRepository } from "../../testing";
+import { createMetadata } from "../../testing/create-metadata.fn";
 
 describe("a partial cache", () => {
     let facade: TestFacade;

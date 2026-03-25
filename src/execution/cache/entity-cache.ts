@@ -7,7 +7,9 @@ import {
     EntityRelationProperty,
     EntitySchema,
     EntitySelection,
+    entityToId,
     isHydrated,
+    isReadonlyCriterion,
     joinEntities,
     matchesCriterion,
     mergeQueries,
@@ -16,13 +18,15 @@ import {
     omitRelationalSelections,
     subtractQueries,
 } from "@entity-space/elements";
-import { merge, Observable } from "rxjs";
+import { ComplexKeyMap } from "@entity-space/utils";
+import { map, merge, Observable, Subject } from "rxjs";
 import { EntityQueryExecutionContext } from "../entity-query-execution-context";
 import { EntityStore } from "./entity-store";
 
 export class EntityCache {
     readonly #stores = new Map<string, EntityStore>();
     readonly #cachedQueries = new Map<string, EntityQuery[]>();
+    readonly #cachedQueriesChanged = new Subject<void>();
 
     query(query: EntityQuery): Entity[] {
         const schema = query.getSchema();
@@ -60,9 +64,11 @@ export class EntityCache {
     upsertQuery(query: EntityQuery, entities: readonly Entity[], context?: EntityQueryExecutionContext): void {
         const schema = query.getSchema();
         this.upsert(schema, entities, query.getParameters(), context);
+        this.#evictRemovedFromCache(query, entities);
         const cacheKey = query.getSchema().getName();
         const cachedQueries = this.#cachedQueries.get(cacheKey) ?? [];
         this.#cachedQueries.set(cacheKey, mergeQueries([query, ...cachedQueries]) || [query, ...cachedQueries]);
+        this.#cachedQueriesChanged.next();
     }
 
     upsert(
@@ -88,6 +94,14 @@ export class EntityCache {
         }
 
         return subtractQueries([query], cachedQueries);
+    }
+
+    getCachedQueries(): EntityQuery[] {
+        return Array.from(this.#cachedQueries.values()).flat();
+    }
+
+    getCachedQueries$(): Observable<EntityQuery[]> {
+        return this.#cachedQueriesChanged.pipe(map(() => this.getCachedQueries()));
     }
 
     #hydrate(entities: Entity[], schema: EntitySchema, selection: EntitySelection): void {
@@ -117,6 +131,59 @@ export class EntityCache {
         const joinedEntities = this.query(joinQuery);
 
         joinEntities(entities, joinedEntities, relation);
+    }
+
+    // [todo] ❌ implement evicting inbound relations w/ readonly join properties
+    #evictRemovedFromCache(query: EntityQuery, next: readonly Entity[]): void {
+        const previous = this.query(query);
+
+        if (!previous.length) {
+            return;
+        }
+
+        const schema = query.getSchema();
+        const nextMap = new ComplexKeyMap(schema.getIdPaths());
+
+        for (const nextEntity of next) {
+            nextMap.set(nextEntity, nextEntity);
+        }
+
+        const evicted: Entity[] = [];
+
+        for (const previousEntity of previous) {
+            const id = entityToId(schema, previousEntity);
+
+            if (!nextMap.has(id)) {
+                // [todo] ❌ collect all evicted and use 1x tracing call instead
+                console.log("🚯 evict from cache", schema.getName(), JSON.stringify(id));
+                evicted.push(previousEntity);
+                this.#getStore(schema).remove(id);
+            }
+        }
+
+        if (!evicted.length) {
+            return;
+        }
+
+        const criterion = query.getCriterion();
+
+        if (criterion === undefined || isReadonlyCriterion(query.getSchema(), criterion)) {
+            // no need to update cached query state as we assume all removed entities were deleted
+            return;
+        }
+
+        // [todo] ❌ trace call to log evicted cached queries
+        const cachedQueries = (this.#cachedQueries.get(schema.getName()) ?? []).filter(cachedQuery => {
+            const criterion = cachedQuery.getCriterion();
+
+            if (criterion === undefined) {
+                return true;
+            }
+
+            return isReadonlyCriterion(cachedQuery.getSchema(), criterion);
+        });
+
+        this.#cachedQueries.set(schema.getName(), cachedQueries);
     }
 
     #toStoreQuery(query: EntityQuery): EntityQuery {

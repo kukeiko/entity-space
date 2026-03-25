@@ -67,4 +67,8 @@ export class EntityServiceContainer {
     destroyCache(key: unknown): void {
         this.#caches.delete(key);
     }
+
+    getCaches(): EntityCache[] {
+        return Array.from(this.#caches.values());
+    }
 }
