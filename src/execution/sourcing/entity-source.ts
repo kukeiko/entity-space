@@ -109,7 +109,7 @@ export class EntitySource {
         const criterion = query.getCriterion();
         let criteria: WhereEntityShapeInstance = {};
 
-        if (this.#whereEntityShape && criterion) {
+        if (this.#whereEntityShape) {
             criteria = criterionToWhereEntityShapeInstance(this.#whereEntityShape, criterion);
         }
 

@@ -30,13 +30,17 @@ function createDefault(shape: WhereEntityShape): WhereEntityShapeInstance {
 
 export function criterionToWhereEntityShapeInstance(
     shape: WhereEntityShape,
-    criterion: Criterion,
+    criterion?: Criterion,
 ): WhereEntityShapeInstance {
-    if (!(criterion instanceof EntityCriterion)) {
+    if (criterion !== undefined && !(criterion instanceof EntityCriterion)) {
         throw new Error("not yet implemented");
     }
 
     const whereEntityShapeInstance = createDefault(shape);
+
+    if (criterion === undefined) {
+        return whereEntityShapeInstance;
+    }
 
     for (const [key, value] of Object.entries(criterion.getCriteria())) {
         const wherePropertyShape = shape[key];
