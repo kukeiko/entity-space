@@ -20,7 +20,8 @@ function getBestAcceptedSourcing(
     const accepted = sources
         .map(source => source.accept(queryShape))
         .filter(isNot(false))
-        .sort((a, b) => {
+        .map((acceptedSourcing, index) => [acceptedSourcing, index] as const)
+        .sort(([a, indexA], [b, indexB]) => {
             const uniqueCountDiff =
                 b.getReshapedShape().getCriteriaUniqueCount() - a.getReshapedShape().getCriteriaUniqueCount();
 
@@ -35,10 +36,17 @@ function getBestAcceptedSourcing(
                 return flattenCountDiff;
             }
 
-            return a.getReshapedShape().getReshaped().getCriterionShape() === undefined ? 1 : -1;
+            const shapeA = a.getReshapedShape().getReshaped().getCriterionShape();
+            const shapeB = b.getReshapedShape().getReshaped().getCriterionShape();
+
+            if ((shapeA === undefined || shapeB === undefined) && shapeA !== shapeB) {
+                return shapeA === undefined ? 1 : -1;
+            }
+
+            return indexA - indexB;
         });
 
-    return accepted[0];
+    return accepted[0][0];
 }
 
 function expandSelectionAndAcceptAgain(
