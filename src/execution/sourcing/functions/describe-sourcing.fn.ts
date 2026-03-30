@@ -46,6 +46,10 @@ function getBestAcceptedSourcing(
             return indexA - indexB;
         });
 
+    if (!accepted.length) {
+        return undefined;
+    }
+
     return accepted[0][0];
 }
 

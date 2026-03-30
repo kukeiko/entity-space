@@ -95,7 +95,7 @@ export class EntitySchemaScopedServiceContainer<B> {
         parameters,
     }: {
         select: PackedEntitySelection<EntityBlueprint.Type<B>>;
-        requires: S;
+        requires: S | PackedEntitySelection<EntityBlueprint.Type<B>>;
         hydrate: HydrateEntitiesFn<B, S, P>;
         parameters?: Class<P>;
     }): this {

@@ -25,7 +25,7 @@ function addDeleteChanges(
     for (const previousEntity of previous) {
         let nextEntity: Entity | undefined;
 
-        if (schema.hasId()) {
+        if (schema.hasId() && entityHasId(schema, previousEntity)) {
             nextEntity = next.getEntity(schema, previousEntity);
 
             if (
