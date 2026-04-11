@@ -53,6 +53,26 @@ export class EntityServiceContainer {
         return new EntitySchemaScopedServiceContainer<B>(this, schema, addSource, addHydrator, addMutator);
     }
 
+    addComputedHydratorsFromSchemas(): void {
+        for (const schema of this.#catalog.getSchemas()) {
+            for (const computedProperties of schema.getComputedProperties()) {
+                const hydrator = new ExplicitEntityHydrator(
+                    schema,
+                    undefined,
+                    computedProperties.getRequiredSelection(),
+                    computedProperties.getHydratedSelection(),
+                    async ({ entities }) => {
+                        for (const entity of entities) {
+                            computedProperties.hydrate(entity);
+                        }
+                    },
+                );
+
+                mutateMapEntry(this.#explicitHydrators, schema.getName(), hydrators => hydrators.push(hydrator), []);
+            }
+        }
+    }
+
     getOrCreateCacheBucket(key: unknown): EntityCache {
         let cache = this.#caches.get(key);
 

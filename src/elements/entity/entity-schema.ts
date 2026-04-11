@@ -3,6 +3,7 @@ import { Entity } from "./entity";
 import { EntityPrimitiveProperty, EntityPrimitivePropertyOptions } from "./entity-primitive-property";
 import { EntityProperty, EntityPropertyOptions } from "./entity-property";
 import { EntityRelationProperty, EntityRelationPropertyOptions, RelationshipType } from "./entity-relation-property";
+import { EntityComputedProperties } from "./schema/entity-computed-properties";
 
 export class EntitySchema {
     constructor(name: string) {
@@ -12,6 +13,7 @@ export class EntitySchema {
     readonly #name: string;
     readonly #primitives: Record<string, EntityPrimitiveProperty> = {};
     readonly #relations: Record<string, EntityRelationProperty> = {};
+    readonly #computed: EntityComputedProperties[] = [];
     #idPaths: readonly Path[] = [];
     #sorter?: (a: Entity, b: Entity) => number;
 
@@ -209,6 +211,14 @@ export class EntitySchema {
         ]);
 
         return Object.fromEntries(propertyEntries);
+    }
+
+    addComputedProperties(computedProperties: EntityComputedProperties): void {
+        this.#computed.push(computedProperties);
+    }
+
+    getComputedProperties(): readonly EntityComputedProperties[] {
+        return this.#computed;
     }
 
     #assertIsProperty(name: string): void {

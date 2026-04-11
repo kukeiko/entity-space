@@ -1,4 +1,5 @@
 import { Class, Primitive } from "@entity-space/utils";
+import { PackedEntitySelection } from "../selection/entity-selection";
 import { Entity } from "./entity";
 import { ContainerType } from "./entity-property";
 import { RelationshipType } from "./entity-relation-property";
@@ -60,6 +61,14 @@ export interface DtoAttribute {
     dto: string;
 }
 
+export interface ComputedAttribute<T = any> {
+    computed: {
+        select: PackedEntitySelection<T>;
+        requires: PackedEntitySelection<T>;
+        compute: (entity: T) => any;
+    };
+}
+
 export type AllAttributes =
     | ArrayAttribute
     | CreatableAttribute
@@ -83,11 +92,8 @@ type DistributedKeyOf<T> = T extends any ? keyof T : never;
 export function hasAttribute<P extends BlueprintProperty, K extends DistributedKeyOf<AllAttributes>>(
     attribute: K,
     property: P,
-): property is P & Extract<AllAttributes, Record<K, true | string>> {
-    return (
-        attribute in property &&
-        ((property as any)[attribute] === true || typeof (property as any)[attribute] === "string")
-    );
+): property is P & Extract<AllAttributes, Record<K, unknown>> {
+    return attribute in property && (property as any)[attribute] !== undefined;
 }
 
 export function toContainerType(property: BlueprintProperty): ContainerType | undefined {

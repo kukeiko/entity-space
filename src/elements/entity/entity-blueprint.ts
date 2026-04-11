@@ -1,10 +1,12 @@
 import { Class, EnumPrimitive, Path, Primitive, entryValueIs, enumToPrimitive, isDefined } from "@entity-space/utils";
 import { isPlainObject } from "lodash";
+import { PackedEntitySelection } from "../selection/entity-selection";
 import { Entity } from "./entity";
 import { EntityBlueprintInstance } from "./entity-blueprint-instance.type";
 import {
     ArrayAttribute,
     BlueprintProperty,
+    ComputedAttribute,
     CreatableAttribute,
     DtoAttribute,
     EntityAttribute,
@@ -18,10 +20,16 @@ import {
     isProperty,
 } from "./entity-blueprint-property";
 import { RelationshipType } from "./entity-relation-property";
+import { SelectEntity } from "./select-entity-type";
 
 interface EntityBlueprintMetadata {
     name: string;
     sort?: (a: Entity, b: Entity) => number;
+    computed: {
+        select: PackedEntitySelection<Entity>;
+        requires?: PackedEntitySelection<Entity>;
+        compute: (entity: Entity) => void;
+    }[];
 }
 
 const blueprints = new Map<Class, EntityBlueprintMetadata>();
@@ -66,7 +74,29 @@ export namespace EntityBlueprint {
         blueprints.set(blueprint, {
             name: options.name ?? blueprint.name,
             sort: options.sort as ((a: Entity, b: Entity) => number) | undefined,
+            computed: [],
         });
+    }
+
+    export function computed<T, R extends PackedEntitySelection<EntityBlueprint.Type<T>>>(
+        blueprint: Class<T>,
+        {
+            hydrate,
+            requires,
+            select,
+        }: {
+            requires?: R | PackedEntitySelection<EntityBlueprint.Type<T>>;
+            select: PackedEntitySelection<EntityBlueprint.Type<T>>;
+            hydrate: (entity: SelectEntity<EntityBlueprint.Type<T>, R>) => void;
+        },
+    ): void {
+        const metadata = blueprints.get(blueprint);
+
+        if (!metadata) {
+            throw new Error(`register(...) must be called before computed(...)`);
+        }
+
+        metadata.computed.push({ compute: hydrate as (entity: Entity) => void, requires, select });
     }
 
     export const array = true;
@@ -95,7 +125,13 @@ export namespace EntityBlueprint {
     }
 
     type PrimitiveOptions = Partial<
-        ArrayAttribute & DtoAttribute & NullableAttribute & OptionalAttribute & ReadonlyAttribute & CreatableAttribute
+        ArrayAttribute &
+            DtoAttribute &
+            NullableAttribute &
+            OptionalAttribute &
+            ReadonlyAttribute &
+            CreatableAttribute &
+            ComputedAttribute
     >;
 
     export function string<O extends PrimitiveOptions>(options?: O): BlueprintProperty<typeof String> & O {

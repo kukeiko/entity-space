@@ -1,5 +1,6 @@
 import { Class, Path, Primitive, toPath, toPaths } from "@entity-space/utils";
 import { isString } from "lodash";
+import { unpackSelectionWithoutDefault } from "../selection/unpack-selection-without-default.fn";
 import { getEntityBlueprintMetadata, isEntityBlueprint, toPropertyRecord } from "./entity-blueprint";
 import {
     BlueprintProperty,
@@ -10,6 +11,7 @@ import {
 } from "./entity-blueprint-property";
 import { RelationshipType } from "./entity-relation-property";
 import { EntitySchema } from "./entity-schema";
+import { EntityComputedProperties } from "./schema/entity-computed-properties";
 
 export class EntitySchemaCatalog {
     readonly #schemas = new Map<string, EntitySchema>();
@@ -22,6 +24,10 @@ export class EntitySchemaCatalog {
         }
 
         return schema;
+    }
+
+    getSchemas(): readonly EntitySchema[] {
+        return Array.from(this.#schemas.values());
     }
 
     addSchemaByBlueprint(blueprint: Class): void {
@@ -131,6 +137,13 @@ export class EntitySchemaCatalog {
                 optional: hasAttribute("optional", property),
                 outbound: hasAttribute("outbound", property) || (hasAttribute("inbound", property) ? false : undefined),
             });
+        }
+
+        for (const computed of metadata.computed) {
+            const selection = unpackSelectionWithoutDefault(schema, computed.select);
+            const requires = unpackSelectionWithoutDefault(schema, computed.requires ?? {});
+            const computedProperties = new EntityComputedProperties(selection, requires, computed.compute);
+            schema.addComputedProperties(computedProperties);
         }
     }
 
