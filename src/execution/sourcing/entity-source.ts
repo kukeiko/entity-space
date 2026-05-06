@@ -159,7 +159,7 @@ export class EntitySource {
     }
 
     #subtractOneByCache(query: EntityQuery, context: EntityQueryExecutionContext): EntityQuery[] {
-        const openQueries = context.getCache().subtractByCache(query);
+        const openQueries = context.getCache().subtractByCache(query, context.getMaxTimestamp());
 
         if (openQueries === true) {
             return [];

@@ -17,6 +17,7 @@ export interface QueryCacheOptions {
     refreshDelay?: number;
     refreshInterval?: number;
     reactive?: boolean | QueryReactivityOptions;
+    maxAge?: string | number;
 }
 
 export interface QueryArguments {

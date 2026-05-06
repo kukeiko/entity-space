@@ -12,20 +12,19 @@ import {
     isReadonlyCriterion,
     joinEntities,
     matchesCriterion,
-    mergeQueries,
     normalizeEntities,
     omitRelationalCriteria,
     omitRelationalSelections,
-    subtractQueries,
 } from "@entity-space/elements";
 import { ComplexKeyMap } from "@entity-space/utils";
 import { map, merge, Observable, Subject } from "rxjs";
 import { EntityQueryExecutionContext } from "../entity-query-execution-context";
+import { EntityQueryCache } from "./entity-query-cache";
 import { EntityStore } from "./entity-store";
 
 export class EntityCache {
     readonly #stores = new Map<string, EntityStore>();
-    readonly #cachedQueries = new Map<string, EntityQuery[]>();
+    readonly #queryCache = new EntityQueryCache();
     readonly #cachedQueriesChanged = new Subject<void>();
 
     query(query: EntityQuery): Entity[] {
@@ -65,9 +64,7 @@ export class EntityCache {
         const schema = query.getSchema();
         this.upsert(schema, entities, query.getParameters(), context);
         this.#evictRemovedFromCache(query, entities);
-        const cacheKey = query.getSchema().getName();
-        const cachedQueries = this.#cachedQueries.get(cacheKey) ?? [];
-        this.#cachedQueries.set(cacheKey, mergeQueries([query, ...cachedQueries]) || [query, ...cachedQueries]);
+        this.#queryCache.addQuery(query);
         this.#cachedQueriesChanged.next();
     }
 
@@ -86,21 +83,15 @@ export class EntityCache {
         }
     }
 
-    subtractByCache(query: EntityQuery): EntityQuery[] | boolean {
-        const cachedQueries = this.#cachedQueries.get(query.getSchema().getName()) ?? [];
-
-        if (!cachedQueries.length) {
-            return false;
-        }
-
-        return subtractQueries([query], cachedQueries);
+    subtractByCache(query: EntityQuery, maxTimestamp?: string): EntityQuery[] | boolean {
+        return this.#queryCache.subtractQuery(query, maxTimestamp);
     }
 
-    getCachedQueries(): EntityQuery[] {
-        return Array.from(this.#cachedQueries.values()).flat();
+    getCachedQueries(): readonly EntityQuery[] {
+        return this.#queryCache.getQueries();
     }
 
-    getCachedQueries$(): Observable<EntityQuery[]> {
+    getCachedQueries$(): Observable<readonly EntityQuery[]> {
         return this.#cachedQueriesChanged.pipe(map(() => this.getCachedQueries()));
     }
 
@@ -173,17 +164,8 @@ export class EntityCache {
         }
 
         // [todo] ❌ trace call to log evicted cached queries
-        const cachedQueries = (this.#cachedQueries.get(schema.getName()) ?? []).filter(cachedQuery => {
-            const criterion = cachedQuery.getCriterion();
-
-            if (criterion === undefined) {
-                return true;
-            }
-
-            return isReadonlyCriterion(cachedQuery.getSchema(), criterion);
-        });
-
-        this.#cachedQueries.set(schema.getName(), cachedQueries);
+        // [todo] ❓ is it intentional that we are not triggering this.#cachedQueriesChanged?
+        this.#queryCache.evictNonReadonlyQueries(schema);
     }
 
     #toStoreQuery(query: EntityQuery): EntityQuery {

@@ -11,6 +11,7 @@ export function createEntityDataSource<B, F, S extends PackedEntitySelection<Ent
     filter,
     filterBlueprint,
     interval,
+    maxAge,
     reactive,
     select,
     workspace,
@@ -23,6 +24,7 @@ export function createEntityDataSource<B, F, S extends PackedEntitySelection<Ent
      */
     cacheKey?: unknown;
     reactive?: boolean | QueryReactivityOptions;
+    maxAge?: string | number;
     interval?: number;
     /**
      * Function that maps a filter object to the criteria that will be passed to one of the entity sources you have defined in the workspace.
@@ -52,5 +54,5 @@ export function createEntityDataSource<B, F, S extends PackedEntitySelection<Ent
     const entityFilterSource = new ObservableEntityFilterSource(workspace, filterBlueprint);
     const entityFilter = new EntityFilter(entityFilterSource, criteria, filter, select);
 
-    return new EntityDataSource(workspace, entityBlueprint, entityFilter, select, cacheKey, reactive, interval);
+    return new EntityDataSource(workspace, entityBlueprint, entityFilter, select, cacheKey, reactive, interval, maxAge);
 }

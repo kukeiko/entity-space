@@ -129,8 +129,21 @@ export class EntityQueryBuilder<T extends Entity = Entity, S extends PackedEntit
         return lastValueFrom(this.findOneTyped$());
     }
 
-    constructDefault(): SelectEntity<T, S> {
-        return constructEntity(this.#schema, unpackSelection(this.#schema, this.#selection ?? {})) as any;
+    construct(patch?: Partial<T>): SelectEntity<T, S> {
+        const constructed = constructEntity(this.#schema, unpackSelection(this.#schema, this.#selection ?? {})) as any;
+
+        if (patch !== undefined) {
+            return { ...constructed, ...patch };
+        }
+
+        return constructed;
+    }
+
+    /**
+     * @deprecated use {@link construct} instead
+     */
+    constructDefault(patch?: Partial<T>): SelectEntity<T, S> {
+        return this.construct(patch);
     }
 
     #toQueryArguments(): QueryArguments {

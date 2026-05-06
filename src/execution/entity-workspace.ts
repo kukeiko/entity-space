@@ -117,16 +117,27 @@ export class EntityWorkspace {
                 stream$ = this.#loadFromSource$<T>(query, isLoading$);
             } else {
                 const cache = this.#services.getOrCreateCacheBucket(cacheKey);
+                let maxTimestamp: string | undefined;
+
+                if (cacheOptions.maxAge) {
+                    if (typeof cacheOptions.maxAge === "number") {
+                        maxTimestamp = new Date(Date.now() - cacheOptions.maxAge * 1000).toISOString();
+                    } else {
+                        maxTimestamp = cacheOptions.maxAge;
+                    }
+                }
+
                 const reactiveAdditionalBlueprints =
                     typeof cacheOptions.reactive === "object" ? cacheOptions.reactive.additionalBlueprints : undefined;
 
                 const reload$ = cacheOptions.reactive
                     ? this.#getReactiveReloadTrigger(query, cache, reactiveAdditionalBlueprints)
                     : of(undefined);
+
                 let load$: Observable<T[]>;
 
                 if (!cacheOptions.refresh) {
-                    load$ = this.#loadFromCacheAndSource$<T>(query, cache, isLoading$);
+                    load$ = this.#loadFromCacheAndSource$<T>(query, cache, isLoading$, maxTimestamp);
                 } else {
                     const loadFreshDelay = cacheOptions.refreshDelay ?? 0;
                     const refreshInterval = cacheOptions.refreshInterval;
@@ -137,6 +148,7 @@ export class EntityWorkspace {
                         loadFreshDelay,
                         refreshInterval,
                         isLoading$,
+                        maxTimestamp,
                     );
                 }
 
@@ -166,11 +178,13 @@ export class EntityWorkspace {
         query: EntityQuery,
         cache: EntityCache,
         isLoading$?: Subject<boolean>,
+        maxTimestamp?: string,
     ): Observable<T[]> {
         const context = new EntityQueryExecutionContext(query, cache, {
             loadFromSource: true,
             readFromCache: true,
             writeToCache: true,
+            maxTimestamp,
         });
 
         return defer(() => {
@@ -185,6 +199,7 @@ export class EntityWorkspace {
         refreshDelay = 0,
         refreshInterval?: number,
         isLoading$?: Subject<boolean>,
+        maxTimestamp?: string,
     ): Observable<T[]> {
         return concat(
             defer(() => {
@@ -196,7 +211,9 @@ export class EntityWorkspace {
                 const context = new EntityQueryExecutionContext(query, cache, {
                     loadFromSource: false,
                     readFromCache: true,
+                    maxTimestamp,
                 });
+
                 return executeQuery<T>(this.#services, query, context);
             }),
             defer(() => {

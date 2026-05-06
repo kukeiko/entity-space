@@ -14,6 +14,7 @@ export function createRoutedEntityDataSource<B, F, S extends PackedEntitySelecti
     filter,
     filterBlueprint,
     interval,
+    maxAge,
     reactive,
     router,
     select,
@@ -31,6 +32,7 @@ export function createRoutedEntityDataSource<B, F, S extends PackedEntitySelecti
      */
     cacheKey?: unknown;
     reactive?: boolean | QueryReactivityOptions;
+    maxAge?: string | number;
     interval?: number;
     /**
      * Function that maps a filter object to the criteria that will be passed to one of the entity sources you have defined in the workspace.
@@ -65,5 +67,5 @@ export function createRoutedEntityDataSource<B, F, S extends PackedEntitySelecti
     const entityFilterSource = new RoutedEntityFilterSource(entityFilterSchema, router, activatedRoute);
     const entityFilter = new EntityFilter(entityFilterSource, criteria, filter, select);
 
-    return new EntityDataSource(workspace, entityBlueprint, entityFilter, select, cacheKey, reactive, interval);
+    return new EntityDataSource(workspace, entityBlueprint, entityFilter, select, cacheKey, reactive, interval, maxAge);
 }
