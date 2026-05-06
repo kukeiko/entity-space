@@ -13,6 +13,12 @@ describe(validateEntity, () => {
         Dan = "dan",
     }
 
+    enum SomeNumberEnum {
+        Foo,
+        Bar,
+        Baz,
+    }
+
     const schema = new EntitySchema("foo")
         .addPrimitive("optionalNumber", Number, { optional: true })
         .addPrimitive("nullableNumber", Number, { nullable: true })
@@ -20,7 +26,8 @@ describe(validateEntity, () => {
         .addPrimitive("numberArray", Number, { container: ContainerType.Array })
         .addPrimitive("string", String, { optional: true })
         .addPrimitive("union", enumToPrimitive(SomeEnum), { optional: true })
-        .addPrimitive("unionArray", enumToPrimitive(SomeEnum), { optional: true, container: ContainerType.Array });
+        .addPrimitive("unionArray", enumToPrimitive(SomeEnum), { optional: true, container: ContainerType.Array })
+        .addPrimitive("numberUnion", enumToPrimitive(SomeNumberEnum), { optional: true });
 
     // reusing the same schema to test validation of related entities
     schema.addRelation("parent", schema, { optional: true });
@@ -42,6 +49,7 @@ describe(validateEntity, () => {
             children: [{ optionalNumber: undefined, nullableNumber: null, requiredNumber: 3, numberArray: [1, 2, 3] }],
             union: SomeEnum.Dan,
             unionArray: [SomeEnum.Khaz, SomeEnum.Mo],
+            numberUnion: SomeNumberEnum.Bar,
         };
 
         // act & assert
@@ -56,6 +64,7 @@ describe(validateEntity, () => {
             numberArray: [1, "2", null, undefined], // contains non-numbers
             union: "not-in-enum", // not a valid value for "SomeEnum"
             unionArray: ["mo", "not-in-enum"], // not a valid value for "SomeEnum"
+            numberUnion: 9001, // not a valid value for "SomeNumberEnum"
         };
 
         const parent = { ...entity };
@@ -90,6 +99,9 @@ describe(validateEntity, () => {
             "parent.unionArray[1]": "value at index 1 is not part of the enum (got not-in-enum)",
             "children[0].union": "value is not part of the enum (got not-in-enum)",
             "children[0].unionArray[1]": "value at index 1 is not part of the enum (got not-in-enum)",
+            "children[0].numberUnion": "value is not part of the enum (got 9001)",
+            numberUnion: "value is not part of the enum (got 9001)",
+            "parent.numberUnion": "value is not part of the enum (got 9001)",
         };
 
         // act

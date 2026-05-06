@@ -16,7 +16,8 @@ export type Primitive =
     | typeof String
     | typeof Null
     | typeof Undefined
-    | EnumPrimitive<string>;
+    | EnumPrimitive<string>
+    | EnumPrimitive<number>;
 
 export function primitiveToString(value: ReturnType<Primitive>): string {
     if (value === null) {
@@ -92,10 +93,25 @@ export function primitiveTypeToString(type: Primitive): string {
     }
 }
 
-export function enumToPrimitive<T extends Record<string, string>>(enum_: T): EnumPrimitive<string> {
-    const primitive = () => enum_[Object.keys(enum_)[0]];
-    primitive[$enumPrimitive] = true;
-    primitive[$enumPrimitiveValues] = new Set<string>(Object.values(enum_));
+export function enumToPrimitive<T extends Record<string, string>>(theEnum: T): EnumPrimitive<string>;
+export function enumToPrimitive<T extends Record<string | number, string | number>>(theEnum: T): EnumPrimitive<number>;
+export function enumToPrimitive<T extends Record<string, string | number>>(theEnum: T): EnumPrimitive<string | number> {
+    const firstStringKey = Object.keys(theEnum)
+        .filter(key => typeof key === "string")
+        .at(0);
 
-    return primitive as EnumPrimitive<string>;
+    if (firstStringKey === undefined) {
+        throw new Error("enum is empty");
+    }
+
+    const isNumericEnum = Object.keys(theEnum).some(key => typeof key === "number");
+    const enumValues = isNumericEnum
+        ? Object.values(theEnum).filter(value => typeof value === "number")
+        : Object.values(theEnum);
+
+    const primitive = () => theEnum[firstStringKey];
+    primitive[$enumPrimitive] = true;
+    primitive[$enumPrimitiveValues] = new Set<string | number>(enumValues);
+
+    return primitive as EnumPrimitive<string | number>;
 }
