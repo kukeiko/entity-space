@@ -128,12 +128,6 @@ describe(subtractCriterion, () => {
     });
 
     describe(EntityCriterion, () => {
-        interface FooBarBaz {
-            foo: number;
-            bar: number;
-            baz: number;
-        }
-
         expectCriterion("{ foo: { 2 }, bar: { 3, 4, 7 } }").minus("{ foo: { 2 }, bar: { 3, 4, 7 } }").toEqual(true);
         expectCriterion("{ foo: { 2 }, bar: { 3 } }").minus("{ foo: { 2 } }").toEqual(true);
         expectCriterion("{ foo: { 2 } }").minus("{ bar: { 2 } }").toEqual("{ foo: { 2 }, bar: !{ 2 } }");
@@ -200,8 +194,14 @@ describe(subtractCriterion, () => {
             .minus("({ price: [100, 200], rating: [3, 5] } | { price: (200, 300], rating: [3, 5] })")
             .toEqual("({ price: (200, 300], rating: (5, 7] } | { price: [100, 200], rating: (5, 7] })");
 
-        it("changing order of criteria properties should still result in an equivalent outcome", (): void => {
+        it("changing order of criteria properties should still result in an equivalent subtraction result", (): void => {
             // arrange
+            interface FooBarBaz {
+                foo: number;
+                bar: number;
+                baz: number;
+            }
+
             const a1 = where<FooBarBaz>({
                 bar: inRange([100, 200]),
                 foo: inRange([1, 7]),
@@ -227,7 +227,7 @@ describe(subtractCriterion, () => {
             const subtracted_2 = subtractCriterion(a2, b2);
 
             if (typeof subtracted_1 === "boolean" || typeof subtracted_2 === "boolean") {
-                throw new Error("expected both subtractions to not be false/true");
+                throw new Error("expected neither of the subtractions to result in true or false");
             }
 
             const subtracted_1_by_2 = subtractCriterion(subtracted_1, subtracted_2);

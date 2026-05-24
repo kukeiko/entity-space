@@ -12,11 +12,11 @@ export function relationToCriterionShape(relation: EntityRelationProperty): Crit
     const relatedSchema = relation.getRelatedSchema();
 
     for (const leadingPath of leadingPaths) {
-        const primitiveType = relatedSchema.getPrimitive(leadingPath.toString()).getPrimitiveType();
+        const primitiveType = relatedSchema.getPrimitive(leadingPath).getPrimitiveType();
         writePath(leadingPath, bag, new EqualsCriterionShape([primitiveType]));
     }
 
-    const primitiveType = relatedSchema.getPrimitive(lastPath.toString()).getPrimitiveType();
+    const primitiveType = relatedSchema.getPrimitive(lastPath).getPrimitiveType();
     writePath(lastPath, bag, new InArrayCriterionShape([primitiveType]));
 
     return new EntityCriterionShape(bag);

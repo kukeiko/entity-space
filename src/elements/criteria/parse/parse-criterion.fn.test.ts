@@ -84,6 +84,7 @@ describe(parseCriterion.name, () => {
     // named-criteria
     shouldParse('{ foo: 7, bar: "baz" }', where<FooBar>({ foo: equals(7), bar: equals("baz") }));
     shouldParse("{ foo: 7 }", where<FooBar>({ foo: equals(7) }));
+    shouldParse("{ foo: !7 }", where<FooBar>({ foo: notEquals(7) }));
     shouldParse("{ foo: [1, 7] }", where<FooBar>({ foo: inRange([1, 7]) }));
     shouldParse("{ foo: [1, 7], bar: [3, 4] }", where<FooBar>({ foo: inRange([1, 7]), bar: inRange([3, 4]) }));
 
