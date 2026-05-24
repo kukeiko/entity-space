@@ -17,8 +17,8 @@ describe("cache invalidation", () => {
     describe("entity should be removed from cache after refreshing from source", () => {
         it("when the query has no criteria", async () => {
             // arrange
-            const kept: Artist = { ...workspace.from(ArtistBlueprint).constructDefault(), id: 1, namespace: "dev" };
-            const evicted: Artist = { ...workspace.from(ArtistBlueprint).constructDefault(), id: 2, namespace: "dev" };
+            const kept: Artist = { ...workspace.from(ArtistBlueprint).construct(), id: 1, namespace: "dev" };
+            const evicted: Artist = { ...workspace.from(ArtistBlueprint).construct(), id: 2, namespace: "dev" };
 
             repository.useMusic().useEntities({ artists: [kept, evicted] });
             repository.useMusic().useLoadAllArtists();
@@ -35,8 +35,8 @@ describe("cache invalidation", () => {
 
         it("when criteria are only set on readonly properties", async () => {
             // arrange
-            const kept: Artist = { ...workspace.from(ArtistBlueprint).constructDefault(), id: 1, namespace: "dev" };
-            const evicted: Artist = { ...workspace.from(ArtistBlueprint).constructDefault(), id: 2, namespace: "dev" };
+            const kept: Artist = { ...workspace.from(ArtistBlueprint).construct(), id: 1, namespace: "dev" };
+            const evicted: Artist = { ...workspace.from(ArtistBlueprint).construct(), id: 2, namespace: "dev" };
 
             repository.useMusic().useEntities({ artists: [kept, evicted] });
             repository.useMusic().useLoadArtistsByNamespace();

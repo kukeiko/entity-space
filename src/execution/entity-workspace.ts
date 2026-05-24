@@ -1,14 +1,20 @@
 import {
     Entity,
     EntityBlueprint,
+    EntityPage,
+    EntityPropertySort,
     EntityQuery,
     EntityQueryParameters,
+    EntitySort,
+    EntitySortDirection,
     getSelectedSchemas,
+    selectionToPaths,
     unpackSelection,
+    unpackSelectionWithoutDefault,
     whereEntityToCriterion,
     writeRelationJoins,
 } from "@entity-space/elements";
-import { Class } from "@entity-space/utils";
+import { Class, toPath } from "@entity-space/utils";
 import { uniqBy } from "lodash";
 import {
     concat,
@@ -95,6 +101,8 @@ export class EntityWorkspace {
         parameters: parametersArg,
         select,
         where,
+        page,
+        sort,
     }: QueryArguments): Observable<T[]> {
         return defer(() => {
             const criteria = where ? whereEntityToCriterion(where) : undefined;
@@ -106,7 +114,35 @@ export class EntityWorkspace {
                   )
                 : undefined;
 
-            const query = new EntityQuery(schema, selection, criteria, parameters);
+            let entitySort: EntitySort | undefined;
+
+            if (sort !== undefined && sort.length) {
+                const properties: EntityPropertySort[] = [];
+
+                for (const { key, ascending } of sort) {
+                    const mode = ascending ? EntitySortDirection.Ascending : EntitySortDirection.Descending;
+
+                    if (typeof key === "string") {
+                        properties.push(new EntityPropertySort(toPath(key), mode));
+                    } else {
+                        const unpacked = unpackSelectionWithoutDefault(schema, key);
+
+                        for (const path of selectionToPaths(unpacked)) {
+                            properties.push(new EntityPropertySort(path, mode));
+                        }
+                    }
+                }
+
+                entitySort = new EntitySort(properties);
+            }
+
+            let entityPage: EntityPage | undefined;
+
+            if (page !== undefined) {
+                entityPage = new EntityPage(page.from, page.to);
+            }
+
+            const query = new EntityQuery(schema, selection, criteria, parameters, entitySort, entityPage);
             const cacheOptions = this.#toCacheOptions(cache);
             const cacheKey = cacheOptions ? cacheOptions.key : undefined;
 
@@ -164,7 +200,7 @@ export class EntityWorkspace {
     }
 
     #loadFromSource$<T>(query: EntityQuery, isLoading$?: Subject<boolean>): Observable<T[]> {
-        const cache = new EntityCache();
+        const cache = new EntityCache(this.#services.getTracing());
         const context = new EntityQueryExecutionContext(query, cache, { loadFromSource: true });
 
         return defer(() => {

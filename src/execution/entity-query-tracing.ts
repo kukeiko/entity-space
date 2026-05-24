@@ -115,6 +115,13 @@ export class EntityQueryTracing {
         });
     }
 
+    entitiesEvictedFromCache(query: EntityQuery, entities: readonly Entity[]): void {
+        this.#logForQuery(query, builder => {
+            builder.addLine(`🚯 evicted ${entities.length}x entities from cache:`).addLine(`- query: ${query}`, 1);
+            this.#addEntityLines(entities, builder, 1);
+        });
+    }
+
     hydratorAcceptedSelection(
         hydrator: EntityHydrator,
         openSelection: EntitySelection,

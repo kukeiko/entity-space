@@ -7,6 +7,7 @@ describe(subtractSelection, () => {
     expectSelection("{ foo }").minus("{ foo, bar }").toEqual(true);
     expectSelection("{ foo, bar }").minus("{ foo }").toEqual("{ bar }");
     expectSelection("{ foo }").minus("{ bar }").toEqual(false);
+    expectSelection("{ foo }").minus("{ }").toEqual(false);
     expectSelection("{ foo: { bar, baz } }").minus("{ foo: { bar } }").toEqual("{ foo: { baz } }");
     expectSelection("{ foo: { bar } }").minus("{ foo: { baz } }").toEqual(false);
     expectSelection("{ foo: { bar } }").minus("{ foo: { bar } }").toEqual(true);

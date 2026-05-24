@@ -19,5 +19,11 @@
     },
     "js/ts.tsdk.path": "node_modules/typescript/lib",
     "js/ts.preferences.importModuleSpecifier": "project-relative",
-    "files.eol": "\n"
+    "files.eol": "\n",
+    "github.copilot.enable": {
+        "*": false,
+        "plaintext": false,
+        "markdown": false,
+        "scminput": false
+    }
 }

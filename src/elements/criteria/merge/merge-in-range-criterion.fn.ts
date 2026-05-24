@@ -1,7 +1,7 @@
 import { Criterion } from "../criterion";
 import { InRangeCriterion, isFromInsideFromTo, isToInsideFromTo } from "../in-range-criterion";
 
-export function mergeInRangeCriterion(criterion: InRangeCriterion, other: Criterion): Criterion | boolean {
+export function mergeInRangeCriterion(criterion: InRangeCriterion, other: Criterion): InRangeCriterion | boolean {
     if (!(other instanceof InRangeCriterion)) {
         return false;
     }

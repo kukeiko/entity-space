@@ -1,9 +1,10 @@
 import {
-    CriterionShape,
     EntityBlueprint,
+    EntityPageShape,
     EntityQueryShape,
     EntityRelationSelection,
     EntitySchema,
+    EntitySortShape,
     getDefaultSelection,
     isCreatableEntityProperty,
     isSavableEntityProperty,
@@ -12,6 +13,7 @@ import {
     PackedEntitySelection,
     packEntitySelection,
     SelectEntity,
+    selectionToPaths,
     toRelationSelection,
     unpackSelection,
     unpackSelectionWithoutDefault,
@@ -62,25 +64,53 @@ export class EntitySchemaScopedServiceContainer<B> {
         W extends WhereEntityShape<EntityBlueprint.Type<B>>,
         S extends PackedEntitySelection<EntityBlueprint.Type<B>>,
         P,
+        O extends PackedEntitySelection<EntityBlueprint.Type<B>>,
     >({
         where,
         select,
         load,
+        paging,
         parameters,
+        sortable,
     }: {
         where?: W | WhereEntityShape<EntityBlueprint.Type<B>>;
         select?: S | PackedEntitySelection<EntityBlueprint.Type<B>>;
+        // [todo] ❌ apply same { required: boolean } option to the "parameters"
+        paging?: boolean | { required: boolean };
+        sortable?: O | PackedEntitySelection<EntityBlueprint.Type<B>>;
         parameters?: Class<P>;
         load: LoadEntitiesFn<B, W, S, P>;
     }): this {
-        const criterionShape: CriterionShape | undefined =
-            where === undefined ? undefined : whereEntityShapeToCriterionShape(this.#schema, where);
+        const criterionShape = where === undefined ? undefined : whereEntityShapeToCriterionShape(this.#schema, where);
+
+        let sortShape: EntitySortShape | undefined;
+        let pageShape: EntityPageShape | undefined;
+
+        if (sortable !== undefined) {
+            const sortableProperties = selectionToPaths(unpackSelectionWithoutDefault(this.#schema, sortable));
+
+            if (!sortableProperties.length) {
+                throw new Error("'sortable' can't be empty");
+            }
+
+            sortShape = new EntitySortShape(sortableProperties);
+
+            if (paging === true || typeof paging === "object") {
+                pageShape = new EntityPageShape(typeof paging === "object" && paging.required);
+            }
+        } else if (paging === true || typeof paging === "object") {
+            throw new Error("'sortable' must be provided if paging is enabled");
+        }
 
         const queryShape = new EntityQueryShape(
             this.#schema,
+            // [todo] ❌ how come we have a function "unpackSelectionWithoutDefault()", yet we call the other variant that includes the default
+            // and then we merge it with the default selection returned from "getDefaultSelection()"?
             mergeSelection(getDefaultSelection(this.#schema), unpackSelection(this.#schema, select ?? {})),
             criterionShape,
             parameters ? this.#services.getCatalog().getSchemaByBlueprint(parameters) : undefined,
+            sortShape,
+            pageShape,
         );
 
         this.#addSourceFn(new EntitySource(this.#services.getTracing(), queryShape, load as LoadEntitiesFn, where));

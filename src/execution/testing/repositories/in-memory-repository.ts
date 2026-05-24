@@ -1,5 +1,22 @@
 import { Entity } from "@entity-space/elements";
-import { jsonClone } from "@entity-space/utils";
+import { compareValue, jsonClone, readPath, toPath } from "@entity-space/utils";
+import { LoadEntitiesSort } from "../../sourcing/entity-source";
+
+function sortEntities(entities: readonly Entity[], sort: LoadEntitiesSort[]): Entity[] {
+    return entities.slice().sort((entityA, entityB) => {
+        for (const property of sort) {
+            const a = readPath(toPath(property.key), entityA);
+            const b = readPath(toPath(property.key), entityB);
+            const result = compareValue(a, b) * (property.ascending ? 1 : -1);
+
+            if (result !== 0) {
+                return result;
+            }
+        }
+
+        return 0;
+    });
+}
 
 export abstract class InMemoryRepository<T extends Record<string, Entity[]>, NoId extends keyof T = never> {
     protected entities: Partial<T> = {};
@@ -12,18 +29,18 @@ export abstract class InMemoryRepository<T extends Record<string, Entity[]>, NoI
     protected filter<K extends keyof T>(
         entity: K,
         predicate?: (entity: T[K][number]) => boolean,
-        pageSize?: number,
-        page?: number,
+        from?: number,
+        to?: number,
+        sort?: LoadEntitiesSort[],
     ): T[K] {
         let filtered = jsonClone((this.entities[entity] ?? []).filter(predicate ?? (() => true)));
 
-        if (pageSize) {
-            page = page ?? 0;
-            const sliceFrom = pageSize * page;
-            const sliceTo = pageSize * (page + 1);
-
-            filtered = filtered.slice(sliceFrom, sliceTo);
+        if (sort) {
+            filtered = sortEntities(filtered, sort);
         }
+
+        from = from ?? 0;
+        filtered = filtered.slice(from, to);
 
         return filtered as T[K];
     }

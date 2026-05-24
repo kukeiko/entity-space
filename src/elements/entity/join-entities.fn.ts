@@ -16,6 +16,8 @@ export function joinEntities(
             }
 
             for (const entity of entities) {
+                // [todo] ❌ confirmed bug: should call permutateEntries() not on full entity, but on an object that contains only the join paths
+                // [todo] ❌ if relationIds is null, set relation to null as well if nullable. check other joins in this fn() as well.
                 entity[relation.getName()] = permutateEntries(entity)
                     .map(key => joinedEntitiesMap.get(key, relation.getJoinFrom()))
                     .filter(isDefined);
@@ -25,6 +27,7 @@ export function joinEntities(
 
             for (const joinedEntity of joinedEntities) {
                 if (relation.joinToIsContainer()) {
+                    // [todo] ❌ suspecting same bug as mentioned above
                     for (const flatKey of permutateEntries(joinedEntity)) {
                         joinedEntitiesMap.set(flatKey, [joinedEntity], (previous, current) => {
                             previous.push(current[0]);

@@ -30,46 +30,89 @@ describe("source dispatch", () => {
         expect(load).toHaveBeenCalledTimes(1);
     });
 
-    it("should prefer sources filtering by unique values", async () => {
-        // arrange
-        const loadById = vi.fn(() => []);
-        const loadByArtistId = vi.fn(() => []);
+    describe("should prefer sources filtering by unique values", () => {
+        it("unique filter source declared first", async () => {
+            // arrange
+            const loadById = vi.fn(() => []);
+            const loadByArtistId = vi.fn(() => []);
 
-        facade
-            .getServices()
-            .for(SongBlueprint)
-            // [note] the order of adding sources matters: switching order and deactivating the relevant code in EntityQueryExecutor lets the test succeed
-            .addSource({ where: { id: { $equals: true }, namespace: { $equals: true } }, load: loadById })
-            .addSource({ where: { artistId: { $equals: true } }, load: loadByArtistId });
+            facade
+                .getServices()
+                .for(SongBlueprint)
+                .addSource({ where: { artistId: { $equals: true } }, load: loadByArtistId })
+                .addSource({ where: { id: { $equals: true }, namespace: { $equals: true } }, load: loadById });
 
-        // act
-        await workspace.from(SongBlueprint).where({ id: 1, namespace: "dev", artistId: 2 }).get();
+            // act
+            await workspace.from(SongBlueprint).where({ id: 1, namespace: "dev", artistId: 2 }).get();
 
-        // assert
-        expect(loadById).toHaveBeenCalledTimes(1);
-        expect(loadByArtistId).toHaveBeenCalledTimes(0);
+            // assert
+            expect(loadById).toHaveBeenCalledTimes(1);
+            expect(loadByArtistId).toHaveBeenCalledTimes(0);
+        });
+
+        it("unique filter source declared last", async () => {
+            // arrange
+            const loadById = vi.fn(() => []);
+            const loadByArtistId = vi.fn(() => []);
+
+            facade
+                .getServices()
+                .for(SongBlueprint)
+                .addSource({ where: { id: { $equals: true }, namespace: { $equals: true } }, load: loadById })
+                .addSource({ where: { artistId: { $equals: true } }, load: loadByArtistId });
+
+            // act
+            await workspace.from(SongBlueprint).where({ id: 1, namespace: "dev", artistId: 2 }).get();
+
+            // assert
+            expect(loadById).toHaveBeenCalledTimes(1);
+            expect(loadByArtistId).toHaveBeenCalledTimes(0);
+        });
     });
 
-    it("should prefer dispatching to sources making less API calls", async () => {
-        // arrange
-        const loadById = vi.fn(() => []);
-        const loadByIds = vi.fn(() => []);
+    describe("should prefer dispatching to sources making less API calls", () => {
+        it("less API calls source declared first", async () => {
+            // arrange
+            const loadById = vi.fn(() => []);
+            const loadByIds = vi.fn(() => []);
 
-        facade
-            .getServices()
-            .for(SongBlueprint)
-            // [note] the order of adding sources matters: switching order and deactivating the relevant code in EntityQueryExecutor lets the test succeed
-            .addSource({ where: { id: { $inArray: true }, namespace: { $equals: true } }, load: loadByIds })
-            .addSource({ where: { id: { $equals: true }, namespace: { $equals: true } }, load: loadById });
+            facade
+                .getServices()
+                .for(SongBlueprint)
+                .addSource({ where: { id: { $inArray: true }, namespace: { $equals: true } }, load: loadByIds })
+                .addSource({ where: { id: { $equals: true }, namespace: { $equals: true } }, load: loadById });
 
-        // act
-        await workspace
-            .from(SongBlueprint)
-            .where({ id: [1, 2], namespace: "dev", artistId: 2 })
-            .get();
+            // act
+            await workspace
+                .from(SongBlueprint)
+                .where({ id: [1, 2], namespace: "dev", artistId: 2 })
+                .get();
 
-        // assert
-        expect(loadById).toHaveBeenCalledTimes(0);
-        expect(loadByIds).toHaveBeenCalledTimes(1);
+            // assert
+            expect(loadById).toHaveBeenCalledTimes(0);
+            expect(loadByIds).toHaveBeenCalledTimes(1);
+        });
+
+        it("less API calls source declared last", async () => {
+            // arrange
+            const loadById = vi.fn(() => []);
+            const loadByIds = vi.fn(() => []);
+
+            facade
+                .getServices()
+                .for(SongBlueprint)
+                .addSource({ where: { id: { $equals: true }, namespace: { $equals: true } }, load: loadById })
+                .addSource({ where: { id: { $inArray: true }, namespace: { $equals: true } }, load: loadByIds });
+
+            // act
+            await workspace
+                .from(SongBlueprint)
+                .where({ id: [1, 2], namespace: "dev", artistId: 2 })
+                .get();
+
+            // assert
+            expect(loadById).toHaveBeenCalledTimes(0);
+            expect(loadByIds).toHaveBeenCalledTimes(1);
+        });
     });
 });

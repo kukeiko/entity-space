@@ -1,12 +1,15 @@
 import {
     copyEntities,
+    Criterion,
     entitiesToCriterion,
     Entity,
+    EntityPage,
     EntityQuery,
     EntityQueryParameters,
     EntityRelationProperty,
     EntitySchema,
     EntitySelection,
+    EntitySort,
     entityToId,
     isHydrated,
     isReadonlyCriterion,
@@ -19,10 +22,16 @@ import {
 import { ComplexKeyMap } from "@entity-space/utils";
 import { map, merge, Observable, Subject } from "rxjs";
 import { EntityQueryExecutionContext } from "../entity-query-execution-context";
+import { EntityQueryTracing } from "../entity-query-tracing";
 import { EntityQueryCache } from "./entity-query-cache";
 import { EntityStore } from "./entity-store";
 
 export class EntityCache {
+    constructor(tracing: EntityQueryTracing) {
+        this.#tracing = tracing;
+    }
+
+    readonly #tracing: EntityQueryTracing;
     readonly #stores = new Map<string, EntityStore>();
     readonly #queryCache = new EntityQueryCache();
     readonly #cachedQueriesChanged = new Subject<void>();
@@ -45,7 +54,7 @@ export class EntityCache {
             }
         }
 
-        if (parameters === undefined) {
+        if (parameters === undefined && query.getPage() === undefined) {
             const sorter = schema.getSorter();
 
             if (sorter) {
@@ -62,7 +71,15 @@ export class EntityCache {
 
     upsertQuery(query: EntityQuery, entities: readonly Entity[], context?: EntityQueryExecutionContext): void {
         const schema = query.getSchema();
-        this.upsert(schema, entities, query.getParameters(), context);
+        this.upsert(
+            schema,
+            entities,
+            query.getParameters(),
+            query.getCriterion(),
+            query.getSort(),
+            query.getPage(),
+            context,
+        );
         this.#evictRemovedFromCache(query, entities);
         this.#queryCache.addQuery(query);
         this.#cachedQueriesChanged.next();
@@ -72,6 +89,9 @@ export class EntityCache {
         schema: EntitySchema,
         entities: readonly Entity[],
         parameters?: EntityQueryParameters,
+        criterion?: Criterion,
+        sort?: EntitySort,
+        page?: EntityPage,
         context?: EntityQueryExecutionContext,
     ): void {
         entities = copyEntities(schema, entities);
@@ -79,7 +99,7 @@ export class EntityCache {
 
         for (const [schema, entities] of normalized) {
             const store = this.#getStore(schema);
-            store.upsert(entities, parameters, context);
+            store.upsert(entities, parameters, criterion, sort, page, context);
         }
     }
 
@@ -145,8 +165,6 @@ export class EntityCache {
             const id = entityToId(schema, previousEntity);
 
             if (!nextMap.has(id)) {
-                // [todo] ❌ collect all evicted and use 1x tracing call instead
-                console.log("🚯 evict from cache", schema.getName(), JSON.stringify(id));
                 evicted.push(previousEntity);
                 this.#getStore(schema).remove(id);
             }
@@ -156,6 +174,7 @@ export class EntityCache {
             return;
         }
 
+        this.#tracing.entitiesEvictedFromCache(query, evicted);
         const criterion = query.getCriterion();
 
         if (criterion === undefined || isReadonlyCriterion(query.getSchema(), criterion)) {

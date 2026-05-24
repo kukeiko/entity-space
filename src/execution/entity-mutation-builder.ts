@@ -8,6 +8,8 @@ import {
 } from "@entity-space/elements";
 import { EntityMutation } from "./mutation/entity-mutation";
 
+// [todo] ❌ add method "markWriteRelationIdsOnly(selection)" (or similar) so user can have the option to have relation ids written without mutating the selected relation
+// [todo] ❌ S is unused
 export class EntityMutationBuilder<B, S extends PackedEntitySelection<EntityBlueprint.Type<B>> = {}> {
     constructor(schema: EntitySchema, mutateFn: (mutation: EntityMutation) => Promise<Entity[]>) {
         this.#schema = schema;
@@ -62,6 +64,7 @@ export class EntityMutationBuilder<B, S extends PackedEntitySelection<EntityBlue
     }
 
     async createOne(entity: EntityBlueprint.Type<B>): Promise<EntityBlueprint.Type<B>> {
+        // [todo] ❌ should implement soon
         throw new Error("not yet implemented");
         // const selection = unpackSelection(this.#schema, this.#selection, isRequiredCreatableEntityProperty);
         // const operation = new EntityMutation("create", this.#schema, selection, [entity]);
@@ -71,6 +74,7 @@ export class EntityMutationBuilder<B, S extends PackedEntitySelection<EntityBlue
     }
 
     create(entities: EntityBlueprint.Type<B>[]): Promise<EntityBlueprint.Type<B>[]> {
+        // [todo] ❌ should implement soon
         throw new Error("not yet implemented");
         // const selection = unpackSelection(this.#schema, this.#selection, isRequiredCreatableEntityProperty);
         // const operation = new EntityMutation("create", this.#schema, selection, entities);

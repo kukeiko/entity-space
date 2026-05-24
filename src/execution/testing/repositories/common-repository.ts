@@ -3,6 +3,7 @@ import { vi } from "vitest";
 import { EntityServiceContainer } from "../../entity-service-container";
 import { HydrateEntitiesFn } from "../../hydration/entity-hydrator";
 import { DeleteEntitiesFn, SaveEntitiesFn } from "../../mutation/entity-mutation-function.type";
+import { LoadEntitiesSort } from "../../sourcing/entity-source";
 import { InMemoryRepository } from "./in-memory-repository";
 
 type CommonEntities = {
@@ -32,6 +33,26 @@ export class CommonRepository extends InMemoryRepository<CommonEntities> {
         return load;
     }
 
+    useLoadPagedUsers() {
+        const load = vi.fn((from?: number, to?: number, sort?: LoadEntitiesSort[]) =>
+            this.filter("users", undefined, from, to, sort),
+        );
+
+        this.#services.for(UserBlueprint).addSource({
+            select: {},
+            sortable: {
+                name: true,
+                metadata: {
+                    updatedAt: true,
+                },
+            },
+            paging: true,
+            load: ({ page, sort }) => load(page?.from, page?.to, sort),
+        });
+
+        return load;
+    }
+
     useLoadUserById() {
         const load = vi.fn((id: number) => this.filter("users", filterById(id)));
 
@@ -45,7 +66,12 @@ export class CommonRepository extends InMemoryRepository<CommonEntities> {
 
     useLoadUsersByRequest() {
         const load = vi.fn((parameters: UserRequest) => {
-            return this.filter("users", undefined, parameters.pageSize ?? 3, parameters.page);
+            const page = parameters.page ?? 0;
+            const pageSize = parameters.pageSize ?? 3;
+            const from = page * pageSize;
+            const to = (page + 1) * pageSize;
+
+            return this.filter("users", undefined, from, to);
         });
 
         this.#services.for(UserBlueprint).addSource({

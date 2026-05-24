@@ -22,6 +22,15 @@ function getBestAcceptedSourcing(
         .filter(isNot(false))
         .map((acceptedSourcing, index) => [acceptedSourcing, index] as const)
         .sort(([a, indexA], [b, indexB]) => {
+            const pageShapeA = a.getReshapedShape().getReshaped().getPageShape();
+            const pageShapeB = b.getReshapedShape().getReshaped().getPageShape();
+
+            if (pageShapeA !== undefined && pageShapeB === undefined) {
+                return -1;
+            } else if (pageShapeA === undefined && pageShapeB !== undefined) {
+                return 1;
+            }
+
             const uniqueCountDiff =
                 b.getReshapedShape().getCriteriaUniqueCount() - a.getReshapedShape().getCriteriaUniqueCount();
 

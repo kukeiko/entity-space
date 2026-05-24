@@ -1,12 +1,15 @@
 import { jsonParser, lex, Token, TokenType } from "@entity-space/lexer";
+import { toPath } from "@entity-space/utils";
 import { isPlainObject } from "lodash";
 import { Criterion } from "../criteria/criterion";
 import { criteriaTokenParser } from "../criteria/parse/criteria.token-parser";
 import { Entity } from "../entity/entity";
 import { EntitySchemaCatalog } from "../entity/entity-schema-catalog";
+import { EntityPropertySort, EntitySort, EntitySortDirection } from "../entity/entity-sort";
 import { EntitySelection } from "../selection/entity-selection";
 import { selectionParser } from "../selection/selection-parser.fn";
 import { unpackSelection } from "../selection/unpack-selection.fn";
+import { EntityPage } from "./entity-page";
 import { EntityQuery } from "./entity-query";
 import { EntityQueryParameters } from "./entity-query-parameters";
 
@@ -44,6 +47,8 @@ export function parseQuery(input: string, schemas: EntitySchemaCatalog): EntityQ
                     unpackSelection(schema, parts.selection ?? {}),
                     parts.criterion,
                     parameters,
+                    parts.sort,
+                    parts.page,
                 );
             } else {
                 throw new Error("syntax error");
@@ -60,6 +65,8 @@ interface QueryParts {
     selection?: EntitySelection;
     parametersSchemaName?: string;
     parameters?: Entity;
+    sort?: EntitySort;
+    page?: EntityPage;
 }
 
 type QueryPartsParser = Generator<unknown, false | QueryParts, Token>;
@@ -121,16 +128,16 @@ function* queryParser(terminator: Token): QueryPartsParser {
         token = yield;
     }
 
-    // if (token.type === TokenType.Special && token.value === "[") {
-    //     const paging = yield* pagingParser();
+    if (token.type === TokenType.Special && token.value === "[") {
+        const sortAndPage = yield* sortAndPageParser();
 
-    //     if (!paging) {
-    //         return false;
-    //     }
+        if (!sortAndPage) {
+            return false;
+        }
 
-    //     parts = { ...parts, paging: paging };
-    //     token = yield;
-    // }
+        parts = { ...parts, sort: sortAndPage[0], page: sortAndPage[1] };
+        token = yield;
+    }
 
     if (token.type === TokenType.Special && token.value === "/") {
         const selection = yield* selectionParser();
@@ -148,4 +155,80 @@ function* queryParser(terminator: Token): QueryPartsParser {
     } else {
         return false;
     }
+}
+
+function* sortAndPageParser(): Generator<unknown, false | [EntitySort, EntityPage | undefined], Token> {
+    const sortProperties: EntityPropertySort[] = [];
+    let token = yield;
+
+    // [todo] ❌ change this to not support "..."
+    // [todo] ❌ fix this up to require sorted field (can currently be skipped via input "[,0]")
+    while (true) {
+        if (token.type === TokenType.Special && token.value === "!") {
+            token = yield;
+
+            if (token.type !== TokenType.Literal) {
+                return false;
+            }
+
+            sortProperties.push(new EntityPropertySort(toPath(token.value), EntitySortDirection.Descending));
+            token = yield;
+        } else if (token.type === TokenType.Literal) {
+            sortProperties.push(new EntityPropertySort(toPath(token.value), EntitySortDirection.Ascending));
+            token = yield;
+        } else if (token.type === TokenType.Special && token.value === ",") {
+            token = yield;
+            continue;
+        } else if (token.type === TokenType.Number) {
+            break;
+        } else if (token.type === TokenType.Special && token.value === ".") {
+            break;
+        } else if (token.type === TokenType.Special && token.value === "]") {
+            return [new EntitySort(sortProperties), undefined];
+        } else {
+            return false;
+        }
+    }
+
+    let from: number | undefined;
+
+    if (token.type === TokenType.Number) {
+        from = +token.value;
+    } else if (token.type === TokenType.Special && token.value === ".") {
+        token = yield;
+
+        if (token.type !== TokenType.Special || token.value !== ".") return false;
+        token = yield;
+
+        if (token.type !== TokenType.Special || token.value !== ".") return false;
+    }
+
+    token = yield;
+
+    if (token.type !== TokenType.Special || token.value !== ",") {
+        return false;
+    }
+
+    token = yield;
+
+    let to: number | undefined;
+
+    if (token.type === TokenType.Number) {
+        to = +token.value;
+    } else if (token.type === TokenType.Special && token.value === ".") {
+        token = yield;
+
+        if (token.type !== TokenType.Special || token.value !== ".") return false;
+        token = yield;
+
+        if (token.type !== TokenType.Special || token.value !== ".") return false;
+    }
+
+    token = yield;
+
+    if (token.type !== TokenType.Special || token.value !== "]") {
+        return false;
+    }
+
+    return [new EntitySort(sortProperties), new EntityPage(from, to)];
 }

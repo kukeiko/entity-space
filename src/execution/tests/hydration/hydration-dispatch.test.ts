@@ -20,6 +20,7 @@ describe("hydration dispatch", () => {
 
         repository.useMusic().useLoadAllArtists();
         repository.useMusic().useLoadSongsByArtistId();
+
         facade
             .getServices()
             .for(ArtistBlueprint)

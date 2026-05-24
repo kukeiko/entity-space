@@ -77,7 +77,7 @@ export class EntityServiceContainer {
         let cache = this.#caches.get(key);
 
         if (!cache) {
-            cache = new EntityCache();
+            cache = new EntityCache(this.#tracing);
             this.#caches.set(key, cache);
         }
 

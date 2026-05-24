@@ -2,12 +2,16 @@ import {
     criterionToWhereEntityShapeInstance,
     Entity,
     EntityBlueprint,
+    EntityPage,
     EntityQuery,
     EntityQueryShape,
+    EntitySort,
     mergeQueries,
     reshapeQuery,
     reshapeQueryShape,
     reshapeSelection,
+    slicePage,
+    sortEntities,
     sortRelatedEntities,
     toRelationSelection,
     validateEntity,
@@ -22,12 +26,64 @@ import { AcceptedEntitySourcing } from "./accepted-entity-sourcing";
 
 export type LoadEntitiesFnResult<T extends Entity = Entity> = MaybeAsync<T> | MaybeAsync<T[]>;
 
+export interface LoadEntitiesSort {
+    key: string;
+    ascending: boolean;
+}
+
+export interface LoadEntitiesPage {
+    index: number;
+    size: number;
+    from: number;
+    to: number;
+    top: number;
+    skip: number;
+}
+
 export type LoadEntitiesFn<B = {}, W = {}, S = {}, P = {}> = (args: {
     query: EntityQuery;
     selection: DeepPartial<S>;
     criteria: WhereEntityShapeInstance<W, EntityBlueprint.Type<B>>;
     parameters: EntityBlueprint.Type<P>;
+    sort?: LoadEntitiesSort[];
+    page?: LoadEntitiesPage;
 }) => MaybeAsync<EntityBlueprint.Type<B>> | MaybeAsync<EntityBlueprint.Type<B>[]>;
+
+function toLoadEntitiesSort(sort?: EntitySort): LoadEntitiesSort[] | undefined {
+    if (sort === undefined) {
+        return undefined;
+    }
+
+    return sort
+        .getProperties()
+        .map(
+            property =>
+                ({ key: property.getPath().toString(), ascending: property.isAscending() }) satisfies LoadEntitiesSort,
+        );
+}
+
+function toLoadEntitiesPage(page?: EntityPage): LoadEntitiesPage | undefined {
+    if (page === undefined) {
+        return undefined;
+    }
+
+    const [to, top] = [page.getTo(), page.getTop()];
+
+    if (to === undefined || top === undefined) {
+        return undefined;
+    }
+
+    const skip = page.getSkip();
+
+    return {
+        index: -1, // [todo] ❌ somehow support this
+        size: -1, // [todo] ❌ somehow support this
+        from: page.getFrom(),
+        to,
+        skip,
+        top,
+    };
+}
 
 export class EntitySource {
     constructor(
@@ -58,7 +114,7 @@ export class EntitySource {
     }
 
     async #executeQuery(query: EntityQuery, context: EntityQueryExecutionContext): Promise<Entity[]> {
-        const reshaped = reshapeQuery(this.#queryShape, query);
+        const reshaped = reshapeQuery(query, this.#queryShape);
 
         if (!reshaped) {
             throw new Error(`failed to reshape query ${query.toString()} using ${this.#queryShape.toString()}`);
@@ -76,7 +132,7 @@ export class EntitySource {
         }
 
         if (uncached.length && context.loadFromSource() && context.writeToCache()) {
-            await this.#loadIntoCache(uncached, context, query);
+            await this.#loadIntoCache(uncached, query, context);
         }
 
         return this.#loadFromCache(reshaped, context);
@@ -89,12 +145,7 @@ export class EntitySource {
     ): Promise<Entity[]> {
         const entities = await Promise.all(
             queries.map(async query => {
-                const entities = await this.#loadOneFromSource(query, originalQuery);
-
-                if (context.writeToCache()) {
-                    context.getCache().upsertQuery(query, entities, context);
-                }
-
+                const entities = await this.#loadOneFromSource(query, originalQuery, context);
                 const relationSelection = toRelationSelection(query.getSchema(), query.getSelection());
                 sortRelatedEntities(query.getSchema(), relationSelection, entities);
 
@@ -105,7 +156,11 @@ export class EntitySource {
         return entities.flat();
     }
 
-    async #loadOneFromSource(query: EntityQuery, originalQuery: EntityQuery): Promise<Entity[]> {
+    async #loadOneFromSource(
+        query: EntityQuery,
+        originalQuery: EntityQuery,
+        context: EntityQueryExecutionContext,
+    ): Promise<Entity[]> {
         const criterion = query.getCriterion();
         let criteria: WhereEntityShapeInstance = {};
 
@@ -114,16 +169,31 @@ export class EntitySource {
         }
 
         this.#tracing.queryDispatchedToSource(query, originalQuery, this.#queryShape.getCriterionShape());
+
         const loaded = this.#load({
             query,
             selection: reshapeSelection(this.#queryShape.getSelection(), query.getSelection()),
             criteria,
             parameters: query.getParameters()?.getValue() ?? {},
+            sort: toLoadEntitiesSort(query.getSort()),
+            page: toLoadEntitiesPage(query.getPage()),
         });
 
         const result = await unwrapMaybeAsync(loaded);
-        const entities = Array.isArray(result) ? result : [result];
+        let entities = Array.isArray(result) ? result : [result];
         this.#tracing.queryReceivedEntities(query, entities);
+
+        if (context.writeToCache()) {
+            context.getCache().upsertQuery(query, entities, context);
+        }
+
+        const sort = originalQuery.getSort();
+        const page = originalQuery.getPage();
+
+        if (sort !== undefined && this.#queryShape.getPageShape() === undefined && page !== undefined) {
+            entities = sortEntities(entities, sort);
+            entities = slicePage(entities, page);
+        }
 
         const [validEntities, invalidEntities] = partition(
             entities,
@@ -143,15 +213,10 @@ export class EntitySource {
 
     async #loadIntoCache(
         queries: readonly EntityQuery[],
-        context: EntityQueryExecutionContext,
         originalQuery: EntityQuery,
+        context: EntityQueryExecutionContext,
     ): Promise<void> {
-        await Promise.all(
-            queries.map(async query => {
-                const entities = await this.#loadOneFromSource(query, originalQuery);
-                context.getCache().upsertQuery(query, entities, context);
-            }),
-        );
+        await Promise.all(queries.map(async query => this.#loadOneFromSource(query, originalQuery, context)));
     }
 
     #subtractByCache(queries: readonly EntityQuery[], context: EntityQueryExecutionContext): EntityQuery[] {
@@ -168,7 +233,7 @@ export class EntitySource {
         }
 
         const openMerged = mergeQueries(openQueries) || openQueries;
-        const openReshaped = openMerged.map(openQuery => reshapeQuery(this.#queryShape, openQuery));
+        const openReshaped = openMerged.map(openQuery => reshapeQuery(openQuery, this.#queryShape));
 
         if (!openReshaped.every(isNot(false))) {
             return [query];

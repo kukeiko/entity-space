@@ -25,6 +25,8 @@ export interface QueryArguments {
     select?: PackedEntitySelection;
     where?: WhereEntity;
     parameters?: QueryArgumentsParameters;
+    sort?: QueryArgumentsSort[];
+    page?: QueryArgumentsPage;
     cache?: boolean | QueryCacheOptions;
     isLoading$?: Subject<boolean>;
 }
@@ -32,6 +34,16 @@ export interface QueryArguments {
 export interface QueryArgumentsParameters {
     blueprint: Class;
     value: Entity;
+}
+
+export interface QueryArgumentsSort {
+    key: string | PackedEntitySelection;
+    ascending: boolean;
+}
+
+export interface QueryArgumentsPage {
+    from: number;
+    to: number;
 }
 
 export interface HydrateArguments {

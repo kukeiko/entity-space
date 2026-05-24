@@ -1,3 +1,4 @@
+export * from "./compare-value.fn";
 export * from "./complex-key-map";
 export * from "./entry-value-is.fn";
 export * from "./is-defined.fn";

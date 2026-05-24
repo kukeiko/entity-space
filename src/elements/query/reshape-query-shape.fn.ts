@@ -4,7 +4,9 @@ import { ReshapedCriterionShape } from "../criteria/reshaped-criterion-shape";
 import { intersectSelection } from "../selection/intersect-selection.fn";
 import { packEntitySelection } from "../selection/pack-entity-selection.fn";
 import { subtractSelection } from "../selection/subtract-selection.fn";
+import { EntityPageShape } from "./entity-page-shape";
 import { EntityQueryShape } from "./entity-query-shape";
+import { EntitySortShape } from "./entity-sort-shape";
 import { ReshapedEntityQueryShape } from "./reshaped-entity-query-shape";
 
 function reshapeQueryCriterionShape(
@@ -32,16 +34,45 @@ function reshapeQueryCriterionShape(
     return reshapeCriterionShape(whatCriterionShape, [byCriterionShape]);
 }
 
-export function reshapeQueryShape(what: EntityQueryShape, by: EntityQueryShape): ReshapedEntityQueryShape | false {
-    if (what.getSchema().getName() !== by.getSchema().getName()) {
+function reshapeSortShape(what?: EntitySortShape, into?: EntitySortShape): EntitySortShape | undefined {
+    if (what !== undefined && into !== undefined && into.includesSortableProperties(what.getSortableProperties())) {
+        return what;
+    }
+
+    return undefined;
+}
+
+function reshapePageShape(what?: EntityPageShape, into?: EntityPageShape): EntityPageShape | false | undefined {
+    if (what === undefined && into !== undefined && into.isRequired()) {
         return false;
-    } else if (what.getParametersSchema()?.getName() !== by.getParametersSchema()?.getName()) {
+    } else if (what !== undefined && into === undefined) {
+        return undefined;
+    }
+
+    return what;
+}
+
+export function reshapeQueryShape(what: EntityQueryShape, into: EntityQueryShape): ReshapedEntityQueryShape | false {
+    if (what.getSchema().getName() !== into.getSchema().getName()) {
+        return false;
+    } else if (what.getParametersSchema()?.getName() !== into.getParametersSchema()?.getName()) {
+        return false;
+    } else if (what.getPageShape() === undefined && into.getPageShape()?.isRequired()) {
         return false;
     }
 
-    const reshapedCriterionShape = reshapeQueryCriterionShape(what, by);
+    const reshapedCriterionShape = reshapeQueryCriterionShape(what, into);
 
     if (reshapedCriterionShape === false) {
+        return false;
+    }
+
+    const sortShape = reshapeSortShape(what.getSortShape(), into.getSortShape());
+    const pageShape = reshapePageShape(what.getPageShape(), into.getPageShape());
+
+    if (pageShape === false) {
+        return false;
+    } else if (pageShape !== undefined && sortShape === undefined) {
         return false;
     }
 
@@ -51,16 +82,22 @@ export function reshapeQueryShape(what: EntityQueryShape, by: EntityQueryShape):
         const openCriterionShape = reshapedCriterionShape.getOpen();
 
         if (openCriterionShape !== undefined) {
+            if (pageShape !== undefined) {
+                return false;
+            }
+
             openForCriteria = new EntityQueryShape(
                 what.getSchema(),
                 what.getSelection(),
                 openCriterionShape,
                 what.getParametersSchema(),
+                sortShape,
+                pageShape,
             );
         }
     }
 
-    const intersectedSelection = intersectSelection(what.getUnpackedSelection(), by.getUnpackedSelection());
+    const intersectedSelection = intersectSelection(what.getUnpackedSelection(), into.getUnpackedSelection());
 
     if (intersectedSelection === false) {
         return false;
@@ -75,6 +112,8 @@ export function reshapeQueryShape(what: EntityQueryShape, by: EntityQueryShape):
             packEntitySelection(what.getSchema(), openSelection),
             what.getCriterionShape(),
             what.getParametersSchema(),
+            sortShape,
+            pageShape,
         );
     }
 
@@ -84,9 +123,11 @@ export function reshapeQueryShape(what: EntityQueryShape, by: EntityQueryShape):
             intersectedSelection,
             reshapedCriterionShape?.getReshaped(),
             what.getParametersSchema(),
+            sortShape,
+            pageShape,
         ),
         openForCriteria,
         openForSelection,
-        reshapedCriterionShape?.getFlattenCount()
+        reshapedCriterionShape?.getFlattenCount(),
     );
 }

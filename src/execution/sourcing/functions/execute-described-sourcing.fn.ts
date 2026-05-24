@@ -25,7 +25,7 @@ export async function executeDescribedSourcing(
         entities = entities.filter(entity => withoutDehydrated.contains(entity));
     }
 
-    if (query.getParameters() === undefined) {
+    if (query.getParameters() === undefined && query.getPage() === undefined) {
         const sorter = query.getSchema().getSorter();
 
         if (sorter) {

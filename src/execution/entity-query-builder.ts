@@ -10,7 +10,13 @@ import {
 } from "@entity-space/elements";
 import { Class } from "@entity-space/utils";
 import { lastValueFrom, map, Observable, Subject } from "rxjs";
-import { QueryArguments, QueryArgumentsParameters, QueryCacheOptions } from "./execution-arguments.interface";
+import {
+    QueryArguments,
+    QueryArgumentsPage,
+    QueryArgumentsParameters,
+    QueryArgumentsSort,
+    QueryCacheOptions,
+} from "./execution-arguments.interface";
 
 export class EntityQueryBuilder<T extends Entity = Entity, S extends PackedEntitySelection<T> = {}> {
     constructor(schema: EntitySchema, queryFn: (args: QueryArguments) => Observable<T[]>) {
@@ -23,6 +29,8 @@ export class EntityQueryBuilder<T extends Entity = Entity, S extends PackedEntit
     #selection: PackedEntitySelection<T> = {};
     #criteria: WhereEntity<T> = {};
     #parameters?: QueryArgumentsParameters;
+    #sort?: QueryArgumentsSort[];
+    #page?: QueryArgumentsPage;
     #cache: QueryCacheOptions | boolean = false;
     #indicate?: Subject<boolean>;
 
@@ -38,6 +46,22 @@ export class EntityQueryBuilder<T extends Entity = Entity, S extends PackedEntit
 
     use<P>(blueprint: Class<P>, parameters: EntityBlueprint.Type<P>): this {
         this.#parameters = { blueprint, value: parameters };
+        return this;
+    }
+
+    order(key: string | PackedEntitySelection<T>, ascending = true): this {
+        if (this.#sort === undefined) {
+            this.#sort = [];
+        }
+
+        this.#sort.push({ key, ascending });
+
+        return this;
+    }
+
+    slice(from: number, to: number): this {
+        this.#page = { from, to };
+
         return this;
     }
 
@@ -153,6 +177,8 @@ export class EntityQueryBuilder<T extends Entity = Entity, S extends PackedEntit
             parameters: this.#parameters,
             select: this.#selection,
             where: this.#criteria,
+            page: this.#page,
+            sort: this.#sort,
             isLoading$: this.#indicate,
         };
     }

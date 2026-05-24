@@ -1,7 +1,7 @@
 import { EntityQuery, EntitySchema, isReadonlyCriterion, subtractQueries, subtractQuery } from "@entity-space/elements";
 
 export class EntityQueryCache {
-    #cache = new Map<string, [string, EntityQuery][]>();
+    readonly #cache = new Map<string, [string, EntityQuery][]>();
 
     addQuery(query: EntityQuery): void {
         const now = new Date(Date.now()).toISOString();
