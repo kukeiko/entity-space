@@ -1,12 +1,14 @@
 import { EntityQuery } from "@entity-space/elements";
+import { ExecutionContext } from "@entity-space/utils";
 import { EntityCache } from "./cache/entity-cache";
 
-export class EntityQueryExecutionContext {
+export class EntityQueryExecutionContext extends ExecutionContext {
     constructor(
         query: EntityQuery,
         cache: EntityCache,
         options?: { readFromCache?: boolean; loadFromSource?: boolean; writeToCache?: boolean; maxTimestamp?: string },
     ) {
+        super(query.toString());
         this.#query = query;
         this.#cache = cache;
         this.#readFromCache = options?.readFromCache ?? false;

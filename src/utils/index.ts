@@ -1,5 +1,6 @@
 export * from "./complex-key-map";
 export * from "./entry-value-is.fn";
+export * from "./execution-context";
 export * from "./is-defined.fn";
 export * from "./is-not-nullsy.fn";
 export * from "./is-not.fn";
