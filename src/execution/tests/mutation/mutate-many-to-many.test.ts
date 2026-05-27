@@ -19,7 +19,7 @@ describe("mutate many-to-many", () => {
     it("save() can create many-to-many relations: song.songTags", async () => {
         // arrange
         const metadata = createMetadata(1);
-        const song: Song = {
+        const song: Song = workspace.from(SongBlueprint).construct({
             id: 0,
             albumId: 1,
             artistId: 2,
@@ -31,9 +31,9 @@ describe("mutate many-to-many", () => {
                 { songId: 0, tagId: "upbeat" },
                 { songId: 0, tagId: "trippy" },
             ],
-        };
+        });
 
-        const expected: Song = {
+        const expected: Song = workspace.from(SongBlueprint).construct({
             id: 1,
             albumId: 1,
             artistId: 2,
@@ -45,7 +45,7 @@ describe("mutate many-to-many", () => {
                 { songId: 1, tagId: "upbeat" },
                 { songId: 1, tagId: "trippy" },
             ],
-        };
+        });
 
         const createSong = repository.useMusic().useCreateSong();
         const createSongTag = repository.useMusic().useCreateSongTag();
@@ -75,7 +75,7 @@ describe("mutate many-to-many", () => {
     it("save() can create many-to-many relations: songTags.songs", async () => {
         // arrange
         const metadata = createMetadata(1);
-        const song: Song = {
+        const song: Song = workspace.from(SongBlueprint).construct({
             id: 0,
             albumId: 1,
             artistId: 2,
@@ -83,14 +83,14 @@ describe("mutate many-to-many", () => {
             metadata,
             name: "foo",
             namespace: "dev",
-        };
+        });
 
         const songTags: SongTag[] = [
             { songId: 0, tagId: "upbeat", songs: [song] },
             { songId: 0, tagId: "trippy", songs: [song] },
         ];
 
-        const expectedSong: Song = {
+        const expectedSong: Song = workspace.from(SongBlueprint).construct({
             id: 1,
             albumId: 1,
             artistId: 2,
@@ -98,7 +98,7 @@ describe("mutate many-to-many", () => {
             metadata,
             name: "foo",
             namespace: "dev",
-        };
+        });
 
         const expected: SongTag[] = [
             { songId: 1, tagId: "upbeat", songs: [expectedSong] },
@@ -118,7 +118,16 @@ describe("mutate many-to-many", () => {
         expect(createSongTag).toHaveBeenCalledTimes(2);
         expect(createSong).toHaveBeenCalledWith<Parameters<CreateEntityFn<SongBlueprint>>>({
             selection: {},
-            entity: { id: 0, albumId: 1, artistId: 2, duration: 100, metadata, name: "foo", namespace: "dev" },
+            entity: {
+                id: 0,
+                albumId: 1,
+                artistId: 2,
+                duration: 100,
+                metadata,
+                name: "foo",
+                namespace: "dev",
+                urls: [],
+            },
         });
         expect(createSongTag).toHaveBeenCalledWith<Parameters<CreateEntityFn<SongTagBlueprint>>>({
             selection: {},

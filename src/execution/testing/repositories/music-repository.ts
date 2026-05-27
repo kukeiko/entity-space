@@ -73,6 +73,13 @@ export class MusicRepository extends InMemoryRepository<MusicEntities, "tags" | 
 
     readonly #services: EntityServiceContainer;
 
+    useLoadAllTags() {
+        const load = vi.fn(() => this.filter("tags"));
+        this.#services.for(TagBlueprint).addSource({ load });
+
+        return load;
+    }
+
     useLoadTagById() {
         const load = vi.fn((id: string) => this.filter("tags", filterById(id)));
 
@@ -320,6 +327,13 @@ export class MusicRepository extends InMemoryRepository<MusicEntities, "tags" | 
         return del;
     }
 
+    useLoadAllSongs() {
+        const load = vi.fn(() => this.filter("songs"));
+        this.#services.for(SongBlueprint).addSource({ load });
+
+        return load;
+    }
+
     useLoadSongById() {
         const load = vi.fn((id: number) => this.filter("songs", filterById(id)));
 
@@ -402,6 +416,7 @@ export class MusicRepository extends InMemoryRepository<MusicEntities, "tags" | 
                 duration: song.duration,
                 metadata: song.metadata,
                 namespace: song.namespace,
+                urls: song.urls,
             };
 
             this.entities.songs = [...(this.entities.songs ?? []), created];

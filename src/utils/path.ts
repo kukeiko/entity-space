@@ -110,3 +110,13 @@ export function assertValidPaths(paths: readonly Path[]): void {
         }
     }
 }
+
+export function pickPaths(object: Record<string, any>, paths: readonly Path[]): Record<string, any> {
+    const result = {};
+
+    for (const path of paths) {
+        writePath(path, result, readPath(path, object));
+    }
+
+    return result;
+}

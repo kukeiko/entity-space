@@ -298,6 +298,7 @@ export class EntityWorkspace {
             const hydrationDescription = describeHydration(this.#services, sourcedEntities);
 
             if (!hydrationDescription) {
+                // [todo] ❌ improve error message to something useful
                 throw new Error("no idea how to hydrate that");
             }
 

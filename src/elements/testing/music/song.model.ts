@@ -1,7 +1,7 @@
 import { EntityBlueprint } from "../../entity/entity-blueprint";
+import { RecordMetadataBlueprint } from "../common/record-metadata.model";
 import { AlbumBlueprint } from "./album.model";
 import { ArtistBlueprint } from "./artist.model";
-import { RecordMetadataBlueprint } from "../common/record-metadata.model";
 import { SongTagBlueprint } from "./song-tag.model";
 import { TagBlueprint } from "./tag.model";
 
@@ -12,6 +12,7 @@ export class SongBlueprint {
     id = id();
     name = string();
     duration = number();
+    urls = string({ array });
     artistId = number();
     artist = entity(ArtistBlueprint, [this.namespace, this.artistId], artist => [artist.namespace, artist.id]);
     albumId = number();

@@ -5,6 +5,7 @@ import {
     SongBlueprint,
     SongTag,
     Tag,
+    TagBlueprint,
     User,
     UserBlueprint,
 } from "@entity-space/elements/testing";
@@ -151,8 +152,8 @@ describe("get()", () => {
         ];
 
         const tags: Tag[] = [
-            { id: "upbeat", name: "Upbeat" },
-            { id: "vocals", name: "Vocals" },
+            workspace.from(TagBlueprint).construct({ id: "upbeat", name: "Upbeat" }),
+            workspace.from(TagBlueprint).construct({ id: "vocals", name: "Vocals" }),
         ];
 
         const artists: Artist[] = [
@@ -171,7 +172,7 @@ describe("get()", () => {
         ];
 
         const songs: Song[] = [
-            {
+            workspace.from(SongBlueprint).construct({
                 id: 1,
                 albumId: 0,
                 artistId: 1,
@@ -179,7 +180,7 @@ describe("get()", () => {
                 name: "Comite",
                 duration: 336,
                 metadata: createMetadata(1, 2, createdAt, updatedAt),
-            },
+            }),
         ];
 
         const songTags: SongTag[] = [{ songId: 1, tagId: "upbeat" }];
@@ -223,6 +224,7 @@ describe("get()", () => {
                     name: "Comite",
                     duration: 336,
                     tagIds: ["upbeat"],
+                    urls: [],
                     metadata: {
                         createdAt,
                         createdById: 1,
@@ -240,7 +242,7 @@ describe("get()", () => {
                         },
                         updatedBy: null,
                     },
-                    tags: [{ id: "upbeat", name: "Upbeat" }],
+                    tags: [{ id: "upbeat", name: "Upbeat", similar: [] }],
                 },
             ],
         });

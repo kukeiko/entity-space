@@ -1,5 +1,13 @@
 import { SelectEntity } from "@entity-space/elements";
-import { Artist, ArtistBlueprint, Song, SongBlueprint, SongTag, Tag } from "@entity-space/elements/testing";
+import {
+    Artist,
+    ArtistBlueprint,
+    Song,
+    SongBlueprint,
+    SongTag,
+    Tag,
+    TagBlueprint,
+} from "@entity-space/elements/testing";
 import { beforeEach, describe, expect, it } from "vitest";
 import { EntityWorkspace } from "../entity-workspace";
 import { TestFacade, TestRepository } from "../testing";
@@ -55,7 +63,7 @@ describe("[from archive] system supports", () => {
 
         songs = [
             // Infected Mushroom
-            {
+            workspace.from(SongBlueprint).construct({
                 id: 10,
                 artistId: 1,
                 albumId: 100,
@@ -63,8 +71,8 @@ describe("[from archive] system supports", () => {
                 duration: 370,
                 namespace: "dev",
                 metadata: createMetadata(1),
-            },
-            {
+            }),
+            workspace.from(SongBlueprint).construct({
                 id: 11,
                 artistId: 1,
                 albumId: 200,
@@ -72,8 +80,8 @@ describe("[from archive] system supports", () => {
                 duration: 538,
                 namespace: "dev",
                 metadata: createMetadata(1),
-            },
-            {
+            }),
+            workspace.from(SongBlueprint).construct({
                 id: 12,
                 artistId: 1,
                 albumId: 300,
@@ -81,9 +89,9 @@ describe("[from archive] system supports", () => {
                 duration: 375,
                 namespace: "dev",
                 metadata: createMetadata(1),
-            },
+            }),
             // Hedflux
-            {
+            workspace.from(SongBlueprint).construct({
                 id: 20,
                 artistId: 2,
                 albumId: 400,
@@ -91,11 +99,10 @@ describe("[from archive] system supports", () => {
                 duration: 446,
                 namespace: "dev",
                 metadata: createMetadata(1),
-            },
-            // Sunnexo
+            }),
         ];
 
-        tags = [{ id: "upbeat", name: "Upbeat" }];
+        tags = [workspace.from(TagBlueprint).construct({ id: "upbeat", name: "Upbeat" })];
         songTags = [{ songId: 10, tagId: "upbeat" }];
         repository.useMusic().useEntities({ artists, songs, songTags, tags });
     });
