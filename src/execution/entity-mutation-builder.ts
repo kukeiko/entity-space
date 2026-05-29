@@ -63,23 +63,25 @@ export class EntityMutationBuilder<B, S extends PackedEntitySelection<EntityBlue
         return Array.isArray(entities) ? (saved as EntityBlueprint.Type<B>[]) : (saved[0] as EntityBlueprint.Type<B>);
     }
 
-    async createOne(entity: EntityBlueprint.Type<B>): Promise<EntityBlueprint.Type<B>> {
-        // [todo] ❌ should implement soon
-        throw new Error("not yet implemented");
-        // const selection = unpackSelection(this.#schema, this.#selection, isRequiredCreatableEntityProperty);
-        // const operation = new EntityMutation("create", this.#schema, selection, [entity]);
-        // const created = await this.#mutateFn(operation);
+    async create(entity: EntityBlueprint.Type<B>, previous?: EntityBlueprint.Type<B>): Promise<EntityBlueprint.Type<B>>;
+    async create(
+        entities: EntityBlueprint.Type<B>[],
+        previous?: EntityBlueprint.Type<B>[],
+    ): Promise<EntityBlueprint.Type<B>[]>;
+    async create(
+        entities: EntityBlueprint.Type<B>[] | EntityBlueprint.Type<B>,
+        previous?: EntityBlueprint.Type<B>[] | EntityBlueprint.Type<B>,
+    ): Promise<EntityBlueprint.Type<B>[] | EntityBlueprint.Type<B>> {
+        const mutation = new EntityMutation(
+            "create",
+            this.#schema,
+            Array.isArray(entities) ? entities : [entities],
+            toRelationSelection(this.#schema, unpackSelection(this.#schema, this.#selection)),
+            previous ? (Array.isArray(previous) ? previous : [previous]) : undefined,
+        );
 
-        // return created[0];
-    }
-
-    create(entities: EntityBlueprint.Type<B>[]): Promise<EntityBlueprint.Type<B>[]> {
-        // [todo] ❌ should implement soon
-        throw new Error("not yet implemented");
-        // const selection = unpackSelection(this.#schema, this.#selection, isRequiredCreatableEntityProperty);
-        // const operation = new EntityMutation("create", this.#schema, selection, entities);
-
-        // return this.#mutateFn(operation);
+        const saved = await this.#mutateFn(mutation);
+        return Array.isArray(entities) ? (saved as EntityBlueprint.Type<B>[]) : (saved[0] as EntityBlueprint.Type<B>);
     }
 
     async update(entity: EntityBlueprint.Type<B>, previous?: EntityBlueprint.Type<B>): Promise<EntityBlueprint.Type<B>>;

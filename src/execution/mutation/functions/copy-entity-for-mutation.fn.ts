@@ -5,7 +5,11 @@ export function copyEntityForMutation(mutation: AcceptedEntityMutation, entity: 
     const schema = mutation.getSchema();
     const selection = getSelection(schema, mutation.getSelection());
 
-    return copyEntity(schema, entity, selection, (relation, entity) =>
-        isSave ? true : relation.isEmbedded() || mutation.getChanges().some(change => change.getEntity() === entity),
+    return copyEntity(
+        schema,
+        entity,
+        selection,
+        (relation, entity) =>
+            isSave || relation.isEmbedded() || mutation.getChanges().some(change => change.getEntity() === entity),
     );
 }

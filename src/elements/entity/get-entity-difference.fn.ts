@@ -31,27 +31,37 @@ export function getEntityDifference(
             if (relation.isArray()) {
                 const currentRelated = value as Entity[];
                 const previousRelated = previous[key] as Entity[];
-                const relatedSchema = relation.getRelatedSchema();
-                const pairs = toEntityPairs(relatedSchema, currentRelated, previousRelated);
-                const relatedDifference: Entity[] = [];
 
-                for (const [current, previous] of pairs) {
-                    if (previous === undefined) {
-                        relatedDifference.push(current);
-                    } else {
-                        relatedDifference.push(
-                            getEntityDifference(
-                                relatedSchema,
-                                current,
-                                previous,
-                                selection ? selection[key] : undefined,
-                            ),
-                        );
+                if (currentRelated.length !== previousRelated.length) {
+                    // [todo] ❌ this is just a hack to make change detection on embedded arrays work when
+                    // items have only been removed, but not added or changed. thise whole "getDifference()"
+                    // thing isn't even really used as intended - we currently through the object away, we're
+                    // only interested in whether or not there are differences, so a "isEntityEqual()" would
+                    // currently suffice.
+                    difference[key] = structuredClone(currentRelated);
+                } else {
+                    const relatedSchema = relation.getRelatedSchema();
+                    const pairs = toEntityPairs(relatedSchema, currentRelated, previousRelated);
+                    const relatedDifference: Entity[] = [];
+
+                    for (const [current, previous] of pairs) {
+                        if (previous === undefined) {
+                            relatedDifference.push(current);
+                        } else {
+                            relatedDifference.push(
+                                getEntityDifference(
+                                    relatedSchema,
+                                    current,
+                                    previous,
+                                    selection ? selection[key] : undefined,
+                                ),
+                            );
+                        }
                     }
-                }
 
-                if (!relatedDifference.every(value => isEmpty(value))) {
-                    difference[key] = relatedDifference;
+                    if (!relatedDifference.every(value => isEmpty(value))) {
+                        difference[key] = relatedDifference;
+                    }
                 }
             } else {
                 const relatedDifference = getEntityDifference(
