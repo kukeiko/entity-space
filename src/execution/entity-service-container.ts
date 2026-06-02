@@ -88,6 +88,10 @@ export class EntityServiceContainer {
         this.#caches.delete(key);
     }
 
+    destroyAllCaches(): void {
+        this.#caches.clear();
+    }
+
     getCaches(): EntityCache[] {
         return Array.from(this.#caches.values());
     }
