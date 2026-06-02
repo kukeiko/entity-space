@@ -4,6 +4,7 @@ import {
     EntitySelection,
     intersectSelection,
     isSelectionSubsetOf,
+    packEntitySelection,
     selectionToString,
     subtractSelection,
 } from "@entity-space/elements";
@@ -71,6 +72,6 @@ export class ExplicitEntityHydrator extends EntityHydrator {
 
     override toString(): string {
         // to make prettier tracing messages. should not be relied upon as actual logic
-        return selectionToString(this.#hydratedSelection);
+        return selectionToString(packEntitySelection(this.#schema, this.#hydratedSelection));
     }
 }
