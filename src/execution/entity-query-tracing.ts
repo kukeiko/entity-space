@@ -12,7 +12,7 @@ import { EntityMutationType } from "./mutation/entity-mutation";
 import { EntityChangeDependency } from "./mutation/structures/entity-change-dependency";
 
 const TAB_WIDTH = 4;
-const MAX_FULLY_PRINTED_ENTITIES = 10;
+const MAX_FULLY_PRINTED_ENTITIES = 3;
 
 type EntityQueryTracingFilter = (query: EntityQuery) => boolean;
 
@@ -103,6 +103,12 @@ export class EntityQueryTracing {
         });
     }
 
+    querySourceCallReused(query: EntityQuery): void {
+        this.#logForQuery(query, builder => {
+            builder.addLine("🔄️ source call for query was reused:").addLine(`- query: ${query}`, 1);
+        });
+    }
+
     queryWasLoadedFromCache(query: EntityQuery): void {
         this.#logForQuery(query, builder => {
             builder.addLine("💾 query was loaded from cache:").addLine(`- query: ${query}`, 1);
@@ -124,9 +130,9 @@ export class EntityQueryTracing {
 
     hydratorAcceptedSelection(
         hydrator: EntityHydrator,
-        openSelection: EntitySelection,
-        acceptedSelection: EntitySelection,
-        remainingOpen?: boolean | EntitySelection,
+        openSelection: EntitySelection | PackedEntitySelection,
+        acceptedSelection: EntitySelection | PackedEntitySelection,
+        remainingOpen?: boolean | EntitySelection | PackedEntitySelection,
     ): void {
         this.#log(builder => {
             builder.addLine(`✅ hydrator ${hydrator.toString()} accepted selection:`);

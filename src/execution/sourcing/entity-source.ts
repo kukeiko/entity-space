@@ -102,6 +102,7 @@ export class EntitySource {
     readonly #queryShape: EntityQueryShape;
     readonly #load: LoadEntitiesFn;
     readonly #whereEntityShape?: WhereEntityShape;
+    #pendingRequests: { query: EntityQuery; result: ReturnType<LoadEntitiesFn> }[] = [];
 
     accept(queryShape: EntityQueryShape): AcceptedEntitySourcing | false {
         const reshaped = reshapeQueryShape(queryShape, this.#queryShape);
@@ -170,7 +171,7 @@ export class EntitySource {
 
         this.#tracing.queryDispatchedToSource(query, originalQuery, this.#queryShape.getCriterionShape());
 
-        const loaded = this.#load({
+        const loaded = await this.#executeLoad({
             query,
             selection: reshapeSelection(this.#queryShape.getSelection(), query.getSelection()),
             criteria,
@@ -240,5 +241,25 @@ export class EntitySource {
         }
 
         return openReshaped.flat();
+    }
+
+    async #executeLoad(...args: Parameters<LoadEntitiesFn>): Promise<ReturnType<LoadEntitiesFn>> {
+        const query = args[0].query;
+        let loader = this.#pendingRequests.find(request => request.query.toString() === query.toString());
+
+        if (loader === undefined) {
+            const result = this.#load(...args);
+            this.#pendingRequests.push({ query, result });
+            const entities = await unwrapMaybeAsync(result);
+
+            this.#pendingRequests = this.#pendingRequests.filter(
+                request => request.query.toString() !== query.toString(),
+            );
+
+            return entities;
+        } else {
+            this.#tracing.querySourceCallReused(query);
+            return loader.result;
+        }
     }
 }
