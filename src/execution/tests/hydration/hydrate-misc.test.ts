@@ -1,7 +1,8 @@
+import { EntityBlueprint } from "@entity-space/elements";
 import { User, UserBlueprint } from "@entity-space/elements/testing";
 import { beforeEach, describe, expect, it } from "vitest";
-import { EntityWorkspace } from "../entity-workspace";
-import { TestFacade, TestRepository } from "../testing";
+import { EntityWorkspace } from "../../entity-workspace";
+import { TestFacade, TestRepository } from "../../testing";
 
 describe("hydrate()", () => {
     let facade: TestFacade;
@@ -60,5 +61,40 @@ describe("hydrate()", () => {
 
         // assert
         expect(actual).toStrictEqual(expected);
+    });
+
+    it("should hydrate property that depends on other hydrated property without explicitly selecting it", async () => {
+        // arrange
+        const { register, id, string, optional } = EntityBlueprint;
+
+        class FooBlueprint {
+            id = id();
+            bar = string({ optional });
+            baz = string({ optional });
+        }
+
+        type Foo = EntityBlueprint.Type<FooBlueprint>;
+        register(FooBlueprint);
+
+        facade
+            .getServices()
+            .for(FooBlueprint)
+            .addHydrator({
+                select: { bar: true },
+                requires: { id: true },
+                hydrate: ({ entities }) => entities.forEach(entity => (entity.bar = "Hello")),
+            })
+            .addHydrator({
+                select: { baz: true },
+                requires: { bar: true },
+                hydrate: ({ entities }) => entities.forEach(entity => (entity.baz = `${entity.bar} World`)),
+            });
+
+        // act
+        const foo: Foo = { id: 1 };
+        await workspace.for(FooBlueprint).select({ baz: true }).hydrateOne(foo);
+
+        // assert
+        expect(foo.baz).toEqual("Hello World");
     });
 });

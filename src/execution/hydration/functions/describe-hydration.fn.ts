@@ -1,6 +1,7 @@
-import { mergeSelections, selectionToString, subtractSelection } from "@entity-space/elements";
+import { mergeSelections, packEntitySelection, selectionToString, subtractSelection } from "@entity-space/elements";
 import { EntityServiceContainer } from "../../entity-service-container";
 import { EntitySourcingState } from "../../sourcing/entity-sourcing-state.interface";
+import { expandSourcedSelection } from "../../sourcing/functions/expand-source-selection.fn";
 import { AcceptedEntityHydration } from "../accepted-entity-hydration";
 import { DescribedEntityHydration } from "../described-entity-hydration";
 import { getHydrators } from "./get-hydrators.fn";
@@ -11,11 +12,13 @@ export function describeHydration(
 ): DescribedEntityHydration | false {
     const schema = sourcing.getSchema();
     const parametersSchema = sourcing.getParametersSchema();
-    const targetSelection = sourcing.getTargetSelection();
+    const targetSelection = expandSourcedSelection(services, schema, sourcing.getTargetSelection());
     let availableSelection = sourcing.getAvailableSelection();
-    let openSelection = sourcing.getOpenSelection();
+    let openSelection = subtractSelection(targetSelection, availableSelection);
 
-    if (openSelection === undefined) {
+    if (typeof openSelection === "boolean") {
+        return false;
+    } else if (openSelection === undefined) {
         throw new Error("openSelection was unexpectedly undefined");
     }
 
@@ -34,9 +37,17 @@ export function describeHydration(
 
             currentAcceptedHydrations.push(accepted);
             const nextOpenSelection = subtractSelection(openSelection, accepted.getAcceptedSelection());
+
             services
                 .getTracing()
-                .hydratorAcceptedSelection(hydrator, openSelection, accepted.getAcceptedSelection(), nextOpenSelection);
+                .hydratorAcceptedSelection(
+                    hydrator,
+                    packEntitySelection(schema, openSelection),
+                    packEntitySelection(schema, accepted.getAcceptedSelection()),
+                    typeof nextOpenSelection === "boolean"
+                        ? nextOpenSelection
+                        : packEntitySelection(schema, nextOpenSelection),
+                );
 
             if (nextOpenSelection === false) {
                 throw new Error(
