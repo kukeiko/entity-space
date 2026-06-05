@@ -67,6 +67,7 @@ export * from "./query/entity-query";
 export * from "./query/entity-query-parameters";
 export * from "./query/entity-query-shape";
 export * from "./query/entity-sort-shape";
+export * from "./query/functions/entity-to-query.fn";
 export * from "./query/is-equal-parameters.fn";
 export * from "./query/merge-queries.fn";
 export * from "./query/merge-query.fn";

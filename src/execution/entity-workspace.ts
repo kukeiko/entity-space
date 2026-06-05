@@ -7,6 +7,7 @@ import {
     EntityQueryParameters,
     EntitySort,
     EntitySortDirection,
+    entityToQuery,
     getSelectedSchemas,
     selectionToPaths,
     unpackSelection,
@@ -89,9 +90,10 @@ export class EntityWorkspace {
     }
 
     upsertToCache<B>(blueprint: Class<B>, entity: EntityBlueprint.Type<B>, cacheKey?: unknown): void {
-        const cache = this.#services.getOrCreateCacheBucket(cacheKey);
         const schema = this.#services.getCatalog().getSchemaByBlueprint(blueprint);
-        cache.upsert(schema, [entity]);
+        const cache = this.#services.getOrCreateCacheBucket(cacheKey);
+        const query = entityToQuery(schema, entity);
+        cache.upsertQuery(query, [entity]);
     }
 
     #query$<T>({

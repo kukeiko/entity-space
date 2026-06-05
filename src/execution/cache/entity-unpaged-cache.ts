@@ -1,17 +1,21 @@
 import {
     Criterion,
+    deduplicateEntities,
     Entity,
     EntityQueryParameters,
+    EntitySchema,
     isEqualParameters,
     OrCriterion,
     subtractCriterion,
 } from "@entity-space/elements";
 
 export class EntityUnpagedCache {
-    constructor(parameters?: EntityQueryParameters) {
+    constructor(schema: EntitySchema, parameters?: EntityQueryParameters) {
+        this.#schema = schema;
         this.#parameters = parameters;
     }
 
+    readonly #schema: EntitySchema;
     readonly #parameters?: EntityQueryParameters;
     #entities: Entity[] = [];
     #hasAll = false;
@@ -41,8 +45,7 @@ export class EntityUnpagedCache {
             this.#criteria = [];
             this.#hasAll = true;
         } else {
-            // [todo] ❌ need to deduplicate
-            this.#entities = [...this.#entities, ...entities];
+            this.#entities = deduplicateEntities(this.#schema, [...this.#entities, ...entities]);
             // [todo] ❌ need method "mergeCriteria()"
             this.#criteria.push(criterion);
             this.#hasAll = false;

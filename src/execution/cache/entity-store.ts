@@ -226,7 +226,7 @@ export class EntityStore {
         let unpagedCache = this.#getUnpagedCache(parameters);
 
         if (unpagedCache === undefined) {
-            unpagedCache = new EntityUnpagedCache(parameters);
+            unpagedCache = new EntityUnpagedCache(this.#schema, parameters);
             this.#unpagedCaches.push(unpagedCache);
         }
 
