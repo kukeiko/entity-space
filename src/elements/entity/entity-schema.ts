@@ -61,12 +61,16 @@ export class EntitySchema {
         return this.#idPaths.at(-1)!;
     }
 
-    isProperty(name: string): boolean {
+    hasProperty(name: string): boolean {
         return name in this.#primitives || name in this.#relations;
     }
 
-    isIdProperty(name: string): boolean {
+    hasIdProperty(name: string): boolean {
         return this.#idPaths.some(path => path.toString() === name);
+    }
+
+    isIdProperty(property: EntityProperty): boolean {
+        return this.hasIdProperty(property.getName());
     }
 
     addPrimitive(
@@ -148,11 +152,11 @@ export class EntitySchema {
             }
 
             if (this.#idPaths.length) {
-                joinsFromId = joinFrom.every(path => this.isIdProperty(path.valueOf()));
+                joinsFromId = joinFrom.every(path => this.hasIdProperty(path.valueOf()));
             }
 
             if (schema.#idPaths.length) {
-                joinsToId = joinTo.every(path => schema.isIdProperty(path.valueOf()));
+                joinsToId = joinTo.every(path => schema.hasIdProperty(path.valueOf()));
             }
         }
 
@@ -202,6 +206,10 @@ export class EntitySchema {
 
     getProperties(): EntityProperty[] {
         return [...Object.values(this.#primitives), ...Object.values(this.#relations)];
+    }
+
+    getPrimitiveProperties(): EntityPrimitiveProperty[] {
+        return Object.values(this.#primitives);
     }
 
     getPropertyRecord(filter?: (property: EntityProperty) => boolean): Record<string, EntityProperty> {

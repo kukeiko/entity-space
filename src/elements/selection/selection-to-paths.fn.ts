@@ -17,7 +17,7 @@ export function selectionToPaths(selection: EntitySelection, path?: Path): Path[
                 paths.push(toPath(key));
             }
         } else {
-            paths.push(...selectionToPaths(value, path === undefined ? toPath(key) : joinPaths([path, key])));
+            paths.push(...selectionToPaths(value, joinPaths([path, key])));
         }
     }
 

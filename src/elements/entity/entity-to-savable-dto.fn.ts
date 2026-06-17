@@ -17,9 +17,13 @@ export function entityToSavableDto(
     for (const property of properties) {
         const value = property.readValue(entity);
 
+        if (value === undefined) {
+            continue;
+        }
+
         const skip = hasId
-            ? value === undefined || (property.isReadonly() && !(includeId && schema.isIdProperty(property.getName())))
-            : value === undefined || !property.isCreatable();
+            ? property.isReadonly() && !(includeId && schema.isIdProperty(property))
+            : !property.isCreatable();
 
         if (skip) {
             continue;

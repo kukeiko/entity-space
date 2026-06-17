@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 import { Entity } from "./entity";
 import { ContainerType } from "./entity-property";
 import { EntitySchema } from "./entity-schema";
-import { isCreatableEntityProperty } from "./is-creatable-entity-property.fn";
 import { EntityValidationErrors, validateEntity } from "./validate-entity.fn";
 
 describe(validateEntity, () => {
@@ -122,35 +121,5 @@ describe(validateEntity, () => {
 
         // assert
         expect(actual).toEqual(expected);
-    });
-
-    describe("should allow a custom predicate to filter properties", () => {
-        it("to validate if an entity is creatable", () => {
-            // arrange
-            const schema = new EntitySchema("foo")
-                .addPrimitive("creatableNumber", Number)
-                .addPrimitive("creatableOptionalNumber", Number, { optional: true })
-                .addPrimitive("readonlyNumber", Number, { readonly: true });
-
-            const entity: Entity = { creatableOptionalNumber: 3, readonlyNumber: 8, doesntExist: 7 };
-
-            const expected: EntityValidationErrors = {
-                creatableNumber: "property is required",
-                readonlyNumber: "property is not creatable",
-                doesntExist: "property doesn't exist",
-            };
-
-            // act
-            const actual = validateEntity(
-                schema,
-                entity,
-                undefined,
-                isCreatableEntityProperty,
-                "property is not creatable",
-            );
-
-            // assert
-            expect(actual).toEqual(expected);
-        });
     });
 });

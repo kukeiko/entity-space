@@ -10,6 +10,7 @@ export function assignCreatedIds(
     targets: readonly Entity[],
     sources: readonly Entity[],
 ): void {
+    // [todo] ❌ filter from "sources" all those entities that already have an id
     const pairs = toEntityPairs(schema, targets, sources);
 
     for (const [target, source] of pairs) {

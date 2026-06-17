@@ -26,7 +26,7 @@ export async function executeCreateMutation(
     tracing.dispatchedMutation(schema, "create", copies);
     const created = await mutation.mutate(copies, mutation.getSelection() ?? {});
     assignCreatedIds(schema, mutation.getSelection() ?? {}, mutation.getEntities(), created);
-    const selection = getSelection(schema, mutation.getSelection() ?? {});
+    const selection = getSelection(schema, mutation.getSelection());
     const originals = Array.from(map.values());
     assignEntitiesUsingIds(schema, selection, originals, created);
 

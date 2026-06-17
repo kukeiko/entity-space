@@ -58,31 +58,11 @@ export class CreateEntityChange extends EntityChange {
     }
 
     override toString(): string {
-        return `⭐ ${this.getSchema().getName()} ${JSON.stringify(this.getEntity())}`;
+        return `🆕 ${this.getSchema().getName()} ${JSON.stringify(this.getEntity())}`;
     }
 }
 
 export class UpdateEntityChange extends EntityChange {
-    constructor(
-        schema: EntitySchema,
-        entity: Entity,
-        dependencies: readonly EntityChangeDependency[],
-        entities: readonly Entity[],
-    ) {
-        super(schema, entity, dependencies);
-        this.#entities = entities;
-    }
-
-    readonly #entities: readonly Entity[];
-
-    getEntities(): readonly Entity[] {
-        return this.#entities;
-    }
-
-    override hasEntity(entity: Entity): boolean {
-        return this.#entities.includes(entity);
-    }
-
     override isUpdate(): this is UpdateEntityChange {
         return true;
     }

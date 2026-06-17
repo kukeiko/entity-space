@@ -9,7 +9,6 @@ export function copyEntityForMutation(mutation: AcceptedEntityMutation, entity: 
         schema,
         entity,
         selection,
-        (relation, entity) =>
-            isSave || relation.isEmbedded() || mutation.getChanges().some(change => change.getEntity() === entity),
+        (relation, entity) => isSave || relation.isEmbedded() || mutation.includesEntity(entity),
     );
 }

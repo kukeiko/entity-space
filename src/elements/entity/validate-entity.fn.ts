@@ -1,7 +1,6 @@
 import { isEnumPrimitive, isPrimitiveOfType, primitiveToString, primitiveTypeToString } from "@entity-space/utils";
 import { Entity } from "./entity";
 import { isEntityPrimitiveProperty } from "./entity-primitive-property";
-import { EntityProperty } from "./entity-property";
 import { isEntityRelationProperty } from "./entity-relation-property";
 import { EntitySchema } from "./entity-schema";
 
@@ -11,11 +10,9 @@ export function validateEntity(
     schema: EntitySchema,
     entity: Entity,
     pathPrefix?: string,
-    propertyPredicate?: (property: EntityProperty) => boolean,
-    propertyPredicateError?: string,
 ): EntityValidationErrors | undefined {
     const errors: EntityValidationErrors = {};
-    const properties = schema.getPropertyRecord(propertyPredicate);
+    const properties = schema.getPropertyRecord();
 
     for (const [key, property] of Object.entries(properties)) {
         const path = pathPrefix ? `${pathPrefix}.${key}` : key;
@@ -77,12 +74,7 @@ export function validateEntity(
 
     for (const key of Object.keys(entity).filter(key => !(key in properties))) {
         const path = pathPrefix ? `${pathPrefix}.${key}` : key;
-
-        if (propertyPredicate && schema.isProperty(key)) {
-            errors[path] = propertyPredicateError ?? "property did not match custom predicate";
-        } else {
-            errors[path] = "property doesn't exist";
-        }
+        errors[path] = "property doesn't exist";
     }
 
     return Object.keys(errors).length ? errors : undefined;

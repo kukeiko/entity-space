@@ -2,13 +2,9 @@ import {
     EntityBlueprint,
     EntityPageShape,
     EntityQueryShape,
-    EntityRelationSelection,
     EntitySchema,
     EntitySortShape,
     getDefaultSelection,
-    isCreatableEntityProperty,
-    isSavableEntityProperty,
-    isUpdatableEntityProperty,
     mergeSelection,
     PackedEntitySelection,
     packEntitySelection,
@@ -170,12 +166,7 @@ export class EntitySchemaScopedServiceContainer<B> {
             );
         };
 
-        const selection = toRelationSelection(
-            this.#schema,
-            unpackSelection(this.#schema, select ?? {}, isSavableEntityProperty),
-        );
-
-        return this.#addMutator("save", mutate, selection);
+        return this.#addMutator("save", mutate, select);
     }
 
     addSaveMutator<S extends PackedEntitySelection<EntityBlueprint.Type<B>>>({
@@ -194,12 +185,7 @@ export class EntitySchemaScopedServiceContainer<B> {
             );
         };
 
-        const selection = toRelationSelection(
-            this.#schema,
-            unpackSelection(this.#schema, select ?? {}, isSavableEntityProperty),
-        );
-
-        return this.#addMutator("save", mutate, selection);
+        return this.#addMutator("save", mutate, select);
     }
 
     addCreateOneMutator<S extends PackedEntitySelection<EntityBlueprint.Type<B>>>({
@@ -222,12 +208,7 @@ export class EntitySchemaScopedServiceContainer<B> {
             );
         };
 
-        const selection = toRelationSelection(
-            this.#schema,
-            unpackSelection(this.#schema, select ?? {}, isCreatableEntityProperty),
-        );
-
-        return this.#addMutator("create", mutate, selection);
+        return this.#addMutator("create", mutate, select);
     }
 
     addCreateMutator<S extends PackedEntitySelection<EntityBlueprint.Type<B>>>({
@@ -246,12 +227,7 @@ export class EntitySchemaScopedServiceContainer<B> {
             );
         };
 
-        const selection = toRelationSelection(
-            this.#schema,
-            unpackSelection(this.#schema, select ?? {}, isCreatableEntityProperty),
-        );
-
-        return this.#addMutator("create", mutate, selection);
+        return this.#addMutator("create", mutate, select);
     }
 
     addUpdateOneMutator<S extends PackedEntitySelection<EntityBlueprint.Type<B>>>({
@@ -274,12 +250,7 @@ export class EntitySchemaScopedServiceContainer<B> {
             );
         };
 
-        const selection = toRelationSelection(
-            this.#schema,
-            unpackSelection(this.#schema, select ?? {}, isUpdatableEntityProperty),
-        );
-
-        return this.#addMutator("update", mutate, selection);
+        return this.#addMutator("update", mutate, select);
     }
 
     addUpdateMutator<S extends PackedEntitySelection<EntityBlueprint.Type<B>>>({
@@ -298,12 +269,7 @@ export class EntitySchemaScopedServiceContainer<B> {
             );
         };
 
-        const selection = toRelationSelection(
-            this.#schema,
-            unpackSelection(this.#schema, select ?? {}, isUpdatableEntityProperty),
-        );
-
-        return this.#addMutator("update", mutate, selection);
+        return this.#addMutator("update", mutate, select);
     }
 
     addDeleteOneMutator<S extends PackedEntitySelection<EntityBlueprint.Type<B>>>({
@@ -328,9 +294,7 @@ export class EntitySchemaScopedServiceContainer<B> {
             return entities;
         };
 
-        const selection = toRelationSelection(this.#schema, unpackSelection(this.#schema, select ?? {}));
-
-        return this.#addMutator("delete", mutate, selection);
+        return this.#addMutator("delete", mutate, select);
     }
 
     addDeleteMutator<S extends PackedEntitySelection<EntityBlueprint.Type<B>>>({
@@ -351,13 +315,12 @@ export class EntitySchemaScopedServiceContainer<B> {
             return entities;
         };
 
-        const selection = toRelationSelection(this.#schema, unpackSelection(this.#schema, select ?? {}));
-
-        return this.#addMutator("delete", mutate, selection);
+        return this.#addMutator("delete", mutate, select);
     }
 
-    #addMutator(type: EntityMutationType, mutate: EntityMutationFn, selection: EntityRelationSelection): this {
-        const mutator = new ExplicitEntityMutator(type, this.#schema, mutate, selection);
+    #addMutator(type: EntityMutationType, mutate: EntityMutationFn, selection?: PackedEntitySelection): this {
+        const relationSelection = toRelationSelection(this.#schema, unpackSelection(this.#schema, selection ?? {}));
+        const mutator = new ExplicitEntityMutator(type, this.#schema, mutate, relationSelection);
         this.#addMutatorFn(mutator);
 
         return this;

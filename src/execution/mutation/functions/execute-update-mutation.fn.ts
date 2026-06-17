@@ -26,7 +26,7 @@ export async function executeUpdateMutation(
     tracing.dispatchedMutation(schema, "update", copies);
     const updated = await mutation.mutate(copies, mutation.getSelection() ?? {});
     const originals = Array.from(map.values());
-    const selection = getSelection(schema, mutation.getSelection() ?? {});
+    const selection = getSelection(schema, mutation.getSelection());
     assignEntitiesUsingIds(schema, selection, originals, updated);
 
     for (const dependency of mutation.getInboundDependencies()) {

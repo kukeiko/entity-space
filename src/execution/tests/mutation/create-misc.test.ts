@@ -17,12 +17,30 @@ describe("create()", () => {
 
     it("should work", async () => {
         // arrange
+
+        const sunnexo = workspace.from(ArtistBlueprint).construct({ name: "Sunnexo" });
+        const expected = structuredClone(sunnexo);
+        const artists: Artist[] = [sunnexo];
+        const createArtist = repository.useMusic().useCreateArtist();
+
+        // act
+        await workspace.in(ArtistBlueprint).create(artists);
+
+        // assert
+        expect(createArtist).toHaveBeenCalledTimes(1);
+        expect(createArtist).toHaveBeenNthCalledWith<Parameters<CreateEntityFn<ArtistBlueprint>>>(1, {
+            entity: expected,
+            selection: {},
+        });
+    });
+
+    it("ignores updatable entities", async () => {
+        // arrange
         const infectedMushroom = workspace
             .from(ArtistBlueprint)
             .construct({ id: 1, namespace: "dev", name: "Infected Mushroom" });
         const sunnexo = workspace.from(ArtistBlueprint).construct({ name: "Sunnexo" });
-        // [todo] ❌ hack until I've figured out (and implemented) how exactly entities are passed to mutators
-        const expected = { ...structuredClone(sunnexo), metadata: undefined };
+        const expected = structuredClone(sunnexo);
         const memtrix = workspace.from(ArtistBlueprint).construct({ id: 2, namespace: "dev", name: "Memtrix" });
 
         const artists: Artist[] = [infectedMushroom, sunnexo, memtrix];
@@ -36,8 +54,7 @@ describe("create()", () => {
         // assert
         expect(createArtist).toHaveBeenCalledTimes(1);
         expect(createArtist).toHaveBeenNthCalledWith<Parameters<CreateEntityFn<ArtistBlueprint>>>(1, {
-            // [todo] ❌ hack until I've figured out (and implemented) how exactly entities are passed to mutators
-            entity: expected as any,
+            entity: expected,
             selection: {},
         });
         expect(updateArtist).toHaveBeenCalledTimes(0);

@@ -1,3 +1,4 @@
+import { isDefined } from "./is-defined.fn";
 import { isNotNullsy } from "./is-not-nullsy.fn";
 
 const $path = Symbol();
@@ -30,8 +31,8 @@ export function toPaths(paths: readonly string[]): Path[] {
     return wrapped;
 }
 
-export function joinPaths(paths: readonly (string | Path)[]): Path {
-    return toPath(paths.join("."));
+export function joinPaths(paths: readonly (string | Path | undefined)[]): Path {
+    return toPath(paths.filter(isDefined).join("."));
 }
 
 export function toPathSegments(path: Path): readonly string[] {

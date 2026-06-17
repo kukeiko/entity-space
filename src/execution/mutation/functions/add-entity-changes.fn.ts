@@ -10,8 +10,71 @@ import {
     relationEntries,
     toEntityMap,
 } from "@entity-space/elements";
+import { joinPaths, Path } from "@entity-space/utils";
 import { EntityChangesBuilder } from "../entity-changes-builder";
 import { EntityMutationType } from "../entity-mutation";
+
+function addCreateChanges(
+    builder: EntityChangesBuilder,
+    schema: EntitySchema,
+    selection: EntityRelationSelection,
+    entities: readonly Entity[],
+): void {
+    if (schema.hasId()) {
+        for (const creatable of entities.filter(entity => isNewEntity(schema, entity))) {
+            builder.addCreate(schema, creatable);
+        }
+    }
+
+    for (const [relation, relatedSchema, selected] of relationEntries(schema, selection)) {
+        const related = relation.readValuesFlat(entities);
+
+        if (!related.length) {
+            continue;
+        }
+
+        addCreateChanges(builder, relatedSchema, selected, related);
+    }
+}
+
+function addUpdateChanges(
+    builder: EntityChangesBuilder,
+    schema: EntitySchema,
+    selection: EntityRelationSelection,
+    entities: readonly Entity[],
+    previous?: readonly Entity[],
+    path?: Path,
+): void {
+    if (schema.hasId()) {
+        for (const updatable of entities.filter(entity => isPersistedEntity(schema, entity))) {
+            builder.addUpdate(schema, path, selection, updatable);
+        }
+
+        if (previous !== undefined) {
+            for (const entity of previous.filter(entity => entityHasId(schema, entity))) {
+                builder.addPrevious(schema, path, selection, entity);
+            }
+        }
+    }
+
+    for (const [relation, relatedSchema, selected] of relationEntries(schema, selection)) {
+        const related = relation.readValuesFlat(entities);
+        const previousRelated = previous !== undefined ? relation.readValuesFlat(previous) : undefined;
+
+        if (!related.length && (previousRelated === undefined || !previousRelated.length)) {
+            continue;
+        }
+
+        addUpdateChanges(
+            builder,
+            relatedSchema,
+            selected,
+            related,
+            previousRelated,
+            joinPaths([path, relation.getName()]),
+        );
+    }
+}
 
 function addDeleteChanges(
     builder: EntityChangesBuilder,
@@ -54,49 +117,6 @@ function addDeleteChanges(
     }
 }
 
-// [todo] ❓ consider extracting addPrevious() logic out of this function
-function addCreateAndUpdateChanges(
-    builder: EntityChangesBuilder,
-    schema: EntitySchema,
-    selection: EntityRelationSelection,
-    entities: readonly Entity[],
-    type: readonly EntityMutationType[],
-    previous?: readonly Entity[],
-): void {
-    if (schema.hasId()) {
-        if (type.includes("update")) {
-            for (const updatable of entities.filter(entity => isPersistedEntity(schema, entity))) {
-                builder.addUpdate(schema, updatable);
-            }
-        }
-
-        if (type.includes("create")) {
-            for (const creatable of entities.filter(entity => isNewEntity(schema, entity))) {
-                builder.addCreate(schema, creatable);
-            }
-        }
-
-        if (type.includes("update") || type.includes("delete")) {
-            if (previous !== undefined) {
-                for (const entity of previous.filter(entity => entityHasId(schema, entity))) {
-                    builder.addPrevious(schema, entity);
-                }
-            }
-        }
-    }
-
-    for (const [relation, relatedSchema, selected] of relationEntries(schema, selection)) {
-        const related = relation.readValuesFlat(entities);
-        const previousRelated = previous !== undefined ? relation.readValuesFlat(previous) : undefined;
-
-        if (!related.length && (previousRelated === undefined || !previousRelated.length)) {
-            continue;
-        }
-
-        addCreateAndUpdateChanges(builder, relatedSchema, selected, related, type, previousRelated);
-    }
-}
-
 export function addEntityChanges(
     builder = new EntityChangesBuilder(),
     schema: EntitySchema,
@@ -105,8 +125,12 @@ export function addEntityChanges(
     type: readonly EntityMutationType[],
     previous?: readonly Entity[],
 ): void {
-    if (type.includes("create") || type.includes("update")) {
-        addCreateAndUpdateChanges(builder, schema, selection, entities, type, previous);
+    if (type.includes("create")) {
+        addCreateChanges(builder, schema, selection, entities);
+    }
+
+    if (type.includes("update")) {
+        addUpdateChanges(builder, schema, selection, entities, previous);
     }
 
     if (previous !== undefined && type.includes("delete")) {

@@ -15,7 +15,7 @@ export function entityToUpdatableDto(
     for (const property of properties) {
         const value = property.readValue(entity);
 
-        if (value === undefined || (property.isReadonly() && !(includeId && schema.isIdProperty(property.getName())))) {
+        if (value === undefined || (property.isReadonly() && !(includeId && schema.isIdProperty(property)))) {
             continue;
         } else if (property.isPrimitive()) {
             property.writeDtoValue(dto, value);

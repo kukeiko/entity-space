@@ -21,13 +21,32 @@ describe("update()", () => {
             .from(ArtistBlueprint)
             .construct({ id: 1, namespace: "dev", name: "Infected Mushroom" });
         const memtrix = workspace.from(ArtistBlueprint).construct({ id: 2, namespace: "dev", name: "Memtrix" });
+        const artists: Artist[] = [infectedMushroom, memtrix];
+        const updateArtist = repository.useMusic().useUpdateArtist();
 
-        const artists: Artist[] = [
-            infectedMushroom,
-            workspace.from(ArtistBlueprint).construct({ name: "Sunnexo" }),
-            memtrix,
-        ];
+        // act
+        await workspace.in(ArtistBlueprint).update(artists);
 
+        // assert
+        expect(updateArtist).toHaveBeenCalledTimes(2);
+        expect(updateArtist).toHaveBeenNthCalledWith<Parameters<UpdateEntityFn<ArtistBlueprint>>>(1, {
+            entity: infectedMushroom,
+            selection: {},
+        });
+        expect(updateArtist).toHaveBeenNthCalledWith<Parameters<UpdateEntityFn<ArtistBlueprint>>>(2, {
+            entity: memtrix,
+            selection: {},
+        });
+    });
+
+    it("ignores creatable entities", async () => {
+        // arrange
+        const infectedMushroom = workspace
+            .from(ArtistBlueprint)
+            .construct({ id: 1, namespace: "dev", name: "Infected Mushroom" });
+        const sunnexo = workspace.from(ArtistBlueprint).construct({ name: "Sunnexo" });
+        const memtrix = workspace.from(ArtistBlueprint).construct({ id: 2, namespace: "dev", name: "Memtrix" });
+        const artists: Artist[] = [infectedMushroom, sunnexo, memtrix];
         const updateArtist = repository.useMusic().useUpdateArtist();
         const createArtist = repository.useMusic().useCreateArtist();
 
@@ -37,16 +56,13 @@ describe("update()", () => {
         // assert
         expect(updateArtist).toHaveBeenCalledTimes(2);
         expect(updateArtist).toHaveBeenNthCalledWith<Parameters<UpdateEntityFn<ArtistBlueprint>>>(1, {
-            // [todo] ❌ hack until I've figured out (and implemented) how exactly entities are passed to mutators
-            entity: { ...infectedMushroom, metadata: undefined } as any,
+            entity: infectedMushroom,
             selection: {},
         });
         expect(updateArtist).toHaveBeenNthCalledWith<Parameters<UpdateEntityFn<ArtistBlueprint>>>(2, {
-            // [todo] ❌ hack until I've figured out (and implemented) how exactly entities are passed to mutators
-            entity: { ...memtrix, metadata: undefined } as any,
+            entity: memtrix,
             selection: {},
         });
-        // expect(updateArtist).toHaveBeenNthCalledWith(2, memtrix);
         expect(createArtist).toHaveBeenCalledTimes(0);
     });
 });

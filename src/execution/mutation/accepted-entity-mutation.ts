@@ -60,15 +60,19 @@ export class AcceptedEntityMutation {
     }
 
     getEntities(): readonly Entity[] {
-        return this.#entities.filter(entity => this.#changes.some(change => change.getEntity() === entity));
+        return this.#entities.filter(entity => this.includesEntity(entity));
     }
 
     getPreviousEntities(): readonly Entity[] {
-        return (this.#previous ?? []).filter(entity => this.#changes.some(change => change.getEntity() === entity));
+        return (this.#previous ?? []).filter(entity => this.includesEntity(entity));
     }
 
     getChanges(): readonly EntityChange[] {
         return this.#changes;
+    }
+
+    includesEntity(entity: Entity): boolean {
+        return this.#changes.some(change => change.getEntity() === entity);
     }
 
     getSelection(): EntityRelationSelection {
