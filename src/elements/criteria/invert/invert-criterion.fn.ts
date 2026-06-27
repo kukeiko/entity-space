@@ -5,9 +5,11 @@ import { EntityCriterion } from "../entity-criterion";
 import { EqualsCriterion } from "../equals-criterion";
 import { InArrayCriterion } from "../in-array-criterion";
 import { InRangeCriterion } from "../in-range-criterion";
+import { NoneCriterion } from "../none-criterion";
 import { NotEqualsCriterion } from "../not-equals-criterion";
 import { NotInArrayCriterion } from "../not-in-array-criterion";
 import { OrCriterion } from "../or-criterion";
+import { SomeCriterion } from "../some-criterion";
 
 function invertAndCriterion(criterion: AndCriterion): Criterion {
     const invertedCriteria = criterion
@@ -79,6 +81,8 @@ const inverters: Inverters = {
     "not-equals": criterion => new EqualsCriterion(criterion.getValue()),
     "not-in-array": criterion => new InArrayCriterion(criterion.getValues()),
     or: invertOrCriterion,
+    some: criterion => new NoneCriterion(criterion.getCriterion()),
+    none: criterion => new SomeCriterion(criterion.getCriterion()),
 };
 
 export function invertCriterion(criterion: Criterion): Criterion {

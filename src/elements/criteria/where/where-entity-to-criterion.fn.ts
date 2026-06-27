@@ -1,4 +1,5 @@
 import { isPrimitive } from "@entity-space/utils";
+import { EntitySchema } from "../../entity/entity-schema";
 import { Criterion } from "../criterion";
 import { EntityCriterion, PackedEntityCriterion } from "../entity-criterion";
 import { EqualsCriterion } from "../equals-criterion";
@@ -6,6 +7,7 @@ import { InArrayCriterion } from "../in-array-criterion";
 import { InRangeCriterion } from "../in-range-criterion";
 import { NotEqualsCriterion } from "../not-equals-criterion";
 import { NotInArrayCriterion } from "../not-in-array-criterion";
+import { SomeCriterion } from "../some-criterion";
 import {
     WhereEntity,
     WhereEquals,
@@ -15,7 +17,7 @@ import {
     WhereNotInArray,
 } from "./where-entity.type";
 
-export function whereEntityToCriterion(where: WhereEntity): Criterion | undefined {
+export function whereEntityToCriterion(schema: EntitySchema, where: WhereEntity): Criterion | undefined {
     const criterion: PackedEntityCriterion = {};
 
     for (const [key, value] of Object.entries(where)) {
@@ -37,10 +39,15 @@ export function whereEntityToCriterion(where: WhereEntity): Criterion | undefine
         } else if ((value as WhereNotInArray<any>).$notInArray !== undefined) {
             criterion[key] = new NotInArrayCriterion((value as WhereNotInArray<any>).$notInArray);
         } else {
-            const nested = whereEntityToCriterion(value as WhereEntity);
+            const relation = schema.getRelation(key);
+            const nested = whereEntityToCriterion(relation.getRelatedSchema(), value as WhereEntity);
 
             if (nested !== undefined) {
-                criterion[key] = nested;
+                if (relation.isArray()) {
+                    criterion[key] = new SomeCriterion(nested);
+                } else {
+                    criterion[key] = nested;
+                }
             }
         }
     }

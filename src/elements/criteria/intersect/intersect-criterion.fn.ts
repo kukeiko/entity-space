@@ -9,6 +9,7 @@ import { InRangeCriterion, isFromInsideFromTo, isToInsideFromTo } from "../in-ra
 import { NotEqualsCriterion } from "../not-equals-criterion";
 import { NotInArrayCriterion } from "../not-in-array-criterion";
 import { OrCriterion } from "../or-criterion";
+import { SomeCriterion } from "../some-criterion";
 
 function intersectInArrayCriterion(criterion: InArrayCriterion, other: Criterion): Criterion | false {
     const intersection = Array.from(criterion.getValues()).filter(value => other.contains(value));
@@ -201,6 +202,20 @@ function intersectOrCriterion(criterion: OrCriterion, other: Criterion): Criteri
     }
 }
 
+function intersectSomeCriterion(criterion: SomeCriterion, other: Criterion): Criterion | false {
+    if (!(other instanceof SomeCriterion)) {
+        return false;
+    }
+
+    const result = intersectCriterion(criterion.getCriterion(), other.getCriterion());
+
+    if (result === false) {
+        return false;
+    }
+
+    return new SomeCriterion(result);
+}
+
 type Intersecter<T> = (criterion: T, other: Criterion) => Criterion | false;
 
 type Intersecters = {
@@ -210,7 +225,7 @@ type Intersecters = {
 };
 
 const intersecters: Intersecters = {
-    and: () => false, // [todo] implement
+    and: () => false, // [todo] ❌ implement
     entity: intersectEntityCriterion,
     equals: (criterion, other) => (other.contains(criterion.getValue()) ? criterion : false),
     "in-array": intersectInArrayCriterion,
@@ -218,6 +233,8 @@ const intersecters: Intersecters = {
     "not-equals": intersectNotEqualsCriterion,
     "not-in-array": intersectNotInArrayCriterion,
     or: intersectOrCriterion,
+    some: intersectSomeCriterion,
+    none: () => false, // [todo] ❌ implement
 };
 
 export function intersectCriterion(criterion: Criterion, other: Criterion): Criterion | false {

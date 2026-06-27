@@ -107,7 +107,7 @@ export class EntityWorkspace {
         sort,
     }: QueryArguments): Observable<T[]> {
         return defer(() => {
-            const criteria = where ? whereEntityToCriterion(where) : undefined;
+            const criteria = where ? whereEntityToCriterion(schema, where) : undefined;
             const selection = unpackSelection(schema, select ?? {});
             const parameters = parametersArg
                 ? new EntityQueryParameters(

@@ -3,6 +3,7 @@ import { EntityCriterion } from "../entity-criterion";
 import { EqualsCriterion } from "../equals-criterion";
 import { InArrayCriterion } from "../in-array-criterion";
 import { InRangeCriterion } from "../in-range-criterion";
+import { SomeCriterion } from "../some-criterion";
 import { WhereEntityShapeInstance } from "./where-entity-shape-instance.type";
 import { WhereEntityShape, WherePrimitiveShape } from "./where-entity-shape.type";
 
@@ -53,6 +54,11 @@ export function criterionToWhereEntityShapeInstance(
             whereEntityShapeInstance[key] = criterionToWhereEntityShapeInstance(
                 wherePropertyShape as WhereEntityShape,
                 value,
+            );
+        } else if (value instanceof SomeCriterion) {
+            whereEntityShapeInstance[key] = criterionToWhereEntityShapeInstance(
+                wherePropertyShape as WhereEntityShape,
+                value.getCriterion(),
             );
         } else if (value instanceof EqualsCriterion) {
             if (wherePropertyShape.$equals === true) {

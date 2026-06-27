@@ -6,9 +6,11 @@ import { EntityCriterion } from "../entity-criterion";
 import { EqualsCriterion } from "../equals-criterion";
 import { InArrayCriterion } from "../in-array-criterion";
 import { InRangeCriterion } from "../in-range-criterion";
+import { NoneCriterion } from "../none-criterion";
 import { NotEqualsCriterion } from "../not-equals-criterion";
 import { NotInArrayCriterion } from "../not-in-array-criterion";
 import { OrCriterion } from "../or-criterion";
+import { SomeCriterion } from "../some-criterion";
 import { parseCriterion } from "./parse-criterion.fn";
 
 describe(parseCriterion.name, () => {
@@ -18,6 +20,8 @@ describe(parseCriterion.name, () => {
     const notEquals = (value: ReturnType<Primitive>) => new NotEqualsCriterion(value);
     const notInArray = (values: ReturnType<Primitive>[]) => new NotInArrayCriterion(values);
     const or = (criteria: Criterion[]) => new OrCriterion(criteria);
+    const some = (criterion: Criterion) => new SomeCriterion(criterion);
+    const none = (criterion: Criterion) => new NoneCriterion(criterion);
     const where = <T extends any>(criteria: Partial<Record<keyof T, Criterion>>) =>
         new EntityCriterion(criteria as any);
     const inRange = <T extends typeof Number | typeof String>(
@@ -75,13 +79,17 @@ describe(parseCriterion.name, () => {
     shouldParse(`{1, 2, "foo", 3}`, inArray([1, 2, "foo", 3]));
     shouldParse(`{1, 2, "foo", null, undefined}`, inArray([1, 2, "foo", null, undefined]));
     shouldParse("!{1, 2}", notInArray([1, 2]));
+    shouldParse("some(1)", some(equals(1)));
+    shouldParse("some(1 | 2)", some(or([equals(1), equals(2)])));
+    shouldParse("none(1)", none(equals(1)));
+    shouldParse("none(1 | 2)", none(or([equals(1), equals(2)])));
 
     interface FooBar {
         foo: number;
         bar: number;
     }
 
-    // named-criteria
+    // entity-criteria
     shouldParse('{ foo: 7, bar: "baz" }', where<FooBar>({ foo: equals(7), bar: equals("baz") }));
     shouldParse("{ foo: 7 }", where<FooBar>({ foo: equals(7) }));
     shouldParse("{ foo: !7 }", where<FooBar>({ foo: notEquals(7) }));
@@ -146,5 +154,15 @@ describe(parseCriterion.name, () => {
     shouldParse(
         'true & ({ foo: 7, bar: "baz" } | 64)',
         and([equals(true), or([where({ foo: equals(7), bar: equals("baz") }), equals(64)])]),
+    );
+
+    shouldParse(
+        'some({ foo: 7, bar: "baz" } | 64)',
+        some(or([where({ foo: equals(7), bar: equals("baz") }), equals(64)])),
+    );
+
+    shouldParse(
+        'none({ foo: 7, bar: "baz" } | 64)',
+        none(or([where({ foo: equals(7), bar: equals("baz") }), equals(64)])),
     );
 });

@@ -8,6 +8,7 @@ import { InArrayCriterion } from "../in-array-criterion";
 import { NotEqualsCriterion } from "../not-equals-criterion";
 import { NotInArrayCriterion } from "../not-in-array-criterion";
 import { OrCriterion } from "../or-criterion";
+import { SomeCriterion } from "../some-criterion";
 import { subtractCriterion } from "../subtract/subtract-criterion.fn";
 import { mergeInRangeCriterion } from "./merge-in-range-criterion.fn";
 
@@ -56,6 +57,7 @@ function mergeEqualsCriterion(criterion: EqualsCriterion, other: Criterion): Cri
     } else if (other instanceof InArrayCriterion) {
         return new InArrayCriterion([...other.getValues(), criterion.getValue()]);
     } else if (other instanceof NotEqualsCriterion) {
+        // [todo] ❓ is this correct?
         return true;
     }
 
@@ -132,6 +134,20 @@ function mergeOrCriterion(criterion: OrCriterion, other: Criterion): Criterion |
     return unmerged.length ? new OrCriterion([merged, ...unmerged]) : merged;
 }
 
+function mergeSomeCriterion(criterion: SomeCriterion, other: Criterion): Criterion | boolean {
+    if (!(other instanceof SomeCriterion)) {
+        return false;
+    }
+
+    const result = mergeCriterion(criterion.getCriterion(), other.getCriterion());
+
+    if (typeof result === "boolean") {
+        return result;
+    }
+
+    return new SomeCriterion(result);
+}
+
 type Merger<T> = (criterion: T, other: Criterion) => Criterion | boolean;
 
 type Mergers = {
@@ -139,7 +155,7 @@ type Mergers = {
 };
 
 const mergers: Mergers = {
-    and: () => false, // [todo] implement
+    and: () => false, // [todo] ❌ implement
     entity: mergeEntityCriterion,
     equals: mergeEqualsCriterion,
     "in-array": mergeInArrayCriterion,
@@ -147,6 +163,8 @@ const mergers: Mergers = {
     "not-equals": mergeNotEqualsCriterion,
     "not-in-array": mergeNotInArrayCriterion,
     or: mergeOrCriterion,
+    some: mergeSomeCriterion,
+    none: () => false, // [todo] ❌ implement
 };
 
 export function mergeCriterion(criterion: Criterion, other: Criterion): Criterion | boolean {

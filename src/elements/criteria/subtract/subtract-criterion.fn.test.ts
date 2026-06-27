@@ -9,6 +9,7 @@ import { InRangeCriterion } from "../in-range-criterion";
 import { NotEqualsCriterion } from "../not-equals-criterion";
 import { NotInArrayCriterion } from "../not-in-array-criterion";
 import { OrCriterion } from "../or-criterion";
+import { SomeCriterion } from "../some-criterion";
 import { subtractCriterion } from "./subtract-criterion.fn";
 
 describe(subtractCriterion, () => {
@@ -194,6 +195,12 @@ describe(subtractCriterion, () => {
             .minus("({ price: [100, 200], rating: [3, 5] } | { price: (200, 300], rating: [3, 5] })")
             .toEqual("({ price: (200, 300], rating: (5, 7] } | { price: [100, 200], rating: (5, 7] })");
 
+        expectCriterion("{ foo: some({3, 4}) }").minus("{ foo: some(3) }").toEqual("{ foo: some({4}) }");
+
+        expectCriterion("{ foo: some(3) }")
+            .minus("{ foo: some(3), bar: some(1) }")
+            .toEqual("{ foo: some(3), bar: none(1) }");
+
         it("changing order of criteria properties should still result in an equivalent subtraction result", (): void => {
             // arrange
             interface FooBarBaz {
@@ -237,5 +244,13 @@ describe(subtractCriterion, () => {
             expect(subtracted_1_by_2).toEqual(true);
             expect(subtracted_2_by_1).toEqual(true);
         });
+    });
+
+    describe(SomeCriterion, () => {
+        expectCriterion("some(1)").minus("some(1)").toEqual(true);
+        expectCriterion("some(1)").minus("some(2)").toEqual(false);
+        expectCriterion("some(1)").minus("some(1 | 2)").toEqual(true);
+        expectCriterion("some(1 | 2 | 3)").minus("some(1 | 2)").toEqual("some(3)");
+        expectCriterion("some({ foo: {3, 4} })").minus("some({ foo: 3 })").toEqual("some({ foo: {4} })");
     });
 });

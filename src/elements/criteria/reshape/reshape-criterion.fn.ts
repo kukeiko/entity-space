@@ -19,6 +19,8 @@ import { NotInArrayCriterionShape } from "../not-in-array-criterion-shape";
 import { OrCriterion } from "../or-criterion";
 import { OrCriterionShape } from "../or-criterion-shape";
 import { ReshapedCriterion } from "../reshaped-criterion";
+import { SomeCriterion } from "../some-criterion";
+import { SomeCriterionShape } from "../some-criterion-shape";
 import { subtractCriterion } from "../subtract/subtract-criterion.fn";
 
 function reshapeByEquals(shape: EqualsCriterionShape, criterion: Criterion): ReshapedCriterion | false {
@@ -207,6 +209,23 @@ function reshapeByEntity(shape: EntityCriterionShape, criterion: Criterion): Res
     return new ReshapedCriterion(reshaped, open);
 }
 
+function reshapeBySome(someShape: SomeCriterionShape, criterion: Criterion): ReshapedCriterion | false {
+    if (!(criterion instanceof SomeCriterion)) {
+        return false;
+    }
+
+    const result = reshapeCriterion([someShape.getShape()], criterion.getCriterion());
+
+    if (result === false) {
+        return false;
+    }
+
+    const reshaped = result.getReshaped().map(criterion => new SomeCriterion(criterion));
+    const open = result.getOpen().map(criterion => new SomeCriterion(criterion));
+
+    return new ReshapedCriterion(reshaped, open);
+}
+
 function reshapeByOr(orShape: OrCriterionShape, criterion: Criterion): ReshapedCriterion | false {
     let reshaped: Criterion[] = [];
 
@@ -268,7 +287,7 @@ type Reshapers = {
 
 const reshapers: Reshapers = {
     and: () => {
-        // [todo] implement
+        // [todo] ❌ implement
         throw new Error("not yet implemented");
     },
     entity: reshapeByEntity,
@@ -278,6 +297,11 @@ const reshapers: Reshapers = {
     "not-equals": reshapeByNotEquals,
     "not-in-array": reshapeByNotInArray,
     or: reshapeByOr,
+    some: reshapeBySome,
+    none: () => {
+        // [todo] ❌ implement
+        throw new Error("not yet implemented");
+    },
 };
 
 export function reshapeCriterion<T extends CriterionShape[]>(

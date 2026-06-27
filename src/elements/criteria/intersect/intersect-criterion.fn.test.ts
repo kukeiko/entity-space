@@ -7,6 +7,7 @@ import { InRangeCriterion } from "../in-range-criterion";
 import { NotEqualsCriterion } from "../not-equals-criterion";
 import { NotInArrayCriterion } from "../not-in-array-criterion";
 import { OrCriterion } from "../or-criterion";
+import { SomeCriterion } from "../some-criterion";
 import { intersectCriterion } from "./intersect-criterion.fn";
 
 describe(intersectCriterion, () => {
@@ -44,6 +45,10 @@ describe(intersectCriterion, () => {
 
         describe(EntityCriterion, () => {
             expectCriterion("1").intersect("{ foo: 1 }").toEqual(false);
+        });
+
+        describe(SomeCriterion, () => {
+            expectCriterion("1").intersect("some(1)").toEqual(false);
         });
     });
 
@@ -177,6 +182,14 @@ describe(intersectCriterion, () => {
         expectCriterion("{ foo: 1, bar: 2 }", test.skip)
             .intersect("{ foo: 1 } & { bar: 2 }")
             .toEqual("{ foo: 1, bar: 2 }");
+    });
+
+    describe(SomeCriterion, () => {
+        expectCriterion("some(1)").intersect("some(1)").toEqual("some(1)");
+        expectCriterion("some(1)").intersect("some(2)").toEqual(false);
+        expectCriterion("some({1, 2})").intersect("some(1)").toEqual("some(1)");
+        expectCriterion("some({1, 2})").intersect("some({2, 3})").toEqual("some(2)");
+        expectCriterion("some({1, 2, 3})").intersect("some({2, 3})").toEqual("some({2, 3})");
     });
 
     describe(OrCriterion, () => {

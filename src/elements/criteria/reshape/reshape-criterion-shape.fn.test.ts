@@ -6,8 +6,12 @@ import { InRangeCriterionShape } from "../in-range-criterion-shape";
 import { NotEqualsCriterionShape } from "../not-equals-criterion-shape";
 import { NotInArrayCriterionShape } from "../not-in-array-criterion-shape";
 import { ReshapedCriterionShape } from "../reshaped-criterion-shape";
+import { SomeCriterionShape } from "../some-criterion-shape";
 import { reshapeCriterionShape } from "./reshape-criterion-shape.fn";
 
+// [todo] ❌ none of these tests are fully asserting equality, as so many properties are private.
+// we could solve that like we did with other elements: have a string representation and check equality for those.
+// another option is to have a custom matcher.
 describe(reshapeCriterionShape, () => {
     describe(EqualsCriterionShape, () => {
         it("Number", () => {
@@ -355,6 +359,26 @@ describe(reshapeCriterionShape, () => {
                 new EntityCriterionShape({ foo: Number }),
                 new EntityCriterionShape({ foo: String, bar: Number }),
             );
+
+            // act
+            const reshaped = reshapeCriterionShape(what, by);
+
+            // assert
+            expect(reshaped).not.toBe(false);
+
+            if (reshaped !== false) {
+                expect(reshaped.getReshaped()).toStrictEqual(expected.getReshaped());
+                expect(reshaped.getOpen()).toStrictEqual(expected.getOpen());
+            }
+        });
+    });
+
+    describe(SomeCriterionShape, () => {
+        it("some({ number })", () => {
+            // arrange
+            const what = new SomeCriterionShape(new InArrayCriterionShape([Number]));
+            const by = [new SomeCriterionShape(new EqualsCriterionShape([Number]))];
+            const expected = new ReshapedCriterionShape(new SomeCriterionShape(new EqualsCriterionShape([Number])));
 
             // act
             const reshaped = reshapeCriterionShape(what, by);

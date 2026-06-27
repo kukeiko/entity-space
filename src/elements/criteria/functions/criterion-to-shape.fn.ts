@@ -13,6 +13,8 @@ import { NotEqualsCriterion } from "../not-equals-criterion";
 import { NotEqualsCriterionShape } from "../not-equals-criterion-shape";
 import { NotInArrayCriterion } from "../not-in-array-criterion";
 import { NotInArrayCriterionShape } from "../not-in-array-criterion-shape";
+import { SomeCriterion } from "../some-criterion";
+import { SomeCriterionShape } from "../some-criterion-shape";
 
 export function criterionToShape(criterion: Criterion): CriterionShape {
     if (criterion instanceof EntityCriterion) {
@@ -33,6 +35,8 @@ export function criterionToShape(criterion: Criterion): CriterionShape {
         return new NotInArrayCriterionShape(criterion.getValues().map(primitiveToType));
     } else if (criterion instanceof InRangeCriterion) {
         return new InRangeCriterionShape(criterion.getValueType());
+    } else if (criterion instanceof SomeCriterion) {
+        return new SomeCriterionShape(criterionToShape(criterion.getCriterion()));
     } else {
         throw new Error(`not yet implemented: mapping a criterion of type "${criterion.type}" to its shape`);
     }

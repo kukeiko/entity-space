@@ -6,9 +6,11 @@ import { EntityCriterion } from "../entity-criterion";
 import { EqualsCriterion } from "../equals-criterion";
 import { InArrayCriterion } from "../in-array-criterion";
 import { InRangeCriterion } from "../in-range-criterion";
+import { NoneCriterion } from "../none-criterion";
 import { NotEqualsCriterion } from "../not-equals-criterion";
 import { NotInArrayCriterion } from "../not-in-array-criterion";
 import { OrCriterion } from "../or-criterion";
+import { SomeCriterion } from "../some-criterion";
 import { invertCriterion } from "./invert-criterion.fn";
 
 describe(invertCriterion, () => {
@@ -75,6 +77,14 @@ describe(invertCriterion, () => {
             .toEqual(
                 "{ foo: [..., 0) | (7, ...] } | { foo: [0, 7], bar: !{1,2,3} } | { foo: [0, 7], bar: {1,2,3}, baz: !8}",
             );
+    });
+
+    describe(SomeCriterion, () => {
+        expectCriterion("some(1)").inverted().toEqual("none(1)");
+    });
+
+    describe(NoneCriterion, () => {
+        expectCriterion("none(1)").inverted().toEqual("some(1)");
     });
 
     it("should throw if passed an unknown Criterion", () => {

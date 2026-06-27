@@ -11,6 +11,7 @@ import { NotEqualsCriterionShape } from "../not-equals-criterion-shape";
 import { NotInArrayCriterionShape } from "../not-in-array-criterion-shape";
 import { OrCriterionShape } from "../or-criterion-shape";
 import { ReshapedCriterionShape } from "../reshaped-criterion-shape";
+import { SomeCriterionShape } from "../some-criterion-shape";
 
 function reshapeByEquals(
     what: CriterionShape,
@@ -143,6 +144,27 @@ function reshapeByInRange(
     return false;
 }
 
+function reshapeBySome(
+    what: CriterionShape,
+    by: SomeCriterionShape,
+): ReshapedCriterionShape<SomeCriterionShape> | false {
+    if (!(what instanceof SomeCriterionShape)) {
+        return false;
+    }
+
+    const result = reshapeCriterionShape(what.getShape(), [by.getShape()]);
+
+    if (result === false) {
+        return false;
+    }
+
+    const reshaped = new SomeCriterionShape(result.getReshaped());
+    const open = result.getOpen();
+    const openShape = open ? new SomeCriterionShape(open) : undefined;
+
+    return new ReshapedCriterionShape(reshaped, openShape, result.getFlattenCount());
+}
+
 function reshapeByEntity(
     what: CriterionShape,
     by: EntityCriterionShape,
@@ -244,7 +266,7 @@ type Reshapers = {
 
 const reshapers: Reshapers = {
     and: () => {
-        // [todo] implement
+        // [todo] ❌ implement
         throw new Error("not yet implemented");
     },
     equals: reshapeByEquals,
@@ -254,7 +276,12 @@ const reshapers: Reshapers = {
     "not-in-array": reshapeByNotInArray,
     "in-range": reshapeByInRange,
     or: () => {
-        // [todo] implement
+        // [todo] ❌ implement
+        throw new Error("not yet implemented");
+    },
+    some: reshapeBySome,
+    none: () => {
+        // [todo] ❌ implement
         throw new Error("not yet implemented");
     },
 };

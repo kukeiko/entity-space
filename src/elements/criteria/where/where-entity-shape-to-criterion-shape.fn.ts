@@ -7,6 +7,7 @@ import { InArrayCriterionShape } from "../in-array-criterion-shape";
 import { InRangeCriterionShape } from "../in-range-criterion-shape";
 import { NotEqualsCriterionShape } from "../not-equals-criterion-shape";
 import { NotInArrayCriterionShape } from "../not-in-array-criterion-shape";
+import { SomeCriterionShape } from "../some-criterion-shape";
 import { WhereEntityShape, WherePrimitiveShape } from "./where-entity-shape.type";
 
 function wherePrimitiveShapeToCriterionShapes(
@@ -66,11 +67,12 @@ export function whereEntityShapeToCriterionShape(schema: EntitySchema, shape: Wh
                 relation.getRelatedSchema(),
                 value as WhereEntityShape,
             );
+            const wrappedShape = relation.isArray() ? new SomeCriterionShape(relatedShape) : relatedShape;
 
             if (relatedShape.isOptional()) {
-                optional[key] = relatedShape;
+                optional[key] = wrappedShape;
             } else {
-                required[key] = relatedShape;
+                required[key] = wrappedShape;
             }
         }
     }

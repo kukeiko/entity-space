@@ -7,6 +7,7 @@ import { InRangeCriterion } from "../in-range-criterion";
 import { NotEqualsCriterion } from "../not-equals-criterion";
 import { NotInArrayCriterion } from "../not-in-array-criterion";
 import { OrCriterion } from "../or-criterion";
+import { SomeCriterion } from "../some-criterion";
 import { mergeCriterion } from "./merge-criterion.fn";
 
 describe(mergeCriterion, () => {
@@ -81,5 +82,10 @@ describe(mergeCriterion, () => {
             .toEqual("{ foo: [1, 13], bar: [3, 5] }");
 
         expectCriterion("{ foo: [1, 7], bar: [3, 5] }").plus("{ foo: [2, 6], bar: [5, 7] }").toEqual(false);
+    });
+
+    describe(SomeCriterion, () => {
+        expectCriterion("some(1)").plus("some(2)").toEqual("some({1, 2})");
+        expectCriterion("some(1)").plus("some(!1)").toEqual(true);
     });
 });

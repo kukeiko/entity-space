@@ -10,6 +10,7 @@ import { subtractByInRangeCriterion } from "./subtract-by-in-range-criterion.fn"
 import { subtractByNotEqualsCriterion } from "./subtract-by-not-equals-criterion.fn";
 import { subtractByNotInArrayCriterion } from "./subtract-by-not-in-array-criterion.fn";
 import { subtractByOrCriterion } from "./subtract-by-or-criterion.fn";
+import { subtractBySomeCriterion } from "./subtract-by-some-criterion.fn";
 import { subtractFromAndCriterion } from "./subtract-from-and-criterion.fn";
 import { subtractFromOrCriterion } from "./subtract-from-or-criterion.fn";
 
@@ -30,6 +31,11 @@ const subtractors: Subtractors = {
     "not-equals": subtractByNotEqualsCriterion,
     "not-in-array": subtractByNotInArrayCriterion,
     or: subtractByOrCriterion,
+    some: subtractBySomeCriterion,
+    none: () => {
+        // [todo] ❌ implement
+        return false;
+    },
 };
 
 export function subtractCriterion(what: Criterion, by: Criterion): Criterion | boolean {
