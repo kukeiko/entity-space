@@ -138,6 +138,30 @@ describe("get()", () => {
         expect(actual).toStrictEqual(expected);
     });
 
+    it("should support entity-source that provides joined entities", async () => {
+        // arrange
+        const artists: Artist[] = [facade.construct(ArtistBlueprint, { id: 1, namespace: "dev" })];
+        const songs: Song[] = [facade.construct(SongBlueprint, { id: 10, namespace: "dev", artistId: 1, name: "foo" })];
+        const expected = [{ ...artists[0], songs: [{ ...songs[0] }] }];
+        repository.useMusic().useEntities({ artists, songs });
+        repository.useMusic().useLoadAllArtistsJoinSongs();
+
+        const load = () =>
+            workspace
+                .from(ArtistBlueprint)
+                .select({ songs: true })
+                .where({ songs: { name: "foo" } })
+                .cache(true)
+                .get();
+
+        // act
+        await load(); // load into cache
+        const actual = await load(); // load from cache
+
+        // assert
+        expect(actual).toEqual(expected);
+    });
+
     it("should work (complex)", async () => {
         // arrange
         const createdAt = "2025-05-19T03:27:16.292Z";
