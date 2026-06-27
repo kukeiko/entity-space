@@ -5,11 +5,11 @@ import { Criterion } from "../criterion";
 import { EntityCriterion } from "../entity-criterion";
 import { OrCriterion } from "../or-criterion";
 
-export function omitRelationalCriteria(criterion: Criterion, schema: EntitySchema): Criterion | undefined {
+export function omitJoinedCriteria(criterion: Criterion, schema: EntitySchema): Criterion | undefined {
     if (criterion instanceof OrCriterion || criterion instanceof AndCriterion) {
         const omittedCriteria = criterion
             .getCriteria()
-            .map(criterion => omitRelationalCriteria(criterion, schema))
+            .map(criterion => omitJoinedCriteria(criterion, schema))
             .filter(isDefined);
 
         if (!omittedCriteria.length) {
@@ -31,7 +31,7 @@ export function omitRelationalCriteria(criterion: Criterion, schema: EntitySchem
             } else if (!schema.getRelation(key).isEmbedded()) {
                 continue;
             } else {
-                const omittedCriterion = omitRelationalCriteria(criterion, schema.getRelation(key).getRelatedSchema());
+                const omittedCriterion = omitJoinedCriteria(criterion, schema.getRelation(key).getRelatedSchema());
 
                 if (omittedCriterion) {
                     omitted[key] = omittedCriterion;

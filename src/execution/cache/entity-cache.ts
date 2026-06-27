@@ -16,8 +16,8 @@ import {
     joinEntities,
     matchesCriterion,
     normalizeEntities,
-    omitRelationalCriteria,
-    omitRelationalSelections,
+    omitJoinedCriteria,
+    omitJoinedSelections,
 } from "@entity-space/elements";
 import { ComplexKeyMap } from "@entity-space/utils";
 import { map, merge, Observable, Subject } from "rxjs";
@@ -71,7 +71,7 @@ export class EntityCache {
 
     upsertQuery(query: EntityQuery, entities: readonly Entity[], context?: EntityQueryExecutionContext): void {
         const schema = query.getSchema();
-        this.upsert(
+        this.#upsert(
             schema,
             entities,
             query.getParameters(),
@@ -85,7 +85,7 @@ export class EntityCache {
         this.#cachedQueriesChanged.next();
     }
 
-    upsert(
+    #upsert(
         schema: EntitySchema,
         entities: readonly Entity[],
         parameters?: EntityQueryParameters,
@@ -191,8 +191,8 @@ export class EntityCache {
         const criterion = query.getCriterion();
         const schema = query.getSchema();
         const selection = query.getSelection();
-        const storeCriterion = criterion ? omitRelationalCriteria(criterion, schema) : undefined;
-        const storeSelection = selection ? omitRelationalSelections(selection, schema) : undefined;
+        const storeCriterion = criterion ? omitJoinedCriteria(criterion, schema) : undefined;
+        const storeSelection = selection ? omitJoinedSelections(selection, schema) : undefined;
 
         return query.with({ criterion: storeCriterion ?? null, selection: storeSelection });
     }
