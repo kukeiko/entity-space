@@ -250,13 +250,16 @@ export class EntitySource {
         if (loader === undefined) {
             const result = this.#load(...args);
             this.#pendingRequests.push({ query, result });
-            const entities = await unwrapMaybeAsync(result);
 
-            this.#pendingRequests = this.#pendingRequests.filter(
-                request => request.query.toString() !== query.toString(),
-            );
+            try {
+                const entities = await unwrapMaybeAsync(result);
 
-            return entities;
+                return entities;
+            } finally {
+                this.#pendingRequests = this.#pendingRequests.filter(
+                    request => request.query.toString() !== query.toString(),
+                );
+            }
         } else {
             this.#tracing.querySourceCallReused(query);
             return loader.result;
