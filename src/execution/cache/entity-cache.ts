@@ -193,7 +193,8 @@ export class EntityCache {
         const selection = query.getSelection();
         const storeCriterion = criterion ? omitRelationalCriteria(criterion, schema) : undefined;
         const storeSelection = selection ? omitRelationalSelections(selection, schema) : undefined;
-        return query.with({ criterion: storeCriterion, selection: storeSelection });
+
+        return query.with({ criterion: storeCriterion ?? null, selection: storeSelection });
     }
 
     #getStore(schema: EntitySchema): EntityStore {
