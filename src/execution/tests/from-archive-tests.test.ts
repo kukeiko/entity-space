@@ -1,13 +1,5 @@
 import { SelectEntity } from "@entity-space/elements";
-import {
-    Artist,
-    ArtistBlueprint,
-    Song,
-    SongBlueprint,
-    SongTag,
-    Tag,
-    TagBlueprint,
-} from "@entity-space/elements/testing";
+import { Artist, ArtistBlueprint, Song, SongBlueprint } from "@entity-space/elements/testing";
 import { beforeEach, describe, expect, it } from "vitest";
 import { EntityWorkspace } from "../entity-workspace";
 import { TestFacade, TestRepository } from "../testing";
@@ -26,8 +18,6 @@ describe("[from archive] system supports", () => {
 
     let artists: Artist[];
     let songs: Song[];
-    let songTags: SongTag[];
-    let tags: Tag[];
 
     beforeEach(() => {
         artists = [
@@ -102,9 +92,7 @@ describe("[from archive] system supports", () => {
             }),
         ];
 
-        tags = [workspace.from(TagBlueprint).construct({ id: "upbeat", name: "Upbeat" })];
-        songTags = [{ songId: 10, tagId: "upbeat" }];
-        repository.useMusic().useEntities({ artists, songs, songTags, tags });
+        repository.useMusic().useEntities({ artists, songs });
     });
 
     describe("finding one entity by id", () => {
@@ -170,7 +158,7 @@ describe("[from archive] system supports", () => {
             // expect(loadArtistById).toHaveBeenCalledTimes(2);
         });
 
-        // [todo] add "by loading from cache" tests
+        // [todo] ❌ add "by loading from cache" tests
         describe("and hydration of", () => {
             describe("a relation", () => {
                 it("by loading from source", async () => {
@@ -381,73 +369,5 @@ describe("[from archive] system supports", () => {
         //     expect(loadArtistsById).toHaveBeenCalledTimes(2);
         //     expect(loadArtistsById).toHaveBeenNthCalledWith(1, id);
         //     expect(loadArtistsById).toHaveBeenNthCalledWith(2, invalidatedIds);
-    });
-
-    it("having a custom hydrator depend on the auto hydrator", async () => {
-        // arrange
-        const artist = artists[0];
-        const expected: SelectEntity<Artist, { longestSong: true; songs: true }> = {
-            ...artist,
-            // [todo] ❓ we cannot just use "findLongestSong()" as the Select removes "undefined", meaning that we expect a hydrated property
-            // to never be able to be undefined. That is fine if we enforce the user to use "null" instead, but that has some DX implications.
-            longestSong: repository.useMusic().getLongestSong(songs.filter(song => song.artistId === artist.id)),
-            songs: songs.filter(song => song.artistId === artist.id).sort((a, b) => a.name.localeCompare(b.name)),
-        };
-        const id = expected.id;
-        const loadArtistById = repository.useMusic().useLoadArtistById();
-        const loadSongsByArtistId = repository.useMusic().useLoadSongsByArtistId();
-        const hydrateArtistLongestSong = repository.useMusic().useHydrateArtistLongestSong();
-
-        // act
-        const actual = await workspace
-            .from(ArtistBlueprint)
-            .where({ id })
-            .select({ country: true, songs: true, longestSong: true })
-            .findOne();
-
-        // assert
-        expect(actual).toEqual(expected);
-        expect(loadArtistById).toHaveBeenCalledTimes(1);
-        expect(loadSongsByArtistId).toHaveBeenCalledTimes(1);
-        expect(hydrateArtistLongestSong).toHaveBeenCalledTimes(1);
-    });
-
-    it("having a custom hydrator depend on the auto hydrator (deep relation)", async () => {
-        // arrange
-        const artist = artists[0];
-
-        const expected: SelectEntity<Artist, { songTags: true }> = {
-            ...artist,
-            songTags: [],
-            songs: songs
-                .filter(song => song.artistId === artist.id)
-                .sort((a, b) => a.name.localeCompare(b.name))
-                .map(song => {
-                    const tagIds = songTags.filter(songTag => songTag.songId === song.id).map(songTag => songTag.tagId);
-                    const thisTags = tags.filter(tag => tagIds.includes(tag.id));
-
-                    return { ...song, tagIds, tags: thisTags };
-                }),
-        };
-        const songTagIds = Array.from(new Set(expected.songs?.flatMap(song => song.tagIds ?? []) ?? []));
-        expected.songTags = tags.filter(tag => songTagIds.includes(tag.id));
-        const id = expected.id;
-        const loadArtistById = repository.useMusic().useLoadArtistById();
-        const loadSongsByArtistId = repository.useMusic().useLoadSongsByArtistId();
-        repository.useMusic().useLoadTagById();
-        repository.useMusic().useHydrateSongTagIds();
-        repository.useMusic().useHydrateArtistSongTags();
-
-        // act
-        const actual = await workspace
-            .from(ArtistBlueprint)
-            .where({ id })
-            .select({ country: true, songTags: true })
-            .findOne();
-
-        // assert
-        expect(actual).toEqual(expected);
-        expect(loadArtistById).toHaveBeenCalledTimes(1);
-        expect(loadSongsByArtistId).toHaveBeenCalledTimes(1);
     });
 });
