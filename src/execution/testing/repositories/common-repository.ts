@@ -58,7 +58,7 @@ export class CommonRepository extends InMemoryRepository<CommonEntities> {
 
         this.#services.for(UserBlueprint).addSource({
             where: { id: { $equals: true } },
-            load: ({ criteria: { id } }) => load(id.value),
+            load: ({ criteria: { id } }) => load(id.$equals),
         });
 
         return load;

@@ -21,10 +21,10 @@ export class EntityCriterion extends Criterion {
                 unpacked[key] = new EqualsCriterion(value);
             } else if (Array.isArray(value) && value.every(isPrimitive)) {
                 unpacked[key] = new InArrayCriterion(value);
-            } else if (isPlainObject(value)) {
-                unpacked[key] = new EntityCriterion(value as PackedEntityCriterion);
             } else if (value instanceof Criterion) {
                 unpacked[key] = value;
+            } else if (isPlainObject(value)) {
+                unpacked[key] = new EntityCriterion(value);
             }
         }
 

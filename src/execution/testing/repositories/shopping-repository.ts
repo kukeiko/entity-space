@@ -27,7 +27,7 @@ export class ShoppingRepository extends InMemoryRepository<ShoppingEntities> {
 
         this.#services.for(ProductBlueprint).addSource({
             where: { id: { $equals: true } },
-            load: ({ criteria: { id } }) => load(id.value),
+            load: ({ criteria: { id } }) => load(id.$equals),
         });
 
         return load;

@@ -85,7 +85,7 @@ export class MusicRepository extends InMemoryRepository<MusicEntities, "tags" | 
 
         this.#services.for(TagBlueprint).addSource({
             where: { id: { $equals: true } },
-            load: ({ criteria: { id } }) => load(id.value),
+            load: ({ criteria: { id } }) => load(id.$equals),
         });
 
         return load;
@@ -127,7 +127,7 @@ export class MusicRepository extends InMemoryRepository<MusicEntities, "tags" | 
                 },
             }) => {
                 // [todo] ❌ bug: elvis not required if we make RecordMetadata.updatedAt optional
-                return load(createdAt.value, updatedAt?.value);
+                return load(createdAt.$inRange, updatedAt?.$inRange);
             },
         });
 
@@ -171,7 +171,7 @@ export class MusicRepository extends InMemoryRepository<MusicEntities, "tags" | 
                 }
 
                 if (criteria.songs.name !== undefined) {
-                    artists = artists.filter(a => a.songs?.some(s => s.name === criteria.songs.name?.value));
+                    artists = artists.filter(a => a.songs?.some(s => s.name === criteria.songs.name?.$equals));
                 }
 
                 return artists;
@@ -188,7 +188,7 @@ export class MusicRepository extends InMemoryRepository<MusicEntities, "tags" | 
             select: { country: true },
             where: { id: { $equals: true } },
             load: ({ criteria: { id }, selection }) => {
-                return load(id.value).map(artist => {
+                return load(id.$equals).map(artist => {
                     if (!selection.country) {
                         delete artist.country;
                     }
@@ -206,7 +206,7 @@ export class MusicRepository extends InMemoryRepository<MusicEntities, "tags" | 
 
         this.#services.for(ArtistBlueprint).addSource({
             where: { id: { $inArray: true } },
-            load: ({ criteria: { id } }) => loadArtistsById(id.value),
+            load: ({ criteria: { id } }) => loadArtistsById(id.$inArray),
         });
 
         return loadArtistsById;
@@ -217,7 +217,7 @@ export class MusicRepository extends InMemoryRepository<MusicEntities, "tags" | 
 
         this.#services.for(ArtistBlueprint).addSource({
             where: { namespace: { $equals: true } },
-            load: ({ criteria: { namespace } }) => load(namespace.value),
+            load: ({ criteria: { namespace } }) => load(namespace.$equals),
         });
 
         return load;
@@ -228,7 +228,7 @@ export class MusicRepository extends InMemoryRepository<MusicEntities, "tags" | 
 
         this.#services.for(ArtistBlueprint).addSource({
             where: { country: { $equals: true } },
-            load: ({ criteria: { country } }) => load(country.value),
+            load: ({ criteria: { country } }) => load(country.$equals),
         });
 
         return load;
@@ -335,7 +335,7 @@ export class MusicRepository extends InMemoryRepository<MusicEntities, "tags" | 
 
         this.#services.for(AlbumBlueprint).addSource({
             where: { id: { $equals: true } },
-            load: ({ criteria: { id } }) => load(id.value),
+            load: ({ criteria: { id } }) => load(id.$equals),
         });
 
         return load;
@@ -367,7 +367,7 @@ export class MusicRepository extends InMemoryRepository<MusicEntities, "tags" | 
 
         this.#services.for(SongBlueprint).addSource({
             where: { id: { $equals: true } },
-            load: ({ criteria: { id } }) => load(id.value),
+            load: ({ criteria: { id } }) => load(id.$equals),
         });
 
         return load;
@@ -378,7 +378,7 @@ export class MusicRepository extends InMemoryRepository<MusicEntities, "tags" | 
 
         this.#services.for(SongBlueprint).addSource({
             where: { name: { $equals: true } },
-            load: ({ criteria: { name } }) => load(name.value),
+            load: ({ criteria: { name } }) => load(name.$equals),
         });
 
         return load;
@@ -391,7 +391,7 @@ export class MusicRepository extends InMemoryRepository<MusicEntities, "tags" | 
 
         this.#services.for(SongBlueprint).addSource({
             where: { artistId: { $inArray: true } },
-            load: ({ criteria: { artistId } }) => loadSongsByArtistId(artistId.value),
+            load: ({ criteria: { artistId } }) => loadSongsByArtistId(artistId.$inArray),
         });
 
         return loadSongsByArtistId;
@@ -426,7 +426,7 @@ export class MusicRepository extends InMemoryRepository<MusicEntities, "tags" | 
         this.#services.for(SongBlueprint).addSource({
             where: { artistId: { $inArray: true }, namespace: { $equals: true } },
             load: ({ criteria: { artistId, namespace } }) =>
-                loadSongsByArtistIdsAndNamespace(artistId.value, namespace.value),
+                loadSongsByArtistIdsAndNamespace(artistId.$inArray, namespace.$equals),
         });
 
         return loadSongsByArtistIdsAndNamespace;

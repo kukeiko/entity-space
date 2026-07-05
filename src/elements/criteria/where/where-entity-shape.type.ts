@@ -19,3 +19,11 @@ type WhereEntityShapeProperty<T, U = Unbox<T>> =
     NonNullable<U> extends ReturnType<Primitive> ? WherePrimitiveShape : WhereEntityShape<U>;
 
 export type WhereEntityShape<T = Entity> = { [K in keyof T]?: WhereEntityShapeProperty<T[K]> };
+
+export function isWherePrimitiveShape(
+    shape: Partial<WherePrimitiveShape> | WhereEntityShape,
+): shape is Partial<WherePrimitiveShape> {
+    const keys: (keyof WherePrimitiveShape)[] = ["$equals", "$inArray", "$inRange", "$notEquals", "$notInArray"];
+
+    return keys.some(key => shape[key] === true);
+}

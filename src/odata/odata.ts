@@ -5,15 +5,14 @@ export type ODataPrimitiveValue = number | string | boolean | null | Date;
 
 export type ODataPrimitiveCriterion = {
     property: string;
-    operation: "eq" | "ne" | "lt" | "le" | "gt" | "ge" | "in";
+    operation: "eq" | "ne" | "lt" | "le" | "gt" | "ge" | "in" | "not-in";
     value: ODataPrimitiveValue | ODataPrimitiveValue[];
-    isGuid?: boolean;
 };
 
 export type ODataArrayCriterion = {
     property: string;
     operation: "any" | "all";
-    criterion: ODataPrimitiveCriterion | ODataLogicalCriterion;
+    criterion: ODataCriterion;
 };
 
 export interface ODataLogicalCriterion {
@@ -28,15 +27,21 @@ export interface ODataUrlParams {
     $filter?: string;
 }
 
+function looksLikeUuid(value: string): boolean {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+}
+
+function looksLikeDate(value: string) {
+    return Number.isFinite(Date.parse(value));
+}
+
 export namespace OData {
-    export function toUrlPath(name: string, id?: string | number, v4 = false, isGuid = false): string {
+    export function toUrlPath(name: string, id?: string | number, v4 = false): string {
         if (id === undefined || !id.toString().length) {
             return name;
-        } else if (typeof id === "string" && !v4 && isGuid) {
-            return `${name}(guid'${id}')`;
         }
 
-        return `${name}(${id})`;
+        return `${name}(${primitiveToString(id, v4)})`;
     }
 
     export function toQueryParameters(
@@ -83,12 +88,17 @@ export namespace OData {
         return result?.length ? result : undefined;
     }
 
-    function criterionToString(criterion: ODataCriterion, v4 = false, path: string[] = []): string | undefined {
+    function criterionToString(
+        criterion: ODataCriterion,
+        v4 = false,
+        path: string[] = [],
+        lambdaIndex = 0,
+    ): string | undefined {
         const prefix = path.length > 0 ? `${path.join("/")}/` : "";
 
         if ("combinator" in criterion) {
             const filterString = criterion.criteria
-                .map(criterion => criterionToString(criterion, v4, path))
+                .map(criterion => criterionToString(criterion, v4, path, lambdaIndex))
                 .filter(isDefined)
                 .join(` ${criterion.combinator} `);
 
@@ -98,61 +108,85 @@ export namespace OData {
 
             return criterion.criteria.length > 1 ? `(${filterString})` : filterString;
         } else if ("value" in criterion) {
-            if (criterion.operation === "in" && !v4) {
-                return criterionToString(downLevelInCriterion(criterion), v4, path);
+            if (!v4 && criterion.operation === "in") {
+                return criterionToString(downLevelInCriterion(criterion), v4, path, lambdaIndex);
+            } else if (criterion.operation == "not-in") {
+                if (!v4) {
+                    return criterionToString(downLevelInCriterion(criterion), v4, path, lambdaIndex);
+                } else {
+                    return `${prefix}${criterion.property} in ${criterionValueToString(criterion.value, v4)} eq false`;
+                }
             }
 
-            return `${prefix}${criterion.property} ${criterion.operation} ${criterionValueToString(criterion.value, criterion.isGuid, v4)}`;
+            return `${prefix}${criterion.property} ${criterion.operation} ${criterionValueToString(criterion.value, v4)}`;
         } else {
-            const lambdaCriterion = criterionToString(criterion.criterion, v4, [...path, "x"]);
+            const lambda = String.fromCharCode(lambdaIndex + "a".charCodeAt(0));
+            lambdaIndex++;
+            lambdaIndex = lambdaIndex % 26;
+
+            const lambdaCriterion = criterionToString(criterion.criterion, v4, [...path, "x"], lambdaIndex);
 
             if (lambdaCriterion === undefined) {
                 return undefined;
             }
 
-            // [todo] use a-z for lambdas, by passing around already used lambdas and taking next free one
-            return `${prefix}${criterion.property}/${criterion.operation}(x: ${lambdaCriterion})`;
+            return `${prefix}${criterion.property}/${criterion.operation}(${lambda}: ${lambdaCriterion})`;
         }
     }
 
-    function criterionValueToString(value: ODataPrimitiveCriterion["value"], isGuid = false, v4 = false): string {
+    function criterionValueToString(value: ODataPrimitiveCriterion["value"], v4 = false): string {
         if (Array.isArray(value)) {
-            return `(${value.map(v => primitiveToString(v, isGuid, v4)).join(", ")})`;
+            return `(${value.map(v => primitiveToString(v, v4)).join(", ")})`;
         } else {
-            return primitiveToString(value, isGuid, v4);
+            return primitiveToString(value, v4);
         }
     }
 
-    function primitiveToString(value: ODataPrimitiveCriterion["value"], isGuid = false, v4 = false): string {
-        // [todo] ❌ check string format to determine if is guid/date
+    function primitiveToString(value: ODataPrimitiveCriterion["value"], v4 = false): string {
         if (value == null) {
             return "null";
-        } else if (isGuid) {
-            return v4 ? value.toString() : `guid'${value}'`;
-        } else if (value instanceof Date) {
-            return v4 ? (value as Date).toISOString() : `datetimeoffset'${(value as Date).toISOString()}'`;
         } else if (typeof value == "string") {
-            return `'${value}'`;
-        } else if (typeof value === "boolean") {
-            return value ? "true" : "false";
+            if (looksLikeDate(value)) {
+                return v4 ? new Date(value).toISOString() : `datetimeoffset'${new Date(value).toISOString()}'`;
+            } else if (looksLikeUuid(value)) {
+                return v4 ? value.toString() : `guid'${value}'`;
+            } else {
+                return `'${value}'`;
+            }
         } else if (typeof value === "number") {
             return value.toString();
+        } else if (typeof value === "boolean") {
+            return value ? "true" : "false";
+        } else if (value instanceof Date) {
+            return v4 ? value.toISOString() : `datetimeoffset'${value.toISOString()}'`;
         } else {
-            throw new Error(`Unsupported OData criterion value type: ${typeof value}`);
+            throw new Error(`unsupported OData value type: ${typeof value}`);
         }
     }
 
     function downLevelInCriterion(criterion: ODataPrimitiveCriterion): ODataLogicalCriterion {
         const value = Array.isArray(criterion.value) ? criterion.value : [criterion.value];
 
-        return {
-            combinator: "or",
-            criteria: value.map(v => ({
-                property: criterion.property,
-                operation: "eq",
-                value,
-                isGuid: criterion.isGuid,
-            })),
-        };
+        if (criterion.operation === "in") {
+            return {
+                combinator: "or",
+                criteria: value.map(v => ({
+                    property: criterion.property,
+                    operation: "eq",
+                    value,
+                })),
+            };
+        } else if (criterion.operation === "not-in") {
+            return {
+                combinator: "and",
+                criteria: value.map(v => ({
+                    property: criterion.property,
+                    operation: "ne",
+                    value,
+                })),
+            };
+        } else {
+            throw new Error(`can't downlevel OData criterion "${criterion.operation}"`);
+        }
     }
 }

@@ -1,14 +1,10 @@
-import {
-    EntityProperty,
-    EntitySchema,
-    WhereEntityShapeInstance,
-    WherePrimitiveShapeInstance,
-} from "@entity-space/elements";
+import { EntityProperty, EntitySchema, WhereEntity, WherePrimitive } from "@entity-space/elements";
+import { isDefined, isPrimitive } from "@entity-space/utils";
 import { ODataArrayCriterion, ODataCriterion } from "./odata";
 
 export function toODataCriterion(
     schema: EntitySchema,
-    criterion: WhereEntityShapeInstance,
+    criterion: WhereEntity,
     path: string[] = [],
 ): ODataCriterion | undefined {
     if (criterion === undefined) {
@@ -37,7 +33,7 @@ export function toODataCriterion(
                     const result: ODataArrayCriterion = {
                         operation: "any",
                         property: name,
-                        criterion: relatedResult as any, // [todo] ❌ dirty
+                        criterion: relatedResult,
                     };
 
                     oDataCriterion.criteria.push(result);
@@ -61,7 +57,7 @@ export function toODataCriterion(
 
 function primitiveToODataCriterion(
     property: EntityProperty,
-    criterion: WherePrimitiveShapeInstance<any, any>,
+    criterion: WherePrimitive,
     path: string[] = [],
 ): ODataCriterion | undefined {
     if (criterion === undefined) {
@@ -71,13 +67,45 @@ function primitiveToODataCriterion(
     const dtoName = property.getDtoName();
     const name = path.length ? [...path, dtoName].join("/") : dtoName;
 
-    if (criterion.type === "$inArray") {
-        return { property: name, operation: "in", value: criterion.value };
-    } else if (criterion.type === "$equals") {
-        return { property: name, operation: "eq", value: criterion.value };
-    } else if (criterion.type === "$inRange") {
-        const from = criterion.value[0];
-        const to = criterion.value[1];
+    if (isPrimitive(criterion)) {
+        if (criterion === undefined) {
+            return undefined;
+        }
+
+        return { property: name, operation: "eq", value: criterion };
+    } else if (Array.isArray(criterion) && criterion.every(isPrimitive)) {
+        const value = criterion.filter(isDefined);
+
+        if (!value.length) {
+            return undefined;
+        }
+
+        return { property: name, operation: "in", value };
+    }
+
+    if (criterion.$inArray !== undefined) {
+        const value = criterion.$inArray.filter(isDefined);
+
+        if (!value.length) {
+            return undefined;
+        }
+
+        return { property: name, operation: "in", value };
+    } else if (criterion.$notInArray !== undefined) {
+        const value = criterion.$notInArray.filter(isDefined);
+
+        if (!value.length) {
+            return undefined;
+        }
+
+        return { property: name, operation: "not-in", value };
+    } else if (criterion.$equals !== undefined) {
+        return { property: name, operation: "eq", value: criterion.$equals };
+    } else if (criterion.$notEquals !== undefined) {
+        return { property: name, operation: "ne", value: criterion.$notEquals };
+    } else if (criterion.$inRange !== undefined) {
+        const from = criterion.$inRange[0];
+        const to = criterion.$inRange[1];
 
         if (from !== undefined && to !== undefined) {
             return {
@@ -88,17 +116,9 @@ function primitiveToODataCriterion(
                 ],
             };
         } else if (from !== undefined) {
-            return {
-                property: name,
-                operation: "ge",
-                value: from,
-            };
+            return { property: name, operation: "ge", value: from };
         } else if (to !== undefined) {
-            return {
-                property: name,
-                operation: "le",
-                value: to,
-            };
+            return { property: name, operation: "le", value: to };
         }
     }
 

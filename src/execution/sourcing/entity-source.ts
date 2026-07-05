@@ -1,5 +1,5 @@
 import {
-    criterionToWhereEntityShapeInstance,
+    criterionToWhereEntity,
     Entity,
     EntityBlueprint,
     EntityPage,
@@ -15,8 +15,9 @@ import {
     sortRelatedEntities,
     toRelationSelection,
     validateEntity,
+    WhereEntity,
     WhereEntityShape,
-    WhereEntityShapeInstance,
+    WhereEntityTyped,
 } from "@entity-space/elements";
 import { DeepPartial, isNot, MaybeAsync, unwrapMaybeAsync } from "@entity-space/utils";
 import { partition } from "lodash";
@@ -43,7 +44,7 @@ export interface LoadEntitiesPage {
 export type LoadEntitiesFn<B = {}, W = {}, S = {}, P = {}> = (args: {
     query: EntityQuery;
     selection: DeepPartial<S>;
-    criteria: WhereEntityShapeInstance<W, EntityBlueprint.Type<B>>;
+    criteria: WhereEntityTyped<W, EntityBlueprint.Type<B>>;
     parameters: EntityBlueprint.Type<P>;
     sort?: LoadEntitiesSort[];
     page?: LoadEntitiesPage;
@@ -163,10 +164,10 @@ export class EntitySource {
         context: EntityQueryExecutionContext,
     ): Promise<Entity[]> {
         const criterion = query.getCriterion();
-        let criteria: WhereEntityShapeInstance = {};
+        let criteria: WhereEntity = {};
 
         if (this.#whereEntityShape) {
-            criteria = criterionToWhereEntityShapeInstance(this.#whereEntityShape, criterion);
+            criteria = criterionToWhereEntity(this.#whereEntityShape, criterion);
         }
 
         this.#tracing.queryDispatchedToSource(query, originalQuery, this.#queryShape.getCriterionShape());

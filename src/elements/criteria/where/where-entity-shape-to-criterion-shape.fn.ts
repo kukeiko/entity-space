@@ -56,10 +56,12 @@ export function whereEntityShapeToCriterionShape(schema: EntitySchema, shape: Wh
         }
 
         if (schema.isPrimitive(key)) {
+            const criterionShapes = wherePrimitiveShapeToCriterionShapes(schema, value, key);
+
             if (value.$optional) {
-                optional[key] = wherePrimitiveShapeToCriterionShapes(schema, value, key);
+                optional[key] = criterionShapes;
             } else {
-                required[key] = wherePrimitiveShapeToCriterionShapes(schema, value, key);
+                required[key] = criterionShapes;
             }
         } else {
             const relation = schema.getRelation(key);
