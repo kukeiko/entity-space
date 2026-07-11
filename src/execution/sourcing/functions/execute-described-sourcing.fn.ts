@@ -1,4 +1,10 @@
-import { Entity, EntityQuery, deduplicateEntities, intersectCriterionWithSelection } from "@entity-space/elements";
+import {
+    Entity,
+    EntityQuery,
+    deduplicateEntities,
+    intersectCriterionWithSelection,
+    sortEntitiesByDefaultSorter,
+} from "@entity-space/elements";
 import { EntityQueryExecutionContext } from "../../entity-query-execution-context";
 import { DescribedEntitySourcing } from "../described-entity-sourcing";
 
@@ -26,11 +32,8 @@ export async function executeDescribedSourcing(
     }
 
     if (query.getParameters() === undefined && query.getPage() === undefined) {
-        const sorter = query.getSchema().getSorter();
-
-        if (sorter) {
-            entities.sort(sorter);
-        }
+        // [todo] ❓ note sure sorting here is required as we're already sorting in executeDescribed()
+        entities = sortEntitiesByDefaultSorter(query.getSchema(), entities);
     }
 
     return entities;

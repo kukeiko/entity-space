@@ -81,8 +81,8 @@ export class EntityWorkspace {
         return new EntityMapper(schema);
     }
 
-    getOrCreateCacheBucket(key: unknown): EntityCache {
-        return this.#services.getOrCreateCacheBucket(key);
+    getOrCreateCache(key: unknown): EntityCache {
+        return this.#services.getOrCreateCache(key);
     }
 
     destroyCache(key: unknown): void {
@@ -91,80 +91,25 @@ export class EntityWorkspace {
 
     upsertToCache<B>(blueprint: Class<B>, entity: EntityBlueprint.Type<B>, cacheKey?: unknown): void {
         const schema = this.#services.getCatalog().getSchemaByBlueprint(blueprint);
-        const cache = this.#services.getOrCreateCacheBucket(cacheKey);
+        const cache = this.#services.getOrCreateCache(cacheKey);
         const query = entityToQuery(schema, entity);
         cache.upsertQuery(query, [entity]);
     }
 
-    #query$<T>({
-        schema,
-        cache,
-        isLoading$,
-        parameters: parametersArg,
-        select,
-        where,
-        page,
-        sort,
-    }: QueryArguments): Observable<T[]> {
+    #query$<T>(args: QueryArguments): Observable<T[]> {
         return defer(() => {
-            const criteria = where ? whereEntityToCriterion(schema, where) : undefined;
-            const selection = unpackSelection(schema, select ?? {});
-            const parameters = parametersArg
-                ? new EntityQueryParameters(
-                      this.#services.getCatalog().getSchemaByBlueprint(parametersArg.blueprint),
-                      parametersArg.value,
-                  )
-                : undefined;
-
-            let entitySort: EntitySort | undefined;
-
-            if (sort !== undefined && sort.length) {
-                const properties: EntityPropertySort[] = [];
-
-                for (const { key, ascending } of sort) {
-                    const mode = ascending ? EntitySortDirection.Ascending : EntitySortDirection.Descending;
-
-                    if (typeof key === "string") {
-                        properties.push(new EntityPropertySort(toPath(key), mode));
-                    } else {
-                        const unpacked = unpackSelectionWithoutDefault(schema, key);
-
-                        for (const path of selectionToPaths(unpacked)) {
-                            properties.push(new EntityPropertySort(path, mode));
-                        }
-                    }
-                }
-
-                entitySort = new EntitySort(properties);
-            }
-
-            let entityPage: EntityPage | undefined;
-
-            if (page !== undefined) {
-                entityPage = new EntityPage(page.from, page.to);
-            }
-
-            const query = new EntityQuery(schema, selection, criteria, parameters, entitySort, entityPage);
+            const { cache, isLoading$ } = args;
+            const query = this.#toQuery(args);
+            this.#services.getTracing().querySpawned(query);
             const cacheOptions = this.#toCacheOptions(cache);
             const cacheKey = cacheOptions ? cacheOptions.key : undefined;
-
-            this.#services.getTracing().querySpawned(query);
             let stream$: Observable<T[]>;
 
             if (cacheOptions === false) {
                 stream$ = this.#loadFromSource$<T>(query, isLoading$);
             } else {
-                const cache = this.#services.getOrCreateCacheBucket(cacheKey);
-                let maxTimestamp: string | undefined;
-
-                if (cacheOptions.maxAge) {
-                    if (typeof cacheOptions.maxAge === "number") {
-                        maxTimestamp = new Date(Date.now() - cacheOptions.maxAge * 1000).toISOString();
-                    } else {
-                        maxTimestamp = cacheOptions.maxAge;
-                    }
-                }
-
+                const cache = this.#services.getOrCreateCache(cacheKey);
+                const maxTimestamp = this.#toMaxTimestamp(cacheOptions);
                 const reactiveAdditionalBlueprints =
                     typeof cacheOptions.reactive === "object" ? cacheOptions.reactive.additionalBlueprints : undefined;
 
@@ -194,11 +139,69 @@ export class EntityWorkspace {
             }
 
             return stream$.pipe(
+                tap(() => {
+                    // [todo] ❌ add "query emit" trace with number of entities returned
+                }),
                 finalize(() => {
                     this.#services.getTracing().queryResolved(query);
                 }),
             );
         });
+    }
+
+    #toQuery({ schema, parameters: parametersArg, select, where, page, sort }: QueryArguments): EntityQuery {
+        const criteria = where ? whereEntityToCriterion(schema, where) : undefined;
+        const selection = unpackSelection(schema, select ?? {});
+        const parameters = parametersArg
+            ? new EntityQueryParameters(
+                  this.#services.getCatalog().getSchemaByBlueprint(parametersArg.blueprint),
+                  parametersArg.value,
+              )
+            : undefined;
+
+        let entitySort: EntitySort | undefined;
+
+        if (sort !== undefined && sort.length) {
+            const properties: EntityPropertySort[] = [];
+
+            for (const { key, ascending } of sort) {
+                const mode = ascending ? EntitySortDirection.Ascending : EntitySortDirection.Descending;
+
+                if (typeof key === "string") {
+                    properties.push(new EntityPropertySort(toPath(key), mode));
+                } else {
+                    const unpacked = unpackSelectionWithoutDefault(schema, key);
+
+                    for (const path of selectionToPaths(unpacked)) {
+                        properties.push(new EntityPropertySort(path, mode));
+                    }
+                }
+            }
+
+            entitySort = new EntitySort(properties);
+        }
+
+        let entityPage: EntityPage | undefined;
+
+        if (page !== undefined) {
+            entityPage = new EntityPage(page.from, page.to);
+        }
+
+        return new EntityQuery(schema, selection, criteria, parameters, entitySort, entityPage);
+    }
+
+    #toMaxTimestamp(cacheOptions: QueryCacheOptions): string | undefined {
+        let maxTimestamp: string | undefined;
+
+        if (cacheOptions.maxAge) {
+            if (typeof cacheOptions.maxAge === "number") {
+                maxTimestamp = new Date(Date.now() - cacheOptions.maxAge * 1000).toISOString();
+            } else {
+                maxTimestamp = cacheOptions.maxAge;
+            }
+        }
+
+        return maxTimestamp;
     }
 
     #loadFromSource$<T>(query: EntityQuery, isLoading$?: Subject<boolean>): Observable<T[]> {
@@ -296,7 +299,7 @@ export class EntityWorkspace {
 
             const cacheOptions = this.#toCacheOptions(args.cache);
             const cacheKey = cacheOptions ? cacheOptions.key : undefined;
-            const cache = this.#services.getOrCreateCacheBucket(cacheKey);
+            const cache = this.#services.getOrCreateCache(cacheKey);
             const hydrationDescription = describeHydration(this.#services, sourcedEntities);
 
             if (!hydrationDescription) {

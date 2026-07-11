@@ -18,6 +18,7 @@ import {
     normalizeEntities,
     omitJoinedCriteria,
     omitJoinedSelections,
+    sortEntitiesByDefaultSorter,
 } from "@entity-space/elements";
 import { ComplexKeyMap } from "@entity-space/utils";
 import { map, merge, Observable, Subject } from "rxjs";
@@ -55,11 +56,7 @@ export class EntityCache {
         }
 
         if (parameters === undefined && query.getPage() === undefined) {
-            const sorter = schema.getSorter();
-
-            if (sorter) {
-                entities.sort(sorter);
-            }
+            entities = sortEntitiesByDefaultSorter(schema, entities);
         }
 
         return entities;

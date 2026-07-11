@@ -73,7 +73,7 @@ export class EntityServiceContainer {
         }
     }
 
-    getOrCreateCacheBucket(key: unknown): EntityCache {
+    getOrCreateCache(key: unknown): EntityCache {
         let cache = this.#caches.get(key);
 
         if (!cache) {

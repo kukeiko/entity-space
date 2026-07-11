@@ -1,4 +1,4 @@
-import { Entity, EntityQuery, isHydrated } from "@entity-space/elements";
+import { Entity, EntityQuery, isHydrated, sortEntitiesByDefaultSorter } from "@entity-space/elements";
 import { DescribedEntityQueryExecution } from "../described-entity-query-execution";
 import { EntityQueryExecutionContext } from "../entity-query-execution-context";
 import { executeDescribedHydration } from "../hydration/functions/execute-described-hydration.fn";
@@ -28,11 +28,7 @@ export async function executeDescribed(
     entities = entities.filter(entity => isHydrated(entity, query.getSelection()));
 
     if (query.getParameters() === undefined) {
-        const sorter = query.getSchema().getSorter();
-
-        if (sorter) {
-            entities.sort(sorter);
-        }
+        entities = sortEntitiesByDefaultSorter(query.getSchema(), entities);
     }
 
     return entities;
