@@ -1,5 +1,5 @@
 import { Entity } from "../entity/entity";
-import { EntitySchema } from "../entity/entity-schema";
+import { EntitySchema } from "../entity/schema/entity-schema";
 
 export class EntityQueryParameters {
     constructor(schema: EntitySchema, parameters: Entity) {

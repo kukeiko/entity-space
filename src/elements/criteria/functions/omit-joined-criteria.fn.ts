@@ -1,5 +1,5 @@
 import { isDefined } from "@entity-space/utils";
-import { EntitySchema } from "../../entity/entity-schema";
+import { EntitySchema } from "../../entity/schema/entity-schema";
 import { AndCriterion } from "../and-criterion";
 import { Criterion } from "../criterion";
 import { EntityCriterion } from "../entity-criterion";

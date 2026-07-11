@@ -1,6 +1,6 @@
 import { EntityProperty } from "../entity/entity-property";
 import { isEntityRelationProperty } from "../entity/entity-relation-property";
-import { EntitySchema } from "../entity/entity-schema";
+import { EntitySchema } from "../entity/schema/entity-schema";
 import { EntitySelection, PackedEntitySelection } from "./entity-selection";
 import { getDefaultSelection } from "./get-default-selection.fn";
 

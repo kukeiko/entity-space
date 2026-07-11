@@ -1,6 +1,6 @@
 import { EntityRelationSelection } from "../selection/entity-selection";
 import { Entity } from "./entity";
-import { EntitySchema } from "./entity-schema";
+import { EntitySchema } from "./schema/entity-schema";
 
 export function entityToUpdatableDto(
     schema: EntitySchema,

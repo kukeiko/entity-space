@@ -1,11 +1,12 @@
 import { assertValidPaths, Path, Primitive, toPathSegments } from "@entity-space/utils";
-import { Entity } from "./entity";
-import { EntityPrimitiveProperty, EntityPrimitivePropertyOptions } from "./entity-primitive-property";
-import { EntityProperty, EntityPropertyOptions } from "./entity-property";
-import { EntityRelationProperty, EntityRelationPropertyOptions, RelationshipType } from "./entity-relation-property";
-import { EntityComputedProperties } from "./schema/entity-computed-properties";
+import { Entity } from "../entity";
+import { EntityPrimitiveProperty, EntityPrimitivePropertyOptions } from "../entity-primitive-property";
+import { EntityProperty, EntityPropertyOptions } from "../entity-property";
+import { EntityRelationProperty, EntityRelationPropertyOptions, RelationshipType } from "../entity-relation-property";
+import { EntityComputedProperties } from "./entity-computed-properties";
+import { EntitySchema } from "./entity-schema";
 
-export class EntitySchema {
+export class ConcreteEntitySchema implements EntitySchema {
     constructor(name: string) {
         this.#name = name;
     }
@@ -155,7 +156,9 @@ export class EntitySchema {
                 joinsFromId = joinFrom.every(path => this.hasIdProperty(path.valueOf()));
             }
 
-            if (schema.#idPaths.length) {
+            const relatedIdPaths = schema.getIdPaths();
+
+            if (relatedIdPaths.length) {
                 joinsToId = joinTo.every(path => schema.hasIdProperty(path.valueOf()));
             }
         }

@@ -2,7 +2,7 @@ import { enumToPrimitive } from "@entity-space/utils";
 import { describe, expect, it } from "vitest";
 import { Entity } from "./entity";
 import { ContainerType } from "./entity-property";
-import { EntitySchema } from "./entity-schema";
+import { ConcreteEntitySchema } from "./schema/concrete-entity-schema";
 import { EntityValidationErrors, validateEntity } from "./validate-entity.fn";
 
 describe(validateEntity, () => {
@@ -18,7 +18,7 @@ describe(validateEntity, () => {
         Baz,
     }
 
-    const schema = new EntitySchema("foo")
+    const schema = new ConcreteEntitySchema("foo")
         .addPrimitive("optionalNumber", Number, { optional: true })
         .addPrimitive("nullableNumber", Number, { nullable: true })
         .addPrimitive("requiredNumber", Number)
@@ -112,7 +112,7 @@ describe(validateEntity, () => {
 
     it("should return errors if entity has properties not defined in the schema", () => {
         // arrange
-        const schema = new EntitySchema("foo").addPrimitive("number", Number);
+        const schema = new ConcreteEntitySchema("foo").addPrimitive("number", Number);
         const entity: Entity = { number: 3, doesntExist: 7 };
         const expected: EntityValidationErrors = { doesntExist: "property doesn't exist" };
 

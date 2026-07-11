@@ -2,7 +2,7 @@ import { isEnumPrimitive, isPrimitiveOfType, primitiveToString, primitiveTypeToS
 import { Entity } from "./entity";
 import { isEntityPrimitiveProperty } from "./entity-primitive-property";
 import { isEntityRelationProperty } from "./entity-relation-property";
-import { EntitySchema } from "./entity-schema";
+import { EntitySchema } from "./schema/entity-schema";
 
 export type EntityValidationErrors = Record<string, string>;
 

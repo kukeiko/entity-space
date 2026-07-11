@@ -1,5 +1,5 @@
 import { Entity } from "./entity";
-import { EntitySchema } from "./entity-schema";
+import { EntitySchema } from "./schema/entity-schema";
 
 function normalizeEntitiesCore(
     schema: EntitySchema,

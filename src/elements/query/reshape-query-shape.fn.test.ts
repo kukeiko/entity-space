@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { EntityCriterionShape } from "../criteria/entity-criterion-shape";
-import { EntitySchema } from "../entity/entity-schema";
+import { ConcreteEntitySchema } from "../entity/schema/concrete-entity-schema";
 import { EntityQueryShape } from "./entity-query-shape";
 import { reshapeQueryShape } from "./reshape-query-shape.fn";
 
 describe(reshapeQueryShape, () => {
     it("a shape with only optional criteria should reshape a query with no criteria", () => {
         // arrange
-        const schema = new EntitySchema("foo").addPrimitive("id", Number);
+        const schema = new ConcreteEntitySchema("foo").addPrimitive("id", Number);
         const what = new EntityQueryShape(schema, { id: true });
         const by = new EntityQueryShape(schema, { id: true }, new EntityCriterionShape({}, { id: Number }));
         const expected = new EntityQueryShape(schema, { id: true }, new EntityCriterionShape({}, { id: Number }));

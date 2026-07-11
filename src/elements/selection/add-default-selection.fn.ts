@@ -1,5 +1,5 @@
 import { EntityProperty } from "../entity/entity-property";
-import { EntitySchema } from "../entity/entity-schema";
+import { EntitySchema } from "../entity/schema/entity-schema";
 import { EntitySelection } from "./entity-selection";
 import { getDefaultSelection } from "./get-default-selection.fn";
 import { mergeSelection } from "./merge-selection.fn";

@@ -3,7 +3,7 @@ import { isPlainObject } from "lodash";
 import { Entity } from "./entity";
 import { EntityPrimitiveProperty } from "./entity-primitive-property";
 import { EntityProperty, EntityPropertyOptions } from "./entity-property";
-import { EntitySchema } from "./entity-schema";
+import { EntitySchema } from "./schema/entity-schema";
 
 export enum RelationshipType {
     Joined = "joined",

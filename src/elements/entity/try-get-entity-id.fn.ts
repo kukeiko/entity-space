@@ -1,6 +1,6 @@
 import { readPath, writePath } from "@entity-space/utils";
 import { Entity } from "./entity";
-import { EntitySchema } from "./entity-schema";
+import { EntitySchema } from "./schema/entity-schema";
 
 export function tryGetEntityId(schema: EntitySchema, entity: Entity): Entity | undefined {
     if (!schema.hasId()) {

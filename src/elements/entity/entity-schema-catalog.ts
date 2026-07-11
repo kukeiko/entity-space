@@ -10,8 +10,9 @@ import {
     toContainerType,
 } from "./entity-blueprint-property";
 import { RelationshipType } from "./entity-relation-property";
-import { EntitySchema } from "./entity-schema";
+import { ConcreteEntitySchema } from "./schema/concrete-entity-schema";
 import { EntityComputedProperties } from "./schema/entity-computed-properties";
+import { EntitySchema } from "./schema/entity-schema";
 
 export class EntitySchemaCatalog {
     readonly #schemas = new Map<string, EntitySchema>();
@@ -55,7 +56,7 @@ export class EntitySchemaCatalog {
 
     #addBlueprint(blueprint: Class): void {
         const metadata = getEntityBlueprintMetadata(blueprint);
-        const schema = new EntitySchema(metadata.name);
+        const schema = new ConcreteEntitySchema(metadata.name);
         this.#schemas.set(metadata.name, schema);
 
         if (metadata.sort) {

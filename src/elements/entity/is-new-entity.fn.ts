@@ -1,6 +1,6 @@
 import { Entity } from "./entity";
 import { entityHasId } from "./entity-has-id.fn";
-import { EntitySchema } from "./entity-schema";
+import { EntitySchema } from "./schema/entity-schema";
 
 export function isNewEntity(schema: EntitySchema, entity: Entity): boolean {
     if (!schema.hasId()) {

@@ -1,4 +1,4 @@
-import { EntitySchema } from "../entity/entity-schema";
+import { EntitySchema } from "../entity/schema/entity-schema";
 import { EntitySelection } from "./entity-selection";
 
 export function getSelectedSchemas(schema: EntitySchema, selection: EntitySelection): EntitySchema[] {

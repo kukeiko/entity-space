@@ -3,7 +3,7 @@ import { mergeSelections } from "../selection/merge-selections.fn";
 import { Entity } from "./entity";
 import { isEntityPrimitiveProperty } from "./entity-primitive-property";
 import { isEntityRelationProperty } from "./entity-relation-property";
-import { EntitySchema } from "./entity-schema";
+import { EntitySchema } from "./schema/entity-schema";
 
 export function entityToSelection(schema: EntitySchema, entity: Entity): EntitySelection {
     const selection: EntitySelection = {};

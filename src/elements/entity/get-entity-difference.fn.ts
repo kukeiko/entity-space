@@ -1,7 +1,7 @@
 import { isEmpty, isEqual } from "lodash";
 import { EntityRelationSelection } from "../selection/entity-selection";
 import { Entity } from "./entity";
-import { EntitySchema } from "./entity-schema";
+import { EntitySchema } from "./schema/entity-schema";
 import { toEntityPairs } from "./to-entity-pairs.fn";
 
 export function getEntityDifference(

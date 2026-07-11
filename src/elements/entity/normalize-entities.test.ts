@@ -2,21 +2,23 @@ import { toPaths } from "@entity-space/utils";
 import { describe, expect, it } from "vitest";
 import { ContainerType } from "./entity-property";
 import { RelationshipType } from "./entity-relation-property";
-import { EntitySchema } from "./entity-schema";
 import { normalizeEntities } from "./normalize-entities.fn";
+import { ConcreteEntitySchema } from "./schema/concrete-entity-schema";
 
 describe(normalizeEntities.name, () => {
     it("should normalize entities that are not embedded for all types of containers", () => {
         // arrange
-        const rootSchema = new EntitySchema("root").addPrimitive("number", Number);
-        const joinedSchema = new EntitySchema("joined").addPrimitive("number", Number).setId(toPaths(["number"]));
+        const rootSchema = new ConcreteEntitySchema("root").addPrimitive("number", Number);
+        const joinedSchema = new ConcreteEntitySchema("joined")
+            .addPrimitive("number", Number)
+            .setId(toPaths(["number"]));
         rootSchema.addRelation("joined", joinedSchema, {
             relationshipType: RelationshipType.Joined,
             container: ContainerType.Array,
             joinFrom: toPaths(["number"]),
             joinTo: toPaths(["number"]),
         });
-        const embeddedSchema = new EntitySchema("embedded").addPrimitive("number", Number);
+        const embeddedSchema = new ConcreteEntitySchema("embedded").addPrimitive("number", Number);
         rootSchema.addRelation("embedded", embeddedSchema);
         embeddedSchema.addRelation("joined", joinedSchema, {
             relationshipType: RelationshipType.Joined,
@@ -64,8 +66,8 @@ describe(normalizeEntities.name, () => {
 
     it("should not throw if related entity is null", () => {
         // arrange
-        const fooSchema = new EntitySchema("foo").addPrimitive("id", Number);
-        const barSchema = new EntitySchema("bar")
+        const fooSchema = new ConcreteEntitySchema("foo").addPrimitive("id", Number);
+        const barSchema = new ConcreteEntitySchema("bar")
             .addPrimitive("id", Number)
             .setId(toPaths(["id"]))
             .addPrimitive("fooId", Number);
@@ -84,8 +86,8 @@ describe(normalizeEntities.name, () => {
 
     it("should throw if an array was expected", () => {
         // arrange
-        const fooSchema = new EntitySchema("foo").addPrimitive("id", Number);
-        const barSchema = new EntitySchema("bar")
+        const fooSchema = new ConcreteEntitySchema("foo").addPrimitive("id", Number);
+        const barSchema = new ConcreteEntitySchema("bar")
             .addPrimitive("id", Number)
             .setId(toPaths(["id"]))
             .addPrimitive("fooId", Number);
@@ -104,8 +106,8 @@ describe(normalizeEntities.name, () => {
 
     it("should throw if an object was expected, but got a number", () => {
         // arrange
-        const fooSchema = new EntitySchema("foo").addPrimitive("id", Number);
-        const barSchema = new EntitySchema("bar")
+        const fooSchema = new ConcreteEntitySchema("foo").addPrimitive("id", Number);
+        const barSchema = new ConcreteEntitySchema("bar")
             .addPrimitive("id", Number)
             .setId(toPaths(["id"]))
             .addPrimitive("fooId", Number);

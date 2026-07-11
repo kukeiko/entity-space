@@ -1,5 +1,5 @@
 import { writePath } from "@entity-space/utils";
-import { EntitySchema } from "../entity/entity-schema";
+import { EntitySchema } from "../entity/schema/entity-schema";
 import { EntityRelationSelection, EntitySelection } from "./entity-selection";
 
 // [todo] [recursive] ❌ should need adaptation, but mutation test using recursion don't fail yet.

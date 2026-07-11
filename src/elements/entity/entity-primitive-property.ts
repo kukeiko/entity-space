@@ -2,7 +2,7 @@ import { isPrimitiveType, Primitive } from "@entity-space/utils";
 import { Entity } from "./entity";
 import { EntityProperty, EntityPropertyOptions } from "./entity-property";
 import { EntityRelationProperty } from "./entity-relation-property";
-import { EntitySchema } from "./entity-schema";
+import { EntitySchema } from "./schema/entity-schema";
 
 export function isEntityPrimitiveProperty(value: unknown): value is EntityPrimitiveProperty {
     return value instanceof EntityPrimitiveProperty;
