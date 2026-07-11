@@ -1,6 +1,6 @@
-import { isEntityPrimitiveProperty } from "../entity/entity-primitive-property";
-import { isEntityRelationProperty } from "../entity/entity-relation-property";
-import { EntitySchema } from "../entity/entity-schema";
+import { isEntityPrimitiveProperty } from "../entity/schema/entity-primitive-property";
+import { isEntityRelationProperty } from "../entity/schema/entity-relation-property";
+import { EntitySchema } from "../entity/schema/entity-schema";
 import { EntityRelationSelection, EntitySelection } from "./entity-selection";
 
 export function getSelection(schema: EntitySchema, relations: EntityRelationSelection = {}): EntitySelection {

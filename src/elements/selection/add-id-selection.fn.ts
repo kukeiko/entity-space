@@ -1,4 +1,4 @@
-import { EntitySchema } from "../entity/entity-schema";
+import { EntitySchema } from "../entity/schema/entity-schema";
 import { EntitySelection } from "./entity-selection";
 import { getIdSelection } from "./get-id-selection.fn";
 import { mergeSelection } from "./merge-selection.fn";

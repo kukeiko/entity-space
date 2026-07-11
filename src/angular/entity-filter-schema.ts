@@ -150,7 +150,7 @@ function toEntityFilterSchemaProperty(property: NamedProperty): EntityFilterSche
     return { parse, stringify };
 }
 
-export function createEntityFilterSchema<B>(blueprint: Class<B>): EntityFilterSchema<EntityBlueprint.Type<B>> {
+export function createEntityFilterSchema<B extends Class>(blueprint: B): EntityFilterSchema<EntityBlueprint.Type<B>> {
     const schema: EntityFilterSchema<Entity> = {};
     const properties = getNamedProperties(blueprint);
 

@@ -1,5 +1,5 @@
 import { Entity } from "./entity";
-import { EntitySchema } from "./entity-schema";
+import { EntitySchema } from "./schema/entity-schema";
 
 export function dtoToEntity(schema: EntitySchema, dto: Entity): Entity {
     const properties = schema.getProperties();

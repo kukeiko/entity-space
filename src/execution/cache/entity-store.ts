@@ -103,7 +103,7 @@ export class EntityStore {
         }
 
         if (selection !== undefined) {
-            entities = entities.filter(entity => isHydrated(entity, selection));
+            entities = entities.filter(entity => isHydrated(query.getSchema(), selection, entity));
         }
 
         if (applyPaging && page !== undefined) {

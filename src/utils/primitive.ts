@@ -10,6 +10,14 @@ export function isEnumPrimitive(primitive: unknown): primitive is EnumPrimitive<
     return primitive != null && (primitive as any)[$enumPrimitive] === true;
 }
 
+const $literalPrimitive: unique symbol = Symbol();
+const $literalPrimitiveValue: unique symbol = Symbol();
+
+export type LiteralPrimitive<T> = (() => T) & {
+    readonly [$literalPrimitive]: true;
+    readonly [$literalPrimitiveValue]: T;
+};
+
 export type Primitive =
     | typeof Boolean
     | typeof Number
@@ -17,7 +25,8 @@ export type Primitive =
     | typeof Null
     | typeof Undefined
     | EnumPrimitive<string>
-    | EnumPrimitive<number>;
+    | EnumPrimitive<number>
+    | LiteralPrimitive<string | number>;
 
 export function primitiveToString(value: ReturnType<Primitive>): string {
     if (value === null) {
@@ -48,7 +57,11 @@ export function primitiveToType(value: ReturnType<Primitive>): Primitive {
 }
 
 export function isPrimitiveType(value: any): value is Primitive {
-    return value?.[$enumPrimitive] === true || [Number, String, Boolean, Null, Undefined].includes(value);
+    return (
+        value?.[$enumPrimitive] === true ||
+        value?.[$literalPrimitive] === true ||
+        [Number, String, Boolean, Null, Undefined].includes(value)
+    );
 }
 
 export function isPrimitive(value: any): value is ReturnType<Primitive> {
@@ -88,6 +101,8 @@ export function primitiveTypeToString(type: Primitive): string {
         return "boolean";
     } else if ((type as any)[$enumPrimitive] === true) {
         return "enum";
+    } else if ((type as any)[$literalPrimitive] === true) {
+        return (type as any)[$literalPrimitiveValue].toString();
     } else {
         throw new Error(`type ${type} is not a Primitive`);
     }
@@ -114,4 +129,12 @@ export function enumToPrimitive<T extends Record<string, string | number>>(theEn
     primitive[$enumPrimitiveValues] = new Set<string | number>(enumValues);
 
     return primitive as EnumPrimitive<string | number>;
+}
+
+export function literalToPrimitive<T extends string | number>(literal: T): LiteralPrimitive<T> {
+    const primitive = () => literal;
+    primitive[$literalPrimitive] = true;
+    primitive[$literalPrimitiveValue] = literal as T;
+
+    return primitive as LiteralPrimitive<T>;
 }

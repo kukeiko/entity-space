@@ -6,7 +6,7 @@ import { isEqual } from "lodash";
 import { BehaviorSubject, Observable, distinctUntilChanged, map } from "rxjs";
 import { EntityFilterSchema, EntityFilterSchemaProperty, EntityFilterSource } from "./entity-filter-schema";
 
-export class EntityFilter<B, F, S extends PackedEntitySelection<EntityBlueprint.Type<B>>> {
+export class EntityFilter<B extends Class | Class[], F, S extends PackedEntitySelection<EntityBlueprint.Type<B>>> {
     constructor(
         source: EntityFilterSource<F>,
         toWhereEntityFn?: (filter: F) => WhereEntity<EntityBlueprint.Type<B>>,
@@ -54,8 +54,10 @@ export class EntityFilter<B, F, S extends PackedEntitySelection<EntityBlueprint.
     }
 }
 
-export class ObservableEntityFilterSource<B> implements EntityFilterSource<EntityBlueprint.Type<B>> {
-    constructor(workspace: EntityWorkspace, blueprint: Class<B>) {
+export class ObservableEntityFilterSource<B extends Class | Class[]>
+    implements EntityFilterSource<EntityBlueprint.Type<B>>
+{
+    constructor(workspace: EntityWorkspace, blueprint: B) {
         this.#filter$ = new BehaviorSubject(workspace.from(blueprint).constructDefault());
     }
 

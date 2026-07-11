@@ -6,7 +6,11 @@ import { EntityDataSource } from "./entity-data-source";
 import { EntityFilter, RoutedEntityFilterSource } from "./entity-filter";
 import { createEntityFilterSchema } from "./entity-filter-schema";
 
-export function createRoutedEntityDataSource<B, F, S extends PackedEntitySelection<EntityBlueprint.Type<B>>>({
+export function createRoutedEntityDataSource<
+    B extends Class | Class[],
+    F extends Class,
+    S extends PackedEntitySelection<EntityBlueprint.Type<B>>,
+>({
     activatedRoute,
     cacheKey,
     criteria,
@@ -41,7 +45,7 @@ export function createRoutedEntityDataSource<B, F, S extends PackedEntitySelecti
     /**
      * Blueprint of the entity this data source will provide.
      */
-    entityBlueprint: Class<B>;
+    entityBlueprint: B;
     /**
      * Additional client-side filter for anything the entity sources can't filter out.
      */
@@ -49,7 +53,7 @@ export function createRoutedEntityDataSource<B, F, S extends PackedEntitySelecti
     /**
      * Blueprint of the filter you want to apply to the data source.
      */
-    filterBlueprint: Class<F>;
+    filterBlueprint: F;
     /**
      * Router of Angular, will be used to persist the current filter object as query params in the activated route.
      */

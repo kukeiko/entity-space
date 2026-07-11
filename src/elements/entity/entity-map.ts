@@ -1,6 +1,6 @@
 import { ComplexKeyMap } from "@entity-space/utils";
 import { Entity } from "./entity";
-import { EntitySchema } from "./entity-schema";
+import { EntitySchema } from "./schema/entity-schema";
 
 export class EntityMap {
     readonly #map = new Map<EntitySchema, ComplexKeyMap<Entity, Entity>>();

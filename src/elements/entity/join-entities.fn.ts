@@ -1,6 +1,6 @@
 import { ComplexKeyMap, isDefined, permutateEntries, pickPaths } from "@entity-space/utils";
 import { Entity } from "./entity";
-import { EntityRelationProperty } from "./entity-relation-property";
+import { EntityRelationProperty } from "./schema/entity-relation-property";
 
 export function joinEntities(
     entities: readonly Entity[],

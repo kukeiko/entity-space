@@ -1,14 +1,10 @@
 import { describe } from "vitest";
 import { EntitySchemaCatalog } from "../entity/entity-schema-catalog";
-import { AlbumBlueprint, ArtistBlueprint, ArtistRequestBlueprint, expectQuery, SongBlueprint } from "../testing";
+import { expectQuery } from "../testing";
 import { mergeQuery } from "./merge-query.fn";
 
 describe(mergeQuery, () => {
     const catalog = new EntitySchemaCatalog();
-    catalog.addSchemaByBlueprint(ArtistBlueprint);
-    catalog.addSchemaByBlueprint(AlbumBlueprint);
-    catalog.addSchemaByBlueprint(SongBlueprint);
-    catalog.addSchemaByBlueprint(ArtistRequestBlueprint);
 
     expectQuery(catalog, "artists({ id: 1 })").plus("artists({ id: !1 })").toEqual("artists");
     expectQuery(catalog, "artists").plus("albums").toEqual(false);

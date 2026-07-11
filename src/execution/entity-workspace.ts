@@ -66,12 +66,12 @@ export class EntityWorkspace {
         return new EntityHydrationBuilder(blueprint, args => this.#hydrate$(args));
     }
 
-    from<T>(blueprint: Class<T>): EntityQueryBuilder<EntityBlueprint.Type<T>> {
+    from<T extends Class[] | Class>(blueprint: T): EntityQueryBuilder<EntityBlueprint.Type<T>> {
         const schema = this.#services.getCatalog().getSchemaByBlueprint(blueprint);
         return new EntityQueryBuilder(schema, args => this.#query$(args));
     }
 
-    in<T>(blueprint: Class<T>): EntityMutationBuilder<T> {
+    in<T extends Class | Class[]>(blueprint: T): EntityMutationBuilder<T> {
         const schema = this.#services.getCatalog().getSchemaByBlueprint(blueprint);
         return new EntityMutationBuilder(schema, operation => this.#mutate(operation));
     }
@@ -318,6 +318,7 @@ export class EntityWorkspace {
 
             return from(
                 executeDescribedHydration(
+                    schema,
                     args.entities,
                     sourcedEntities.getAvailableSelection(),
                     hydrationDescription,

@@ -1,4 +1,4 @@
-import { Entity } from "./entity";
+import { Entity } from "../entity";
 import { EntityPrimitiveProperty } from "./entity-primitive-property";
 import { EntityRelationProperty } from "./entity-relation-property";
 import { EntitySchema } from "./entity-schema";
@@ -42,7 +42,7 @@ export abstract class EntityProperty {
 
         this.#schema = schema;
         this.#name = name;
-        this.#options = Object.freeze({
+        this.#options = Object.freeze<EntityPropertyOptions>({
             container: options.container,
             optional: options.optional === true,
             nullable: options.nullable === true,

@@ -1,4 +1,4 @@
-import { EntityBlueprint } from "../../entity/entity-blueprint";
+import { EntityBlueprint } from "../../entity/blueprint/entity-blueprint";
 import { ItemBlueprint } from "./item.model";
 
 const { register, id, string, number, entity, nullable, readonly, creatable } = EntityBlueprint;

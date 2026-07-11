@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { EntityCriterionShape } from "../criteria/entity-criterion-shape";
-import { EntitySchema } from "../entity/entity-schema";
+import { EntitySchema } from "../entity/schema/entity-schema";
 import { EntityQueryShape } from "./entity-query-shape";
 import { reshapeQueryShape } from "./reshape-query-shape.fn";
 

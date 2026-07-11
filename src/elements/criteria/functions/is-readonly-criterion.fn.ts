@@ -1,4 +1,4 @@
-import { EntitySchema } from "../../entity/entity-schema";
+import { EntitySchema } from "../../entity/schema/entity-schema";
 import { Criterion } from "../criterion";
 import { EntityCriterion } from "../entity-criterion";
 

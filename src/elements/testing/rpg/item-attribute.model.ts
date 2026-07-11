@@ -1,4 +1,4 @@
-import { EntityBlueprint } from "../../entity/entity-blueprint";
+import { EntityBlueprint } from "../../entity/blueprint/entity-blueprint";
 import { ItemAttributeTypeBlueprint } from "./item-attribute-type.model";
 
 const { register, number, entity, array } = EntityBlueprint;

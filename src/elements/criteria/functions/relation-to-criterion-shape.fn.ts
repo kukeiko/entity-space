@@ -1,5 +1,5 @@
 import { writePath } from "@entity-space/utils";
-import { EntityRelationProperty } from "../../entity/entity-relation-property";
+import { EntityRelationProperty } from "../../entity/schema/entity-relation-property";
 import { CriterionShape } from "../criterion-shape";
 import { EntityCriterionShape, PackedEntityCriterionShape } from "../entity-criterion-shape";
 import { EqualsCriterionShape } from "../equals-criterion-shape";

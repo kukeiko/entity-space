@@ -1,10 +1,10 @@
 import { Class, Primitive } from "@entity-space/utils";
-import { PackedEntitySelection } from "../selection/entity-selection";
-import { Entity } from "./entity";
-import { ContainerType } from "./entity-property";
-import { RelationshipType } from "./entity-relation-property";
+import { PackedEntitySelection } from "../../selection/entity-selection";
+import { Entity } from "../entity";
+import { ContainerType } from "../schema/entity-property";
+import { RelationshipType } from "../schema/entity-relation-property";
 
-export type BlueprintPropertyValue = Primitive | Class;
+export type BlueprintPropertyValue = Primitive | Class | Class[];
 
 export interface BlueprintProperty<V extends BlueprintPropertyValue = BlueprintPropertyValue> {
     valueType: V;
@@ -61,6 +61,10 @@ export interface DtoAttribute {
     dto: string;
 }
 
+export interface DiscriminatorAttribute {
+    discriminator: true;
+}
+
 export interface ComputedAttribute<T = any> {
     computed: {
         select: PackedEntitySelection<T>;
@@ -72,6 +76,7 @@ export interface ComputedAttribute<T = any> {
 export type AllAttributes =
     | ArrayAttribute
     | CreatableAttribute
+    | DiscriminatorAttribute
     | DtoAttribute
     | EntityAttribute
     | IdAttribute

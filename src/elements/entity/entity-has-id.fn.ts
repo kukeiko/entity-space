@@ -1,6 +1,6 @@
 import { readPath } from "@entity-space/utils";
 import { Entity } from "./entity";
-import { EntitySchema } from "./entity-schema";
+import { EntitySchema } from "./schema/entity-schema";
 
 function isValidIdValue(value: string | number | null | undefined): boolean {
     return !(

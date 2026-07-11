@@ -17,6 +17,7 @@ export async function executeDescribed(
     }
 
     entities = await executeDescribedHydration(
+        query.getSchema(),
         entities,
         description.getDescribedSourcing().getAvailableSelection(),
         describedHydration,
@@ -25,7 +26,7 @@ export async function executeDescribed(
         query.getParameters()?.getValue(),
     );
 
-    entities = entities.filter(entity => isHydrated(entity, query.getSelection()));
+    entities = entities.filter(entity => isHydrated(query.getSchema(), query.getSelection(), entity));
 
     if (query.getParameters() === undefined) {
         entities = sortEntitiesByDefaultSorter(query.getSchema(), entities);

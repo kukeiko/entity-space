@@ -1,8 +1,8 @@
 import { isEmpty } from "lodash";
 import { EntityRelationSelection } from "../../selection/entity-selection";
 import { Entity } from "../entity";
-import { EntitySchema } from "../entity-schema";
 import { relationEntries } from "../relation-entries.fn";
+import { EntitySchema } from "../schema/entity-schema";
 
 export function sortRelatedEntities(
     schema: EntitySchema,

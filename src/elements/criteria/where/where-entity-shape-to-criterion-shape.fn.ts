@@ -1,5 +1,5 @@
 import { primitiveTypeToString } from "@entity-space/utils";
-import { EntitySchema } from "../../entity/entity-schema";
+import { EntitySchema } from "../../entity/schema/entity-schema";
 import { CriterionShape } from "../criterion-shape";
 import { EntityCriterionShape, PackedEntityCriterionShape } from "../entity-criterion-shape";
 import { EqualsCriterionShape } from "../equals-criterion-shape";

@@ -1,7 +1,19 @@
-import { Class, EnumPrimitive, Path, Primitive, entryValueIs, enumToPrimitive, isDefined } from "@entity-space/utils";
+import {
+    Class,
+    EnumPrimitive,
+    LiteralPrimitive,
+    Path,
+    Primitive,
+    entryValueIs,
+    enumToPrimitive,
+    isDefined,
+    literalToPrimitive,
+} from "@entity-space/utils";
 import { isPlainObject } from "lodash";
-import { PackedEntitySelection } from "../selection/entity-selection";
-import { Entity } from "./entity";
+import { PackedEntitySelection } from "../../selection/entity-selection";
+import { Entity } from "../entity";
+import { RelationshipType } from "../schema/entity-relation-property";
+import { SelectEntity } from "../select-entity-type";
 import { EntityBlueprintInstance } from "./entity-blueprint-instance.type";
 import {
     ArrayAttribute,
@@ -19,11 +31,9 @@ import {
     UnionAttribute,
     isProperty,
 } from "./entity-blueprint-property";
-import { RelationshipType } from "./entity-relation-property";
-import { SelectEntity } from "./select-entity-type";
 
-interface EntityBlueprintMetadata {
-    name: string;
+export interface EntityBlueprintMetadata {
+    name?: string;
     sort?: (a: Entity, b: Entity) => number;
     computed: {
         select: PackedEntitySelection<Entity>;
@@ -32,24 +42,24 @@ interface EntityBlueprintMetadata {
     }[];
 }
 
-const blueprints = new Map<Class, EntityBlueprintMetadata>();
+const blueprints = new Map<Class | Class[], EntityBlueprintMetadata>();
 
-export interface RegisterEntityBlueprintOptions<T> {
-    name?: string;
-    sort?: (a: EntityBlueprintInstance<T>, b: EntityBlueprintInstance<T>) => number;
+export function getAllEntityBlueprintMetadata(): Map<Class | Class[], EntityBlueprintMetadata> {
+    return new Map(blueprints.entries());
 }
 
-export function getEntityBlueprintMetadata(type: Class): EntityBlueprintMetadata {
+export function getEntityBlueprintMetadata(type: Class | Class[]): EntityBlueprintMetadata {
     const metadata = blueprints.get(type);
 
     if (!metadata) {
-        throw new Error(`no blueprint metadata found for ${type.name}. did you forget to call register()?`);
+        const typeName = Array.isArray(type) ? type.map(type => type.name).join(",") : type.name;
+        throw new Error(`no blueprint metadata found for ${typeName}. did you forget to call register()?`);
     }
 
     return metadata;
 }
 
-export function isEntityBlueprint(value: any): value is Class {
+export function isEntityBlueprint(value: any): value is Class | Class[] {
     return blueprints.has(value);
 }
 
@@ -70,9 +80,14 @@ export function getNamedProperties(blueprint: Class): NamedProperty[] {
 export namespace EntityBlueprint {
     export type Type<T> = EntityBlueprintInstance<T>;
 
-    export function register<T>(blueprint: Class<T>, options: RegisterEntityBlueprintOptions<T> = {}): void {
+    interface RegisterOptions<T> {
+        name?: string;
+        sort?: (a: T, b: T) => number;
+    }
+
+    export function register<T extends Class[] | Class>(blueprint: T, options: RegisterOptions<Type<T>> = {}): void {
         blueprints.set(blueprint, {
-            name: options.name ?? blueprint.name,
+            name: options.name,
             sort: options.sort as ((a: Entity, b: Entity) => number) | undefined,
             computed: [],
         });
@@ -146,7 +161,21 @@ export namespace EntityBlueprint {
         return { valueType: Boolean, ...(options ?? {}) } as any;
     }
 
-    export function union<T extends Record<string, any>, O extends PrimitiveOptions>(
+    export function literal<V extends string | number, O extends PrimitiveOptions>(
+        value: V,
+        options?: O,
+    ): BlueprintProperty<LiteralPrimitive<V>> & O {
+        return { valueType: literalToPrimitive(value), ...(options ?? {}) } as any;
+    }
+
+    export function discriminator<V extends string | number, O extends PrimitiveOptions>(
+        value: V,
+        options?: O,
+    ): BlueprintProperty<LiteralPrimitive<V>> & O {
+        return { valueType: literalToPrimitive(value), ...(options ?? {}), discriminator: true } as any;
+    }
+
+    export function enumeration<T extends Record<string, any>, O extends PrimitiveOptions>(
         valueType: T,
         options?: O,
     ): BlueprintProperty<EnumPrimitive<T[keyof T]>> & UnionAttribute & O {
@@ -161,14 +190,27 @@ export namespace EntityBlueprint {
         ArrayAttribute & DtoAttribute & NullableAttribute & ReadonlyAttribute & OutboundAttribute & InboundAttribute
     >;
 
-    export function entity<V extends Class, O extends EmbeddedEntityOptions>(
+    type InstanceTypeHelper<T> = T extends readonly Class[]
+        ? T[number] extends infer C
+            ? C extends Class
+                ? InstanceType<C>
+                : never
+            : never
+        : T extends Class
+          ? InstanceType<T>
+          : never;
+
+    export function entity<V extends Class | Class[], O extends EmbeddedEntityOptions>(
         valueType: V,
         options?: O,
     ): BlueprintProperty<V> & EntityAttribute & O;
-    export function entity<V extends Class, O extends JoinedEntityOptions>(
+    export function entity<V extends Class | Class[], O extends JoinedEntityOptions>(
         valueType: V,
         from: Path | Path[] | BlueprintProperty<Primitive> | BlueprintProperty<Primitive>[],
-        to: Path | Path[] | ((other: InstanceType<V>) => BlueprintProperty<Primitive> | BlueprintProperty<Primitive>[]),
+        to:
+            | Path
+            | Path[]
+            | ((other: InstanceTypeHelper<V>) => BlueprintProperty<Primitive> | BlueprintProperty<Primitive>[]),
         options?: O,
     ): BlueprintProperty<V> & EntityAttribute & OptionalAttribute & O;
     export function entity(...args: any[]): BlueprintProperty<Class> & EntityAttribute {

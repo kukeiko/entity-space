@@ -1,7 +1,7 @@
 import { Path, toPath } from "@entity-space/utils";
 import { describe, expect, it } from "vitest";
-import { EntitySchema } from "../entity/entity-schema";
 import { EntitySchemaCatalog } from "../entity/entity-schema-catalog";
+import { EntitySchema } from "../entity/schema/entity-schema";
 import { RecordMetadataBlueprint, Tree, TreeBlueprint, TreeBranchBlueprint, TreeLeafBlueprint } from "../testing";
 import { PackedEntitySelection } from "./entity-selection";
 import { getDefaultSelection } from "./get-default-selection.fn";

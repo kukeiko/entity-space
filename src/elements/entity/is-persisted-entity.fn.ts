@@ -1,6 +1,6 @@
 import { Entity } from "./entity";
-import { EntitySchema } from "./entity-schema";
 import { isNewEntity } from "./is-new-entity.fn";
+import { EntitySchema } from "./schema/entity-schema";
 
 export function isPersistedEntity(schema: EntitySchema, entity: Entity): boolean {
     if (!schema.hasId()) {

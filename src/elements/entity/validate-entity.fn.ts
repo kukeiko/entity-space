@@ -1,8 +1,9 @@
 import { isEnumPrimitive, isPrimitiveOfType, primitiveToString, primitiveTypeToString } from "@entity-space/utils";
 import { Entity } from "./entity";
-import { isEntityPrimitiveProperty } from "./entity-primitive-property";
-import { isEntityRelationProperty } from "./entity-relation-property";
-import { EntitySchema } from "./entity-schema";
+import { getDiscriminatedSchemaOfEntity } from "./functions/get-discriminated-schema-of-entity.fn";
+import { isEntityPrimitiveProperty } from "./schema/entity-primitive-property";
+import { isEntityRelationProperty } from "./schema/entity-relation-property";
+import { EntitySchema } from "./schema/entity-schema";
 
 export type EntityValidationErrors = Record<string, string>;
 
@@ -12,6 +13,11 @@ export function validateEntity(
     pathPrefix?: string,
 ): EntityValidationErrors | undefined {
     const errors: EntityValidationErrors = {};
+
+    if (schema.isUnionSchema()) {
+        schema = getDiscriminatedSchemaOfEntity(schema, entity);
+    }
+
     const properties = schema.getPropertyRecord();
 
     for (const [key, property] of Object.entries(properties)) {

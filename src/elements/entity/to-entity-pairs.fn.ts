@@ -2,8 +2,8 @@ import { ComplexKeyMap } from "@entity-space/utils";
 import { isPlainObject } from "lodash";
 import { Entity } from "./entity";
 import { entityHasId } from "./entity-has-id.fn";
-import { EntitySchema } from "./entity-schema";
 import { getEntityDifference } from "./get-entity-difference.fn";
+import { EntitySchema } from "./schema/entity-schema";
 
 function countProperties(entity: Entity): number {
     let count = 0;

@@ -1,7 +1,7 @@
 import { ComplexKeyMap } from "@entity-space/utils";
 import { EntitySelection } from "../selection/entity-selection";
 import { Entity } from "./entity";
-import { EntitySchema } from "./entity-schema";
+import { EntitySchema } from "./schema/entity-schema";
 
 export function assignEntitiesUsingIds(
     schema: EntitySchema,

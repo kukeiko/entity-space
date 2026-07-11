@@ -1,6 +1,7 @@
 import {
     Criterion,
     Entity,
+    EntitySchema,
     EntitySelection,
     intersectCriterionWithSelection,
     isHydrated,
@@ -10,6 +11,7 @@ import { EntityQueryExecutionContext } from "../../entity-query-execution-contex
 import { DescribedEntityHydration } from "../described-entity-hydration";
 
 export async function executeDescribedHydration(
+    schema: EntitySchema,
     entities: Entity[],
     initialAvailableSelection: EntitySelection,
     hydrationDescription: DescribedEntityHydration,
@@ -34,7 +36,7 @@ export async function executeDescribedHydration(
         if (criterion) {
             const withoutDehydrated = intersectCriterionWithSelection(criterion, availableSelection);
             entities = entities.filter(entity => withoutDehydrated.contains(entity));
-            entities = entities.filter(entity => isHydrated(entity, availableSelection));
+            entities = entities.filter(entity => isHydrated(schema, availableSelection, entity));
         }
     }
 

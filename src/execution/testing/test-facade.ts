@@ -29,15 +29,18 @@ export class TestFacade {
     }
 
     // [todo] ❌ use this method in all tests where we currently call "face.getServices().getCatalog().getSchemaByBlueprint(...)"
-    getSchemaByBlueprint(blueprint: Class): EntitySchema {
+    getSchemaByBlueprint(blueprint: Class | Class[]): EntitySchema {
         return this.#services.getCatalog().getSchemaByBlueprint(blueprint);
     }
 
-    construct<B>(blueprint: Class<B>, patch?: Partial<EntityBlueprint.Type<B>>): EntityBlueprint.Type<B> {
+    construct<B extends Class | Class[]>(
+        blueprint: B,
+        patch?: Partial<EntityBlueprint.Type<B>>,
+    ): EntityBlueprint.Type<B> {
         return this.#workspace.from(blueprint).construct(patch);
     }
 
-    constructDefault<B>(blueprint: Class<B>): EntityBlueprint.Type<B> {
+    constructDefault<B extends Class | Class[]>(blueprint: B): EntityBlueprint.Type<B> {
         return this.#workspace.from(blueprint).constructDefault();
     }
 }

@@ -1,5 +1,5 @@
 import { isPrimitive } from "@entity-space/utils";
-import { EntitySchema } from "../../entity/entity-schema";
+import { EntitySchema } from "../../entity/schema/entity-schema";
 import { Criterion } from "../criterion";
 import { EntityCriterion, PackedEntityCriterion } from "../entity-criterion";
 import { EqualsCriterion } from "../equals-criterion";

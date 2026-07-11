@@ -1,8 +1,10 @@
 import { EntityServiceContainer } from "../entity-service-container";
 import { CommonRepository } from "./repositories/common-repository";
 import { FileSystemRepository } from "./repositories/file-system-repository";
+import { GameObjectRepository } from "./repositories/game-object-repository";
 import { MusicRepository } from "./repositories/music-repository";
 import { RpgRepository } from "./repositories/rpg-repository";
+import { ShapeRepository } from "./repositories/shape-repository";
 import { ShoppingRepository } from "./repositories/shopping-repository";
 import { TreeRepository } from "./repositories/tree-repository";
 
@@ -14,6 +16,8 @@ export class TestRepository {
         this.#rpgRepository = new RpgRepository(services);
         this.#fileSystemRepository = new FileSystemRepository(services);
         this.#treeRepository = new TreeRepository(services);
+        this.#shapeRepository = new ShapeRepository(services);
+        this.#gameObjectRepository = new GameObjectRepository(services);
     }
 
     readonly #commonRepository: CommonRepository;
@@ -22,6 +26,8 @@ export class TestRepository {
     readonly #rpgRepository: RpgRepository;
     readonly #fileSystemRepository: FileSystemRepository;
     readonly #treeRepository: TreeRepository;
+    readonly #shapeRepository: ShapeRepository;
+    readonly #gameObjectRepository: GameObjectRepository;
 
     useCommon(): CommonRepository {
         return this.#commonRepository;
@@ -43,7 +49,15 @@ export class TestRepository {
         return this.#fileSystemRepository;
     }
 
+    useShapes(): ShapeRepository {
+        return this.#shapeRepository;
+    }
+
     useTree(): TreeRepository {
         return this.#treeRepository;
+    }
+
+    useGameObjects(): GameObjectRepository {
+        return this.#gameObjectRepository;
     }
 }

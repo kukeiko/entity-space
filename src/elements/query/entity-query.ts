@@ -1,6 +1,6 @@
 import { Criterion } from "../criteria/criterion";
-import { EntitySchema } from "../entity/entity-schema";
 import { EntitySort } from "../entity/entity-sort";
+import { EntitySchema } from "../entity/schema/entity-schema";
 import { EntitySelection } from "../selection/entity-selection";
 import { packEntitySelection } from "../selection/pack-entity-selection.fn";
 import { selectionToString } from "../selection/selection-to-string.fn";

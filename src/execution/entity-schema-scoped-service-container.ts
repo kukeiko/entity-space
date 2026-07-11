@@ -109,7 +109,10 @@ export class EntitySchemaScopedServiceContainer<B> {
             pageShape,
         );
 
-        this.#addSourceFn(new EntitySource(this.#services.getTracing(), queryShape, load as LoadEntitiesFn, where));
+        // [todo] ❌ cast to any
+        this.#addSourceFn(
+            new EntitySource(this.#services.getTracing(), queryShape, load as any as LoadEntitiesFn, where),
+        );
 
         return this;
     }
