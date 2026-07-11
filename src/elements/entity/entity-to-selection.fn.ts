@@ -1,8 +1,8 @@
 import { EntitySelection } from "../selection/entity-selection";
 import { mergeSelections } from "../selection/merge-selections.fn";
 import { Entity } from "./entity";
-import { isEntityPrimitiveProperty } from "./entity-primitive-property";
-import { isEntityRelationProperty } from "./entity-relation-property";
+import { isEntityPrimitiveProperty } from "./schema/entity-primitive-property";
+import { isEntityRelationProperty } from "./schema/entity-relation-property";
 import { EntitySchema } from "./schema/entity-schema";
 
 export function entityToSelection(schema: EntitySchema, entity: Entity): EntitySelection {

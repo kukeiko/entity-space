@@ -1,4 +1,4 @@
-import { EntityBlueprint } from "../../entity/entity-blueprint";
+import { EntityBlueprint } from "../../entity/blueprint/entity-blueprint";
 import { ItemAttributeBlueprint } from "./item-attribute.model";
 import { ItemSocketBlueprint } from "./item-socket.model";
 import { ItemTypeBlueprint } from "./item-type.model";

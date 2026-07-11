@@ -1,8 +1,8 @@
 import { enumToPrimitive } from "@entity-space/utils";
 import { describe, expect, it } from "vitest";
 import { Entity } from "./entity";
-import { ContainerType } from "./entity-property";
 import { ConcreteEntitySchema } from "./schema/concrete-entity-schema";
+import { ContainerType } from "./schema/entity-property";
 import { EntityValidationErrors, validateEntity } from "./validate-entity.fn";
 
 describe(validateEntity, () => {

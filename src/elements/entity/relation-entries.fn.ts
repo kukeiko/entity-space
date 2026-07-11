@@ -1,5 +1,5 @@
 import { EntityRelationSelection } from "../selection/entity-selection";
-import { EntityRelationProperty } from "./entity-relation-property";
+import { EntityRelationProperty } from "./schema/entity-relation-property";
 import { EntitySchema } from "./schema/entity-schema";
 
 export function relationEntries(

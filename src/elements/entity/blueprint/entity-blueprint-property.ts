@@ -1,8 +1,8 @@
 import { Class, Primitive } from "@entity-space/utils";
-import { PackedEntitySelection } from "../selection/entity-selection";
-import { Entity } from "./entity";
-import { ContainerType } from "./entity-property";
-import { RelationshipType } from "./entity-relation-property";
+import { PackedEntitySelection } from "../../selection/entity-selection";
+import { Entity } from "../entity";
+import { ContainerType } from "../schema/entity-property";
+import { RelationshipType } from "../schema/entity-relation-property";
 
 export type BlueprintPropertyValue = Primitive | Class;
 

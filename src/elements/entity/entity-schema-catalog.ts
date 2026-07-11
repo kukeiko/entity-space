@@ -1,17 +1,17 @@
 import { Class, Path, Primitive, toPath, toPaths } from "@entity-space/utils";
 import { isString } from "lodash";
 import { unpackSelectionWithoutDefault } from "../selection/unpack-selection-without-default.fn";
-import { getEntityBlueprintMetadata, isEntityBlueprint, toPropertyRecord } from "./entity-blueprint";
+import { getEntityBlueprintMetadata, isEntityBlueprint, toPropertyRecord } from "./blueprint/entity-blueprint";
 import {
     BlueprintProperty,
     EntityAttribute,
     hasAttribute,
     IdAttribute,
     toContainerType,
-} from "./entity-blueprint-property";
-import { RelationshipType } from "./entity-relation-property";
+} from "./blueprint/entity-blueprint-property";
 import { ConcreteEntitySchema } from "./schema/concrete-entity-schema";
 import { EntityComputedProperties } from "./schema/entity-computed-properties";
+import { RelationshipType } from "./schema/entity-relation-property";
 import { EntitySchema } from "./schema/entity-schema";
 
 export class EntitySchemaCatalog {

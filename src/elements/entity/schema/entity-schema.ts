@@ -1,9 +1,9 @@
 import { Path } from "@entity-space/utils";
 import { Entity } from "../entity";
-import { EntityPrimitiveProperty } from "../entity-primitive-property";
-import { EntityProperty } from "../entity-property";
-import { EntityRelationProperty } from "../entity-relation-property";
 import { EntityComputedProperties } from "./entity-computed-properties";
+import { EntityPrimitiveProperty } from "./entity-primitive-property";
+import { EntityProperty } from "./entity-property";
+import { EntityRelationProperty } from "./entity-relation-property";
 
 export interface EntitySchema {
     getName(): string;

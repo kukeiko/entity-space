@@ -1,9 +1,9 @@
 import { assertValidPaths, Path, Primitive, toPathSegments } from "@entity-space/utils";
 import { Entity } from "../entity";
-import { EntityPrimitiveProperty, EntityPrimitivePropertyOptions } from "../entity-primitive-property";
-import { EntityProperty, EntityPropertyOptions } from "../entity-property";
-import { EntityRelationProperty, EntityRelationPropertyOptions, RelationshipType } from "../entity-relation-property";
 import { EntityComputedProperties } from "./entity-computed-properties";
+import { EntityPrimitiveProperty, EntityPrimitivePropertyOptions } from "./entity-primitive-property";
+import { EntityProperty, EntityPropertyOptions } from "./entity-property";
+import { EntityRelationProperty, EntityRelationPropertyOptions, RelationshipType } from "./entity-relation-property";
 import { EntitySchema } from "./entity-schema";
 
 export class ConcreteEntitySchema implements EntitySchema {

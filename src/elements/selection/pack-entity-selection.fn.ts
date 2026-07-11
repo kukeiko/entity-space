@@ -1,4 +1,4 @@
-import { isEntityRelationProperty } from "../entity/entity-relation-property";
+import { isEntityRelationProperty } from "../entity/schema/entity-relation-property";
 import { EntitySchema } from "../entity/schema/entity-schema";
 import { EntitySelection, PackedEntitySelection } from "./entity-selection";
 

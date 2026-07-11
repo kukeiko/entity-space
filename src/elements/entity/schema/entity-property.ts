@@ -1,7 +1,7 @@
-import { Entity } from "./entity";
+import { Entity } from "../entity";
 import { EntityPrimitiveProperty } from "./entity-primitive-property";
 import { EntityRelationProperty } from "./entity-relation-property";
-import { EntitySchema } from "./schema/entity-schema";
+import { EntitySchema } from "./entity-schema";
 
 export enum ContainerType {
     Array = "array",

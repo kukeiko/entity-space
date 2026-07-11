@@ -1,9 +1,9 @@
 import { toPaths } from "@entity-space/utils";
 import { describe, expect, it } from "vitest";
-import { ContainerType } from "./entity-property";
-import { RelationshipType } from "./entity-relation-property";
 import { normalizeEntities } from "./normalize-entities.fn";
 import { ConcreteEntitySchema } from "./schema/concrete-entity-schema";
+import { ContainerType } from "./schema/entity-property";
+import { RelationshipType } from "./schema/entity-relation-property";
 
 describe(normalizeEntities.name, () => {
     it("should normalize entities that are not embedded for all types of containers", () => {

@@ -1,8 +1,8 @@
 import { toPaths } from "@entity-space/utils";
 import { describe, expect, it } from "vitest";
-import { ContainerType } from "../entity-property";
-import { EntityRelationProperty, RelationshipType } from "../entity-relation-property";
 import { ConcreteEntitySchema } from "./concrete-entity-schema";
+import { ContainerType } from "./entity-property";
+import { EntityRelationProperty, RelationshipType } from "./entity-relation-property";
 
 describe(ConcreteEntitySchema, () => {
     describe(ConcreteEntitySchema.prototype.addPrimitive, () => {

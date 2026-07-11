@@ -1,4 +1,4 @@
-import { EntityProperty } from "../entity/entity-property";
+import { EntityProperty } from "../entity/schema/entity-property";
 import { EntitySchema } from "../entity/schema/entity-schema";
 import { EntitySelection, PackedEntitySelection } from "./entity-selection";
 import { getDefaultSelection } from "./get-default-selection.fn";

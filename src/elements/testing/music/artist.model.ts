@@ -1,4 +1,4 @@
-import { EntityBlueprint } from "../../entity/entity-blueprint";
+import { EntityBlueprint } from "../../entity/blueprint/entity-blueprint";
 import { RecordMetadataBlueprint } from "../common/record-metadata.model";
 import { SongBlueprint } from "./song.model";
 import { TagBlueprint } from "./tag.model";

@@ -1,9 +1,9 @@
 import { entryValueIs, isNotNullsy, isNullsy, Path, readPath, writePath } from "@entity-space/utils";
 import { isPlainObject } from "lodash";
-import { Entity } from "./entity";
+import { Entity } from "../entity";
 import { EntityPrimitiveProperty } from "./entity-primitive-property";
 import { EntityProperty, EntityPropertyOptions } from "./entity-property";
-import { EntitySchema } from "./schema/entity-schema";
+import { EntitySchema } from "./entity-schema";
 
 export enum RelationshipType {
     Joined = "joined",

@@ -1,8 +1,8 @@
 import { EntitySelection } from "../selection/entity-selection";
 import { copyEntities } from "./copy-entities.fn";
 import { Entity } from "./entity";
-import { EntityProperty } from "./entity-property";
-import { EntityRelationProperty } from "./entity-relation-property";
+import { EntityProperty } from "./schema/entity-property";
+import { EntityRelationProperty } from "./schema/entity-relation-property";
 import { EntitySchema } from "./schema/entity-schema";
 
 export function copyEntity(

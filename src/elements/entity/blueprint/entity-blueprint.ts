@@ -1,7 +1,9 @@
 import { Class, EnumPrimitive, Path, Primitive, entryValueIs, enumToPrimitive, isDefined } from "@entity-space/utils";
 import { isPlainObject } from "lodash";
-import { PackedEntitySelection } from "../selection/entity-selection";
-import { Entity } from "./entity";
+import { PackedEntitySelection } from "../../selection/entity-selection";
+import { Entity } from "../entity";
+import { RelationshipType } from "../schema/entity-relation-property";
+import { SelectEntity } from "../select-entity-type";
 import { EntityBlueprintInstance } from "./entity-blueprint-instance.type";
 import {
     ArrayAttribute,
@@ -19,8 +21,6 @@ import {
     UnionAttribute,
     isProperty,
 } from "./entity-blueprint-property";
-import { RelationshipType } from "./entity-relation-property";
-import { SelectEntity } from "./select-entity-type";
 
 interface EntityBlueprintMetadata {
     name: string;

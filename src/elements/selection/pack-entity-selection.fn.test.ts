@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { EntityBlueprint } from "../entity/entity-blueprint";
+import { EntityBlueprint } from "../entity/blueprint/entity-blueprint";
 import { EntitySchemaCatalog } from "../entity/entity-schema-catalog";
 import { AlbumBlueprint, Folder, FolderBlueprint, TreeBlueprint } from "../testing";
 import { TypedEntitySelection } from "./entity-selection";
