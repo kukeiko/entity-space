@@ -38,6 +38,7 @@ export * from "./entity/entity-to-id.fn";
 export * from "./entity/entity-to-savable-dto.fn";
 export * from "./entity/entity-to-selection.fn";
 export * from "./entity/entity-to-updatable-dto.fn";
+export * from "./entity/functions/group-entities-by-discriminator.fn";
 export * from "./entity/functions/sort-entities-by-default-sorter.fn";
 export * from "./entity/functions/sort-entities.fn";
 export * from "./entity/functions/sort-related-entities.fn";

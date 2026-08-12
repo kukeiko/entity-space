@@ -1,14 +1,10 @@
 import { describe } from "vitest";
 import { EntitySchemaCatalog } from "../entity/entity-schema-catalog";
-import { AlbumBlueprint, ArtistBlueprint, ArtistRequestBlueprint, expectQuery, SongBlueprint } from "../testing";
+import { expectQuery } from "../testing";
 import { subtractQuery } from "./subtract-query.fn";
 
 describe(subtractQuery, () => {
     const catalog = new EntitySchemaCatalog();
-    catalog.addSchemaByBlueprint(ArtistBlueprint);
-    catalog.addSchemaByBlueprint(AlbumBlueprint);
-    catalog.addSchemaByBlueprint(SongBlueprint);
-    catalog.addSchemaByBlueprint(ArtistRequestBlueprint);
 
     expectQuery(catalog, "artists({ id: 1 })").minus("artists({ id: 1 })").toEqual(true);
     expectQuery(catalog, "artists/{ country }").minus("artists").toEqual("artists/{ country }");

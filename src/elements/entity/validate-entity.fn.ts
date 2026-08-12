@@ -12,6 +12,21 @@ export function validateEntity(
     pathPrefix?: string,
 ): EntityValidationErrors | undefined {
     const errors: EntityValidationErrors = {};
+
+    if (schema.isUnionSchema()) {
+        const discriminator = schema.getDiscriminator();
+        const entityValue = discriminator.readValue(entity);
+        const discriminatedSchema = schema
+            .getSchemas()
+            .find(candidate => candidate.getDiscriminator().getDefaultValue() === entityValue);
+
+        if (!discriminatedSchema) {
+            throw new Error("did not find discriminated schema");
+        }
+
+        schema = discriminatedSchema;
+    }
+
     const properties = schema.getPropertyRecord();
 
     for (const [key, property] of Object.entries(properties)) {

@@ -29,7 +29,7 @@ export class TestFacade {
     }
 
     // [todo] ❌ use this method in all tests where we currently call "face.getServices().getCatalog().getSchemaByBlueprint(...)"
-    getSchemaByBlueprint(blueprint: Class): EntitySchema {
+    getSchemaByBlueprint(blueprint: Class | Class[]): EntitySchema {
         return this.#services.getCatalog().getSchemaByBlueprint(blueprint);
     }
 

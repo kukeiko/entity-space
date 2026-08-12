@@ -6,9 +6,11 @@ import { EntityProperty, EntityPropertyOptions } from "./entity-property";
 import { EntityRelationProperty, EntityRelationPropertyOptions, RelationshipType } from "./entity-relation-property";
 import { EntitySchema } from "./entity-schema";
 
+// [todo] ❌ rename back to "EntitySchema"
 export class ConcreteEntitySchema implements EntitySchema {
-    constructor(name: string) {
+    constructor(name: string, sorter?: (a: Entity, b: Entity) => number) {
         this.#name = name;
+        this.#sorter = sorter;
     }
 
     readonly #name: string;
@@ -16,22 +18,19 @@ export class ConcreteEntitySchema implements EntitySchema {
     readonly #relations: Record<string, EntityRelationProperty> = {};
     readonly #computed: EntityComputedProperties[] = [];
     #idPaths: readonly Path[] = [];
-    #sorter?: (a: Entity, b: Entity) => number;
+    readonly #sorter?: (a: Entity, b: Entity) => number;
+    #schemas: readonly ConcreteEntitySchema[] = [];
+    #discriminator?: EntityPrimitiveProperty;
 
     getName(): string {
         return this.#name;
-    }
-
-    setSorter(sorter: (a: Entity, b: Entity) => number): this {
-        this.#sorter = sorter;
-        return this;
     }
 
     getSorter(): ((a: Entity, b: Entity) => number) | undefined {
         return this.#sorter;
     }
 
-    setId(idPaths: Path[]): this {
+    setId(idPaths: readonly Path[]): this {
         assertValidPaths(idPaths);
         idPaths.forEach(idPath => this.#assertIsValidIdPath(idPath));
         this.#idPaths = Object.freeze(idPaths.slice());
@@ -87,7 +86,17 @@ export class ConcreteEntitySchema implements EntitySchema {
             throw new Error(`${this.#name}.${name} already exists as a relation`);
         }
 
-        this.#primitives[name] = new EntityPrimitiveProperty(name, this, primitive, options);
+        if (options?.discriminator && this.#discriminator) {
+            throw new Error(`${this.#schemas} already has a discriminator`);
+        }
+
+        const property = new EntityPrimitiveProperty(name, this, primitive, options);
+        this.#primitives[name] = property;
+
+        if (options?.discriminator) {
+            this.#discriminator = property;
+        }
+
         return this;
     }
 
@@ -113,6 +122,14 @@ export class ConcreteEntitySchema implements EntitySchema {
 
             return schema.getPrimitive(toPathSegments(name).at(-1)!);
         }
+    }
+
+    getDiscriminator(): EntityPrimitiveProperty {
+        if (!this.#discriminator) {
+            throw new Error(`schema ${this.getName()} has no discriminator`);
+        }
+
+        return this.#discriminator;
     }
 
     addRelation(
@@ -211,7 +228,7 @@ export class ConcreteEntitySchema implements EntitySchema {
         return [...Object.values(this.#primitives), ...Object.values(this.#relations)];
     }
 
-    getPrimitiveProperties(): EntityPrimitiveProperty[] {
+    getPrimitives(): EntityPrimitiveProperty[] {
         return Object.values(this.#primitives);
     }
 
@@ -230,6 +247,22 @@ export class ConcreteEntitySchema implements EntitySchema {
 
     getComputedProperties(): readonly EntityComputedProperties[] {
         return this.#computed;
+    }
+
+    setSchemas(schemas: readonly ConcreteEntitySchema[]): void {
+        this.#schemas = Object.freeze(schemas.slice());
+    }
+
+    getSchemas(): readonly ConcreteEntitySchema[] {
+        if (!this.#schemas.length) {
+            return [this];
+        } else {
+            return this.#schemas;
+        }
+    }
+
+    isUnionSchema(): boolean {
+        return this.#schemas.length > 0;
     }
 
     #assertIsProperty(name: string): void {

@@ -27,4 +27,14 @@ type InstanceRequired<T> = {
         : T[K];
 };
 
-export type EntityBlueprintInstance<T> = InstanceDefault<T> & InstanceRequired<T>;
+type Instance<T> = InstanceDefault<T> & InstanceRequired<T>;
+
+export type EntityBlueprintInstance<T> = T extends readonly Class[]
+    ? T[number] extends infer C
+        ? C extends Class
+            ? Instance<InstanceType<C>>
+            : never
+        : never
+    : T extends Class
+      ? Instance<InstanceType<T>>
+      : Instance<T>;

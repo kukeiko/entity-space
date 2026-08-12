@@ -7,7 +7,7 @@ export function isEntityUpdateEqual(
     b: Entity,
     selection: EntityRelationSelection = {},
 ): boolean {
-    for (const property of schema.getPrimitiveProperties()) {
+    for (const property of schema.getPrimitives()) {
         const valueA = property.readValue(a);
         const valueB = property.readValue(b);
 

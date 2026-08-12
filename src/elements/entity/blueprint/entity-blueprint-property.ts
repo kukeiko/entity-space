@@ -61,6 +61,10 @@ export interface DtoAttribute {
     dto: string;
 }
 
+export interface DiscriminatorAttribute {
+    discriminator: true;
+}
+
 export interface ComputedAttribute<T = any> {
     computed: {
         select: PackedEntitySelection<T>;
@@ -72,6 +76,7 @@ export interface ComputedAttribute<T = any> {
 export type AllAttributes =
     | ArrayAttribute
     | CreatableAttribute
+    | DiscriminatorAttribute
     | DtoAttribute
     | EntityAttribute
     | IdAttribute

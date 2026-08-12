@@ -35,7 +35,7 @@ export class EntityServiceContainer {
         return this.#mutators.get(schema.getName())?.slice() ?? [];
     }
 
-    for<B>(blueprint: Class<B>): EntitySchemaScopedServiceContainer<B> {
+    for<B extends Class[] | Class>(blueprint: B): EntitySchemaScopedServiceContainer<B> {
         const schema = this.#catalog.getSchemaByBlueprint(blueprint);
 
         const addSource = (source: EntitySource) => {

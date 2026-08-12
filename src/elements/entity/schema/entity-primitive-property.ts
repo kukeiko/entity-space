@@ -10,6 +10,7 @@ export function isEntityPrimitiveProperty(value: unknown): value is EntityPrimit
 
 export interface EntityPrimitivePropertyOptions {
     unique: boolean;
+    discriminator: boolean;
 }
 
 export class EntityPrimitiveProperty extends EntityProperty {
@@ -26,8 +27,9 @@ export class EntityPrimitiveProperty extends EntityProperty {
         }
 
         this.#primitive = primitive;
-        this.#options = Object.freeze({
+        this.#options = Object.freeze<EntityPrimitivePropertyOptions>({
             unique: options.unique === true,
+            discriminator: options.discriminator === true,
         });
     }
 
@@ -52,6 +54,10 @@ export class EntityPrimitiveProperty extends EntityProperty {
 
     isUnique(): boolean {
         return this.#options.unique;
+    }
+
+    isDiscriminator(): boolean {
+        return this.#options.discriminator;
     }
 
     getDefaultValue(): ReturnType<Primitive> | ReturnType<Primitive>[] {
