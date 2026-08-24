@@ -76,6 +76,7 @@ export class OreBlueprint extends ResourceBlueprintBase {
 register(OreBlueprint);
 
 export const ResourceBlueprint = [PlantBlueprint, OreBlueprint];
+export type ResourceBlueprint = typeof ResourceBlueprint;
 export type Resource = EntityBlueprint.Type<typeof ResourceBlueprint>;
 register(ResourceBlueprint);
 
@@ -93,6 +94,7 @@ export const GameObjectBlueprint = [
     ...ResourceBlueprint,
     FactionBlueprint,
 ];
+export type GameObjectBlueprint = typeof GameObjectBlueprint;
 export type GameObject = EntityBlueprint.Type<typeof GameObjectBlueprint>;
 
 register(GameObjectBlueprint, { name: "game-objects" });

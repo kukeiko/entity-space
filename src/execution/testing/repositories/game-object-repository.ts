@@ -1,3 +1,4 @@
+import { EntityBlueprint } from "@entity-space/elements";
 import {
     FactionBlueprint,
     GameObject,
@@ -8,6 +9,7 @@ import {
 } from "@entity-space/elements/testing";
 import { vi } from "vitest";
 import { EntityServiceContainer } from "../../entity-service-container";
+import { CreateEntityFn } from "../../mutation/entity-mutation-function.type";
 import { InMemoryRepository } from "./in-memory-repository";
 
 type GameObjectEntities = {
@@ -80,6 +82,82 @@ export class GameObjectRepository extends InMemoryRepository<GameObjectEntities>
         this.#services.for(ResourceBlueprint).addSource({ load });
 
         return load;
+    }
+
+    useCreateScene() {
+        const create = vi.fn<CreateEntityFn<SceneBlueprint>>(({ entity }) => {
+            const nextId = this.nextId("scenes");
+
+            const created: EntityBlueprint.Type<SceneBlueprint> = {
+                ...entity,
+                id: nextId,
+            };
+
+            this.entities.scenes = [...(this.entities.scenes ?? []), created];
+
+            return Promise.resolve(created);
+        });
+
+        this.#services.for(SceneBlueprint).addCreateOneMutator({ create });
+
+        return create;
+    }
+
+    useCreateGameObject() {
+        const create = vi.fn<CreateEntityFn<GameObjectBlueprint>>(({ entity }) => {
+            const nextId = this.nextId("gameObjects");
+
+            const created: EntityBlueprint.Type<GameObjectBlueprint> = {
+                ...entity,
+                id: nextId,
+            };
+
+            this.entities.gameObjects = [...(this.entities.gameObjects ?? []), created];
+
+            return Promise.resolve(created);
+        });
+
+        this.#services.for(GameObjectBlueprint).addCreateOneMutator({ create });
+
+        return create;
+    }
+
+    useCreateFaction() {
+        const create = vi.fn<CreateEntityFn<FactionBlueprint>>(({ entity }) => {
+            const nextId = this.nextId("gameObjects");
+
+            const created: EntityBlueprint.Type<FactionBlueprint> = {
+                ...entity,
+                id: nextId,
+            };
+
+            this.entities.gameObjects = [...(this.entities.gameObjects ?? []), created];
+
+            return Promise.resolve(created);
+        });
+
+        this.#services.for(FactionBlueprint).addCreateOneMutator({ create });
+
+        return create;
+    }
+
+    useCreateResource() {
+        const create = vi.fn<CreateEntityFn<ResourceBlueprint>>(({ entity }) => {
+            const nextId = this.nextId("gameObjects");
+
+            const created: EntityBlueprint.Type<ResourceBlueprint> = {
+                ...entity,
+                id: nextId,
+            };
+
+            this.entities.gameObjects = [...(this.entities.gameObjects ?? []), created];
+
+            return Promise.resolve(created);
+        });
+
+        this.#services.for(ResourceBlueprint).addCreateOneMutator({ create });
+
+        return create;
     }
 
     #filterUnion<T extends GameObject["type"]>(
