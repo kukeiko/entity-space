@@ -27,7 +27,7 @@ export class AutoJoinEntityHydrator extends EntityHydrator {
     readonly #services: EntityServiceContainer;
 
     override expand(schema: EntitySchema, openSelection: EntitySelection): false | EntitySelection {
-        const openRelations = this.#getOpenEntityProperties(schema, openSelection);
+        const openRelations = this.#getOpenRelations(schema, openSelection);
 
         if (!openRelations.length) {
             return false;
@@ -45,9 +45,9 @@ export class AutoJoinEntityHydrator extends EntityHydrator {
         availableSelection: EntitySelection,
         openSelection: EntitySelection,
     ): AcceptedEntityHydration | false {
-        const openEntityProperties = this.#getOpenEntityProperties(schema, openSelection, availableSelection);
+        const openRelations = this.#getOpenRelations(schema, openSelection, availableSelection);
 
-        const acceptedHydrations = openEntityProperties
+        const acceptedHydrations = openRelations
             .map(relation =>
                 this.#toAcceptedEntityHydration(
                     relation,
@@ -64,7 +64,7 @@ export class AutoJoinEntityHydrator extends EntityHydrator {
         return mergeAcceptedEntityHydrations(acceptedHydrations);
     }
 
-    #getOpenEntityProperties(
+    #getOpenRelations(
         schema: EntitySchema,
         openSelection: EntitySelection,
         availableSelection?: EntitySelection,
@@ -115,22 +115,36 @@ export class AutoJoinEntityHydrator extends EntityHydrator {
                 return;
             }
 
+            // [todo] ❌ duplicated code, see EntityCache, not yet sure how to refactor
+            if (relation.getSchema().isUnionSchema()) {
+                const concreteSchemas = relation
+                    .getSchema()
+                    .getSchemas()
+                    .filter(schema => schema.hasProperty(relation.getName()));
+
+                entities = entities.filter(entity => {
+                    return concreteSchemas.some(schema => {
+                        const discriminator = schema.getDiscriminator();
+                        return discriminator.readValue(entity) === discriminator.getDefaultValue();
+                    });
+                });
+            }
+
             const criteria = entitiesToCriterion(entities, relation.getJoinFrom(), relation.getJoinTo());
 
             if (criteria === undefined) {
-                // to set default join values
+                // set default join values
                 joinEntities(entities, [], relation);
-                return;
+            } else {
+                const query = new EntityQuery(
+                    relation.getRelatedSchema(),
+                    selection[relation.getName()] as EntitySelection,
+                    criteria,
+                );
+                this.#services.getTracing().hydrationQuerySpawned(query);
+                const relatedEntities = await executeDescribedSourcing(description, context, query);
+                joinEntities(entities, relatedEntities, relation);
             }
-
-            const query = new EntityQuery(
-                relation.getRelatedSchema(),
-                selection[relation.getName()] as EntitySelection,
-                criteria,
-            );
-            this.#services.getTracing().hydrationQuerySpawned(query);
-            const relatedEntities = await executeDescribedSourcing(description, context, query);
-            joinEntities(entities, relatedEntities, relation);
         };
 
         const acceptedSelection: EntitySelection = {

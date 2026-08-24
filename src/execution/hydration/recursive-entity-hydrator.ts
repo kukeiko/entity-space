@@ -140,13 +140,22 @@ export class RecursiveEntityHydrator extends EntityHydrator {
             async ({ entities, context }) => {
                 entities = path ? readPath(path, entities) : entities;
 
-                await executeDescribedHydration(entities, availableSelection, describedHydration, context);
+                await executeDescribedHydration(
+                    // [todo] ❌ need to make sure "relatedSchema" is correct (as opposed to using "schema")
+                    relatedSchema,
+                    entities,
+                    availableSelection,
+                    describedHydration,
+                    context,
+                );
 
                 for (const key of recursiveKeys) {
                     let recursiveEntities = readPath<Entity>(toPath(key), entities);
 
                     while (recursiveEntities.length) {
                         await executeDescribedHydration(
+                            // [todo] ❌ need to make sure "relatedSchema" is correct (as opposed to using "schema")
+                            relatedSchema,
                             recursiveEntities,
                             availableSelection,
                             describedHydration,

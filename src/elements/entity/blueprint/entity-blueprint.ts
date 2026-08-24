@@ -190,14 +190,27 @@ export namespace EntityBlueprint {
         ArrayAttribute & DtoAttribute & NullableAttribute & ReadonlyAttribute & OutboundAttribute & InboundAttribute
     >;
 
-    export function entity<V extends Class, O extends EmbeddedEntityOptions>(
+    type InstanceTypeHelper<T> = T extends readonly Class[]
+        ? T[number] extends infer C
+            ? C extends Class
+                ? InstanceType<C>
+                : never
+            : never
+        : T extends Class
+          ? InstanceType<T>
+          : never;
+
+    export function entity<V extends Class | Class[], O extends EmbeddedEntityOptions>(
         valueType: V,
         options?: O,
     ): BlueprintProperty<V> & EntityAttribute & O;
-    export function entity<V extends Class, O extends JoinedEntityOptions>(
+    export function entity<V extends Class | Class[], O extends JoinedEntityOptions>(
         valueType: V,
         from: Path | Path[] | BlueprintProperty<Primitive> | BlueprintProperty<Primitive>[],
-        to: Path | Path[] | ((other: InstanceType<V>) => BlueprintProperty<Primitive> | BlueprintProperty<Primitive>[]),
+        to:
+            | Path
+            | Path[]
+            | ((other: InstanceTypeHelper<V>) => BlueprintProperty<Primitive> | BlueprintProperty<Primitive>[]),
         options?: O,
     ): BlueprintProperty<V> & EntityAttribute & OptionalAttribute & O;
     export function entity(...args: any[]): BlueprintProperty<Class> & EntityAttribute {

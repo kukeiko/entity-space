@@ -384,7 +384,14 @@ export class EntitySchemaBuilder {
                 throw new Error(`valueType must be a blueprint`);
             }
 
-            const instance = new property.valueType();
+            let instance: any;
+
+            if (Array.isArray(property.valueType)) {
+                instance = new property.valueType[0]();
+            } else {
+                instance = new property.valueType();
+            }
+
             const allProperties = toPropertyRecord(instance);
             let providedProperties = property.to(instance);
 

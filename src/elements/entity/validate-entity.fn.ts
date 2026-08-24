@@ -1,5 +1,6 @@
 import { isEnumPrimitive, isPrimitiveOfType, primitiveToString, primitiveTypeToString } from "@entity-space/utils";
 import { Entity } from "./entity";
+import { getDiscriminatedSchemaOfEntity } from "./functions/get-discriminated-schema-of-entity.fn";
 import { isEntityPrimitiveProperty } from "./schema/entity-primitive-property";
 import { isEntityRelationProperty } from "./schema/entity-relation-property";
 import { EntitySchema } from "./schema/entity-schema";
@@ -14,17 +15,7 @@ export function validateEntity(
     const errors: EntityValidationErrors = {};
 
     if (schema.isUnionSchema()) {
-        const discriminator = schema.getDiscriminator();
-        const entityValue = discriminator.readValue(entity);
-        const discriminatedSchema = schema
-            .getSchemas()
-            .find(candidate => candidate.getDiscriminator().getDefaultValue() === entityValue);
-
-        if (!discriminatedSchema) {
-            throw new Error("did not find discriminated schema");
-        }
-
-        schema = discriminatedSchema;
+        schema = getDiscriminatedSchemaOfEntity(schema, entity);
     }
 
     const properties = schema.getPropertyRecord();

@@ -33,11 +33,14 @@ export class TestFacade {
         return this.#services.getCatalog().getSchemaByBlueprint(blueprint);
     }
 
-    construct<B>(blueprint: Class<B>, patch?: Partial<EntityBlueprint.Type<B>>): EntityBlueprint.Type<B> {
+    construct<B extends Class | Class[]>(
+        blueprint: B,
+        patch?: Partial<EntityBlueprint.Type<B>>,
+    ): EntityBlueprint.Type<B> {
         return this.#workspace.from(blueprint).construct(patch);
     }
 
-    constructDefault<B>(blueprint: Class<B>): EntityBlueprint.Type<B> {
+    constructDefault<B extends Class | Class[]>(blueprint: B): EntityBlueprint.Type<B> {
         return this.#workspace.from(blueprint).constructDefault();
     }
 }

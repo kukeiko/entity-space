@@ -48,7 +48,7 @@ export class EntityCache {
 
         if (selection !== undefined) {
             this.#hydrate(entities, schema, selection);
-            entities = entities.filter(entity => isHydrated(entity, selection));
+            entities = entities.filter(entity => isHydrated(schema, selection, entity));
 
             if (criterion) {
                 entities = entities.filter(matchesCriterion(criterion));
@@ -134,10 +134,26 @@ export class EntityCache {
     }
 
     #hydrateJoin(entities: Entity[], relation: EntityRelationProperty, selection: EntitySelection): void {
+        // [todo] ❌ duplicated code from AutoJoinEntityHydrator
+        if (relation.getSchema().isUnionSchema()) {
+            const concreteSchemas = relation
+                .getSchema()
+                .getSchemas()
+                .filter(schema => schema.hasProperty(relation.getName()));
+
+            entities = entities.filter(entity => {
+                return concreteSchemas.some(schema => {
+                    const discriminator = schema.getDiscriminator();
+                    return discriminator.readValue(entity) === discriminator.getDefaultValue();
+                });
+            });
+        }
+
         const joinCriterion = entitiesToCriterion(entities, relation.getJoinFrom(), relation.getJoinTo());
         const joinQuery = new EntityQuery(relation.getRelatedSchema(), selection, joinCriterion);
         const joinedEntities = this.query(joinQuery);
 
+        // [todo] ❌ support union schemas (see AutoJoinEntityHydrator)
         joinEntities(entities, joinedEntities, relation);
     }
 

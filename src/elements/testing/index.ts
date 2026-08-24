@@ -7,6 +7,7 @@ export * from "./expect-query.fn";
 export * from "./expect-selection.fn";
 export * from "./file-system/file.model";
 export * from "./file-system/folder.model";
+export * from "./game-engine/game-object.model";
 export * from "./music/album.model";
 export * from "./music/artist-request.model";
 export * from "./music/artist.model";

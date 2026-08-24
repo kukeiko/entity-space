@@ -4,7 +4,7 @@ import { Entity } from "../entity";
 import { ContainerType } from "../schema/entity-property";
 import { RelationshipType } from "../schema/entity-relation-property";
 
-export type BlueprintPropertyValue = Primitive | Class;
+export type BlueprintPropertyValue = Primitive | Class | Class[];
 
 export interface BlueprintProperty<V extends BlueprintPropertyValue = BlueprintPropertyValue> {
     valueType: V;

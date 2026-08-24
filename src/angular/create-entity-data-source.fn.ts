@@ -4,7 +4,11 @@ import { Class } from "@entity-space/utils";
 import { EntityDataSource } from "./entity-data-source";
 import { EntityFilter, ObservableEntityFilterSource } from "./entity-filter";
 
-export function createEntityDataSource<B, F, S extends PackedEntitySelection<EntityBlueprint.Type<B>>>({
+export function createEntityDataSource<
+    B extends Class | Class[],
+    F extends Class,
+    S extends PackedEntitySelection<EntityBlueprint.Type<B>>,
+>({
     cacheKey,
     criteria,
     entityBlueprint,
@@ -33,7 +37,7 @@ export function createEntityDataSource<B, F, S extends PackedEntitySelection<Ent
     /**
      * Blueprint of the entity this data source will provide.
      */
-    entityBlueprint: Class<B>;
+    entityBlueprint: B;
     /**
      * Additional client-side filter for anything the entity sources can't filter out.
      */
@@ -41,7 +45,7 @@ export function createEntityDataSource<B, F, S extends PackedEntitySelection<Ent
     /**
      * Blueprint of the filter you want to apply to the data source.
      */
-    filterBlueprint: Class<F>;
+    filterBlueprint: F;
     /**
      * The hydration selection that will be passed to one of the entity sources and all relevant hydrators you have defined in the workspace.
      */

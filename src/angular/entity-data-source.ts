@@ -7,10 +7,10 @@ import { EntityFilter } from "./entity-filter";
 // a little delay to not spam server on frequent filter change
 const REFRESH_DELAY = 1000;
 
-export class EntityDataSource<B, F, S extends PackedEntitySelection<EntityBlueprint.Type<B>>> {
+export class EntityDataSource<B extends Class | Class[], F, S extends PackedEntitySelection<EntityBlueprint.Type<B>>> {
     constructor(
         workspace: EntityWorkspace,
-        blueprint: Class<B>,
+        blueprint: B,
         filter: EntityFilter<B, F, S>,
         select?: S,
         cacheKey?: unknown,
@@ -37,7 +37,7 @@ export class EntityDataSource<B, F, S extends PackedEntitySelection<EntityBluepr
     }
 
     readonly #workspace: EntityWorkspace;
-    readonly #blueprint: Class<B>;
+    readonly #blueprint: B;
     readonly #select?: S;
     readonly #filter: EntityFilter<B, F, S>;
     readonly #refresh$ = new BehaviorSubject(undefined);

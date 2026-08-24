@@ -160,6 +160,7 @@ export class RecursiveAutoJoinEntityHydrator extends EntityHydrator {
             while (entities.length) {
                 const criteria = entitiesToCriterion(entities, relation.getJoinFrom(), relation.getJoinTo());
 
+                // [todo] ❌ support union schemas (see AutoJoinEntityHydrator)
                 if (criteria === undefined) {
                     // to set default join values
                     joinEntities(entities, [], relation);
