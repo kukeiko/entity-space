@@ -124,7 +124,7 @@ export namespace OData {
             lambdaIndex++;
             lambdaIndex = lambdaIndex % 26;
 
-            const lambdaCriterion = criterionToString(criterion.criterion, v4, [...path, "x"], lambdaIndex);
+            const lambdaCriterion = criterionToString(criterion.criterion, v4, [...path, lambda], lambdaIndex);
 
             if (lambdaCriterion === undefined) {
                 return undefined;
