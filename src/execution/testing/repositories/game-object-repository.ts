@@ -40,6 +40,17 @@ export class GameObjectRepository extends InMemoryRepository<GameObjectEntities>
         return load;
     }
 
+    useLoadGameObjectById() {
+        const load = vi.fn((id: number) => this.filter("gameObjects", filterById(id)));
+
+        this.#services.for(GameObjectBlueprint).addSource({
+            where: { id: { $equals: true } },
+            load: ({ criteria: { id } }) => load(id.$equals),
+        });
+
+        return load;
+    }
+
     useLoadAllGameObjects(selection?: { factions?: boolean }) {
         const load = vi.fn(() => {
             const gameObjects = this.filter("gameObjects");

@@ -8,8 +8,6 @@ import {
     PlantBlueprint,
     Scene,
     SceneBlueprint,
-    Shape,
-    ShapeBlueprint,
 } from "@entity-space/elements/testing";
 import { beforeEach, describe, expect, it } from "vitest";
 import { EntityWorkspace } from "../../entity-workspace";
@@ -26,20 +24,21 @@ describe("get()", () => {
         workspace = facade.getWorkspace();
     });
 
-    it("should work (shapes)", async () => {
+    it("loads one entity by id", async () => {
         // arrange
         const id = 7;
-        const shape: Shape = { id, type: "circle", radius: 7 };
+        const biome = facade.construct(BiomeBlueprint, { id, type: "biome", name: "Dunes" });
+
         repository
-            .useShapes()
-            .useEntities({ shapes: [shape] })
-            .useLoadShapeById();
+            .useGameObjects()
+            .useEntities({ gameObjects: [biome] })
+            .useLoadGameObjectById();
 
         // act
-        const actual = await workspace.from(ShapeBlueprint).where({ id }).getOne();
+        const actual = await workspace.from(GameObjectBlueprint).where({ id }).getOne();
 
         // asserts
-        expect(actual).toStrictEqual(shape);
+        expect(actual).toStrictEqual(biome);
     });
 
     it("can hydrate a relation common to all members of the union", async () => {
