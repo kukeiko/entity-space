@@ -17,7 +17,7 @@ export function entityToSelection(schema: EntitySchema, entity: Entity): EntityS
 
         if (isEntityPrimitiveProperty(property)) {
             selection[key] = true;
-        } else if (isEntityRelationProperty(property)) {
+        } else if (isEntityRelationProperty(property) && entity[key] !== null) {
             if (property.isArray()) {
                 selection[key] = mergeSelections(
                     (entity[key] as Entity[]).map(entity => entityToSelection(property.getRelatedSchema(), entity)),
