@@ -9,6 +9,7 @@ import {
     EntitySortDirection,
     entityToQuery,
     getSelectedSchemas,
+    PackedEntitySelection,
     selectionToPaths,
     unpackSelection,
     unpackSelectionWithoutDefault,
@@ -76,7 +77,7 @@ export class EntityWorkspace {
         return new EntityMutationBuilder(schema, operation => this.#mutate(operation));
     }
 
-    map<B>(blueprint: Class<B>): EntityMapper<B> {
+    map<B extends Class>(blueprint: B): EntityMapper<B> {
         const schema = this.#services.getCatalog().getSchemaByBlueprint(blueprint);
         return new EntityMapper(schema);
     }
@@ -89,10 +90,15 @@ export class EntityWorkspace {
         return this.#services.destroyCache(key);
     }
 
-    upsertToCache<B>(blueprint: Class<B>, entity: EntityBlueprint.Type<B>, cacheKey?: unknown): void {
+    upsertToCache<B>(
+        blueprint: Class<B>,
+        entity: EntityBlueprint.Type<B>,
+        selection?: PackedEntitySelection<EntityBlueprint.Type<B>>,
+        cacheKey?: unknown,
+    ): void {
         const schema = this.#services.getCatalog().getSchemaByBlueprint(blueprint);
         const cache = this.#services.getOrCreateCache(cacheKey);
-        const query = entityToQuery(schema, entity);
+        const query = entityToQuery(schema, entity, selection ? unpackSelection(schema, selection) : undefined);
         cache.upsertQuery(query, [entity]);
     }
 

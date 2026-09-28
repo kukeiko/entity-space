@@ -12,7 +12,7 @@ import {
     unpackSelection,
 } from "@entity-space/elements";
 
-export class EntityMapper<B = {}> {
+export class EntityMapper<B> {
     constructor(schema: EntitySchema) {
         this.#schema = schema;
     }

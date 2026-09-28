@@ -71,6 +71,7 @@ export class EntityCache {
         this.#upsert(
             schema,
             entities,
+            query.getSelection(),
             query.getParameters(),
             query.getCriterion(),
             query.getSort(),
@@ -85,6 +86,7 @@ export class EntityCache {
     #upsert(
         schema: EntitySchema,
         entities: readonly Entity[],
+        selection?: EntitySelection,
         parameters?: EntityQueryParameters,
         criterion?: Criterion,
         sort?: EntitySort,
@@ -92,7 +94,7 @@ export class EntityCache {
         context?: EntityQueryExecutionContext,
     ): void {
         entities = copyEntities(schema, entities);
-        const normalized = normalizeEntities(schema, entities);
+        const normalized = normalizeEntities(schema, entities, selection);
 
         for (const [schema, entities] of normalized) {
             const store = this.#getStore(schema);
@@ -196,7 +198,6 @@ export class EntityCache {
         }
 
         // [todo] ❌ trace call to log evicted cached queries
-        // [todo] ❓ is it intentional that we are not triggering this.#cachedQueriesChanged?
         this.#queryCache.evictNonReadonlyQueries(schema);
     }
 
