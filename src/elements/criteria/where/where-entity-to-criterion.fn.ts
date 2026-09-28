@@ -29,7 +29,10 @@ export function whereEntityToCriterion(schema: EntitySchema, where: WhereEntity)
             criterion[key] = value;
         } else if ((value as WhereInRange<any>).$inRange) {
             const [from, to] = (value as WhereInRange<any>).$inRange;
-            criterion[key] = new InRangeCriterion(from, to);
+
+            if (!(from === undefined && to === undefined)) {
+                criterion[key] = new InRangeCriterion(from, to);
+            }
         } else if ((value as WhereEquals<any>).$equals !== undefined) {
             criterion[key] = new EqualsCriterion((value as WhereEquals<any>).$equals);
         } else if ((value as WhereNotEquals<any>).$notEquals !== undefined) {
