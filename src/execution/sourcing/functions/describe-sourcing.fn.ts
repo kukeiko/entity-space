@@ -1,4 +1,5 @@
 import {
+    criterionShapeToSelection,
     EntityQueryShape,
     EntitySelection,
     mergeSelections,
@@ -62,6 +63,37 @@ function getBestAcceptedSourcing(
     return accepted[0][0];
 }
 
+function expandSelectionByCriterion(
+    selection: EntitySelection,
+    queryShape: EntityQueryShape,
+    services: EntityServiceContainer,
+): EntitySelection {
+    const criterionShape = queryShape.getCriterionShape();
+
+    if (criterionShape === undefined) {
+        return selection;
+    }
+
+    const criteriaAddedSelection = criterionShapeToSelection(criterionShape);
+    const criteriaExpandedSelection = mergeSelections([selection, criteriaAddedSelection]);
+
+    if (isEqual(criteriaExpandedSelection, selection)) {
+        return selection;
+    }
+
+    const schema = queryShape.getSchema();
+
+    services
+        .getTracing()
+        .selectionGotExpanded(
+            packEntitySelection(schema, queryShape.getUnpackedSelection()),
+            packEntitySelection(schema, criteriaExpandedSelection),
+            packEntitySelection(schema, criteriaAddedSelection),
+        );
+
+    return criteriaExpandedSelection;
+}
+
 function expandSelectionAndAcceptAgain(
     queryShape: EntityQueryShape,
     accepted: AcceptedEntitySourcing,
@@ -107,6 +139,7 @@ export function describeSourcing(
     const sources = services.getSourcesFor(queryShape.getSchema());
     let nextQueryShape: EntityQueryShape | undefined = queryShape;
     let targetSelection = queryShape.getUnpackedSelection();
+    targetSelection = expandSelectionByCriterion(targetSelection, queryShape, services);
 
     while (true) {
         let bestAccepted = getBestAcceptedSourcing(sources, queryShape);

@@ -156,11 +156,15 @@ export class EntityQueryTracing {
         this.#log(builder => {
             builder.addLine(`↕️ selection got expanded:`);
             builder.addLine(" - from:", 1);
-            builder.addLine(selectionToString(from), 2);
+            const fromIsEmpty = !Object.keys(from).length;
+            builder.addLine(fromIsEmpty ? "(empty)" : selectionToString(from), 2);
             builder.addLine(" - to:", 1);
             builder.addLine(selectionToString(to), 2);
-            builder.addLine(" - added:", 1);
-            builder.addLine(selectionToString(added), 2);
+
+            if (!fromIsEmpty) {
+                builder.addLine(" - added:", 1);
+                builder.addLine(selectionToString(added), 2);
+            }
         });
     }
 

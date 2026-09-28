@@ -1,6 +1,7 @@
 export * from "./criteria/criterion";
 export * from "./criteria/criterion-shape";
 export * from "./criteria/entity-criterion";
+export * from "./criteria/functions/criterion-shape-to-selection.fn";
 export * from "./criteria/functions/entities-to-criterion.fn";
 export * from "./criteria/functions/is-equivalent-criterion.fn";
 export * from "./criteria/functions/is-readonly-criterion.fn";
