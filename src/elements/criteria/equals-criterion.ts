@@ -19,6 +19,11 @@ export class EqualsCriterion extends Criterion {
     }
 
     override contains(value: unknown): boolean {
+        // [todo] 🧨 sneaky hack to make filtering on primitive arrays work, should probably introduce new type of criterion instead
+        if (Array.isArray(value)) {
+            return value.some(candidate => this.#value === candidate);
+        }
+
         return this.#value === value;
     }
 

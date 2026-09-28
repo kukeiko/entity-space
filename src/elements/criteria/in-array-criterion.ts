@@ -15,6 +15,11 @@ export class InArrayCriterion extends Criterion {
     }
 
     override contains(value: unknown): boolean {
+        // [todo] 🧨 sneaky hack to make filtering on primitive arrays work, should probably introduce new type of criterion instead
+        if (Array.isArray(value)) {
+            return value.some(candidate => this.#values.has(candidate));
+        }
+
         return this.#values.has(value as any);
     }
 
