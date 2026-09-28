@@ -83,6 +83,14 @@ export class EntityQueryBuilder<T extends Entity = Entity, S extends PackedEntit
         return lastValueFrom(this.get$());
     }
 
+    getMap$<K>(keySelector: (entity: SelectEntity<T, S>) => K): Observable<Map<K, SelectEntity<T, S>>> {
+        return this.get$().pipe(map(entities => new Map(entities.map(entity => [keySelector(entity), entity]))));
+    }
+
+    getMap<K>(keySelector: (entity: SelectEntity<T, S>) => K): Promise<Map<K, SelectEntity<T, S>>> {
+        return lastValueFrom(this.getMap$(keySelector));
+    }
+
     /**
      * @deprecated use {@link get$} instead
      */
