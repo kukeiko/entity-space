@@ -8,8 +8,8 @@ describe(whereEntityToCriterion, () => {
     const catalog = new EntitySchemaCatalog();
     const songSchema = catalog.getSchemaByBlueprint(SongBlueprint);
 
-    describe("should ignore undefined", () => {
-        it("and return undefined as all values are undefined", () => {
+    describe("should omit undefined values", () => {
+        it("and return undefined if all criteria are undefined", () => {
             // arrange
             const where: WhereEntity = { artistId: undefined, album: { id: undefined } };
 
@@ -17,7 +17,7 @@ describe(whereEntityToCriterion, () => {
             expect(whereEntityToCriterion(songSchema, where)).toBeUndefined();
         });
 
-        it("and return a criterion where values were not undefined", () => {
+        it("and return a criterion for defined values", () => {
             // arrange
             const where: WhereEntity = { artistId: undefined, album: { id: 3, name: undefined }, createdAt: "now" };
             const expected = `{ album: { id: 3 }, createdAt: "now" }`;
@@ -27,12 +27,38 @@ describe(whereEntityToCriterion, () => {
         });
     });
 
-    it("should return false if contains empty arrays", () => {
-        // arrange
-        const where: WhereEntity = { artistId: [], album: { id: 3, name: [] }, createdAt: "now" };
+    describe("should return false if contains empty arrays", () => {
+        it("not nested, simple syntax", () => {
+            // arrange
+            const where: WhereEntity = { artistId: [] };
 
-        // act & assert
-        expect(whereEntityToCriterion(songSchema, where)?.toString()).toEqual("false");
+            // act & assert
+            expect(whereEntityToCriterion(songSchema, where)?.toString()).toEqual("false");
+        });
+
+        it("not nested, verbose syntax", () => {
+            // arrange
+            const where: WhereEntity = { artistId: { $inArray: [] } };
+
+            // act & assert
+            expect(whereEntityToCriterion(songSchema, where)?.toString()).toEqual("false");
+        });
+
+        it("nested, simple syntax", () => {
+            // arrange
+            const where: WhereEntity = { album: { id: [] } };
+
+            // act & assert
+            expect(whereEntityToCriterion(songSchema, where)?.toString()).toEqual("false");
+        });
+
+        it("nested, verbose syntax", () => {
+            // arrange
+            const where: WhereEntity = { album: { id: { $inArray: [] } } };
+
+            // act & assert
+            expect(whereEntityToCriterion(songSchema, where)?.toString()).toEqual("false");
+        });
     });
 
     it("should keep [undefined]", () => {

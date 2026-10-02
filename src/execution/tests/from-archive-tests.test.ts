@@ -339,8 +339,6 @@ describe("[from archive] system supports", () => {
         // causing the number of calls to be different. seems unintuitive at first glance - should look into that
         describe("first by createdAt: specific time range, then by createdAt: all time", () => {
             it("without namespace criterion", async () => {
-                facade.enableConsoleTracing(true);
-
                 // arrange
                 const hedflux: Artist = {
                     ...facade.construct(ArtistBlueprint, {
@@ -406,8 +404,6 @@ describe("[from archive] system supports", () => {
             });
 
             it("with namespace criterion", async () => {
-                facade.enableConsoleTracing(true);
-
                 // arrange
                 const hedflux: Artist = {
                     ...facade.construct(ArtistBlueprint, {

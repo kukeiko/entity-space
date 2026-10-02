@@ -162,6 +162,18 @@ describe("get()", () => {
         expect(actual).toEqual(expected);
     });
 
+    it("should not dispatch to source if criterion contains empty array", async () => {
+        // arrange
+        const loadArtistsById = repository.useMusic().useLoadArtistById();
+
+        // act
+        const artists = await workspace.from(ArtistBlueprint).where({ id: [] }).get();
+
+        // assert
+        expect(loadArtistsById).toHaveBeenCalledTimes(0);
+        expect(artists).toEqual([]);
+    });
+
     it("should work (complex)", async () => {
         // arrange
         const createdAt = "2025-05-19T03:27:16.292Z";

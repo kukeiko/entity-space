@@ -9,12 +9,14 @@ import { NotEqualsCriterion } from "../not-equals-criterion";
 import { NotInArrayCriterion } from "../not-in-array-criterion";
 import { SomeCriterion } from "../some-criterion";
 import {
+    isWhereEntity,
+    isWhereEquals,
+    isWhereInArray,
+    isWhereInRange,
+    isWhereNever,
+    isWhereNotEquals,
+    isWhereNotInArray,
     WhereEntity,
-    WhereEquals,
-    WhereInArray,
-    WhereInRange,
-    WhereNotEquals,
-    WhereNotInArray,
 } from "./where-entity.type";
 
 export function whereEntityToCriterion(schema: EntitySchema, where: WhereEntity): Criterion | false | undefined {
@@ -23,32 +25,23 @@ export function whereEntityToCriterion(schema: EntitySchema, where: WhereEntity)
     for (const [key, value] of Object.entries(where)) {
         if (value === undefined) {
             continue;
-        } else if (Array.isArray(value) && !value.length) {
+        } else if (isWhereNever(value)) {
             return false;
-        }
-
-        if (isPrimitive(value) || (Array.isArray(value) && value.every(isPrimitive))) {
+        } else if (isPrimitive(value) || (Array.isArray(value) && value.every(isPrimitive))) {
             criterion[key] = value;
-        } else if ((value as WhereInRange<any>).$inRange) {
-            const [from, to] = (value as WhereInRange<any>).$inRange;
-
-            if (!(from === undefined && to === undefined)) {
-                criterion[key] = new InRangeCriterion(from, to);
-            }
-        } else if ((value as WhereEquals<any>).$equals !== undefined) {
-            criterion[key] = new EqualsCriterion((value as WhereEquals<any>).$equals);
-        } else if ((value as WhereNotEquals<any>).$notEquals !== undefined) {
-            criterion[key] = new NotEqualsCriterion((value as WhereNotEquals<any>).$notEquals);
-        } else if ((value as WhereInArray<any>).$inArray !== undefined) {
-            if (!(value as WhereInArray<any>).$inArray.length) {
-                return false;
-            }
-            criterion[key] = new InArrayCriterion((value as WhereInArray<any>).$inArray);
-        } else if ((value as WhereNotInArray<any>).$notInArray !== undefined) {
-            criterion[key] = new NotInArrayCriterion((value as WhereNotInArray<any>).$notInArray);
-        } else {
+        } else if (isWhereInRange(value)) {
+            criterion[key] = new InRangeCriterion(value.$inRange[0], value.$inRange[1]);
+        } else if (isWhereEquals(value)) {
+            criterion[key] = new EqualsCriterion(value.$equals);
+        } else if (isWhereNotEquals(value)) {
+            criterion[key] = new NotEqualsCriterion(value.$notEquals);
+        } else if (isWhereInArray(value)) {
+            criterion[key] = new InArrayCriterion(value.$inArray);
+        } else if (isWhereNotInArray(value)) {
+            criterion[key] = new NotInArrayCriterion(value.$notInArray);
+        } else if (isWhereEntity(value) && schema.isRelation(key)) {
             const relation = schema.getRelation(key);
-            const nested = whereEntityToCriterion(relation.getRelatedSchema(), value as WhereEntity);
+            const nested = whereEntityToCriterion(relation.getRelatedSchema(), value);
 
             if (nested === false) {
                 return false;
