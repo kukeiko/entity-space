@@ -6,11 +6,7 @@ import { InRangeCriterion, isFromInsideFromTo, isToInsideFromTo } from "../in-ra
 import { OrCriterion } from "../or-criterion";
 
 export function subtractByInRangeCriterion(inRangeCriterion: InRangeCriterion, what: Criterion): boolean | Criterion {
-    if (
-        what instanceof InRangeCriterion &&
-        what.getValueType() === Number &&
-        inRangeCriterion.getValueType() === Number
-    ) {
+    if (what instanceof InRangeCriterion) {
         const otherFrom = what.getFrom();
         const otherTo = what.getTo();
         const selfFrom = inRangeCriterion.getFrom();

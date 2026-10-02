@@ -8,7 +8,9 @@ export interface InRangeCriterionLimit<T> {
 }
 
 function isFromBiggerThanFrom<T>(from?: InRangeCriterionLimit<T>, biggerThanFrom?: InRangeCriterionLimit<T>): boolean {
-    if (from === undefined) {
+    if (from === undefined && biggerThanFrom === undefined) {
+        return true;
+    } else if (from === undefined) {
         return false;
     } else if (biggerThanFrom === undefined) {
         return true;
@@ -48,7 +50,9 @@ function isToBiggerThanFrom<T>(to?: InRangeCriterionLimit<T>, biggerThanFrom?: I
 }
 
 function isToSmallerThanTo<T>(to?: InRangeCriterionLimit<T>, smallerThanTo?: InRangeCriterionLimit<T>): boolean {
-    if (to === undefined) {
+    if (to === undefined && smallerThanTo === undefined) {
+        return true;
+    } else if (to === undefined) {
         return false;
     } else if (smallerThanTo === undefined) {
         return true;

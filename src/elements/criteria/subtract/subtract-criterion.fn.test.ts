@@ -84,6 +84,16 @@ describe(subtractCriterion, () => {
         expectCriterion("[3, ...]").minus("[1, 8)").toEqual("[8, ...]");
         expectCriterion("[1, 7]").minus("[..., 3)").toEqual("[3, 7]");
 
+        expectCriterion("[..., 4]").minus("[..., 2)").toEqual("[2, 4]");
+        expectCriterion('[..., "2026-06-04T00:00:00.000Z"]')
+            .minus('[..., "2026-06-02T00:00:00.000Z")')
+            .toEqual('["2026-06-02T00:00:00.000Z", "2026-06-04T00:00:00.000Z"]');
+
+        expectCriterion("[2, ...]").minus("(4, ...]").toEqual("[2, 4]");
+        expectCriterion('["2026-06-02T00:00:00.000Z", ...]')
+            .minus('("2026-06-04T00:00:00.000Z", ...]')
+            .toEqual('["2026-06-02T00:00:00.000Z", "2026-06-04T00:00:00.000Z"]');
+
         expectCriterion("[1, 7]").minus("[3, 10]").toEqual("[1, 3)");
         expectCriterion("[1, 7]").minus("(3, 8]").toEqual("[1, 3]");
         expectCriterion("[..., 3]").minus("[1, 8]").toEqual("[..., 1)");

@@ -114,12 +114,16 @@ export class MusicRepository extends InMemoryRepository<MusicEntities, "tags" | 
             (
                 createdAt?: [string | undefined | null, string | undefined | null],
                 updatedAt?: [string | undefined | null, string | undefined | null],
-            ) => this.filter("artists", filterByMetadataDates(createdAt, updatedAt)),
+            ) =>
+                this.filter("artists", filterByMetadataDates(createdAt, updatedAt))
         );
 
         this.#services.for(ArtistBlueprint).addSource({
             where: {
-                metadata: { createdAt: { $inRange: true }, updatedAt: { $inRange: true, $optional: true } },
+                metadata: {
+                    createdAt: { $inRange: true, $optional: true },
+                    updatedAt: { $inRange: true, $optional: true },
+                },
             },
             load: ({
                 criteria: {
@@ -127,7 +131,42 @@ export class MusicRepository extends InMemoryRepository<MusicEntities, "tags" | 
                 },
             }) => {
                 // [todo] ❌ bug: elvis not required if we make RecordMetadata.updatedAt optional
-                return load(createdAt.$inRange, updatedAt?.$inRange);
+                return load(createdAt?.$inRange, updatedAt?.$inRange);
+            },
+        });
+
+        return load;
+    }
+
+
+    useLoadArtistsByCreatedAtAndNamespace() {
+        const load = vi.fn(
+            (
+                namespace: string,
+                createdAt?: [string | undefined | null, string | undefined | null],
+                updatedAt?: [string | undefined | null, string | undefined | null],
+            ) =>
+                this.filter("artists", filterByMetadataDates(createdAt, updatedAt)).filter(
+                    artist => artist.namespace === namespace,
+                ),
+        );
+
+        this.#services.for(ArtistBlueprint).addSource({
+            where: {
+                namespace: { $equals: true },
+                metadata: {
+                    createdAt: { $inRange: true, $optional: true },
+                    updatedAt: { $inRange: true, $optional: true },
+                },
+            },
+            load: ({
+                criteria: {
+                    namespace,
+                    metadata: { createdAt, updatedAt },
+                },
+            }) => {
+                // [todo] ❌ bug: elvis not required if we make RecordMetadata.updatedAt optional
+                return load(namespace.$equals, createdAt?.$inRange, updatedAt?.$inRange);
             },
         });
 

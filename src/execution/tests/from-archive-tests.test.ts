@@ -1,5 +1,5 @@
 import { SelectEntity } from "@entity-space/elements";
-import { Artist, ArtistBlueprint, Song, SongBlueprint } from "@entity-space/elements/testing";
+import { Artist, ArtistBlueprint, RecordMetadataBlueprint, Song, SongBlueprint } from "@entity-space/elements/testing";
 import { beforeEach, describe, expect, it } from "vitest";
 import { EntityWorkspace } from "../entity-workspace";
 import { TestFacade, TestRepository } from "../testing";
@@ -330,6 +330,149 @@ describe("[from archive] system supports", () => {
                 // assert
                 expect(actual).toEqual(expected);
                 expect(loadArtistById).toHaveBeenCalledTimes(id.length);
+            });
+        });
+    });
+
+    describe("loading entities by time range", () => {
+        // [todo] 🧪 the following two tests are the same, except one uses an additional criterion,
+        // causing the number of calls to be different. seems unintuitive at first glance - should look into that
+        describe("first by createdAt: specific time range, then by createdAt: all time", () => {
+            it("without namespace criterion", async () => {
+                facade.enableConsoleTracing(true);
+
+                // arrange
+                const hedflux: Artist = {
+                    ...facade.construct(ArtistBlueprint, {
+                        id: 1,
+                        namespace: "dev",
+                        name: "Hedflux",
+                        metadata: {
+                            ...facade.construct(RecordMetadataBlueprint, {
+                                createdAt: "2026-06-03T00:00:00.000Z",
+                            }),
+                        },
+                    }),
+                };
+
+                const asura: Artist = {
+                    ...facade.construct(ArtistBlueprint, {
+                        id: 2,
+                        namespace: "dev",
+                        name: "Asura",
+                        metadata: {
+                            ...facade.construct(RecordMetadataBlueprint, {
+                                createdAt: "2026-06-01T00:00:00.000Z",
+                            }),
+                        },
+                    }),
+                };
+
+                const artists: Artist[] = [hedflux, asura];
+
+                const loadArtistsByCreatedAt = repository.useMusic().useLoadArtistsByCreatedAt();
+                repository.useMusic().useEntities({ artists });
+
+                // act
+                const artistsInTimeRange = await workspace
+                    .from(ArtistBlueprint)
+                    .where({
+                        metadata: { createdAt: { $inRange: ["2026-06-02T00:00:00.000Z", "2026-06-04T00:00:00.000Z"] } },
+                    })
+                    .cache(true)
+                    .get();
+
+                const artistsOfAllTime = await workspace
+                    .from(ArtistBlueprint)
+                    .where({
+                        metadata: { createdAt: { $inRange: [undefined, undefined] } },
+                    })
+                    .cache(true)
+                    .get();
+
+                const artistsOfAllTimeFromCache = await workspace
+                    .from(ArtistBlueprint)
+                    .where({
+                        metadata: { createdAt: { $inRange: [undefined, undefined] } },
+                    })
+                    .cache(true)
+                    .get();
+
+                // assert
+                expect(loadArtistsByCreatedAt).toHaveBeenCalledTimes(2);
+                expect(artistsInTimeRange).toEqual([hedflux]);
+                expect(artistsOfAllTime).toEqual([hedflux, asura]);
+                expect(artistsOfAllTimeFromCache).toEqual([hedflux, asura]);
+            });
+
+            it("with namespace criterion", async () => {
+                facade.enableConsoleTracing(true);
+
+                // arrange
+                const hedflux: Artist = {
+                    ...facade.construct(ArtistBlueprint, {
+                        id: 1,
+                        namespace: "dev",
+                        name: "Hedflux",
+                        metadata: {
+                            ...facade.construct(RecordMetadataBlueprint, {
+                                createdAt: "2026-06-03T00:00:00.000Z",
+                            }),
+                        },
+                    }),
+                };
+
+                const asura: Artist = {
+                    ...facade.construct(ArtistBlueprint, {
+                        id: 2,
+                        namespace: "dev",
+                        name: "Asura",
+                        metadata: {
+                            ...facade.construct(RecordMetadataBlueprint, {
+                                createdAt: "2026-06-01T00:00:00.000Z",
+                            }),
+                        },
+                    }),
+                };
+
+                const artists: Artist[] = [hedflux, asura];
+
+                const loadArtistsByCreatedAt = repository.useMusic().useLoadArtistsByCreatedAtAndNamespace();
+                repository.useMusic().useEntities({ artists });
+
+                // act
+                const artistsInTimeRange = await workspace
+                    .from(ArtistBlueprint)
+                    .where({
+                        namespace: "dev",
+                        metadata: { createdAt: { $inRange: ["2026-06-02T00:00:00.000Z", "2026-06-04T00:00:00.000Z"] } },
+                    })
+                    .cache(true)
+                    .get();
+
+                const artistsOfAllTime = await workspace
+                    .from(ArtistBlueprint)
+                    .where({
+                        namespace: "dev",
+                        metadata: { createdAt: { $inRange: [undefined, undefined] } },
+                    })
+                    .cache(true)
+                    .get();
+
+                const artistsOfAllTimeFromCache = await workspace
+                    .from(ArtistBlueprint)
+                    .where({
+                        namespace: "dev",
+                        metadata: { createdAt: { $inRange: [undefined, undefined] } },
+                    })
+                    .cache(true)
+                    .get();
+
+                // assert
+                expect(loadArtistsByCreatedAt).toHaveBeenCalledTimes(3);
+                expect(artistsInTimeRange).toEqual([hedflux]);
+                expect(artistsOfAllTime).toEqual([hedflux, asura]);
+                expect(artistsOfAllTimeFromCache).toEqual([hedflux, asura]);
             });
         });
     });

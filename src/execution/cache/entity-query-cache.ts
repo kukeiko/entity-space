@@ -33,6 +33,7 @@ export class EntityQueryCache {
         }
 
         const cachedQueries = cachedTimestampedQueries.map(([_, cachedQuery]) => cachedQuery);
+
         return subtractQueries([query], cachedQueries);
     }
 
