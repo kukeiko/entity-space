@@ -106,6 +106,11 @@ export class EntityWorkspace {
         return defer(() => {
             const { cache, isLoading$ } = args;
             const query = this.#toQuery(args);
+
+            if (query === false) {
+                return of([]);
+            }
+
             this.#services.getTracing().querySpawned(query);
             const cacheOptions = this.#toCacheOptions(cache);
             const cacheKey = cacheOptions ? cacheOptions.key : undefined;
@@ -155,8 +160,13 @@ export class EntityWorkspace {
         });
     }
 
-    #toQuery({ schema, parameters: parametersArg, select, where, page, sort }: QueryArguments): EntityQuery {
+    #toQuery({ schema, parameters: parametersArg, select, where, page, sort }: QueryArguments): EntityQuery | false {
         const criteria = where ? whereEntityToCriterion(schema, where) : undefined;
+
+        if (criteria === false) {
+            return false;
+        }
+
         const selection = unpackSelection(schema, select ?? {});
         const parameters = parametersArg
             ? new EntityQueryParameters(

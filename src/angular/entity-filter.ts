@@ -58,7 +58,7 @@ export class ObservableEntityFilterSource<B extends Class | Class[]>
     implements EntityFilterSource<EntityBlueprint.Type<B>>
 {
     constructor(workspace: EntityWorkspace, blueprint: B) {
-        this.#filter$ = new BehaviorSubject(workspace.from(blueprint).constructDefault());
+        this.#filter$ = new BehaviorSubject(workspace.from(blueprint).construct());
     }
 
     #filter$: BehaviorSubject<EntityBlueprint.Type<B>>;

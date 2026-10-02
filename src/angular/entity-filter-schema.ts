@@ -22,12 +22,14 @@ function toNullableInteger(value?: string): number | null {
     return isNaN(int) ? null : int;
 }
 
-function toIntegerArray(value?: string): number[] {
-    return (value ?? "")
+function toIntegerArray(value?: string): number[] | undefined {
+    const values = (value ?? "")
         .split(",")
         .filter(str => str.length)
         .map(str => parseInt(str))
         .filter(number => !isNaN(number));
+
+    return values.length ? values : undefined;
 }
 
 function toStringArray(value?: string): string[] {

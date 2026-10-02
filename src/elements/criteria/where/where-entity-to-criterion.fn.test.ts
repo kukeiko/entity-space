@@ -27,23 +27,12 @@ describe(whereEntityToCriterion, () => {
         });
     });
 
-    describe("should ignore empty arrays", () => {
-        it("and return undefined as all arrays were empty", () => {
-            // arrange
-            const where: WhereEntity = { artistId: [], album: { id: [] } };
+    it("should return false if contains empty arrays", () => {
+        // arrange
+        const where: WhereEntity = { artistId: [], album: { id: 3, name: [] }, createdAt: "now" };
 
-            // act & assert
-            expect(whereEntityToCriterion(songSchema, where)).toBeUndefined();
-        });
-
-        it("and return a criterion where values were not undefined", () => {
-            // arrange
-            const where: WhereEntity = { artistId: [], album: { id: 3, name: [] }, createdAt: "now" };
-            const expected = `{ album: { id: 3 }, createdAt: "now" }`;
-
-            // act & assert
-            expect(whereEntityToCriterion(songSchema, where)?.toString()).toEqual(expected);
-        });
+        // act & assert
+        expect(whereEntityToCriterion(songSchema, where)?.toString()).toEqual("false");
     });
 
     it("should keep [undefined]", () => {
