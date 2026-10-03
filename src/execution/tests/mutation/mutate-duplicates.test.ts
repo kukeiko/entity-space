@@ -115,10 +115,12 @@ describe("mutate duplicates", () => {
         expect(createSong).toHaveBeenCalledWith<Parameters<CreateEntityFn<SongBlueprint>>>({
             selection: {},
             entity: { ...dispatchedSongA },
+            context: expect.anything(),
         });
         expect(createSong).toHaveBeenCalledWith<Parameters<CreateEntityFn<SongBlueprint>>>({
             selection: {},
             entity: { ...dispatchedSongB },
+            context: expect.anything(),
         });
     });
 

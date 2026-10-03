@@ -219,6 +219,7 @@ describe("save()", () => {
                     },
                 ],
                 selection: {},
+                context: expect.anything(),
             });
             expect(createItems).toHaveBeenCalledWith<Parameters<CreateEntitiesFn<ItemBlueprint>>>({
                 entities: [
@@ -236,6 +237,7 @@ describe("save()", () => {
                     },
                 ],
                 selection: {},
+                context: expect.anything(),
             });
             expect(updateItems).toHaveBeenCalledTimes(1);
             expect(updateItems).toHaveBeenCalledWith<Parameters<UpdateEntitiesFn<ItemBlueprint>>>({
@@ -251,6 +253,7 @@ describe("save()", () => {
                     },
                 ],
                 selection: {},
+                context: expect.anything(),
             });
             expect(deleteItems).toHaveBeenCalledTimes(1);
             expect(deleteItems).toHaveBeenCalledWith<Parameters<DeleteEntitiesFn<ItemBlueprint>>>({
@@ -266,6 +269,7 @@ describe("save()", () => {
                     },
                 ],
                 selection: {},
+                context: expect.anything(),
             });
         }
 
@@ -284,6 +288,7 @@ describe("save()", () => {
                     },
                 ],
                 selection: {},
+                context: expect.anything(),
             });
             expect(updateItemSockets).toHaveBeenCalledTimes(1);
             expect(updateItemSockets).toHaveBeenCalledWith<Parameters<UpdateEntitiesFn<ItemSocketBlueprint>>>({
@@ -299,11 +304,13 @@ describe("save()", () => {
                     { id: 4, itemId: 1, socketedItemId: 400, assignId: 4, createdAt, updatedAt },
                 ],
                 selection: {},
+                context: expect.anything(),
             });
             expect(deleteItemSocket).toHaveBeenCalledTimes(1);
             expect(deleteItemSocket).toHaveBeenCalledWith<Parameters<DeleteEntitiesFn<ItemSocketBlueprint>>>({
                 entities: [{ id: 21, assignId: 21, itemId: 2, socketedItemId: 300, createdAt, updatedAt }],
                 selection: {},
+                context: expect.anything(),
             });
         }
 
@@ -330,6 +337,7 @@ describe("save()", () => {
                     },
                 ],
                 selection: {},
+                context: expect.anything(),
             });
             expect(createItemAttributeTypes).toHaveBeenCalledWith<
                 Parameters<CreateEntitiesFn<ItemAttributeTypeBlueprint>>
@@ -344,6 +352,7 @@ describe("save()", () => {
                     },
                 ],
                 selection: {},
+                context: expect.anything(),
             });
             expect(updateItemAttributeTypes).toHaveBeenCalledTimes(1);
             expect(updateItemAttributeTypes).toHaveBeenCalledWith<
@@ -359,6 +368,7 @@ describe("save()", () => {
                     },
                 ],
                 selection: {},
+                context: expect.anything(),
             });
             expect(deleteItemAttributeTypes).not.toHaveBeenCalled();
         }

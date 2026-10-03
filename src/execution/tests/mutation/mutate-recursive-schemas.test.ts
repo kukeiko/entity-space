@@ -134,13 +134,14 @@ describe("mutate recursive schemas", () => {
                     },
                 ],
                 selection: {},
+                context: expect.anything(),
             });
         }
 
         {
             // User
             expect(saveUsers).toHaveBeenCalledTimes(1);
-            expect(saveUsers).toHaveBeenCalledWith({
+            expect(saveUsers).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<UserBlueprint>>>({
                 entities: [
                     {
                         id: 0,
@@ -149,6 +150,7 @@ describe("mutate recursive schemas", () => {
                     },
                 ],
                 selection: {},
+                context: expect.anything(),
             });
         }
     });
@@ -213,7 +215,7 @@ describe("mutate recursive schemas", () => {
 
         {
             // Folders
-            expect(saveFolders).toHaveBeenNthCalledWith(1, {
+            expect(saveFolders).toHaveBeenNthCalledWith<Parameters<SaveEntitiesFn<FolderBlueprint>>>(1, {
                 entities: [
                     {
                         id: 0,
@@ -223,8 +225,9 @@ describe("mutate recursive schemas", () => {
                     },
                 ],
                 selection: {},
+                context: expect.anything(),
             });
-            expect(saveFolders).toHaveBeenNthCalledWith(2, {
+            expect(saveFolders).toHaveBeenNthCalledWith<Parameters<SaveEntitiesFn<FolderBlueprint>>>(2, {
                 entities: [
                     {
                         id: 0,
@@ -234,8 +237,9 @@ describe("mutate recursive schemas", () => {
                     },
                 ],
                 selection: {},
+                context: expect.anything(),
             });
-            expect(saveFolders).toHaveBeenNthCalledWith(3, {
+            expect(saveFolders).toHaveBeenNthCalledWith<Parameters<SaveEntitiesFn<FolderBlueprint>>>(3, {
                 entities: [
                     {
                         id: 0,
@@ -245,6 +249,7 @@ describe("mutate recursive schemas", () => {
                     },
                 ],
                 selection: {},
+                context: expect.anything(),
             });
         }
 
@@ -252,7 +257,7 @@ describe("mutate recursive schemas", () => {
             // File
             expect(saveFiles).toHaveBeenCalledAfter(saveFolders);
             expect(saveFiles).toHaveBeenCalledTimes(1);
-            expect(saveFiles).toHaveBeenCalledWith({
+            expect(saveFiles).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<FileBlueprint>>>({
                 entities: [
                     {
                         id: 0,
@@ -262,6 +267,7 @@ describe("mutate recursive schemas", () => {
                     },
                 ],
                 selection: {},
+                context: expect.anything(),
             });
         }
 
@@ -270,7 +276,7 @@ describe("mutate recursive schemas", () => {
             expect(saveUsers).toHaveBeenCalledBefore(saveFolders);
             expect(saveUsers).toHaveBeenCalledBefore(saveFiles);
             expect(saveUsers).toHaveBeenCalledTimes(1);
-            expect(saveUsers).toHaveBeenCalledWith({
+            expect(saveUsers).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<UserBlueprint>>>({
                 entities: [
                     {
                         id: 0,
@@ -279,6 +285,7 @@ describe("mutate recursive schemas", () => {
                     },
                 ],
                 selection: {},
+                context: expect.anything(),
             });
         }
     });
@@ -346,6 +353,7 @@ describe("mutate recursive schemas", () => {
                     },
                 ],
                 selection: {},
+                context: expect.anything(),
             });
         }
 
@@ -356,6 +364,7 @@ describe("mutate recursive schemas", () => {
             expect(deleteUsers).toHaveBeenCalledWith<Parameters<DeleteEntitiesFn<UserBlueprint>>>({
                 entities: [{ id: 1, name: "Susi Sonne", metadata: createMetadata_V2(0) }],
                 selection: {},
+                context: expect.anything(),
             });
         }
     });
@@ -415,11 +424,13 @@ describe("mutate recursive schemas", () => {
             expect(deleteFolders).toHaveBeenNthCalledWith<Parameters<DeleteEntitiesFn<FolderBlueprint>>>(1, {
                 entities: [{ id: 3, name: "Dive Deep", parentId: 2, metadata: deletedMetadata }],
                 selection: {},
+                context: expect.anything(),
             });
 
             expect(deleteFolders).toHaveBeenNthCalledWith<Parameters<DeleteEntitiesFn<FolderBlueprint>>>(2, {
                 entities: [{ id: 2, name: "Morcheeba", parentId: 1, metadata: deletedMetadata }],
                 selection: {},
+                context: expect.anything(),
             });
         }
 
@@ -430,6 +441,7 @@ describe("mutate recursive schemas", () => {
             expect(deleteFiles).toHaveBeenCalledWith<Parameters<DeleteEntitiesFn<FileBlueprint>>>({
                 entities: [{ id: 1, name: "Enjoy The Ride", folderId: 3, metadata: deletedMetadata }],
                 selection: {},
+                context: expect.anything(),
             });
         }
 

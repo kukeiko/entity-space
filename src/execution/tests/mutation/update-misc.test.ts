@@ -32,10 +32,12 @@ describe("update()", () => {
         expect(updateArtist).toHaveBeenNthCalledWith<Parameters<UpdateEntityFn<ArtistBlueprint>>>(1, {
             entity: infectedMushroom,
             selection: {},
+            context: expect.anything(),
         });
         expect(updateArtist).toHaveBeenNthCalledWith<Parameters<UpdateEntityFn<ArtistBlueprint>>>(2, {
             entity: memtrix,
             selection: {},
+            context: expect.anything(),
         });
     });
 
@@ -58,10 +60,12 @@ describe("update()", () => {
         expect(updateArtist).toHaveBeenNthCalledWith<Parameters<UpdateEntityFn<ArtistBlueprint>>>(1, {
             entity: infectedMushroom,
             selection: {},
+            context: expect.anything(),
         });
         expect(updateArtist).toHaveBeenNthCalledWith<Parameters<UpdateEntityFn<ArtistBlueprint>>>(2, {
             entity: memtrix,
             selection: {},
+            context: expect.anything(),
         });
         expect(createArtist).toHaveBeenCalledTimes(0);
     });

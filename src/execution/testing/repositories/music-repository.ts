@@ -114,8 +114,7 @@ export class MusicRepository extends InMemoryRepository<MusicEntities, "tags" | 
             (
                 createdAt?: [string | undefined | null, string | undefined | null],
                 updatedAt?: [string | undefined | null, string | undefined | null],
-            ) =>
-                this.filter("artists", filterByMetadataDates(createdAt, updatedAt))
+            ) => this.filter("artists", filterByMetadataDates(createdAt, updatedAt)),
         );
 
         this.#services.for(ArtistBlueprint).addSource({
@@ -137,7 +136,6 @@ export class MusicRepository extends InMemoryRepository<MusicEntities, "tags" | 
 
         return load;
     }
-
 
     useLoadArtistsByCreatedAtAndNamespace() {
         const load = vi.fn(
@@ -262,6 +260,19 @@ export class MusicRepository extends InMemoryRepository<MusicEntities, "tags" | 
         return load;
     }
 
+    useLoadArtistsByIdAndNamespace() {
+        const load = vi.fn((id: number, namespace: string) =>
+            this.filter("artists", artist => artist.id === id && artist.namespace === namespace),
+        );
+
+        this.#services.for(ArtistBlueprint).addSource({
+            where: { id: { $equals: true }, namespace: { $equals: true } },
+            load: ({ criteria: { id, namespace } }) => load(id.$equals, namespace.$equals),
+        });
+
+        return load;
+    }
+
     useLoadArtistsByCountry() {
         const load = vi.fn((country?: string | null) => this.filter("artists", artist => artist.country === country));
 
@@ -365,6 +376,13 @@ export class MusicRepository extends InMemoryRepository<MusicEntities, "tags" | 
     useDeleteArtist() {
         const del = vi.fn<DeleteEntityFn<ArtistBlueprint>>(() => {});
         this.#services.for(ArtistBlueprint).addDeleteOneMutator({ delete: del });
+
+        return del;
+    }
+
+    useDeleteArtistWithSongs() {
+        const del = vi.fn<DeleteEntityFn<ArtistBlueprint>>(() => {});
+        this.#services.for(ArtistBlueprint).addDeleteOneMutator({ delete: del, select: { songs: true } });
 
         return del;
     }

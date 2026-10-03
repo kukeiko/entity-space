@@ -51,10 +51,12 @@ describe("mutate one-to-one", () => {
         expect(createProduct).toHaveBeenCalledWith<Parameters<CreateEntityFn<ProductBlueprint>>>({
             selection: {},
             entity: { name: "HydroSpin 2000", price: 699, id: 0 },
+            context: expect.anything(),
         });
         expect(createWashingMachine).toHaveBeenCalledWith<Parameters<CreateEntityFn<WashingMachineBlueprint>>>({
             selection: {},
             entity: { id: 1, maxLoadKg: 64 },
+            context: expect.anything(),
         });
     });
 
@@ -94,10 +96,12 @@ describe("mutate one-to-one", () => {
         expect(createProduct).toHaveBeenCalledWith<Parameters<CreateEntityFn<ProductBlueprint>>>({
             selection: {},
             entity: { name: "HydroSpin 2000", price: 699, id: 0 },
+            context: expect.anything(),
         });
         expect(createWashingMachine).toHaveBeenCalledWith<Parameters<CreateEntityFn<WashingMachineBlueprint>>>({
             selection: {},
             entity: { id: 1, maxLoadKg: 64 },
+            context: expect.anything(),
         });
     });
 });

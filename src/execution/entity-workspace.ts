@@ -7,10 +7,10 @@ import {
     EntityQueryParameters,
     EntitySort,
     EntitySortDirection,
-    entityToQuery,
     getSelectedSchemas,
     PackedEntitySelection,
     selectionToPaths,
+    toRelationSelection,
     unpackSelection,
     unpackSelectionWithoutDefault,
     whereEntityToCriterion,
@@ -35,13 +35,19 @@ import {
     tap,
 } from "rxjs";
 import { EntityCache } from "./cache/entity-cache";
+import { upsertToCache } from "./cache/upsert-to-cache.fn";
 import { EntityHydrationBuilder } from "./entity-hydration-builder";
 import { EntityMapper } from "./entity-mapper";
 import { EntityMutationBuilder } from "./entity-mutation-builder";
 import { EntityQueryBuilder } from "./entity-query-builder";
 import { EntityQueryExecutionContext } from "./entity-query-execution-context";
 import { EntityServiceContainer } from "./entity-service-container";
-import { HydrateArguments, QueryArguments, QueryCacheOptions } from "./execution-arguments.interface";
+import {
+    EntityMutationOptions,
+    HydrateArguments,
+    QueryArguments,
+    QueryCacheOptions,
+} from "./execution-arguments.interface";
 import { executeQuery } from "./functions/execute-query.fn";
 import { describeHydration } from "./hydration/functions/describe-hydration.fn";
 import { executeDescribedHydration } from "./hydration/functions/execute-described-hydration.fn";
@@ -53,6 +59,7 @@ import { executeMutation } from "./mutation/functions/execute-mutation.fn";
 import { toEntityChanges } from "./mutation/functions/to-entity-changes.fn";
 import { generatePathedMutators } from "./mutation/generate-pathed-mutators.fn";
 import { sortAcceptedMutationsByDependency } from "./mutation/sort-accepted-mutations-by-dependency.fn";
+import { EntityMutationContext } from "./mutation/structures/entity-mutation-context";
 import { expandSourcedSelection } from "./sourcing/functions/expand-source-selection.fn";
 import { toSourcedEntities } from "./sourcing/to-sourced-entities.fn";
 
@@ -74,7 +81,7 @@ export class EntityWorkspace {
 
     in<T extends Class | Class[]>(blueprint: T): EntityMutationBuilder<T> {
         const schema = this.#services.getCatalog().getSchemaByBlueprint(blueprint);
-        return new EntityMutationBuilder(schema, operation => this.#mutate(operation));
+        return new EntityMutationBuilder(schema, (operation, options) => this.#mutate(operation, options));
     }
 
     map<B extends Class>(blueprint: B): EntityMapper<B> {
@@ -97,9 +104,14 @@ export class EntityWorkspace {
         cacheKey?: unknown,
     ): void {
         const schema = this.#services.getCatalog().getSchemaByBlueprint(blueprint);
-        const cache = this.#services.getOrCreateCache(cacheKey);
-        const query = entityToQuery(schema, entity, selection ? unpackSelection(schema, selection) : undefined);
-        cache.upsertQuery(query, [entity]);
+
+        upsertToCache(
+            this.#services,
+            schema,
+            entity,
+            selection ? toRelationSelection(schema, unpackSelection(schema, selection)) : undefined,
+            cacheKey,
+        );
     }
 
     #query$<T>(args: QueryArguments): Observable<T[]> {
@@ -348,7 +360,7 @@ export class EntityWorkspace {
         });
     }
 
-    async #mutate(mutation: EntityMutation): Promise<Entity[]> {
+    async #mutate(mutation: EntityMutation, options: EntityMutationOptions): Promise<Entity[]> {
         const selection = mutation.getSelection() ?? {};
         writeRelationJoins(mutation.getSchema(), mutation.getEntities(), selection);
         const entityChanges = toEntityChanges(mutation);
@@ -384,8 +396,10 @@ export class EntityWorkspace {
             throw new Error("not all mutations have been accepted");
         }
 
+        const context = new EntityMutationContext(mutation, options);
+
         for (const mutation of sortAcceptedMutationsByDependency(allAccepted)) {
-            await executeMutation(mutation, this.#services.getTracing());
+            await executeMutation(mutation, context, this.#services);
         }
 
         return mutation.getEntities();

@@ -156,13 +156,14 @@ export class EntitySchemaScopedServiceContainer<B> {
         select?: S | PackedEntitySelection<EntityBlueprint.Type<B>>;
         save: SaveEntityFn<B, S>;
     }): this {
-        const mutate: EntityMutationFn = (entities, selection) => {
+        const mutate: EntityMutationFn = (entities, selection, context) => {
             return Promise.all(
                 entities.map(entity => {
                     return unwrapMaybeAsync(
                         save({
                             entity: entity as EntityBlueprint.Type<B>,
                             selection: packEntitySelection(this.#schema, selection) as S,
+                            context,
                         }),
                     );
                 }),
@@ -179,11 +180,12 @@ export class EntitySchemaScopedServiceContainer<B> {
         select?: S | PackedEntitySelection<EntityBlueprint.Type<B>>;
         save: SaveEntitiesFn<B, S>;
     }): this {
-        const mutate: EntityMutationFn = (entities, selection) => {
+        const mutate: EntityMutationFn = (entities, selection, context) => {
             return unwrapMaybeAsync(
                 save({
                     entities: entities as EntityBlueprint.Type<B>[],
                     selection: packEntitySelection(this.#schema, selection) as S,
+                    context,
                 }),
             );
         };
@@ -198,13 +200,14 @@ export class EntitySchemaScopedServiceContainer<B> {
         select?: S | PackedEntitySelection<EntityBlueprint.Type<B>>;
         create: CreateEntityFn<B, S>;
     }): this {
-        const mutate: EntityMutationFn = (entities, selection) => {
+        const mutate: EntityMutationFn = (entities, selection, context) => {
             return Promise.all(
                 entities.map(entity => {
                     return unwrapMaybeAsync(
                         create({
                             entity: entity as EntityBlueprint.Type<B>,
                             selection: packEntitySelection(this.#schema, selection) as S,
+                            context,
                         }),
                     );
                 }),
@@ -221,11 +224,12 @@ export class EntitySchemaScopedServiceContainer<B> {
         select?: S | PackedEntitySelection<EntityBlueprint.Type<B>>;
         create: CreateEntitiesFn<B, S>;
     }): this {
-        const mutate: EntityMutationFn = (entities, selection) => {
+        const mutate: EntityMutationFn = (entities, selection, context) => {
             return unwrapMaybeAsync(
                 create({
                     entities: entities as EntityBlueprint.Type<B>[],
                     selection: packEntitySelection(this.#schema, selection) as S,
+                    context,
                 }),
             );
         };
@@ -240,13 +244,14 @@ export class EntitySchemaScopedServiceContainer<B> {
         select?: S | PackedEntitySelection<EntityBlueprint.Type<B>>;
         update: UpdateEntityFn<B, S>;
     }): this {
-        const mutate: EntityMutationFn = (entities, selection) => {
+        const mutate: EntityMutationFn = (entities, selection, context) => {
             return Promise.all(
                 entities.map(entity => {
                     return unwrapMaybeAsync(
                         update({
                             entity: entity as EntityBlueprint.Type<B>,
                             selection: packEntitySelection(this.#schema, selection) as S,
+                            context,
                         }),
                     );
                 }),
@@ -263,11 +268,12 @@ export class EntitySchemaScopedServiceContainer<B> {
         select?: S | PackedEntitySelection<EntityBlueprint.Type<B>>;
         update: UpdateEntitiesFn<B, S>;
     }): this {
-        const mutate: EntityMutationFn = (entities, selection) => {
+        const mutate: EntityMutationFn = (entities, selection, context) => {
             return unwrapMaybeAsync(
                 update({
                     entities: entities as EntityBlueprint.Type<B>[],
                     selection: packEntitySelection(this.#schema, selection) as S,
+                    context,
                 }),
             );
         };
@@ -282,13 +288,14 @@ export class EntitySchemaScopedServiceContainer<B> {
         select?: S | PackedEntitySelection<EntityBlueprint.Type<B>>;
         delete: DeleteEntityFn<B, S>;
     }): this {
-        const mutate: EntityMutationFn = async (entities, selection) => {
+        const mutate: EntityMutationFn = async (entities, selection, context) => {
             await Promise.all(
                 entities.map(entity => {
                     return unwrapMaybeAsync(
                         del({
                             entity: entity as EntityBlueprint.Type<B>,
                             selection: packEntitySelection(this.#schema, selection) as S,
+                            context,
                         }),
                     );
                 }),
@@ -307,11 +314,12 @@ export class EntitySchemaScopedServiceContainer<B> {
         select?: S | PackedEntitySelection<EntityBlueprint.Type<B>>;
         delete: DeleteEntitiesFn<B, S>;
     }): this {
-        const mutate: EntityMutationFn = async (entities, selection) => {
+        const mutate: EntityMutationFn = async (entities, selection, context) => {
             await unwrapMaybeAsync(
                 del({
                     entities: entities as EntityBlueprint.Type<B>[],
                     selection: packEntitySelection(this.#schema, selection) as S,
+                    context,
                 }),
             );
 

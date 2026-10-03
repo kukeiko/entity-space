@@ -3,6 +3,7 @@ import { EntityMutationType } from "./entity-mutation";
 import { EntityMutationFn } from "./entity-mutator";
 import { EntityChange } from "./structures/entity-change";
 import { EntityChangeDependency } from "./structures/entity-change-dependency";
+import { EntityMutationContext } from "./structures/entity-mutation-context";
 
 export class AcceptedEntityMutation {
     constructor(
@@ -55,8 +56,8 @@ export class AcceptedEntityMutation {
         return this.getType() === "save";
     }
 
-    mutate(entities: Entity[], selection: EntityRelationSelection): Promise<Entity[]> {
-        return this.#mutateFn(entities, selection);
+    mutate(entities: Entity[], selection: EntityRelationSelection, context: EntityMutationContext): Promise<Entity[]> {
+        return this.#mutateFn(entities, selection, context);
     }
 
     getEntities(): readonly Entity[] {

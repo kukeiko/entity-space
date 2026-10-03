@@ -2,8 +2,13 @@ import { Entity, EntityRelationSelection } from "@entity-space/elements";
 import { Path } from "@entity-space/utils";
 import { AcceptedEntityMutation } from "./accepted-entity-mutation";
 import { EntityChanges } from "./entity-changes";
+import { EntityMutationContext } from "./structures/entity-mutation-context";
 
-export type EntityMutationFn = (entities: Entity[], selection: EntityRelationSelection) => Promise<Entity[]>;
+export type EntityMutationFn = (
+    entities: Entity[],
+    selection: EntityRelationSelection,
+    context: EntityMutationContext,
+) => Promise<Entity[]>;
 
 export abstract class EntityMutator {
     abstract accept(

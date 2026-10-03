@@ -1,11 +1,14 @@
 import { toEntityPairs } from "@entity-space/elements";
-import { EntityQueryTracing } from "../../entity-query-tracing";
+import { deleteFromCache } from "../../cache/delete-from-cache.fn";
+import { EntityServiceContainer } from "../../entity-service-container";
 import { AcceptedEntityMutation } from "../accepted-entity-mutation";
+import { EntityMutationContext } from "../structures/entity-mutation-context";
 import { copyEntityForMutation } from "./copy-entity-for-mutation.fn";
 
 export async function executeDeleteMutation(
     mutation: AcceptedEntityMutation,
-    tracing: EntityQueryTracing,
+    context: EntityMutationContext,
+    services: EntityServiceContainer,
 ): Promise<void> {
     const schema = mutation.getSchema();
 
@@ -22,8 +25,8 @@ export async function executeDeleteMutation(
     );
 
     const copies = Array.from(map.keys());
-    tracing.dispatchedMutation(schema, "delete", copies);
-    const deleted = await mutation.mutate(copies, mutation.getSelection() ?? {});
+    services.getTracing().dispatchedMutation(schema, "delete", copies);
+    const deleted = await mutation.mutate(copies, mutation.getSelection() ?? {}, context);
     const originals = Array.from(map.values());
 
     for (const [current, previous] of toEntityPairs(schema, originals, deleted)) {
@@ -39,5 +42,11 @@ export async function executeDeleteMutation(
 
         // [todo] ❌ reimplement and write a test for this
         // change.removeEntity();
+    }
+
+    const cacheOptions = context.getOptions().cache;
+
+    if (cacheOptions) {
+        deleteFromCache(services, schema, mutation.getPreviousEntities(), mutation.getSelection(), cacheOptions.key);
     }
 }

@@ -57,6 +57,7 @@ describe("save() change detection", () => {
             expect(updateItems).toHaveBeenCalledWith<Parameters<UpdateEntitiesFn<ItemBlueprint>>>({
                 entities: [windforcePassedToUpdate],
                 selection: {},
+                context: expect.anything(),
             });
         });
 
@@ -97,6 +98,7 @@ describe("save() change detection", () => {
             expect(updateItems).toHaveBeenCalledWith<Parameters<UpdateEntitiesFn<ItemBlueprint>>>({
                 entities: [windforcePassedToUpdate],
                 selection: {},
+                context: expect.anything(),
             });
         });
 
@@ -136,6 +138,7 @@ describe("save() change detection", () => {
             expect(updateItems).toHaveBeenCalledWith<Parameters<UpdateEntitiesFn<ItemBlueprint>>>({
                 entities: [windforcePassedToUpdate],
                 selection: {},
+                context: expect.anything(),
             });
         });
     });

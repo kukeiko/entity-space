@@ -61,14 +61,17 @@ describe("mutate many-to-many", () => {
         expect(createSong).toHaveBeenCalledWith<Parameters<CreateEntityFn<SongBlueprint>>>({
             selection: {},
             entity: { ...song, id: 0, songTags: undefined },
+            context: expect.anything(),
         });
         expect(createSongTag).toHaveBeenCalledWith<Parameters<CreateEntityFn<SongTagBlueprint>>>({
             selection: {},
             entity: { songId: 1, tagId: "upbeat" },
+            context: expect.anything(),
         });
         expect(createSongTag).toHaveBeenCalledWith<Parameters<CreateEntityFn<SongTagBlueprint>>>({
             selection: {},
             entity: { songId: 1, tagId: "trippy" },
+            context: expect.anything(),
         });
     });
 
@@ -128,14 +131,17 @@ describe("mutate many-to-many", () => {
                 namespace: "dev",
                 urls: [],
             },
+            context: expect.anything(),
         });
         expect(createSongTag).toHaveBeenCalledWith<Parameters<CreateEntityFn<SongTagBlueprint>>>({
             selection: {},
             entity: { songId: 1, tagId: "upbeat" },
+            context: expect.anything(),
         });
         expect(createSongTag).toHaveBeenCalledWith<Parameters<CreateEntityFn<SongTagBlueprint>>>({
             selection: {},
             entity: { songId: 1, tagId: "trippy" },
+            context: expect.anything(),
         });
     });
 });

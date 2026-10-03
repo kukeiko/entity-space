@@ -55,6 +55,7 @@ describe("save() deletes one entity", () => {
             expect(deleteItems).toHaveBeenCalledWith<Parameters<DeleteEntitiesFn<ItemBlueprint>>>({
                 entities: [windforce.dispatched],
                 selection: {},
+                context: expect.anything(),
             });
             expect(saved).toEqual(windforce.output);
         });
@@ -136,10 +137,12 @@ describe("save() deletes one entity", () => {
             expect(deleteItemSockets).toHaveBeenCalledWith<Parameters<DeleteEntitiesFn<ItemSocketBlueprint>>>({
                 entities: windforce.dispatched.itemSockets,
                 selection: {},
+                context: expect.anything(),
             });
             expect(deleteItems).toHaveBeenCalledWith<Parameters<DeleteEntitiesFn<ItemBlueprint>>>({
                 entities: [windforce.dispatched.item],
                 selection: {},
+                context: expect.anything(),
             });
             expect(saved).toEqual(windforce.output);
         });

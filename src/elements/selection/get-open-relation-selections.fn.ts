@@ -25,6 +25,7 @@ function getOpenRelationSelectionsCore(
     return openRelationSelections;
 }
 
+// [todo] unused
 export function getOpenRelationSelections(
     required: EntitySelection,
     supported: EntitySelection,

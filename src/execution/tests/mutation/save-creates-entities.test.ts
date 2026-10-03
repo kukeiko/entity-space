@@ -70,6 +70,7 @@ describe("save() creates one entity", () => {
             expect(saveItems).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemBlueprint>>>({
                 entities: [windforce.dispatched],
                 selection: {},
+                context: expect.anything(),
             });
             expect(saved).toEqual(windforce.output);
             expect(saved).toBe(windforce.input);
@@ -86,6 +87,7 @@ describe("save() creates one entity", () => {
             expect(createItems).toHaveBeenCalledWith<Parameters<CreateEntitiesFn<ItemBlueprint>>>({
                 entities: [windforce.dispatched],
                 selection: {},
+                context: expect.anything(),
             });
             expect(saved).toEqual(windforce.output);
             expect(saved).toBe(windforce.input);
@@ -133,6 +135,7 @@ describe("save() creates one entity", () => {
             expect(saveItems).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemBlueprint>>>({
                 entities: [windforce.dispatched],
                 selection: {},
+                context: expect.anything(),
             });
             expect(saved).toEqual(windforce.output);
             expect(saved).toBe(windforce.input);
@@ -149,6 +152,7 @@ describe("save() creates one entity", () => {
             expect(createItems).toHaveBeenCalledWith<Parameters<CreateEntitiesFn<ItemBlueprint>>>({
                 entities: [windforce.dispatched],
                 selection: {},
+                context: expect.anything(),
             });
             expect(saved).toEqual(windforce.output);
             expect(saved).toBe(windforce.input);
@@ -211,10 +215,12 @@ describe("save() creates one entity", () => {
             expect(saveItemTypes).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemTypeBlueprint>>>({
                 entities: [windforce.dispatched.itemType],
                 selection: {},
+                context: expect.anything(),
             });
             expect(saveItems).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemBlueprint>>>({
                 entities: [windforce.dispatched.item],
                 selection: {},
+                context: expect.anything(),
             });
             expect(saved).toEqual(windforce.output);
             expect(saved).toBe(windforce.input);
@@ -233,10 +239,12 @@ describe("save() creates one entity", () => {
             expect(createItemTypes).toHaveBeenCalledWith<Parameters<CreateEntitiesFn<ItemTypeBlueprint>>>({
                 entities: [windforce.dispatched.itemType],
                 selection: {},
+                context: expect.anything(),
             });
             expect(createItems).toHaveBeenCalledWith<Parameters<CreateEntitiesFn<ItemBlueprint>>>({
                 entities: [windforce.dispatched.item],
                 selection: {},
+                context: expect.anything(),
             });
             expect(saved).toEqual(windforce.output);
             expect(saved).toBe(windforce.input);
@@ -299,10 +307,12 @@ describe("save() creates one entity", () => {
             expect(saveItemTypes).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemTypeBlueprint>>>({
                 entities: [windforce.dispatched.itemType],
                 selection: {},
+                context: expect.anything(),
             });
             expect(saveItems).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemBlueprint>>>({
                 entities: [windforce.dispatched.item],
                 selection: {},
+                context: expect.anything(),
             });
             expect(saved).toEqual(windforce.output);
             expect(saved).toBe(windforce.input);
@@ -321,10 +331,12 @@ describe("save() creates one entity", () => {
             expect(updateItemTypes).toHaveBeenCalledWith<Parameters<UpdateEntitiesFn<ItemTypeBlueprint>>>({
                 entities: [windforce.dispatched.itemType],
                 selection: {},
+                context: expect.anything(),
             });
             expect(createItems).toHaveBeenCalledWith<Parameters<CreateEntitiesFn<ItemBlueprint>>>({
                 entities: [windforce.dispatched.item],
                 selection: {},
+                context: expect.anything(),
             });
             expect(saved).toEqual(windforce.output);
             expect(saved).toBe(windforce.input);
@@ -395,10 +407,12 @@ describe("save() creates one entity", () => {
             expect(saveItems).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemBlueprint>>>({
                 entities: [windforce.dispatched.item],
                 selection: {},
+                context: expect.anything(),
             });
             expect(saveItemSockets).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemSocketBlueprint>>>({
                 entities: windforce.dispatched.itemSockets,
                 selection: {},
+                context: expect.anything(),
             });
             expect(saved).toEqual(windforce.output);
             expect(saved).toBe(windforce.input);
@@ -417,10 +431,12 @@ describe("save() creates one entity", () => {
             expect(createItems).toHaveBeenCalledWith<Parameters<CreateEntitiesFn<ItemBlueprint>>>({
                 entities: [windforce.dispatched.item],
                 selection: {},
+                context: expect.anything(),
             });
             expect(createItemSockets).toHaveBeenCalledWith<Parameters<CreateEntitiesFn<ItemSocketBlueprint>>>({
                 entities: windforce.dispatched.itemSockets,
                 selection: {},
+                context: expect.anything(),
             });
             expect(saved).toEqual(windforce.output);
             expect(saved).toBe(windforce.input);
@@ -491,10 +507,12 @@ describe("save() creates one entity", () => {
             expect(saveItems).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemBlueprint>>>({
                 entities: [windforce.dispatched.item],
                 selection: {},
+                context: expect.anything(),
             });
             expect(saveItemSockets).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemSocketBlueprint>>>({
                 entities: windforce.dispatched.itemSockets,
                 selection: {},
+                context: expect.anything(),
             });
             expect(saved).toEqual(windforce.output);
             expect(saved).toBe(windforce.input);
@@ -513,10 +531,12 @@ describe("save() creates one entity", () => {
             expect(saveItems).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemBlueprint>>>({
                 entities: [windforce.dispatched.item],
                 selection: {},
+                context: expect.anything(),
             });
             expect(saveItemSockets).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemSocketBlueprint>>>({
                 entities: windforce.dispatched.itemSockets,
                 selection: {},
+                context: expect.anything(),
             });
             expect(saved).toEqual(windforce.output);
             expect(saved).toBe(windforce.input);
@@ -535,10 +555,12 @@ describe("save() creates one entity", () => {
             expect(createItems).toHaveBeenCalledWith<Parameters<CreateEntitiesFn<ItemBlueprint>>>({
                 entities: [windforce.dispatched.item],
                 selection: {},
+                context: expect.anything(),
             });
             expect(saveItemSockets).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemSocketBlueprint>>>({
                 entities: windforce.dispatched.itemSockets,
                 selection: {},
+                context: expect.anything(),
             });
             expect(saved).toEqual(windforce.output);
             expect(saved).toBe(windforce.input);
@@ -590,6 +612,7 @@ describe("save() creates one entity", () => {
         expect(saveItem).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemBlueprint>>>({
             entities: [windforcePassedToSave],
             selection: { sockets: true },
+            context: expect.anything(),
         });
         expect(saved).toEqual([windforceSaved]);
         expect(saved[0]).toBe(windforce);
@@ -658,6 +681,7 @@ describe("save() creates many entities", () => {
             expect(saveItems).toHaveBeenCalledWith<Parameters<SaveEntitiesFn<ItemBlueprint>>>({
                 entities: windforce.dispatched,
                 selection: {},
+                context: expect.anything(),
             });
             expect(saved).toEqual(windforce.output);
             expect(saved).toBe(windforce.input);
@@ -674,6 +698,7 @@ describe("save() creates many entities", () => {
             expect(createItems).toHaveBeenCalledWith<Parameters<CreateEntitiesFn<ItemBlueprint>>>({
                 entities: windforce.dispatched,
                 selection: {},
+                context: expect.anything(),
             });
             expect(saved).toEqual(windforce.output);
             expect(saved).toBe(windforce.input);

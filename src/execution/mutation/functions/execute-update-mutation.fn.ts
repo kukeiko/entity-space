@@ -1,16 +1,19 @@
 import { assignEntitiesUsingIds, getSelection } from "@entity-space/elements";
-import { EntityQueryTracing } from "../../entity-query-tracing";
+import { upsertToCache } from "../../cache/upsert-to-cache.fn";
+import { EntityServiceContainer } from "../../entity-service-container";
 import { AcceptedEntityMutation } from "../accepted-entity-mutation";
+import { EntityMutationContext } from "../structures/entity-mutation-context";
 import { copyEntityForMutation } from "./copy-entity-for-mutation.fn";
 
 export async function executeUpdateMutation(
     mutation: AcceptedEntityMutation,
-    tracing: EntityQueryTracing,
+    context: EntityMutationContext,
+    services: EntityServiceContainer,
 ): Promise<void> {
     const schema = mutation.getSchema();
 
     for (const dependency of mutation.getOutboundDependencies()) {
-        tracing.writingDependency(dependency);
+        services.getTracing().writingDependency(dependency);
         dependency.writeIds(schema, mutation.getEntities());
     }
 
@@ -23,14 +26,22 @@ export async function executeUpdateMutation(
     );
 
     const copies = Array.from(map.keys());
-    tracing.dispatchedMutation(schema, "update", copies);
-    const updated = await mutation.mutate(copies, mutation.getSelection() ?? {});
+    services.getTracing().dispatchedMutation(schema, "update", copies);
+    const updated = await mutation.mutate(copies, mutation.getSelection() ?? {}, context);
     const originals = Array.from(map.values());
     const selection = getSelection(schema, mutation.getSelection());
     assignEntitiesUsingIds(schema, selection, originals, updated);
 
     for (const dependency of mutation.getInboundDependencies()) {
-        tracing.writingDependency(dependency);
+        services.getTracing().writingDependency(dependency);
         dependency.writeIds(schema, originals);
+    }
+
+    const cacheOptions = context.getOptions().cache;
+
+    if (cacheOptions) {
+        for (const entity of mutation.getEntities()) {
+            upsertToCache(services, schema, entity, mutation.getSelection(), cacheOptions.key);
+        }
     }
 }

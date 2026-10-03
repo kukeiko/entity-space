@@ -56,6 +56,7 @@ describe("save()", () => {
             expect(deleteItemSocket).toHaveBeenCalledWith<Parameters<DeleteEntitiesFn<ItemSocketBlueprint>>>({
                 entities: [{ ...deletedSocket }],
                 selection: {},
+                context: expect.anything(),
             });
         });
 
@@ -132,12 +133,14 @@ describe("save()", () => {
         expect(updateSong).toHaveBeenCalledWith<Parameters<UpdateEntityFn<SongBlueprint>>>({
             entity: { ...updatedSong },
             selection: {},
+            context: expect.anything(),
         });
 
         expect(deleteSong).toHaveBeenCalledTimes(1);
         expect(deleteSong).toHaveBeenCalledWith<Parameters<DeleteEntityFn<SongBlueprint>>>({
             entity: { ...deletedSong },
             selection: {},
+            context: expect.anything(),
         });
     });
 });

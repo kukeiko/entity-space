@@ -31,6 +31,7 @@ describe("create()", () => {
         expect(createArtist).toHaveBeenNthCalledWith<Parameters<CreateEntityFn<ArtistBlueprint>>>(1, {
             entity: expected,
             selection: {},
+            context: expect.anything(),
         });
     });
 
@@ -56,6 +57,7 @@ describe("create()", () => {
         expect(createArtist).toHaveBeenNthCalledWith<Parameters<CreateEntityFn<ArtistBlueprint>>>(1, {
             entity: expected,
             selection: {},
+            context: expect.anything(),
         });
         expect(updateArtist).toHaveBeenCalledTimes(0);
     });

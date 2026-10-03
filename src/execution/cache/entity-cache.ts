@@ -2,6 +2,7 @@ import {
     copyEntities,
     Criterion,
     entitiesToCriterion,
+    entitiesToQuery,
     Entity,
     EntityPage,
     EntityQuery,
@@ -102,6 +103,12 @@ export class EntityCache {
         }
     }
 
+    delete(query: EntityQuery): void {
+        this.#evictRemovedFromCache(query, []);
+        this.#queryCache.addQuery(query);
+        this.#cachedQueriesChanged.next();
+    }
+
     subtractByCache(query: EntityQuery, maxTimestamp?: string): EntityQuery[] | boolean {
         return this.#queryCache.subtractQuery(query, maxTimestamp);
     }
@@ -159,7 +166,6 @@ export class EntityCache {
         joinEntities(entities, joinedEntities, relation);
     }
 
-    // [todo] ❌ implement evicting inbound relations w/ readonly join properties
     #evictRemovedFromCache(query: EntityQuery, next: readonly Entity[]): void {
         const previous = this.query(query);
 
@@ -168,6 +174,30 @@ export class EntityCache {
         }
 
         const schema = query.getSchema();
+
+        // evict inbound relations
+        for (const [key, selected] of Object.entries(query.getSelection())) {
+            if (selected === true) {
+                continue;
+            }
+
+            const relation = schema.getRelation(key);
+
+            // [todo] ❌ should we also check if joined properties are readonly?
+            if (!relation.isJoined() || relation.isOutbound()) {
+                continue;
+            }
+
+            const relatedPrevious = relation.readValuesFlat(previous);
+
+            if (relatedPrevious.length) {
+                // 🧪 test this
+                const relatedNext = relation.readValuesFlat(next);
+                const relatedPreviousQuery = entitiesToQuery(relation.getRelatedSchema(), relatedPrevious, selected);
+                this.#evictRemovedFromCache(relatedPreviousQuery, relatedNext);
+            }
+        }
+
         const nextMap = new ComplexKeyMap(schema.getIdPaths());
 
         for (const nextEntity of next) {
@@ -190,6 +220,7 @@ export class EntityCache {
         }
 
         this.#tracing.entitiesEvictedFromCache(query, evicted);
+
         const criterion = query.getCriterion();
 
         if (criterion === undefined || isReadonlyCriterion(query.getSchema(), criterion)) {

@@ -52,3 +52,11 @@ export interface HydrateArguments {
     select: PackedEntitySelection;
     cache?: boolean | QueryCacheOptions;
 }
+
+export interface EntityMutationCacheOptions {
+    key?: unknown;
+}
+
+export interface EntityMutationOptions {
+    cache: false | EntityMutationCacheOptions;
+}

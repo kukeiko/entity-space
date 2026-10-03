@@ -85,6 +85,7 @@ describe("delete()", () => {
                 },
             ],
             selection: {},
+            context: expect.anything(),
         });
 
         expect(deleteItemSockets).toHaveBeenCalledTimes(1);
@@ -109,6 +110,7 @@ describe("delete()", () => {
                 },
             ],
             selection: {},
+            context: expect.anything(),
         });
 
         expect(deleteItemAttributeTypes).not.toHaveBeenCalled();
