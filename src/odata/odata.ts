@@ -32,7 +32,7 @@ function looksLikeUuid(value: string): boolean {
 }
 
 function looksLikeDate(value: string) {
-    return Number.isFinite(Date.parse(value));
+    return /^\d\d\d\d-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d\d\d)?Z$/.test(value);
 }
 
 export namespace OData {
