@@ -13,7 +13,6 @@ import {
     EntitySort,
     entityToId,
     isHydrated,
-    isReadonlyCriterion,
     joinEntities,
     matchesCriterion,
     normalizeEntities,
@@ -31,12 +30,11 @@ import { EntityStore } from "./entity-store";
 export class EntityCache {
     constructor(tracing: EntityQueryTracing) {
         this.#tracing = tracing;
-        this.#queryCache = new EntityQueryCache(tracing);
     }
 
     readonly #tracing: EntityQueryTracing;
     readonly #stores = new Map<string, EntityStore>();
-    readonly #queryCache: EntityQueryCache;
+    readonly #queryCache = new EntityQueryCache();
     readonly #cachedQueriesChanged = new Subject<void>();
 
     query(query: EntityQuery): Entity[] {
@@ -178,7 +176,6 @@ export class EntityCache {
         }
 
         const schema = query.getSchema();
-        // [todo] ❓ there is an argument to be made that we should evict ALL inbound relations, instead of just the selected inbound relations
         this.#evictInboundRelationsFromCache(schema, query.getSelection(), previous, next);
         const evicted = this.#getMissingInMap(schema, previous, next);
 
@@ -188,21 +185,6 @@ export class EntityCache {
 
         this.#getStore(schema).removeMany(evicted);
         this.#tracing.entitiesEvictedFromCache(query, evicted);
-        const criterion = query.getCriterion();
-
-        if (criterion === undefined || isReadonlyCriterion(query.getSchema(), criterion)) {
-            // [todo] ❓i think this only holds true if we didn't also evict inbound relations with non-readonly properties.
-            // so if we're evicting an Album because it has been deleted, if we evicted it's Songs, Songs might be on a different Album now,
-            // we still need to update the cached query state.
-            //
-            // no need to update cached query state as we assume all removed entities were deleted
-            return;
-        }
-
-        // [todo] ❓ this seems aggressive - but maybe it is warranted.
-        // [todo] 🧪 removing this call doesn't break any tests
-        // [todo] ❌ trace call to log evicted cached queries
-        this.#queryCache.evictNonReadonlyQueries(schema);
     }
 
     #evictInboundRelationsFromCache(
@@ -225,7 +207,7 @@ export class EntityCache {
             const relatedPrevious = relation.readValuesFlat(previous);
 
             if (relatedPrevious.length) {
-                // 🧪 test this
+                // [odo] 🧪 needs testing
                 const relatedNext = relation.readValuesFlat(next);
                 const relatedPreviousQuery = entitiesToQuery(relation.getRelatedSchema(), relatedPrevious, selected);
                 this.#evictRemovedFromCache(relatedPreviousQuery, relatedNext);
