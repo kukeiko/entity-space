@@ -186,6 +186,12 @@ export class EntityStore {
         this.#idIndex.delete(entity);
     }
 
+    removeMany(entities: readonly Entity[]): void {
+        for (const entity of entities) {
+            this.remove(entity);
+        }
+    }
+
     onChange(): Observable<EntityQueryExecutionContext | undefined> {
         return this.#changed.asObservable();
     }

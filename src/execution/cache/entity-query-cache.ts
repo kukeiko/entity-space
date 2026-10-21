@@ -1,6 +1,13 @@
 import { EntityQuery, EntitySchema, isReadonlyCriterion, subtractQueries, subtractQuery } from "@entity-space/elements";
+import { partition } from "lodash";
+import { EntityQueryTracing } from "../entity-query-tracing";
 
 export class EntityQueryCache {
+    constructor(tracing: EntityQueryTracing) {
+        this.#tracing = tracing;
+    }
+
+    readonly #tracing: EntityQueryTracing;
     readonly #cache = new Map<string, [string, EntityQuery][]>();
 
     addQuery(query: EntityQuery): void {
@@ -45,16 +52,13 @@ export class EntityQueryCache {
 
     evictNonReadonlyQueries(schema: EntitySchema): void {
         const cacheKey = schema.getName();
-        const cachedQueries = (this.#cache.get(cacheKey) ?? []).filter(([_, cachedQuery]) => {
+
+        const [kept, evicted] = partition(this.#cache.get(cacheKey) ?? [], ([_, cachedQuery]) => {
             const criterion = cachedQuery.getCriterion();
-
-            if (criterion === undefined) {
-                return true;
-            }
-
-            return isReadonlyCriterion(cachedQuery.getSchema(), criterion);
+            return criterion === undefined || isReadonlyCriterion(cachedQuery.getSchema(), criterion);
         });
 
-        this.#cache.set(cacheKey, cachedQueries);
+        this.#tracing.queriesEvictedFromCache(evicted.map(([_, query]) => query));
+        this.#cache.set(cacheKey, kept);
     }
 }

@@ -1,10 +1,16 @@
 import { EntitySchema } from "../../entity/schema/entity-schema";
+import { AndCriterion } from "../and-criterion";
 import { Criterion } from "../criterion";
 import { EntityCriterion } from "../entity-criterion";
+import { OrCriterion } from "../or-criterion";
 
+/**
+ * Returns true if the criterion only filters on readonly properties of an entity.
+ */
 export function isReadonlyCriterion(schema: EntitySchema, criterion: Criterion): boolean {
-    // [todo] ❌ implement OrCriterionShape
-    if (!(criterion instanceof EntityCriterion)) {
+    if (criterion instanceof OrCriterion || criterion instanceof AndCriterion) {
+        return criterion.getCriteria().every(criterion => isReadonlyCriterion(schema, criterion));
+    } else if (!(criterion instanceof EntityCriterion)) {
         return false;
     }
 

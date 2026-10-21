@@ -54,5 +54,46 @@ describe("cache invalidation", () => {
             // assert
             expect(actual).toBeUndefined();
         });
+
+        it("when criteria are only set on non-readonly properties", async () => {
+            facade.enableConsoleTracing();
+
+            // arrange
+            const kept: Artist = {
+                ...workspace.from(ArtistBlueprint).construct(),
+                id: 1,
+                namespace: "dev",
+                name: "foo",
+            };
+            const evicted: Artist = {
+                ...workspace.from(ArtistBlueprint).construct(),
+                id: 2,
+                namespace: "dev",
+                name: "bar",
+            };
+
+            repository.useMusic().useEntities({ artists: [kept, evicted] });
+            repository.useMusic().useLoadArtistsByName();
+
+            // act
+            await workspace
+                .from(ArtistBlueprint)
+                .where({ name: ["foo", "bar"] })
+                .cache(true)
+                .get();
+
+            repository.useMusic().useEntities({ artists: [kept] });
+
+            await workspace
+                .from(ArtistBlueprint)
+                .where({ name: ["foo", "bar"] })
+                .cache({ refresh: true })
+                .get();
+
+            const actual = await workspace.from(ArtistBlueprint).cache(true).where({ name: "bar" }).findOne();
+
+            // assert
+            expect(actual).toBeUndefined();
+        });
     });
 });
