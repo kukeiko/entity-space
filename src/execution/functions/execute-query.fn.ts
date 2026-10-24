@@ -12,7 +12,7 @@ export async function executeQuery<T>(
     const result = describeQuery(services, query);
 
     if (result === false) {
-        throw new Error(`no suitable sources found to execute query ${query}`);
+        throw new Error(`no sources/hydrators found that can execute query ${query}`);
     }
 
     const [description, expandedQuery] = result;
