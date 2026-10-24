@@ -40,6 +40,9 @@ export class TestFacade {
         return this.#workspace.from(blueprint).construct(patch);
     }
 
+    /**
+     * @deprecated use {@link construct} instead
+     */
     constructDefault<B extends Class | Class[]>(blueprint: B): EntityBlueprint.Type<B> {
         return this.#workspace.from(blueprint).constructDefault();
     }

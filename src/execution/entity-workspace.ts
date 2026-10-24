@@ -120,6 +120,7 @@ export class EntityWorkspace {
             const query = this.#toQuery(args);
 
             if (query === false) {
+                // [todo] ❌ trace that a query was effectively ignored
                 return of([]);
             }
 

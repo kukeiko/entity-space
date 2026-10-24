@@ -19,16 +19,8 @@ describe("mutate duplicates", () => {
     it("delete() does not delete the same entity twice", async () => {
         // arrange
         const artists: Artist[] = [
-            {
-                ...facade.constructDefault(ArtistBlueprint),
-                id: 1,
-                namespace: "dev",
-            },
-            {
-                ...facade.constructDefault(ArtistBlueprint),
-                id: 1,
-                namespace: "dev",
-            },
+            facade.construct(ArtistBlueprint, { id: 1, namespace: "dev" }),
+            facade.construct(ArtistBlueprint, { id: 1, namespace: "dev" }),
         ];
 
         const deleteArtist = repository.useMusic().useDeleteArtist();
@@ -42,62 +34,17 @@ describe("mutate duplicates", () => {
 
     it("save() does not create the same entity twice", async () => {
         // arrange
-        const metadata = createMetadata(1);
-
-        const artist: Artist = {
-            ...facade.constructDefault(ArtistBlueprint),
-            metadata,
-            name: "foo",
-            namespace: "dev",
-        };
-
-        const songA: Song = {
-            ...facade.constructDefault(SongBlueprint),
-            artist,
-            metadata,
-            namespace: "dev",
-        };
-
-        const songB: Song = {
-            ...facade.constructDefault(SongBlueprint),
-            albumId: 1,
-            artist,
-            metadata,
-            namespace: "dev",
-        };
-
+        const artist: Artist = facade.construct(ArtistBlueprint, { name: "foo", namespace: "dev" });
+        const songA: Song = facade.construct(SongBlueprint, { artist, namespace: "dev" });
+        const songB: Song = facade.construct(SongBlueprint, { artist, namespace: "dev" });
         const songs: Song[] = [{ ...songA }, { ...songB }];
 
-        const expectedArtist: Artist = {
-            id: 1,
-            metadata,
-            name: "foo",
-            namespace: "dev",
-        };
-
-        const dispatchedSongA: Song = {
-            ...songA,
-            artistId: 1,
-            artist: undefined,
-        };
-
-        const dispatchedSongB: Song = {
-            ...songB,
-            artistId: 1,
-            artist: undefined,
-        };
+        const dispatchedSongA: Song = { ...songA, artistId: 1, artist: undefined };
+        const dispatchedSongB: Song = { ...songB, artistId: 1, artist: undefined };
 
         const expected: Song[] = [
-            {
-                ...dispatchedSongA,
-                id: 1,
-                artist: expectedArtist,
-            },
-            {
-                ...dispatchedSongB,
-                id: 2,
-                artist: expectedArtist,
-            },
+            { ...songA, id: 1, artistId: 1 },
+            { ...songB, id: 2, artistId: 1 },
         ];
 
         const createSong = repository.useMusic().useCreateSong();

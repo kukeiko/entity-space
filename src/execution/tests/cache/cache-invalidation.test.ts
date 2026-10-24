@@ -56,8 +56,6 @@ describe("cache invalidation", () => {
         });
 
         it("when criteria are only set on non-readonly properties", async () => {
-            facade.enableConsoleTracing();
-
             // arrange
             const kept: Artist = {
                 ...workspace.from(ArtistBlueprint).construct(),

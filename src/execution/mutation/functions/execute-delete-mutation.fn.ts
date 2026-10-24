@@ -12,7 +12,7 @@ export async function executeDeleteMutation(
 ): Promise<void> {
     const schema = mutation.getSchema();
 
-    // [todo] ❌ we need splice the original entities if the user just wants do "delete" (i.e. there is no previous),
+    // [todo] ❌ we need to splice the original entities if the user just wants do "delete" (i.e. there is no previous),
     // so that in case of an error (service temporarily unavailable), and some entities have already been deleted successfully,
     // entity-space doesn't try to delete those again.
 

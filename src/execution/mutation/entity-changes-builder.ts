@@ -31,6 +31,9 @@ export class EntityChangesBuilder {
     readonly #relations: RelationStruct[] = [];
 
     addCreate(schema: EntitySchema, entity: Entity): void {
+        // [todo] ❓right now creating same entity twice is prevented in explicit-entity-mutator (uses uniq(entities)).
+        // instead I think we should just prevent adding a change instead? needs investigation into how it all works.
+        // also, if we're doing it here - also do it for addDelete(), addUpdate(), addPrevious()
         let entities = this.#creates.get(schema);
 
         if (entities === undefined) {
