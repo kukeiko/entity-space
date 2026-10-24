@@ -22,12 +22,18 @@ function toNullableInteger(value?: string): number | null {
     return isNaN(int) ? null : int;
 }
 
-function toIntegerArray(value?: string): number[] | undefined {
+function toIntegerArray(value?: string): number[] {
     const values = (value ?? "")
         .split(",")
         .filter(str => str.length)
         .map(str => parseInt(str))
         .filter(number => !isNaN(number));
+
+    return values;
+}
+
+function toOptionalIntegerArray(value?: string): number[] | undefined {
+    const values = toIntegerArray(value);
 
     return values.length ? values : undefined;
 }
@@ -110,12 +116,17 @@ function toEntityFilterSchemaProperty(property: NamedProperty): EntityFilterSche
 
     const errorMessagePrefix = `can't create filter schema for property "${property.name}"`;
     const isNullable = hasAttribute("nullable", property);
+    const isOptional = hasAttribute("optional", property);
     const isArray = hasAttribute("array", property);
     const isUnion = hasAttribute("union", property);
 
     if (property.valueType === Number) {
         if (isArray) {
-            parse = toIntegerArray;
+            if (isOptional) {
+                parse = toOptionalIntegerArray;
+            } else {
+                parse = toIntegerArray;
+            }
         } else if (isNullable) {
             parse = toNullableInteger;
         } else {
