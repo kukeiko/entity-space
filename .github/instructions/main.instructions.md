@@ -12,7 +12,7 @@ The library does not provide a database driver, network transport, or client/ser
 
 - `workspace.from(blueprint)` builds a query.
 - `workspace.for(blueprint)` hydrates existing entities.
-- `workspace.in(blueprint)` builds a create, update, save, or delete mutation.
+- `workspace.in(blueprint)` builds a mutation.
 - `workspace.map(blueprint)` provides entity mapping helpers.
 
 The core library is framework-agnostic. The repository also contains Angular and NestJS integration packages.
@@ -39,6 +39,14 @@ Mutation caching is also opt-in and uses the configured cache key. The workspace
 
 Automatic relation hydration currently applies to joined relations with join metadata and a related schema that can be queried through registered sources. Embedded relations are nested values, not relations loaded by this auto-join mechanism. Whether this is the final intended distinction is still an open design question; see [Hydration](./hydration.instructions.md).
 
-The intended direction for `save()` is full entity-graph synchronization, including deletions. The exact contract for root removals and related-entity selection is not settled, and current behavior depends on registered mutators; see [Mutation](./mutation.instructions.md). Do not describe the intended behavior as fully implemented.
+### Current mutation behavior
+
+The workspace currently exposes `create()`, `update()`, `save()`, and `delete()`. `save(current, previous)` detects previous root entities omitted from the current set as deletions and dispatches them through delete mutators. Without `previous`, it does not infer root deletions. Save mutators handle current root creates/updates and selected related changes, including supported inbound related deletions. See [Mutation](./mutation.instructions.md).
+
+### Planned mutation behavior
+
+The planned API removes workspace `create()` and `update()`, retaining `save()` and `delete()` and adding `sync()`. Planned `save()` will not infer root deletions from entities omitted from `current`, even when `previous` is provided. `sync(current, previous)` will behave like `save()` and additionally dispatch previous root entities omitted from `current` through delete mutators, using all applicable existing mutator kinds for the changes it detects. No separate sync mutator is planned.
+
+An `upsert` mutator and workspace method may be added later if needed. The planned upsert would create and update entities without deleting related inbound entities. This is a possible future addition, not part of the current API.
 
 Using `entity-space` at both a client and API boundary, with the library facilitating communication between them, is a possible future setup only. This repository does not currently implement that communication or a shared protocol.
