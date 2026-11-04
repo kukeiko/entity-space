@@ -71,7 +71,8 @@ export class EntityDataSource<B extends Class | Class[], F, S extends PackedEnti
         }
 
         this.#isLoading$.next(true);
-        await this.#workspace.in(this.#blueprint).update(next as any, previous as any);
+        // [todo] ❌ changed from "update" to "save" - needs testing
+        await this.#workspace.in(this.#blueprint).save(next as any, previous as any);
         this.#isLoading$.next(false);
         // [todo] ❌ instead of reloading, we could just emit "next" as the new entities
         this.refresh();

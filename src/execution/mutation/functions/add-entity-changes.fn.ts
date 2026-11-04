@@ -2,7 +2,6 @@ import {
     Entity,
     entityHasId,
     EntityMap,
-    EntityRelationProperty,
     EntityRelationSelection,
     EntitySchema,
     isNewEntity,
@@ -12,7 +11,7 @@ import {
 } from "@entity-space/elements";
 import { joinPaths, Path } from "@entity-space/utils";
 import { EntityChangesBuilder } from "../entity-changes-builder";
-import { EntityMutationType } from "../entity-mutation";
+import { EntityMutation } from "../entity-mutation";
 
 function addCreateChanges(
     builder: EntityChangesBuilder,
@@ -82,8 +81,7 @@ function addDeleteChanges(
     selection: EntityRelationSelection,
     next: EntityMap,
     previous: readonly Entity[],
-    relation?: EntityRelationProperty,
-    relationValueIsDefined?: boolean,
+    doDelete = false,
 ): void {
     for (const previousEntity of previous) {
         let nextEntity: Entity | undefined;
@@ -91,51 +89,61 @@ function addDeleteChanges(
         if (schema.hasId() && entityHasId(schema, previousEntity)) {
             nextEntity = next.getEntity(schema, previousEntity);
 
-            if (
-                nextEntity === undefined &&
-                (relation === undefined || (relation.isInbound() && relationValueIsDefined))
-            ) {
+            if (nextEntity === undefined && doDelete) {
                 builder.addDelete(schema, previousEntity);
             }
         }
 
         for (const [relation, relatedSchema, relatedSelection] of relationEntries(schema, selection)) {
-            const nextHasDefinedRelationValue =
-                (nextEntity !== undefined && relation.hasValue(nextEntity)) || nextEntity === undefined;
+            let doDeleteRelated =
+                relation.isJoined() &&
+                relation.isInbound() &&
+                (nextEntity === undefined || relation.hasValue(nextEntity));
             const related = relation.readValueAsArray(previousEntity);
-
-            addDeleteChanges(
-                builder,
-                relatedSchema,
-                relatedSelection,
-                next,
-                related,
-                relation,
-                nextHasDefinedRelationValue,
-            );
+            addDeleteChanges(builder, relatedSchema, relatedSelection, next, related, doDeleteRelated);
         }
     }
 }
 
-export function addEntityChanges(
-    builder = new EntityChangesBuilder(),
+function addRootDeleteChanges(
+    builder: EntityChangesBuilder,
     schema: EntitySchema,
-    selection: EntityRelationSelection,
-    entities: readonly Entity[],
-    type: readonly EntityMutationType[],
-    previous?: readonly Entity[],
+    next: EntityMap,
+    previous: readonly Entity[],
 ): void {
-    if (type.includes("create")) {
-        addCreateChanges(builder, schema, selection, entities);
-    }
+    addDeleteChanges(builder, schema, {}, next, previous, true);
+}
 
-    if (type.includes("update")) {
+function addInboundRelationDeleteChanges(
+    builder: EntityChangesBuilder,
+    schema: EntitySchema,
+    next: EntityMap,
+    previous: readonly Entity[],
+    selection: EntityRelationSelection,
+): void {
+    addDeleteChanges(builder, schema, selection, next, previous, false);
+}
+
+export function addEntityChanges(builder: EntityChangesBuilder, mutation: EntityMutation): void {
+    const schema = mutation.getSchema();
+    const entities = mutation.getEntities();
+    const selection = mutation.getSelection() ?? {};
+    const previous = mutation.getPrevious();
+
+    if (mutation.isSave() || mutation.isSync()) {
+        addCreateChanges(builder, schema, selection, entities);
         addUpdateChanges(builder, schema, selection, entities, previous);
     }
 
-    if (previous !== undefined && type.includes("delete")) {
+    if (previous !== undefined) {
         // [todo] ❓ should duplicates be merged during toEntityMap()?
-        const current = toEntityMap(schema, selection, entities);
-        addDeleteChanges(builder, schema, selection, current, previous);
+        const next = toEntityMap(schema, selection, entities);
+        addInboundRelationDeleteChanges(builder, schema, next, previous, selection);
+
+        // [todo] ❌ the commented out line here is what we want
+        // if (mutation.isDelete() || mutation.isSync()) {
+        if (mutation.isDelete() || mutation.isSync() || mutation.isSave()) {
+            addRootDeleteChanges(builder, schema, next, previous);
+        }
     }
 }

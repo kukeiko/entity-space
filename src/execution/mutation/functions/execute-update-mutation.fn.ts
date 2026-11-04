@@ -2,6 +2,7 @@ import { assignEntitiesUsingIds, getSelection } from "@entity-space/elements";
 import { upsertToCache } from "../../cache/upsert-to-cache.fn";
 import { EntityServiceContainer } from "../../entity-service-container";
 import { AcceptedEntityMutation } from "../accepted-entity-mutation";
+import { EntityMutatorType } from "../entity-mutator";
 import { EntityMutationContext } from "../structures/entity-mutation-context";
 import { copyEntityForMutation } from "./copy-entity-for-mutation.fn";
 
@@ -26,7 +27,7 @@ export async function executeUpdateMutation(
     );
 
     const copies = Array.from(map.keys());
-    services.getTracing().dispatchedMutation(schema, "update", copies);
+    services.getTracing().dispatchedToMutator(schema, EntityMutatorType.Update, copies);
     const updated = await mutation.mutate(copies, mutation.getSelection() ?? {}, context);
     const originals = Array.from(map.values());
     const selection = getSelection(schema, mutation.getSelection());

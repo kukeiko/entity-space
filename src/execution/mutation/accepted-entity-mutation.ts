@@ -1,6 +1,5 @@
 import { Entity, EntityRelationSelection, EntitySchema } from "@entity-space/elements";
-import { EntityMutationType } from "./entity-mutation";
-import { EntityMutationFn } from "./entity-mutator";
+import { EntityMutationFn, EntityMutatorType } from "./entity-mutator";
 import { EntityChange } from "./structures/entity-change";
 import { EntityChangeDependency } from "./structures/entity-change-dependency";
 import { EntityMutationContext } from "./structures/entity-mutation-context";
@@ -8,7 +7,7 @@ import { EntityMutationContext } from "./structures/entity-mutation-context";
 export class AcceptedEntityMutation {
     constructor(
         schema: EntitySchema,
-        type: EntityMutationType,
+        type: EntityMutatorType,
         entities: readonly Entity[],
         acceptedChanges: readonly EntityChange[],
         mutateFn: EntityMutationFn,
@@ -25,7 +24,7 @@ export class AcceptedEntityMutation {
     }
 
     readonly #schema: EntitySchema;
-    readonly #type: EntityMutationType;
+    readonly #type: EntityMutatorType;
     readonly #entities: readonly Entity[];
     readonly #changes: readonly EntityChange[];
     readonly #mutateFn: EntityMutationFn;
@@ -36,24 +35,24 @@ export class AcceptedEntityMutation {
         return this.#schema;
     }
 
-    getType(): EntityMutationType {
+    getType(): EntityMutatorType {
         return this.#type;
     }
 
     isCreate(): boolean {
-        return this.getType() === "create";
+        return this.getType() === EntityMutatorType.Create;
     }
 
     isUpdate(): boolean {
-        return this.getType() === "update";
+        return this.getType() === EntityMutatorType.Update;
     }
 
     isDelete(): boolean {
-        return this.getType() === "delete";
+        return this.getType() === EntityMutatorType.Delete;
     }
 
     isSave(): boolean {
-        return this.getType() === "save";
+        return this.getType() === EntityMutatorType.Save;
     }
 
     mutate(entities: Entity[], selection: EntityRelationSelection, context: EntityMutationContext): Promise<Entity[]> {

@@ -2,6 +2,7 @@ import { toEntityPairs } from "@entity-space/elements";
 import { deleteFromCache } from "../../cache/delete-from-cache.fn";
 import { EntityServiceContainer } from "../../entity-service-container";
 import { AcceptedEntityMutation } from "../accepted-entity-mutation";
+import { EntityMutatorType } from "../entity-mutator";
 import { EntityMutationContext } from "../structures/entity-mutation-context";
 import { copyEntityForMutation } from "./copy-entity-for-mutation.fn";
 
@@ -25,7 +26,7 @@ export async function executeDeleteMutation(
     );
 
     const copies = Array.from(map.keys());
-    services.getTracing().dispatchedMutation(schema, "delete", copies);
+    services.getTracing().dispatchedToMutator(schema, EntityMutatorType.Delete, copies);
     const deleted = await mutation.mutate(copies, mutation.getSelection() ?? {}, context);
     const originals = Array.from(map.values());
 

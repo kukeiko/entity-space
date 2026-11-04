@@ -9,13 +9,12 @@ import { joinPaths, Path } from "@entity-space/utils";
 import { isEmpty, uniq } from "lodash";
 import { AcceptedEntityMutation } from "./accepted-entity-mutation";
 import { EntityChanges } from "./entity-changes";
-import { EntityMutationType } from "./entity-mutation";
-import { EntityMutationFn, EntityMutator } from "./entity-mutator";
-import { EntityChange } from "./structures/entity-change";
+import { EntityMutationFn, EntityMutator, EntityMutatorType } from "./entity-mutator";
+import { EntityChange, EntityChangeType } from "./structures/entity-change";
 
 export class ExplicitEntityMutator extends EntityMutator {
     constructor(
-        type: EntityMutationType,
+        type: EntityMutatorType,
         schema: EntitySchema,
         mutateFn: EntityMutationFn,
         selection: EntityRelationSelection,
@@ -27,7 +26,7 @@ export class ExplicitEntityMutator extends EntityMutator {
         this.#selection = selection;
     }
 
-    readonly #type: EntityMutationType;
+    readonly #type: EntityMutatorType;
     readonly #schema: EntitySchema;
     readonly #mutateFn: EntityMutationFn;
     readonly #selection: EntityRelationSelection;
@@ -84,13 +83,23 @@ export class ExplicitEntityMutator extends EntityMutator {
 
         if (schema.hasId()) {
             [acceptedChanges, open] = changes.subtractChanges(
-                this.#type === "save" ? ["create", "update"] : [this.#type],
+                this.#type === EntityMutatorType.Save
+                    ? [EntityChangeType.Create, EntityChangeType.Update]
+                    : [this.#type],
                 schema,
                 entities,
             );
 
-            if (previous && open && (this.#type === "delete" || (!isRoot && this.#type === "save"))) {
-                const [acceptedDeletionChanges, nextOpen] = open.subtractChanges(["delete"], schema, previous);
+            if (
+                previous &&
+                open &&
+                (this.#type === EntityMutatorType.Delete || (!isRoot && this.#type === EntityMutatorType.Save))
+            ) {
+                const [acceptedDeletionChanges, nextOpen] = open.subtractChanges(
+                    [EntityMutatorType.Delete],
+                    schema,
+                    previous,
+                );
                 acceptedChanges.push(...acceptedDeletionChanges);
                 open = nextOpen;
             }

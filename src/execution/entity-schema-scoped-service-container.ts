@@ -20,7 +20,6 @@ import { Class, unwrapMaybeAsync } from "@entity-space/utils";
 import { EntityServiceContainer } from "./entity-service-container";
 import { HydrateEntitiesFn } from "./hydration/entity-hydrator";
 import { ExplicitEntityHydrator } from "./hydration/explicit-entity-hydrator";
-import { EntityMutationType } from "./mutation/entity-mutation";
 import {
     CreateEntitiesFn,
     CreateEntityFn,
@@ -31,7 +30,7 @@ import {
     UpdateEntitiesFn,
     UpdateEntityFn,
 } from "./mutation/entity-mutation-function.type";
-import { EntityMutationFn } from "./mutation/entity-mutator";
+import { EntityMutationFn, EntityMutatorType } from "./mutation/entity-mutator";
 import { ExplicitEntityMutator } from "./mutation/explicit-entity-mutator";
 import { EntitySource, LoadEntitiesFn } from "./sourcing/entity-source";
 
@@ -170,7 +169,7 @@ export class EntitySchemaScopedServiceContainer<B> {
             );
         };
 
-        return this.#addMutator("save", mutate, select);
+        return this.#addMutator(EntityMutatorType.Save, mutate, select);
     }
 
     addSaveMutator<S extends PackedEntitySelection<EntityBlueprint.Type<B>>>({
@@ -190,7 +189,7 @@ export class EntitySchemaScopedServiceContainer<B> {
             );
         };
 
-        return this.#addMutator("save", mutate, select);
+        return this.#addMutator(EntityMutatorType.Save, mutate, select);
     }
 
     addCreateOneMutator<S extends PackedEntitySelection<EntityBlueprint.Type<B>>>({
@@ -214,7 +213,7 @@ export class EntitySchemaScopedServiceContainer<B> {
             );
         };
 
-        return this.#addMutator("create", mutate, select);
+        return this.#addMutator(EntityMutatorType.Create, mutate, select);
     }
 
     addCreateMutator<S extends PackedEntitySelection<EntityBlueprint.Type<B>>>({
@@ -234,7 +233,7 @@ export class EntitySchemaScopedServiceContainer<B> {
             );
         };
 
-        return this.#addMutator("create", mutate, select);
+        return this.#addMutator(EntityMutatorType.Create, mutate, select);
     }
 
     addUpdateOneMutator<S extends PackedEntitySelection<EntityBlueprint.Type<B>>>({
@@ -258,7 +257,7 @@ export class EntitySchemaScopedServiceContainer<B> {
             );
         };
 
-        return this.#addMutator("update", mutate, select);
+        return this.#addMutator(EntityMutatorType.Update, mutate, select);
     }
 
     addUpdateMutator<S extends PackedEntitySelection<EntityBlueprint.Type<B>>>({
@@ -278,7 +277,7 @@ export class EntitySchemaScopedServiceContainer<B> {
             );
         };
 
-        return this.#addMutator("update", mutate, select);
+        return this.#addMutator(EntityMutatorType.Update, mutate, select);
     }
 
     addDeleteOneMutator<S extends PackedEntitySelection<EntityBlueprint.Type<B>>>({
@@ -304,7 +303,7 @@ export class EntitySchemaScopedServiceContainer<B> {
             return entities;
         };
 
-        return this.#addMutator("delete", mutate, select);
+        return this.#addMutator(EntityMutatorType.Delete, mutate, select);
     }
 
     addDeleteMutator<S extends PackedEntitySelection<EntityBlueprint.Type<B>>>({
@@ -326,10 +325,10 @@ export class EntitySchemaScopedServiceContainer<B> {
             return entities;
         };
 
-        return this.#addMutator("delete", mutate, select);
+        return this.#addMutator(EntityMutatorType.Delete, mutate, select);
     }
 
-    #addMutator(type: EntityMutationType, mutate: EntityMutationFn, selection?: PackedEntitySelection): this {
+    #addMutator(type: EntityMutatorType, mutate: EntityMutationFn, selection?: PackedEntitySelection): this {
         const relationSelection = toRelationSelection(this.#schema, unpackSelection(this.#schema, selection ?? {}));
         const mutator = new ExplicitEntityMutator(type, this.#schema, mutate, relationSelection);
         this.#addMutatorFn(mutator);

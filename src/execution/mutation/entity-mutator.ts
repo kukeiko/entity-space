@@ -16,3 +16,12 @@ export abstract class EntityMutator {
         path?: Path,
     ): [accepted: AcceptedEntityMutation | undefined, open: EntityChanges | undefined];
 }
+
+export const EntityMutatorType = {
+    Create: "create",
+    Update: "update",
+    Delete: "delete",
+    Save: "save",
+} as const;
+
+export type EntityMutatorType = (typeof EntityMutatorType)[keyof typeof EntityMutatorType];

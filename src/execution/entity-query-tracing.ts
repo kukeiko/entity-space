@@ -8,7 +8,7 @@ import {
     selectionToString,
 } from "@entity-space/elements";
 import { EntityHydrator } from "./hydration/entity-hydrator";
-import { EntityMutationType } from "./mutation/entity-mutation";
+import { EntityMutatorType } from "./mutation/entity-mutator";
 import { EntityChangeDependency } from "./mutation/structures/entity-change-dependency";
 
 const TAB_WIDTH = 4;
@@ -185,12 +185,12 @@ export class EntityQueryTracing {
         });
     }
 
-    dispatchedMutation(schema: EntitySchema, type: EntityMutationType, entities: Entity[]): void {
-        const icons: Record<EntityMutationType, string> = {
-            create: "🆕",
-            delete: "❌",
-            save: "💾",
-            update: "✏️",
+    dispatchedToMutator(schema: EntitySchema, type: EntityMutatorType, entities: Entity[]): void {
+        const icons: Record<EntityMutatorType, string> = {
+            [EntityMutatorType.Create]: "🆕",
+            [EntityMutatorType.Delete]: "❌",
+            [EntityMutatorType.Save]: "💾",
+            [EntityMutatorType.Update]: "✏️",
         };
 
         this.#log(builder => {

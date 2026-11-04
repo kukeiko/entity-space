@@ -1,6 +1,12 @@
 import { Entity, EntityRelationSelection, EntitySchema } from "@entity-space/elements";
 
-export type EntityMutationType = "create" | "update" | "save" | "delete";
+export const EntityMutationType = {
+    Save: "save",
+    Sync: "sync",
+    Delete: "delete",
+} as const;
+
+export type EntityMutationType = (typeof EntityMutationType)[keyof typeof EntityMutationType];
 
 export class EntityMutation {
     constructor(
@@ -25,6 +31,18 @@ export class EntityMutation {
 
     getType(): EntityMutationType {
         return this.#type;
+    }
+
+    isSave(): boolean {
+        return this.#type === EntityMutationType.Save;
+    }
+
+    isSync(): boolean {
+        return this.#type === EntityMutationType.Sync;
+    }
+
+    isDelete(): boolean {
+        return this.#type === EntityMutationType.Delete;
     }
 
     getSchema(): EntitySchema {

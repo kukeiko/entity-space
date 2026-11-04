@@ -1,8 +1,7 @@
 import { Entity, EntityRelationSelection, EntitySchema } from "@entity-space/elements";
 import { Path, readPath } from "@entity-space/utils";
 import { partition } from "lodash";
-import { EntityMutationType } from "./entity-mutation";
-import { EntityChange } from "./structures/entity-change";
+import { EntityChange, EntityChangeType } from "./structures/entity-change";
 
 export class EntityChanges {
     constructor(
@@ -42,7 +41,7 @@ export class EntityChanges {
     }
 
     subtractChanges(
-        types: readonly EntityMutationType[],
+        types: readonly EntityChangeType[],
         // [todo] ❌ do we really need the schema here?
         schema: EntitySchema,
         entities: readonly Entity[],

@@ -6,9 +6,14 @@ import {
     EntitySchema,
 } from "@entity-space/elements";
 import { ComplexKeyMap, joinPaths, Path } from "@entity-space/utils";
-import { EntityMutationType } from "./entity-mutation";
 import { isEntityUpdateEqual } from "./functions/is-entity-update-equal.fn";
-import { CreateEntityChange, DeleteEntityChange, EntityChange, UpdateEntityChange } from "./structures/entity-change";
+import {
+    CreateEntityChange,
+    DeleteEntityChange,
+    EntityChange,
+    EntityChangeType,
+    UpdateEntityChange,
+} from "./structures/entity-change";
 import { EntityChangeDependency } from "./structures/entity-change-dependency";
 
 interface RelationStruct {
@@ -72,7 +77,7 @@ export class EntityChangesBuilder {
 
         for (const [schema, entities] of this.#creates.entries()) {
             for (const entity of entities) {
-                const dependencies = this.#getDependencies("create", schema, entity);
+                const dependencies = this.#getDependencies(EntityChangeType.Create, schema, entity);
                 changes.push(new CreateEntityChange(schema, entity, dependencies));
             }
         }
@@ -85,9 +90,11 @@ export class EntityChangesBuilder {
                     continue;
                 }
 
-                const dependencies = this.#getDependencies("update", schema, entity);
+                const dependencies = this.#getDependencies(EntityChangeType.Update, schema, entity);
                 const deleteDependencies =
-                    previous !== undefined ? this.#getDependencies("delete", schema, previous.entity) : [];
+                    previous !== undefined
+                        ? this.#getDependencies(EntityChangeType.Delete, schema, previous.entity)
+                        : [];
 
                 changes.push(new UpdateEntityChange(schema, entity, [...dependencies, ...deleteDependencies]));
             }
@@ -95,7 +102,7 @@ export class EntityChangesBuilder {
 
         for (const schema of this.#deletes.getSchemas()) {
             for (const entity of this.#deletes.getEntities(schema)) {
-                const dependencies = this.#getDependencies("delete", schema, entity);
+                const dependencies = this.#getDependencies(EntityChangeType.Delete, schema, entity);
                 changes.push(new DeleteEntityChange(schema, entity, dependencies));
             }
         }
@@ -134,7 +141,7 @@ export class EntityChangesBuilder {
             ?.find(candidate => candidate.path?.toString() === path?.toString());
     }
 
-    #getDependencies(type: EntityMutationType, schema: EntitySchema, entity: Entity): EntityChangeDependency[] {
+    #getDependencies(type: EntityChangeType, schema: EntitySchema, entity: Entity): EntityChangeDependency[] {
         const dependencies: EntityChangeDependency[] = [];
 
         for (const [relations, to] of this.#getJoinedRelations(entity)) {

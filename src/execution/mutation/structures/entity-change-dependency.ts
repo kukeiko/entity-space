@@ -1,16 +1,16 @@
 import { Entity, EntitySchema } from "@entity-space/elements";
 import { Path, readPath, toPath, toPathSegments } from "@entity-space/utils";
-import { EntityMutationType } from "../entity-mutation";
+import { EntityChangeType } from "./entity-change";
 
 export class EntityChangeDependency {
-    constructor(type: EntityMutationType, schema: EntitySchema, path: Path, entity: Entity) {
+    constructor(type: EntityChangeType, schema: EntitySchema, path: Path, entity: Entity) {
         this.#type = type;
         this.#schema = schema;
         this.#path = path;
         this.#entity = entity;
     }
 
-    readonly #type: EntityMutationType;
+    readonly #type: EntityChangeType;
     readonly #schema: EntitySchema;
     readonly #path: Path;
     readonly #entity: Entity;
@@ -24,7 +24,7 @@ export class EntityChangeDependency {
     }
 
     isOutbound(): boolean {
-        if (this.#type === "delete") {
+        if (this.#type === EntityChangeType.Delete) {
             return this.#schema.getRelation(this.#path).isInbound();
         } else {
             return this.#schema.getRelation(this.#path).isOutbound();
@@ -32,7 +32,7 @@ export class EntityChangeDependency {
     }
 
     isInbound(): boolean {
-        if (this.#type === "delete") {
+        if (this.#type === EntityChangeType.Delete) {
             return this.#schema.getRelation(this.#path).isOutbound();
         } else {
             return this.#schema.getRelation(this.#path).isInbound();

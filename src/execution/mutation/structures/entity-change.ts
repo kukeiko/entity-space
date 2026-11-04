@@ -1,6 +1,13 @@
 import { Entity, EntitySchema } from "@entity-space/elements";
-import { EntityMutationType } from "../entity-mutation";
 import { EntityChangeDependency } from "./entity-change-dependency";
+
+export const EntityChangeType = {
+    Create: "create",
+    Update: "update",
+    Delete: "delete",
+} as const;
+
+export type EntityChangeType = (typeof EntityChangeType)[keyof typeof EntityChangeType];
 
 export abstract class EntityChange {
     constructor(schema: EntitySchema, entity: Entity, dependencies: readonly EntityChangeDependency[]) {
@@ -13,7 +20,7 @@ export abstract class EntityChange {
     readonly #entity: Entity;
     readonly #dependencies: readonly EntityChangeDependency[];
 
-    abstract isType(types: readonly EntityMutationType[]): boolean;
+    abstract isType(types: readonly EntityChangeType[]): boolean;
 
     getSchema(): EntitySchema {
         return this.#schema;
@@ -53,8 +60,8 @@ export class CreateEntityChange extends EntityChange {
         return true;
     }
 
-    override isType(types: readonly EntityMutationType[]): boolean {
-        return types.includes("create");
+    override isType(types: readonly EntityChangeType[]): boolean {
+        return types.includes(EntityChangeType.Create);
     }
 
     override toString(): string {
@@ -67,8 +74,8 @@ export class UpdateEntityChange extends EntityChange {
         return true;
     }
 
-    override isType(types: readonly EntityMutationType[]): boolean {
-        return types.includes("update");
+    override isType(types: readonly EntityChangeType[]): boolean {
+        return types.includes(EntityChangeType.Update);
     }
 
     override toString(): string {
@@ -81,8 +88,8 @@ export class DeleteEntityChange extends EntityChange {
         return true;
     }
 
-    override isType(types: readonly EntityMutationType[]): boolean {
-        return types.includes("delete");
+    override isType(types: readonly EntityChangeType[]): boolean {
+        return types.includes(EntityChangeType.Delete);
     }
 
     override toString(): string {
