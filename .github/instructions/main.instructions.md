@@ -41,12 +41,8 @@ Automatic relation hydration currently applies to joined relations with join met
 
 ### Current mutation behavior
 
-The workspace currently exposes `create()`, `update()`, `save()`, and `delete()`. `save(current, previous)` detects previous root entities omitted from the current set as deletions and dispatches them through delete mutators. Without `previous`, it does not infer root deletions. Save mutators handle current root creates/updates and selected related changes, including supported inbound related deletions. See [Mutation](./mutation.instructions.md).
+The workspace currently exposes `save()`, `sync()`, and `delete()`. `save(current, previous?)` creates or updates the current root entities and handles selected related changes, including supported inbound related deletions; it does not delete previous root entities omitted from `current`. `sync(current, previous)` behaves like `save()` and also dispatches omitted previous root entities through delete mutators. `delete(entities)` dispatches the supplied entities as root deletions and, for selected relations, also handles supported inbound related deletions through delete mutators. See [Mutation](./mutation.instructions.md).
 
-### Planned mutation behavior
-
-The planned API removes workspace `create()` and `update()`, retaining `save()` and `delete()` and adding `sync()`. Planned `save()` will not infer root deletions from entities omitted from `current`, even when `previous` is provided. `sync(current, previous)` will behave like `save()` and additionally dispatch previous root entities omitted from `current` through delete mutators, using all applicable existing mutator kinds for the changes it detects. No separate sync mutator is planned.
-
-An `upsert` mutator and workspace method may be added later if needed. The planned upsert would create and update entities without deleting related inbound entities. This is a possible future addition, not part of the current API.
+An `upsert` mutator and workspace method may be added in the future; neither is part of the current API.
 
 Using `entity-space` at both a client and API boundary, with the library facilitating communication between them, is a possible future setup only. This repository does not currently implement that communication or a shared protocol.
