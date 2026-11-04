@@ -140,9 +140,7 @@ export function addEntityChanges(builder: EntityChangesBuilder, mutation: Entity
         const next = toEntityMap(schema, selection, entities);
         addInboundRelationDeleteChanges(builder, schema, next, previous, selection);
 
-        // [todo] ❌ the commented out line here is what we want
-        // if (mutation.isDelete() || mutation.isSync()) {
-        if (mutation.isDelete() || mutation.isSync() || mutation.isSave()) {
+        if (mutation.isDelete() || mutation.isSync()) {
             addRootDeleteChanges(builder, schema, next, previous);
         }
     }

@@ -4,7 +4,7 @@ import { EntityWorkspace } from "../../entity-workspace";
 import { DeleteEntitiesFn } from "../../mutation/entity-mutation-function.type";
 import { TestFacade, TestRepository } from "../../testing";
 
-describe("save() deletes one entity", () => {
+describe("sync() deletes one entity", () => {
     let facade: TestFacade;
     let repository: TestRepository;
     let workspace: EntityWorkspace;
@@ -49,7 +49,7 @@ describe("save() deletes one entity", () => {
             const deleteItems = repository.useRpg().useDeleteItems();
 
             // act
-            const saved = await workspace.in(ItemBlueprint).save([], [windforce.input]);
+            const synced = await workspace.in(ItemBlueprint).sync([], [windforce.input]);
 
             // assert
             expect(deleteItems).toHaveBeenCalledWith<Parameters<DeleteEntitiesFn<ItemBlueprint>>>({
@@ -57,7 +57,7 @@ describe("save() deletes one entity", () => {
                 selection: {},
                 context: expect.anything(),
             });
-            expect(saved).toEqual(windforce.output);
+            expect(synced).toEqual(windforce.output);
         });
     });
 
@@ -130,9 +130,13 @@ describe("save() deletes one entity", () => {
             const deleteItemSockets = repository.useRpg().useDeleteItemSockets();
 
             // act
-            const saved = await workspace.in(ItemBlueprint).select({ sockets: true }).save([], [windforce.input]);
+            const synced = await workspace.in(ItemBlueprint).select({ sockets: true }).sync([], [windforce.input]);
 
             // assert
+            // [todo] ❌ add to AI instructions that any test checking if a spy was called before another,
+            // there should also be an assertion that the spy was called at all - otherwise it leads to confusing errors.
+            expect(deleteItems).toHaveBeenCalled();
+            expect(deleteItemSockets).toHaveBeenCalled();
             expect(deleteItemSockets).toHaveBeenCalledBefore(deleteItems);
             expect(deleteItemSockets).toHaveBeenCalledWith<Parameters<DeleteEntitiesFn<ItemSocketBlueprint>>>({
                 entities: windforce.dispatched.itemSockets,
@@ -144,7 +148,7 @@ describe("save() deletes one entity", () => {
                 selection: {},
                 context: expect.anything(),
             });
-            expect(saved).toEqual(windforce.output);
+            expect(synced).toEqual(windforce.output);
         });
     });
 });

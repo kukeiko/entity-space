@@ -168,7 +168,7 @@ describe("save()", () => {
             updatedAt,
         };
 
-        // will be deleted
+        // will not be deleted because we're not using sync() - save() does not delete root entities
         const wizardSpike: Item = {
             id: 3,
             assignId: 2,
@@ -255,22 +255,7 @@ describe("save()", () => {
                 selection: {},
                 context: expect.anything(),
             });
-            expect(deleteItems).toHaveBeenCalledTimes(1);
-            expect(deleteItems).toHaveBeenCalledWith<Parameters<DeleteEntitiesFn<ItemBlueprint>>>({
-                entities: [
-                    {
-                        id: 3,
-                        assignId: 2,
-                        typeId: 7,
-                        name: "Wizardspike",
-                        attributes: [],
-                        createdAt,
-                        updatedAt,
-                    },
-                ],
-                selection: {},
-                context: expect.anything(),
-            });
+            expect(deleteItems).not.toHaveBeenCalled();
         }
 
         // ItemSocket

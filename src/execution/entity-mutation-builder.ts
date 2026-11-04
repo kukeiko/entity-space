@@ -58,6 +58,22 @@ export class EntityMutationBuilder<B, S extends PackedEntitySelection<EntityBlue
         return Array.isArray(entities) ? (saved as EntityBlueprint.Type<B>[]) : (saved[0] as EntityBlueprint.Type<B>);
     }
 
+    async sync(
+        entities: EntityBlueprint.Type<B>[],
+        previous: EntityBlueprint.Type<B>[],
+    ): Promise<EntityBlueprint.Type<B>[]> {
+        const mutation = new EntityMutation(
+            EntityMutationType.Sync,
+            this.#schema,
+            entities,
+            toRelationSelection(this.#schema, unpackSelection(this.#schema, this.#selection)),
+            previous,
+        );
+
+        const saved = await this.#mutateFn(mutation, this.#toMutationArguments());
+        return saved as EntityBlueprint.Type<B>[];
+    }
+
     async delete(entity: EntityBlueprint.Type<B>): Promise<EntityBlueprint.Type<B> | undefined>;
     async delete(entities: EntityBlueprint.Type<B>[]): Promise<EntityBlueprint.Type<B>[]>;
     async delete(

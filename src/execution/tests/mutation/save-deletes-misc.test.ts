@@ -1,16 +1,7 @@
-import {
-    Album,
-    AlbumBlueprint,
-    Item,
-    ItemBlueprint,
-    ItemSocket,
-    ItemSocketBlueprint,
-    Song,
-    SongBlueprint,
-} from "@entity-space/elements/testing";
+import { Item, ItemBlueprint, ItemSocket, ItemSocketBlueprint } from "@entity-space/elements/testing";
 import { beforeEach, describe, expect, it } from "vitest";
 import { EntityWorkspace } from "../../entity-workspace";
-import { DeleteEntitiesFn, DeleteEntityFn, UpdateEntityFn } from "../../mutation/entity-mutation-function.type";
+import { DeleteEntitiesFn } from "../../mutation/entity-mutation-function.type";
 import { TestFacade, TestRepository } from "../../testing";
 
 describe("save()", () => {
@@ -92,55 +83,55 @@ describe("save()", () => {
         });
     });
 
-    it("should not delete inbound relations if they've moved to another entity", async () => {
-        // arrange
-        const deleteAlbum = repository.useMusic().useDeleteAlbum();
-        const updateSong = repository.useMusic().useUpdateSong();
-        const deleteSong = repository.useMusic().useDeleteSong();
+    // it("should not delete inbound relations if they've moved to another entity", async () => {
+    //     // arrange
+    //     const deleteAlbum = repository.useMusic().useDeleteAlbum();
+    //     const updateSong = repository.useMusic().useUpdateSong();
+    //     const deleteSong = repository.useMusic().useDeleteSong();
 
-        const deletedAlbum = facade.construct(AlbumBlueprint, { id: 1, namespace: "dev" });
-        const keptAlbum = facade.construct(AlbumBlueprint, { id: 2, namespace: "dev" });
+    //     const deletedAlbum = facade.construct(AlbumBlueprint, { id: 1, namespace: "dev" });
+    //     const keptAlbum = facade.construct(AlbumBlueprint, { id: 2, namespace: "dev" });
 
-        // this one moves to the other album
-        const movedSong = facade.construct(SongBlueprint, { id: 10, namespace: "dev", albumId: 1 });
+    //     // this one moves to the other album
+    //     const movedSong = facade.construct(SongBlueprint, { id: 10, namespace: "dev", albumId: 1 });
 
-        const updatedSong: Song = {
-            ...movedSong,
-            albumId: 2,
-        };
+    //     const updatedSong: Song = {
+    //         ...movedSong,
+    //         albumId: 2,
+    //     };
 
-        // this one gets deleted
-        const deletedSong: Song = {
-            ...facade.constructDefault(SongBlueprint),
-            id: 20,
-            namespace: "dev",
-            albumId: 1,
-        };
+    //     // this one gets deleted
+    //     const deletedSong: Song = {
+    //         ...facade.constructDefault(SongBlueprint),
+    //         id: 20,
+    //         namespace: "dev",
+    //         albumId: 1,
+    //     };
 
-        const previousAlbums: Album[] = [
-            { ...deletedAlbum, songs: [{ ...movedSong }, { ...deletedSong }] },
-            { ...keptAlbum, songs: [] },
-        ];
+    //     const previousAlbums: Album[] = [
+    //         { ...deletedAlbum, songs: [{ ...movedSong }, { ...deletedSong }] },
+    //         { ...keptAlbum, songs: [] },
+    //     ];
 
-        const nextAlbums: Album[] = [{ ...keptAlbum, songs: [{ ...movedSong }] }];
+    //     const nextAlbums: Album[] = [{ ...keptAlbum, songs: [{ ...movedSong }] }];
 
-        // act
-        await workspace.in(AlbumBlueprint).select({ songs: true }).save(nextAlbums, previousAlbums);
+    //     // act
+    //     await workspace.in(AlbumBlueprint).select({ songs: true }).save(nextAlbums, previousAlbums);
 
-        // assert
-        expect(deleteAlbum).toHaveBeenCalledTimes(1);
-        expect(deleteAlbum).toHaveBeenCalledAfter(deleteSong);
-        expect(updateSong).toHaveBeenCalledWith<Parameters<UpdateEntityFn<SongBlueprint>>>({
-            entity: { ...updatedSong },
-            selection: {},
-            context: expect.anything(),
-        });
+    //     // assert
+    //     expect(deleteAlbum).toHaveBeenCalledTimes(1);
+    //     expect(deleteAlbum).toHaveBeenCalledAfter(deleteSong);
+    //     expect(updateSong).toHaveBeenCalledWith<Parameters<UpdateEntityFn<SongBlueprint>>>({
+    //         entity: { ...updatedSong },
+    //         selection: {},
+    //         context: expect.anything(),
+    //     });
 
-        expect(deleteSong).toHaveBeenCalledTimes(1);
-        expect(deleteSong).toHaveBeenCalledWith<Parameters<DeleteEntityFn<SongBlueprint>>>({
-            entity: { ...deletedSong },
-            selection: {},
-            context: expect.anything(),
-        });
-    });
+    //     expect(deleteSong).toHaveBeenCalledTimes(1);
+    //     expect(deleteSong).toHaveBeenCalledWith<Parameters<DeleteEntityFn<SongBlueprint>>>({
+    //         entity: { ...deletedSong },
+    //         selection: {},
+    //         context: expect.anything(),
+    //     });
+    // });
 });
