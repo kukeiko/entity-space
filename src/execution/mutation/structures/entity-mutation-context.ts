@@ -1,5 +1,5 @@
 import { EntityMutationOptions } from "../../execution-arguments.interface";
-import { EntityMutation } from "../entity-mutation";
+import { EntityMutation } from "./entity-mutation";
 
 export class EntityMutationContext {
     constructor(mutation: EntityMutation, options: EntityMutationOptions) {

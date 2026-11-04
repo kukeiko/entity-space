@@ -1,7 +1,6 @@
 import { Entity, EntityRelationSelection, EntitySchema } from "@entity-space/elements";
 import { Path, readPath } from "@entity-space/utils";
-import { partition } from "lodash";
-import { EntityChange, EntityChangeType } from "./structures/entity-change";
+import { EntityChange } from "./entity-change";
 
 export class EntityChanges {
     constructor(
@@ -40,25 +39,17 @@ export class EntityChanges {
         return readPath(path, this.#previous);
     }
 
-    subtractChanges(
-        types: readonly EntityChangeType[],
-        // [todo] ❌ do we really need the schema here?
-        schema: EntitySchema,
-        entities: readonly Entity[],
-    ): [changes: EntityChange[], open: EntityChanges | undefined] {
-        const [subtracted, open] = partition(
-            this.#changes,
-            change =>
-                change.isType(types) &&
-                change.getSchema().getName() === schema.getName() &&
-                entities.includes(change.getEntity()),
-        );
+    getChanges(): readonly EntityChange[] {
+        return this.#changes;
+    }
 
-        return [
-            subtracted,
-            open.length
-                ? new EntityChanges(this.#schema, this.#selection, open, this.#entities, this.#previous)
-                : undefined,
-        ];
+    with(patch: { changes?: EntityChange[] | null }): EntityChanges {
+        return new EntityChanges(
+            this.#schema,
+            this.#selection,
+            patch.changes === null ? [] : (patch.changes ?? this.#changes),
+            this.#entities,
+            this.#previous,
+        );
     }
 }

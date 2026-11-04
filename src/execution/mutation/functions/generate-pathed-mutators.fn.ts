@@ -1,7 +1,7 @@
 import { EntitySchema, EntitySelection, selectionToPathedRelatedSchemas } from "@entity-space/elements";
 import { toPathSegments } from "@entity-space/utils";
-import { EntityServiceContainer } from "../entity-service-container";
-import { PathedEntityMutator } from "./pathed-entity-mutator";
+import { EntityServiceContainer } from "../../entity-service-container";
+import { PathedEntityMutator } from "../pathed-entity-mutator";
 
 export function generatePathedMutators(
     services: EntityServiceContainer,

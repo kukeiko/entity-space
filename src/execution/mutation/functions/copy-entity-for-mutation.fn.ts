@@ -1,5 +1,5 @@
 import { copyEntity, Entity, getSelection } from "@entity-space/elements";
-import { AcceptedEntityMutation } from "../accepted-entity-mutation";
+import { AcceptedEntityMutation } from "../structures/accepted-entity-mutation";
 
 export function copyEntityForMutation(mutation: AcceptedEntityMutation, entity: Entity, isSave = false): Entity {
     const schema = mutation.getSchema();

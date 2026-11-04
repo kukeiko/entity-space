@@ -11,7 +11,7 @@ import {
 } from "@entity-space/elements";
 import { joinPaths, Path } from "@entity-space/utils";
 import { EntityChangesBuilder } from "../entity-changes-builder";
-import { EntityMutation } from "../entity-mutation";
+import { EntityMutation } from "../structures/entity-mutation";
 
 function addCreateChanges(
     builder: EntityChangesBuilder,

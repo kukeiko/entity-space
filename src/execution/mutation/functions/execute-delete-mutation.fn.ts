@@ -1,8 +1,8 @@
 import { toEntityPairs } from "@entity-space/elements";
 import { deleteFromCache } from "../../cache/delete-from-cache.fn";
 import { EntityServiceContainer } from "../../entity-service-container";
-import { AcceptedEntityMutation } from "../accepted-entity-mutation";
 import { EntityMutatorType } from "../entity-mutator";
+import { AcceptedEntityMutation } from "../structures/accepted-entity-mutation";
 import { EntityMutationContext } from "../structures/entity-mutation-context";
 import { copyEntityForMutation } from "./copy-entity-for-mutation.fn";
 

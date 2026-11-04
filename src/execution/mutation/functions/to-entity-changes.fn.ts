@@ -1,6 +1,6 @@
-import { EntityChanges } from "../entity-changes";
 import { EntityChangesBuilder } from "../entity-changes-builder";
-import { EntityMutation } from "../entity-mutation";
+import { EntityChanges } from "../structures/entity-changes";
+import { EntityMutation } from "../structures/entity-mutation";
 import { addChangeRelations } from "./add-change-relations.fn";
 import { addEntityChanges } from "./add-entity-changes.fn";
 

@@ -7,10 +7,11 @@ import {
 } from "@entity-space/elements";
 import { joinPaths, Path } from "@entity-space/utils";
 import { isEmpty, uniq } from "lodash";
-import { AcceptedEntityMutation } from "./accepted-entity-mutation";
-import { EntityChanges } from "./entity-changes";
 import { EntityMutationFn, EntityMutator, EntityMutatorType } from "./entity-mutator";
+import { subtractChanges } from "./functions/subtract-changes.fn";
+import { AcceptedEntityMutation } from "./structures/accepted-entity-mutation";
 import { EntityChange, EntityChangeType } from "./structures/entity-change";
+import { EntityChanges } from "./structures/entity-changes";
 
 export class ExplicitEntityMutator extends EntityMutator {
     constructor(
@@ -82,11 +83,11 @@ export class ExplicitEntityMutator extends EntityMutator {
         let open: EntityChanges | undefined = changes;
 
         if (schema.hasId()) {
-            [acceptedChanges, open] = changes.subtractChanges(
+            [acceptedChanges, open] = subtractChanges(
+                changes,
                 this.#type === EntityMutatorType.Save
                     ? [EntityChangeType.Create, EntityChangeType.Update]
                     : [this.#type],
-                schema,
                 entities,
             );
 
@@ -95,11 +96,7 @@ export class ExplicitEntityMutator extends EntityMutator {
                 open &&
                 (this.#type === EntityMutatorType.Delete || (!isRoot && this.#type === EntityMutatorType.Save))
             ) {
-                const [acceptedDeletionChanges, nextOpen] = open.subtractChanges(
-                    [EntityMutatorType.Delete],
-                    schema,
-                    previous,
-                );
+                const [acceptedDeletionChanges, nextOpen] = subtractChanges(open, [EntityMutatorType.Delete], previous);
                 acceptedChanges.push(...acceptedDeletionChanges);
                 open = nextOpen;
             }

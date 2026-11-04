@@ -1,4 +1,4 @@
-import { AcceptedEntityMutation } from "./accepted-entity-mutation";
+import { AcceptedEntityMutation } from "../structures/accepted-entity-mutation";
 
 export function sortAcceptedMutationsByDependency(
     acceptedMutations: readonly AcceptedEntityMutation[],

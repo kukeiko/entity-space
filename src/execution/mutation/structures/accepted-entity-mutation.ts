@@ -1,8 +1,8 @@
 import { Entity, EntityRelationSelection, EntitySchema } from "@entity-space/elements";
-import { EntityMutationFn, EntityMutatorType } from "./entity-mutator";
-import { EntityChange } from "./structures/entity-change";
-import { EntityChangeDependency } from "./structures/entity-change-dependency";
-import { EntityMutationContext } from "./structures/entity-mutation-context";
+import { EntityMutationFn, EntityMutatorType } from "../entity-mutator";
+import { EntityChange } from "./entity-change";
+import { EntityChangeDependency } from "./entity-change-dependency";
+import { EntityMutationContext } from "./entity-mutation-context";
 
 export class AcceptedEntityMutation {
     constructor(

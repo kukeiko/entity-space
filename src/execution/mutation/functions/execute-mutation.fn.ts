@@ -1,5 +1,5 @@
 import { EntityServiceContainer } from "../../entity-service-container";
-import { AcceptedEntityMutation } from "../accepted-entity-mutation";
+import { AcceptedEntityMutation } from "../structures/accepted-entity-mutation";
 import { EntityMutationContext } from "../structures/entity-mutation-context";
 import { executeCreateMutation } from "./execute-create-mutation.fn";
 import { executeDeleteMutation } from "./execute-delete-mutation.fn";

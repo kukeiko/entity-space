@@ -1,7 +1,7 @@
 import { Path } from "@entity-space/utils";
-import { AcceptedEntityMutation } from "./accepted-entity-mutation";
-import { EntityChanges } from "./entity-changes";
 import { EntityMutator } from "./entity-mutator";
+import { AcceptedEntityMutation } from "./structures/accepted-entity-mutation";
+import { EntityChanges } from "./structures/entity-changes";
 
 export class PathedEntityMutator extends EntityMutator {
     constructor(path: Path, mutator: EntityMutator) {

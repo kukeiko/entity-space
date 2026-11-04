@@ -1,7 +1,7 @@
 import { Entity, EntityRelationSelection } from "@entity-space/elements";
 import { Path } from "@entity-space/utils";
-import { AcceptedEntityMutation } from "./accepted-entity-mutation";
-import { EntityChanges } from "./entity-changes";
+import { AcceptedEntityMutation } from "./structures/accepted-entity-mutation";
+import { EntityChanges } from "./structures/entity-changes";
 import { EntityMutationContext } from "./structures/entity-mutation-context";
 
 export type EntityMutationFn = (

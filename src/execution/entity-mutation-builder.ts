@@ -7,7 +7,7 @@ import {
     unpackSelection,
 } from "@entity-space/elements";
 import { EntityMutationCacheOptions, EntityMutationOptions } from "./execution-arguments.interface";
-import { EntityMutation, EntityMutationType } from "./mutation/entity-mutation";
+import { EntityMutation, EntityMutationType } from "./mutation/structures/entity-mutation";
 
 // [todo] ❌ add method "markWriteRelationIdsOnly(selection)" (or similar) so user can have the option to have relation ids written without mutating the selected relation
 // [todo] ❌ S is unused
