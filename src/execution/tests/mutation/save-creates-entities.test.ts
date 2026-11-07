@@ -570,6 +570,8 @@ describe("save() creates one entity", () => {
     // [todo] 🧪 i thought this test was redundant, but when trying to move mutation dependencies to entity-changes,
     // this was the only test that reported an issue, as "sortAcceptedMutationsByDependency" erroneously allowed
     // a mutation to be a dependency of itself.
+    // [update] this is also the only test that failed when I started using AcceptedEntityMutation.getChangedEntities() instead of getEntities().
+    // looks like I need more tests with mutators that accept a selection
     it("save one entity incl. related", async () => {
         // arrange
         const socket: ItemSocket = {

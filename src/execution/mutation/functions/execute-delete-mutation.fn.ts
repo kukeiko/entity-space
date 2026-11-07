@@ -4,7 +4,7 @@ import { EntityServiceContainer } from "../../entity-service-container";
 import { EntityMutatorType } from "../entity-mutator";
 import { AcceptedEntityMutation } from "../structures/accepted-entity-mutation";
 import { EntityMutationContext } from "../structures/entity-mutation-context";
-import { copyEntityForMutation } from "./copy-entity-for-mutation.fn";
+import { copyEntitiesForMutationDispatch } from "./copy-entities-for-mutation-dispatch.fn";
 
 export async function executeDeleteMutation(
     mutation: AcceptedEntityMutation,
@@ -12,23 +12,16 @@ export async function executeDeleteMutation(
     services: EntityServiceContainer,
 ): Promise<void> {
     const schema = mutation.getSchema();
+    const rootEntities = mutation.getAcceptedPreviousRootEntities();
 
     // [todo] ❌ we need to splice the original entities if the user just wants do "delete" (i.e. there is no previous),
     // so that in case of an error (service temporarily unavailable), and some entities have already been deleted successfully,
     // entity-space doesn't try to delete those again.
 
-    const map = new Map(
-        mutation.getPreviousEntities().map(entity => {
-            const copy = copyEntityForMutation(mutation, entity);
-
-            return [copy, entity];
-        }),
-    );
-
-    const copies = Array.from(map.keys());
+    const [copies, originals] = copyEntitiesForMutationDispatch(mutation, rootEntities);
+    const relationSelection = mutation.getSelection();
     services.getTracing().dispatchedToMutator(schema, EntityMutatorType.Delete, copies);
     const deleted = await mutation.mutate(copies, mutation.getSelection() ?? {}, context);
-    const originals = Array.from(map.values());
 
     for (const [current, previous] of toEntityPairs(schema, originals, deleted)) {
         if (!previous) {
@@ -48,6 +41,6 @@ export async function executeDeleteMutation(
     const cacheOptions = context.getOptions().cache;
 
     if (cacheOptions) {
-        deleteFromCache(services, schema, mutation.getPreviousEntities(), mutation.getSelection(), cacheOptions.key);
+        deleteFromCache(services, schema, rootEntities, relationSelection, cacheOptions.key);
     }
 }

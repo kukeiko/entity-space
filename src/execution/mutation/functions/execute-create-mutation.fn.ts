@@ -4,7 +4,7 @@ import { EntityServiceContainer } from "../../entity-service-container";
 import { EntityMutatorType } from "../entity-mutator";
 import { AcceptedEntityMutation } from "../structures/accepted-entity-mutation";
 import { EntityMutationContext } from "../structures/entity-mutation-context";
-import { copyEntityForMutation } from "./copy-entity-for-mutation.fn";
+import { copyEntitiesForMutationDispatch } from "./copy-entities-for-mutation-dispatch.fn";
 
 export async function executeCreateMutation(
     mutation: AcceptedEntityMutation,
@@ -12,27 +12,20 @@ export async function executeCreateMutation(
     services: EntityServiceContainer,
 ): Promise<void> {
     const schema = mutation.getSchema();
+    const rootEntities = mutation.getAcceptedRootEntities();
 
     for (const dependency of mutation.getOutboundDependencies()) {
         services.getTracing().writingDependency(dependency);
-        dependency.writeIds(schema, mutation.getEntities());
+        dependency.writeIds(schema, rootEntities);
     }
 
-    const map = new Map(
-        mutation.getEntities().map(entity => {
-            const copy = copyEntityForMutation(mutation, entity);
-
-            return [copy, entity];
-        }),
-    );
-
-    const copies = Array.from(map.keys());
+    const [copies, originals] = copyEntitiesForMutationDispatch(mutation, rootEntities);
+    const relationSelection = mutation.getSelection();
+    const fullSelection = getSelection(schema, relationSelection);
     services.getTracing().dispatchedToMutator(schema, EntityMutatorType.Create, copies);
-    const created = await mutation.mutate(copies, mutation.getSelection() ?? {}, context);
-    assignCreatedIds(schema, mutation.getSelection() ?? {}, mutation.getEntities(), created);
-    const selection = getSelection(schema, mutation.getSelection());
-    const originals = Array.from(map.values());
-    assignEntitiesUsingIds(schema, selection, originals, created);
+    const created = await mutation.mutate(copies, relationSelection, context);
+    assignCreatedIds(schema, relationSelection, rootEntities, created);
+    assignEntitiesUsingIds(schema, fullSelection, originals, created);
 
     for (const dependency of mutation.getInboundDependencies()) {
         services.getTracing().writingDependency(dependency);
@@ -42,8 +35,8 @@ export async function executeCreateMutation(
     const cacheOptions = context.getOptions().cache;
 
     if (cacheOptions) {
-        for (const entity of mutation.getEntities()) {
-            upsertToCache(services, schema, entity, mutation.getSelection(), cacheOptions.key);
+        for (const entity of rootEntities) {
+            upsertToCache(services, schema, entity, relationSelection, cacheOptions.key);
         }
     }
 }

@@ -4,7 +4,7 @@ import { EntityServiceContainer } from "../../entity-service-container";
 import { EntityMutatorType } from "../entity-mutator";
 import { AcceptedEntityMutation } from "../structures/accepted-entity-mutation";
 import { EntityMutationContext } from "../structures/entity-mutation-context";
-import { copyEntityForMutation } from "./copy-entity-for-mutation.fn";
+import { copyEntitiesForMutationDispatch } from "./copy-entities-for-mutation-dispatch.fn";
 
 export async function executeSaveMutation(
     mutation: AcceptedEntityMutation,
@@ -12,27 +12,20 @@ export async function executeSaveMutation(
     services: EntityServiceContainer,
 ): Promise<void> {
     const schema = mutation.getSchema();
+    const rootEntities = mutation.getAcceptedRootEntities();
 
     for (const dependency of mutation.getOutboundDependencies()) {
         services.getTracing().writingDependency(dependency);
-        dependency.writeIds(schema, mutation.getEntities());
+        dependency.writeIds(schema, rootEntities);
     }
 
-    const map = new Map(
-        mutation.getEntities().map(entity => {
-            const copy = copyEntityForMutation(mutation, entity, true);
-
-            return [copy, entity];
-        }),
-    );
-
-    const copies = Array.from(map.keys());
+    const [copies, originals] = copyEntitiesForMutationDispatch(mutation, rootEntities, true);
+    const relationSelection = mutation.getSelection();
+    const fullSelection = getSelection(schema, relationSelection);
     services.getTracing().dispatchedToMutator(schema, EntityMutatorType.Save, copies);
-    const saved = await mutation.mutate(copies, mutation.getSelection() ?? {}, context);
-    assignCreatedIds(schema, mutation.getSelection() ?? {}, mutation.getEntities(), saved);
-    const selection = getSelection(schema, mutation.getSelection());
-    const originals = Array.from(map.values());
-    assignEntitiesUsingIds(schema, selection, originals, saved);
+    const saved = await mutation.mutate(copies, relationSelection, context);
+    assignCreatedIds(schema, relationSelection, rootEntities, saved);
+    assignEntitiesUsingIds(schema, fullSelection, originals, saved);
 
     for (const dependency of mutation.getInboundDependencies()) {
         services.getTracing().writingDependency(dependency);
@@ -41,9 +34,10 @@ export async function executeSaveMutation(
 
     const cacheOptions = context.getOptions().cache;
 
+    // [todo] ❓ consider upserting at the end of mutation, in workspace somewhere, to reduce reactive query triggers
     if (cacheOptions) {
-        for (const entity of mutation.getEntities()) {
-            upsertToCache(services, schema, entity, mutation.getSelection(), cacheOptions.key);
+        for (const entity of rootEntities) {
+            upsertToCache(services, schema, entity, relationSelection, cacheOptions.key);
         }
     }
 

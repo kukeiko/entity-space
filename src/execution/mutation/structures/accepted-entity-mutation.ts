@@ -59,11 +59,11 @@ export class AcceptedEntityMutation {
         return this.#mutateFn(entities, selection, context);
     }
 
-    getEntities(): readonly Entity[] {
+    getAcceptedRootEntities(): readonly Entity[] {
         return this.#entities.filter(entity => this.includesEntity(entity));
     }
 
-    getPreviousEntities(): readonly Entity[] {
+    getAcceptedPreviousRootEntities(): readonly Entity[] {
         return (this.#previous ?? []).filter(entity => this.includesEntity(entity));
     }
 
