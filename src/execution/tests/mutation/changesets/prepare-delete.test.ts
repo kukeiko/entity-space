@@ -11,6 +11,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { EntityWorkspace } from "../../../entity-workspace";
 import { EntityMutationError } from "../../../mutation/entity-mutation-error";
 import {
+    EntityMutatorType,
     allDispatchedNames,
     dispatched,
     dispatchedNames,
@@ -44,7 +45,7 @@ describe("prepareDelete()", () => {
         ])("using %s", (_, options) => {
             it("should plan one delete per song without calling the mutator", () => {
                 // arrange
-                const del = backend.useSongs("delete", options);
+                const del = backend.useSongs(EntityMutatorType.Delete, options);
                 const songs = [song("A", { id: 1 }), song("B", { id: 2 })];
 
                 // act
@@ -60,7 +61,7 @@ describe("prepareDelete()", () => {
 
             it("should delete the songs", async () => {
                 // arrange
-                const del = backend.useSongs("delete", options);
+                const del = backend.useSongs(EntityMutatorType.Delete, options);
                 const songs = [song("A", { id: 1 }), song("B", { id: 2 })];
                 const songsBefore = structuredClone(songs);
 
@@ -78,7 +79,7 @@ describe("prepareDelete()", () => {
 
             it("should keep songs that failed to be deleted as previous and only retry those", async () => {
                 // arrange
-                const del = backend.useSongs("delete", options);
+                const del = backend.useSongs(EntityMutatorType.Delete, options);
                 backend.rejectName("B");
                 const changeset = workspace
                     .in(SongBlueprint)
@@ -106,7 +107,7 @@ describe("prepareDelete()", () => {
 
         it("should accept a single song instead of an array", async () => {
             // arrange
-            const del = backend.useSongs("delete");
+            const del = backend.useSongs(EntityMutatorType.Delete);
 
             // act
             const summary = await workspace
@@ -121,7 +122,7 @@ describe("prepareDelete()", () => {
 
         it("should fail all songs of a batch if the mutator throws", async () => {
             // arrange
-            const del = backend.useSongs("delete");
+            const del = backend.useSongs(EntityMutatorType.Delete);
             del.mockRejectedValueOnce(new Error("service unavailable"));
 
             // act
@@ -139,8 +140,8 @@ describe("prepareDelete()", () => {
 
         it.each<[string, () => void]>([
             ["no mutator exists", () => {}],
-            ["only a save mutator exists", () => backend.useSongs("save")],
-            ["only a delete mutator for artists exists", () => backend.useArtists("delete")],
+            ["only a save mutator exists", () => backend.useSongs(EntityMutatorType.Save)],
+            ["only a delete mutator for artists exists", () => backend.useArtists(EntityMutatorType.Delete)],
         ])("should throw if %s", (_, useMutators) => {
             // arrange
             useMutators();
@@ -153,7 +154,7 @@ describe("prepareDelete()", () => {
 
         it("should throw an EntityMutationError from the delete() shortcut and allow retrying", async () => {
             // arrange
-            backend.useSongs("delete");
+            backend.useSongs(EntityMutatorType.Delete);
             backend.rejectName("B");
 
             // act
@@ -186,8 +187,8 @@ describe("prepareDelete()", () => {
         ])("using %s for artists and songs", (_, songOptions, artistOptions) => {
             it("should delete the songs before their artists", async () => {
                 // arrange
-                const songs = backend.useSongs("delete", songOptions);
-                const artists = backend.useArtists("delete", artistOptions);
+                const songs = backend.useSongs(EntityMutatorType.Delete, songOptions);
+                const artists = backend.useArtists(EntityMutatorType.Delete, artistOptions);
 
                 // act
                 const changeset = workspace.in(ArtistBlueprint).select(select).prepareDelete(input());
@@ -208,8 +209,8 @@ describe("prepareDelete()", () => {
 
             it("should only block the artist whose song failed to be deleted", async () => {
                 // arrange
-                backend.useSongs("delete", songOptions);
-                const artists = backend.useArtists("delete", artistOptions);
+                backend.useSongs(EntityMutatorType.Delete, songOptions);
+                const artists = backend.useArtists(EntityMutatorType.Delete, artistOptions);
                 backend.rejectName("B");
 
                 // act
@@ -235,8 +236,8 @@ describe("prepareDelete()", () => {
 
             it("should delete the remaining song and its artist on retry", async () => {
                 // arrange
-                const songs = backend.useSongs("delete", songOptions);
-                const artists = backend.useArtists("delete", artistOptions);
+                const songs = backend.useSongs(EntityMutatorType.Delete, songOptions);
+                const artists = backend.useArtists(EntityMutatorType.Delete, artistOptions);
                 backend.rejectName("B");
                 const changeset = workspace.in(ArtistBlueprint).select(select).prepareDelete(input());
                 await changeset.execute();
@@ -261,7 +262,7 @@ describe("prepareDelete()", () => {
         ])("using %s", (_, options) => {
             it("should dispatch the artists together with their songs", async () => {
                 // arrange
-                const artists = backend.useArtists("delete", options);
+                const artists = backend.useArtists(EntityMutatorType.Delete, options);
 
                 // act
                 const changeset = workspace.in(ArtistBlueprint).select(select).prepareDelete(input());
@@ -282,7 +283,7 @@ describe("prepareDelete()", () => {
 
             it("should keep a song the backend refused to delete, while its artist is deleted", async () => {
                 // arrange
-                backend.useArtists("delete", options);
+                backend.useArtists(EntityMutatorType.Delete, options);
                 backend.rejectName("B");
 
                 // act
@@ -297,9 +298,9 @@ describe("prepareDelete()", () => {
 
         it("should prefer a delete mutator for artists including songs over separate mutators if registered first", async () => {
             // arrange
-            const aggregate = backend.useArtists("delete", { select });
-            const songs = backend.useSongs("delete");
-            const artists = backend.useArtists("delete");
+            const aggregate = backend.useArtists(EntityMutatorType.Delete, { select });
+            const songs = backend.useSongs(EntityMutatorType.Delete);
+            const artists = backend.useArtists(EntityMutatorType.Delete);
 
             // act
             await workspace.in(ArtistBlueprint).select(select).prepareDelete(input()).execute();
@@ -312,7 +313,7 @@ describe("prepareDelete()", () => {
 
         it("should throw if the artist delete mutator does not include songs and no song delete mutator exists", () => {
             // arrange
-            backend.useArtists("delete");
+            backend.useArtists(EntityMutatorType.Delete);
 
             // act & assert
             expect(() => workspace.in(ArtistBlueprint).select(select).prepareDelete(input())).toThrow(
@@ -322,8 +323,8 @@ describe("prepareDelete()", () => {
 
         it("should only delete the artists if the songs are not selected", async () => {
             // arrange
-            const songs = backend.useSongs("delete");
-            const artists = backend.useArtists("delete");
+            const songs = backend.useSongs(EntityMutatorType.Delete);
+            const artists = backend.useArtists(EntityMutatorType.Delete);
 
             // act
             await workspace.in(ArtistBlueprint).prepareDelete(input()).execute();
@@ -335,8 +336,8 @@ describe("prepareDelete()", () => {
 
         it("should only delete the artists if their songs are not loaded", async () => {
             // arrange
-            const songs = backend.useSongs("delete");
-            const artists = backend.useArtists("delete");
+            const songs = backend.useSongs(EntityMutatorType.Delete);
+            const artists = backend.useArtists(EntityMutatorType.Delete);
 
             // act
             const summary = await workspace
@@ -355,9 +356,9 @@ describe("prepareDelete()", () => {
     describe("songs with their artist and album (outbound relations)", () => {
         it("should not delete the artist or album of a deleted song", async () => {
             // arrange
-            const songs = backend.useSongs("delete");
-            const artists = backend.useArtists("delete");
-            const albums = backend.useAlbums("delete");
+            const songs = backend.useSongs(EntityMutatorType.Delete);
+            const artists = backend.useArtists(EntityMutatorType.Delete);
+            const albums = backend.useAlbums(EntityMutatorType.Delete);
 
             // act
             const summary = await workspace
@@ -383,7 +384,7 @@ describe("prepareDelete()", () => {
 
         it("should not require mutators for the artist or album of a deleted song", async () => {
             // arrange
-            backend.useSongs("delete");
+            backend.useSongs(EntityMutatorType.Delete);
 
             // act
             const summary = await workspace
@@ -400,9 +401,9 @@ describe("prepareDelete()", () => {
     describe("albums with their songs and the tags of those songs (nested relations)", () => {
         it("should delete the songs of an album, but not the tags of those songs", async () => {
             // arrange
-            const songs = backend.useSongs("delete");
-            const albums = backend.useAlbums("delete");
-            const tags = backend.useTags("delete");
+            const songs = backend.useSongs(EntityMutatorType.Delete);
+            const albums = backend.useAlbums(EntityMutatorType.Delete);
+            const tags = backend.useTags(EntityMutatorType.Delete);
 
             // act
             const changeset = workspace

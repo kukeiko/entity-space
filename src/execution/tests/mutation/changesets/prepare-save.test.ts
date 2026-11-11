@@ -11,12 +11,12 @@ import {
 import { beforeEach, describe, expect, it } from "vitest";
 import { EntityWorkspace } from "../../../entity-workspace";
 import {
+    EntityMutatorType,
     allDispatchedNames,
     dispatched,
     dispatchedNames,
     MusicBackend,
     MutatorOptions,
-    MutatorType,
     TestFacade,
 } from "../../../testing";
 
@@ -40,11 +40,11 @@ describe("prepareSave()", () => {
     });
 
     describe("songs without relations", () => {
-        describe.each<[string, MutatorType, MutatorOptions<Song>]>([
-            ["a batch create mutator", "create", {}],
-            ["a one-entity create mutator", "create", { one: true }],
-            ["a batch save mutator", "save", {}],
-            ["a one-entity save mutator", "save", { one: true }],
+        describe.each<[string, EntityMutatorType, MutatorOptions<Song>]>([
+            ["a batch create mutator", EntityMutatorType.Create, {}],
+            ["a one-entity create mutator", EntityMutatorType.Create, { one: true }],
+            ["a batch save mutator", EntityMutatorType.Save, {}],
+            ["a one-entity save mutator", EntityMutatorType.Save, { one: true }],
         ])("creating new songs using %s", (_, type, options) => {
             it("should plan one create per song without calling the mutator", () => {
                 // arrange
@@ -118,7 +118,7 @@ describe("prepareSave()", () => {
 
         it("should accept a single song instead of an array", async () => {
             // arrange
-            backend.useSongs("create");
+            backend.useSongs(EntityMutatorType.Create);
 
             // act
             const changeset = workspace.in(SongBlueprint).prepareSave(song("A"));
@@ -128,11 +128,11 @@ describe("prepareSave()", () => {
             expect(changeset.getNext()).toEqual([expect.objectContaining({ id: 301, name: "A" })]);
         });
 
-        describe.each<[string, MutatorType, MutatorOptions<Song>]>([
-            ["a batch update mutator", "update", {}],
-            ["a one-entity update mutator", "update", { one: true }],
-            ["a batch save mutator", "save", {}],
-            ["a one-entity save mutator", "save", { one: true }],
+        describe.each<[string, EntityMutatorType, MutatorOptions<Song>]>([
+            ["a batch update mutator", EntityMutatorType.Update, {}],
+            ["a one-entity update mutator", EntityMutatorType.Update, { one: true }],
+            ["a batch save mutator", EntityMutatorType.Save, {}],
+            ["a one-entity save mutator", EntityMutatorType.Save, { one: true }],
         ])("updating existing songs using %s", (_, type, options) => {
             it("should only dispatch the songs that changed compared to previous", async () => {
                 // arrange
@@ -186,7 +186,7 @@ describe("prepareSave()", () => {
 
         it("should not plan anything for songs that did not change", async () => {
             // arrange
-            const mutator = backend.useSongs("save");
+            const mutator = backend.useSongs(EntityMutatorType.Save);
             const songs = [song("A", { id: 1 })];
 
             // act
@@ -201,8 +201,8 @@ describe("prepareSave()", () => {
 
         it("should dispatch creates and updates to their respective mutators", async () => {
             // arrange
-            const create = backend.useSongs("create");
-            const update = backend.useSongs("update");
+            const create = backend.useSongs(EntityMutatorType.Create);
+            const update = backend.useSongs(EntityMutatorType.Update);
             const previous = [song("A", { id: 1 })];
             const next = [song("A*", { id: 1 }), song("B")];
 
@@ -217,7 +217,7 @@ describe("prepareSave()", () => {
 
         it("should dispatch creates and updates to a save mutator in one call", async () => {
             // arrange
-            const save = backend.useSongs("save");
+            const save = backend.useSongs(EntityMutatorType.Save);
             const previous = [song("A", { id: 1 })];
             const next = [song("A*", { id: 1 }), song("B")];
 
@@ -232,8 +232,8 @@ describe("prepareSave()", () => {
 
         it("should prefer the mutator that was registered first", async () => {
             // arrange
-            const create = backend.useSongs("create");
-            const save = backend.useSongs("save");
+            const create = backend.useSongs(EntityMutatorType.Create);
+            const save = backend.useSongs(EntityMutatorType.Save);
 
             // act
             await workspace
@@ -248,7 +248,7 @@ describe("prepareSave()", () => {
 
         it("should throw if only an update mutator exists for new songs", () => {
             // arrange
-            const update = backend.useSongs("update");
+            const update = backend.useSongs(EntityMutatorType.Update);
 
             // act & assert
             expect(() => workspace.in(SongBlueprint).prepareSave([song("A")])).toThrow(
@@ -259,7 +259,7 @@ describe("prepareSave()", () => {
 
         it("should throw if only a create mutator exists for changed songs", () => {
             // arrange
-            backend.useSongs("create");
+            backend.useSongs(EntityMutatorType.Create);
 
             // act & assert
             expect(() =>
@@ -285,22 +285,22 @@ describe("prepareSave()", () => {
         >([
             [
                 "batch create mutators for artists and songs",
-                () => ({ artists: backend.useArtists("create"), songs: backend.useSongs("create") }),
+                () => ({ artists: backend.useArtists(EntityMutatorType.Create), songs: backend.useSongs(EntityMutatorType.Create) }),
             ],
             [
                 "one-entity create mutators for artists and songs",
                 () => ({
-                    artists: backend.useArtists("create", { one: true }),
-                    songs: backend.useSongs("create", { one: true }),
+                    artists: backend.useArtists(EntityMutatorType.Create, { one: true }),
+                    songs: backend.useSongs(EntityMutatorType.Create, { one: true }),
                 }),
             ],
             [
                 "batch save mutators for artists and songs",
-                () => ({ artists: backend.useArtists("save"), songs: backend.useSongs("save") }),
+                () => ({ artists: backend.useArtists(EntityMutatorType.Save), songs: backend.useSongs(EntityMutatorType.Save) }),
             ],
             [
                 "a create mutator for artists and a save mutator for songs",
-                () => ({ artists: backend.useArtists("create"), songs: backend.useSongs("save") }),
+                () => ({ artists: backend.useArtists(EntityMutatorType.Create), songs: backend.useSongs(EntityMutatorType.Save) }),
             ],
         ])("creating a song and its new artist using %s", (_, useMutators) => {
             it("should create the artist first and pass its Id to the song", async () => {
@@ -381,10 +381,10 @@ describe("prepareSave()", () => {
             });
         });
 
-        describe.each<[string, MutatorType, MutatorOptions<Song>]>([
-            ["a batch save mutator for songs that includes the artist", "save", { select }],
-            ["a one-entity save mutator for songs that includes the artist", "save", { select, one: true }],
-            ["a batch create mutator for songs that includes the artist", "create", { select }],
+        describe.each<[string, EntityMutatorType, MutatorOptions<Song>]>([
+            ["a batch save mutator for songs that includes the artist", EntityMutatorType.Save, { select }],
+            ["a one-entity save mutator for songs that includes the artist", EntityMutatorType.Save, { select, one: true }],
+            ["a batch create mutator for songs that includes the artist", EntityMutatorType.Create, { select }],
         ])("creating a song and its new artist using %s", (_, type, options) => {
             it("should dispatch the song together with its artist in one call", async () => {
                 // arrange
@@ -436,7 +436,7 @@ describe("prepareSave()", () => {
 
         it("should throw if the song mutator does not include the artist and no artist mutator exists", () => {
             // arrange
-            backend.useSongs("create");
+            backend.useSongs(EntityMutatorType.Create);
 
             // act & assert
             expect(() =>
@@ -449,8 +449,8 @@ describe("prepareSave()", () => {
 
         it("should create an artist shared by multiple songs only once", async () => {
             // arrange
-            const artists = backend.useArtists("create");
-            const songs = backend.useSongs("create");
+            const artists = backend.useArtists(EntityMutatorType.Create);
+            const songs = backend.useSongs(EntityMutatorType.Create);
             const sunnexo = artist("Sunnexo");
 
             // act
@@ -472,8 +472,8 @@ describe("prepareSave()", () => {
 
         it("should only update the artist if nothing but the artist changed", async () => {
             // arrange
-            const artists = backend.useArtists("update");
-            const songs = backend.useSongs("update");
+            const artists = backend.useArtists(EntityMutatorType.Update);
+            const songs = backend.useSongs(EntityMutatorType.Update);
             const previous = [song("A", { id: 1, artistId: 7, artist: artist("Sunnexo", { id: 7 }) })];
             const next = [song("A", { id: 1, artistId: 7, artist: artist("Sunnexo*", { id: 7 }) })];
 
@@ -490,8 +490,8 @@ describe("prepareSave()", () => {
 
         it("should create a song for an existing, unchanged artist without touching the artist", async () => {
             // arrange
-            const artists = backend.useArtists("save");
-            const songs = backend.useSongs("create");
+            const artists = backend.useArtists(EntityMutatorType.Save);
+            const songs = backend.useSongs(EntityMutatorType.Create);
             const sunnexo = artist("Sunnexo", { id: 7 });
             const previous = [song("A", { id: 1, artistId: 7, artist: sunnexo })];
             const next = [...structuredClone(previous), song("B", { artist: structuredClone(sunnexo) })];
@@ -507,8 +507,8 @@ describe("prepareSave()", () => {
 
         it("should ignore the artist if it is not selected", async () => {
             // arrange
-            const artists = backend.useArtists("create");
-            const songs = backend.useSongs("create");
+            const artists = backend.useArtists(EntityMutatorType.Create);
+            const songs = backend.useSongs(EntityMutatorType.Create);
 
             // act
             const changeset = workspace.in(SongBlueprint).prepareSave([song("A", { artist: artist("Sunnexo") })]);
@@ -523,8 +523,8 @@ describe("prepareSave()", () => {
 
         it("should keep creating songs that do not depend on an artist that was rejected", async () => {
             // arrange
-            backend.useArtists("create");
-            const songs = backend.useSongs("create");
+            backend.useArtists(EntityMutatorType.Create);
+            const songs = backend.useSongs(EntityMutatorType.Create);
             backend.rejectName("");
 
             // act
@@ -557,18 +557,18 @@ describe("prepareSave()", () => {
         >([
             [
                 "batch create mutators for artists and songs",
-                () => ({ artists: backend.useArtists("create"), songs: backend.useSongs("create") }),
+                () => ({ artists: backend.useArtists(EntityMutatorType.Create), songs: backend.useSongs(EntityMutatorType.Create) }),
             ],
             [
                 "one-entity create mutators for artists and songs",
                 () => ({
-                    artists: backend.useArtists("create", { one: true }),
-                    songs: backend.useSongs("create", { one: true }),
+                    artists: backend.useArtists(EntityMutatorType.Create, { one: true }),
+                    songs: backend.useSongs(EntityMutatorType.Create, { one: true }),
                 }),
             ],
             [
                 "batch save mutators for artists and songs",
-                () => ({ artists: backend.useArtists("save"), songs: backend.useSongs("save") }),
+                () => ({ artists: backend.useArtists(EntityMutatorType.Save), songs: backend.useSongs(EntityMutatorType.Save) }),
             ],
         ])("creating an artist and its new songs using %s", (_, useMutators) => {
             it("should create the artist first and pass its Id to the songs", async () => {
@@ -660,11 +660,11 @@ describe("prepareSave()", () => {
             });
         });
 
-        describe.each<[string, MutatorType, MutatorOptions<Artist>]>([
-            ["a batch save mutator for artists that includes songs", "save", { select }],
-            ["a one-entity save mutator for artists that includes songs", "save", { select, one: true }],
-            ["a batch create mutator for artists that includes songs", "create", { select }],
-            ["a one-entity create mutator for artists that includes songs", "create", { select, one: true }],
+        describe.each<[string, EntityMutatorType, MutatorOptions<Artist>]>([
+            ["a batch save mutator for artists that includes songs", EntityMutatorType.Save, { select }],
+            ["a one-entity save mutator for artists that includes songs", EntityMutatorType.Save, { select, one: true }],
+            ["a batch create mutator for artists that includes songs", EntityMutatorType.Create, { select }],
+            ["a one-entity create mutator for artists that includes songs", EntityMutatorType.Create, { select, one: true }],
         ])("creating an artist and its new songs using %s", (_, type, options) => {
             it("should dispatch the artist together with its songs in one call", async () => {
                 // arrange
@@ -718,8 +718,8 @@ describe("prepareSave()", () => {
 
         it("should only let an artist save mutator including songs delete songs of the artists it saves", async () => {
             // arrange
-            const artists = backend.useArtists("save", { select });
-            const songDeletes = backend.useSongs("delete");
+            const artists = backend.useArtists(EntityMutatorType.Save, { select });
+            const songDeletes = backend.useSongs(EntityMutatorType.Delete);
             const previous = [
                 artist("changed", {
                     id: 7,
@@ -750,7 +750,7 @@ describe("prepareSave()", () => {
 
         it("should throw if the artist mutator does not include songs and no song mutator exists", () => {
             // arrange
-            backend.useArtists("create");
+            backend.useArtists(EntityMutatorType.Create);
 
             // act & assert
             expect(() =>
@@ -787,10 +787,10 @@ describe("prepareSave()", () => {
 
             it("should dispatch song creates, updates and deletes to their respective mutators", async () => {
                 // arrange
-                const artists = backend.useArtists("save");
-                const create = backend.useSongs("create");
-                const update = backend.useSongs("update");
-                const del = backend.useSongs("delete");
+                const artists = backend.useArtists(EntityMutatorType.Save);
+                const create = backend.useSongs(EntityMutatorType.Create);
+                const update = backend.useSongs(EntityMutatorType.Update);
+                const del = backend.useSongs(EntityMutatorType.Delete);
 
                 // act
                 const changeset = workspace.in(ArtistBlueprint).select(select).prepareSave(next, previous);
@@ -821,8 +821,8 @@ describe("prepareSave()", () => {
 
             it("should dispatch song creates and updates to a song save mutator", async () => {
                 // arrange
-                const save = backend.useSongs("save");
-                const del = backend.useSongs("delete");
+                const save = backend.useSongs(EntityMutatorType.Save);
+                const del = backend.useSongs(EntityMutatorType.Delete);
 
                 // act
                 await workspace.in(ArtistBlueprint).select(select).prepareSave(next, previous).execute();
@@ -834,7 +834,7 @@ describe("prepareSave()", () => {
 
             it("should throw if no song delete mutator exists for the removed song", () => {
                 // arrange
-                backend.useSongs("save");
+                backend.useSongs(EntityMutatorType.Save);
 
                 // act & assert
                 expect(() => workspace.in(ArtistBlueprint).select(select).prepareSave(next, previous)).toThrow(
@@ -844,7 +844,7 @@ describe("prepareSave()", () => {
 
             it("should throw if only an artist save mutator including songs exists, but the artist did not change", () => {
                 // arrange
-                backend.useArtists("save", { select });
+                backend.useArtists(EntityMutatorType.Save, { select });
 
                 // act & assert
                 expect(() => workspace.in(ArtistBlueprint).select(select).prepareSave(next, previous)).toThrow(
@@ -854,7 +854,7 @@ describe("prepareSave()", () => {
 
             it("should dispatch the whole aggregate to an artist save mutator including songs if the artist changed", async () => {
                 // arrange
-                const artists = backend.useArtists("save", { select });
+                const artists = backend.useArtists(EntityMutatorType.Save, { select });
                 next.name = "Sunnexo*";
 
                 // act
@@ -878,9 +878,9 @@ describe("prepareSave()", () => {
 
             it("should keep a song that failed to be deleted as previous", async () => {
                 // arrange
-                backend.useSongs("save");
-                backend.useSongs("delete");
-                backend.rejectName("removed", ["delete"]);
+                backend.useSongs(EntityMutatorType.Save);
+                backend.useSongs(EntityMutatorType.Delete);
+                backend.rejectName("removed", [EntityMutatorType.Delete]);
 
                 // act
                 const changeset = workspace.in(ArtistBlueprint).select(select).prepareSave(next, previous);
@@ -896,8 +896,8 @@ describe("prepareSave()", () => {
 
             it("should not delete songs if the songs are omitted", async () => {
                 // arrange
-                const songs = backend.useSongs("delete");
-                const artists = backend.useArtists("update");
+                const songs = backend.useSongs(EntityMutatorType.Delete);
+                const artists = backend.useArtists(EntityMutatorType.Update);
                 const { songs: _, ...withoutSongs } = next;
 
                 // act
@@ -915,7 +915,7 @@ describe("prepareSave()", () => {
 
             it("should delete all songs if the songs are an empty array", async () => {
                 // arrange
-                const songs = backend.useSongs("delete");
+                const songs = backend.useSongs(EntityMutatorType.Delete);
 
                 // act
                 const changeset = workspace
@@ -931,7 +931,7 @@ describe("prepareSave()", () => {
 
             it("should not touch the songs if they are not selected", async () => {
                 // arrange
-                const artists = backend.useArtists("update");
+                const artists = backend.useArtists(EntityMutatorType.Update);
                 next.name = "Sunnexo*";
 
                 // act
@@ -954,9 +954,9 @@ describe("prepareSave()", () => {
 
         it("should create albums and the artist before the songs, using separate mutators", async () => {
             // arrange
-            const artists = backend.useArtists("create");
-            const songs = backend.useSongs("create");
-            const albums = backend.useAlbums("create");
+            const artists = backend.useArtists(EntityMutatorType.Create);
+            const songs = backend.useSongs(EntityMutatorType.Create);
+            const albums = backend.useAlbums(EntityMutatorType.Create);
 
             // act
             const changeset = workspace.in(ArtistBlueprint).select(select).prepareSave(input());
@@ -985,7 +985,7 @@ describe("prepareSave()", () => {
 
         it("should dispatch everything to an artist save mutator including songs and albums", async () => {
             // arrange
-            const artists = backend.useArtists("save", { select });
+            const artists = backend.useArtists(EntityMutatorType.Save, { select });
 
             // act
             const changeset = workspace.in(ArtistBlueprint).select(select).prepareSave(input());
@@ -1002,8 +1002,8 @@ describe("prepareSave()", () => {
 
         it("should create the album first if the artist save mutator only includes songs", async () => {
             // arrange
-            const artists = backend.useArtists("save", { select: { songs: true } });
-            const albums = backend.useAlbums("create");
+            const artists = backend.useArtists(EntityMutatorType.Save, { select: { songs: true } });
+            const albums = backend.useAlbums(EntityMutatorType.Create);
 
             // act
             const changeset = workspace.in(ArtistBlueprint).select(select).prepareSave(input());
@@ -1025,9 +1025,9 @@ describe("prepareSave()", () => {
 
         it("should block the songs of a rejected album, but still create the artist", async () => {
             // arrange
-            backend.useArtists("create");
-            const songs = backend.useSongs("create");
-            backend.useAlbums("create");
+            backend.useArtists(EntityMutatorType.Create);
+            const songs = backend.useSongs(EntityMutatorType.Create);
+            backend.useAlbums(EntityMutatorType.Create);
             backend.rejectName("Album");
 
             // act
@@ -1050,9 +1050,9 @@ describe("prepareSave()", () => {
 
         it("should not create albums if only the songs are selected", async () => {
             // arrange
-            backend.useArtists("create");
-            const songs = backend.useSongs("create");
-            const albums = backend.useAlbums("create");
+            backend.useArtists(EntityMutatorType.Create);
+            const songs = backend.useSongs(EntityMutatorType.Create);
+            const albums = backend.useAlbums(EntityMutatorType.Create);
 
             // act
             await workspace.in(ArtistBlueprint).select({ songs: true }).prepareSave(input()).execute();
@@ -1070,9 +1070,9 @@ describe("prepareSave()", () => {
     describe("songs with their album and the artist of that album", () => {
         it("should create artist and album before the song", async () => {
             // arrange
-            const artists = backend.useArtists("create");
-            const albums = backend.useAlbums("create");
-            const songs = backend.useSongs("create");
+            const artists = backend.useArtists(EntityMutatorType.Create);
+            const albums = backend.useAlbums(EntityMutatorType.Create);
+            const songs = backend.useSongs(EntityMutatorType.Create);
             const input = song("A", { album: album("Album", { artist: artist("Sunnexo") }) });
 
             // act
@@ -1098,8 +1098,8 @@ describe("prepareSave()", () => {
             ["a selection of primitive fields", { songs: { name: true } }],
         ] as const)("should treat a related selection given as %s the same", async (_, select) => {
             // arrange
-            backend.useArtists("create");
-            const songs = backend.useSongs("create");
+            backend.useArtists(EntityMutatorType.Create);
+            const songs = backend.useSongs(EntityMutatorType.Create);
 
             // act
             const changeset = workspace
@@ -1115,7 +1115,7 @@ describe("prepareSave()", () => {
 
         it("should pass the selection a mutator accepted to it", async () => {
             // arrange
-            const artists = backend.useArtists("save", { select: { songs: { album: true } } });
+            const artists = backend.useArtists(EntityMutatorType.Save, { select: { songs: { album: true } } });
 
             // act
             await workspace
@@ -1132,8 +1132,8 @@ describe("prepareSave()", () => {
     describe("songs with tags (outbound relation via an array of Ids)", () => {
         it("should create new tags first and write their Ids to the song", async () => {
             // arrange
-            const tags = backend.useTags("create");
-            const songs = backend.useSongs("create");
+            const tags = backend.useTags(EntityMutatorType.Create);
+            const songs = backend.useSongs(EntityMutatorType.Create);
 
             // act
             const changeset = workspace
@@ -1153,8 +1153,8 @@ describe("prepareSave()", () => {
 
         it("should treat related tags that have an Id as updates if there is no previous", async () => {
             // arrange
-            const tags = backend.useTags("save");
-            backend.useSongs("create");
+            const tags = backend.useTags(EntityMutatorType.Save);
+            backend.useSongs(EntityMutatorType.Create);
 
             // act
             const changeset = workspace
@@ -1166,9 +1166,9 @@ describe("prepareSave()", () => {
             // assert
             expect(summary.items.map(item => [item.schema.getName(), item.type, item.entity.name])).toEqual(
                 expect.arrayContaining([
-                    ["tags", "update", "Rock"],
-                    ["tags", "create", "pop"],
-                    ["songs", "create", "A"],
+                    ["tags", EntityMutatorType.Update, "Rock"],
+                    ["tags", EntityMutatorType.Create, "pop"],
+                    ["songs", EntityMutatorType.Create, "A"],
                 ]),
             );
             expect(allDispatchedNames(tags)).toEqual(["Rock", "pop"]);
@@ -1177,8 +1177,8 @@ describe("prepareSave()", () => {
 
         it("should only create the new tags if the existing ones did not change compared to previous", async () => {
             // arrange
-            const tags = backend.useTags("create");
-            const songs = backend.useSongs("update");
+            const tags = backend.useTags(EntityMutatorType.Create);
+            const songs = backend.useSongs(EntityMutatorType.Update);
             const previous = song("A", { id: 1, tagIds: ["rock"], tags: [tag("Rock", { id: "rock" })] });
             const next = song("A", { id: 1, tagIds: ["rock"], tags: [tag("Rock", { id: "rock" }), tag("pop")] });
 

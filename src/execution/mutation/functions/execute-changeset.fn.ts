@@ -4,7 +4,7 @@ import { EntityServiceContainer } from "../../entity-service-container";
 import { CommittedEntities } from "../committed-entities";
 import { ChangeItem, EntityChangeStatus } from "../structures/change-item";
 import { EntityMutation } from "../structures/entity-mutation";
-import { MutationCacheOperation, MutationDispatch } from "../structures/mutation-dispatch";
+import { EntityChangeOutcomeStatus, MutationCacheOperation, MutationDispatch } from "../structures/mutation-dispatch";
 import { TemporaryIds } from "../temporary-ids";
 import { executeMutation } from "./execute-mutation.fn";
 import { getDispatchRoots, groupBatchItems } from "./group-batch-items.fn";
@@ -59,7 +59,7 @@ export async function executeChangeset(args: ExecuteChangesetArguments): Promise
 
                             if (outcome === undefined) {
                                 item.fail(new Error("no outcome has been resolved for this change"));
-                            } else if (outcome.status === "succeeded") {
+                            } else if (outcome.status === EntityChangeOutcomeStatus.Succeeded) {
                                 item.succeed();
                             } else {
                                 item.fail(outcome.error, outcome.path);

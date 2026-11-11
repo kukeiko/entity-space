@@ -12,10 +12,15 @@ import {
 import { Class } from "@entity-space/utils";
 import { Mock, vi } from "vitest";
 import { EntityServiceContainer } from "../entity-service-container";
+import { EntityMutatorType } from "../mutation/entity-mutator";
 import { EntityMutationContext } from "../mutation/structures/entity-mutation-context";
 
-export type MutatorType = "create" | "update" | "save" | "delete";
-export type Operation = "create" | "update" | "delete";
+export { EntityMutatorType };
+
+type MusicBackendOperation =
+    | typeof EntityMutatorType.Create
+    | typeof EntityMutatorType.Update
+    | typeof EntityMutatorType.Delete;
 
 export interface MutatorOptions<T> {
     /** register a one-entity mutator instead of a batch mutator */
@@ -30,7 +35,7 @@ export interface Rejection {
 
 type Selection = Record<string, unknown>;
 type Fail = (entity: Entity, error: Error, path?: string) => void;
-type Persist = (entity: any, selection: Selection, fail: Fail, type: MutatorType) => Entity | undefined;
+type Persist = (entity: any, selection: Selection, fail: Fail, type: EntityMutatorType) => Entity | undefined;
 
 /**
  * An in-memory API for artists, songs, albums and tags that persists whatever the selection of the mutator covers,
@@ -42,7 +47,7 @@ export class MusicBackend {
     }
 
     readonly #services: EntityServiceContainer;
-    readonly #rejections: ((entity: Entity, operation: Operation) => Rejection | undefined)[] = [];
+    readonly #rejections: ((entity: Entity, operation: MusicBackendOperation) => Rejection | undefined)[] = [];
     readonly #nextIds = { artists: 101, albums: 201, songs: 301, tags: 1 };
 
     readonly artists = new Map<string, Artist>();
@@ -51,7 +56,14 @@ export class MusicBackend {
     readonly tags = new Map<string, Tag>();
 
     /** Rejects any entity with the given name, as a server side validation of the "name" property would. */
-    rejectName(name: string, operations: Operation[] = ["create", "update", "delete"]): this {
+    rejectName(
+        name: string,
+        operations: MusicBackendOperation[] = [
+            EntityMutatorType.Create,
+            EntityMutatorType.Update,
+            EntityMutatorType.Delete,
+        ],
+    ): this {
         this.#rejections.push((entity, operation) =>
             (entity as { name?: string }).name === name && operations.includes(operation)
                 ? { message: `name "${name}" is not allowed`, path: "name" }
@@ -66,35 +78,37 @@ export class MusicBackend {
         return this;
     }
 
-    useArtists(type: MutatorType, options: MutatorOptions<Artist> = {}): Mock {
+    useArtists(type: EntityMutatorType, options: MutatorOptions<Artist> = {}): Mock {
         return this.#register(ArtistBlueprint, type, options, (entity, selection, fail, type) =>
-            type === "delete"
+            type === EntityMutatorType.Delete
                 ? this.#deleteArtist(entity, selection, fail)
                 : this.#persistArtist(entity, selection, fail, type),
         );
     }
 
-    useSongs(type: MutatorType, options: MutatorOptions<Song> = {}): Mock {
+    useSongs(type: EntityMutatorType, options: MutatorOptions<Song> = {}): Mock {
         return this.#register(SongBlueprint, type, options, (entity, selection, fail, type) =>
-            type === "delete"
+            type === EntityMutatorType.Delete
                 ? this.#deleteSong(entity, selection, fail)
                 : this.#persistSong(entity, {}, selection, fail, type),
         );
     }
 
-    useAlbums(type: MutatorType, options: MutatorOptions<Album> = {}): Mock {
+    useAlbums(type: EntityMutatorType, options: MutatorOptions<Album> = {}): Mock {
         return this.#register(AlbumBlueprint, type, options, (entity, selection, fail, type) =>
-            type === "delete" ? this.#deleteAlbum(entity, fail) : this.#persistAlbum(entity, selection, fail),
+            type === EntityMutatorType.Delete
+                ? this.#deleteAlbum(entity, fail)
+                : this.#persistAlbum(entity, selection, fail),
         );
     }
 
-    useTags(type: MutatorType, options: MutatorOptions<Tag> = {}): Mock {
+    useTags(type: EntityMutatorType, options: MutatorOptions<Tag> = {}): Mock {
         return this.#register(TagBlueprint, type, options, (entity, _, fail, type) =>
-            type === "delete" ? this.#deleteTag(entity, fail) : this.#persistTag(entity, fail),
+            type === EntityMutatorType.Delete ? this.#deleteTag(entity, fail) : this.#persistTag(entity, fail),
         );
     }
 
-    #register(blueprint: Class, type: MutatorType, options: MutatorOptions<any>, persist: Persist): Mock {
+    #register(blueprint: Class, type: EntityMutatorType, options: MutatorOptions<any>, persist: Persist): Mock {
         const services = this.#services.for(blueprint);
         const select = options.select;
 
@@ -110,15 +124,15 @@ export class MusicBackend {
                         throw rootError;
                     }
 
-                    return type === "delete" ? undefined : result;
+                    return type === EntityMutatorType.Delete ? undefined : result;
                 },
             );
 
             const add = {
-                create: () => services.addCreateOneMutator({ select, create: mutate as any }),
-                update: () => services.addUpdateOneMutator({ select, update: mutate as any }),
-                save: () => services.addSaveOneMutator({ select, save: mutate as any }),
-                delete: () => services.addDeleteOneMutator({ select, delete: mutate as any }),
+                [EntityMutatorType.Create]: () => services.addCreateOneMutator({ select, create: mutate as any }),
+                [EntityMutatorType.Update]: () => services.addUpdateOneMutator({ select, update: mutate as any }),
+                [EntityMutatorType.Save]: () => services.addSaveOneMutator({ select, save: mutate as any }),
+                [EntityMutatorType.Delete]: () => services.addDeleteOneMutator({ select, delete: mutate as any }),
             };
 
             add[type]();
@@ -137,15 +151,15 @@ export class MusicBackend {
                     const fail: Fail = (failed, error, path) => context.fail(failed, error, { path });
                     const results = entities.map(entity => persist(entity, selection, fail, type));
 
-                    return type === "delete" ? undefined : results.filter(result => result !== undefined);
+                    return type === EntityMutatorType.Delete ? undefined : results.filter(result => result !== undefined);
                 },
             );
 
             const add = {
-                create: () => services.addCreateMutator({ select, create: mutate as any }),
-                update: () => services.addUpdateMutator({ select, update: mutate as any }),
-                save: () => services.addSaveMutator({ select, save: mutate as any }),
-                delete: () => services.addDeleteMutator({ select, delete: mutate as any }),
+                [EntityMutatorType.Create]: () => services.addCreateMutator({ select, create: mutate as any }),
+                [EntityMutatorType.Update]: () => services.addUpdateMutator({ select, update: mutate as any }),
+                [EntityMutatorType.Save]: () => services.addSaveMutator({ select, save: mutate as any }),
+                [EntityMutatorType.Delete]: () => services.addDeleteMutator({ select, delete: mutate as any }),
             };
 
             add[type]();
@@ -153,8 +167,8 @@ export class MusicBackend {
         }
     }
 
-    #persistArtist(artist: Artist, selection: Selection, fail: Fail, type: MutatorType): Artist | undefined {
-        if (!this.#isValid(artist, artist.id ? "update" : "create", fail)) {
+    #persistArtist(artist: Artist, selection: Selection, fail: Fail, type: EntityMutatorType): Artist | undefined {
+        if (!this.#isValid(artist, artist.id ? EntityMutatorType.Update : EntityMutatorType.Create, fail)) {
             return undefined;
         }
 
@@ -175,7 +189,7 @@ export class MusicBackend {
                 )
                 .filter(song => song !== undefined);
 
-            if (type === "save") {
+            if (type === EntityMutatorType.Save) {
                 for (const [key, stored] of this.songs) {
                     if (stored.artistId === id && !persisted.songs.some(song => song.id === stored.id)) {
                         this.songs.delete(key);
@@ -194,9 +208,9 @@ export class MusicBackend {
         overrides: Partial<Song>,
         selection: Selection,
         fail: Fail,
-        type: MutatorType,
+        type: EntityMutatorType,
     ): Song | undefined {
-        if (!this.#isValid(song, song.id ? "update" : "create", fail)) {
+        if (!this.#isValid(song, song.id ? EntityMutatorType.Update : EntityMutatorType.Create, fail)) {
             return undefined;
         }
 
@@ -238,7 +252,7 @@ export class MusicBackend {
     }
 
     #persistAlbum(album: Album, selection: Selection, fail: Fail): Album | undefined {
-        if (!this.#isValid(album, album.id ? "update" : "create", fail)) {
+        if (!this.#isValid(album, album.id ? EntityMutatorType.Update : EntityMutatorType.Create, fail)) {
             return undefined;
         }
 
@@ -247,7 +261,9 @@ export class MusicBackend {
 
         if (selection.songs && songs) {
             persisted.songs = songs
-                .map(song => this.#persistSong(song, { albumId: persisted.id }, nested(selection.songs), fail, "save"))
+                .map(song =>
+                    this.#persistSong(song, { albumId: persisted.id }, nested(selection.songs), fail, EntityMutatorType.Save),
+                )
                 .filter(song => song !== undefined);
         }
 
@@ -257,7 +273,7 @@ export class MusicBackend {
     }
 
     #persistTag(tag: Tag, fail: Fail): Tag | undefined {
-        if (!this.#isValid(tag, tag.id ? "update" : "create", fail)) {
+        if (!this.#isValid(tag, tag.id ? EntityMutatorType.Update : EntityMutatorType.Create, fail)) {
             return undefined;
         }
 
@@ -279,7 +295,7 @@ export class MusicBackend {
             }
         }
 
-        if (this.#isValid(artist, "delete", fail)) {
+        if (this.#isValid(artist, EntityMutatorType.Delete, fail)) {
             this.artists.delete(toKey(artist));
         }
 
@@ -287,7 +303,7 @@ export class MusicBackend {
     }
 
     #deleteSong(song: Song, _: Selection, fail: Fail): undefined {
-        if (this.#isValid(song, "delete", fail)) {
+        if (this.#isValid(song, EntityMutatorType.Delete, fail)) {
             this.songs.delete(toKey(song));
         }
 
@@ -295,7 +311,7 @@ export class MusicBackend {
     }
 
     #deleteAlbum(album: Album, fail: Fail): undefined {
-        if (this.#isValid(album, "delete", fail)) {
+        if (this.#isValid(album, EntityMutatorType.Delete, fail)) {
             this.albums.delete(toKey(album));
         }
 
@@ -303,14 +319,14 @@ export class MusicBackend {
     }
 
     #deleteTag(tag: Tag, fail: Fail): undefined {
-        if (this.#isValid(tag, "delete", fail)) {
+        if (this.#isValid(tag, EntityMutatorType.Delete, fail)) {
             this.tags.delete(tag.id);
         }
 
         return undefined;
     }
 
-    #isValid(entity: Entity, operation: Operation, fail: Fail): boolean {
+    #isValid(entity: Entity, operation: MusicBackendOperation, fail: Fail): boolean {
         for (const reject of this.#rejections) {
             const rejection = reject(entity, operation);
 
@@ -323,12 +339,12 @@ export class MusicBackend {
         return true;
     }
 
-    #assertId(id: number, type?: MutatorType): number {
+    #assertId(id: number, type?: EntityMutatorType): number {
         if (id < 0) {
             throw new Error(`received a temporary Id: ${id}`);
-        } else if (type === "create" && id) {
+        } else if (type === EntityMutatorType.Create && id) {
             throw new Error(`a create mutator received an existing entity: ${id}`);
-        } else if (type === "update" && !id) {
+        } else if (type === EntityMutatorType.Update && !id) {
             throw new Error("an update mutator received a new entity");
         }
 

@@ -7,13 +7,33 @@ import { AcceptedEntityMutation } from "./accepted-entity-mutation";
 import { ChangeItem } from "./change-item";
 import { EntityMutation } from "./entity-mutation";
 
-// [review] 🤖 for the status field, use enum-like object instead (such as EntityChangeType)
-export type EntityChangeOutcome = { status: "succeeded" } | { status: "failed"; error: unknown; path?: string };
+export const EntityChangeOutcomeStatus = {
+    Succeeded: "succeeded",
+    Failed: "failed",
+} as const;
 
-// [review] 🤖 for the type field, use enum-like object instead (such as EntityChangeType)
+export type EntityChangeOutcome =
+    | { status: typeof EntityChangeOutcomeStatus.Succeeded }
+    | { status: typeof EntityChangeOutcomeStatus.Failed; error: unknown; path?: string };
+
+export const MutationCacheOperationType = {
+    Upsert: "upsert",
+    Delete: "delete",
+} as const;
+
 export type MutationCacheOperation =
-    | { type: "upsert"; schema: EntitySchema; entity: Entity; selection: EntityRelationSelection }
-    | { type: "delete"; schema: EntitySchema; entities: Entity[]; selection: EntityRelationSelection };
+    | {
+          type: typeof MutationCacheOperationType.Upsert;
+          schema: EntitySchema;
+          entity: Entity;
+          selection: EntityRelationSelection;
+      }
+    | {
+          type: typeof MutationCacheOperationType.Delete;
+          schema: EntitySchema;
+          entities: Entity[];
+          selection: EntityRelationSelection;
+      };
 
 /**
  * Everything needed to dispatch (part of) an accepted mutation to its mutator.

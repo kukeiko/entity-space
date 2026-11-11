@@ -8,7 +8,7 @@ import {
     unpackSelection,
 } from "@entity-space/elements";
 import { EntityMutationCacheOptions, EntityMutationOptions } from "./execution-arguments.interface";
-import { EntityChangeset } from "./mutation/entity-changeset";
+import { EntityChangeset, EntityChangesetResultStatus } from "./mutation/entity-changeset";
 import { EntityMutationError } from "./mutation/entity-mutation-error";
 import { EntityMutationType } from "./mutation/structures/entity-mutation";
 
@@ -123,7 +123,7 @@ export class EntityMutationBuilder<B, S extends PackedEntitySelection<EntityBlue
         const summary = await changeset.execute();
         changeset.writeBack(targets);
 
-        if (summary.status !== "succeeded") {
+        if (summary.status !== EntityChangesetResultStatus.Succeeded) {
             throw new EntityMutationError(changeset as EntityChangeset, summary);
         }
     }

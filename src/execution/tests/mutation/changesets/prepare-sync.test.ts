@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { EntityWorkspace } from "../../../entity-workspace";
 import { EntityMutationError } from "../../../mutation/entity-mutation-error";
 import {
+    EntityMutatorType,
     allDispatchedNames,
     dispatched,
     dispatchedNames,
@@ -45,26 +46,26 @@ describe("prepareSync()", () => {
             [
                 "batch create, update and delete mutators",
                 () => ({
-                    upsert: [backend.useSongs("create"), backend.useSongs("update")],
-                    del: backend.useSongs("delete"),
+                    upsert: [backend.useSongs(EntityMutatorType.Create), backend.useSongs(EntityMutatorType.Update)],
+                    del: backend.useSongs(EntityMutatorType.Delete),
                 }),
             ],
             [
                 "one-entity create, update and delete mutators",
                 () => ({
-                    upsert: [backend.useSongs("create", { one: true }), backend.useSongs("update", { one: true })],
-                    del: backend.useSongs("delete", { one: true }),
+                    upsert: [backend.useSongs(EntityMutatorType.Create, { one: true }), backend.useSongs(EntityMutatorType.Update, { one: true })],
+                    del: backend.useSongs(EntityMutatorType.Delete, { one: true }),
                 }),
             ],
             [
                 "batch save and delete mutators",
-                () => ({ upsert: [backend.useSongs("save")], del: backend.useSongs("delete") }),
+                () => ({ upsert: [backend.useSongs(EntityMutatorType.Save)], del: backend.useSongs(EntityMutatorType.Delete) }),
             ],
             [
                 "one-entity save and delete mutators",
                 () => ({
-                    upsert: [backend.useSongs("save", { one: true })],
-                    del: backend.useSongs("delete", { one: true }),
+                    upsert: [backend.useSongs(EntityMutatorType.Save, { one: true })],
+                    del: backend.useSongs(EntityMutatorType.Delete, { one: true }),
                 }),
             ],
         ])("using %s", (_, useMutators) => {
@@ -116,7 +117,7 @@ describe("prepareSync()", () => {
             it("should keep a song that failed to be deleted as previous and retry deleting it", async () => {
                 // arrange
                 const mutators = useMutators();
-                backend.rejectName("removed", ["delete"]);
+                backend.rejectName("removed", [EntityMutatorType.Delete]);
                 const changeset = workspace.in(SongBlueprint).prepareSync(next, previous);
 
                 // act
@@ -143,7 +144,7 @@ describe("prepareSync()", () => {
 
         it("should throw if no delete mutator exists for removed songs", () => {
             // arrange
-            backend.useSongs("save");
+            backend.useSongs(EntityMutatorType.Save);
 
             // act & assert
             expect(() => workspace.in(SongBlueprint).prepareSync(next, previous)).toThrow(
@@ -153,7 +154,7 @@ describe("prepareSync()", () => {
 
         it("should not need a delete mutator if no song was removed", async () => {
             // arrange
-            const save = backend.useSongs("save");
+            const save = backend.useSongs(EntityMutatorType.Save);
 
             // act
             const summary = await workspace
@@ -168,7 +169,7 @@ describe("prepareSync()", () => {
 
         it("should delete all songs if next is empty", async () => {
             // arrange
-            const del = backend.useSongs("delete");
+            const del = backend.useSongs(EntityMutatorType.Delete);
 
             // act
             const changeset = workspace.in(SongBlueprint).prepareSync([], previous);
@@ -182,8 +183,8 @@ describe("prepareSync()", () => {
 
         it("should not plan anything if nothing changed", async () => {
             // arrange
-            const save = backend.useSongs("save");
-            const del = backend.useSongs("delete");
+            const save = backend.useSongs(EntityMutatorType.Save);
+            const del = backend.useSongs(EntityMutatorType.Delete);
 
             // act
             const summary = await workspace
@@ -199,9 +200,9 @@ describe("prepareSync()", () => {
 
         it("should keep creating and updating songs while a delete fails", async () => {
             // arrange
-            const save = backend.useSongs("save");
-            backend.useSongs("delete");
-            backend.rejectName("removed", ["delete"]);
+            const save = backend.useSongs(EntityMutatorType.Save);
+            backend.useSongs(EntityMutatorType.Delete);
+            backend.rejectName("removed", [EntityMutatorType.Delete]);
 
             // act
             const summary = await workspace.in(SongBlueprint).prepareSync(next, previous).execute();
@@ -214,9 +215,9 @@ describe("prepareSync()", () => {
 
         it("should throw an EntityMutationError from the sync() shortcut and allow retrying", async () => {
             // arrange
-            backend.useSongs("save");
-            backend.useSongs("delete");
-            backend.rejectName("removed", ["delete"]);
+            backend.useSongs(EntityMutatorType.Save);
+            backend.useSongs(EntityMutatorType.Delete);
+            backend.rejectName("removed", [EntityMutatorType.Delete]);
 
             // act
             const error = await workspace
@@ -257,8 +258,8 @@ describe("prepareSync()", () => {
         ])("deleting a removed artist and its songs using %s", (_, songOptions, artistOptions) => {
             it("should delete the songs before the artist", async () => {
                 // arrange
-                const songs = backend.useSongs("delete", songOptions);
-                const artists = backend.useArtists("delete", artistOptions);
+                const songs = backend.useSongs(EntityMutatorType.Delete, songOptions);
+                const artists = backend.useArtists(EntityMutatorType.Delete, artistOptions);
 
                 // act
                 const changeset = workspace
@@ -278,9 +279,9 @@ describe("prepareSync()", () => {
 
             it("should not delete the artist if one of its songs failed to be deleted", async () => {
                 // arrange
-                backend.useSongs("delete", songOptions);
-                const artists = backend.useArtists("delete", artistOptions);
-                backend.rejectName("D", ["delete"]);
+                backend.useSongs(EntityMutatorType.Delete, songOptions);
+                const artists = backend.useArtists(EntityMutatorType.Delete, artistOptions);
+                backend.rejectName("D", [EntityMutatorType.Delete]);
 
                 // act
                 const changeset = workspace
@@ -307,7 +308,7 @@ describe("prepareSync()", () => {
 
         it("should dispatch a removed artist together with its songs to an artist delete mutator including songs", async () => {
             // arrange
-            const artists = backend.useArtists("delete", { select });
+            const artists = backend.useArtists(EntityMutatorType.Delete, { select });
 
             // act
             const changeset = workspace
@@ -325,8 +326,8 @@ describe("prepareSync()", () => {
 
         it("should only delete the artist if its songs are not selected", async () => {
             // arrange
-            const songs = backend.useSongs("delete");
-            const artists = backend.useArtists("delete");
+            const songs = backend.useSongs(EntityMutatorType.Delete);
+            const artists = backend.useArtists(EntityMutatorType.Delete);
 
             // act
             await workspace
@@ -341,7 +342,7 @@ describe("prepareSync()", () => {
 
         it("should throw if the songs of a removed artist can not be deleted", () => {
             // arrange
-            backend.useArtists("delete");
+            backend.useArtists(EntityMutatorType.Delete);
 
             // act & assert
             expect(() =>
@@ -354,10 +355,10 @@ describe("prepareSync()", () => {
 
         it("should combine changes of kept artists with deletion of removed ones", async () => {
             // arrange
-            const artists = backend.useArtists("save");
-            const artistDeletes = backend.useArtists("delete");
-            const songs = backend.useSongs("save");
-            const songDeletes = backend.useSongs("delete");
+            const artists = backend.useArtists(EntityMutatorType.Save);
+            const artistDeletes = backend.useArtists(EntityMutatorType.Delete);
+            const songs = backend.useSongs(EntityMutatorType.Save);
+            const songDeletes = backend.useSongs(EntityMutatorType.Delete);
             const kept = structuredClone(previous[0]);
             kept.name = "kept*";
             kept.songs = [kept.songs![0], song("E")];
@@ -384,8 +385,8 @@ describe("prepareSync()", () => {
 
         it("should only pass removed songs of saved artists to an artist save mutator including songs", async () => {
             // arrange
-            const save = backend.useArtists("save", { select });
-            const del = backend.useArtists("delete", { select });
+            const save = backend.useArtists(EntityMutatorType.Save, { select });
+            const del = backend.useArtists(EntityMutatorType.Delete, { select });
             const kept = structuredClone(previous[0]);
             kept.name = "kept*";
             kept.songs = [kept.songs![0]];
@@ -416,8 +417,8 @@ describe("prepareSync()", () => {
 
         it("should replace all artists using save and delete mutators for artists that include songs", async () => {
             // arrange
-            const artists = backend.useArtists("save", { select });
-            const deletes = backend.useArtists("delete", { select });
+            const artists = backend.useArtists(EntityMutatorType.Save, { select });
+            const deletes = backend.useArtists(EntityMutatorType.Delete, { select });
 
             // act
             const changeset = workspace

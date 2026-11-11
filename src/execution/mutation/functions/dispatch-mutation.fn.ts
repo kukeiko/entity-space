@@ -4,7 +4,12 @@ import { EntityMutatorType } from "../entity-mutator";
 import { ChangeItem } from "../structures/change-item";
 import { EntityMutationContext } from "../structures/entity-mutation-context";
 import { EntityMutationOutcomes } from "../structures/entity-mutation-outcomes";
-import { EntityChangeOutcome, MutationDispatch } from "../structures/mutation-dispatch";
+import {
+    EntityChangeOutcome,
+    EntityChangeOutcomeStatus,
+    MutationCacheOperationType,
+    MutationDispatch,
+} from "../structures/mutation-dispatch";
 import { CopiesForMutationDispatch, copyEntitiesForMutationDispatch } from "./copy-entities-for-mutation-dispatch.fn";
 import { matchMutationResults } from "./match-mutation-results.fn";
 
@@ -76,7 +81,7 @@ export async function dispatchUpsertMutation(
     const succeededRoots = roots.filter(root => isRootSucceeded(dispatch, results, root));
 
     for (const [item, outcome] of results) {
-        if (outcome.status !== "succeeded") {
+        if (outcome.status !== EntityChangeOutcomeStatus.Succeeded) {
             continue;
         }
 
@@ -87,7 +92,7 @@ export async function dispatchUpsertMutation(
     }
 
     for (const [item, outcome] of results) {
-        if (outcome.status !== "succeeded") {
+        if (outcome.status !== EntityChangeOutcomeStatus.Succeeded) {
             continue;
         } else if (item.change.isDelete()) {
             dispatch.committed.delete(item.getSchema(), item.getEntity());
@@ -97,7 +102,12 @@ export async function dispatchUpsertMutation(
     }
 
     for (const root of succeededRoots) {
-        dispatch.cacheOperations.push({ type: "upsert", schema, entity: root, selection: relationSelection });
+        dispatch.cacheOperations.push({
+            type: MutationCacheOperationType.Upsert,
+            schema,
+            entity: root,
+            selection: relationSelection,
+        });
     }
 
     return results;
@@ -124,14 +134,14 @@ export async function dispatchDeleteMutation(dispatch: MutationDispatch): Promis
     const succeededRoots = roots.filter(root => isRootSucceeded(dispatch, results, root));
 
     for (const [item, outcome] of results) {
-        if (outcome.status === "succeeded") {
+        if (outcome.status === EntityChangeOutcomeStatus.Succeeded) {
             dispatch.committed.delete(item.getSchema(), item.getEntity());
         }
     }
 
     if (succeededRoots.length) {
         dispatch.cacheOperations.push({
-            type: "delete",
+            type: MutationCacheOperationType.Delete,
             schema,
             entities: succeededRoots.slice(),
             selection: relationSelection,
@@ -152,7 +162,7 @@ function createDispatchContext(
 }
 
 function failAll(items: readonly ChangeItem[], error: unknown): MutationOutcomes {
-    return new Map(items.map(item => [item, { status: "failed", error }]));
+    return new Map(items.map(item => [item, { status: EntityChangeOutcomeStatus.Failed, error }]));
 }
 
 function resolveOutcomes(
@@ -171,20 +181,20 @@ function resolveOutcomes(
         const failure = outcomes.getFailure(copy);
 
         if (failure !== undefined) {
-            return { status: "failed", error: failure.error, path: failure.path };
+            return { status: EntityChangeOutcomeStatus.Failed, error: failure.error, path: failure.path };
         } else if (outcomes.isSucceeded(copy) || isPersisted(copy)) {
-            return { status: "succeeded" };
+            return { status: EntityChangeOutcomeStatus.Succeeded };
         }
 
         for (let parent = dispatched.parentOf.get(copy); parent; parent = dispatched.parentOf.get(parent)) {
             const parentFailure = outcomes.getFailure(parent);
 
             if (parentFailure !== undefined) {
-                return { status: "failed", error: parentFailure.error };
+                return { status: EntityChangeOutcomeStatus.Failed, error: parentFailure.error };
             }
         }
 
-        return { status: "failed", error: new Error("the mutator did not return this entity") };
+        return { status: EntityChangeOutcomeStatus.Failed, error: new Error("the mutator did not return this entity") };
     };
 
     const resolveEntity = (entity: Entity): EntityChangeOutcome | undefined => {
@@ -195,7 +205,7 @@ function resolveOutcomes(
         }
 
         const resolved = copies.map(resolveCopy);
-        return resolved.find(outcome => outcome.status === "failed") ?? resolved[0];
+        return resolved.find(outcome => outcome.status === EntityChangeOutcomeStatus.Failed) ?? resolved[0];
     };
 
     const results: MutationOutcomes = new Map();
@@ -207,7 +217,7 @@ function resolveOutcomes(
             // e.g. deletions handled by a save mutator: they share the outcome of the root they were dispatched with
             const root = dispatch.rootOf.get(item);
             outcome = (root !== undefined && root !== item.getEntity() ? resolveEntity(root) : undefined) ?? {
-                status: "failed",
+                status: EntityChangeOutcomeStatus.Failed,
                 error: new Error("the entity was not passed to the mutator"),
             };
         }
@@ -220,5 +230,8 @@ function resolveOutcomes(
 
 function isRootSucceeded(dispatch: MutationDispatch, results: MutationOutcomes, root: Entity): boolean {
     const rootItems = dispatch.items.filter(item => item.getEntity() === root);
-    return rootItems.length > 0 && rootItems.every(item => results.get(item)?.status === "succeeded");
+    return (
+        rootItems.length > 0 &&
+        rootItems.every(item => results.get(item)?.status === EntityChangeOutcomeStatus.Succeeded)
+    );
 }

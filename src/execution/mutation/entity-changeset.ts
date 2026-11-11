@@ -19,13 +19,26 @@ import { planChanges, PlannedChanges } from "./functions/plan-changes.fn";
 import { writeBackEntities } from "./functions/write-back-entities.fn";
 import { ChangeItem, EntityChangeItem, EntityChangeStatus } from "./structures/change-item";
 import { EntityMutation, EntityMutationType } from "./structures/entity-mutation";
-import { MutationCacheOperation } from "./structures/mutation-dispatch";
+import { MutationCacheOperation, MutationCacheOperationType } from "./structures/mutation-dispatch";
 import { TemporaryIds } from "./temporary-ids";
 
-// [review] 🤖 use enum-like object instead (such as EntityChangeType)
-export type EntityChangesetResultStatus = "succeeded" | "partial" | "failed" | "cancelled";
-// [review] 🤖 use enum-like object instead (such as EntityChangeType)
-export type EntityChangesetStatus = "pending" | "running" | EntityChangesetResultStatus;
+export const EntityChangesetResultStatus = {
+    Succeeded: "succeeded",
+    Partial: "partial",
+    Failed: "failed",
+    Cancelled: "cancelled",
+} as const;
+
+export type EntityChangesetResultStatus =
+    (typeof EntityChangesetResultStatus)[keyof typeof EntityChangesetResultStatus];
+
+export const EntityChangesetStatus = {
+    Pending: "pending",
+    Running: "running",
+    ...EntityChangesetResultStatus,
+} as const;
+
+export type EntityChangesetStatus = (typeof EntityChangesetStatus)[keyof typeof EntityChangesetStatus];
 
 export interface EntityChangesetSummary {
     readonly status: EntityChangesetResultStatus;
@@ -88,9 +101,9 @@ export class EntityChangeset<T extends Entity = Entity> {
 
     getStatus(): EntityChangesetStatus {
         if (this.isRunning()) {
-            return "running";
+            return EntityChangesetStatus.Running;
         } else if (!this.#executed || this.#planned.items.every(item => item.status === EntityChangeStatus.Pending)) {
-            return "pending";
+            return EntityChangesetStatus.Pending;
         } else {
             return this.#getResultStatus();
         }
@@ -234,13 +247,13 @@ export class EntityChangeset<T extends Entity = Entity> {
         const items = this.#planned.items;
 
         if (items.some(item => item.status === EntityChangeStatus.Cancelled)) {
-            return "cancelled";
+            return EntityChangesetResultStatus.Cancelled;
         } else if (items.every(item => item.status === EntityChangeStatus.Succeeded)) {
-            return "succeeded";
+            return EntityChangesetResultStatus.Succeeded;
         } else if (items.some(item => item.status === EntityChangeStatus.Succeeded)) {
-            return "partial";
+            return EntityChangesetResultStatus.Partial;
         } else {
-            return "failed";
+            return EntityChangesetResultStatus.Failed;
         }
     }
 
@@ -266,7 +279,7 @@ export class EntityChangeset<T extends Entity = Entity> {
         const cache = this.#services.getOrCreateCache(this.#options.cache.key);
 
         for (const operation of operations) {
-            if (operation.type === "upsert") {
+            if (operation.type === MutationCacheOperationType.Upsert) {
                 const persisted = copyEntities(
                     operation.schema,
                     [operation.entity],
