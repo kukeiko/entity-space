@@ -508,8 +508,8 @@ describe("EntityChangeset", () => {
             const execution = changeset.execute();
 
             // assert
-            await expect(changeset.execute()).rejects.toThrow("the changeset is already executing");
             expect(() => changeset.update([song("b")])).toThrow("can not update a changeset while it is executing");
+            await expect(changeset.execute()).rejects.toThrow("the changeset is already executing");
             await execution;
         });
     });

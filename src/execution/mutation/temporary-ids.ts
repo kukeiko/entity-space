@@ -15,11 +15,11 @@ import { Path, readPath, writePath } from "@entity-space/utils";
  */
 export class TemporaryIds {
     #nextId = -1;
-    // [review] 🤖 why "unknown, unknown" - can it not be "number|string, number|string"?
-    readonly #originals = new Map<unknown, unknown>();
+    /** Temporary placeholder Ids (negative numbers or their strings) mapped to the value on the entity before assignment. */
+    readonly #originals = new Map<number | string, unknown>();
 
     isTemporary(value: unknown): boolean {
-        return this.#originals.has(value);
+        return (typeof value === "number" || typeof value === "string") && this.#originals.has(value);
     }
 
     assign(schema: EntitySchema, entities: readonly Entity[], selection: EntityRelationSelection): void {
@@ -106,15 +106,17 @@ export class TemporaryIds {
                 writePath(
                     path,
                     entity,
-                    value.map(item => (this.isTemporary(item) ? this.#toOriginal(item, isJoin) : item)),
+                    value.map(item =>
+                        this.isTemporary(item) ? this.#toOriginal(item as number | string, isJoin) : item,
+                    ),
                 );
             }
         } else if (this.isTemporary(value)) {
-            writePath(path, entity, this.#toOriginal(value, isJoin));
+            writePath(path, entity, this.#toOriginal(value as number | string, isJoin));
         }
     }
 
-    #toOriginal(value: unknown, isJoin: boolean): unknown {
+    #toOriginal(value: number | string, isJoin: boolean): unknown {
         const original = this.#originals.get(value);
         // joins of not yet created entities have always been written as 0, see EntityRelationProperty.writeJoins()
         return isJoin ? (original ?? 0) : original;

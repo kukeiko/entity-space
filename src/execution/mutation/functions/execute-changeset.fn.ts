@@ -51,39 +51,8 @@ export async function executeChangeset(args: ExecuteChangesetArguments): Promise
                     continue;
                 }
 
-                // [review] 🤖 use await instead of then/catch/finally callbacks if possible
-                const promise: Promise<void> = executeMutation(dispatch)
-                    .then(outcomes => {
-                        for (const item of dispatch.items) {
-                            const outcome = outcomes.get(item.getKey());
-
-                            if (outcome === undefined) {
-                                args.planned.replaceItem(
-                                    item.withStatus(EntityChangeStatus.Failed, {
-                                        error: new Error("no outcome has been resolved for this change"),
-                                    }),
-                                );
-                            } else if (outcome.status === EntityChangeOutcomeStatus.Succeeded) {
-                                args.planned.replaceItem(item.withStatus(EntityChangeStatus.Succeeded));
-                            } else {
-                                args.planned.replaceItem(
-                                    item.withStatus(EntityChangeStatus.Failed, {
-                                        error: outcome.error,
-                                        errorPath: outcome.path,
-                                    }),
-                                );
-                            }
-                        }
-                    })
-                    .catch(error => {
-                        for (const item of dispatch.items) {
-                            args.planned.replaceItem(item.withStatus(EntityChangeStatus.Failed, { error }));
-                        }
-                    })
-                    .finally(() => {
-                        running.delete(promise);
-                    });
-
+                const promise = applyMutationOutcomes(args, dispatch);
+                void promise.finally(() => running.delete(promise));
                 running.add(promise);
             }
         }
@@ -107,6 +76,37 @@ export async function executeChangeset(args: ExecuteChangesetArguments): Promise
     }
 
     onChange();
+}
+
+async function applyMutationOutcomes(args: ExecuteChangesetArguments, dispatch: MutationDispatch): Promise<void> {
+    try {
+        const outcomes = await executeMutation(dispatch);
+
+        for (const item of dispatch.items) {
+            const outcome = outcomes.get(item.getKey());
+
+            if (outcome === undefined) {
+                args.planned.replaceItem(
+                    item.withStatus(EntityChangeStatus.Failed, {
+                        error: new Error("no outcome has been resolved for this change"),
+                    }),
+                );
+            } else if (outcome.status === EntityChangeOutcomeStatus.Succeeded) {
+                args.planned.replaceItem(item.withStatus(EntityChangeStatus.Succeeded));
+            } else {
+                args.planned.replaceItem(
+                    item.withStatus(EntityChangeStatus.Failed, {
+                        error: outcome.error,
+                        errorPath: outcome.path,
+                    }),
+                );
+            }
+        }
+    } catch (error) {
+        for (const item of dispatch.items) {
+            args.planned.replaceItem(item.withStatus(EntityChangeStatus.Failed, { error }));
+        }
+    }
 }
 
 function isReady(batch: ChangeBatch, planned: PlannedChanges): boolean {
