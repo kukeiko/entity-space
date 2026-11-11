@@ -4,7 +4,7 @@ import { EntityMutationOptions } from "../../execution-arguments.interface";
 import { CommittedEntities } from "../committed-entities";
 import { TemporaryIds } from "../temporary-ids";
 import { AcceptedEntityMutation } from "./accepted-entity-mutation";
-import { ChangeItem } from "./change-item";
+import { PlannedEntityChange } from "./entity-change";
 import { EntityMutation } from "./entity-mutation";
 
 export const EntityChangeOutcomeStatus = {
@@ -43,9 +43,9 @@ export interface MutationDispatch {
     /** The root entities to dispatch, i.e. the accepted roots that are not blocked. */
     readonly roots: readonly Entity[];
     /** The items that are dispatched together with the roots. */
-    readonly items: readonly ChangeItem[];
+    readonly items: readonly PlannedEntityChange[];
     /** Maps each dispatched item to the root entity it is dispatched with. */
-    readonly rootOf: ReadonlyMap<ChangeItem, Entity>;
+    readonly rootOf: ReadonlyMap<PlannedEntityChange, Entity>;
     readonly entityMutation: EntityMutation;
     readonly options: EntityMutationOptions;
     readonly signal: AbortSignal;

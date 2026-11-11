@@ -14,7 +14,7 @@ import {
     SaveEntitiesFn,
     UpdateEntitiesFn,
 } from "../../mutation/entity-mutation-function.type";
-import { EntityChangeItem } from "../../mutation/structures/change-item";
+import { EntityChangeItem } from "../../mutation/structures/entity-change";
 import { TestFacade } from "../../testing";
 
 describe("EntityChangeset", () => {

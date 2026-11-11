@@ -1,7 +1,7 @@
 import { Entity, entityHasId, EntityRelationSelection, EntitySchema, relationEntries } from "@entity-space/elements";
 import { ComplexKeyMap } from "@entity-space/utils";
 import { CommittedEntities } from "../committed-entities";
-import { ChangeItem, EntityChangeStatus } from "../structures/change-item";
+import { EntityChangeStatus, PlannedEntityChange } from "../structures/entity-change";
 
 /**
  * Builds the entities known to be persisted after executing changes, in the shape of the previous entities:
@@ -15,10 +15,10 @@ export function materializePrevious(
     selection: EntityRelationSelection,
     next: readonly Entity[],
     previous: readonly Entity[],
-    items: readonly ChangeItem[],
+    items: readonly PlannedEntityChange[],
     committed: CommittedEntities,
 ): Entity[] {
-    const itemsByEntity = new Map<Entity, ChangeItem[]>();
+    const itemsByEntity = new Map<Entity, PlannedEntityChange[]>();
 
     for (const item of items) {
         itemsByEntity.set(item.getEntity(), [...(itemsByEntity.get(item.getEntity()) ?? []), item]);
@@ -29,7 +29,7 @@ export function materializePrevious(
     const memo = new Map<Entity, Entity>();
 
     const isCurrent = (entity: Entity): boolean =>
-        (itemsByEntity.get(entity) ?? []).every(item => item.status === EntityChangeStatus.Succeeded);
+        (itemsByEntity.get(entity) ?? []).every(item => item.getStatus() === EntityChangeStatus.Succeeded);
 
     const materialize = (
         schema: EntitySchema,

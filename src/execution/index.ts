@@ -4,6 +4,5 @@ export * from "./execution-arguments.interface";
 export * from "./mutation/entity-changeset";
 export * from "./mutation/entity-mutation-error";
 export * from "./mutation/entity-mutation-function.type";
-export * from "./mutation/structures/change-item";
 export * from "./mutation/structures/entity-change";
 export * from "./mutation/structures/entity-mutation-context";

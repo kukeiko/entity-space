@@ -17,7 +17,7 @@ Use `workspace.in(blueprint)` to build a mutation, optionally with `.select(...)
 
 An `EntityChangeset` never modifies the entities passed to it; it works on copies.
 
-- `getItems()` / `items$`: one `EntityChangeItem` per entity change (`key`, `schema`, `type`, `entity`, `previous`, `path`, `dependsOn`, `status`, `error`, `errorPath`). Statuses are `pending`, `running`, `succeeded`, `failed`, `blocked` and `cancelled`.
+- `getItems()` / `items$`: one frozen `EntityChangeItem` snapshot per planned change (`key`, `schema`, `type`, `entity`, `previous`, `path`, `dependsOn`, `status`, `error`, `errorPath`). Planning upgrades immutable `EntityChange` values to `PlannedEntityChange` via `toPlanned()`. Statuses are `pending`, `running`, `succeeded`, `failed`, `blocked` and `cancelled`.
 - `execute()`: dispatches ready mutations in dependency order, independent ones in parallel. Dependents of changes that did not succeed are `blocked`; independent work continues. Resolves with an `EntityChangesetSummary` (`succeeded`, `partial`, `failed` or `cancelled`) and does not reject because changes failed. Executing again retries only outstanding changes.
 - `getNext()`: next entities with created Ids and persisted values; uncreated entities keep temporary (negative) Ids, which are never passed to mutators.
 - `getPrevious()`: only state known to be persisted, used as the baseline for retries.

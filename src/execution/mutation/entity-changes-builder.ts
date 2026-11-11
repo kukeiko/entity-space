@@ -9,13 +9,7 @@ import { ComplexKeyMap, joinPaths, Path } from "@entity-space/utils";
 import { isEqual } from "lodash";
 import { CommittedEntities } from "./committed-entities";
 import { isEntityUpdateEqual } from "./functions/is-entity-update-equal.fn";
-import {
-    CreateEntityChange,
-    DeleteEntityChange,
-    EntityChange,
-    EntityChangeType,
-    UpdateEntityChange,
-} from "./structures/entity-change";
+import { EntityChange, EntityChangeType } from "./structures/entity-change";
 import { EntityChangeDependency } from "./structures/entity-change-dependency";
 
 interface RelationStruct {
@@ -91,7 +85,7 @@ export class EntityChangesBuilder {
         for (const [schema, entities] of this.#creates.entries()) {
             for (const entity of entities) {
                 const dependencies = this.#getDependencies(EntityChangeType.Create, schema, entity);
-                changes.push(new CreateEntityChange(schema, entity, dependencies));
+                changes.push(new EntityChange(schema, entity, EntityChangeType.Create, dependencies));
             }
         }
 
@@ -112,7 +106,7 @@ export class EntityChangesBuilder {
                         : [];
 
                 changes.push(
-                    new UpdateEntityChange(schema, entity, [...dependencies, ...deleteDependencies], {
+                    new EntityChange(schema, entity, EntityChangeType.Update, [...dependencies, ...deleteDependencies], {
                         previous: baseline,
                         path,
                     }),
@@ -123,7 +117,7 @@ export class EntityChangesBuilder {
         for (const schema of this.#deletes.getSchemas()) {
             for (const entity of this.#deletes.getEntities(schema)) {
                 const dependencies = this.#getDependencies(EntityChangeType.Delete, schema, entity);
-                changes.push(new DeleteEntityChange(schema, entity, dependencies));
+                changes.push(new EntityChange(schema, entity, EntityChangeType.Delete, dependencies));
             }
         }
 

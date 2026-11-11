@@ -17,7 +17,7 @@ import { executeChangeset } from "./functions/execute-changeset.fn";
 import { materializePrevious } from "./functions/materialize-previous.fn";
 import { planChanges, PlannedChanges } from "./functions/plan-changes.fn";
 import { writeBackEntities } from "./functions/write-back-entities.fn";
-import { ChangeItem, EntityChangeItem, EntityChangeStatus } from "./structures/change-item";
+import { EntityChangeItem, EntityChangeStatus, PlannedEntityChange } from "./structures/entity-change";
 import { EntityMutation, EntityMutationType } from "./structures/entity-mutation";
 import { MutationCacheOperation, MutationCacheOperationType } from "./structures/mutation-dispatch";
 import { TemporaryIds } from "./temporary-ids";
@@ -102,7 +102,7 @@ export class EntityChangeset<T extends Entity = Entity> {
     getStatus(): EntityChangesetStatus {
         if (this.isRunning()) {
             return EntityChangesetStatus.Running;
-        } else if (!this.#executed || this.#planned.items.every(item => item.status === EntityChangeStatus.Pending)) {
+        } else if (!this.#executed || this.#planned.items.every(item => item.getStatus() === EntityChangeStatus.Pending)) {
             return EntityChangesetStatus.Pending;
         } else {
             return this.#getResultStatus();
@@ -214,18 +214,22 @@ export class EntityChangeset<T extends Entity = Entity> {
         return prepared;
     }
 
-    #plan(previousItems: ReadonlyMap<string, ChangeItem>): void {
+    #plan(previousItems: ReadonlyMap<string, PlannedEntityChange>): void {
         writeRelationJoins(this.#schema, this.#next, this.#selection);
 
         const mutation = new EntityMutation(this.#type, this.#schema, this.#next, this.#selection, this.#previous);
         const planned = planChanges(this.#services, mutation, this.#committed);
 
         for (const item of planned.items) {
-            const previousItem = previousItems.get(item.key);
+            const previousItem = previousItems.get(item.getKey());
 
-            if (previousItem?.error !== undefined) {
-                item.error = previousItem.error;
-                item.errorPath = previousItem.errorPath;
+            if (previousItem?.getError() !== undefined) {
+                planned.replaceItem(
+                    item.withStatus(EntityChangeStatus.Pending, {
+                        error: previousItem.getError(),
+                        errorPath: previousItem.getErrorPath(),
+                    }),
+                );
             }
         }
 
@@ -235,8 +239,8 @@ export class EntityChangeset<T extends Entity = Entity> {
         this.#emit();
     }
 
-    #getItemsByKey(): Map<string, ChangeItem> {
-        return new Map(this.#planned.items.map(item => [item.key, item]));
+    #getItemsByKey(): Map<string, PlannedEntityChange> {
+        return new Map(this.#planned.items.map(item => [item.getKey(), item]));
     }
 
     #emit(): void {
@@ -246,11 +250,11 @@ export class EntityChangeset<T extends Entity = Entity> {
     #getResultStatus(): EntityChangesetResultStatus {
         const items = this.#planned.items;
 
-        if (items.some(item => item.status === EntityChangeStatus.Cancelled)) {
+        if (items.some(item => item.getStatus() === EntityChangeStatus.Cancelled)) {
             return EntityChangesetResultStatus.Cancelled;
-        } else if (items.every(item => item.status === EntityChangeStatus.Succeeded)) {
+        } else if (items.every(item => item.getStatus() === EntityChangeStatus.Succeeded)) {
             return EntityChangesetResultStatus.Succeeded;
-        } else if (items.some(item => item.status === EntityChangeStatus.Succeeded)) {
+        } else if (items.some(item => item.getStatus() === EntityChangeStatus.Succeeded)) {
             return EntityChangesetResultStatus.Partial;
         } else {
             return EntityChangesetResultStatus.Failed;

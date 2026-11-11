@@ -1,7 +1,7 @@
 import { assignEntitiesUsingIds, Entity, entityHasId, getSelection } from "@entity-space/elements";
 import { readPath, writePath } from "@entity-space/utils";
 import { EntityMutatorType } from "../entity-mutator";
-import { ChangeItem } from "../structures/change-item";
+import { PlannedEntityChange } from "../structures/entity-change";
 import { EntityMutationContext } from "../structures/entity-mutation-context";
 import { EntityMutationOutcomes } from "../structures/entity-mutation-outcomes";
 import {
@@ -13,7 +13,7 @@ import {
 import { CopiesForMutationDispatch, copyEntitiesForMutationDispatch } from "./copy-entities-for-mutation-dispatch.fn";
 import { matchMutationResults } from "./match-mutation-results.fn";
 
-export type MutationOutcomes = Map<ChangeItem, EntityChangeOutcome>;
+export type MutationOutcomes = Map<string, EntityChangeOutcome>;
 
 /**
  * Dispatches roots (and their accepted related entities) to a create, update or save mutator and resolves the
@@ -29,7 +29,7 @@ export async function dispatchUpsertMutation(
     const fullSelection = getSelection(schema, relationSelection);
 
     for (const item of dispatch.items) {
-        for (const dependency of item.change.getOutboundDependencies()) {
+        for (const dependency of item.getOutboundDependencies()) {
             services.getTracing().writingDependency(dependency);
             dependency.writeIds(item.getSchema(), [item.getEntity()]);
         }
@@ -80,21 +80,25 @@ export async function dispatchUpsertMutation(
     const results = resolveOutcomes(dispatch, dispatched, outcomes, copy => matchedCopies.has(copy));
     const succeededRoots = roots.filter(root => isRootSucceeded(dispatch, results, root));
 
-    for (const [item, outcome] of results) {
-        if (outcome.status !== EntityChangeOutcomeStatus.Succeeded) {
+    for (const item of dispatch.items) {
+        const outcome = results.get(item.getKey());
+
+        if (outcome?.status !== EntityChangeOutcomeStatus.Succeeded) {
             continue;
         }
 
-        for (const dependency of item.change.getInboundDependencies()) {
+        for (const dependency of item.getInboundDependencies()) {
             services.getTracing().writingDependency(dependency);
             dependency.writeIds(item.getSchema(), [item.getEntity()]);
         }
     }
 
-    for (const [item, outcome] of results) {
-        if (outcome.status !== EntityChangeOutcomeStatus.Succeeded) {
+    for (const item of dispatch.items) {
+        const outcome = results.get(item.getKey());
+
+        if (outcome?.status !== EntityChangeOutcomeStatus.Succeeded) {
             continue;
-        } else if (item.change.isDelete()) {
+        } else if (item.isDelete()) {
             dispatch.committed.delete(item.getSchema(), item.getEntity());
         } else {
             dispatch.committed.commit(item.getSchema(), item.getEntity());
@@ -133,8 +137,8 @@ export async function dispatchDeleteMutation(dispatch: MutationDispatch): Promis
     const results = resolveOutcomes(dispatch, dispatched, outcomes, () => true);
     const succeededRoots = roots.filter(root => isRootSucceeded(dispatch, results, root));
 
-    for (const [item, outcome] of results) {
-        if (outcome.status === EntityChangeOutcomeStatus.Succeeded) {
+    for (const item of dispatch.items) {
+        if (results.get(item.getKey())?.status === EntityChangeOutcomeStatus.Succeeded) {
             dispatch.committed.delete(item.getSchema(), item.getEntity());
         }
     }
@@ -161,8 +165,8 @@ function createDispatchContext(
     return [outcomes, context];
 }
 
-function failAll(items: readonly ChangeItem[], error: unknown): MutationOutcomes {
-    return new Map(items.map(item => [item, { status: EntityChangeOutcomeStatus.Failed, error }]));
+function failAll(items: readonly PlannedEntityChange[], error: unknown): MutationOutcomes {
+    return new Map(items.map(item => [item.getKey(), { status: EntityChangeOutcomeStatus.Failed, error }]));
 }
 
 function resolveOutcomes(
@@ -216,13 +220,14 @@ function resolveOutcomes(
         if (outcome === undefined) {
             // e.g. deletions handled by a save mutator: they share the outcome of the root they were dispatched with
             const root = dispatch.rootOf.get(item);
+
             outcome = (root !== undefined && root !== item.getEntity() ? resolveEntity(root) : undefined) ?? {
                 status: EntityChangeOutcomeStatus.Failed,
                 error: new Error("the entity was not passed to the mutator"),
             };
         }
 
-        results.set(item, outcome);
+        results.set(item.getKey(), outcome);
     }
 
     return results;
@@ -232,6 +237,6 @@ function isRootSucceeded(dispatch: MutationDispatch, results: MutationOutcomes, 
     const rootItems = dispatch.items.filter(item => item.getEntity() === root);
     return (
         rootItems.length > 0 &&
-        rootItems.every(item => results.get(item)?.status === EntityChangeOutcomeStatus.Succeeded)
+        rootItems.every(item => results.get(item.getKey())?.status === EntityChangeOutcomeStatus.Succeeded)
     );
 }

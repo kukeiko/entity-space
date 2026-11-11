@@ -2,7 +2,7 @@ import { Entity } from "@entity-space/elements";
 import { EntityMutationOptions } from "../../execution-arguments.interface";
 import { EntityServiceContainer } from "../../entity-service-container";
 import { CommittedEntities } from "../committed-entities";
-import { ChangeItem, EntityChangeStatus } from "../structures/change-item";
+import { EntityChangeStatus, PlannedEntityChange } from "../structures/entity-change";
 import { EntityMutation } from "../structures/entity-mutation";
 import { EntityChangeOutcomeStatus, MutationCacheOperation, MutationDispatch } from "../structures/mutation-dispatch";
 import { TemporaryIds } from "../temporary-ids";
@@ -39,7 +39,7 @@ export async function executeChangeset(args: ExecuteChangesetArguments): Promise
             dispatchedOrBlocked = false;
 
             for (const batch of [...remaining]) {
-                if (!isReady(batch)) {
+                if (!isReady(batch, args.planned)) {
                     continue;
                 }
 
@@ -55,20 +55,29 @@ export async function executeChangeset(args: ExecuteChangesetArguments): Promise
                 const promise: Promise<void> = executeMutation(dispatch)
                     .then(outcomes => {
                         for (const item of dispatch.items) {
-                            const outcome = outcomes.get(item);
+                            const outcome = outcomes.get(item.getKey());
 
                             if (outcome === undefined) {
-                                item.fail(new Error("no outcome has been resolved for this change"));
+                                args.planned.replaceItem(
+                                    item.withStatus(EntityChangeStatus.Failed, {
+                                        error: new Error("no outcome has been resolved for this change"),
+                                    }),
+                                );
                             } else if (outcome.status === EntityChangeOutcomeStatus.Succeeded) {
-                                item.succeed();
+                                args.planned.replaceItem(item.withStatus(EntityChangeStatus.Succeeded));
                             } else {
-                                item.fail(outcome.error, outcome.path);
+                                args.planned.replaceItem(
+                                    item.withStatus(EntityChangeStatus.Failed, {
+                                        error: outcome.error,
+                                        errorPath: outcome.path,
+                                    }),
+                                );
                             }
                         }
                     })
                     .catch(error => {
                         for (const item of dispatch.items) {
-                            item.fail(error);
+                            args.planned.replaceItem(item.withStatus(EntityChangeStatus.Failed, { error }));
                         }
                     })
                     .finally(() => {
@@ -91,34 +100,46 @@ export async function executeChangeset(args: ExecuteChangesetArguments): Promise
 
     for (const batch of remaining) {
         for (const item of batch.items.filter(item => !item.isSettled())) {
-            item.status = signal.aborted ? EntityChangeStatus.Cancelled : EntityChangeStatus.Blocked;
+            args.planned.replaceItem(
+                item.withStatus(signal.aborted ? EntityChangeStatus.Cancelled : EntityChangeStatus.Blocked),
+            );
         }
     }
 
     onChange();
 }
 
-function isReady(batch: ChangeBatch): boolean {
+function isReady(batch: ChangeBatch, planned: PlannedChanges): boolean {
     return batch.items.every(item =>
-        [...item.dependsOn].every(dependency => dependency.batchIndex === batch.index || dependency.isSettled()),
+        item.getDependsOnKeys().every(dependencyKey => {
+            const dependency = planned.getItem(dependencyKey);
+
+            if (dependency === undefined) {
+                return true;
+            }
+
+            return dependency.getBatchIndex() === batch.index || dependency.isSettled();
+        }),
     );
 }
 
 function toDispatch(args: ExecuteChangesetArguments, batch: ChangeBatch): MutationDispatch | undefined {
     const groups = groupBatchItems(batch.mutation, batch.items);
-    const blocked = getBlockedItems(batch, groups);
+    const blocked = getBlockedItems(batch, groups, args.planned);
 
-    for (const item of blocked) {
-        item.status = EntityChangeStatus.Blocked;
+    for (const item of batch.items) {
+        if (blocked.has(item.getKey())) {
+            args.planned.replaceItem(item.withStatus(EntityChangeStatus.Blocked));
+        }
     }
 
     const dispatchRoots = new Set(getDispatchRoots(batch.mutation));
     const roots: Entity[] = [];
-    const items: ChangeItem[] = [];
-    const rootOf = new Map<ChangeItem, Entity>();
+    const items: PlannedEntityChange[] = [];
+    const rootOfByKey = new Map<string, Entity>();
 
     for (const [root, groupItems] of groups) {
-        if (!dispatchRoots.has(root) || groupItems.some(item => blocked.has(item))) {
+        if (!dispatchRoots.has(root) || groupItems.some(item => blocked.has(item.getKey()))) {
             continue;
         }
 
@@ -126,12 +147,16 @@ function toDispatch(args: ExecuteChangesetArguments, batch: ChangeBatch): Mutati
 
         for (const item of groupItems) {
             items.push(item);
-            rootOf.set(item, root);
+            rootOfByKey.set(item.getKey(), root);
         }
     }
 
-    for (const item of batch.items.filter(item => !blocked.has(item) && !rootOf.has(item))) {
-        item.fail(new Error("the entity is not part of any entity dispatched to the mutator"));
+    for (const item of batch.items.filter(item => !blocked.has(item.getKey()) && !rootOfByKey.has(item.getKey()))) {
+        args.planned.replaceItem(
+            item.withStatus(EntityChangeStatus.Failed, {
+                error: new Error("the entity is not part of any entity dispatched to the mutator"),
+            }),
+        );
     }
 
     if (!items.length) {
@@ -139,14 +164,16 @@ function toDispatch(args: ExecuteChangesetArguments, batch: ChangeBatch): Mutati
     }
 
     for (const item of items) {
-        item.status = EntityChangeStatus.Running;
+        args.planned.replaceItem(item.withStatus(EntityChangeStatus.Running));
     }
+
+    const dispatchItems = items.map(item => args.planned.getItem(item.getKey())!);
 
     return {
         mutation: batch.mutation,
         roots,
-        items,
-        rootOf,
+        items: dispatchItems,
+        rootOf: new Map(dispatchItems.map(item => [item, rootOfByKey.get(item.getKey())!])),
         entityMutation: args.entityMutation,
         options: args.options,
         signal: args.signal,
@@ -160,33 +187,46 @@ function toDispatch(args: ExecuteChangesetArguments, batch: ChangeBatch): Mutati
 /**
  * An item is blocked if any of its prerequisites did not succeed, or if it belongs to the aggregate of a blocked item.
  */
-function getBlockedItems(batch: ChangeBatch, groups: Map<Entity, ChangeItem[]>): Set<ChangeItem> {
-    const blocked = new Set<ChangeItem>();
+function getBlockedItems(
+    batch: ChangeBatch,
+    groups: Map<Entity, PlannedEntityChange[]>,
+    planned: PlannedChanges,
+): Set<string> {
+    const blocked = new Set<string>();
     let changed = true;
 
     while (changed) {
         changed = false;
 
         for (const item of batch.items) {
-            if (blocked.has(item)) {
+            if (blocked.has(item.getKey())) {
                 continue;
             }
 
-            const isBlocked = [...item.dependsOn].some(dependency =>
-                dependency.batchIndex === batch.index
-                    ? blocked.has(dependency)
-                    : dependency.status !== EntityChangeStatus.Succeeded,
-            );
+            const isBlocked = item.getDependsOnKeys().some(dependencyKey => {
+                const dependency = planned.getItem(dependencyKey);
+
+                if (dependency === undefined) {
+                    return false;
+                }
+
+                return dependency.getBatchIndex() === batch.index
+                    ? blocked.has(dependency.getKey())
+                    : dependency.getStatus() !== EntityChangeStatus.Succeeded;
+            });
 
             if (isBlocked) {
-                blocked.add(item);
+                blocked.add(item.getKey());
                 changed = true;
             }
         }
 
         for (const groupItems of groups.values()) {
-            if (groupItems.some(item => blocked.has(item)) && groupItems.some(item => !blocked.has(item))) {
-                groupItems.forEach(item => blocked.add(item));
+            if (
+                groupItems.some(item => blocked.has(item.getKey())) &&
+                groupItems.some(item => !blocked.has(item.getKey()))
+            ) {
+                groupItems.forEach(item => blocked.add(item.getKey()));
                 changed = true;
             }
         }
