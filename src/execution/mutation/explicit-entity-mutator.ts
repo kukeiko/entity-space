@@ -1,11 +1,12 @@
 import {
+    Entity,
     EntityRelationSelection,
     EntitySchema,
     EntitySelection,
     intersectRelationSelection,
     toRelationSelection,
 } from "@entity-space/elements";
-import { joinPaths, Path } from "@entity-space/utils";
+import { joinPaths, Path, readPath, toPathSegments } from "@entity-space/utils";
 import { isEmpty, uniq } from "lodash";
 import { EntityMutationFn, EntityMutator, EntityMutatorType } from "./entity-mutator";
 import { subtractChanges } from "./functions/subtract-changes.fn";
@@ -51,6 +52,7 @@ export class ExplicitEntityMutator extends EntityMutator {
         const acceptedSelection = intersectRelationSelection(changes.getSelection(path), this.#selection);
         const entities = changes.getEntities(path);
         const previous = changes.getPrevious(path);
+
         const acceptedMutation = new AcceptedEntityMutation(
             this.#schema,
             this.#type,
@@ -69,9 +71,12 @@ export class ExplicitEntityMutator extends EntityMutator {
         supportedSelection?: EntityRelationSelection,
         path?: Path,
         isRoot?: boolean,
+        scope?: PreviousScope,
     ): [accepted: EntityChange[], open: EntityChanges | undefined] {
         const entities = changes.getEntities(path);
-        const previous = changes.getPrevious(path);
+        const previous = scope
+            ? readPath<Entity>(relativePath(scope.path, path), scope.roots)
+            : changes.getPrevious(path);
 
         if (!entities.length && !previous?.length) {
             return [[], changes];
@@ -104,13 +109,17 @@ export class ExplicitEntityMutator extends EntityMutator {
             if (!acceptedChanges.length || open === undefined) {
                 return [acceptedChanges, open];
             }
+
+            if (isRoot) {
+                scope = { path, roots: this.#getAcceptedPrevious(schema, acceptedChanges, changes.getPrevious(path)) };
+            }
         }
 
         let openChanges: EntityChanges | undefined = open;
 
         if (!isEmpty(changeSelection) && supportedSelection !== undefined) {
             const intersection = intersectRelationSelection(supportedSelection, changeSelection);
-            const [relatedChanges, openAfterRelated] = this.#acceptRelated(intersection, open, path);
+            const [relatedChanges, openAfterRelated] = this.#acceptRelated(intersection, open, path, scope);
             acceptedChanges.push(...relatedChanges);
             openChanges = openAfterRelated;
         }
@@ -118,10 +127,22 @@ export class ExplicitEntityMutator extends EntityMutator {
         return [acceptedChanges, openChanges];
     }
 
+    /**
+     * The previous entities of the accepted root changes, so that related deletions are only accepted for entities
+     * that belong to roots this mutator is dispatched with.
+     */
+    #getAcceptedPrevious(schema: EntitySchema, accepted: EntityChange[], previous: readonly Entity[]): Entity[] {
+        const toKey = (entity: Entity) => JSON.stringify(schema.getIdPaths().map(path => readPath(path, entity)));
+        const acceptedKeys = new Set(accepted.map(change => toKey(change.getEntity())));
+
+        return previous.filter(entity => acceptedKeys.has(toKey(entity)));
+    }
+
     #acceptRelated(
         intersection: EntitySelection,
         changes: EntityChanges,
         path?: Path,
+        scope?: PreviousScope,
     ): [EntityChange[], EntityChanges | undefined] {
         const entityChanges: EntityChange[] = [];
         const schema = changes.getSchema(path);
@@ -132,6 +153,8 @@ export class ExplicitEntityMutator extends EntityMutator {
                 openChanges,
                 isEmpty(selected) ? undefined : selected,
                 joinPaths([path, key]),
+                false,
+                scope,
             );
 
             entityChanges.push(...relatedRemovedChanges);
@@ -144,4 +167,14 @@ export class ExplicitEntityMutator extends EntityMutator {
 
         return [entityChanges, openChanges];
     }
+}
+
+interface PreviousScope {
+    path?: Path;
+    roots: readonly Entity[];
+}
+
+function relativePath(from: Path | undefined, to: Path | undefined): Path | undefined {
+    const segments = toPathSegments(to!).slice(from ? toPathSegments(from).length : 0);
+    return segments.length ? joinPaths(segments) : undefined;
 }

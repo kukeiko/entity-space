@@ -1,5 +1,4 @@
 import {
-    Entity,
     EntityBlueprint,
     EntityPage,
     EntityPropertySort,
@@ -14,7 +13,6 @@ import {
     unpackSelection,
     unpackSelectionWithoutDefault,
     whereEntityToCriterion,
-    writeRelationJoins,
 } from "@entity-space/elements";
 import { Class, toPath } from "@entity-space/utils";
 import { uniqBy } from "lodash";
@@ -43,7 +41,6 @@ import { EntityQueryBuilder } from "./entity-query-builder";
 import { EntityQueryExecutionContext } from "./entity-query-execution-context";
 import { EntityServiceContainer } from "./entity-service-container";
 import {
-    EntityMutationOptions,
     HydrateArguments,
     QueryArguments,
     QueryCacheOptions,
@@ -51,15 +48,7 @@ import {
 import { executeQuery } from "./functions/execute-query.fn";
 import { describeHydration } from "./hydration/functions/describe-hydration.fn";
 import { executeDescribedHydration } from "./hydration/functions/execute-described-hydration.fn";
-import { EntityMutator } from "./mutation/entity-mutator";
-import { executeMutation } from "./mutation/functions/execute-mutation.fn";
-import { generatePathedMutators } from "./mutation/functions/generate-pathed-mutators.fn";
-import { sortAcceptedMutationsByDependency } from "./mutation/functions/sort-accepted-mutations-by-dependency.fn";
-import { toEntityChanges } from "./mutation/functions/to-entity-changes.fn";
-import { AcceptedEntityMutation } from "./mutation/structures/accepted-entity-mutation";
-import { EntityChanges } from "./mutation/structures/entity-changes";
-import { EntityMutation } from "./mutation/structures/entity-mutation";
-import { EntityMutationContext } from "./mutation/structures/entity-mutation-context";
+import { EntityChangeset } from "./mutation/entity-changeset";
 import { expandSourcedSelection } from "./sourcing/functions/expand-source-selection.fn";
 import { toSourcedEntities } from "./sourcing/to-sourced-entities.fn";
 
@@ -81,7 +70,7 @@ export class EntityWorkspace {
 
     in<T extends Class | Class[]>(blueprint: T): EntityMutationBuilder<T> {
         const schema = this.#services.getCatalog().getSchemaByBlueprint(blueprint);
-        return new EntityMutationBuilder(schema, (operation, options) => this.#mutate(operation, options));
+        return new EntityMutationBuilder(schema, args => new EntityChangeset({ ...args, services: this.#services }));
     }
 
     map<B extends Class>(blueprint: B): EntityMapper<B> {
@@ -104,13 +93,13 @@ export class EntityWorkspace {
         cacheKey?: unknown,
     ): void {
         const schema = this.#services.getCatalog().getSchemaByBlueprint(blueprint);
+        const cache = this.#services.getOrCreateCache(cacheKey);
 
         upsertToCache(
-            this.#services,
+            cache,
             schema,
             entity,
             selection ? toRelationSelection(schema, unpackSelection(schema, selection)) : undefined,
-            cacheKey,
         );
     }
 
@@ -359,51 +348,6 @@ export class EntityWorkspace {
                 }),
             );
         });
-    }
-
-    async #mutate(mutation: EntityMutation, options: EntityMutationOptions): Promise<Entity[]> {
-        const selection = mutation.getSelection() ?? {};
-        writeRelationJoins(mutation.getSchema(), mutation.getEntities(), selection);
-        const entityChanges = toEntityChanges(mutation);
-
-        if (entityChanges === undefined) {
-            return mutation.getEntities();
-        }
-
-        const mutators: EntityMutator[] = [
-            ...this.#services.getExplicitMutatorsFor(mutation.getSchema()),
-            ...generatePathedMutators(this.#services, mutation.getSchema(), selection),
-        ];
-        let nextEntityChanges: EntityChanges | undefined = entityChanges;
-        const allAccepted: AcceptedEntityMutation[] = [];
-
-        for (const mutator of mutators) {
-            const [accepted, open] = mutator.accept(nextEntityChanges, undefined);
-
-            if (accepted === undefined) {
-                continue;
-            }
-
-            allAccepted.push(accepted);
-            nextEntityChanges = open;
-
-            if (nextEntityChanges === undefined) {
-                break;
-            }
-        }
-
-        if (nextEntityChanges !== undefined) {
-            console.warn("not all mutations have been accepted", nextEntityChanges);
-            throw new Error("not all mutations have been accepted");
-        }
-
-        const context = new EntityMutationContext(mutation, options);
-
-        for (const mutation of sortAcceptedMutationsByDependency(allAccepted)) {
-            await executeMutation(mutation, context, this.#services);
-        }
-
-        return mutation.getEntities();
     }
 
     #toCacheOptions(options?: QueryCacheOptions | boolean): QueryCacheOptions | false {

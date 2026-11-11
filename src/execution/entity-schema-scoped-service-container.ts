@@ -1,4 +1,5 @@
 import {
+    Entity,
     EntityBlueprint,
     EntityPageShape,
     EntityQueryShape,
@@ -16,7 +17,7 @@ import {
     WhereEntityShape,
     whereEntityShapeToCriterionShape,
 } from "@entity-space/elements";
-import { Class, unwrapMaybeAsync } from "@entity-space/utils";
+import { Class, isDefined, MaybeAsync, unwrapMaybeAsync } from "@entity-space/utils";
 import { EntityServiceContainer } from "./entity-service-container";
 import { HydrateEntitiesFn } from "./hydration/entity-hydrator";
 import { ExplicitEntityHydrator } from "./hydration/explicit-entity-hydrator";
@@ -32,6 +33,7 @@ import {
 } from "./mutation/entity-mutation-function.type";
 import { EntityMutationFn, EntityMutatorType } from "./mutation/entity-mutator";
 import { ExplicitEntityMutator } from "./mutation/explicit-entity-mutator";
+import { EntityMutationContext } from "./mutation/structures/entity-mutation-context";
 import { EntitySource, LoadEntitiesFn } from "./sourcing/entity-source";
 
 export class EntitySchemaScopedServiceContainer<B> {
@@ -156,15 +158,11 @@ export class EntitySchemaScopedServiceContainer<B> {
         save: SaveEntityFn<B, S>;
     }): this {
         const mutate: EntityMutationFn = (entities, selection, context) => {
-            return Promise.all(
-                entities.map(entity => {
-                    return unwrapMaybeAsync(
-                        save({
-                            entity: entity as EntityBlueprint.Type<B>,
-                            selection: packEntitySelection(this.#schema, selection) as S,
-                            context,
-                        }),
-                    );
+            return this.#mutateEach(entities, context, entity =>
+                save({
+                    entity: entity as EntityBlueprint.Type<B>,
+                    selection: packEntitySelection(this.#schema, selection) as S,
+                    context,
                 }),
             );
         };
@@ -200,15 +198,11 @@ export class EntitySchemaScopedServiceContainer<B> {
         create: CreateEntityFn<B, S>;
     }): this {
         const mutate: EntityMutationFn = (entities, selection, context) => {
-            return Promise.all(
-                entities.map(entity => {
-                    return unwrapMaybeAsync(
-                        create({
-                            entity: entity as EntityBlueprint.Type<B>,
-                            selection: packEntitySelection(this.#schema, selection) as S,
-                            context,
-                        }),
-                    );
+            return this.#mutateEach(entities, context, entity =>
+                create({
+                    entity: entity as EntityBlueprint.Type<B>,
+                    selection: packEntitySelection(this.#schema, selection) as S,
+                    context,
                 }),
             );
         };
@@ -244,15 +238,11 @@ export class EntitySchemaScopedServiceContainer<B> {
         update: UpdateEntityFn<B, S>;
     }): this {
         const mutate: EntityMutationFn = (entities, selection, context) => {
-            return Promise.all(
-                entities.map(entity => {
-                    return unwrapMaybeAsync(
-                        update({
-                            entity: entity as EntityBlueprint.Type<B>,
-                            selection: packEntitySelection(this.#schema, selection) as S,
-                            context,
-                        }),
-                    );
+            return this.#mutateEach(entities, context, entity =>
+                update({
+                    entity: entity as EntityBlueprint.Type<B>,
+                    selection: packEntitySelection(this.#schema, selection) as S,
+                    context,
                 }),
             );
         };
@@ -288,19 +278,19 @@ export class EntitySchemaScopedServiceContainer<B> {
         delete: DeleteEntityFn<B, S>;
     }): this {
         const mutate: EntityMutationFn = async (entities, selection, context) => {
-            await Promise.all(
-                entities.map(entity => {
-                    return unwrapMaybeAsync(
-                        del({
-                            entity: entity as EntityBlueprint.Type<B>,
-                            selection: packEntitySelection(this.#schema, selection) as S,
-                            context,
-                        }),
-                    );
-                }),
-            );
+            await this.#mutateEach(entities, context, async entity => {
+                await unwrapMaybeAsync(
+                    del({
+                        entity: entity as EntityBlueprint.Type<B>,
+                        selection: packEntitySelection(this.#schema, selection) as S,
+                        context,
+                    }),
+                );
 
-            return entities;
+                return entity as EntityBlueprint.Type<B>;
+            });
+
+            return [];
         };
 
         return this.#addMutator(EntityMutatorType.Delete, mutate, select);
@@ -322,10 +312,32 @@ export class EntitySchemaScopedServiceContainer<B> {
                 }),
             );
 
-            return entities;
+            return [];
         };
 
         return this.#addMutator(EntityMutatorType.Delete, mutate, select);
+    }
+
+    /**
+     * Calls the given one-entity mutator for each entity, reporting thrown errors as failures of that entity.
+     */
+    async #mutateEach(
+        entities: Entity[],
+        context: EntityMutationContext,
+        mutateOne: (entity: Entity) => MaybeAsync<EntityBlueprint.Type<B>>,
+    ): Promise<Entity[]> {
+        const mutated = await Promise.all(
+            entities.map(async entity => {
+                try {
+                    return await unwrapMaybeAsync(mutateOne(entity));
+                } catch (error) {
+                    context.fail(entity, error);
+                    return undefined;
+                }
+            }),
+        );
+
+        return mutated.filter(isDefined) as Entity[];
     }
 
     #addMutator(type: EntityMutatorType, mutate: EntityMutationFn, selection?: PackedEntitySelection): this {

@@ -6,6 +6,8 @@ import {
     EntitySchema,
 } from "@entity-space/elements";
 import { ComplexKeyMap, joinPaths, Path } from "@entity-space/utils";
+import { isEqual } from "lodash";
+import { CommittedEntities } from "./committed-entities";
 import { isEntityUpdateEqual } from "./functions/is-entity-update-equal.fn";
 import {
     CreateEntityChange,
@@ -29,6 +31,11 @@ interface SelectedEntityStruct {
 }
 
 export class EntityChangesBuilder {
+    constructor(committed?: CommittedEntities) {
+        this.#committed = committed;
+    }
+
+    readonly #committed?: CommittedEntities;
     readonly #creates = new Map<EntitySchema, Entity[]>();
     readonly #updates = new Map<EntitySchema, ComplexKeyMap<Entity, SelectedEntityStruct[]>>();
     readonly #deletes = new EntityMap();
@@ -46,7 +53,9 @@ export class EntityChangesBuilder {
             this.#creates.set(schema, entities);
         }
 
-        entities.push(entity);
+        if (!entities.includes(entity)) {
+            entities.push(entity);
+        }
     }
 
     addUpdate(schema: EntitySchema, path: Path | undefined, selection: EntityRelationSelection, entity: Entity): void {
@@ -64,6 +73,10 @@ export class EntityChangesBuilder {
 
     // [todo] ❓ what about this removeFn?
     addDelete(schema: EntitySchema, entity: Entity, removeFn?: (entity: Entity) => void): void {
+        if (this.#deletes.hasEntity(schema, entity)) {
+            return;
+        }
+
         this.#deletes.addEntity(schema, entity);
     }
 
@@ -83,10 +96,12 @@ export class EntityChangesBuilder {
         }
 
         for (const [schema, map] of this.#updates.entries()) {
+            // [todo] ❓ get familiar again with why we needed path & selection. find an existing test that covers the need for this
             for (const { entity, path, selection } of map.getAll().flat()) {
                 const previous = this.#getPrevious(schema, entity, path);
+                const baseline = previous?.entity ?? this.#committed?.get(schema, entity);
 
-                if (previous !== undefined && isEntityUpdateEqual(schema, entity, previous.entity, selection)) {
+                if (baseline !== undefined && isEntityUpdateEqual(schema, entity, baseline, selection)) {
                     continue;
                 }
 
@@ -96,7 +111,12 @@ export class EntityChangesBuilder {
                         ? this.#getDependencies(EntityChangeType.Delete, schema, previous.entity)
                         : [];
 
-                changes.push(new UpdateEntityChange(schema, entity, [...dependencies, ...deleteDependencies]));
+                changes.push(
+                    new UpdateEntityChange(schema, entity, [...dependencies, ...deleteDependencies], {
+                        previous: baseline,
+                        path,
+                    }),
+                );
             }
         }
 
@@ -131,7 +151,16 @@ export class EntityChangesBuilder {
             map.set(entity, entities);
         }
 
-        entities.push({ entity, selection, path });
+        if (
+            !entities.find(
+                candidate =>
+                    candidate.entity === entity &&
+                    candidate.path?.toString() === path?.toString() &&
+                    isEqual(candidate.selection, selection),
+            )
+        ) {
+            entities.push({ entity, selection, path });
+        }
     }
 
     #getPrevious(schema: EntitySchema, entity: Entity, path?: Path): SelectedEntityStruct | undefined {

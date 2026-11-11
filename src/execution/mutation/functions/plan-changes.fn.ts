@@ -1,0 +1,134 @@
+import { Entity, EntitySchema } from "@entity-space/elements";
+import { readPath } from "@entity-space/utils";
+import { EntityServiceContainer } from "../../entity-service-container";
+import { CommittedEntities } from "../committed-entities";
+import { EntityMutator } from "../entity-mutator";
+import { AcceptedEntityMutation } from "../structures/accepted-entity-mutation";
+import { ChangeItem } from "../structures/change-item";
+import { EntityChange } from "../structures/entity-change";
+import { EntityChanges } from "../structures/entity-changes";
+import { EntityMutation } from "../structures/entity-mutation";
+import { generatePathedMutators } from "./generate-pathed-mutators.fn";
+import { sortAcceptedMutationsByDependency } from "./sort-accepted-mutations-by-dependency.fn";
+import { toEntityChanges } from "./to-entity-changes.fn";
+
+export interface ChangeBatch {
+    readonly index: number;
+    readonly mutation: AcceptedEntityMutation;
+    readonly items: readonly ChangeItem[];
+}
+
+export interface PlannedChanges {
+    readonly items: readonly ChangeItem[];
+    readonly batches: readonly ChangeBatch[];
+}
+
+/**
+ * Detects the changes of a mutation, assigns them to mutators and builds the per-entity dependency graph.
+ * Does not invoke any mutators. Throws if a change is not accepted by any registered mutator.
+ */
+export function planChanges(
+    services: EntityServiceContainer,
+    mutation: EntityMutation,
+    committed: CommittedEntities,
+): PlannedChanges {
+    const entityChanges = toEntityChanges(mutation, committed);
+
+    if (entityChanges === undefined) {
+        return { items: [], batches: [] };
+    }
+
+    const accepted = sortAcceptedMutationsByDependency(acceptChanges(services, mutation, entityChanges));
+    const keys = new Map<string, number>();
+    const items: ChangeItem[] = [];
+
+    const batches = accepted.map((acceptedMutation, index) => {
+        const batchItems = acceptedMutation
+            .getChanges()
+            .map(change => new ChangeItem(toUniqueKey(keys, change), change, index));
+
+        items.push(...batchItems);
+
+        return { index, mutation: acceptedMutation, items: batchItems };
+    });
+
+    addItemDependencies(items);
+
+    return { items, batches };
+}
+
+function acceptChanges(
+    services: EntityServiceContainer,
+    mutation: EntityMutation,
+    entityChanges: EntityChanges,
+): AcceptedEntityMutation[] {
+    const mutators: EntityMutator[] = [
+        ...services.getExplicitMutatorsFor(mutation.getSchema()),
+        ...generatePathedMutators(services, mutation.getSchema(), mutation.getSelection() ?? {}),
+    ];
+    let open: EntityChanges | undefined = entityChanges;
+    const allAccepted: AcceptedEntityMutation[] = [];
+
+    for (const mutator of mutators) {
+        const [accepted, nextOpen] = mutator.accept(open, undefined);
+
+        if (accepted === undefined) {
+            continue;
+        }
+
+        allAccepted.push(accepted);
+        open = nextOpen;
+
+        if (open === undefined) {
+            break;
+        }
+    }
+
+    if (open !== undefined) {
+        const unaccepted = open.getChanges().map(change => change.toString());
+        throw new Error(`not all mutations have been accepted, no mutator found for: ${unaccepted.join(", ")}`);
+    }
+
+    return allAccepted;
+}
+
+function addItemDependencies(items: readonly ChangeItem[]): void {
+    const itemsByEntity = new Map<Entity, ChangeItem[]>();
+
+    for (const item of items) {
+        const entityItems = itemsByEntity.get(item.getEntity()) ?? [];
+        entityItems.push(item);
+        itemsByEntity.set(item.getEntity(), entityItems);
+    }
+
+    for (const item of items) {
+        for (const dependency of item.change.getOutboundDependencies()) {
+            for (const other of itemsByEntity.get(dependency.getEntity()) ?? []) {
+                if (other !== item) {
+                    item.dependsOn.add(other);
+                }
+            }
+        }
+
+        for (const dependency of item.change.getInboundDependencies()) {
+            for (const other of itemsByEntity.get(dependency.getEntity()) ?? []) {
+                if (other !== item) {
+                    other.dependsOn.add(item);
+                }
+            }
+        }
+    }
+}
+
+function toUniqueKey(keys: Map<string, number>, change: EntityChange): string {
+    const key = toKey(change.getSchema(), change);
+    const count = keys.get(key) ?? 0;
+    keys.set(key, count + 1);
+
+    return count ? `${key}#${count + 1}` : key;
+}
+
+function toKey(schema: EntitySchema, change: EntityChange): string {
+    const ids = schema.getIdPaths().map(path => readPath(path, change.getEntity()));
+    return `${schema.getName()}:${change.getType()}:${JSON.stringify(ids.length === 1 ? ids[0] : ids)}`;
+}

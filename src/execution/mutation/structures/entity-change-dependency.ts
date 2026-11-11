@@ -39,6 +39,7 @@ export class EntityChangeDependency {
         }
     }
 
+    // [todo] ❌ extract as function
     writeIds(schema: EntitySchema, entities: readonly Entity[]): void {
         const path = this.#path;
         const relation = schema.getRelation(path);

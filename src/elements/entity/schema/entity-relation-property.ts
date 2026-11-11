@@ -222,6 +222,29 @@ export class EntityRelationProperty extends EntityProperty {
         const [joinsFrom, joinsTo] = [this.getJoinFrom(), this.getJoinTo()];
 
         for (const entity of entities) {
+            if (this.isOutbound() && this.joinFromIsContainer()) {
+                const value = this.readValue(entity);
+
+                if (value !== undefined) {
+                    const related = this.readValueAsArray(entity);
+                    const last = joinsFrom.length - 1;
+
+                    for (let i = 0; i < last; i++) {
+                        for (const item of related) {
+                            writePath(joinsFrom[i], entity, readPath(joinsTo[i], item) ?? 0);
+                        }
+                    }
+
+                    writePath(
+                        joinsFrom[last],
+                        entity,
+                        related.map(item => readPath(joinsTo[last], item) ?? 0),
+                    );
+                }
+
+                continue;
+            }
+
             for (const related of this.readValueAsArray(entity)) {
                 for (let i = 0; i < joinsFrom.length; i++) {
                     let [joinFrom, joinTo] = [joinsFrom[i], joinsTo[i]];

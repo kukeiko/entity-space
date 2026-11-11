@@ -533,7 +533,28 @@ export class MusicRepository extends InMemoryRepository<MusicEntities, "tags" | 
     }
 
     useDeleteSong() {
-        const del = vi.fn<DeleteEntityFn<SongBlueprint>>(() => {});
+        const del = vi.fn<DeleteEntityFn<SongBlueprint>>(({ entity }) => {
+            this.entities.songs = (this.entities.songs ?? []).filter(
+                candidate => candidate.id !== entity.id || candidate.namespace !== entity.namespace,
+            );
+        });
+
+        this.#services.for(SongBlueprint).addDeleteOneMutator({ delete: del });
+
+        return del;
+    }
+
+    useDeleteSongIfOddId() {
+        const del = vi.fn<DeleteEntityFn<SongBlueprint>>(({ entity }) => {
+            if (entity.id % 2 === 0) {
+                throw new Error("can only delete entities w/ odd id");
+            }
+
+            this.entities.songs = (this.entities.songs ?? []).filter(
+                candidate => candidate.id !== entity.id || candidate.namespace !== entity.namespace,
+            );
+        });
+
         this.#services.for(SongBlueprint).addDeleteOneMutator({ delete: del });
 
         return del;

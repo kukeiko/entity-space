@@ -5,8 +5,8 @@ import { EntitySchema } from "./schema/entity-schema";
 
 export function assignTemporaryIds(
     schema: EntitySchema,
-    selection: EntityRelationSelection,
     entities: readonly Entity[],
+    selection: EntityRelationSelection,
     startWith = -1,
 ): number {
     let nextId = startWith;
@@ -29,7 +29,7 @@ export function assignTemporaryIds(
 
         for (const entity of entities) {
             const related = relation.readValueAsArray(entity);
-            nextId = assignTemporaryIds(relatedSchema, selected, related, nextId);
+            nextId = assignTemporaryIds(relatedSchema, related, selected, nextId);
         }
 
         relation.writeJoins(entities);

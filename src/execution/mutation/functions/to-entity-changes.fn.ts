@@ -1,15 +1,16 @@
+import { CommittedEntities } from "../committed-entities";
 import { EntityChangesBuilder } from "../entity-changes-builder";
 import { EntityChanges } from "../structures/entity-changes";
 import { EntityMutation } from "../structures/entity-mutation";
 import { addChangeRelations } from "./add-change-relations.fn";
 import { addEntityChanges } from "./add-entity-changes.fn";
 
-export function toEntityChanges(mutation: EntityMutation): EntityChanges | undefined {
+export function toEntityChanges(mutation: EntityMutation, committed?: CommittedEntities): EntityChanges | undefined {
     const schema = mutation.getSchema();
     const entities = mutation.getEntities();
     const selection = mutation.getSelection() ?? {};
     const previous = mutation.getPrevious();
-    const builder = new EntityChangesBuilder();
+    const builder = new EntityChangesBuilder(committed);
 
     addChangeRelations(builder, schema, selection, entities);
 

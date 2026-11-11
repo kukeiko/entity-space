@@ -1,4 +1,5 @@
 import { Entity, EntitySchema } from "@entity-space/elements";
+import { Path } from "@entity-space/utils";
 import { EntityChangeDependency } from "./entity-change-dependency";
 
 export const EntityChangeType = {
@@ -10,17 +11,30 @@ export const EntityChangeType = {
 export type EntityChangeType = (typeof EntityChangeType)[keyof typeof EntityChangeType];
 
 export abstract class EntityChange {
-    constructor(schema: EntitySchema, entity: Entity, dependencies: readonly EntityChangeDependency[]) {
+    constructor(
+        schema: EntitySchema,
+        entity: Entity,
+        dependencies: readonly EntityChangeDependency[],
+        options: { previous?: Entity; path?: Path } = {},
+    ) {
         this.#schema = schema;
         this.#entity = entity;
         this.#dependencies = dependencies;
+        this.#previous = options.previous;
+        this.#path = options.path;
     }
 
     readonly #schema: EntitySchema;
     readonly #entity: Entity;
     readonly #dependencies: readonly EntityChangeDependency[];
+    readonly #previous?: Entity;
+    readonly #path?: Path;
 
-    abstract isType(types: readonly EntityChangeType[]): boolean;
+    abstract getType(): EntityChangeType;
+
+    isType(types: readonly EntityChangeType[]): boolean {
+        return types.includes(this.getType());
+    }
 
     getSchema(): EntitySchema {
         return this.#schema;
@@ -28,6 +42,14 @@ export abstract class EntityChange {
 
     getEntity(): Entity {
         return this.#entity;
+    }
+
+    getPrevious(): Entity | undefined {
+        return this.#previous;
+    }
+
+    getPath(): Path | undefined {
+        return this.#path;
     }
 
     hasEntity(entity: Entity): boolean {
@@ -56,12 +78,12 @@ export abstract class EntityChange {
 }
 
 export class CreateEntityChange extends EntityChange {
-    override isCreate(): this is CreateEntityChange {
-        return true;
+    override getType(): EntityChangeType {
+        return EntityChangeType.Create;
     }
 
-    override isType(types: readonly EntityChangeType[]): boolean {
-        return types.includes(EntityChangeType.Create);
+    override isCreate(): this is CreateEntityChange {
+        return true;
     }
 
     override toString(): string {
@@ -70,12 +92,12 @@ export class CreateEntityChange extends EntityChange {
 }
 
 export class UpdateEntityChange extends EntityChange {
-    override isUpdate(): this is UpdateEntityChange {
-        return true;
+    override getType(): EntityChangeType {
+        return EntityChangeType.Update;
     }
 
-    override isType(types: readonly EntityChangeType[]): boolean {
-        return types.includes(EntityChangeType.Update);
+    override isUpdate(): this is UpdateEntityChange {
+        return true;
     }
 
     override toString(): string {
@@ -84,12 +106,12 @@ export class UpdateEntityChange extends EntityChange {
 }
 
 export class DeleteEntityChange extends EntityChange {
-    override isDelete(): this is DeleteEntityChange {
-        return true;
+    override getType(): EntityChangeType {
+        return EntityChangeType.Delete;
     }
 
-    override isType(types: readonly EntityChangeType[]): boolean {
-        return types.includes(EntityChangeType.Delete);
+    override isDelete(): this is DeleteEntityChange {
+        return true;
     }
 
     override toString(): string {

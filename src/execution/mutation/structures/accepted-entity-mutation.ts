@@ -63,6 +63,10 @@ export class AcceptedEntityMutation {
         return this.#entities.filter(entity => this.includesEntity(entity));
     }
 
+    getPrevious(): readonly Entity[] {
+        return this.#previous ?? [];
+    }
+
     getAcceptedPreviousRootEntities(): readonly Entity[] {
         return (this.#previous ?? []).filter(entity => this.includesEntity(entity));
     }

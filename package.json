@@ -10,7 +10,8 @@
         "prestart": "npm run clean",
         "build": "tsc --build tsconfig.build.json",
         "start": "tsc --build tsconfig.build.json --watch",
-        "test": "vitest --coverage --typecheck"
+        "test": "vitest --coverage --typecheck",
+        "sync-cursor-rules": "node scripts/sync-cursor-rules.mjs"
     },
     "repository": {
         "type": "git",

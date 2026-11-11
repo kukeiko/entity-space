@@ -5,16 +5,14 @@ import {
     EntitySchema,
     unpackSelection,
 } from "@entity-space/elements";
-import { EntityServiceContainer } from "../entity-service-container";
+import { EntityCache } from "./entity-cache";
 
 export function deleteFromCache(
-    services: EntityServiceContainer,
+    cache: EntityCache,
     schema: EntitySchema,
     entities: readonly Entity[],
     selection: EntityRelationSelection,
-    cacheKey?: unknown,
 ): void {
-    const cache = services.getOrCreateCache(cacheKey);
     const query = entitiesToQuery(schema, entities, unpackSelection(schema, selection));
     cache.delete(query);
 }
