@@ -3,10 +3,21 @@ import { Entity } from "./entity";
 import { getDiscriminatedSchemaOfEntity } from "./functions/get-discriminated-schema-of-entity.fn";
 import { EntitySchema } from "./schema/entity-schema";
 
-export function isHydrated(schema: EntitySchema, selection: EntitySelection, entity: Entity): boolean {
+export function isHydrated(
+    schema: EntitySchema,
+    selection: EntitySelection,
+    entity: Entity,
+    visited = new Set<Entity>(),
+): boolean {
+    if (visited.has(entity)) {
+        return true;
+    }
+
     if (schema.isUnionSchema()) {
         schema = getDiscriminatedSchemaOfEntity(schema, entity);
     }
+
+    visited.add(entity);
 
     for (const [name, selected] of Object.entries(selection)) {
         if (!schema.hasProperty(name)) {

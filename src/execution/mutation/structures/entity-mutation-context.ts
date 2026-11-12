@@ -66,22 +66,18 @@ export class EntityMutationContext {
         this.#succeeded.set(entity as Entity, persisted as Entity | undefined);
     }
 
-    /** @internal */
     getFailure(entity: Entity): EntityMutationFailure | undefined {
         return this.#failed.get(entity);
     }
 
-    /** @internal */
     isFailed(entity: Entity): boolean {
         return this.#failed.has(entity);
     }
 
-    /** @internal */
     isSucceeded(entity: Entity): boolean {
         return this.#succeeded.has(entity);
     }
 
-    /** @internal */
     getSucceeded(): ReadonlyMap<Entity, Entity | undefined> {
         return this.#succeeded;
     }

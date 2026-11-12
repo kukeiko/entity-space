@@ -1,8 +1,8 @@
 import { Entity, EntityRelationSelection, EntitySchema } from "@entity-space/elements";
+import { EntityCache } from "../../cache/entity-cache";
 import { EntityServiceContainer } from "../../entity-service-container";
 import { EntityMutationOptions } from "../../execution-arguments.interface";
 import { AcceptedEntityMutation } from "./accepted-entity-mutation";
-import { CommittedEntities } from "./committed-entities";
 import { EntityChange } from "./entity-change";
 import { EntityMutation } from "./entity-mutation";
 
@@ -49,6 +49,6 @@ export interface MutationDispatch {
     readonly options: EntityMutationOptions;
     readonly signal: AbortSignal;
     readonly services: EntityServiceContainer;
-    readonly committed: CommittedEntities;
+    readonly previousCache: EntityCache;
     readonly cacheOperations: MutationCacheOperation[];
 }

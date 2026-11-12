@@ -102,7 +102,7 @@ export class EntityCache {
         }
     }
 
-    delete(query: EntityQuery): void {
+    deleteQuery(query: EntityQuery): void {
         this.#evictRemovedFromCache(query, []);
         this.#queryCache.addQuery(query);
         this.#cachedQueriesChanged.next();
@@ -122,7 +122,7 @@ export class EntityCache {
 
     #hydrate(entities: Entity[], schema: EntitySchema, selection: EntitySelection): void {
         for (const [name, selectionValue] of Object.entries(selection)) {
-            if (!schema.isRelation(name)) {
+            if (!schema.isRelation(name) || selectionValue === selection) {
                 continue;
             }
 

@@ -4,11 +4,12 @@ import {
     EntityRelationProperty,
     EntityRelationSelection,
     EntitySchema,
+    entityToQuery,
 } from "@entity-space/elements";
 import { ComplexKeyMap, joinPaths, Path } from "@entity-space/utils";
 import { isEqual } from "lodash";
+import { EntityCache } from "../cache/entity-cache";
 import { isEntityUpdateEqual } from "./functions/is-entity-update-equal.fn";
-import { CommittedEntities } from "./structures/committed-entities";
 import { EntityChange, EntityChangeType } from "./structures/entity-change";
 import { EntityChangeDependency } from "./structures/entity-change-dependency";
 
@@ -25,11 +26,11 @@ interface SelectedEntityStruct {
 }
 
 export class EntityChangesBuilder {
-    constructor(committed?: CommittedEntities) {
-        this.#committed = committed;
+    constructor(cache: EntityCache) {
+        this.#cache = cache;
     }
 
-    readonly #committed?: CommittedEntities;
+    readonly #cache: EntityCache;
     readonly #creates = new Map<EntitySchema, Entity[]>();
     readonly #updates = new Map<EntitySchema, ComplexKeyMap<Entity, SelectedEntityStruct[]>>();
     readonly #deletes = new EntityMap();
@@ -65,8 +66,7 @@ export class EntityChangesBuilder {
         this.#addUpdateOrPrevious(this.#previous, schema, path, selection, entity);
     }
 
-    // [todo] ❓ what about this removeFn?
-    addDelete(schema: EntitySchema, entity: Entity, removeFn?: (entity: Entity) => void): void {
+    addDelete(schema: EntitySchema, entity: Entity): void {
         if (this.#deletes.hasEntity(schema, entity)) {
             return;
         }
@@ -93,7 +93,7 @@ export class EntityChangesBuilder {
             // [todo] ❓ get familiar again with why we needed path & selection. find an existing test that covers the need for this
             for (const { entity, path, selection } of map.getAll().flat()) {
                 const previous = this.#getPrevious(schema, entity, path);
-                const baseline = previous?.entity ?? this.#committed?.get(schema, entity);
+                const baseline = previous?.entity ?? this.#cache.query(entityToQuery(schema, entity))[0];
 
                 if (baseline !== undefined && isEntityUpdateEqual(schema, entity, baseline, selection)) {
                     continue;

@@ -1,9 +1,9 @@
 import { Entity, EntitySchema } from "@entity-space/elements";
 import { readPath } from "@entity-space/utils";
+import { EntityCache } from "../../cache/entity-cache";
 import { EntityServiceContainer } from "../../entity-service-container";
 import { EntityMutator } from "../entity-mutator";
 import { AcceptedEntityMutation } from "../structures/accepted-entity-mutation";
-import { CommittedEntities } from "../structures/committed-entities";
 import { EntityChange } from "../structures/entity-change";
 import { EntityChanges } from "../structures/entity-changes";
 import { EntityMutation } from "../structures/entity-mutation";
@@ -41,9 +41,9 @@ export function createPlannedChanges(items: EntityChange[], batches: ChangeBatch
 export function planChanges(
     services: EntityServiceContainer,
     mutation: EntityMutation,
-    committed: CommittedEntities,
+    previousCache: EntityCache,
 ): PlannedChanges {
-    const entityChanges = toEntityChanges(mutation, committed);
+    const entityChanges = toEntityChanges(mutation, previousCache);
 
     if (entityChanges === undefined) {
         return createPlannedChanges([], []);

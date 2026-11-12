@@ -14,5 +14,5 @@ export function deleteFromCache(
     selection: EntityRelationSelection,
 ): void {
     const query = entitiesToQuery(schema, entities, unpackSelection(schema, selection));
-    cache.delete(query);
+    cache.deleteQuery(query);
 }

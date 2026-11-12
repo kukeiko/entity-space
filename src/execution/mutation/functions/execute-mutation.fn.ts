@@ -1,5 +1,7 @@
-import { assignEntitiesUsingIds, Entity, entityHasId, getSelection } from "@entity-space/elements";
+import { assignEntitiesUsingIds, Entity, entityHasId, entityToQuery, getSelection } from "@entity-space/elements";
 import { readPath, writePath } from "@entity-space/utils";
+import { EntityCache } from "../../cache/entity-cache";
+import { EntityServiceContainer } from "../../entity-service-container";
 import { EntityMutatorType } from "../entity-mutator";
 import { EntityChange } from "../structures/entity-change";
 import { EntityMutationContext } from "../structures/entity-mutation-context";
@@ -28,6 +30,34 @@ export function executeMutation(dispatch: MutationDispatch): Promise<MutationOut
 
 export type MutationOutcomes = Map<string, EntityChangeOutcome>;
 
+function writeOutboundDependencyRelationIds(changes: readonly EntityChange[], services: EntityServiceContainer): void {
+    for (const change of changes) {
+        for (const dependency of change.getOutboundDependencies()) {
+            services.getTracing().writingDependency(dependency);
+            dependency.writeIds(change.getSchema(), [change.getEntity()]);
+        }
+    }
+}
+
+function writeInboundDependencyRelationIds(changes: readonly EntityChange[], services: EntityServiceContainer): void {
+    for (const change of changes) {
+        for (const dependency of change.getInboundDependencies()) {
+            services.getTracing().writingDependency(dependency);
+            dependency.writeIds(change.getSchema(), [change.getEntity()]);
+        }
+    }
+}
+
+function commitChanges(changes: readonly EntityChange[], previousCache: EntityCache): void {
+    for (const change of changes) {
+        if (change.isDelete()) {
+            previousCache.deleteQuery(entityToQuery(change.getSchema(), change.getEntity()));
+        } else {
+            previousCache.upsertQuery(entityToQuery(change.getSchema(), change.getEntity()), [change.getEntity()]);
+        }
+    }
+}
+
 /**
  * Dispatches roots (and their accepted related entities) to a create, update or save mutator and resolves the
  * outcome of each dispatched item. Persisted ids and values are written into the changeset-owned entities.
@@ -41,12 +71,7 @@ async function executeUpsertMutation(
     const relationSelection = mutation.getSelection();
     const fullSelection = getSelection(schema, relationSelection);
 
-    for (const item of dispatch.items) {
-        for (const dependency of item.getOutboundDependencies()) {
-            services.getTracing().writingDependency(dependency);
-            dependency.writeIds(item.getSchema(), [item.getEntity()]);
-        }
-    }
+    writeOutboundDependencyRelationIds(dispatch.items, services);
 
     const dispatched = copyEntitiesForMutationDispatch(mutation, roots, type !== EntityMutatorType.Create);
     const context = createDispatchContext(dispatch, dispatched);
@@ -90,31 +115,12 @@ async function executeUpsertMutation(
 
     const matchedCopies = new Set(matched.map(({ input }) => input));
     const results = resolveOutcomes(dispatch, dispatched, context, copy => matchedCopies.has(copy));
+    const successfulChanges = dispatch.items.filter(
+        change => results.get(change.getKey())?.status === EntityChangeOutcomeStatus.Succeeded,
+    );
 
-    for (const item of dispatch.items) {
-        const outcome = results.get(item.getKey());
-
-        if (outcome?.status !== EntityChangeOutcomeStatus.Succeeded) {
-            continue;
-        }
-
-        for (const dependency of item.getInboundDependencies()) {
-            services.getTracing().writingDependency(dependency);
-            dependency.writeIds(item.getSchema(), [item.getEntity()]);
-        }
-    }
-
-    for (const item of dispatch.items) {
-        const outcome = results.get(item.getKey());
-
-        if (outcome?.status !== EntityChangeOutcomeStatus.Succeeded) {
-            continue;
-        } else if (item.isDelete()) {
-            dispatch.committed.delete(item.getSchema(), item.getEntity());
-        } else {
-            dispatch.committed.commit(item.getSchema(), item.getEntity());
-        }
-    }
+    writeInboundDependencyRelationIds(successfulChanges, services);
+    commitChanges(successfulChanges, dispatch.previousCache);
 
     for (const root of roots.filter(root => isRootSucceeded(dispatch, results, root))) {
         dispatch.cacheOperations.push({
@@ -150,7 +156,7 @@ async function dispatchDeleteMutation(dispatch: MutationDispatch): Promise<Mutat
 
     for (const item of dispatch.items) {
         if (results.get(item.getKey())?.status === EntityChangeOutcomeStatus.Succeeded) {
-            dispatch.committed.delete(item.getSchema(), item.getEntity());
+            dispatch.previousCache.deleteQuery(entityToQuery(item.getSchema(), item.getEntity()));
         }
     }
 
@@ -166,7 +172,10 @@ async function dispatchDeleteMutation(dispatch: MutationDispatch): Promise<Mutat
     return results;
 }
 
-function createDispatchContext(dispatch: MutationDispatch, dispatched: CopiesForMutationDispatch): EntityMutationContext {
+function createDispatchContext(
+    dispatch: MutationDispatch,
+    dispatched: CopiesForMutationDispatch,
+): EntityMutationContext {
     return new EntityMutationContext(
         dispatch.workspaceMutation,
         dispatch.options,

@@ -1,6 +1,13 @@
-import { Entity, entityHasId, EntityRelationSelection, EntitySchema, relationEntries } from "@entity-space/elements";
+import {
+    Entity,
+    entityHasId,
+    EntityRelationSelection,
+    EntitySchema,
+    entityToQuery,
+    relationEntries,
+} from "@entity-space/elements";
 import { ComplexKeyMap } from "@entity-space/utils";
-import { CommittedEntities } from "../structures/committed-entities";
+import { EntityCache } from "../../cache/entity-cache";
 import { EntityChange, EntityChangeStatus } from "../structures/entity-change";
 
 /**
@@ -16,7 +23,7 @@ export function materializePrevious(
     next: readonly Entity[],
     previous: readonly Entity[],
     items: readonly EntityChange[],
-    committed: CommittedEntities,
+    cache: EntityCache,
 ): Entity[] {
     const itemsByEntity = new Map<Entity, EntityChange[]>();
 
@@ -72,8 +79,8 @@ export function materializePrevious(
             const state = isCurrent(entity)
                 ? itemsByEntity.has(entity)
                     ? entity
-                    : (previousEntity ?? committed.get(schema, entity) ?? entity)
-                : (previousEntity ?? committed.get(schema, entity));
+                    : (previousEntity ?? cache.query(entityToQuery(schema, entity))[0] ?? entity)
+                : (previousEntity ?? cache.query(entityToQuery(schema, entity))[0]);
 
             if (state === undefined) {
                 continue;
@@ -87,7 +94,7 @@ export function materializePrevious(
         for (const entity of previous) {
             if (
                 matchedPrevious.has(entity) ||
-                committed.isDeleted(schema, entity) ||
+                cache.query(entityToQuery(schema, entity)).length === 0 ||
                 isPersistedElsewhere(schema, entity)
             ) {
                 continue;

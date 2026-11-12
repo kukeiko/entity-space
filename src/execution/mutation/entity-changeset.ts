@@ -1,5 +1,6 @@
 import {
     copyEntities,
+    entitiesToQuery,
     Entity,
     entityHasId,
     EntityRelationSelection,
@@ -9,14 +10,15 @@ import {
 } from "@entity-space/elements";
 import { BehaviorSubject, Observable } from "rxjs";
 import { deleteFromCache } from "../cache/delete-from-cache.fn";
+import { EntityCache } from "../cache/entity-cache";
 import { upsertToCache } from "../cache/upsert-to-cache.fn";
+import { EntityQueryTracing } from "../entity-query-tracing";
 import { EntityServiceContainer } from "../entity-service-container";
 import { EntityMutationOptions } from "../execution-arguments.interface";
 import { executeChangeset } from "./functions/execute-changeset.fn";
 import { materializePrevious } from "./functions/materialize-previous.fn";
 import { planChanges, PlannedChanges } from "./functions/plan-changes.fn";
 import { writeBackEntities } from "./functions/write-back-entities.fn";
-import { CommittedEntities } from "./structures/committed-entities";
 import { EntityChange, EntityChangeItem, EntityChangeStatus } from "./structures/entity-change";
 import { EntityMutation, EntityMutationType } from "./structures/entity-mutation";
 import { MutationCacheOperation, MutationCacheOperationType } from "./structures/mutation-dispatch";
@@ -67,16 +69,23 @@ export class EntityChangeset<T extends Entity = Entity> {
     constructor({ services, type, schema, selection, next, previous, options }: EntityChangesetArguments) {
         this.#services = services;
         this.#options = options;
+        const silentTracing = new EntityQueryTracing();
+        this.#cache = new EntityCache(silentTracing);
         const preparedNext = this.#prepareEntities(next);
         this.#mutation = new EntityMutation(type, schema, preparedNext, selection, structuredClone(previous.slice()));
         this.#plan(new Map());
+
+        if (previous.length) {
+            const previousQuery = entitiesToQuery(schema, previous, selection);
+            this.#cache.upsertQuery(previousQuery, previous);
+        }
     }
 
     readonly #services: EntityServiceContainer;
     readonly #mutation: EntityMutation;
     readonly #options: EntityMutationOptions;
-    readonly #committed = new CommittedEntities();
     readonly #items$ = new BehaviorSubject<readonly EntityChangeItem[]>([]);
+    readonly #cache: EntityCache;
     #planned!: PlannedChanges;
     #executed = false;
     #isStale = false;
@@ -142,9 +151,9 @@ export class EntityChangeset<T extends Entity = Entity> {
                 options: this.#options,
                 signal: controller.signal,
                 services: this.#services,
-                committed: this.#committed,
                 cacheOperations,
                 onChange: () => this.#emit(),
+                previousCache: this.#cache,
             });
         } finally {
             this.#mutation.setPrevious(
@@ -154,7 +163,7 @@ export class EntityChangeset<T extends Entity = Entity> {
                     this.#mutation.getType() === EntityMutationType.Delete ? [] : this.#mutation.getEntities(),
                     this.#mutation.getPrevious(),
                     this.#planned.items,
-                    this.#committed,
+                    this.#cache,
                 ),
             );
 
@@ -211,7 +220,7 @@ export class EntityChangeset<T extends Entity = Entity> {
 
         writeRelationJoins(schema, this.#mutation.getEntities(), selection);
 
-        const planned = planChanges(this.#services, this.#mutation, this.#committed);
+        const planned = planChanges(this.#services, this.#mutation, this.#cache);
 
         for (const item of planned.items) {
             const previousItem = previousItems.get(item.getKey());

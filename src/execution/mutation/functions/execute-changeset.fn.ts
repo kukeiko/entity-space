@@ -1,7 +1,7 @@
 import { Entity } from "@entity-space/elements";
+import { EntityCache } from "../../cache/entity-cache";
 import { EntityServiceContainer } from "../../entity-service-container";
 import { EntityMutationOptions } from "../../execution-arguments.interface";
-import { CommittedEntities } from "../structures/committed-entities";
 import { EntityChange, EntityChangeStatus } from "../structures/entity-change";
 import { EntityMutation } from "../structures/entity-mutation";
 import { EntityChangeOutcomeStatus, MutationCacheOperation, MutationDispatch } from "../structures/mutation-dispatch";
@@ -15,7 +15,7 @@ export interface ExecuteChangesetArguments {
     readonly options: EntityMutationOptions;
     readonly signal: AbortSignal;
     readonly services: EntityServiceContainer;
-    readonly committed: CommittedEntities;
+    readonly previousCache: EntityCache;
     readonly cacheOperations: MutationCacheOperation[];
     readonly onChange: () => void;
 }
@@ -171,8 +171,8 @@ function toDispatch(args: ExecuteChangesetArguments, batch: ChangeBatch): Mutati
         options: args.options,
         signal: args.signal,
         services: args.services,
-        committed: args.committed,
         cacheOperations: args.cacheOperations,
+        previousCache: args.previousCache,
     };
 }
 
