@@ -12,15 +12,14 @@ import { deleteFromCache } from "../cache/delete-from-cache.fn";
 import { upsertToCache } from "../cache/upsert-to-cache.fn";
 import { EntityServiceContainer } from "../entity-service-container";
 import { EntityMutationOptions } from "../execution-arguments.interface";
-import { CommittedEntities } from "./committed-entities";
 import { executeChangeset } from "./functions/execute-changeset.fn";
 import { materializePrevious } from "./functions/materialize-previous.fn";
 import { planChanges, PlannedChanges } from "./functions/plan-changes.fn";
 import { writeBackEntities } from "./functions/write-back-entities.fn";
-import { EntityChangeItem, EntityChangeStatus, PlannedEntityChange } from "./structures/entity-change";
+import { CommittedEntities } from "./structures/committed-entities";
+import { EntityChange, EntityChangeItem, EntityChangeStatus } from "./structures/entity-change";
 import { EntityMutation, EntityMutationType } from "./structures/entity-mutation";
 import { MutationCacheOperation, MutationCacheOperationType } from "./structures/mutation-dispatch";
-import { TemporaryIds } from "./temporary-ids";
 
 export const EntityChangesetResultStatus = {
     Succeeded: "succeeded",
@@ -67,26 +66,17 @@ export interface EntityChangesetArguments {
 export class EntityChangeset<T extends Entity = Entity> {
     constructor({ services, type, schema, selection, next, previous, options }: EntityChangesetArguments) {
         this.#services = services;
-        this.#type = type;
-        this.#schema = schema;
-        this.#selection = selection;
         this.#options = options;
-        this.#next = this.#prepareNext(next);
-        this.#previous = structuredClone(previous.slice());
+        const preparedNext = this.#prepareEntities(next);
+        this.#mutation = new EntityMutation(type, schema, preparedNext, selection, structuredClone(previous.slice()));
         this.#plan(new Map());
     }
 
     readonly #services: EntityServiceContainer;
-    readonly #type: EntityMutationType;
-    readonly #schema: EntitySchema;
-    readonly #selection: EntityRelationSelection;
+    readonly #mutation: EntityMutation;
     readonly #options: EntityMutationOptions;
-    readonly #temporaryIds = new TemporaryIds();
     readonly #committed = new CommittedEntities();
     readonly #items$ = new BehaviorSubject<readonly EntityChangeItem[]>([]);
-    #next: Entity[];
-    #previous: Entity[];
-    #mutation!: EntityMutation;
     #planned!: PlannedChanges;
     #executed = false;
     #isStale = false;
@@ -102,7 +92,10 @@ export class EntityChangeset<T extends Entity = Entity> {
     getStatus(): EntityChangesetStatus {
         if (this.isRunning()) {
             return EntityChangesetStatus.Running;
-        } else if (!this.#executed || this.#planned.items.every(item => item.getStatus() === EntityChangeStatus.Pending)) {
+        } else if (
+            !this.#executed ||
+            this.#planned.items.every(item => item.getStatus() === EntityChangeStatus.Pending)
+        ) {
             return EntityChangesetStatus.Pending;
         } else {
             return this.#getResultStatus();
@@ -113,19 +106,19 @@ export class EntityChangeset<T extends Entity = Entity> {
         return this.#controller !== undefined;
     }
 
-    /** Copies of the next entities, including created Ids, and temporary Ids for entities not yet created. */
+    /** Copies of the next entities, including created Ids and caller-supplied temporary Ids for uncreated entities. */
     getNext(): T[] {
-        return structuredClone(this.#next) as T[];
+        return structuredClone(this.#mutation.getEntities()) as T[];
     }
 
     /** Copies of the entities known to be persisted. */
     getPrevious(): T[] {
-        return structuredClone(this.#previous) as T[];
+        return structuredClone(this.#mutation.getPrevious()) as T[];
     }
 
     /**
      * Executes all outstanding changes. Changes that did not succeed in a previous execution are retried.
-     * Resolves with a summary once nothing more can be executed; changes that did not succeed are not thrown.
+     * Resolves with a summary once nothing more can be dispatched; changes that did not succeed are not thrown.
      */
     async execute(): Promise<EntityChangesetSummary> {
         if (this.isRunning()) {
@@ -145,23 +138,24 @@ export class EntityChangeset<T extends Entity = Entity> {
         try {
             await executeChangeset({
                 planned: this.#planned,
-                entityMutation: this.#mutation,
+                mutation: this.#mutation,
                 options: this.#options,
                 signal: controller.signal,
                 services: this.#services,
-                temporaryIds: this.#temporaryIds,
                 committed: this.#committed,
                 cacheOperations,
                 onChange: () => this.#emit(),
             });
         } finally {
-            this.#previous = materializePrevious(
-                this.#schema,
-                this.#selection,
-                this.#type === EntityMutationType.Delete ? [] : this.#next,
-                this.#previous,
-                this.#planned.items,
-                this.#committed,
+            this.#mutation.setPrevious(
+                materializePrevious(
+                    this.#mutation.getSchema(),
+                    this.#mutation.getSelection() ?? {},
+                    this.#mutation.getType() === EntityMutationType.Delete ? [] : this.#mutation.getEntities(),
+                    this.#mutation.getPrevious(),
+                    this.#planned.items,
+                    this.#committed,
+                ),
             );
 
             this.#isStale = true;
@@ -183,9 +177,9 @@ export class EntityChangeset<T extends Entity = Entity> {
             throw new Error("can not update a changeset while it is executing");
         }
 
-        const items = this.#getItemsByKey();
-        this.#next = this.#prepareNext(next);
-        this.#plan(items);
+        const prepared = this.#prepareEntities(next);
+        this.#mutation.setEntities(prepared);
+        this.#plan(this.#getItemsByKey());
     }
 
     /**
@@ -198,48 +192,44 @@ export class EntityChangeset<T extends Entity = Entity> {
 
     /** @internal used by the save(), sync() and delete() shortcuts, which modify the entities passed to them */
     writeBack(targets: readonly T[]): void {
+        const schema = this.#mutation.getSchema();
         writeBackEntities(
-            this.#schema,
-            getSelection(this.#schema, this.#selection),
+            schema,
+            getSelection(schema, this.#mutation.getSelection() ?? {}),
             targets,
-            this.#next,
-            this.#temporaryIds,
+            this.#mutation.getEntities(),
         );
     }
 
-    #prepareNext(next: readonly Entity[]): Entity[] {
-        const prepared = structuredClone(next.slice());
-        this.#temporaryIds.assign(this.#schema, prepared, this.#selection);
-
-        return prepared;
+    #prepareEntities(next: readonly Entity[]): Entity[] {
+        return structuredClone(next.slice());
     }
 
-    #plan(previousItems: ReadonlyMap<string, PlannedEntityChange>): void {
-        writeRelationJoins(this.#schema, this.#next, this.#selection);
+    #plan(previousItems: ReadonlyMap<string, EntityChange>): void {
+        const schema = this.#mutation.getSchema();
+        const selection = this.#mutation.getSelection() ?? {};
 
-        const mutation = new EntityMutation(this.#type, this.#schema, this.#next, this.#selection, this.#previous);
-        const planned = planChanges(this.#services, mutation, this.#committed);
+        writeRelationJoins(schema, this.#mutation.getEntities(), selection);
+
+        const planned = planChanges(this.#services, this.#mutation, this.#committed);
 
         for (const item of planned.items) {
             const previousItem = previousItems.get(item.getKey());
 
             if (previousItem?.getError() !== undefined) {
-                planned.replaceItem(
-                    item.withStatus(EntityChangeStatus.Pending, {
-                        error: previousItem.getError(),
-                        errorPath: previousItem.getErrorPath(),
-                    }),
-                );
+                item.setStatus(EntityChangeStatus.Pending, {
+                    error: previousItem.getError(),
+                    errorPath: previousItem.getErrorPath(),
+                });
             }
         }
 
-        this.#mutation = mutation;
         this.#planned = planned;
         this.#isStale = false;
         this.#emit();
     }
 
-    #getItemsByKey(): Map<string, PlannedEntityChange> {
+    #getItemsByKey(): Map<string, EntityChange> {
         return new Map(this.#planned.items.map(item => [item.getKey(), item]));
     }
 

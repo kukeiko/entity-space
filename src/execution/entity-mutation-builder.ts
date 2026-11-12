@@ -9,8 +9,8 @@ import {
 } from "@entity-space/elements";
 import { EntityMutationCacheOptions, EntityMutationOptions } from "./execution-arguments.interface";
 import { EntityChangeset, EntityChangesetResultStatus } from "./mutation/entity-changeset";
-import { EntityMutationError } from "./mutation/entity-mutation-error";
 import { EntityMutationType } from "./mutation/structures/entity-mutation";
+import { EntityMutationError } from "./mutation/structures/entity-mutation-error";
 
 export type CreateEntityChangesetFn = (args: {
     type: EntityMutationType;

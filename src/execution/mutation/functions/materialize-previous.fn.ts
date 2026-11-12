@@ -1,7 +1,7 @@
 import { Entity, entityHasId, EntityRelationSelection, EntitySchema, relationEntries } from "@entity-space/elements";
 import { ComplexKeyMap } from "@entity-space/utils";
-import { CommittedEntities } from "../committed-entities";
-import { EntityChangeStatus, PlannedEntityChange } from "../structures/entity-change";
+import { CommittedEntities } from "../structures/committed-entities";
+import { EntityChange, EntityChangeStatus } from "../structures/entity-change";
 
 /**
  * Builds the entities known to be persisted after executing changes, in the shape of the previous entities:
@@ -15,10 +15,10 @@ export function materializePrevious(
     selection: EntityRelationSelection,
     next: readonly Entity[],
     previous: readonly Entity[],
-    items: readonly PlannedEntityChange[],
+    items: readonly EntityChange[],
     committed: CommittedEntities,
 ): Entity[] {
-    const itemsByEntity = new Map<Entity, PlannedEntityChange[]>();
+    const itemsByEntity = new Map<Entity, EntityChange[]>();
 
     for (const item of items) {
         itemsByEntity.set(item.getEntity(), [...(itemsByEntity.get(item.getEntity()) ?? []), item]);
@@ -70,7 +70,9 @@ export function materializePrevious(
             }
 
             const state = isCurrent(entity)
-                ? (itemsByEntity.has(entity) ? entity : (previousEntity ?? committed.get(schema, entity) ?? entity))
+                ? itemsByEntity.has(entity)
+                    ? entity
+                    : (previousEntity ?? committed.get(schema, entity) ?? entity)
                 : (previousEntity ?? committed.get(schema, entity));
 
             if (state === undefined) {
@@ -83,7 +85,11 @@ export function materializePrevious(
         }
 
         for (const entity of previous) {
-            if (matchedPrevious.has(entity) || committed.isDeleted(schema, entity) || isPersistedElsewhere(schema, entity)) {
+            if (
+                matchedPrevious.has(entity) ||
+                committed.isDeleted(schema, entity) ||
+                isPersistedElsewhere(schema, entity)
+            ) {
                 continue;
             }
 

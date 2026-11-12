@@ -91,7 +91,9 @@ describe("prepareSave()", () => {
                 // arrange
                 const mutator = backend.useSongs(type, options);
                 backend.rejectName("");
-                const changeset = workspace.in(SongBlueprint).prepareSave([song("A"), song("")]);
+                const changeset = workspace
+                    .in(SongBlueprint)
+                    .prepareSave([song("A", { id: -301 }), song("", { id: -302 })]);
 
                 // act
                 const first = await changeset.execute();
@@ -104,11 +106,16 @@ describe("prepareSave()", () => {
                 expect(first.failed.map(item => item.error)).toEqual([new Error('name "" is not allowed')]);
                 expect(first.failed[0].errorPath).toEqual(options.one ? undefined : "name");
                 expect(created.id).toEqual(301);
-                expect(rejected.id).toBeLessThan(0);
+                expect(rejected.id).toEqual(-302);
 
                 expect(second.status).toEqual("succeeded");
                 expect(second.items.map(item => [item.type, item.entity.name])).toEqual([["create", "B"]]);
                 expect(allDispatchedNames(mutator)).toEqual(["A", "", "B"]);
+                expect(
+                    dispatched<Song>(mutator)
+                        .flat()
+                        .map(song => song.id),
+                ).toEqual([-301, -302, -302]);
                 expect(changeset.getNext().map(song => [song.id, song.name])).toEqual([
                     [301, "A"],
                     [302, "B"],

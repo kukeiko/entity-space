@@ -1,5 +1,5 @@
-import { CommittedEntities } from "../committed-entities";
 import { EntityChangesBuilder } from "../entity-changes-builder";
+import { CommittedEntities } from "../structures/committed-entities";
 import { EntityChanges } from "../structures/entity-changes";
 import { EntityMutation } from "../structures/entity-mutation";
 import { addChangeRelations } from "./add-change-relations.fn";

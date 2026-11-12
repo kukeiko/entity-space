@@ -2,9 +2,9 @@ import { copyEntities, Entity, EntityRelationProperty, getSelection } from "@ent
 import { AcceptedEntityMutation } from "../structures/accepted-entity-mutation";
 import { DispatchedCopies, mapDispatchedCopies } from "./map-dispatched-copies.fn";
 
-export interface CopiesForMutationDispatch extends DispatchedCopies {
+export type CopiesForMutationDispatch = DispatchedCopies & {
     readonly copies: Entity[];
-}
+};
 
 export function copyEntitiesForMutationDispatch(
     mutation: AcceptedEntityMutation,

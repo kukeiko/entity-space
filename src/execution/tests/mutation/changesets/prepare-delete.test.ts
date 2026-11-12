@@ -9,12 +9,12 @@ import {
 } from "@entity-space/elements/testing";
 import { beforeEach, describe, expect, it } from "vitest";
 import { EntityWorkspace } from "../../../entity-workspace";
-import { EntityMutationError } from "../../../mutation/entity-mutation-error";
+import { EntityMutationError } from "../../../mutation/structures/entity-mutation-error";
 import {
-    EntityMutatorType,
     allDispatchedNames,
     dispatched,
     dispatchedNames,
+    EntityMutatorType,
     MusicBackend,
     MutatorOptions,
     TestFacade,

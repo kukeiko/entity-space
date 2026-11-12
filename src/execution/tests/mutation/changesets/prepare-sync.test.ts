@@ -1,12 +1,12 @@
 import { Artist, ArtistBlueprint, Song, SongBlueprint } from "@entity-space/elements/testing";
 import { beforeEach, describe, expect, it } from "vitest";
 import { EntityWorkspace } from "../../../entity-workspace";
-import { EntityMutationError } from "../../../mutation/entity-mutation-error";
+import { EntityMutationError } from "../../../mutation/structures/entity-mutation-error";
 import {
-    EntityMutatorType,
     allDispatchedNames,
     dispatched,
     dispatchedNames,
+    EntityMutatorType,
     MusicBackend,
     MutatorOptions,
     TestFacade,
@@ -53,13 +53,19 @@ describe("prepareSync()", () => {
             [
                 "one-entity create, update and delete mutators",
                 () => ({
-                    upsert: [backend.useSongs(EntityMutatorType.Create, { one: true }), backend.useSongs(EntityMutatorType.Update, { one: true })],
+                    upsert: [
+                        backend.useSongs(EntityMutatorType.Create, { one: true }),
+                        backend.useSongs(EntityMutatorType.Update, { one: true }),
+                    ],
                     del: backend.useSongs(EntityMutatorType.Delete, { one: true }),
                 }),
             ],
             [
                 "batch save and delete mutators",
-                () => ({ upsert: [backend.useSongs(EntityMutatorType.Save)], del: backend.useSongs(EntityMutatorType.Delete) }),
+                () => ({
+                    upsert: [backend.useSongs(EntityMutatorType.Save)],
+                    del: backend.useSongs(EntityMutatorType.Delete),
+                }),
             ],
             [
                 "one-entity save and delete mutators",

@@ -1,22 +1,20 @@
 import { Entity } from "@entity-space/elements";
-import { EntityMutationOptions } from "../../execution-arguments.interface";
 import { EntityServiceContainer } from "../../entity-service-container";
-import { CommittedEntities } from "../committed-entities";
-import { EntityChangeStatus, PlannedEntityChange } from "../structures/entity-change";
+import { EntityMutationOptions } from "../../execution-arguments.interface";
+import { CommittedEntities } from "../structures/committed-entities";
+import { EntityChange, EntityChangeStatus } from "../structures/entity-change";
 import { EntityMutation } from "../structures/entity-mutation";
 import { EntityChangeOutcomeStatus, MutationCacheOperation, MutationDispatch } from "../structures/mutation-dispatch";
-import { TemporaryIds } from "../temporary-ids";
 import { executeMutation } from "./execute-mutation.fn";
 import { getDispatchRoots, groupBatchItems } from "./group-batch-items.fn";
 import { ChangeBatch, PlannedChanges } from "./plan-changes.fn";
 
 export interface ExecuteChangesetArguments {
     readonly planned: PlannedChanges;
-    readonly entityMutation: EntityMutation;
+    readonly mutation: EntityMutation;
     readonly options: EntityMutationOptions;
     readonly signal: AbortSignal;
     readonly services: EntityServiceContainer;
-    readonly temporaryIds: TemporaryIds;
     readonly committed: CommittedEntities;
     readonly cacheOperations: MutationCacheOperation[];
     readonly onChange: () => void;
@@ -69,9 +67,7 @@ export async function executeChangeset(args: ExecuteChangesetArguments): Promise
 
     for (const batch of remaining) {
         for (const item of batch.items.filter(item => !item.isSettled())) {
-            args.planned.replaceItem(
-                item.withStatus(signal.aborted ? EntityChangeStatus.Cancelled : EntityChangeStatus.Blocked),
-            );
+            item.setStatus(signal.aborted ? EntityChangeStatus.Cancelled : EntityChangeStatus.Blocked);
         }
     }
 
@@ -86,27 +82,25 @@ async function applyMutationOutcomes(args: ExecuteChangesetArguments, dispatch: 
             const outcome = outcomes.get(item.getKey());
 
             if (outcome === undefined) {
-                args.planned.replaceItem(
-                    item.withStatus(EntityChangeStatus.Failed, {
-                        error: new Error("no outcome has been resolved for this change"),
-                    }),
-                );
+                item.setStatus(EntityChangeStatus.Failed, {
+                    error: new Error("no outcome has been resolved for this change"),
+                });
             } else if (outcome.status === EntityChangeOutcomeStatus.Succeeded) {
-                args.planned.replaceItem(item.withStatus(EntityChangeStatus.Succeeded));
+                item.setStatus(EntityChangeStatus.Succeeded);
             } else {
-                args.planned.replaceItem(
-                    item.withStatus(EntityChangeStatus.Failed, {
-                        error: outcome.error,
-                        errorPath: outcome.path,
-                    }),
-                );
+                item.setStatus(EntityChangeStatus.Failed, {
+                    error: outcome.error,
+                    errorPath: outcome.path,
+                });
             }
         }
     } catch (error) {
         for (const item of dispatch.items) {
-            args.planned.replaceItem(item.withStatus(EntityChangeStatus.Failed, { error }));
+            item.setStatus(EntityChangeStatus.Failed, { error });
         }
     }
+
+    args.onChange();
 }
 
 function isReady(batch: ChangeBatch, planned: PlannedChanges): boolean {
@@ -129,13 +123,13 @@ function toDispatch(args: ExecuteChangesetArguments, batch: ChangeBatch): Mutati
 
     for (const item of batch.items) {
         if (blocked.has(item.getKey())) {
-            args.planned.replaceItem(item.withStatus(EntityChangeStatus.Blocked));
+            item.setStatus(EntityChangeStatus.Blocked);
         }
     }
 
     const dispatchRoots = new Set(getDispatchRoots(batch.mutation));
     const roots: Entity[] = [];
-    const items: PlannedEntityChange[] = [];
+    const items: EntityChange[] = [];
     const rootOfByKey = new Map<string, Entity>();
 
     for (const [root, groupItems] of groups) {
@@ -152,33 +146,31 @@ function toDispatch(args: ExecuteChangesetArguments, batch: ChangeBatch): Mutati
     }
 
     for (const item of batch.items.filter(item => !blocked.has(item.getKey()) && !rootOfByKey.has(item.getKey()))) {
-        args.planned.replaceItem(
-            item.withStatus(EntityChangeStatus.Failed, {
-                error: new Error("the entity is not part of any entity dispatched to the mutator"),
-            }),
-        );
+        item.setStatus(EntityChangeStatus.Failed, {
+            error: new Error("the entity is not part of any entity dispatched to the mutator"),
+        });
     }
 
     if (!items.length) {
+        args.onChange();
         return undefined;
     }
 
     for (const item of items) {
-        args.planned.replaceItem(item.withStatus(EntityChangeStatus.Running));
+        item.setStatus(EntityChangeStatus.Running);
     }
 
-    const dispatchItems = items.map(item => args.planned.getItem(item.getKey())!);
+    args.onChange();
 
     return {
         mutation: batch.mutation,
         roots,
-        items: dispatchItems,
-        rootOf: new Map(dispatchItems.map(item => [item, rootOfByKey.get(item.getKey())!])),
-        entityMutation: args.entityMutation,
+        items,
+        rootOf: new Map(items.map(item => [item, rootOfByKey.get(item.getKey())!])),
+        workspaceMutation: args.mutation,
         options: args.options,
         signal: args.signal,
         services: args.services,
-        temporaryIds: args.temporaryIds,
         committed: args.committed,
         cacheOperations: args.cacheOperations,
     };
@@ -189,7 +181,7 @@ function toDispatch(args: ExecuteChangesetArguments, batch: ChangeBatch): Mutati
  */
 function getBlockedItems(
     batch: ChangeBatch,
-    groups: Map<Entity, PlannedEntityChange[]>,
+    groups: Map<Entity, EntityChange[]>,
     planned: PlannedChanges,
 ): Set<string> {
     const blocked = new Set<string>();

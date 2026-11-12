@@ -37,6 +37,10 @@ type Selection = Record<string, unknown>;
 type Fail = (entity: Entity, error: Error, path?: string) => void;
 type Persist = (entity: any, selection: Selection, fail: Fail, type: EntityMutatorType) => Entity | undefined;
 
+function hasPersistedId(id: number | string): boolean {
+    return typeof id === "number" ? id > 0 : id > "0";
+}
+
 /**
  * An in-memory API for artists, songs, albums and tags that persists whatever the selection of the mutator covers,
  * the same way a real backend accepting nested payloads would.
@@ -168,7 +172,13 @@ export class MusicBackend {
     }
 
     #persistArtist(artist: Artist, selection: Selection, fail: Fail, type: EntityMutatorType): Artist | undefined {
-        if (!this.#isValid(artist, artist.id ? EntityMutatorType.Update : EntityMutatorType.Create, fail)) {
+        if (
+            !this.#isValid(
+                artist,
+                hasPersistedId(artist.id) ? EntityMutatorType.Update : EntityMutatorType.Create,
+                fail,
+            )
+        ) {
             return undefined;
         }
 
@@ -210,7 +220,9 @@ export class MusicBackend {
         fail: Fail,
         type: EntityMutatorType,
     ): Song | undefined {
-        if (!this.#isValid(song, song.id ? EntityMutatorType.Update : EntityMutatorType.Create, fail)) {
+        if (
+            !this.#isValid(song, hasPersistedId(song.id) ? EntityMutatorType.Update : EntityMutatorType.Create, fail)
+        ) {
             return undefined;
         }
 
@@ -252,7 +264,13 @@ export class MusicBackend {
     }
 
     #persistAlbum(album: Album, selection: Selection, fail: Fail): Album | undefined {
-        if (!this.#isValid(album, album.id ? EntityMutatorType.Update : EntityMutatorType.Create, fail)) {
+        if (
+            !this.#isValid(
+                album,
+                hasPersistedId(album.id) ? EntityMutatorType.Update : EntityMutatorType.Create,
+                fail,
+            )
+        ) {
             return undefined;
         }
 
@@ -273,16 +291,15 @@ export class MusicBackend {
     }
 
     #persistTag(tag: Tag, fail: Fail): Tag | undefined {
-        if (!this.#isValid(tag, tag.id ? EntityMutatorType.Update : EntityMutatorType.Create, fail)) {
+        if (!this.#isValid(tag, hasPersistedId(tag.id) ? EntityMutatorType.Update : EntityMutatorType.Create, fail)) {
             return undefined;
         }
 
-        if (tag.id.startsWith("-")) {
-            throw new Error(`received a temporary Id: ${tag.id}`);
-        }
-
         const { songs, ...rest } = tag;
-        const persisted: Tag = { ...rest, id: tag.id || `tag-${this.#nextIds.tags++}` };
+        const persisted: Tag = {
+            ...rest,
+            id: hasPersistedId(tag.id) ? tag.id : `tag-${this.#nextIds.tags++}`,
+        };
         this.tags.set(persisted.id, persisted);
 
         return persisted;
@@ -341,7 +358,11 @@ export class MusicBackend {
 
     #assertId(id: number, type?: EntityMutatorType): number {
         if (id < 0) {
-            throw new Error(`received a temporary Id: ${id}`);
+            if (type === EntityMutatorType.Update) {
+                throw new Error("an update mutator received a new entity");
+            }
+
+            return 0;
         } else if (type === EntityMutatorType.Create && id) {
             throw new Error(`a create mutator received an existing entity: ${id}`);
         } else if (type === EntityMutatorType.Update && !id) {

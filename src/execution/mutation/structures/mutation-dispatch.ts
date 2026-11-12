@@ -1,10 +1,9 @@
 import { Entity, EntityRelationSelection, EntitySchema } from "@entity-space/elements";
 import { EntityServiceContainer } from "../../entity-service-container";
 import { EntityMutationOptions } from "../../execution-arguments.interface";
-import { CommittedEntities } from "../committed-entities";
-import { TemporaryIds } from "../temporary-ids";
 import { AcceptedEntityMutation } from "./accepted-entity-mutation";
-import { PlannedEntityChange } from "./entity-change";
+import { CommittedEntities } from "./committed-entities";
+import { EntityChange } from "./entity-change";
 import { EntityMutation } from "./entity-mutation";
 
 export const EntityChangeOutcomeStatus = {
@@ -43,14 +42,13 @@ export interface MutationDispatch {
     /** The root entities to dispatch, i.e. the accepted roots that are not blocked. */
     readonly roots: readonly Entity[];
     /** The items that are dispatched together with the roots. */
-    readonly items: readonly PlannedEntityChange[];
+    readonly items: readonly EntityChange[];
     /** Maps each dispatched item to the root entity it is dispatched with. */
-    readonly rootOf: ReadonlyMap<PlannedEntityChange, Entity>;
-    readonly entityMutation: EntityMutation;
+    readonly rootOf: ReadonlyMap<EntityChange, Entity>;
+    readonly workspaceMutation: EntityMutation;
     readonly options: EntityMutationOptions;
     readonly signal: AbortSignal;
     readonly services: EntityServiceContainer;
-    readonly temporaryIds: TemporaryIds;
     readonly committed: CommittedEntities;
     readonly cacheOperations: MutationCacheOperation[];
 }

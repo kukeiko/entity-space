@@ -1,4 +1,4 @@
-import type { EntityChangeset, EntityChangesetSummary } from "./entity-changeset";
+import type { EntityChangeset, EntityChangesetSummary } from "../entity-changeset";
 
 /**
  * Thrown by the save(), sync() and delete() shortcuts if not all changes succeeded.

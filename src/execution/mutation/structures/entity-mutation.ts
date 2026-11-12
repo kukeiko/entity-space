@@ -25,9 +25,9 @@ export class EntityMutation {
 
     readonly #type: EntityMutationType;
     readonly #schema: EntitySchema;
-    readonly #entities: Entity[];
+    #entities: Entity[];
     readonly #selection?: EntityRelationSelection;
-    readonly #previous?: Entity[];
+    #previous?: Entity[];
 
     getType(): EntityMutationType {
         return this.#type;
@@ -59,5 +59,13 @@ export class EntityMutation {
 
     getPrevious(): Entity[] {
         return this.#previous ?? [];
+    }
+
+    setEntities(entities: Entity[]): void {
+        this.#entities = entities;
+    }
+
+    setPrevious(previous: Entity[]): void {
+        this.#previous = previous;
     }
 }

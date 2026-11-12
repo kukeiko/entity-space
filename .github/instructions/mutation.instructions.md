@@ -4,7 +4,7 @@ description: Read this whenever you need to understand mutators, which persist c
 
 # Mutation
 
-Mutations persist entity changes through callbacks registered with `EntityServiceContainer.for(blueprint)`. See `docs/mutation-plan.md` for the full design of changesets and partial success.
+Mutations persist entity changes through callbacks registered with `EntityServiceContainer.for(blueprint)`.
 
 ## Consumer API
 
@@ -17,14 +17,17 @@ Use `workspace.in(blueprint)` to build a mutation, optionally with `.select(...)
 
 An `EntityChangeset` never modifies the entities passed to it; it works on copies.
 
+- `prepareSave(next, previous?)`, `prepareSync(next, previous)` and `prepareDelete(entities)` diff entities into changes, then find mutators for them. If any change is not accepted by a registered mutator, preparation throws before persisting anything.
 - `getItems()` / `items$`: one frozen `EntityChangeItem` snapshot per planned change (`key`, `schema`, `type`, `entity`, `previous`, `path`, `dependsOn`, `status`, `error`, `errorPath`). Planning upgrades immutable `EntityChange` values to `PlannedEntityChange` via `toPlanned()`. Statuses are `pending`, `running`, `succeeded`, `failed`, `blocked` and `cancelled`.
-- `execute()`: dispatches ready mutations in dependency order, independent ones in parallel. Dependents of changes that did not succeed are `blocked`; independent work continues. Resolves with an `EntityChangesetSummary` (`succeeded`, `partial`, `failed` or `cancelled`) and does not reject because changes failed. Executing again retries only outstanding changes.
-- `getNext()`: next entities with created Ids and persisted values; uncreated entities keep temporary (negative) Ids, which are never passed to mutators.
+- Callers must supply uniquely assigned temporary negative Ids for new entities so they can be identified and related before creation. Temporary entity and relation Ids are passed to mutators unchanged; mutators must treat them as new and return persisted Ids.
+- `execute()`: dispatches ready mutations in dependency order, independent ones in parallel. Changes depend on other changes, not batches: a change related to a new entity through an outbound or inbound relation depends on that entity being created first. Dependents of changes that did not succeed are `blocked`; independent work continues. Resolves with an `EntityChangesetSummary` (`succeeded`, `partial`, `failed` or `cancelled`, with items grouped by status) and does not reject because changes failed. Executing again retries only outstanding changes.
+- `getNext()`: next entities with created Ids and persisted values; uncreated entities keep their supplied temporary Ids across retries.
 - `getPrevious()`: only state known to be persisted, used as the baseline for retries.
 - `update(next)`: replans with edited next entities (based on `getNext()`); errors are kept on items with the same key until they run again.
-- `cancel()`: aborts `context.signal` and cancels undispatched changes.
+- `cancel()`: stops dispatching further work, aborts `context.signal` for running mutators, and cancels undispatched changes.
 
 The cache, if enabled, is written once at the end of `execute()` with only what was persisted.
+Successful creates and updates advance the retry baseline, and successful deletes are removed from it. Persisted entities no longer reachable from the roots are still retained internally so retries neither create them again nor lose their baseline.
 
 ## Mutators
 
@@ -42,8 +45,9 @@ Outcome contract:
 - One-entity mutators: a throw fails only that entity.
 - Batch mutators return what they persisted. A throw means nothing of the batch was persisted, and all of its changes fail.
 - `context.fail(entity, error, { path? })` reports an entity passed to the mutator (or nested within one) as not persisted. `path` locates the offending property for validation errors.
-- Returned entities are matched to inputs by explicit `context.succeed(input, persisted)`, then by reference, then by Id, then by globally smallest property difference; order is not relied upon. Nested relations are matched within matched pairs.
+- `context.succeed(input, persisted)` explicitly matches a returned entity to its input. Otherwise, returned entities are matched by reference, then by Id, then by globally smallest property difference across the batch (ties use position); order is not otherwise relied upon. Nested relations are matched within matched pairs.
 - Inputs neither returned nor failed fail with "the mutator did not return this entity". Delete mutators need not return anything.
+- Aggregate save mutators should return nested entities in their root's relations as well. Failing a root also fails entities nested within it.
 - Use `context.signal` to abort running requests when the changeset is cancelled.
 
 Mutation selection limits which related entities are traversed, and each mutator's `select` declares which related changes that mutator can handle. A save mutator can persist the current aggregate state for the selected relations it accepts, including removals, without inspecting `previous` to discover missing children. An empty array represents clearing a selected relation, while an omitted/`undefined` relation is left unchanged. Related changes not handled by that save mutator may be accepted by other compatible mutators.
@@ -73,6 +77,6 @@ These trade-offs were deliberate in the changeset rework; changing them would be
 
 ## Known gaps (not implemented yet)
 
-From the original changeset plan; still worth addressing if we revisit the API.
+Still worth addressing if we revisit the API.
 
-- **`update()` does not detect "fresh" objects after partial success.** Callers are expected to pass entities derived from `getNext()` so entities already created in an earlier `execute()` keep their Ids and item keys. If `update()` is given new object graphs without those Ids, the planner may treat them as new creates and dispatch duplicate creates. There is no runtime warning yet; behavior is only documented on `EntityChangeset.update()` and here.
+- **`update()` does not detect "fresh" objects after partial success.** Pass entities derived from `getNext()` so entities already created in an earlier `execute()` keep their Ids and item keys. If `update()` is given new object graphs without those Ids, the planner may treat them as new creates and dispatch duplicate creates. There is no runtime warning yet.

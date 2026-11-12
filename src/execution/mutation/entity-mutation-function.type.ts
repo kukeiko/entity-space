@@ -5,7 +5,7 @@ import { EntityMutationContext } from "./structures/entity-mutation-context";
 /*
  * Contract for batch mutators (create, update, save and delete):
  * - Return only the entities that were persisted (deletes return nothing). Returned entities are matched to the
- *   received ones by Id, otherwise by the smallest difference of their properties, so the order does not matter.
+ *   received ones by id, otherwise by the smallest difference of their properties, so the order does not matter.
  * - Call context.fail(receivedEntity, error, { path? }) for every received entity (including nested ones) that was not
  *   persisted. Received entities that are neither returned nor reported as failed are considered failed.
  * - Use context.succeed(receivedEntity, persisted?) to explicitly pair a received entity with its persisted

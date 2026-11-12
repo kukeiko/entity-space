@@ -27,7 +27,7 @@ todos:
     content: Convert staged next tests and add the partial-success, retry, matching and cancel tests listed in the plan
     status: completed
   - id: docs
-    content: Replace docs/mutation-plan.md and update .github/instructions/mutation.instructions.md, then sync cursor rules
+    content: Maintain the final mutation design in .github/instructions/mutation.instructions.md, then sync cursor rules
     status: completed
 isProject: false
 ---
@@ -118,7 +118,7 @@ Key internals:
 - New: `src/execution/mutation/entity-changeset.ts` (the handle), `src/execution/mutation/structures/change-item.ts`, `src/execution/mutation/functions/plan-changes.fn.ts`, `src/execution/mutation/functions/execute-changeset.fn.ts` (the scheduler), `src/execution/mutation/functions/match-mutation-results.fn.ts`, `src/execution/mutation/entity-mutation-error.ts`.
 - Reworked: [src/execution/entity-workspace.ts](src/execution/entity-workspace.ts) (`#mutate`/`#mutate_next` become changeset creation), [src/execution/entity-mutation-builder.ts](src/execution/entity-mutation-builder.ts) (`prepare*`, shortcuts, `_next` removed), [src/execution/mutation/structures/entity-mutation-context.ts](src/execution/mutation/structures/entity-mutation-context.ts), the four `execute-*-mutation.fn.ts` (they return outcomes instead of writing into originals), [src/execution/mutation/entity-changes-builder.ts](src/execution/mutation/entity-changes-builder.ts) (baseline fallback, temporary Id awareness), [src/execution/entity-schema-scoped-service-container.ts](src/execution/entity-schema-scoped-service-container.ts) (one-mutators use `context.fail` and no longer swallow errors silently), and the mutation function types in [src/execution/mutation/entity-mutation-function.type.ts](src/execution/mutation/entity-mutation-function.type.ts).
 - Staged work: keep the cache function signature changes and the `useDeleteSongIfOddId` test fixture. Convert the three `*-next.test.ts` files to the changeset API. Drop the silent error swallowing.
-- Docs: replace [docs/mutation-plan.md](docs/mutation-plan.md) with the final design and update `.github/instructions/mutation.instructions.md` (then `npm run sync-cursor-rules`). This also resolves the "delete cleanup TODO" note.
+- Docs: maintain the final mutation design in `.github/instructions/mutation.instructions.md` and sync Cursor rules with `npm run sync-cursor-rules`. This also resolves the "delete cleanup TODO" note.
 
 ## Open points to confirm while implementing
 

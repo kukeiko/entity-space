@@ -1,10 +1,10 @@
 import { Entity, EntitySchema } from "@entity-space/elements";
 import { readPath } from "@entity-space/utils";
 import { EntityServiceContainer } from "../../entity-service-container";
-import { CommittedEntities } from "../committed-entities";
 import { EntityMutator } from "../entity-mutator";
 import { AcceptedEntityMutation } from "../structures/accepted-entity-mutation";
-import { EntityChange, PlannedEntityChange } from "../structures/entity-change";
+import { CommittedEntities } from "../structures/committed-entities";
+import { EntityChange } from "../structures/entity-change";
 import { EntityChanges } from "../structures/entity-changes";
 import { EntityMutation } from "../structures/entity-mutation";
 import { generatePathedMutators } from "./generate-pathed-mutators.fn";
@@ -14,38 +14,24 @@ import { toEntityChanges } from "./to-entity-changes.fn";
 export interface ChangeBatch {
     readonly index: number;
     readonly mutation: AcceptedEntityMutation;
-    items: PlannedEntityChange[];
+    readonly items: readonly EntityChange[];
 }
 
-export class PlannedChanges {
-    constructor(items: PlannedEntityChange[], batches: ChangeBatch[]) {
-        this.items = items;
-        this.batches = batches;
-    }
-
-    items: PlannedEntityChange[];
+export interface PlannedChanges {
+    readonly items: EntityChange[];
     readonly batches: readonly ChangeBatch[];
 
-    getItem(key: string): PlannedEntityChange | undefined {
-        return this.items.find(item => item.getKey() === key);
-    }
+    getItem(key: string): EntityChange | undefined;
+}
 
-    replaceItem(next: PlannedEntityChange): void {
-        const key = next.getKey();
-        const index = this.items.findIndex(item => item.getKey() === key);
-
-        if (index >= 0) {
-            this.items[index] = next;
-        }
-
-        for (const batch of this.batches) {
-            const batchIndex = batch.items.findIndex(item => item.getKey() === key);
-
-            if (batchIndex >= 0) {
-                batch.items[batchIndex] = next;
-            }
-        }
-    }
+export function createPlannedChanges(items: EntityChange[], batches: ChangeBatch[]): PlannedChanges {
+    return {
+        items,
+        batches,
+        getItem(key: string) {
+            return items.find(item => item.getKey() === key);
+        },
+    };
 }
 
 /**
@@ -60,12 +46,12 @@ export function planChanges(
     const entityChanges = toEntityChanges(mutation, committed);
 
     if (entityChanges === undefined) {
-        return new PlannedChanges([], []);
+        return createPlannedChanges([], []);
     }
 
     const accepted = sortAcceptedMutationsByDependency(acceptChanges(services, mutation, entityChanges));
     const keys = new Map<string, number>();
-    const items: PlannedEntityChange[] = [];
+    const items: EntityChange[] = [];
 
     const batches = accepted.map((acceptedMutation, index) => {
         const batchItems = acceptedMutation
@@ -77,13 +63,9 @@ export function planChanges(
         return { index, mutation: acceptedMutation, items: batchItems };
     });
 
-    const wiredItems = wireItemDependencies(items);
+    wireItemDependencies(items);
 
-    for (const batch of batches) {
-        batch.items = batch.items.map(item => wiredItems.find(candidate => candidate.getKey() === item.getKey())!);
-    }
-
-    return new PlannedChanges(wiredItems, batches);
+    return createPlannedChanges(items, batches);
 }
 
 function acceptChanges(
@@ -121,8 +103,8 @@ function acceptChanges(
     return allAccepted;
 }
 
-function wireItemDependencies(items: readonly PlannedEntityChange[]): PlannedEntityChange[] {
-    const itemsByEntity = new Map<Entity, PlannedEntityChange[]>();
+function wireItemDependencies(items: readonly EntityChange[]): void {
+    const itemsByEntity = new Map<Entity, EntityChange[]>();
     const dependsOnByKey = new Map<string, Set<string>>();
 
     for (const item of items) {
@@ -152,7 +134,9 @@ function wireItemDependencies(items: readonly PlannedEntityChange[]): PlannedEnt
         }
     }
 
-    return items.map(item => item.withDependsOn([...dependsOnByKey.get(item.getKey())!]));
+    for (const item of items) {
+        item.setDependsOn([...dependsOnByKey.get(item.getKey())!]);
+    }
 }
 
 function toUniqueKey(keys: Map<string, number>, change: EntityChange): string {

@@ -1,7 +1,7 @@
 import { Entity, entityHasId, EntityRelationSelection, EntitySchema, relationEntries } from "@entity-space/elements";
 import { ComplexKeyMap } from "@entity-space/utils";
 import { AcceptedEntityMutation } from "../structures/accepted-entity-mutation";
-import { PlannedEntityChange } from "../structures/entity-change";
+import { EntityChange } from "../structures/entity-change";
 
 /**
  * Groups the items of an accepted mutation by the root entity they are dispatched with. Items of an aggregate
@@ -10,14 +10,14 @@ import { PlannedEntityChange } from "../structures/entity-change";
  */
 export function groupBatchItems(
     mutation: AcceptedEntityMutation,
-    items: readonly PlannedEntityChange[],
-): Map<Entity, PlannedEntityChange[]> {
+    items: readonly EntityChange[],
+): Map<Entity, EntityChange[]> {
     const schema = mutation.getSchema();
     const selection = mutation.getSelection();
     const roots = getDispatchRoots(mutation);
-    const itemsByEntity = new Map<Entity, PlannedEntityChange[]>();
-    const groups = new Map<Entity, PlannedEntityChange[]>();
-    const grouped = new Set<PlannedEntityChange>();
+    const itemsByEntity = new Map<Entity, EntityChange[]>();
+    const groups = new Map<Entity, EntityChange[]>();
+    const grouped = new Set<EntityChange>();
 
     for (const item of items) {
         itemsByEntity.set(item.getEntity(), [...(itemsByEntity.get(item.getEntity()) ?? []), item]);

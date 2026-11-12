@@ -7,8 +7,8 @@ import {
 } from "@entity-space/elements";
 import { ComplexKeyMap, joinPaths, Path } from "@entity-space/utils";
 import { isEqual } from "lodash";
-import { CommittedEntities } from "./committed-entities";
 import { isEntityUpdateEqual } from "./functions/is-entity-update-equal.fn";
+import { CommittedEntities } from "./structures/committed-entities";
 import { EntityChange, EntityChangeType } from "./structures/entity-change";
 import { EntityChangeDependency } from "./structures/entity-change-dependency";
 
@@ -106,10 +106,16 @@ export class EntityChangesBuilder {
                         : [];
 
                 changes.push(
-                    new EntityChange(schema, entity, EntityChangeType.Update, [...dependencies, ...deleteDependencies], {
-                        previous: baseline,
-                        path,
-                    }),
+                    new EntityChange(
+                        schema,
+                        entity,
+                        EntityChangeType.Update,
+                        [...dependencies, ...deleteDependencies],
+                        {
+                            previous: baseline,
+                            path,
+                        },
+                    ),
                 );
             }
         }

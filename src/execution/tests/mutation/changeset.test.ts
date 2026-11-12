@@ -1,13 +1,6 @@
-import {
-    AlbumBlueprint,
-    Artist,
-    ArtistBlueprint,
-    Song,
-    SongBlueprint,
-} from "@entity-space/elements/testing";
+import { AlbumBlueprint, Artist, ArtistBlueprint, Song, SongBlueprint } from "@entity-space/elements/testing";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { EntityWorkspace } from "../../entity-workspace";
-import { EntityMutationError } from "../../mutation/entity-mutation-error";
 import {
     CreateEntitiesFn,
     DeleteEntitiesFn,
@@ -15,6 +8,7 @@ import {
     UpdateEntitiesFn,
 } from "../../mutation/entity-mutation-function.type";
 import { EntityChangeItem } from "../../mutation/structures/entity-change";
+import { EntityMutationError } from "../../mutation/structures/entity-mutation-error";
 import { TestFacade } from "../../testing";
 
 describe("EntityChangeset", () => {
@@ -66,6 +60,29 @@ describe("EntityChangeset", () => {
     });
 
     describe("preview", () => {
+        it("should pass supplied temporary entity and relation Ids to mutators and write persisted Ids back", async () => {
+            // arrange
+            const save = vi.fn<SaveEntitiesFn<ArtistBlueprint>>(({ entities }) =>
+                entities.map(entity => ({
+                    ...entity,
+                    id: 1,
+                    songs: entity.songs?.map(song => ({ ...song, id: 2 })),
+                })),
+            );
+            facade.getServices().for(ArtistBlueprint).addSaveMutator({ select: { songs: true }, save });
+            const newArtist = artist("new", { id: -1, songs: [song("new song", { id: -2 })] });
+
+            // act
+            await workspace.in(ArtistBlueprint).select({ songs: true }).save(newArtist);
+
+            // assert
+            expect(save.mock.calls[0][0].entities[0]).toMatchObject({
+                id: -1,
+                songs: [{ id: -2, artistId: -1 }],
+            });
+            expect(newArtist).toMatchObject({ id: 1, songs: [{ id: 2, artistId: 1 }] });
+        });
+
         it("should plan items with dependencies without calling any mutator", () => {
             // arrange
             const createArtists = useCreateArtists();
@@ -104,7 +121,7 @@ describe("EntityChangeset", () => {
         it("should report entities a batch mutator failed, including the path of the error", async () => {
             // arrange
             const createSongs = useCreateSongs(song => song.name === "");
-            const songs = [song("valid"), song("")];
+            const songs = [song("valid", { id: -1 }), song("", { id: -2 })];
 
             // act
             const changeset = workspace.in(SongBlueprint).prepareSave(songs);
@@ -120,9 +137,9 @@ describe("EntityChangeset", () => {
 
             const [created, notCreated] = changeset.getNext();
             expect(created.id).toEqual(1);
-            expect(notCreated.id).toBeLessThan(0);
+            expect(notCreated.id).toEqual(-2);
             expect(changeset.getPrevious()).toEqual([created]);
-            expect(songs[0].id).toEqual(0);
+            expect(songs[0].id).toEqual(-1);
         });
 
         it("should report entities a batch update mutator failed", async () => {
@@ -308,8 +325,14 @@ describe("EntityChangeset", () => {
                 }),
             );
 
-            facade.getServices().for(ArtistBlueprint).addSaveMutator({ select: { songs: true }, save: saveArtists });
-            const input = artist("Sunnexo", { songs: [song("accepted"), song("rejected")] });
+            facade
+                .getServices()
+                .for(ArtistBlueprint)
+                .addSaveMutator({ select: { songs: true }, save: saveArtists });
+            const input = artist("Sunnexo", {
+                id: -1,
+                songs: [song("accepted", { id: -2 }), song("rejected", { id: -3 })],
+            });
 
             // act
             const changeset = workspace.in(ArtistBlueprint).select({ songs: true }).prepareSave(input);
@@ -325,7 +348,7 @@ describe("EntityChangeset", () => {
             const [next] = changeset.getNext();
             expect(next.id).toEqual(1);
             expect(next.songs![0]).toEqual(expect.objectContaining({ id: 10, artistId: 1 }));
-            expect(next.songs![1].id).toBeLessThan(0);
+            expect(next.songs![1].id).toEqual(-3);
 
             const [previous] = changeset.getPrevious();
             expect(previous.songs!.map(song => song.id)).toEqual([10]);
@@ -365,7 +388,10 @@ describe("EntityChangeset", () => {
             facade.getServices().for(SongBlueprint).addCreateMutator({ create });
 
             // act
-            const summary = await workspace.in(SongBlueprint).prepareSave([song("a"), song("b")]).execute();
+            const summary = await workspace
+                .in(SongBlueprint)
+                .prepareSave([song("a"), song("b")])
+                .execute();
 
             // assert
             expect(byName(summary.items, "a").status).toEqual("failed");
@@ -405,7 +431,10 @@ describe("EntityChangeset", () => {
             facade.getServices().for(SongBlueprint).addCreateMutator({ create });
 
             // act
-            const summary = await workspace.in(SongBlueprint).prepareSave([song("a")]).execute();
+            const summary = await workspace
+                .in(SongBlueprint)
+                .prepareSave([song("a")])
+                .execute();
 
             // assert
             expect(summary.failed[0].error).toEqual(
@@ -429,7 +458,10 @@ describe("EntityChangeset", () => {
             const createAlbums = vi.fn(({ entities }: { entities: { id: number }[] }) =>
                 entities.map(entity => ({ ...entity, id: 5 })),
             );
-            facade.getServices().for(AlbumBlueprint).addCreateMutator({ create: createAlbums as any });
+            facade
+                .getServices()
+                .for(AlbumBlueprint)
+                .addCreateMutator({ create: createAlbums as any });
             useCreateSongs();
 
             const album = facade.construct(AlbumBlueprint, { namespace: "dev", name: "album" });
