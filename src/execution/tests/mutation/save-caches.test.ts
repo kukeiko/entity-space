@@ -21,11 +21,11 @@ describe("save() can cache entities", () => {
         const loadArtistByIdAndNamespace = repository.useMusic().useLoadArtistsByIdAndNamespace();
 
         // act
-        await workspace.in(ArtistBlueprint).cache(true).save(sunnexo);
+        const [next] = await workspace.in(ArtistBlueprint).cache(true).save(sunnexo);
 
         await workspace
             .from(ArtistBlueprint)
-            .where({ id: sunnexo.id, namespace: sunnexo.namespace })
+            .where({ id: next.id, namespace: next.namespace })
             .cache(true)
             .getOne();
 
@@ -40,11 +40,11 @@ describe("save() can cache entities", () => {
         const loadArtistByIdAndNamespace = repository.useMusic().useLoadArtistsByIdAndNamespace();
 
         // act
-        await workspace.in(ArtistBlueprint).cache(true).save(sunnexo);
+        const [next] = await workspace.in(ArtistBlueprint).cache(true).save(sunnexo);
 
         await workspace
             .from(ArtistBlueprint)
-            .where({ id: sunnexo.id, namespace: sunnexo.namespace })
+            .where({ id: next.id, namespace: next.namespace })
             .cache(true)
             .getOne();
 

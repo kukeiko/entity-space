@@ -231,12 +231,14 @@ describe("prepareSync()", () => {
                 .sync(next, previous)
                 .catch(error => error);
             backend.clearRejections();
-            const retried = await (error as EntityMutationError).changeset.execute();
+            const changeset = (error as EntityMutationError).changeset;
+            const retried = await changeset.execute();
 
             // assert
             expect(error).toBeInstanceOf(EntityMutationError);
             expect((error as EntityMutationError).summary.status).toEqual("partial");
-            expect(next.map(song => song.id)).toEqual([1, 2, 301]);
+            expect(next.map(song => song.id)).toEqual([1, 2, 0]);
+            expect(changeset.getNext().map(song => song.id)).toEqual([1, 2, 301]);
             expect(retried.status).toEqual("succeeded");
         });
     });

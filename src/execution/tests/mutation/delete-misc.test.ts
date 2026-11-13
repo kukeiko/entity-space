@@ -63,14 +63,18 @@ describe("delete()", () => {
         const deleteItems = repository.useRpg().useDeleteItems();
         const deleteItemSockets = repository.useRpg().useDeleteItemSockets();
         const deleteItemAttributeTypes = repository.useRpg().useDeleteItemAttributeTypes();
+        const input = structuredClone(windforce);
 
         // act
-        await workspace
+        const [next, previous] = await workspace
             .in(ItemBlueprint)
             .select({ sockets: true, attributes: { type: true } })
-            .delete([windforce]);
+            .delete(windforce);
 
         // assert
+        expect(next).toBeUndefined();
+        expect(previous).toBeUndefined();
+        expect(windforce).toEqual(input);
         expect(deleteItems).toHaveBeenCalledTimes(1);
         expect(deleteItems).toHaveBeenCalledWith<Parameters<DeleteEntitiesFn<ItemBlueprint>>>({
             entities: [

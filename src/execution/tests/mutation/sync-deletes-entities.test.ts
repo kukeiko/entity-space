@@ -57,7 +57,7 @@ describe("sync() deletes one entity", () => {
                 selection: {},
                 context: expect.anything(),
             });
-            expect(synced).toEqual(windforce.output);
+            expect(synced).toEqual([windforce.output, windforce.output]);
         });
     });
 
@@ -148,7 +148,7 @@ describe("sync() deletes one entity", () => {
                 selection: {},
                 context: expect.anything(),
             });
-            expect(synced).toEqual(windforce.output);
+            expect(synced).toEqual([windforce.output, windforce.output]);
         });
     });
 });

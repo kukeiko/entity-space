@@ -44,7 +44,7 @@ describe("mutate one-to-one", () => {
         const actual = await workspace.in(WashingMachineBlueprint).select({ product: true }).save(washingMachine);
 
         // assert
-        expect(actual).toEqual(expected);
+        expect(actual[0]).toEqual(expected);
         expect(createProduct).toHaveBeenCalledTimes(1);
         expect(createWashingMachine).toHaveBeenCalledTimes(1);
         expect(createProduct).toHaveBeenCalledBefore(createWashingMachine);
@@ -89,7 +89,7 @@ describe("mutate one-to-one", () => {
         const actual = await workspace.in(ProductBlueprint).select({ washingMachine: true }).save(product);
 
         // assert
-        expect(actual).toEqual(expected);
+        expect(actual[0]).toEqual(expected);
         expect(createProduct).toHaveBeenCalledBefore(createWashingMachine);
         expect(createProduct).toHaveBeenCalledTimes(1);
         expect(createWashingMachine).toHaveBeenCalledTimes(1);

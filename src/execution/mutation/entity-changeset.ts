@@ -18,7 +18,6 @@ import { EntityServiceContainer } from "../entity-service-container";
 import { EntityMutationOptions } from "../execution-arguments.interface";
 import { executeChangeset } from "./functions/execute-changeset.fn";
 import { planChanges, PlannedChanges } from "./functions/plan-changes.fn";
-import { writeBackEntities } from "./functions/write-back-entities.fn";
 import { EntityChange, EntityChangeItem, EntityChangeStatus } from "./structures/entity-change";
 import { EntityMutation, EntityMutationType } from "./structures/entity-mutation";
 import { MutationCacheOperation, MutationCacheOperationType } from "./structures/mutation-dispatch";
@@ -194,17 +193,6 @@ export class EntityChangeset<T extends Entity = Entity> {
      */
     cancel(): void {
         this.#controller?.abort();
-    }
-
-    /** @internal used by the save(), sync() and delete() shortcuts, which modify the entities passed to them */
-    writeBack(targets: readonly T[]): void {
-        const schema = this.#mutation.getSchema();
-        writeBackEntities(
-            schema,
-            getSelection(schema, this.#mutation.getSelection() ?? {}),
-            targets,
-            this.#mutation.getEntities(),
-        );
     }
 
     #prepareEntities(next: readonly Entity[]): Entity[] {

@@ -60,7 +60,7 @@ describe("EntityChangeset", () => {
     });
 
     describe("preview", () => {
-        it("should pass supplied temporary entity and relation Ids to mutators and write persisted Ids back", async () => {
+        it("should pass supplied temporary Ids to mutators and return persisted copies without mutating inputs", async () => {
             // arrange
             const save = vi.fn<SaveEntitiesFn<ArtistBlueprint>>(({ entities }) =>
                 entities.map(entity => ({
@@ -71,16 +71,20 @@ describe("EntityChangeset", () => {
             );
             facade.getServices().for(ArtistBlueprint).addSaveMutator({ select: { songs: true }, save });
             const newArtist = artist("new", { id: -1, songs: [song("new song", { id: -2 })] });
+            const input = structuredClone(newArtist);
 
             // act
-            await workspace.in(ArtistBlueprint).select({ songs: true }).save(newArtist);
+            const [next, previous] = await workspace.in(ArtistBlueprint).select({ songs: true }).save(newArtist);
 
             // assert
             expect(save.mock.calls[0][0].entities[0]).toMatchObject({
                 id: -1,
                 songs: [{ id: -2, artistId: -1 }],
             });
-            expect(newArtist).toMatchObject({ id: 1, songs: [{ id: 2, artistId: 1 }] });
+            expect(newArtist).toEqual(input);
+            expect(next).toMatchObject({ id: 1, songs: [{ id: 2, artistId: 1 }] });
+            expect(next).not.toBe(newArtist);
+            expect(previous).toMatchObject({ id: 1, songs: [{ id: 2, artistId: 1 }] });
         });
 
         it("should plan items with dependencies without calling any mutator", () => {

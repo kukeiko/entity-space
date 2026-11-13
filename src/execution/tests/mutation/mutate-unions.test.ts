@@ -57,7 +57,7 @@ describe("mutate unions", () => {
         expect(createResource).toHaveBeenCalledAfter(createGameObject);
         expect(createScene).toHaveBeenCalledBefore(createGameObject);
 
-        expect(saved).toStrictEqual([
+        expect(saved[0]).toStrictEqual([
             {
                 id: 2,
                 name: "Susi",

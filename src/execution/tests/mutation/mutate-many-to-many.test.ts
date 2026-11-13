@@ -54,7 +54,7 @@ describe("mutate many-to-many", () => {
         const actual = await workspace.in(SongBlueprint).select({ songTags: true }).save(song);
 
         // assert
-        expect(actual).toEqual(expected);
+        expect(actual[0]).toEqual(expected);
         expect(createSongTag).toHaveBeenCalledAfter(createSong);
         expect(createSong).toHaveBeenCalledTimes(1);
         expect(createSongTag).toHaveBeenCalledTimes(2);
@@ -115,7 +115,7 @@ describe("mutate many-to-many", () => {
         const actual = await workspace.in(SongTagBlueprint).select({ songs: true }).save(songTags);
 
         // assert
-        expect(actual).toEqual(expected);
+        expect(actual[0]).toEqual(expected);
         expect(createSongTag).toHaveBeenCalledAfter(createSong);
         expect(createSong).toHaveBeenCalledTimes(1);
         expect(createSongTag).toHaveBeenCalledTimes(2);

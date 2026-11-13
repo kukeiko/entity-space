@@ -26,9 +26,11 @@ describe("mutate duplicates", () => {
         const deleteArtist = repository.useMusic().useDeleteArtist();
 
         // act
-        await workspace.in(ArtistBlueprint).delete(artists);
+        const [next, previous] = await workspace.in(ArtistBlueprint).delete(artists);
 
         // assert
+        expect(next).toEqual([]);
+        expect(previous).toEqual([]);
         expect(deleteArtist).toHaveBeenCalledTimes(1);
     });
 
@@ -54,8 +56,11 @@ describe("mutate duplicates", () => {
         const actual = await workspace.in(SongBlueprint).select({ artist: true }).save(songs);
 
         // assert
-        expect(actual).toEqual(expected);
-        expect(actual[0].artist).toBe(actual[1].artist);
+        expect(actual[0]).toMatchObject([
+            { id: expected[0].id, artistId: expected[0].artistId, artist: { id: 1, name: "foo" } },
+            { id: expected[1].id, artistId: expected[1].artistId, artist: { id: 1, name: "foo" } },
+        ]);
+        expect(actual[0][0].artist).toBe(actual[0][1].artist);
         expect(createSong).toHaveBeenCalledAfter(createArtist);
         expect(createSong).toHaveBeenCalledTimes(2);
         expect(createArtist).toHaveBeenCalledTimes(1);

@@ -13,7 +13,7 @@ Mutations persist entity changes through callbacks registered with `EntityServic
 Use `workspace.in(blueprint)` to build a mutation, optionally with `.select(...)` and `.cache(...)`.
 
 - `prepareSave(entityOrEntities, previous?)`, `prepareSync(entities, previous)` and `prepareDelete(entityOrEntities)` return an `EntityChangeset` without persisting anything. They throw if a change is not accepted by any registered mutator.
-- `save(...)`, `sync(...)` and `delete(...)` are shortcuts for `prepare*()` + `execute()`. They write created Ids and persisted values back into the given entities, and throw an `EntityMutationError` (carrying `changeset` and `summary`) if not all changes succeeded.
+- `save(...)`, `sync(...)` and `delete(...)` are shortcuts for `prepare*()` + `execute()`. After success, they return `[next, previous]` snapshots from the changeset and never mutate the given entities. Scalar `save(entity, previous?)` returns scalar tuple members; array `save` and `sync` return arrays. Array `delete` returns post-execution arrays, normally `[[], []]`; scalar `delete` returns optional scalar tuple members, normally `[undefined, undefined]`. They throw an `EntityMutationError` (carrying `changeset` and `summary`) if not all changes succeeded.
 
 ## Changesets
 
@@ -74,7 +74,7 @@ There is no all-or-nothing transaction or rollback guarantee; partial persistenc
 
 These trade-offs were deliberate in the changeset rework; changing them would be a breaking or behavioral shift.
 
-- **Shortcuts write back into caller-owned entities.** `prepare*` and `EntityChangeset` never mutate the objects passed in (they work on clones). `save()`, `sync()` and `delete()` still call `writeBack()` on those same objects so existing callers keep the old contract: created Ids and persisted field values land on the references they passed in. For UI-driven partial success, prefer `prepare*` + `execute()` and bind to `getNext()` instead of assuming the original form objects were updated.
+- **Shortcut results are copies.** `prepare*`, `EntityChangeset`, and the `save()`, `sync()` and `delete()` shortcuts do not mutate the objects passed in. Successful shortcuts return `[next, previous]` from the changeset after execution; scalar `save` and `delete` preserve scalar tuple members (or `undefined` when a scalar snapshot is empty), while `sync` and array inputs return arrays. Use `prepare*` + `execute()` when partial success or retries need to be handled without throwing.
 - **Retrying a failed nested change often needs a separate mutator.** Aggregate `save` mutators accept nested creates/updates/deletes only together with a change on the root. If the root succeeded but a nested entity failed (e.g. one song under a new artist), a later `execute()` will not re-dispatch that nested item through the save mutator alone. Retrying it requires another mutator that accepts that schema without the root (e.g. `addCreateMutator` on the nested blueprint), or replanning so the root change is outstanding again.
 
 ## Known gaps (not implemented yet)

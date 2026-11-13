@@ -84,8 +84,8 @@ describe("save() updates one entity", () => {
                 selection: {},
                 context: expect.anything(),
             });
-            expect(saved).toEqual(windforce.output);
-            expect(saved).toBe(windforce.input);
+            expect(saved[0]).toEqual(windforce.output);
+            expect(saved[0]).not.toBe(windforce.input);
         });
 
         it("using an update mutator", async () => {
@@ -101,8 +101,8 @@ describe("save() updates one entity", () => {
                 selection: {},
                 context: expect.anything(),
             });
-            expect(saved).toEqual(windforce.output);
-            expect(saved).toBe(windforce.input);
+            expect(saved[0]).toEqual(windforce.output);
+            expect(saved[0]).not.toBe(windforce.input);
         });
     });
 
@@ -175,8 +175,8 @@ describe("save() updates one entity", () => {
                 selection: {},
                 context: expect.anything(),
             });
-            expect(saved).toEqual(windforce.output);
-            expect(saved).toBe(windforce.input);
+            expect(saved[0]).toEqual(windforce.output);
+            expect(saved[0]).not.toBe(windforce.input);
         });
 
         it("using an update and a create mutator", async () => {
@@ -199,8 +199,8 @@ describe("save() updates one entity", () => {
                 selection: {},
                 context: expect.anything(),
             });
-            expect(saved).toEqual(windforce.output);
-            expect(saved).toBe(windforce.input);
+            expect(saved[0]).toEqual(windforce.output);
+            expect(saved[0]).not.toBe(windforce.input);
         });
     });
 
@@ -273,8 +273,8 @@ describe("save() updates one entity", () => {
                 selection: {},
                 context: expect.anything(),
             });
-            expect(saved).toEqual(windforce.output);
-            expect(saved).toBe(windforce.input);
+            expect(saved[0]).toEqual(windforce.output);
+            expect(saved[0]).not.toBe(windforce.input);
         });
 
         it("using an update mutator", async () => {
@@ -297,8 +297,8 @@ describe("save() updates one entity", () => {
                 selection: {},
                 context: expect.anything(),
             });
-            expect(saved).toEqual(windforce.output);
-            expect(saved).toBe(windforce.input);
+            expect(saved[0]).toEqual(windforce.output);
+            expect(saved[0]).not.toBe(windforce.input);
         });
     });
 
@@ -378,8 +378,8 @@ describe("save() updates one entity", () => {
                 selection: {},
                 context: expect.anything(),
             });
-            expect(saved).toEqual(windforce.output);
-            expect(saved).toBe(windforce.input);
+            expect(saved[0]).toEqual(windforce.output);
+            expect(saved[0]).not.toBe(windforce.input);
         });
 
         it("using an update and a create mutator", async () => {
@@ -402,8 +402,8 @@ describe("save() updates one entity", () => {
                 selection: {},
                 context: expect.anything(),
             });
-            expect(saved).toEqual(windforce.output);
-            expect(saved).toBe(windforce.input);
+            expect(saved[0]).toEqual(windforce.output);
+            expect(saved[0]).not.toBe(windforce.input);
         });
     });
 
@@ -483,8 +483,8 @@ describe("save() updates one entity", () => {
                 selection: {},
                 context: expect.anything(),
             });
-            expect(saved).toEqual(windforce.output);
-            expect(saved).toBe(windforce.input);
+            expect(saved[0]).toEqual(windforce.output);
+            expect(saved[0]).not.toBe(windforce.input);
         });
 
         it("using an update mutator", async () => {
@@ -507,8 +507,8 @@ describe("save() updates one entity", () => {
                 selection: {},
                 context: expect.anything(),
             });
-            expect(saved).toEqual(windforce.output);
-            expect(saved).toBe(windforce.input);
+            expect(saved[0]).toEqual(windforce.output);
+            expect(saved[0]).not.toBe(windforce.input);
         });
     });
 
@@ -621,14 +621,14 @@ describe("save() updates one entity", () => {
                 selection: { sockets: true },
                 context: expect.anything(),
             });
-            expect(saved).toEqual({
+            expect(saved[0]).toEqual({
                 ...windforce.output,
                 sockets: [
                     { id: 10, assignId: 10, itemId: 1, socketedItemId: 100, createdAt, updatedAt },
                     { id: 30, assignId: 30, itemId: 1, socketedItemId: 300, createdAt, updatedAt },
                 ],
             });
-            expect(saved).toBe(windforce.input);
+            expect(saved[0]).not.toBe(windforce.input);
         });
 
         it("using a save mutator and a delete mutator", async () => {
@@ -654,8 +654,8 @@ describe("save() updates one entity", () => {
                 selection: {},
                 context: expect.anything(),
             });
-            expect(saved).toEqual(windforce.output);
-            expect(saved).toBe(windforce.input);
+            expect(saved[0]).toEqual(windforce.output);
+            expect(saved[0]).not.toBe(windforce.input);
         });
 
         it("using an update and a delete mutator", async () => {
@@ -681,8 +681,8 @@ describe("save() updates one entity", () => {
                 selection: {},
                 context: expect.anything(),
             });
-            expect(saved).toEqual(windforce.output);
-            expect(saved).toBe(windforce.input);
+            expect(saved[0]).toEqual(windforce.output);
+            expect(saved[0]).not.toBe(windforce.input);
         });
     });
 });

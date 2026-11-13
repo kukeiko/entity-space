@@ -76,56 +76,79 @@ export class EntityMutationBuilder<B, S extends PackedEntitySelection<EntityBlue
     }
 
     /**
-     * Shortcut for prepareSave() + execute(). Writes created Ids and persisted values into the given entities.
+     * Shortcut for prepareSave() + execute(). Returns copies of the resulting next and previous entities.
      * Throws an EntityMutationError carrying the changeset if not all changes succeeded.
      */
-    async save(entity: EntityBlueprint.Type<B>, previous?: EntityBlueprint.Type<B>): Promise<EntityBlueprint.Type<B>>;
+    async save(
+        entity: EntityBlueprint.Type<B>,
+        previous?: EntityBlueprint.Type<B>,
+    ): Promise<[EntityBlueprint.Type<B>, EntityBlueprint.Type<B>]>;
     async save(
         entities: EntityBlueprint.Type<B>[],
         previous?: EntityBlueprint.Type<B>[],
-    ): Promise<EntityBlueprint.Type<B>[]>;
+    ): Promise<[EntityBlueprint.Type<B>[], EntityBlueprint.Type<B>[]]>;
     async save(
         entities: EntityBlueprint.Type<B>[] | EntityBlueprint.Type<B>,
         previous?: EntityBlueprint.Type<B>[] | EntityBlueprint.Type<B>,
-    ): Promise<EntityBlueprint.Type<B>[] | EntityBlueprint.Type<B>> {
-        const targets = toArray(entities);
-        await this.#execute(this.prepareSave(targets, previous), targets);
+    ): Promise<
+        | [EntityBlueprint.Type<B>, EntityBlueprint.Type<B>]
+        | [EntityBlueprint.Type<B>[], EntityBlueprint.Type<B>[]]
+    > {
+        const [next, persisted] = await this.#execute(this.prepareSave(entities, previous));
 
-        return Array.isArray(entities) ? targets : targets[0];
+        if (Array.isArray(entities)) {
+            return [next, persisted];
+        } else {
+            return [next[0], persisted[0]];
+        }
     }
 
     /**
-     * Shortcut for prepareSync() + execute(). Writes created Ids and persisted values into the given entities.
+     * Shortcut for prepareSync() + execute(). Returns copies of the resulting next and previous entities.
      * Throws an EntityMutationError carrying the changeset if not all changes succeeded.
      */
     async sync(
         entities: EntityBlueprint.Type<B>[],
         previous: EntityBlueprint.Type<B>[],
-    ): Promise<EntityBlueprint.Type<B>[]> {
-        await this.#execute(this.prepareSync(entities, previous), entities);
-        return entities;
+    ): Promise<[EntityBlueprint.Type<B>[], EntityBlueprint.Type<B>[]]> {
+        return this.#execute(this.prepareSync(entities, previous));
     }
 
     /**
-     * Shortcut for prepareDelete() + execute().
+     * Shortcut for prepareDelete() + execute(). Returns copies of the resulting next and previous entities.
      * Throws an EntityMutationError carrying the changeset if not all changes succeeded.
      */
-    async delete(entity: EntityBlueprint.Type<B>): Promise<EntityBlueprint.Type<B> | undefined>;
-    async delete(entities: EntityBlueprint.Type<B>[]): Promise<EntityBlueprint.Type<B>[]>;
+    async delete(
+        entity: EntityBlueprint.Type<B>,
+    ): Promise<[EntityBlueprint.Type<B> | undefined, EntityBlueprint.Type<B> | undefined]>;
+    async delete(
+        entities: EntityBlueprint.Type<B>[],
+    ): Promise<[EntityBlueprint.Type<B>[], EntityBlueprint.Type<B>[]]>;
     async delete(
         entities: EntityBlueprint.Type<B> | EntityBlueprint.Type<B>[],
-    ): Promise<EntityBlueprint.Type<B>[] | EntityBlueprint.Type<B> | undefined> {
-        await this.#execute(this.prepareDelete(entities), []);
-        return entities;
+    ): Promise<
+        | [EntityBlueprint.Type<B> | undefined, EntityBlueprint.Type<B> | undefined]
+        | [EntityBlueprint.Type<B>[], EntityBlueprint.Type<B>[]]
+    > {
+        const [next, previous] = await this.#execute(this.prepareDelete(entities));
+
+        if (Array.isArray(entities)) {
+            return [next, previous];
+        } else {
+            return [next[0], previous[0]];
+        }
     }
 
-    async #execute(changeset: EntityChangeset<EntityBlueprint.Type<B>>, targets: EntityBlueprint.Type<B>[]) {
+    async #execute(
+        changeset: EntityChangeset<EntityBlueprint.Type<B>>,
+    ): Promise<[EntityBlueprint.Type<B>[], EntityBlueprint.Type<B>[]]> {
         const summary = await changeset.execute();
-        changeset.writeBack(targets);
 
         if (summary.status !== EntityChangesetResultStatus.Succeeded) {
             throw new EntityMutationError(changeset as EntityChangeset, summary);
         }
+
+        return [changeset.getNext(), changeset.getPrevious()];
     }
 
     #prepare(
