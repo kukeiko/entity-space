@@ -3,6 +3,7 @@ import {
     entitiesToQuery,
     Entity,
     entityHasId,
+    EntityQuery,
     EntityRelationSelection,
     EntitySchema,
     getSelection,
@@ -16,7 +17,6 @@ import { EntityQueryTracing } from "../entity-query-tracing";
 import { EntityServiceContainer } from "../entity-service-container";
 import { EntityMutationOptions } from "../execution-arguments.interface";
 import { executeChangeset } from "./functions/execute-changeset.fn";
-import { materializePrevious } from "./functions/materialize-previous.fn";
 import { planChanges, PlannedChanges } from "./functions/plan-changes.fn";
 import { writeBackEntities } from "./functions/write-back-entities.fn";
 import { EntityChange, EntityChangeItem, EntityChangeStatus } from "./structures/entity-change";
@@ -76,8 +76,8 @@ export class EntityChangeset<T extends Entity = Entity> {
         this.#plan(new Map());
 
         if (previous.length) {
-            const previousQuery = entitiesToQuery(schema, previous, selection);
-            this.#cache.upsertQuery(previousQuery, previous);
+            this.#previousQuery = entitiesToQuery(schema, previous, selection);
+            this.#cache.upsertQuery(this.#previousQuery, previous);
         }
     }
 
@@ -86,6 +86,7 @@ export class EntityChangeset<T extends Entity = Entity> {
     readonly #options: EntityMutationOptions;
     readonly #items$ = new BehaviorSubject<readonly EntityChangeItem[]>([]);
     readonly #cache: EntityCache;
+    #previousQuery?: EntityQuery;
     #planned!: PlannedChanges;
     #executed = false;
     #isStale = false;
@@ -156,17 +157,13 @@ export class EntityChangeset<T extends Entity = Entity> {
                 previousCache: this.#cache,
             });
         } finally {
-            this.#mutation.setPrevious(
-                materializePrevious(
-                    this.#mutation.getSchema(),
-                    this.#mutation.getSelection() ?? {},
-                    this.#mutation.getType() === EntityMutationType.Delete ? [] : this.#mutation.getEntities(),
-                    this.#mutation.getPrevious(),
-                    this.#planned.items,
-                    this.#cache,
-                ),
+            const query = entitiesToQuery(
+                this.#mutation.getSchema(),
+                [...this.getNext(), ...this.getPrevious()],
+                this.#mutation.getSelection() ?? {},
             );
-
+            const nextPrevious = this.#cache.query(query, false, false);
+            this.#mutation.setPrevious(nextPrevious);
             this.#isStale = true;
             this.#controller = undefined;
             this.#applyCacheOperations(cacheOperations);

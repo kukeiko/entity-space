@@ -37,7 +37,7 @@ export class EntityCache {
     readonly #queryCache = new EntityQueryCache();
     readonly #cachedQueriesChanged = new Subject<void>();
 
-    query(query: EntityQuery): Entity[] {
+    query(query: EntityQuery, strictHydration = true, applyDefaultSort = true): Entity[] {
         const schema = query.getSchema();
         const selection = query.getSelection();
         const criterion = query.getCriterion();
@@ -47,15 +47,18 @@ export class EntityCache {
         let entities = this.#getStore(schema).query(storeQuery);
 
         if (selection !== undefined) {
-            this.#hydrate(entities, schema, selection);
-            entities = entities.filter(entity => isHydrated(schema, selection, entity));
+            this.#hydrate(entities, schema, selection, strictHydration);
+
+            if (strictHydration) {
+                entities = entities.filter(entity => isHydrated(schema, selection, entity));
+            }
 
             if (criterion) {
                 entities = entities.filter(matchesCriterion(criterion));
             }
         }
 
-        if (parameters === undefined && query.getPage() === undefined) {
+        if (parameters === undefined && query.getPage() === undefined && applyDefaultSort) {
             entities = sortEntitiesByDefaultSorter(schema, entities);
         }
 
@@ -120,7 +123,7 @@ export class EntityCache {
         return this.#cachedQueriesChanged.pipe(map(() => this.getCachedQueries()));
     }
 
-    #hydrate(entities: Entity[], schema: EntitySchema, selection: EntitySelection): void {
+    #hydrate(entities: Entity[], schema: EntitySchema, selection: EntitySelection, strictHydration = true): void {
         for (const [name, selectionValue] of Object.entries(selection)) {
             if (!schema.isRelation(name) || selectionValue === selection) {
                 continue;
@@ -134,14 +137,19 @@ export class EntityCache {
 
             if (relation.isEmbedded()) {
                 const embeddedEntities = relation.readValuesFlat(entities);
-                this.#hydrate(embeddedEntities, relation.getRelatedSchema(), selectionValue);
+                this.#hydrate(embeddedEntities, relation.getRelatedSchema(), selectionValue, strictHydration);
             } else if (relation.isJoined()) {
-                this.#hydrateJoin(entities, relation, selectionValue);
+                this.#hydrateJoin(entities, relation, selectionValue, strictHydration);
             }
         }
     }
 
-    #hydrateJoin(entities: Entity[], relation: EntityRelationProperty, selection: EntitySelection): void {
+    #hydrateJoin(
+        entities: Entity[],
+        relation: EntityRelationProperty,
+        selection: EntitySelection,
+        strictHydration = true,
+    ): void {
         // [todo] ❌ duplicated code from AutoJoinEntityHydrator
         if (relation.getSchema().isUnionSchema()) {
             const concreteSchemas = relation
@@ -159,7 +167,7 @@ export class EntityCache {
 
         const joinCriterion = entitiesToCriterion(entities, relation.getJoinFrom(), relation.getJoinTo());
         const joinQuery = new EntityQuery(relation.getRelatedSchema(), selection, joinCriterion);
-        const joinedEntities = this.query(joinQuery);
+        const joinedEntities = this.query(joinQuery, strictHydration);
 
         // [todo] ❌ support union schemas (see AutoJoinEntityHydrator)
         joinEntities(entities, joinedEntities, relation);
@@ -240,7 +248,7 @@ export class EntityCache {
         const schema = query.getSchema();
         const selection = query.getSelection();
         const storeCriterion = criterion ? omitJoinedCriteria(criterion, schema) : undefined;
-        const storeSelection = selection ? omitJoinedSelections(selection, schema) : undefined;
+        const storeSelection = omitJoinedSelections(selection, schema) ?? {};
 
         return query.with({ criterion: storeCriterion ?? null, selection: storeSelection });
     }

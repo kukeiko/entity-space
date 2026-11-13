@@ -5,6 +5,10 @@ export function omitJoinedSelections(selection: EntitySelection, schema: EntityS
     const kept: EntitySelection = {};
 
     for (const [key, value] of Object.entries(selection)) {
+        if (value === selection) {
+            continue;
+        }
+
         if (schema.isRelation(key)) {
             if (schema.getRelation(key).isJoined()) {
                 continue;

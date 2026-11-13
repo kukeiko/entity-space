@@ -11,10 +11,10 @@ import {
 import { beforeEach, describe, expect, it } from "vitest";
 import { EntityWorkspace } from "../../../entity-workspace";
 import {
-    EntityMutatorType,
     allDispatchedNames,
     dispatched,
     dispatchedNames,
+    EntityMutatorType,
     MusicBackend,
     MutatorOptions,
     TestFacade,
@@ -292,7 +292,10 @@ describe("prepareSave()", () => {
         >([
             [
                 "batch create mutators for artists and songs",
-                () => ({ artists: backend.useArtists(EntityMutatorType.Create), songs: backend.useSongs(EntityMutatorType.Create) }),
+                () => ({
+                    artists: backend.useArtists(EntityMutatorType.Create),
+                    songs: backend.useSongs(EntityMutatorType.Create),
+                }),
             ],
             [
                 "one-entity create mutators for artists and songs",
@@ -303,11 +306,17 @@ describe("prepareSave()", () => {
             ],
             [
                 "batch save mutators for artists and songs",
-                () => ({ artists: backend.useArtists(EntityMutatorType.Save), songs: backend.useSongs(EntityMutatorType.Save) }),
+                () => ({
+                    artists: backend.useArtists(EntityMutatorType.Save),
+                    songs: backend.useSongs(EntityMutatorType.Save),
+                }),
             ],
             [
                 "a create mutator for artists and a save mutator for songs",
-                () => ({ artists: backend.useArtists(EntityMutatorType.Create), songs: backend.useSongs(EntityMutatorType.Save) }),
+                () => ({
+                    artists: backend.useArtists(EntityMutatorType.Create),
+                    songs: backend.useSongs(EntityMutatorType.Save),
+                }),
             ],
         ])("creating a song and its new artist using %s", (_, useMutators) => {
             it("should create the artist first and pass its Id to the song", async () => {
@@ -390,7 +399,11 @@ describe("prepareSave()", () => {
 
         describe.each<[string, EntityMutatorType, MutatorOptions<Song>]>([
             ["a batch save mutator for songs that includes the artist", EntityMutatorType.Save, { select }],
-            ["a one-entity save mutator for songs that includes the artist", EntityMutatorType.Save, { select, one: true }],
+            [
+                "a one-entity save mutator for songs that includes the artist",
+                EntityMutatorType.Save,
+                { select, one: true },
+            ],
             ["a batch create mutator for songs that includes the artist", EntityMutatorType.Create, { select }],
         ])("creating a song and its new artist using %s", (_, type, options) => {
             it("should dispatch the song together with its artist in one call", async () => {
@@ -564,7 +577,10 @@ describe("prepareSave()", () => {
         >([
             [
                 "batch create mutators for artists and songs",
-                () => ({ artists: backend.useArtists(EntityMutatorType.Create), songs: backend.useSongs(EntityMutatorType.Create) }),
+                () => ({
+                    artists: backend.useArtists(EntityMutatorType.Create),
+                    songs: backend.useSongs(EntityMutatorType.Create),
+                }),
             ],
             [
                 "one-entity create mutators for artists and songs",
@@ -575,7 +591,10 @@ describe("prepareSave()", () => {
             ],
             [
                 "batch save mutators for artists and songs",
-                () => ({ artists: backend.useArtists(EntityMutatorType.Save), songs: backend.useSongs(EntityMutatorType.Save) }),
+                () => ({
+                    artists: backend.useArtists(EntityMutatorType.Save),
+                    songs: backend.useSongs(EntityMutatorType.Save),
+                }),
             ],
         ])("creating an artist and its new songs using %s", (_, useMutators) => {
             it("should create the artist first and pass its Id to the songs", async () => {
@@ -669,9 +688,17 @@ describe("prepareSave()", () => {
 
         describe.each<[string, EntityMutatorType, MutatorOptions<Artist>]>([
             ["a batch save mutator for artists that includes songs", EntityMutatorType.Save, { select }],
-            ["a one-entity save mutator for artists that includes songs", EntityMutatorType.Save, { select, one: true }],
+            [
+                "a one-entity save mutator for artists that includes songs",
+                EntityMutatorType.Save,
+                { select, one: true },
+            ],
             ["a batch create mutator for artists that includes songs", EntityMutatorType.Create, { select }],
-            ["a one-entity create mutator for artists that includes songs", EntityMutatorType.Create, { select, one: true }],
+            [
+                "a one-entity create mutator for artists that includes songs",
+                EntityMutatorType.Create,
+                { select, one: true },
+            ],
         ])("creating an artist and its new songs using %s", (_, type, options) => {
             it("should dispatch the artist together with its songs in one call", async () => {
                 // arrange
@@ -820,9 +847,9 @@ describe("prepareSave()", () => {
 
                 const [persisted] = changeset.getPrevious();
                 expect(persisted.songs!.map(song => [song.id, song.name])).toEqual([
-                    [1, "kept"],
-                    [2, "changed*"],
                     [301, "added"],
+                    [2, "changed*"],
+                    [1, "kept"],
                 ]);
             });
 
@@ -877,9 +904,9 @@ describe("prepareSave()", () => {
                     "added",
                 ]);
                 expect(changeset.getPrevious()[0].songs!.map(song => [song.id, song.name])).toEqual([
-                    [1, "kept"],
-                    [2, "changed*"],
                     [301, "added"],
+                    [2, "changed*"],
+                    [1, "kept"],
                 ]);
             });
 

@@ -51,9 +51,9 @@ function writeInboundDependencyRelationIds(changes: readonly EntityChange[], ser
 function commitChanges(changes: readonly EntityChange[], previousCache: EntityCache): void {
     for (const change of changes) {
         if (change.isDelete()) {
-            previousCache.deleteQuery(entityToQuery(change.getSchema(), change.getEntity()));
+            previousCache.deleteQuery(entityToQuery(change.getSchema(), change.getEntity(), {}));
         } else {
-            previousCache.upsertQuery(entityToQuery(change.getSchema(), change.getEntity()), [change.getEntity()]);
+            previousCache.upsertQuery(entityToQuery(change.getSchema(), change.getEntity(), {}), [change.getEntity()]);
         }
     }
 }
@@ -156,7 +156,7 @@ async function dispatchDeleteMutation(dispatch: MutationDispatch): Promise<Mutat
 
     for (const item of dispatch.items) {
         if (results.get(item.getKey())?.status === EntityChangeOutcomeStatus.Succeeded) {
-            dispatch.previousCache.deleteQuery(entityToQuery(item.getSchema(), item.getEntity()));
+            dispatch.previousCache.deleteQuery(entityToQuery(item.getSchema(), item.getEntity(), {}));
         }
     }
 
