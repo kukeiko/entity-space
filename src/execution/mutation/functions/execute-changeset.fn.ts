@@ -2,15 +2,16 @@ import { Entity } from "@entity-space/elements";
 import { EntityCache } from "../../cache/entity-cache";
 import { EntityServiceContainer } from "../../entity-service-container";
 import { EntityMutationOptions } from "../../execution-arguments.interface";
+import { AcceptedEntityMutation } from "../structures/accepted-entity-mutation";
+import { AcceptedEntityMutations } from "../structures/accepted-entity-mutations";
 import { EntityChange, EntityChangeStatus } from "../structures/entity-change";
 import { EntityMutation } from "../structures/entity-mutation";
 import { EntityChangeOutcomeStatus, MutationCacheOperation, MutationDispatch } from "../structures/mutation-dispatch";
 import { executeMutation } from "./execute-mutation.fn";
 import { getDispatchRoots, groupBatchItems } from "./group-batch-items.fn";
-import { ChangeBatch, PlannedChanges } from "./plan-changes.fn";
 
 export interface ExecuteChangesetArguments {
-    readonly planned: PlannedChanges;
+    readonly planned: AcceptedEntityMutations;
     readonly mutation: EntityMutation;
     readonly options: EntityMutationOptions;
     readonly signal: AbortSignal;
@@ -27,46 +28,26 @@ export interface ExecuteChangesetArguments {
  */
 export async function executeChangeset(args: ExecuteChangesetArguments): Promise<void> {
     const { planned, signal, onChange } = args;
-    const remaining = new Set(planned.batches);
-    const running = new Set<Promise<void>>();
+    const remaining = new Set(planned.getMutations());
 
-    const dispatchReady = (): void => {
-        let dispatchedOrBlocked = true;
-
-        while (dispatchedOrBlocked && !signal.aborted) {
-            dispatchedOrBlocked = false;
-
-            for (const batch of [...remaining]) {
-                if (!isReady(batch, args.planned)) {
-                    continue;
-                }
-
-                remaining.delete(batch);
-                dispatchedOrBlocked = true;
-                const dispatch = toDispatch(args, batch);
-
-                if (dispatch === undefined) {
-                    continue;
-                }
-
-                const promise = applyMutationOutcomes(args, dispatch);
-                void promise.finally(() => running.delete(promise));
-                running.add(promise);
-            }
+    for (const mutation of args.planned.getMutations()) {
+        if (signal.aborted) {
+            break;
         }
 
+        const dispatch = toDispatch(args, mutation);
+
+        if (dispatch === undefined) {
+            continue;
+        }
+
+        await applyMutationOutcomes(args, dispatch);
+        remaining.delete(mutation);
         onChange();
-    };
-
-    dispatchReady();
-
-    while (running.size) {
-        await Promise.race(running);
-        dispatchReady();
     }
 
-    for (const batch of remaining) {
-        for (const item of batch.items.filter(item => !item.isSettled())) {
+    for (const mutation of remaining) {
+        for (const item of mutation.getChanges().filter(item => !item.isSettled())) {
             item.setStatus(signal.aborted ? EntityChangeStatus.Cancelled : EntityChangeStatus.Blocked);
         }
     }
@@ -103,31 +84,17 @@ async function applyMutationOutcomes(args: ExecuteChangesetArguments, dispatch: 
     args.onChange();
 }
 
-function isReady(batch: ChangeBatch, planned: PlannedChanges): boolean {
-    return batch.items.every(item =>
-        item.getDependsOnKeys().every(dependencyKey => {
-            const dependency = planned.getItem(dependencyKey);
+function toDispatch(args: ExecuteChangesetArguments, mutation: AcceptedEntityMutation): MutationDispatch | undefined {
+    const groups = groupBatchItems(mutation, mutation.getChanges());
+    const blocked = getBlockedItems(mutation, groups, args.planned);
 
-            if (dependency === undefined) {
-                return true;
-            }
-
-            return dependency.getBatchIndex() === batch.index || dependency.isSettled();
-        }),
-    );
-}
-
-function toDispatch(args: ExecuteChangesetArguments, batch: ChangeBatch): MutationDispatch | undefined {
-    const groups = groupBatchItems(batch.mutation, batch.items);
-    const blocked = getBlockedItems(batch, groups, args.planned);
-
-    for (const item of batch.items) {
+    for (const item of mutation.getChanges()) {
         if (blocked.has(item.getKey())) {
             item.setStatus(EntityChangeStatus.Blocked);
         }
     }
 
-    const dispatchRoots = new Set(getDispatchRoots(batch.mutation));
+    const dispatchRoots = new Set(getDispatchRoots(mutation));
     const roots: Entity[] = [];
     const items: EntityChange[] = [];
     const rootOfByKey = new Map<string, Entity>();
@@ -145,7 +112,9 @@ function toDispatch(args: ExecuteChangesetArguments, batch: ChangeBatch): Mutati
         }
     }
 
-    for (const item of batch.items.filter(item => !blocked.has(item.getKey()) && !rootOfByKey.has(item.getKey()))) {
+    for (const item of mutation
+        .getChanges()
+        .filter(item => !blocked.has(item.getKey()) && !rootOfByKey.has(item.getKey()))) {
         item.setStatus(EntityChangeStatus.Failed, {
             error: new Error("the entity is not part of any entity dispatched to the mutator"),
         });
@@ -163,7 +132,7 @@ function toDispatch(args: ExecuteChangesetArguments, batch: ChangeBatch): Mutati
     args.onChange();
 
     return {
-        mutation: batch.mutation,
+        mutation: mutation,
         roots,
         items,
         rootOf: new Map(items.map(item => [item, rootOfByKey.get(item.getKey())!])),
@@ -180,9 +149,9 @@ function toDispatch(args: ExecuteChangesetArguments, batch: ChangeBatch): Mutati
  * An item is blocked if any of its prerequisites did not succeed, or if it belongs to the aggregate of a blocked item.
  */
 function getBlockedItems(
-    batch: ChangeBatch,
+    mutation: AcceptedEntityMutation,
     groups: Map<Entity, EntityChange[]>,
-    planned: PlannedChanges,
+    planned: AcceptedEntityMutations,
 ): Set<string> {
     const blocked = new Set<string>();
     let changed = true;
@@ -190,19 +159,13 @@ function getBlockedItems(
     while (changed) {
         changed = false;
 
-        for (const item of batch.items) {
+        for (const item of mutation.getChanges()) {
             if (blocked.has(item.getKey())) {
                 continue;
             }
 
-            const isBlocked = item.getDependsOnKeys().some(dependencyKey => {
-                const dependency = planned.getItem(dependencyKey);
-
-                if (dependency === undefined) {
-                    return false;
-                }
-
-                return dependency.getBatchIndex() === batch.index
+            const isBlocked = planned.getChangeDependencies(item).some(dependency => {
+                return mutation.includesChange(dependency)
                     ? blocked.has(dependency.getKey())
                     : dependency.getStatus() !== EntityChangeStatus.Succeeded;
             });

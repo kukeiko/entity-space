@@ -33,14 +33,10 @@ export interface EntityChangeItem<T extends Entity = Entity> {
     readonly entity: T;
     readonly previous?: T;
     readonly path?: Path;
-    readonly dependsOn: readonly string[];
     readonly status: EntityChangeStatus;
     readonly error?: unknown;
     readonly errorPath?: string;
 }
-
-/** @deprecated Use {@link EntityChange} — planned rows are mutable {@link EntityChange} instances with a key. */
-export type PlannedEntityChange = EntityChange;
 
 export class EntityChange {
     constructor(
@@ -48,29 +44,19 @@ export class EntityChange {
         entity: Entity,
         type: EntityChangeType,
         dependencies: readonly EntityChangeDependency[],
+        key: string,
         options: {
             previous?: Entity;
             path?: Path;
-            key?: string;
-            batchIndex?: number;
-            status?: EntityChangeStatus;
-            error?: unknown;
-            errorPath?: string;
-            dependsOnKeys?: readonly string[];
         } = {},
     ) {
         this.#schema = schema;
         this.#entity = entity;
         this.#type = type;
         this.#dependencies = dependencies;
+        this.#key = key;
         this.#previous = options.previous;
         this.#path = options.path;
-        this.#key = options.key;
-        this.#batchIndex = options.batchIndex;
-        this.#status = options.status ?? EntityChangeStatus.Pending;
-        this.#error = options.error;
-        this.#errorPath = options.errorPath;
-        this.#dependsOnKeys = options.dependsOnKeys ? [...options.dependsOnKeys] : [];
     }
 
     readonly #schema: EntitySchema;
@@ -79,12 +65,10 @@ export class EntityChange {
     readonly #dependencies: readonly EntityChangeDependency[];
     readonly #previous?: Entity;
     readonly #path?: Path;
-    readonly #key?: string;
-    readonly #batchIndex?: number;
-    #status: EntityChangeStatus;
+    readonly #key: string;
+    #status: EntityChangeStatus = EntityChangeStatus.Pending;
     #error?: unknown;
     #errorPath?: string;
-    #dependsOnKeys: string[];
 
     getType(): EntityChangeType {
         return this.#type;
@@ -134,28 +118,8 @@ export class EntityChange {
         return this.#dependencies.filter(dependency => dependency.isInbound());
     }
 
-    getDependencies(): readonly EntityChangeDependency[] {
-        return this.#dependencies;
-    }
-
     getKey(): string {
-        if (this.#key === undefined) {
-            throw new Error("the change has not been planned yet");
-        }
-
         return this.#key;
-    }
-
-    getBatchIndex(): number {
-        if (this.#batchIndex === undefined) {
-            throw new Error("the change has not been planned yet");
-        }
-
-        return this.#batchIndex;
-    }
-
-    getDependsOnKeys(): readonly string[] {
-        return this.#dependsOnKeys;
     }
 
     getStatus(): EntityChangeStatus {
@@ -174,40 +138,23 @@ export class EntityChange {
         return this.#status !== EntityChangeStatus.Pending && this.#status !== EntityChangeStatus.Running;
     }
 
-    toPlanned(key: string, batchIndex: number): EntityChange {
-        return new EntityChange(this.#schema, this.#entity, this.#type, this.#dependencies, {
-            previous: this.#previous,
-            path: this.#path,
-            key,
-            batchIndex,
-        });
-    }
-
-    setDependsOn(dependsOnKeys: readonly string[]): void {
-        this.#dependsOnKeys = [...dependsOnKeys];
-    }
-
     setStatus(status: EntityChangeStatus, options: { error?: unknown; errorPath?: string } = {}): void {
         this.#status = status;
 
         if (status === EntityChangeStatus.Succeeded) {
             this.#error = undefined;
             this.#errorPath = undefined;
-            return;
-        }
-
-        if (status === EntityChangeStatus.Failed) {
+        } else if (status === EntityChangeStatus.Failed) {
             this.#error = options.error;
             this.#errorPath = options.errorPath;
-            return;
-        }
+        } else {
+            if (options.error !== undefined) {
+                this.#error = options.error;
+            }
 
-        if (options.error !== undefined) {
-            this.#error = options.error;
-        }
-
-        if (options.errorPath !== undefined) {
-            this.#errorPath = options.errorPath;
+            if (options.errorPath !== undefined) {
+                this.#errorPath = options.errorPath;
+            }
         }
     }
 
@@ -218,9 +165,10 @@ export class EntityChange {
             type: this.getType(),
             entity: this.getEntity(),
             previous:
-                this.getType() === EntityChangeType.Delete ? this.getEntity() : (this.getPrevious() as Entity | undefined),
+                this.getType() === EntityChangeType.Delete
+                    ? this.getEntity()
+                    : (this.getPrevious() as Entity | undefined),
             path: this.getPath(),
-            dependsOn: Object.freeze([...this.#dependsOnKeys]),
             status: this.#status,
             error: this.#error,
             errorPath: this.#errorPath,

@@ -91,8 +91,7 @@ export class EntityMutationBuilder<B, S extends PackedEntitySelection<EntityBlue
         entities: EntityBlueprint.Type<B>[] | EntityBlueprint.Type<B>,
         previous?: EntityBlueprint.Type<B>[] | EntityBlueprint.Type<B>,
     ): Promise<
-        | [EntityBlueprint.Type<B>, EntityBlueprint.Type<B>]
-        | [EntityBlueprint.Type<B>[], EntityBlueprint.Type<B>[]]
+        [EntityBlueprint.Type<B>, EntityBlueprint.Type<B>] | [EntityBlueprint.Type<B>[], EntityBlueprint.Type<B>[]]
     > {
         const [next, persisted] = await this.#execute(this.prepareSave(entities, previous));
 
@@ -121,9 +120,7 @@ export class EntityMutationBuilder<B, S extends PackedEntitySelection<EntityBlue
     async delete(
         entity: EntityBlueprint.Type<B>,
     ): Promise<[EntityBlueprint.Type<B> | undefined, EntityBlueprint.Type<B> | undefined]>;
-    async delete(
-        entities: EntityBlueprint.Type<B>[],
-    ): Promise<[EntityBlueprint.Type<B>[], EntityBlueprint.Type<B>[]]>;
+    async delete(entities: EntityBlueprint.Type<B>[]): Promise<[EntityBlueprint.Type<B>[], EntityBlueprint.Type<B>[]]>;
     async delete(
         entities: EntityBlueprint.Type<B> | EntityBlueprint.Type<B>[],
     ): Promise<

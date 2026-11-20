@@ -17,7 +17,8 @@ import { EntityQueryTracing } from "../entity-query-tracing";
 import { EntityServiceContainer } from "../entity-service-container";
 import { EntityMutationOptions } from "../execution-arguments.interface";
 import { executeChangeset } from "./functions/execute-changeset.fn";
-import { planChanges, PlannedChanges } from "./functions/plan-changes.fn";
+import { planChanges } from "./functions/plan-changes.fn";
+import { AcceptedEntityMutations } from "./structures/accepted-entity-mutations";
 import { EntityChange, EntityChangeItem, EntityChangeStatus } from "./structures/entity-change";
 import { EntityMutation, EntityMutationType } from "./structures/entity-mutation";
 import { MutationCacheOperation, MutationCacheOperationType } from "./structures/mutation-dispatch";
@@ -69,14 +70,18 @@ export class EntityChangeset<T extends Entity = Entity> {
         this.#services = services;
         this.#options = options;
         const silentTracing = new EntityQueryTracing();
-        this.#cache = new EntityCache(silentTracing);
-        const preparedNext = this.#prepareEntities(next);
+        this.#nextCache = new EntityCache(silentTracing);
+        this.#previousCache = new EntityCache(silentTracing);
+        const preparedNext = structuredClone(next.slice());
+        // assignTemporaryIds(schema, preparedNext, selection);
+        const nextQuery = entitiesToQuery(schema, preparedNext, getSelection(schema, selection));
+        // this.#nextCache.upsertQuery(nextQuery, preparedNext);
         this.#mutation = new EntityMutation(type, schema, preparedNext, selection, structuredClone(previous.slice()));
         this.#plan(new Map());
 
         if (previous.length) {
             this.#previousQuery = entitiesToQuery(schema, previous, selection);
-            this.#cache.upsertQuery(this.#previousQuery, previous);
+            this.#previousCache.upsertQuery(this.#previousQuery, previous);
         }
     }
 
@@ -84,9 +89,10 @@ export class EntityChangeset<T extends Entity = Entity> {
     readonly #mutation: EntityMutation;
     readonly #options: EntityMutationOptions;
     readonly #items$ = new BehaviorSubject<readonly EntityChangeItem[]>([]);
-    readonly #cache: EntityCache;
+    readonly #nextCache: EntityCache;
+    readonly #previousCache: EntityCache;
     #previousQuery?: EntityQuery;
-    #planned!: PlannedChanges;
+    #planned!: AcceptedEntityMutations;
     #executed = false;
     #isStale = false;
     #controller?: AbortController;
@@ -103,7 +109,7 @@ export class EntityChangeset<T extends Entity = Entity> {
             return EntityChangesetStatus.Running;
         } else if (
             !this.#executed ||
-            this.#planned.items.every(item => item.getStatus() === EntityChangeStatus.Pending)
+            this.#planned.getChanges().every(item => item.getStatus() === EntityChangeStatus.Pending)
         ) {
             return EntityChangesetStatus.Pending;
         } else {
@@ -153,7 +159,7 @@ export class EntityChangeset<T extends Entity = Entity> {
                 services: this.#services,
                 cacheOperations,
                 onChange: () => this.#emit(),
-                previousCache: this.#cache,
+                previousCache: this.#previousCache,
             });
         } finally {
             const query = entitiesToQuery(
@@ -161,7 +167,7 @@ export class EntityChangeset<T extends Entity = Entity> {
                 [...this.getNext(), ...this.getPrevious()],
                 this.#mutation.getSelection() ?? {},
             );
-            const nextPrevious = this.#cache.query(query, false, false);
+            const nextPrevious = this.#previousCache.query(query, false, false);
             this.#mutation.setPrevious(nextPrevious);
             this.#isStale = true;
             this.#controller = undefined;
@@ -205,9 +211,9 @@ export class EntityChangeset<T extends Entity = Entity> {
 
         writeRelationJoins(schema, this.#mutation.getEntities(), selection);
 
-        const planned = planChanges(this.#services, this.#mutation, this.#cache);
+        const planned = planChanges(this.#services, this.#mutation, this.#previousCache);
 
-        for (const item of planned.items) {
+        for (const item of planned.getChanges()) {
             const previousItem = previousItems.get(item.getKey());
 
             if (previousItem?.getError() !== undefined) {
@@ -224,15 +230,15 @@ export class EntityChangeset<T extends Entity = Entity> {
     }
 
     #getItemsByKey(): Map<string, EntityChange> {
-        return new Map(this.#planned.items.map(item => [item.getKey(), item]));
+        return new Map(this.#planned.getChanges().map(item => [item.getKey(), item]));
     }
 
     #emit(): void {
-        this.#items$.next(Object.freeze(this.#planned.items.map(item => item.toSnapshot())));
+        this.#items$.next(Object.freeze(this.#planned.getChanges().map(item => item.toSnapshot())));
     }
 
     #getResultStatus(): EntityChangesetResultStatus {
-        const items = this.#planned.items;
+        const items = this.#planned.getChanges();
 
         if (items.some(item => item.getStatus() === EntityChangeStatus.Cancelled)) {
             return EntityChangesetResultStatus.Cancelled;

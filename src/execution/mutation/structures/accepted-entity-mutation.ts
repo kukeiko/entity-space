@@ -75,6 +75,10 @@ export class AcceptedEntityMutation {
         return this.#changes;
     }
 
+    includesChange(change: EntityChange): boolean {
+        return this.#changes.includes(change);
+    }
+
     includesEntity(entity: Entity): boolean {
         return this.#changes.some(change => change.getEntity() === entity);
     }

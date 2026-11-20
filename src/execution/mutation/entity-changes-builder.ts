@@ -6,7 +6,7 @@ import {
     EntitySchema,
     entityToQuery,
 } from "@entity-space/elements";
-import { ComplexKeyMap, joinPaths, Path } from "@entity-space/utils";
+import { ComplexKeyMap, joinPaths, Path, readPath } from "@entity-space/utils";
 import { isEqual } from "lodash";
 import { EntityCache } from "../cache/entity-cache";
 import { isEntityUpdateEqual } from "./functions/is-entity-update-equal.fn";
@@ -23,6 +23,19 @@ interface SelectedEntityStruct {
     entity: Entity;
     selection: EntityRelationSelection;
     path?: Path;
+}
+
+function toUniqueKey(keys: Map<string, number>, schema: EntitySchema, type: EntityChangeType, entity: Entity): string {
+    const key = toKey(schema, type, entity);
+    const count = keys.get(key) ?? 0;
+    keys.set(key, count + 1);
+
+    return count ? `${key}#${count + 1}` : key;
+}
+
+function toKey(schema: EntitySchema, type: EntityChangeType, entity: Entity): string {
+    const ids = schema.getIdPaths().map(path => readPath(path, entity));
+    return `${schema.getName()}:${type}:${JSON.stringify(ids.length === 1 ? ids[0] : ids)}`;
 }
 
 export class EntityChangesBuilder {
@@ -81,11 +94,20 @@ export class EntityChangesBuilder {
 
     buildChanges(): EntityChange[] {
         const changes: EntityChange[] = [];
+        const changeKeys = new Map<string, number>();
 
         for (const [schema, entities] of this.#creates.entries()) {
             for (const entity of entities) {
                 const dependencies = this.#getDependencies(EntityChangeType.Create, schema, entity);
-                changes.push(new EntityChange(schema, entity, EntityChangeType.Create, dependencies));
+                changes.push(
+                    new EntityChange(
+                        schema,
+                        entity,
+                        EntityChangeType.Create,
+                        dependencies,
+                        toUniqueKey(changeKeys, schema, EntityChangeType.Create, entity),
+                    ),
+                );
             }
         }
 
@@ -111,6 +133,7 @@ export class EntityChangesBuilder {
                         entity,
                         EntityChangeType.Update,
                         [...dependencies, ...deleteDependencies],
+                        toUniqueKey(changeKeys, schema, EntityChangeType.Update, entity),
                         {
                             previous: baseline,
                             path,
@@ -123,7 +146,15 @@ export class EntityChangesBuilder {
         for (const schema of this.#deletes.getSchemas()) {
             for (const entity of this.#deletes.getEntities(schema)) {
                 const dependencies = this.#getDependencies(EntityChangeType.Delete, schema, entity);
-                changes.push(new EntityChange(schema, entity, EntityChangeType.Delete, dependencies));
+                changes.push(
+                    new EntityChange(
+                        schema,
+                        entity,
+                        EntityChangeType.Delete,
+                        dependencies,
+                        toUniqueKey(changeKeys, schema, EntityChangeType.Delete, entity),
+                    ),
+                );
             }
         }
 
